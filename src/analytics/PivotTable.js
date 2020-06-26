@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import PivotTableUI from 'react-pivottable/PivotTableUI';
 import 'react-pivottable/pivottable.css';
 
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
+
 const PivotTable = ({ cards }) => {
   const data = cards.map((card) => ({
     CMC: card.cmc ?? card.details.cmc,
@@ -14,7 +16,10 @@ const PivotTable = ({ cards }) => {
     Name: card.details.name,
     Artist: card.details.artist,
     Rarity: card.details.rarity,
-    Price: card.details.price,
+    'Price USD': cardPrice(card),
+    'Price USD Foil': cardFoilPrice(card),
+    'Price EUR': cardPriceEur(card),
+    'Price TIX': cardTix(card),
     Elo: card.details.elo,
   }));
 

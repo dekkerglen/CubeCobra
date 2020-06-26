@@ -200,7 +200,6 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
 
   const picked = createSeen();
   addSeen(picked, getPicked(0));
-  console.log(getPicked(0));
   const seen = getSeen(0);
   return (
     <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">

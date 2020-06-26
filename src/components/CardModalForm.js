@@ -202,8 +202,6 @@ const CardModalForm = ({ children, ...props }) => {
       ...card.details,
       image_normal: details.image_normal,
       image_flip: details.image_flip,
-      price: details.price,
-      price_foil: details.price_foil,
     },
   };
   return (

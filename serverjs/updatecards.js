@@ -74,6 +74,7 @@ function initializeCatalog() {
   catalog.cardimages = {};
   catalog.oracleToId = {};
   catalog.english = {};
+  catalog.elodict = {};
 }
 
 initializeCatalog();
@@ -585,6 +586,13 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'mps' || // kaladesh masterpieces
     card.set.toLowerCase() === 'mp2' || // invocations
     card.set.toLowerCase() === 'exp'; // expeditions
+  newcard.prices = {
+    usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
+    eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
+    tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
+  };
+  newcard.elo = catalog.elodict[name];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -707,7 +715,14 @@ function saveEnglishCard(card) {
   addCardToCatalog(convertCard(card));
 }
 
-async function saveAllCards(basePath = 'private', defaultPath = null, allPath = null) {
+async function saveAllCards(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
+  winston.info('Fetching Elo...');
+  // create Elo dict
+  for (const rating of ratings) {
+    catalog.elodict[rating.name] = rating.elo;
+  }
+
+  winston.info('Processing cards...');
   await new Promise((resolve) =>
     fs
       .createReadStream(defaultPath || path.resolve(basePath, 'cards.json'))
@@ -728,16 +743,18 @@ async function saveAllCards(basePath = 'private', defaultPath = null, allPath = 
   await writeCatalog(basePath);
 }
 
-async function updateCardbase(basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
+  winston.info('Updating cardbase, this might take a little while...');
 
+  winston.info('Downloading files...');
   // the module.exports line is necessary to correctly mock this function in unit tests
   await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
 
-  winston.info('Updating cardbase, this might take a little while...');
-  await saveAllCards(basePath, defaultPath, allPath);
+  winston.info('Creating objects...');
+  await saveAllCards(ratings, basePath, defaultPath, allPath);
 
   winston.info('Finished cardbase update...');
 }

@@ -45,7 +45,6 @@ const filterutil = require('../dist/filtering/FilterCards.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
-const { GetPrices } = require('../serverjs/prices.js');
 const generateMeta = require('../serverjs/meta.js');
 
 const CARD_HEIGHT = 680;
@@ -416,32 +415,30 @@ router.get('/overview/:id', async (req, res) => {
 
     // calc cube prices
     for (const card of cube.cards) {
-      card.details = { ...carddb.cardFromId(card.cardID, 'name tcgplayer_id') };
+      card.details = { ...carddb.cardFromId(card.cardID, 'name prices') };
     }
-    const pids = new Set();
-    const nameToCard = {};
+    const nameToCards = {};
     for (const card of cube.cards) {
-      if (!nameToCard[card.details.name]) {
+      if (!nameToCards[card.details.name]) {
         const allVersionsOfCard = carddb.getIdsFromName(card.details.name) || [];
-        nameToCard[card.details.name] = allVersionsOfCard.map((id) => carddb.cardFromId(id));
-
-        for (const version of nameToCard[card.details.name]) {
-          if (version.tcgplayer_id) {
-            pids.add(version.tcgplayer_id);
-          }
-        }
+        nameToCards[card.details.name] = allVersionsOfCard.map((id) => carddb.cardFromId(id));
       }
     }
-    const priceDictQ = GetPrices([...pids]);
-    const [blogs, followers, priceDict] = await Promise.all([blogsQ, followersQ, priceDictQ]);
+
+    const [blogs, followers] = await Promise.all([blogsQ, followersQ]);
 
     const cheapestDict = {};
     for (const card of cube.cards) {
       if (!cheapestDict[card.details.name]) {
-        for (const version of nameToCard[card.details.name]) {
-          const price = priceDict[version.tcgplayer_id];
-          if (!cheapestDict[version.name] || price < cheapestDict[version.name]) {
-            cheapestDict[version.name] = price;
+        for (const version of nameToCards[card.details.name]) {
+          if (!cheapestDict[version.name] || (version.prices.usd && version.prices.usd < cheapestDict[version.name])) {
+            cheapestDict[version.name] = version.prices.usd;
+          }
+          if (
+            !cheapestDict[version.name] ||
+            (version.prices.usd_foil && version.prices.usd_foil < cheapestDict[version.name])
+          ) {
+            cheapestDict[version.name] = version.prices.usd_foil;
           }
         }
       }
@@ -451,13 +448,11 @@ router.get('/overview/:id', async (req, res) => {
     let totalPricePurchase = 0;
     for (const card of cube.cards) {
       if (!['Not Owned', 'Proxied'].includes(card.status)) {
-        let priceOwned = 0;
-        if (card.finish === 'Foil') {
-          priceOwned = priceDict[`${card.details.tcgplayer_id}_foil`] || priceDict[card.details.tcgplayer_id] || 0;
+        if (card.finish === 'Foil' && card.details.prices.usd_foil) {
+          totalPriceOwned += card.details.prices.usd_foil || card.details.prices.usd || 0;
         } else {
-          priceOwned = priceDict[card.details.tcgplayer_id] || priceDict[`${card.details.tcgplayer_id}_foil`] || 0;
+          totalPriceOwned += card.details.prices.usd || card.details.prices.usd_foil || 0;
         }
-        totalPriceOwned += priceOwned;
       }
 
       totalPricePurchase += cheapestDict[card.details.name] || 0;
@@ -670,28 +665,6 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     cubeA.cards = addDetails(cubeA.cards);
     cubeB.cards = addDetails(cubeB.cards);
 
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
-    cubeA.cards = addPriceAndElo(cubeA.cards);
-    cubeB.cards = addPriceAndElo(cubeB.cards);
     const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeA.cards, cubeB.cards);
 
     const reactProps = {
@@ -734,8 +707,6 @@ router.get('/list/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const pids = new Set();
-    const cardNames = new Set();
     const addDetails = (cards) => {
       cards.forEach((card, index) => {
         card.details = {
@@ -745,39 +716,12 @@ router.get('/list/:id', async (req, res) => {
         if (!card.type_line) {
           card.type_line = card.details.type;
         }
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
-        cardNames.add(card.details.name);
       });
       return cards;
     };
 
     cube.cards = addDetails(cube.cards);
     cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
-
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
-    cube.cards = addPriceAndElo(cube.cards);
-    cube.maybe = addPriceAndElo(cube.maybe);
 
     const reactProps = {
       cube,
@@ -919,28 +863,6 @@ router.get('/analysis/:id', async (req, res) => {
     };
     cube.cards = addDetails(cube.cards || []);
     cube.maybe = addDetails(cube.maybe || []);
-
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
-    cube.cards = addPriceAndElo(cube.cards);
 
     const reactProps = {
       cube,
@@ -1421,44 +1343,18 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         ({ newCards, newMaybe, missing } = CSVtoCards(items, carddb));
         cube.cards = newCards;
         cube.maybe = newMaybe;
-        const pids = new Set();
-        const cardNames = new Set();
         const addDetails = (cardList) =>
           cardList.map((card, index) => {
             card = { ...card, details: { ...carddb.cardFromId(card.cardID) }, index };
             if (!card.type_line) {
               card.type_line = card.details.type;
             }
-            if (card.details.tcgplayer_id) {
-              pids.add(card.details.tcgplayer_id);
-            }
-            cardNames.add(card.details.name);
             return card;
           });
 
         const cubeCards = addDetails(cards);
         const newDetails = addDetails(newCards);
 
-        const [priceDict, eloDict] = await Promise.all([GetPrices([...pids]), getElo([...cardNames], true)]);
-
-        const addPriceAndElo = (cardList) => {
-          for (const card of cardList) {
-            if (card.details.tcgplayer_id) {
-              if (priceDict[card.details.tcgplayer_id]) {
-                card.details.price = priceDict[card.details.tcgplayer_id];
-              }
-              if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-                card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-              }
-            }
-            if (eloDict[card.details.name]) {
-              card.details.elo = eloDict[card.details.name];
-            }
-          }
-          return cardList;
-        };
-        addPriceAndElo(cubeCards);
-        addPriceAndElo(newDetails);
         const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
         changelog += onlyA.map(({ cardID }) => removeCardHtml(carddb.cardFromId(cardID))).join('');
         changelog += onlyB.map(({ cardID }) => addCardHtml(carddb.cardFromId(cardID))).join('');
@@ -3448,23 +3344,6 @@ router.get(
   '/api/getcardfromid/:id',
   util.wrapAsyncApi(async (req, res) => {
     const card = carddb.cardFromId(req.params.id);
-    // need to get the price of the card with the new version in here
-    const tcg = [];
-    if (card.tcgplayer_id) {
-      tcg.push(card.tcgplayer_id);
-    }
-    const priceDict = await GetPrices(tcg);
-    if (card.error) {
-      return res.status(200).send({
-        success: 'false',
-      });
-    }
-    if (priceDict[card.tcgplayer_id]) {
-      card.price = priceDict[card.tcgplayer_id];
-    }
-    if (priceDict[`${card.tcgplayer_id}_foil`]) {
-      card.price_foil = priceDict[`${card.tcgplayer_id}_foil`];
-    }
     return res.status(200).send({
       success: 'true',
       card,
@@ -3478,24 +3357,6 @@ router.get(
     const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
     // eslint-disable-next-line prefer-object-spread
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
-    const tcg = [...new Set(cards.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid))];
-    const names = [...new Set(cards.map(({ name }) => name).filter((name) => name))];
-    const [priceDict, eloDict] = await Promise.all([GetPrices(tcg), getElo(names, true)]);
-    for (const card of cards) {
-      if (card.tcgplayer_id) {
-        const cardPriceData = priceDict[card.tcgplayer_id];
-        if (cardPriceData) {
-          card.price = cardPriceData;
-        }
-        const cardFoilPriceData = priceDict[`${card.tcgplayer_id}_foil`];
-        if (cardFoilPriceData) {
-          card.price_foil = cardFoilPriceData;
-        }
-      }
-      if (eloDict[card.name]) {
-        card.elo = eloDict[card.name];
-      }
-    }
     return res.status(200).send({
       success: 'true',
       cards,
@@ -3512,21 +3373,18 @@ router.post(
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
     const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
     const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
-    const allVersionsFlat = [].concat(...allVersions);
-    const tcgplayerIds = new Set(allVersionsFlat.map(({ tcgplayer_id }) => tcgplayer_id).filter((tid) => tid));
-    const names = new Set(allDetails.map(({ name }) => cardutil.normalizeName(name)));
-    const [priceDict, eloDict] = await Promise.all([GetPrices([...tcgplayerIds]), getElo([...names])]);
+
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ _id, name, full_name, image_normal, image_flip, tcgplayer_id }) => ({
+        versions.map(({ _id, full_name, image_normal, image_flip, prices, elo }) => ({
           _id,
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
           image_normal,
           image_flip,
-          price: priceDict[tcgplayer_id],
-          price_foil: priceDict[`${tcgplayer_id}_foil`],
-          elo: eloDict[cardutil.normalizeName(name)],
+          price: prices.usd,
+          price_foil: prices.usd_foil,
+          elo,
         })),
       ]),
     );
@@ -3730,27 +3588,6 @@ router.post('/resize/:id/:size', async (req, res) => {
       })
       .map(formatTuple);
 
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
-    addPriceAndElo(list);
-
     const { filter, err } = filterutil.makeFilter(req.body.filter);
     if (err) {
       return util.handleRouteError(req, res, 'Error parsing filter.', `/cube/list/${req.params.id}`);
@@ -3847,28 +3684,9 @@ router.post(
       .sort((a, b) => a[1] - b[1])
       .map(formatTuple);
 
-    const priceDictQ = GetPrices([...pids]);
-    const eloDictQ = getElo([...cardNames], true);
-    const [priceDict, eloDict] = await Promise.all([priceDictQ, eloDictQ]);
-    const addPriceAndElo = (cards) => {
-      for (const card of cards) {
-        if (card.details.tcgplayer_id) {
-          if (priceDict[card.details.tcgplayer_id]) {
-            card.details.price = priceDict[card.details.tcgplayer_id];
-          }
-          if (priceDict[`${card.details.tcgplayer_id}_foil`]) {
-            card.details.price_foil = priceDict[`${card.details.tcgplayer_id}_foil`];
-          }
-        }
-        if (eloDict[card.details.name]) {
-          card.details.elo = eloDict[card.details.name];
-        }
-      }
-      return cards;
-    };
     return res.status(200).send({
       success: 'true',
-      result: { toAdd: addPriceAndElo(addlist), toCut: addPriceAndElo(cutlist) },
+      result: { toAdd: addlist, toCut: cutlist },
     });
   }),
 );

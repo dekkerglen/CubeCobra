@@ -97,8 +97,10 @@ export function getSorts() {
     'Loyalty',
     'Manacost Type',
     'Power',
-    'Price',
-    'Price Foil',
+    'Price USD',
+    'Price USD Foil',
+    'Price EUR',
+    'MTGO TIX',
     'Rarity',
     'Set',
     'Shards / Wedges',
@@ -351,10 +353,24 @@ function getLabelsRaw(cube, sort) {
     return ['Gold', 'Hybrid', 'Phyrexian'];
   } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
-  } else if (sort == 'Price' || sort == 'Price Foil') {
+  } else if (['Price USD', 'Price USD Foil'].includes(sort)) {
     const labels = [];
     for (let i = 0; i <= price_buckets.length; i++) {
-      labels.push(price_bucket_label(i));
+      labels.push(price_bucket_label(i, '$'));
+    }
+    labels.push('No Price Available');
+    return labels;
+  } else if (sort === 'Price EUR') {
+    const labels = [];
+    for (let i = 0; i <= price_buckets.length; i++) {
+      labels.push(price_bucket_label(i, '€'));
+    }
+    labels.push('No Price Available');
+    return labels;
+  } else if (sort === 'MTGO TIX') {
+    const labels = [];
+    for (let i = 0; i <= price_buckets.length; i++) {
+      labels.push(price_bucket_label(i, ''));
     }
     labels.push('No Price Available');
     return labels;
@@ -408,14 +424,14 @@ var price_buckets = [0.25, 0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 40, 50, 75
 // returns the price bucket label at the index designating the upper bound
 // at index == 0, returns < lowest
 // at index == length, returs >= highest
-function price_bucket_label(index) {
+function price_bucket_label(index, prefix) {
   if (index == 0) {
-    return `< $${price_buckets[0]}`;
+    return `< ${prefix}${price_buckets[0]}`;
   }
   if (index == price_buckets.length) {
-    return `>= $${price_buckets[price_buckets.length - 1]}`;
+    return `>= ${prefix}${price_buckets[price_buckets.length - 1]}`;
   }
-  return `$${price_buckets[index - 1]} - $${price_buckets[index] - 0.01}`;
+  return `${prefix}${price_buckets[index - 1]} - ${prefix}${price_buckets[index] - 0.01}`;
 }
 
 function cmcToNumber(card) {
@@ -647,40 +663,72 @@ export function cardGetLabels(card, sort) {
     return [];
   } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
-  } else if (sort == 'Price') {
-    var price = null;
-    if (card.details.price) {
-      price = card.details.price;
-    } else if (card.details.price_foil) {
-      price = card.details.price_foil;
-    }
+  } else if (sort == 'Price USD') {
+    var price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
       //fence post first and last term
       if (price < price_buckets[0]) {
-        return [price_bucket_label(0)];
+        return [price_bucket_label(0, '$')];
       } else if (price >= price_buckets[price_buckets.length - 1]) {
-        return [price_bucket_label(price_buckets.length)];
+        return [price_bucket_label(price_buckets.length, '$')];
       } else {
         for (let i = 1; i < price_buckets.length; i++) {
           if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
-            return [price_bucket_label(i)];
+            return [price_bucket_label(i, '$')];
           }
         }
       }
     } else {
       return ['No Price Available'];
     }
-  } else if (sort == 'Price Foil') {
-    if (card.details.price_foil) {
+  } else if (sort == 'Price USD Foil') {
+    var price = card.details.prices.usd_foil;
+    if (price) {
       //fence post first and last term
-      if (card.details.price_foil < price_buckets[0]) {
-        return [price_bucket_label(0)];
-      } else if (card.details.price_foil >= price_buckets[price_buckets.length - 1]) {
-        return [price_bucket_label(price_buckets.length)];
+      if (price < price_buckets[0]) {
+        return [price_bucket_label(0, '$')];
+      } else if (price >= price_buckets[price_buckets.length - 1]) {
+        return [price_bucket_label(price_buckets.length, '$')];
       } else {
         for (let i = 1; i < price_buckets.length; i++) {
-          if (card.details.price_foil >= price_buckets[i - 1] && card.details.price_foil < price_buckets[i]) {
-            return [price_bucket_label(i)];
+          if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
+            return [price_bucket_label(i, '$')];
+          }
+        }
+      }
+    } else {
+      return ['No Price Available'];
+    }
+  } else if (sort == 'Price EUR') {
+    const price = cardPriceEur(card);
+    if (price) {
+      //fence post first and last term
+      if (price < price_buckets[0]) {
+        return [price_bucket_label(0, '€')];
+      } else if (price >= price_buckets[price_buckets.length - 1]) {
+        return [price_bucket_label(price_buckets.length, '€')];
+      } else {
+        for (let i = 1; i < price_buckets.length; i++) {
+          if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
+            return [price_bucket_label(i, '€')];
+          }
+        }
+      }
+    } else {
+      return ['No Price Available'];
+    }
+  } else if (sort == 'MTGO TIX') {
+    const price = cardTix(card);
+    if (price) {
+      //fence post first and last term
+      if (price < price_buckets[0]) {
+        return [price_bucket_label(0, '')];
+      } else if (price >= price_buckets[price_buckets.length - 1]) {
+        return [price_bucket_label(price_buckets.length, '')];
+      } else {
+        for (let i = 1; i < price_buckets.length; i++) {
+          if (price >= price_buckets[i - 1] && price < price_buckets[i]) {
+            return [price_bucket_label(i, '')];
           }
         }
       }
