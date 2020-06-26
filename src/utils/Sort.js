@@ -700,7 +700,7 @@ export function cardGetLabels(card, sort) {
       return ['No Price Available'];
     }
   } else if (sort == 'Price EUR') {
-    var price = card.details.prices.eur;
+    const price = cardPriceEur(card);
     if (price) {
       //fence post first and last term
       if (price < price_buckets[0]) {
