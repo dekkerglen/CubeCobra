@@ -49,7 +49,18 @@ const allFields = [
   'artist',
   'is',
 ];
-const numFields = ['cmc', 'price', 'priceFoil', 'priceEur', 'priceTix', 'elo', 'power', 'toughness', 'loyalty', 'rarity'];
+const numFields = [
+  'cmc',
+  'price',
+  'priceFoil',
+  'priceEur',
+  'priceTix',
+  'elo',
+  'power',
+  'toughness',
+  'loyalty',
+  'rarity',
+];
 const colorFields = ['color', 'identity'];
 
 const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (

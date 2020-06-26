@@ -251,7 +251,9 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
                   <TextBadge name="Foil USD" className="mt-2 mr-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">${Math.round(totalPriceUsdFoil).toLocaleString()}</Tooltip>
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (

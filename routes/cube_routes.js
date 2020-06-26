@@ -3377,7 +3377,7 @@ router.post(
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ _id,  full_name, image_normal, image_flip, prices, elo }) => ({
+        versions.map(({ _id, full_name, image_normal, image_flip, prices, elo }) => ({
           _id,
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
           image_normal,
