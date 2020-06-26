@@ -2091,8 +2091,10 @@ router.get('/draft/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    if (draft.basics) {
+      for (const key of Object.keys(draft.basics)) {
+        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+      }
     }
 
     const reactProps = {
