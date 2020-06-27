@@ -19,6 +19,7 @@ import {
 import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
+import { cardType, cardIsSpecialZoneType } from 'utils/Card';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -34,12 +35,9 @@ import { Internal } from 'components/DraftbotBreakdown';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
-  const allTypes = cards.map((card) => (card.type_line || card.details.type).toLowerCase());
-  const numLands = allTypes.filter((type) => type.includes('land')).length;
-  const numNonlands = allTypes.filter(
-    (type) => !type.includes('land') && !/^(plane|phenomenon|vanguard|scheme|conspiracy)$/.test(type),
-  ).length;
-  const numCreatures = allTypes.filter((type) => type.includes('creature')).length;
+  const numLands = cards.filter((card) => cardType(card).includes('land')).length;
+  const numNonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card)).length;
+  const numCreatures = cards.filter((card) => cardType(card).includes('creature')).length;
   const numNonCreatures = numNonlands - numCreatures;
   return (
     `${numCards} card${numCards === 1 ? '' : 's'}: ` +

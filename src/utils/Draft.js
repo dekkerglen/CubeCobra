@@ -1,6 +1,13 @@
 import similarity from 'compute-cosine-similarity';
 
-import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType, COLOR_INCLUSION_MAP } from 'utils/Card';
+import {
+  COLOR_COMBINATIONS,
+  cardColorIdentity,
+  cardDevotion,
+  cardType,
+  cardIsSpecialZoneType,
+  COLOR_INCLUSION_MAP,
+} from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import {
   getRating,
@@ -307,8 +314,9 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 };
 
 export async function buildDeck(cards, picked, synergies, initialState, basics) {
-  let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
+  let nonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card));
+  const lands = cards.filter((card) => cardType(card).includes('land'));
+  const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
   const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);
@@ -320,8 +328,6 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
 
   const playableLands = lands.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
-
-  // console.log(colors, inColor.length / nonlands.length, inColor.length);
 
   nonlands = inColor;
   let side = outOfColor;
@@ -386,6 +392,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   side.push(...playableLands.slice(17));
   side.push(...unplayableLands);
   side.push(...nonlands);
+  side.push(...specialZoneCards);
 
   if (basics) {
     const basicsToAdd = calculateBasicCounts(main, colors);
