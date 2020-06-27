@@ -223,7 +223,7 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
       });
     }
 
-    const cubes = await Cube.find()
+    const cubes = await Cube.find({}, 'cards')
       .sort({ shortID: 1 })
       .skip(req.params.page * cubePageSize)
       .limit(cubePageSize)
@@ -260,7 +260,7 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
       });
     }
 
-    const decks = await Deck.find()
+    const decks = await Deck.find({}, 'seats')
       .sort({ date: 1 })
       .skip(req.params.page * deckPageSize)
       .limit(deckPageSize)
