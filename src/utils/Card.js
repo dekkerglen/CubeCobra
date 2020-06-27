@@ -209,7 +209,7 @@ export const cardDevotion = (card, color) =>
   cardCost(card)?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 
 export const cardIsSpecialZoneType = (card) => {
-  return /(plane|phenomenon|vanguard|scheme|conspiracy|contraption)/i.test(cardType(card))
+  return /(plane|phenomenon|vanguard|scheme|conspiracy|contraption)/i.test(cardType(card));
 };
 
 export default {

@@ -316,7 +316,7 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 export async function buildDeck(cards, picked, synergies, initialState, basics) {
   let nonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card));
   const lands = cards.filter((card) => cardType(card).includes('land'));
-  const specialZoneCards = cards.filter(cardIsSpecialZoneType)
+  const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
   const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);

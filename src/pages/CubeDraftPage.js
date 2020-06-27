@@ -35,8 +35,8 @@ import { Internal } from 'components/DraftbotBreakdown';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
-  const numLands = cards.filter(card => cardType(card).includes('land')).length;
-  const numNonlands = cards.filter(card => !cardType(card).includes('land') && !cardIsSpecialZoneType(card)).length;
+  const numLands = cards.filter((card) => cardType(card).includes('land')).length;
+  const numNonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card)).length;
   const numCreatures = cards.filter((card) => cardType(card).includes('creature')).length;
   const numNonCreatures = numNonlands - numCreatures;
   return (
