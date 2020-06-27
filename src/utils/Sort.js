@@ -353,7 +353,7 @@ function getLabelsRaw(cube, sort) {
     return ['Gold', 'Hybrid', 'Phyrexian'];
   } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
-  } else if (['Price USD', 'Price USD Foil'].includes(sort)) {
+  } else if (['Price', 'Price USD', 'Price USD Foil'].includes(sort)) {
     const labels = [];
     for (let i = 0; i <= price_buckets.length; i++) {
       labels.push(price_bucket_label(i, '$'));
@@ -663,7 +663,7 @@ export function cardGetLabels(card, sort) {
     return [];
   } else if (sort == 'Creature/Non-Creature') {
     return typeLine(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
-  } else if (sort == 'Price USD') {
+  } else if (sort == 'Price USD' || sort == 'Price') {
     var price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
       //fence post first and last term
