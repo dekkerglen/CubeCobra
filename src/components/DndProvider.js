@@ -8,8 +8,6 @@ import { isTouchDevice } from '../utils/Util';
 
 const backend = isTouchDevice() ? TouchBackend : HTML5Backend;
 
-const DndProviderWithBackend = (props) => (
-  <DndProvider backend={backend} {...props} />
-);
+const DndProviderWithBackend = (props) => <DndProvider backend={backend} {...props} />;
 
 export default DndProviderWithBackend;
