@@ -47,8 +47,10 @@ const interpolateWeight = (weights, coordMaxPair, ...coordinates) => {
   const floorIndex = Math.floor(index);
   // Is either an integer or is past the end by less than 1 so we can use floor as our index
   if (index === floorIndex || ceilIndex === weights.length) {
-    return interpolateWeight(weights[floorIndex], ...coordinates);
+    return interpolateWeight(weights[Math.min(floorIndex, weights.length - 1)], ...coordinates);
   }
+  // Ceil must be at most weights.length - 1 and floor must be ceil - 1 and at least 0
+  // so the indexes below must be valid.
   // The fractional part of index.
   const indexModOne = index - floorIndex;
   // If is fractional and not past the end we weight it by the two
@@ -192,7 +194,7 @@ export const getColor = (combination, picked) => {
 
 const getCoordPairs = (pack, pick, initialState) => [
   [pack - 1, initialState[0].length],
-  [pick - 1, initialState[0][0].length],
+  [pick - 1, initialState[0][pack - 1].length],
 ];
 
 export const getRatingWeight = (pack, pick, initialState) => {

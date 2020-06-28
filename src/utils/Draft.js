@@ -39,18 +39,20 @@ export const addSeen = (seen, cards, synergies) => {
       for (const comb of COLOR_COMBINATIONS) {
         const combStr = comb.join('');
         if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
-          for (const { index } of seen.cards[combStr]) {
-            if (synergyMatrix[index][card.index] === null) {
-              const similarityValue = similarity(synergies[card.index], synergies[index]);
-              if (Number.isFinite(similarityValue)) {
-                synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+          if (synergies) {
+            for (const { index } of seen.cards[combStr]) {
+              if (synergyMatrix[index][card.index] === null) {
+                const similarityValue = similarity(synergies[card.index], synergies[index]);
+                if (Number.isFinite(similarityValue)) {
+                  synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+                }
+                if (!Number.isFinite(synergyMatrix[card.index][index])) {
+                  synergyMatrix[card.index][index] = 0;
+                }
+                synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
               }
-              if (!Number.isFinite(synergyMatrix[card.index][index])) {
-                synergyMatrix[card.index][index] = 0;
-              }
-              synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
+              seen.synergies[combStr] += synergyMatrix[index][card.index];
             }
-            seen.synergies[combStr] += synergyMatrix[index][card.index];
           }
           seen.cards[combStr].push(card);
           // We ignore colorless because they just reduce variance by
@@ -74,7 +76,7 @@ export function init(newDraft) {
   if (draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
-      addSeen(seat.seen, seat.packbacklog[0].slice(), draft.synergies);
+      addSeen(seat.seen, seat.packbacklog[0].slice());
       seat.picked = createSeen();
     }
   }
@@ -363,7 +365,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     };
     NKernels(2, 18);
     const played = createSeen();
-    addSeen(played, chosen);
+    addSeen(played, chosen, synergies);
     const size = Math.min(23 - chosen.length, nonlands.length);
     for (let i = 0; i < size; i++) {
       // add in new synergy data
@@ -379,7 +381,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
         }
       }
       const current = nonlands.splice(best, 1)[0];
-      addSeen(played, [current]);
+      addSeen(played, [current], synergies);
       chosen.push(current);
     }
     nonlands = nonlands.filter((c) => !chosen.includes(c));
@@ -505,7 +507,7 @@ function passPack() {
   }
   for (const seat of draft.seats) {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
-      addSeen(seat.seen, seat.packbacklog[0], draft.synergies);
+      addSeen(seat.seen, seat.packbacklog[0]);
     }
   }
 }
