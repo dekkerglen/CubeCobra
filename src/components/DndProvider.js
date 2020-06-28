@@ -6,8 +6,10 @@ import TouchBackend from 'react-dnd-touch-backend';
 
 import { isTouchDevice } from '../utils/Util';
 
+const backend = isTouchDevice() ? TouchBackend : HTML5Backend;
+
 const DndProviderWithBackend = (props) => (
-  <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend} {...props} />
+  <DndProvider backend={backend} {...props} />
 );
 
 export default DndProviderWithBackend;

@@ -40,7 +40,7 @@ export const addSeen = (seen, cards, synergies) => {
         const combStr = comb.join('');
         if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
           for (const { index } of seen.cards[combStr]) {
-            if (synergyMatrix[index][card.index] === null) {
+            if (synergyMatrix[index][card.index] === null && synergies) {
               const similarityValue = similarity(synergies[card.index], synergies[index]);
               if (Number.isFinite(similarityValue)) {
                 synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;

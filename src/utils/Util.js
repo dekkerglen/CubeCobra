@@ -154,7 +154,7 @@ export function isTouchDevice() {
   const mq = (query) => window.matchMedia(query).matches;
 
   // eslint-disable-next-line no-undef
-  if (window.ontouchstart || (window.DocumentTouch && document instanceof DocumentTouch)) {
+  if (window.hasOwnProperty('ontouchstart') || (window.DocumentTouch && document instanceof DocumentTouch)) {
     return true;
   }
 
