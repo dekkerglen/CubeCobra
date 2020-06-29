@@ -447,8 +447,8 @@ router.get('/overview/:id', async (req, res) => {
     let totalPriceOwned = 0;
     let totalPricePurchase = 0;
     for (const card of cube.cards) {
-      if (!['Not Owned', 'Proxied'].includes(card.status)) {
-        if (card.finish === 'Foil' && card.details.prices.usd_foil) {
+      if (!['Not Owned', 'Proxied'].includes(card.status) && card.details.prices) {
+        if (card.finish === 'Foil') {
           totalPriceOwned += card.details.prices.usd_foil || card.details.prices.usd || 0;
         } else {
           totalPriceOwned += card.details.prices.usd || card.details.prices.usd_foil || 0;
