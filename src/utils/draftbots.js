@@ -194,7 +194,7 @@ export const getColor = (combination, picked) => {
 
 const getCoordPairs = (pack, pick, initialState) => [
   [pack - 1, initialState[0].length],
-  [pick - 1, initialState[0][pack - 1].length],
+  [pick - 1, initialState[0][Math.min(Math.max(pack - 1, 0), initialState[0].length - 1)].length],
 ];
 
 export const getRatingWeight = (pack, pick, initialState) => {
