@@ -1,6 +1,13 @@
 import similarity from 'compute-cosine-similarity';
 
-import { COLOR_COMBINATIONS, cardColorIdentity, cardDevotion, cardType, COLOR_INCLUSION_MAP } from 'utils/Card';
+import {
+  COLOR_COMBINATIONS,
+  cardColorIdentity,
+  cardDevotion,
+  cardType,
+  cardIsSpecialZoneType,
+  COLOR_INCLUSION_MAP,
+} from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import {
   getRating,
@@ -32,18 +39,20 @@ export const addSeen = (seen, cards, synergies) => {
       for (const comb of COLOR_COMBINATIONS) {
         const combStr = comb.join('');
         if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
-          for (const { index } of seen.cards[combStr]) {
-            if (synergyMatrix[index][card.index] === null) {
-              const similarityValue = similarity(synergies[card.index], synergies[index]);
-              if (Number.isFinite(similarityValue)) {
-                synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+          if (synergies) {
+            for (const { index } of seen.cards[combStr]) {
+              if (synergyMatrix[index][card.index] === null) {
+                const similarityValue = similarity(synergies[card.index], synergies[index]);
+                if (Number.isFinite(similarityValue)) {
+                  synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+                }
+                if (!Number.isFinite(synergyMatrix[card.index][index])) {
+                  synergyMatrix[card.index][index] = 0;
+                }
+                synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
               }
-              if (!Number.isFinite(synergyMatrix[card.index][index])) {
-                synergyMatrix[card.index][index] = 0;
-              }
-              synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
+              seen.synergies[combStr] += synergyMatrix[index][card.index];
             }
-            seen.synergies[combStr] += synergyMatrix[index][card.index];
           }
           seen.cards[combStr].push(card);
           // We ignore colorless because they just reduce variance by
@@ -67,7 +76,7 @@ export function init(newDraft) {
   if (draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
-      addSeen(seat.seen, seat.packbacklog[0].slice(), draft.synergies);
+      addSeen(seat.seen, seat.packbacklog[0].slice());
       seat.picked = createSeen();
     }
   }
@@ -307,8 +316,9 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 };
 
 export async function buildDeck(cards, picked, synergies, initialState, basics) {
-  let nonlands = cards.filter((card) => !card.details.type.toLowerCase().includes('land'));
-  const lands = cards.filter((card) => card.details.type.toLowerCase().includes('land'));
+  let nonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card));
+  const lands = cards.filter((card) => cardType(card).includes('land'));
+  const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
   const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);
@@ -320,8 +330,6 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
 
   const playableLands = lands.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
-
-  // console.log(colors, inColor.length / nonlands.length, inColor.length);
 
   nonlands = inColor;
   let side = outOfColor;
@@ -357,7 +365,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     };
     NKernels(2, 18);
     const played = createSeen();
-    addSeen(played, chosen);
+    addSeen(played, chosen, synergies);
     const size = Math.min(23 - chosen.length, nonlands.length);
     for (let i = 0; i < size; i++) {
       // add in new synergy data
@@ -373,7 +381,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
         }
       }
       const current = nonlands.splice(best, 1)[0];
-      addSeen(played, [current]);
+      addSeen(played, [current], synergies);
       chosen.push(current);
     }
     nonlands = nonlands.filter((c) => !chosen.includes(c));
@@ -386,6 +394,7 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
   side.push(...playableLands.slice(17));
   side.push(...unplayableLands);
   side.push(...nonlands);
+  side.push(...specialZoneCards);
 
   if (basics) {
     const basicsToAdd = calculateBasicCounts(main, colors);
@@ -498,7 +507,7 @@ function passPack() {
   }
   for (const seat of draft.seats) {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
-      addSeen(seat.seen, seat.packbacklog[0], draft.synergies);
+      addSeen(seat.seen, seat.packbacklog[0]);
     }
   }
 }

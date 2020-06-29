@@ -18,6 +18,12 @@ MongoDB: https://docs.mongodb.com/manual/installation/
 
 You will need to either start MongoDB background process, or manually start and stop the process in a separate console. Refer to the official documentation for directions on how to set this up for your OS.
 
+Optionally, you can also run MongoDB using docker
+
+```sh
+docker run --name cubecobra -p 27017:27017 -d mongo:4.2
+```
+
 VSCode (strongly recommended, but not required): https://code.visualstudio.com/
 ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
 
