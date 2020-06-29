@@ -29,6 +29,14 @@ ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName
 
 VSCode (with the ESLint extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Using this plugin will make adhering to the linting rules significantly easier.
 
+This project also contains pre-commit hook that is installed on `npm install` by using `lint-staged`. Linting is also checked at CI tests when PRs are submitted. These hooks enforce that only code adhering to our ESLint rules gets committed to this repository, and automatically fixes fixable issues.
+
+If you however must temporarily bypass pre-commit hooks to commit something as is, you can do that by using `--no-verify` commit flag.
+
+```sh
+$ git commit -m "Your message etc here" --no-verify
+```
+
 ### Initial Setup
 
 Clone the project into a folder of your choice. Copy `.env-EXAMPLE` to `.env` and fill out your personal tokens. **NOTE** `TCG_PLAYER_PUBLIC_KEY` and `TCG_PLAYER_PRIVATE_KEY` can be left blank.
