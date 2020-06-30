@@ -185,11 +185,12 @@ export const getOpenness = (combination, seen) => {
 // Scale from 0-1. Used to select a color combination.
 // Tends to recommend what we've already picked before.
 export const getColor = (combination, picked) => {
-  if (picked.cards.WUBRG.length === 0) {
+  const count = picked.cards.WUBRG.length - picked.cards[''].length;
+  if (count === 0) {
     return 0;
   }
 
-  return picked.values[combination.join('')] / picked.cards.WUBRG.length;
+  return picked.values[combination.join('')] / count;
 };
 
 const getCoordPairs = (pack, pick, initialState) => [
