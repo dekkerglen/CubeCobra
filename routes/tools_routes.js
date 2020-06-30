@@ -224,8 +224,8 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
     }
 
     let cubeQ;
-    if (req.query.maxShortId) {
-      cubeQ = Deck.find({ shortID: { $gt: req.query.maxShortId } }, 'cards shortID')
+    if (req.query.prevMax) {
+      cubeQ = Deck.find({ shortID: { $gt: req.query.prevMax } }, 'cards shortID')
         .sort({ shortID: 1 })
         .limit(cubePageSize)
         .lean();
@@ -238,10 +238,10 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
     }
     const cubes = await cubeQ;
 
-    const maxShortId = cubes[cubes.length - 1].shortID;
+    const prevMax = cubes[cubes.length - 1].shortID;
     return res.status(200).send({
       success: 'true',
-      maxShortId,
+      prevMax,
       pages: Math.ceil(count / cubePageSize),
       cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
     });
@@ -272,8 +272,8 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
     }
 
     let deckQ;
-    if (req.query.maxDate) {
-      deckQ = Deck.find({ date: { $gt: req.query.maxDate } }, 'seats date')
+    if (req.query.prevMax) {
+      deckQ = Deck.find({ date: { $gt: req.query.prevMax } }, 'seats date')
         .sort({ date: 1 })
         .limit(deckPageSize)
         .lean();
@@ -286,11 +286,11 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
     }
     const decks = await deckQ;
 
-    const maxDate = decks[decks.length - 1].date;
+    const prevMax = decks[decks.length - 1].date;
 
     return res.status(200).send({
       success: 'true',
-      maxDate,
+      prevMax,
       pages: Math.ceil(count / deckPageSize),
       decks: decks.map((deck) => {
         const main = [];
