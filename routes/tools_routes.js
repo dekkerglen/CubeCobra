@@ -223,14 +223,25 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
       });
     }
 
-    const cubes = await Cube.find({}, 'cards')
-      .sort({ shortID: 1 })
-      .skip(req.params.page * cubePageSize)
-      .limit(cubePageSize)
-      .lean();
+    let cubeQ;
+    if (req.query.maxShortId) {
+      cubeQ = Deck.find({ shortID: { $gt: req.query.maxShortId } }, 'cards shortID')
+        .sort({ shortID: 1 })
+        .limit(cubePageSize)
+        .lean();
+    } else {
+      cubeQ = Deck.find({}, 'cards shortID')
+        .sort({ shortID: 1 })
+        .skip(req.params.page * cubePageSize)
+        .limit(cubePageSize)
+        .lean();
+    }
+    const cubes = await cubeQ;
 
+    const maxShortId = cubes[cubes.length - 1].shortID;
     return res.status(200).send({
       success: 'true',
+      maxShortId,
       pages: Math.ceil(count / cubePageSize),
       cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
     });
@@ -260,14 +271,26 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
       });
     }
 
-    const decks = await Deck.find({}, 'seats')
-      .sort({ date: 1 })
-      .skip(req.params.page * deckPageSize)
-      .limit(deckPageSize)
-      .lean();
+    let deckQ;
+    if (req.query.maxDate) {
+      deckQ = Deck.find({ date: { $gt: req.query.maxDate } }, 'seats date')
+        .sort({ date: 1 })
+        .limit(deckPageSize)
+        .lean();
+    } else {
+      deckQ = Deck.find({}, 'seats date')
+        .sort({ date: 1 })
+        .skip(req.params.page * deckPageSize)
+        .limit(deckPageSize)
+        .lean();
+    }
+    const decks = await deckQ;
+
+    const maxDate = decks[decks.length - 1].date;
 
     return res.status(200).send({
       success: 'true',
+      maxDate,
       pages: Math.ceil(count / deckPageSize),
       decks: decks.map((deck) => {
         const main = [];
