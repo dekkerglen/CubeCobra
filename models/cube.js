@@ -95,11 +95,12 @@ const cubeSchema = mongoose.Schema({
   },
   defaultStatus: {
     type: String,
+    enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],
     default: 'Owned',
   },
   defaultPrinting: {
     type: String,
-    // Values: first, recent
+    enum: ['recent', 'first'],
     default: 'recent',
   },
 });
