@@ -1,20 +1,43 @@
 module.exports = {
-  tags: [String],
+  tags: [
+    {
+      type: String,
+      minlength: 1,
+    },
+  ],
   finish: {
     type: String,
     enum: ['Foil', 'Non-foil'],
+    default: 'Non-foil',
   },
-  colors: [{ type: String, enum: ['W', 'U', 'B', 'R', 'G', 'C'] }],
   status: {
     type: String,
     enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],
+    default: 'Not Owned',
   },
-  cmc: Number,
+  colors: {
+    type: [
+      {
+        type: String,
+        enum: ['W', 'U', 'B', 'R', 'G', 'C', ''],
+      },
+    ],
+    default: null,
+  },
+  cmc: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
   cardID: String,
   type_line: String,
+  rarity: {
+    type: String,
+    default: null,
+  },
+  addedTmsp: Date,
   imgUrl: String,
   notes: String,
-  rating: Number,
   picks: {
     type: [[Number]],
     default: [],
@@ -24,4 +47,10 @@ module.exports = {
     default: 0,
   },
   index: Number,
+  rating: Number,
+  colorCategory: {
+    type: String,
+    enum: [null, 'White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
+    default: null,
+  },
 };

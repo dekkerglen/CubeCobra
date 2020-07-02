@@ -1,51 +1,6 @@
 const mongoose = require('mongoose');
 
-const Card = {
-  tags: [
-    {
-      type: String,
-      minlength: 1,
-    },
-  ],
-  finish: {
-    type: String,
-    enum: ['Foil', 'Non-foil'],
-    default: 'Non-foil',
-  },
-  status: {
-    type: String,
-    enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],
-    default: 'Not Owned',
-  },
-  colors: {
-    type: [
-      {
-        type: String,
-        enum: ['W', 'U', 'B', 'R', 'G', 'C', ''],
-      },
-    ],
-    default: null,
-  },
-  cmc: {
-    type: Number,
-    min: 0,
-    default: null,
-  },
-  cardID: String,
-  type_line: String,
-  rarity: {
-    type: String,
-    default: null,
-  },
-  addedTmsp: Date,
-  imgUrl: String,
-  notes: String,
-  colorCategory: {
-    type: String,
-    enum: [null, 'White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
-    default: null,
-  },
-};
+const Card = require('./cardSchema');
 
 // Cube schema
 const cubeSchema = mongoose.Schema({
