@@ -38,7 +38,7 @@ export const addSeen = (seen, cards, synergies) => {
       const colorsStr = colors.join('');
       for (const comb of COLOR_COMBINATIONS) {
         const combStr = comb.join('');
-        if (COLOR_INCLUSION_MAP[combStr][colorsStr]) {
+        if (COLOR_INCLUSION_MAP[combStr][colorsStr] || isPlayableLand(comb, card)) {
           if (synergies) {
             for (const { index } of seen.cards[combStr]) {
               if (synergyMatrix[index][card.index] === null) {
