@@ -2209,18 +2209,10 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
       }
     }
 
-    const newMaybe = [...cube.maybe];
-    const newCards = [];
-    for (const add of adds) {
-      newCards.push(util.newCard(add, [], cube.defaultStatus));
-      const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
-      if (maybeIndex !== -1) {
-        newMaybe.splice(maybeIndex, 1);
-      }
-    }
-    // Remove all invalid cards.
-    cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
-    cube.maybe = newMaybe;
+    // Filter out removed and invalid cards, and add new cards.
+    const newCards = adds.map((add) => util.newCard(add, [], cube.defaultStatus));
+    cube.cards = cube.cards.filter((card, index) => card.cardID && !removes.has(index)).concat(newCards);
+    cube.maybe = cube.maybe.filter((maybeCard) => !adds.some((addedCard) => addedCard._id === maybeCard.cardID));
 
     const blogpost = new Blog();
     blogpost.title = req.body.title;
