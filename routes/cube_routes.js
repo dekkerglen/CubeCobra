@@ -3429,7 +3429,7 @@ router.post(
         message: 'Failed input validation',
       });
     }
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
@@ -3445,8 +3445,8 @@ router.post(
     }
 
     const card = cube.cards[src.index];
-    if (!card.type_line) {
-      card.type_line = carddb.cardFromId(card.cardID).type;
+    if (!card.type_line && !updated.type_line) {
+      updated.type_line = carddb.cardFromId(card.cardID).type;
     }
 
     if (!cardsAreEquivalent(src, card)) {
@@ -3455,12 +3455,14 @@ router.post(
         message: 'Cards not equivalent',
       });
     }
-
+    const originalUpdated = { ...updated };
     for (const key of Object.keys(Cube.schema.paths.cards.schema.paths)) {
       if (!Object.prototype.hasOwnProperty.call(updated, key)) {
         updated[key] = card[key];
       }
     }
+    const setProperties = Object.entries(originalUpdated).filter(([key]) => updated[key] !== null && updated[key] !== '').map(([key, value]) => [`cards.${src.index}.${key}`, value]);
+    const unsetProperties = Object.keys(updated).filter((key) => updated[key] === null || updated[key] === '').map((key) => [`cards.${src.index}.${key}`, '']);
     for (const key of Object.keys(updated)) {
       if (updated[key] === null) {
         delete updated[key];
@@ -3470,7 +3472,19 @@ router.post(
 
     setCubeType(cube, carddb);
 
-    await cube.save();
+    const setEntries = [
+      ['type', cube.type],
+      ['card_count', cube.card_count],
+      ...setProperties
+    ];
+    const updateQuery = { $set: Object.fromEntries(setEntries) };
+    if (unsetProperties.length > 0) {
+      updateQuery.$unset = Object.fromEntries(unsetProperties);
+    }
+    console.log(updateQuery);
+
+    await Cube.updateOne({ _id: cube._id }, updateQuery);
+
     return res.status(200).send({
       success: 'true',
     });
@@ -3936,40 +3950,39 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft) {
-      // TODO: fix cube schema, fix out of sync if an edit is also occuring
-      /*
-      const cube = await Cube.findOne(buildIdQuery(draft.cube));
+      const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
       if (cube) {
         const picked = [];
         const passed = [];
-        for (const card of cube.cards) {
+        cube.cards.forEach((card, index) => {
           const { name } = carddb.cardFromId(card.cardID);
           if (name === req.body.pick) {
-            picked.push(card);
+            picked.push(index);
           }
           if (req.body.pack.indexOf(name) !== -1) {
-            passed.push(card);
+            passed.push(index);
           }
-        }
+        });
         const pick =
           draft.initial_state[0][Math.min(draft.initial_state[0].length - 1, req.body.packNum - 1)].length -
           req.body.pack.length;
-        for (const card of picked) {
-          if (!card.picks) {
-            card.picks = [];
-          }
-          card.picks.push([req.body.packNum, pick]);
+        const noPicks = picked.filter((ci) => !cube.cards[ci].picks).map((ci) => [`cards.${ci}.picks`, []]);
+        const noPassed = passed
+          .filter((ci) => !cube.cards[ci].passed && cube.cards[ci].passed !== 0)
+          .map((ci) => [`cards.${ci}.passed`, 0]);
+        const setEntries = noPicks.concat(noPassed);
+        if (setEntries.length > 0) {
+          await Cube.update({ _id: cube._id }, { $set: Object.fromEntries(setEntries) });
         }
-        for (const card of passed) {
-          if (!card.passed) {
-            card.passed = 0;
-          }
-          card.passed += 1;
-        }
-        await cube.save();
+        await Cube.updateOne(
+          { _id: cube._id },
+          {
+            $push: Object.fromEntries(picked.map((ci) => [`cards.${ci}.picks`, [req.body.packNum, pick]])),
+            $inc: Object.fromEntries(passed.map((ci) => [`cards.${ci}.passed`, 1])),
+          },
+        );
       }
-      */
 
       if (!rating.elo) {
         rating.name = req.body.pick;

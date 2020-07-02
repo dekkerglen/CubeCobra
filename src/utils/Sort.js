@@ -1,5 +1,5 @@
 import { alphaCompare, fromEntries } from './Util';
-import { cardDevotion } from 'utils/Card';
+import { cardCmc, cardDevotion } from 'utils/Card';
 
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
@@ -435,7 +435,7 @@ function price_bucket_label(index, prefix) {
 }
 
 function cmcToNumber(card) {
-  const cmc = card.hasOwnProperty('cmc') ? card.cmc : card.details.cmc;
+  const cmc = cardCmc(card);
   if (isNaN(cmc)) {
     return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc);
   }
