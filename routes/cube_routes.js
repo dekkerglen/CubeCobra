@@ -3461,8 +3461,12 @@ router.post(
         updated[key] = card[key];
       }
     }
-    const setProperties = Object.entries(originalUpdated).filter(([key]) => updated[key] !== null && updated[key] !== '').map(([key, value]) => [`cards.${src.index}.${key}`, value]);
-    const unsetProperties = Object.keys(updated).filter((key) => updated[key] === null || updated[key] === '').map((key) => [`cards.${src.index}.${key}`, '']);
+    const setProperties = Object.entries(originalUpdated)
+      .filter(([key]) => updated[key] !== null && updated[key] !== '')
+      .map(([key, value]) => [`cards.${src.index}.${key}`, value]);
+    const unsetProperties = Object.keys(updated)
+      .filter((key) => updated[key] === null || updated[key] === '')
+      .map((key) => [`cards.${src.index}.${key}`, '']);
     for (const key of Object.keys(updated)) {
       if (updated[key] === null) {
         delete updated[key];
@@ -3472,16 +3476,11 @@ router.post(
 
     setCubeType(cube, carddb);
 
-    const setEntries = [
-      ['type', cube.type],
-      ['card_count', cube.card_count],
-      ...setProperties
-    ];
+    const setEntries = [['type', cube.type], ['card_count', cube.card_count], ...setProperties];
     const updateQuery = { $set: Object.fromEntries(setEntries) };
     if (unsetProperties.length > 0) {
       updateQuery.$unset = Object.fromEntries(unsetProperties);
     }
-    console.log(updateQuery);
 
     await Cube.updateOne({ _id: cube._id }, updateQuery);
 
