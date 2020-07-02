@@ -1611,7 +1611,9 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
     }
 
     if (cube.cards.length < numCards) {
-      throw new Error('Could not create sealed pool: not enough cards');
+      // This is a 4XX error, not a 5XX error
+      req.flash('danger', 'Could not create sealed pool: not enough cards.');
+      return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
     const source = shuffle(cube.cards).slice(0, numCards);
