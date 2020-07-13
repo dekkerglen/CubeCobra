@@ -2729,6 +2729,21 @@ router.get(
   }),
 );
 
+router.get(
+  '/api/cubeJSON/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
+    res.contentType('text/json');
+    res.set('Access-Control-Allow-Origin', '*');
+    return res.status(200).send(JSON.stringify(cube));
+  }),
+);
+
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
