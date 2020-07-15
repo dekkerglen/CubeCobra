@@ -239,8 +239,8 @@ app.post('*', (req, res, next) => {
 const apiLimiter = rateLimit({
   windowMs: 60000,
   max: 1,
-  message: '429: Too Many Requests'
-})
+  message: '429: Too Many Requests',
+});
 app.use('/cube/api/cubeJSON', apiLimiter);
 
 // Route files; they manage their own CSRF protection
