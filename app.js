@@ -16,6 +16,7 @@ const AWS = require('aws-sdk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
+const rateLimit = require('express-rate-limit');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 const CardRating = require('./models/cardrating');
@@ -233,6 +234,14 @@ app.post('*', (req, res, next) => {
   res.locals.user = req.user || null;
   next();
 });
+
+// apply a rate limiter to the cube json endpoint
+const apiLimiter = rateLimit({
+  windowMs: 60000,
+  max: 1,
+  message: '429: Too Many Requests'
+})
+app.use('/cube/api/cubeJSON', apiLimiter);
 
 // Route files; they manage their own CSRF protection
 const cubes = require('./routes/cube_routes');
