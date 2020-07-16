@@ -818,3 +818,19 @@ img.mana-symbol-sm {
 	padding: .25rem;
 	font-size: .85rem;
 }
+
+.advertisement {
+	position: relative;
+	width: 728px;
+	height: 90px;
+}
+
+@media (max-width: 991.89px) {
+	.advertisement {
+		position: relative;
+		top: 0;
+		left: 0;
+		width: 100%;
+		min-height: 100px;
+	}
+}

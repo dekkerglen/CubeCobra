@@ -9,6 +9,7 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
+import Advertisement from 'components/Advertisement';
 
 import { getTCGLink } from 'utils/Affiliate';
 
@@ -16,86 +17,89 @@ const CardPage = ({ card, data, related }) => {
   const cardList = related.map((item) => ({ details: item }));
 
   return (
-    <Card className="mt-2">
-      <CardHeader>
-        <h4>
-          {card.name}
-          <div className="float-right">
-            <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
-              <span className="d-none d-sm-inline">View on Scryfall</span>
-              <span className="d-sm-none">Scryfall</span>
-            </ButtonLink>
-            <ButtonLink className="mx-2" color="success" href={`/search/card:"${card.name}"/0`}>
-              Cubes With This Card
-            </ButtonLink>
-            <ButtonLink className="mx-2" color="success" href={getTCGLink({ details: card })}>
-              Buy
-            </ButtonLink>
-          </div>
-        </h4>
-      </CardHeader>
-      <CardBody>
-        <Row>
-          <Col xs="12" sm="4">
-            <ImageFallback
-              className="w-100"
-              src={card.image_normal}
-              fallbackSrc="/content/default_card.png"
-              alt={card.name}
-            />
-            <div className="price-area">
-              {card.prices.usd && <div className="card-price">USD: {card.prices.usd.toFixed(2)}</div>}
-              {card.prices.usd_foil && <div className="card-price">USD Foil: {card.prices.usd_foil.toFixed(2)}</div>}
-              {card.prices.eur && <div className="card-price">EUR: {card.prices.eur.toFixed(2)}</div>}
-              {card.prices.tix && <div className="card-price">TIX: {card.prices.tix.toFixed(2)}</div>}
-              {card.elo && <div className="card-price">Elo: {card.elo.toFixed(0)}</div>}
+    <>
+      <Advertisement />
+      <Card className="mt-2">
+        <CardHeader>
+          <h4>
+            {card.name}
+            <div className="float-right">
+              <ButtonLink className="mx-2" color="success" href={card.scryfall_uri}>
+                <span className="d-none d-sm-inline">View on Scryfall</span>
+                <span className="d-sm-none">Scryfall</span>
+              </ButtonLink>
+              <ButtonLink className="mx-2" color="success" href={`/search/card:"${card.name}"/0`}>
+                Cubes With This Card
+              </ButtonLink>
+              <ButtonLink className="mx-2" color="success" href={getTCGLink({ details: card })}>
+                Buy
+              </ButtonLink>
             </div>
-          </Col>
-          <Col className="breakdown" xs="12" sm="8">
-            <p>
-              Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
-              <span className="percent">{data.current.total[0]}</span> Cubes total.
-            </p>
-            <Row>
-              <Col xs="12" sm="6" md="6" lg="6">
-                <h5>By Legality:</h5>
-                <Table bordered>
-                  <tbody>
-                    <CountTableRow label="Vintage" value={data.current.vintage} />
-                    <CountTableRow label="Legacy" value={data.current.legacy} />
-                    <CountTableRow label="Modern" value={data.current.modern} />
-                    <CountTableRow label="Standard" value={data.current.standard} />
-                    <CountTableRow label="Pauper" value={data.current.pauper} />
-                  </tbody>
-                </Table>
-              </Col>
-              <Col xs="12" sm="6" md="6" lg="6">
-                <h5>By Size:</h5>
-                <Table bordered>
-                  <tbody>
-                    <CountTableRow label="1-180" value={data.current.size180} />
-                    <CountTableRow label="181-360" value={data.current.size360} />
-                    <CountTableRow label="361-450" value={data.current.size450} />
-                    <CountTableRow label="451-540" value={data.current.size540} />
-                    <CountTableRow label="541+" value={data.current.size720} />
-                  </tbody>
-                </Table>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      </CardBody>
-      <CardBody>
-        <h4>Often Drafted With:</h4>
-        <CardGrid
-          cardList={cardList}
-          Tag={CardImage}
-          colProps={{ xs: 6, sm: 4, className: 'col-md-1-5 col-lg-1-5 col-xl-1-5' }}
-          cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-          linkDetails
-        />
-      </CardBody>
-    </Card>
+          </h4>
+        </CardHeader>
+        <CardBody>
+          <Row>
+            <Col xs="12" sm="4">
+              <ImageFallback
+                className="w-100"
+                src={card.image_normal}
+                fallbackSrc="/content/default_card.png"
+                alt={card.name}
+              />
+              <div className="price-area">
+                {card.prices.usd && <div className="card-price">USD: {card.prices.usd.toFixed(2)}</div>}
+                {card.prices.usd_foil && <div className="card-price">USD Foil: {card.prices.usd_foil.toFixed(2)}</div>}
+                {card.prices.eur && <div className="card-price">EUR: {card.prices.eur.toFixed(2)}</div>}
+                {card.prices.tix && <div className="card-price">TIX: {card.prices.tix.toFixed(2)}</div>}
+                {card.elo && <div className="card-price">Elo: {card.elo.toFixed(0)}</div>}
+              </div>
+            </Col>
+            <Col className="breakdown" xs="12" sm="8">
+              <p>
+                Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
+                <span className="percent">{data.current.total[0]}</span> Cubes total.
+              </p>
+              <Row>
+                <Col xs="12" sm="6" md="6" lg="6">
+                  <h5>By Legality:</h5>
+                  <Table bordered>
+                    <tbody>
+                      <CountTableRow label="Vintage" value={data.current.vintage} />
+                      <CountTableRow label="Legacy" value={data.current.legacy} />
+                      <CountTableRow label="Modern" value={data.current.modern} />
+                      <CountTableRow label="Standard" value={data.current.standard} />
+                      <CountTableRow label="Pauper" value={data.current.pauper} />
+                    </tbody>
+                  </Table>
+                </Col>
+                <Col xs="12" sm="6" md="6" lg="6">
+                  <h5>By Size:</h5>
+                  <Table bordered>
+                    <tbody>
+                      <CountTableRow label="1-180" value={data.current.size180} />
+                      <CountTableRow label="181-360" value={data.current.size360} />
+                      <CountTableRow label="361-450" value={data.current.size450} />
+                      <CountTableRow label="451-540" value={data.current.size540} />
+                      <CountTableRow label="541+" value={data.current.size720} />
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+        </CardBody>
+        <CardBody>
+          <h4>Often Drafted With:</h4>
+          <CardGrid
+            cardList={cardList}
+            Tag={CardImage}
+            colProps={{ xs: 6, sm: 4, className: 'col-md-1-5 col-lg-1-5 col-xl-1-5' }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
+        </CardBody>
+      </Card>
+    </>
   );
 };
 
