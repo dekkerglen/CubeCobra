@@ -1,0 +1,14 @@
+extends ../layout
+
+block content
+  link(rel='stylesheet' href='/css/draft.css')
+
+  include ../dynamic_flash
+  #react-root !{reactHTML}
+
+block scripts
+  include ../react
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  script(src='/js/gridDraft.bundle.js')
