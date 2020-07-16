@@ -148,7 +148,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
   if (!req.validated) {
     res.render('user/lostpassword');
   } else {
-    const recoveryEmail = req.body.email.toLowerCase()
+    const recoveryEmail = req.body.email.toLowerCase();
     PasswordReset.deleteOne(
       {
         email: recoveryEmail,
@@ -223,7 +223,7 @@ router.post(
     if (!req.validated) {
       res.render('user/passwordreset');
     } else {
-      const recoveryEmail = req.body.email.toLowerCase()
+      const recoveryEmail = req.body.email.toLowerCase();
       PasswordReset.findOne(
         {
           code: req.body.code,
