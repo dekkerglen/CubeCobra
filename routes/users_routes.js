@@ -638,7 +638,7 @@ router.get('/blog/:userid', async (req, res) => {
       canEdit: req.user && req.user._id.equals(user._id),
       followers,
       following: req.user && req.user.followed_users.includes(user.id),
-      userId: req.user._id,
+      userId: req.user ? req.user._id : '',
     };
 
     return res.render('user/user_blog', {

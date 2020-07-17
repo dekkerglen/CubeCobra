@@ -3236,8 +3236,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
-    if (req.params.id && req.params.id !== 'null') {
-      req.flash('danger', 'Deck not found');
+    if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
+      req.flash('danger', 'Invalid deck ID.');
       return res.status(404).render('misc/404', {});
     }
 
