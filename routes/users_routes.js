@@ -56,6 +56,11 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
     const notification = user.notifications.splice(req.params.index, 1)[0];
     await user.save();
 
+    if (!notification) {
+      req.flash('danger', 'Not Found');
+      return res.status(401).render('misc/404', {});
+    }
+
     return res.redirect(notification.url);
   } catch (err) {
     req.logger.error(err);
