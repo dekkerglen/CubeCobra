@@ -21,7 +21,7 @@ const TCG = () => {
 };
 
 const Advertisment = () => {
-  const [option, setOption] = useState(Math.floor(Math.random() * 4));
+  const [option] = useState(Math.floor(Math.random() * 4));
 
   if (option === 0) {
     return (
