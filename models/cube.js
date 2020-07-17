@@ -158,6 +158,10 @@ cubeSchema.index({
 });
 
 cubeSchema.index({
+  isListed: 1,
+});
+
+cubeSchema.index({
   owner: 1,
   date_updated: -1,
 });
