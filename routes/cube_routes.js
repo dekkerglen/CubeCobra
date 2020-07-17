@@ -643,6 +643,16 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
+
+    if (!cubeA) {
+      req.flash('danger', `Base cube not found: ${idA}`);
+      return res.status(401).render('misc/404', {});
+    }
+    if (!cubeB) {
+      req.flash('danger', `Comparison cube not found: ${idB}`);
+      return res.status(401).render('misc/404', {});
+    }
+
     const pids = new Set();
     const cardNames = new Set();
     const addDetails = (cards) => {
