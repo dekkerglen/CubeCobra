@@ -174,6 +174,11 @@ router.get('/card/:id', async (req, res) => {
       id = scryfall.oracle_id;
     }
 
+    if (!carddb.oracleToId[id]) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
     // otherwise just go to this ID.
     const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
     const data = await CardHistory.findOne({ oracleId: id });
