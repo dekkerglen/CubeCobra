@@ -15,6 +15,7 @@ async function addVars(deck) {
     ownerCache[deck.cube] = cube.owner;
   }
   deck.cubeOwner = ownerCache[deck.cube];
+  deck.owner = deck.seats[0].userid;
 
   return deck.save();
 }
