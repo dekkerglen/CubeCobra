@@ -1603,7 +1603,10 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const numCards = packs * cards;
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards owner');
+    const cube = await Cube.findOne(
+      buildIdQuery(req.params.id),
+      '_id name draft_formats card_count type cards owner numDecks',
+    );
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
