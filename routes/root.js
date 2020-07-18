@@ -161,12 +161,9 @@ router.get('/dashboard', async (req, res) => {
 
     // We can do these queries in parallel
     const [cubes, posts] = await Promise.all([cubesq, postsq]);
-    const cubeIds = cubes.map((cube) => cube._id);
 
     const decks = await Deck.find({
-      cube: {
-        $in: cubeIds,
-      },
+      cubeOwner: user._id,
     })
       .sort({
         date: -1,
@@ -207,24 +204,8 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       return res.redirect('/landing');
     }
 
-    const cubes = await Cube.find({
-      owner: user._id,
-    })
-      .lean()
-      .sort({
-        date_updated: -1,
-      })
-      .select({
-        _id: 1,
-      })
-      .exec();
-
-    const cubeIds = cubes.map((cube) => cube._id);
-
     const decks = await Deck.find({
-      cube: {
-        $in: cubeIds,
-      },
+      cubeOwner: user._id,
     })
       .sort({
         date: -1,
@@ -235,9 +216,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       .exec();
 
     const numDecks = await Deck.countDocuments({
-      cube: {
-        $in: cubeIds,
-      },
+      cubeOwner: user._id,
     })
       .lean()
       .exec();
