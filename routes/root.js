@@ -242,27 +242,15 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       .lean()
       .exec();
 
-    const pages = [];
-    for (let i = 0; i < numDecks / pagesize; i++) {
-      if (page === i) {
-        pages.push({
-          url: `/dashboard/decks/${i}`,
-          content: i + 1,
-          active: true,
-        });
-      } else {
-        pages.push({
-          url: `/dashboard/decks/${i}`,
-          content: i + 1,
-        });
-      }
-    }
-
-    return res.render('dashboard_decks', {
+    const reactProps = {
       decks,
-      pages,
-      canEdit: true,
-      loginCallback: '/',
+      currentPage: parseInt(page, 10),
+      totalPages: Math.ceil(numDecks / pagesize),
+      count: numDecks,
+    };
+
+    return res.render('recent_drafts', {
+      reactProps: serialize(reactProps),
     });
   } catch (err) {
     req.logger.error(err);
