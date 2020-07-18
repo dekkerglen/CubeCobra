@@ -56,6 +56,11 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
     const notification = user.notifications.splice(req.params.index, 1)[0];
     await user.save();
 
+    if (!notification) {
+      req.flash('danger', 'Not Found');
+      return res.status(401).render('misc/404', {});
+    }
+
     return res.redirect(notification.url);
   } catch (err) {
     req.logger.error(err);
@@ -148,16 +153,16 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
   if (!req.validated) {
     res.render('user/lostpassword');
   } else {
+    const recoveryEmail = req.body.email.toLowerCase();
     PasswordReset.deleteOne(
       {
-        email: req.body.email.toLowerCase(),
+        email: recoveryEmail,
       },
       () => {
         const passwordReset = new PasswordReset();
         passwordReset.expires = addMinutes(Date.now(), 15);
-        passwordReset.email = req.body.email;
+        passwordReset.email = recoveryEmail;
         passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
-
         passwordReset.save((err2) => {
           if (err2) {
             req.logger.error(err2);
@@ -191,7 +196,7 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
               smtpTransport.close();
             });
 
-            req.flash('success', 'Password recovery email sent');
+            req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
             res.redirect('/user/lostpassword');
           }
         });
@@ -223,10 +228,11 @@ router.post(
     if (!req.validated) {
       res.render('user/passwordreset');
     } else {
+      const recoveryEmail = req.body.email.toLowerCase();
       PasswordReset.findOne(
         {
           code: req.body.code,
-          email: req.body.email,
+          email: recoveryEmail,
         },
         (err2, passwordreset) => {
           if (!passwordreset) {
@@ -235,7 +241,7 @@ router.post(
           } else {
             User.findOne(
               {
-                email: req.body.email,
+                email: recoveryEmail,
               },
               (err3, user) => {
                 if (err3) {
@@ -638,7 +644,7 @@ router.get('/blog/:userid', async (req, res) => {
       canEdit: req.user && req.user._id.equals(user._id),
       followers,
       following: req.user && req.user.followed_users.includes(user.id),
-      userId: req.user._id,
+      userId: req.user ? req.user._id : '',
     };
 
     return res.render('user/user_blog', {

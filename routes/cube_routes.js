@@ -644,6 +644,16 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
+
+    if (!cubeA) {
+      req.flash('danger', `Base cube not found: ${idA}`);
+      return res.status(401).render('misc/404', {});
+    }
+    if (!cubeB) {
+      req.flash('danger', `Comparison cube not found: ${idB}`);
+      return res.status(401).render('misc/404', {});
+    }
+
     const pids = new Set();
     const cardNames = new Set();
     const addDetails = (cards) => {
@@ -2364,18 +2374,10 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
       }
     }
 
-    const newMaybe = [...cube.maybe];
-    const newCards = [];
-    for (const add of adds) {
-      newCards.push(util.newCard(add, [], cube.defaultStatus));
-      const maybeIndex = cube.maybe.findIndex((card) => card.cardID === add._id);
-      if (maybeIndex !== -1) {
-        newMaybe.splice(maybeIndex, 1);
-      }
-    }
-    // Remove all invalid cards.
-    cube.cards = [...cube.cards.filter((card, index) => card.cardID && !removes.has(index)), ...newCards];
-    cube.maybe = newMaybe;
+    // Filter out removed and invalid cards, and add new cards.
+    const newCards = adds.map((add) => util.newCard(add, [], cube.defaultStatus));
+    cube.cards = cube.cards.filter((card, index) => card.cardID && !removes.has(index)).concat(newCards);
+    cube.maybe = cube.maybe.filter((maybeCard) => !adds.some((addedCard) => addedCard._id === maybeCard.cardID));
 
     const blogpost = new Blog();
     blogpost.title = req.body.title;
@@ -2892,6 +2894,21 @@ router.get(
   }),
 );
 
+router.get(
+  '/api/cubeJSON/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+
+    if (!cube) {
+      return res.status(404).send('Cube not found.');
+    }
+
+    res.contentType('text/json');
+    res.set('Access-Control-Allow-Origin', '*');
+    return res.status(200).send(JSON.stringify(cube));
+  }),
+);
+
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
@@ -3393,6 +3410,11 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
+    if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
+      req.flash('danger', 'Invalid deck ID.');
+      return res.status(404).render('misc/404', {});
+    }
+
     const deck = await Deck.findById(req.params.id).lean();
 
     if (!deck) {
