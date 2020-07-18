@@ -643,6 +643,16 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
     const cubeBq = Cube.findOne(buildIdQuery(idB)).lean();
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
+
+    if (!cubeA) {
+      req.flash('danger', `Base cube not found: ${idA}`);
+      return res.status(401).render('misc/404', {});
+    }
+    if (!cubeB) {
+      req.flash('danger', `Comparison cube not found: ${idB}`);
+      return res.status(401).render('misc/404', {});
+    }
+
     const pids = new Set();
     const cardNames = new Set();
     const addDetails = (cards) => {
@@ -3245,6 +3255,11 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
 router.get('/deck/:id', async (req, res) => {
   try {
+    if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
+      req.flash('danger', 'Invalid deck ID.');
+      return res.status(404).render('misc/404', {});
+    }
+
     const deck = await Deck.findById(req.params.id).lean();
 
     if (!deck) {

@@ -56,6 +56,11 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
     const notification = user.notifications.splice(req.params.index, 1)[0];
     await user.save();
 
+    if (!notification) {
+      req.flash('danger', 'Not Found');
+      return res.status(401).render('misc/404', {});
+    }
+
     return res.redirect(notification.url);
   } catch (err) {
     req.logger.error(err);
@@ -639,7 +644,7 @@ router.get('/blog/:userid', async (req, res) => {
       canEdit: req.user && req.user._id.equals(user._id),
       followers,
       following: req.user && req.user.followed_users.includes(user.id),
-      userId: req.user._id,
+      userId: req.user ? req.user._id : '',
     };
 
     return res.render('user/user_blog', {
