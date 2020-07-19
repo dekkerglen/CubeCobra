@@ -254,6 +254,43 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
   return [bestRating + weightedRatingScore, bestCombination];
 };
 
+// inPack is the number of cards in this pack
+export const unWeightedRating = (card, picked, seen, synergies) => {
+  // Find the color combination that gives us the highest score1
+  // that'll be the color combination we want to play currently.
+  let bestRating = -Infinity;
+  let bestCombination = [];
+
+  for (const combination of COLOR_COMBINATIONS) {
+    let rating = -Infinity;
+    if (card && (considerInCombination(combination, card) || isPlayableLand(combination, card))) {
+      const colorScaling = getColorScaling(combination);
+      const synergy = getPickSynergy(combination, card, picked, synergies);
+      const internalSynergy = getInternalSynergy(combination, picked);
+      const opennes = getOpenness(combination, seen);
+      const color = getColor(combination, picked);
+      const fixing = getFixing(combination, card);
+
+      rating = colorScaling * (+synergy + internalSynergy + opennes + color) + fixing;
+    } else if (!card) {
+      const count = picked.cards[combination.join('')].filter((c) => !cardType(c).toLowerCase().includes('land'))
+        .length;
+      if (count >= 23) {
+        rating =
+          COLOR_SCALING_FACTOR[combination.length] ** 2 *
+          (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
+          count;
+      }
+    }
+
+    if (rating > bestRating) {
+      bestRating = rating;
+      bestCombination = combination;
+    }
+  }
+  return [bestRating + getRating(card), bestCombination];
+};
+
 export default {
   getRating,
   getColor,

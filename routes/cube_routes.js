@@ -1621,22 +1621,14 @@ router.post('/startgriddraft/:id', body('packs').toInt({ min: 1, max: 16 }), asy
       return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
-    const source = shuffle(cube.cards).slice(0, numCards);
+    const source = shuffle(cube.cards)
+      .slice(0, numCards)
+      .map((card, index) => {
+        card.index = index;
+        return card;
+      });
 
     const gridDraft = new GridDraft();
-
-    gridDraft.cube = cube._id;
-    gridDraft.basics = getBasics(carddb);
-
-    const cards = [];
-    for (let i = 0; i < packs; i++) {
-      cards.push(source.splice(0, 9));
-    }
-
-    const pool = [];
-    for (let i = 0; i < 16; i += 1) {
-      pool.push([]);
-    }
 
     try {
       const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
@@ -1651,6 +1643,19 @@ router.post('/startgriddraft/:id', body('packs').toInt({ min: 1, max: 16 }), asy
       }
     } catch (err) {
       gridDraft.synergies = null;
+    }
+
+    gridDraft.cube = cube._id;
+    gridDraft.basics = getBasics(carddb);
+
+    const cards = [];
+    for (let i = 0; i < packs; i++) {
+      cards.push(source.splice(0, 9));
+    }
+
+    const pool = [];
+    for (let i = 0; i < 16; i += 1) {
+      pool.push([]);
     }
 
     gridDraft.initial_state = cards;
@@ -2996,6 +3001,64 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
   }
 });
 
+router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
+  try {
+    // req.body contains a draft
+    const draftid = req.body.body;
+    const draft = await GridDraft.findById(draftid).lean();
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+    const deck = new Deck();
+    deck.cube = draft.cube;
+    deck.date = Date.now();
+    deck.comments = [];
+    deck.draft = draft._id;
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    for (const seat of draft.seats) {
+      deck.seats.push({
+        bot: seat.bot,
+        userid: seat.userid,
+        username: seat.name,
+        pickorder: seat.pickorder,
+        name: `Grid Draft of ${cube.name}`,
+        description: '',
+        cols: 16,
+        deck: seat.drafted,
+        sideboard: seat.sideboard ? seat.sideboard : [],
+      });
+    }
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+    cube.numDecks += 1;
+
+    const userq = User.findById(deck.seats[0].userid);
+    const cubeOwnerq = User.findById(cube.owner);
+
+    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
+
+    if (user) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} drafted your cube: ${cube.name}`,
+      );
+    }
+
+    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
+    if (req.body.skipDeckbuilder) {
+      return res.redirect(`/cube/deck/${deck._id}`);
+    }
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
 router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
   try {
     const query = {
@@ -4185,8 +4248,16 @@ router.post(
   }),
 );
 
-router.post('/api/draftpick/:id', async (req, res) => {
+router.post('/api/submitdraft/:id', async (req, res) => {
   await Draft.updateOne({ _id: req.body._id }, req.body);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
+router.post('/api/submitgriddraft/:id', async (req, res) => {
+  await GridDraft.updateOne({ _id: req.body._id }, req.body);
 
   return res.status(200).send({
     success: 'true',

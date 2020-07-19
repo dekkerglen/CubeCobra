@@ -8,7 +8,7 @@ const Seat = {
   userid: String,
   drafted: [[cardSchema]], // organized draft picks
   sideboard: [[cardSchema]], // organized draft picks
-  pickorder: [cardSchema],
+  pickorder: [[cardSchema]],
 };
 
 // Cube schema
