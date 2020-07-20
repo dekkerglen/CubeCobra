@@ -48,7 +48,7 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol }) => (
       <Row className="mb-2 justify-content-center">
         <Col xs="1" />
         {[0, 1, 2].map((col) => (
-          <Col xs="3" md="2">
+          <Col key={`col-btn-${col}`} xs="3" md="2">
             <Button block outline color="success" onClick={() => pickCol(col)}>
               🡇
             </Button>
@@ -56,14 +56,14 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol }) => (
         ))}
       </Row>
       {[0, 1, 2].map((row) => (
-        <Row className="justify-content-center">
+        <Row key={`row-${row}`} className="justify-content-center">
           <Col className="my-2" xs="1">
             <Button className="float-right h-100" outline color="success" onClick={() => pickRow(row)}>
               🡆
             </Button>
           </Col>
           {[0, 1, 2].map((col) => (
-            <Col className="px-0" xs="3" md="2">
+            <Col key={`cell-${col}-${row}`} className="px-0" xs="3" md="2">
               {pack[row * 3 + col] ? (
                 <FoilCardImage card={pack[row * 3 + col]} tags={[]} autocard />
               ) : (

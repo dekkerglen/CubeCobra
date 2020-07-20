@@ -334,7 +334,7 @@ const GridCard = () => {
           <div className="description-area">
             <p>Grid drafting is a strategic 2 player draft with completely open information.</p>
           </div>
-          <LabelRow htmlFor="packs-sealed" label="Number of Packs">
+          <LabelRow htmlFor="packs-grid" label="Number of Packs">
             <Input type="select" name="packs" id="packs-grid" defaultValue="18">
               {rangeOptions(1, 30)}
             </Input>
