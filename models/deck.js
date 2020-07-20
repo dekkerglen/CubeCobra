@@ -40,6 +40,8 @@ const SeatDeck = {
 // Deck schema
 let deckSchema = mongoose.Schema({
   cube: String,
+  cubeOwner: String,
+  owner: String,
   date: Date,
   comments: {
     type: [Comment],
@@ -60,6 +62,11 @@ let deckSchema = mongoose.Schema({
 });
 
 deckSchema.index({
+  cubeOwner: 1,
+  date: -1,
+});
+
+deckSchema.index({
   date: -1,
 });
 
@@ -69,7 +76,7 @@ deckSchema.index({
 });
 
 deckSchema.index({
-  'seats.userid': 1,
+  owner: 1,
   date: -1,
 });
 

@@ -12,6 +12,7 @@ const carddb = require('../serverjs/cards.js');
 const User = require('../models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
+const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 
 const router = express.Router();
@@ -556,10 +557,9 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     const userQ = User.findById(userid, '_id username users_following').lean();
 
-    /*
     const decksQ = Deck.find(
       {
-        'seats.0.userid': userid,
+        owner: userid,
       },
       '_id seats date cube',
     )
@@ -572,13 +572,8 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const numDecksQ = Deck.countDocuments({
       'seats.0.userid': userid,
     });
-    
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
-    */
-    const user = await userQ.exec();
-    const numDecks = 0;
-    const decks = [];
 
     if (!user) {
       req.flash('danger', 'User not found');
