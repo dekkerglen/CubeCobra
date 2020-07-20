@@ -144,7 +144,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                 </NavItem>
               )}
               {loading && <Spinner className="position-absolute" />}
-              {draft && (
+              {draft ? (
                 <UncontrolledDropdown nav inNavbar>
                   <DropdownToggle nav caret>
                     Rebuild/Redraft
@@ -155,6 +155,10 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                     <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
                   </DropdownMenu>
                 </UncontrolledDropdown>
+              ) : (
+                <NavItem>
+                  <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
+                </NavItem>
               )}
               <CustomImageToggler />
               <UncontrolledDropdown nav inNavbar>

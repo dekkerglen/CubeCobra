@@ -18,6 +18,10 @@ const gridDraftSchema = mongoose.Schema({
   seats: [Seat],
   unopenedPacks: [[cardSchema]],
   synergies: [[Number]],
+  draftType: {
+    type: String,
+    enum: ['bot', '2playerlocal'],
+  },
   basics: {
     Plains: cardSchema,
     Island: cardSchema,

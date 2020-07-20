@@ -339,6 +339,12 @@ const GridCard = () => {
               {rangeOptions(1, 30)}
             </Input>
           </LabelRow>
+          <LabelRow htmlFor="type-grid" label="Type">
+            <Input type="select" name="type" id="type-grid" defaultValue="18">
+              <option value="bot">Against Bot</option>
+              <option value="2playerlocal">2 Player Local</option>
+            </Input>
+          </LabelRow>
         </CardBody>
         <CardFooter>
           <Button color="success">Start Grid Draft</Button>

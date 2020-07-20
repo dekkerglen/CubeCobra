@@ -1,7 +1,20 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Collapse, Nav, Navbar, Button, Col, Row, Input } from 'reactstrap';
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Collapse,
+  Nav,
+  Navbar,
+  Button,
+  Col,
+  Row,
+  Input,
+  Badge,
+} from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
 import { cardType, cardIsSpecialZoneType } from 'utils/Card';
@@ -35,12 +48,17 @@ export const subtitle = (cards) => {
   );
 };
 
-const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol }) => (
+const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
-        <h4 className="mb-0">
+        <h4>
           Pack {packNumber}, Pick {pickNumber}
+        </h4>
+        <h4 className="mb-0">
+          {turn && (
+            <Badge color={turn === 1 ? 'primary' : 'danger'}>{`Player ${turn === 1 ? 'one' : 'two'}'s pick`}</Badge>
+          )}
         </h4>
       </CardTitle>
     </CardHeader>
@@ -89,6 +107,11 @@ Pack.propTypes = {
   pickNumber: PropTypes.number.isRequired,
   pickRow: PropTypes.func.isRequired,
   pickCol: PropTypes.func.isRequired,
+  turn: PropTypes.number,
+};
+
+Pack.defaultProps = {
+  turn: null,
 };
 
 const seen = createSeen();
@@ -132,6 +155,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   const [botPicks, setBotPicks] = useState([[[], [], [], [], [], [], [], []]]);
   const [pickOrder, setPickOrder] = useState([]);
   const [botPickOrder, setBotPickOrder] = useState([]);
+  const [turn, setTurn] = useState(0);
 
   const submitDeckForm = useRef();
 
@@ -180,18 +204,24 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   const finish = async () => {
     const updatedDraft = JSON.parse(JSON.stringify(initialDraft));
 
-    const { deck, sideboard, colors } = await buildGridDraftDeck(
-      botPicks.flat(3),
-      picked,
-      initialDraft.synergies,
-      initialDraft.basics,
-    );
+    if (initialDraft.draftType === 'bot') {
+      const { deck, sideboard, colors } = await buildGridDraftDeck(
+        botPicks.flat(3),
+        picked,
+        initialDraft.synergies,
+        initialDraft.basics,
+      );
 
-    updatedDraft.seats[1].drafted = deck;
-    updatedDraft.seats[1].sideboard = sideboard;
-    updatedDraft.seats[1].pickorder = botPickOrder;
-    updatedDraft.seats[1].name = `Bot: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
-    updatedDraft.seats[1].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
+      updatedDraft.seats[1].drafted = deck;
+      updatedDraft.seats[1].sideboard = sideboard;
+      updatedDraft.seats[1].pickorder = botPickOrder;
+      updatedDraft.seats[1].name = `Bot: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
+    } else {
+      updatedDraft.seats[1].drafted = botPicks.flat();
+      updatedDraft.seats[1].sideboard = [];
+      updatedDraft.seats[1].pickorder = botPickOrder;
+      updatedDraft.seats[1].name = `Player Two`;
+    }
 
     updatedDraft.seats[0].drafted = picks.flat();
     updatedDraft.seats[0].sideboard = [];
@@ -210,7 +240,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
 
   const makePick = (mask) => {
     let tempPack = JSON.parse(JSON.stringify(pack));
-    const tempPicks = JSON.parse(JSON.stringify(picks));
+    const tempPicks = turn === 0 ? JSON.parse(JSON.stringify(picks)) : JSON.parse(JSON.stringify(botPicks));
     const newPicks = [];
 
     for (let i = 0; i < 9; i++) {
@@ -222,27 +252,46 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
       }
     }
 
-    if (packNumber % 2 === 1) {
-      const [, newBotPicks] = makeBotPick(tempPack);
-      tempPack = nextPack();
-      const [newPack, bot2] = makeBotPick(tempPack);
-      tempPack = newPack;
+    if (initialDraft.draftType === 'bot') {
+      if (packNumber % 2 === 1) {
+        const [, newBotPicks] = makeBotPick(tempPack);
+        tempPack = nextPack();
+        const [newPack, bot2] = makeBotPick(tempPack);
+        tempPack = newPack;
 
-      const tempBotPicks = JSON.parse(JSON.stringify(botPicks));
+        const tempBotPicks = JSON.parse(JSON.stringify(botPicks));
 
-      for (const pick of newBotPicks.concat(bot2)) {
-        tempBotPicks[0][Math.min(pick.cmc || pick.details.cmc || 0, 7)].push(pick);
+        for (const pick of newBotPicks.concat(bot2)) {
+          tempBotPicks[0][Math.min(pick.cmc || pick.details.cmc || 0, 7)].push(pick);
+        }
+
+        setBotPicks(tempBotPicks);
+        setPickNumber(1);
+      } else {
+        tempPack = nextPack();
+        setPickNumber(2);
       }
-
-      setBotPicks(tempBotPicks);
-      setPickNumber(1);
-    } else {
-      tempPack = nextPack();
-      setPickNumber(2);
     }
 
-    setPicks(tempPicks);
-    setPickOrder(pickOrder.concat([newPicks]));
+    if (turn === 0) {
+      setPicks(tempPicks);
+      setPickOrder(pickOrder.concat([newPicks]));
+    } else {
+      setBotPicks(tempPicks);
+      setBotPickOrder(pickOrder.concat([newPicks]));
+    }
+
+    if (initialDraft.draftType === '2playerlocal') {
+      if (pickNumber === 1) {
+        setTurn((turn + 1) % 2);
+        setPickNumber(2);
+      }
+
+      if (pickNumber === 2) {
+        tempPack = nextPack();
+        setPickNumber(1);
+      }
+    }
 
     if (tempPack.length > 0) {
       setPack(tempPack);
@@ -300,7 +349,18 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
         </CSRFForm>
         <DndProvider>
           <ErrorBoundary>
-            <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
+            {initialDraft.draftType === 'bot' ? (
+              <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
+            ) : (
+              <Pack
+                pack={pack}
+                packNumber={packNumber}
+                pickNumber={pickNumber}
+                pickRow={pickRow}
+                pickCol={pickCol}
+                turn={turn + 1}
+              />
+            )}
           </ErrorBoundary>
           <ErrorBoundary className="mt-3">
             <Card className="mt-3">
@@ -337,9 +397,10 @@ GridDraftPage.propTypes = {
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.array.isRequired,
-    synergies: PropTypes.shape({}),
+    synergies: PropTypes.array.isRequired,
     basics: PropTypes.shape([]),
     cube: PropTypes.string.isRequired,
+    draftType: PropTypes.string.isRequired,
   }).isRequired,
 };
 
