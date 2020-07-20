@@ -7,9 +7,9 @@ import Paginate from 'components/Paginate';
 
 import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
-const perPage = 30;
+const PER_PAGE = 30;
 
-const DashboardPage = ({ decks, currentPage, totalPages, count }) => (
+const RecentDrafts = ({ decks, currentPage, totalPages, count }) => (
   <>
     <Advertisement />
     <Row className="mt-3">
@@ -19,9 +19,9 @@ const DashboardPage = ({ decks, currentPage, totalPages, count }) => (
             {totalPages > 1 ? (
               <>
                 <h5>
-                  {`Displaying ${perPage * currentPage + 1}-${Math.min(
+                  {`Displaying ${PER_PAGE * currentPage + 1}-${Math.min(
                     count,
-                    perPage * (currentPage + 1),
+                    PER_PAGE * (currentPage + 1),
                   )} of ${count} Drafts of Your Cubes`}
                 </h5>
                 <Paginate count={totalPages} active={currentPage} urlF={(i) => `/dashboard/decks/${i}`} />
@@ -41,7 +41,7 @@ const DashboardPage = ({ decks, currentPage, totalPages, count }) => (
             )}
           </CardBody>
           <CardFooter>
-            <Paginate count={totalPages} active={currentPage} urlF={(i) => `/dashboard/${i}`} />
+            <Paginate count={totalPages} active={currentPage} urlF={(i) => `/dashboard/decks/${i}`} />
           </CardFooter>
         </Card>
       </Col>
@@ -49,11 +49,11 @@ const DashboardPage = ({ decks, currentPage, totalPages, count }) => (
   </>
 );
 
-DashboardPage.propTypes = {
+RecentDrafts.propTypes = {
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   count: PropTypes.number.isRequired,
 };
 
-export default DashboardPage;
+export default RecentDrafts;
