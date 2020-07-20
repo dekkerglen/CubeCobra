@@ -83,7 +83,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
   const [draftId, setDraftId] = useState('');
 
   const haveBotsRedraft = useCallback(async () => {
-    if (!loading) {
+    if (!loading && draft) {
       setLoading(true);
       const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
         method: 'POST',
@@ -94,7 +94,7 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
       await Draft.allBotsDraft();
       submitDeckForm.current.submit();
     }
-  }, [draft._id, loading]);
+  }, [draft, loading]);
 
   return (
     <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
@@ -144,16 +144,18 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
                 </NavItem>
               )}
               {loading && <Spinner className="position-absolute" />}
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  Rebuild/Redraft
-                </DropdownToggle>
-                <DropdownMenu right>
-                  <DropdownItem href={`/cube/redraft/${deck._id}`}>Redraft</DropdownItem>
-                  <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
-                  <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
+              {draft && (
+                <UncontrolledDropdown nav inNavbar>
+                  <DropdownToggle nav caret>
+                    Rebuild/Redraft
+                  </DropdownToggle>
+                  <DropdownMenu right>
+                    <DropdownItem href={`/cube/redraft/${deck._id}`}>Redraft</DropdownItem>
+                    <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
+                    <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              )}
               <CustomImageToggler />
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>

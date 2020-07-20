@@ -59,6 +59,7 @@ const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const User = require('../models/user');
 const Draft = require('../models/draft');
+const GridDraft = require('../models/gridDraft');
 const CardRating = require('../models/cardrating');
 
 const { NODE_ENV } = process.env;
@@ -1601,6 +1602,96 @@ function shuffle(a) {
   return a;
 }
 
+router.post('/startgriddraft/:id', body('packs').toInt({ min: 1, max: 16 }), async (req, res) => {
+  try {
+    const packs = parseInt(req.body.packs, 10);
+
+    const numCards = packs * 9;
+
+    const cube = await Cube.findOne(
+      buildIdQuery(req.params.id),
+      '_id name draft_formats card_count type cards owner',
+    ).lean();
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    if (cube.cards.length < numCards) {
+      req.flash('danger', `Not enough cards, need ${numCards} cards for a ${packs} pack grid draft.`);
+      return res.redirect(`/cube/playtest/${req.params.id}`);
+    }
+
+    const source = shuffle(cube.cards)
+      .slice(0, numCards)
+      .map((card, index) => {
+        card.index = index;
+        return card;
+      });
+
+    const gridDraft = new GridDraft();
+
+    try {
+      const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cards: source.map((card) => carddb.cardFromId(card.cardID).name_lower) }),
+      });
+      if (response.ok) {
+        gridDraft.synergies = await response.json();
+      } else {
+        gridDraft.synergies = null;
+      }
+    } catch (err) {
+      gridDraft.synergies = null;
+    }
+
+    gridDraft.cube = cube._id;
+    gridDraft.basics = getBasics(carddb);
+
+    const cards = [];
+    for (let i = 0; i < packs; i++) {
+      cards.push(source.splice(0, 9));
+    }
+
+    const pool = [];
+    for (let i = 0; i < 16; i += 1) {
+      pool.push([]);
+    }
+
+    gridDraft.initial_state = cards;
+    gridDraft.unopenedPacks = cards;
+    gridDraft.seats = [];
+
+    // add human
+    gridDraft.seats.push({
+      bot: false,
+      name: req.user ? req.user.username : 'Anonymous',
+      userid: req.user ? req.user._id : null,
+      drafted: pool,
+      sideboard: pool,
+      pickorder: [],
+    });
+
+    // add bot
+    gridDraft.seats.push({
+      bot: true,
+      name: 'Grid Bot',
+      userid: null,
+      drafted: pool,
+      sideboard: pool,
+      pickorder: [],
+    });
+
+    await gridDraft.save();
+
+    return res.redirect(`/cube/griddraft/${gridDraft._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
 router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('cards').toInt(), async (req, res) => {
   try {
     const user = await User.findById(req.user);
@@ -1626,8 +1717,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
     }
 
     if (cube.cards.length < numCards) {
-      // This is a 4XX error, not a 5XX error
-      req.flash('danger', 'Could not create sealed pool: not enough cards.');
+      req.flash('danger', `Not enough cards, need ${numCards} cards for sealed with ${packs} packs of ${cards}.`);
       return res.redirect(`/cube/playtest/${req.params.id}`);
     }
 
@@ -2077,6 +2167,76 @@ router.post(
     }
   },
 );
+
+router.get('/griddraft/:id', async (req, res) => {
+  try {
+    const draft = await GridDraft.findById(req.params.id).lean();
+    if (!draft) {
+      req.flash('danger', 'Draft not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    const user = await User.findById(cube.owner);
+    if (!user) {
+      req.flash('danger', 'Owner not found');
+      return res.status(404).render('misc/404', {});
+    }
+
+    // insert card details everywhere that needs them
+    for (const pack of draft.unopenedPacks) {
+      for (const card of pack) {
+        card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+      }
+    }
+
+    for (const seat of draft.seats) {
+      for (const collection of [seat.drafted, seat.sideboard]) {
+        for (const pack of collection) {
+          for (const card of pack) {
+            card.details = carddb.cardFromId(card.cardID);
+          }
+        }
+      }
+      for (const card of seat.pickorder) {
+        card.details = carddb.cardFromId(card.cardID);
+      }
+    }
+    if (draft.basics) {
+      for (const key of Object.keys(draft.basics)) {
+        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+      }
+    }
+
+    const reactProps = {
+      cube,
+      cubeID: getCubeId(cube),
+      initialDraft: draft,
+    };
+
+    return res.render('cube/grid_draft', {
+      reactHTML: CubeDraftPage
+        ? ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
+        : undefined,
+      reactProps: serialize(reactProps),
+      title: `${abbreviate(cube.name)} - Grift Draft`,
+      metadata: generateMeta(
+        `Cube Cobra Grid Draft: ${cube.name}`,
+        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+        cube.image_uri,
+        `https://cubecobra.com/cube/griddraft/${req.params.id}`,
+      ),
+    });
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
 
 router.get('/draft/:id', async (req, res) => {
   try {
@@ -2814,6 +2974,64 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         username: seat.name,
         pickorder: seat.pickorder,
         name: `Draft of ${cube.name}`,
+        description: '',
+        cols: 16,
+        deck: seat.drafted,
+        sideboard: seat.sideboard ? seat.sideboard : [],
+      });
+    }
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+    cube.numDecks += 1;
+
+    const userq = User.findById(deck.seats[0].userid);
+    const cubeOwnerq = User.findById(cube.owner);
+
+    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
+
+    if (user) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} drafted your cube: ${cube.name}`,
+      );
+    }
+
+    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
+    if (req.body.skipDeckbuilder) {
+      return res.redirect(`/cube/deck/${deck._id}`);
+    }
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+  }
+});
+
+router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
+  try {
+    // req.body contains a draft
+    const draftid = req.body.body;
+    const draft = await GridDraft.findById(draftid).lean();
+    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+
+    const deck = new Deck();
+    deck.cube = draft.cube;
+    deck.date = Date.now();
+    deck.comments = [];
+    deck.draft = draft._id;
+    deck.cubename = cube.name;
+    deck.seats = [];
+
+    for (const seat of draft.seats) {
+      deck.seats.push({
+        bot: seat.bot,
+        userid: seat.userid,
+        username: seat.name,
+        pickorder: seat.pickorder,
+        name: `Grid Draft of ${cube.name}`,
         description: '',
         cols: 16,
         deck: seat.drafted,
@@ -4041,8 +4259,16 @@ router.post(
   }),
 );
 
-router.post('/api/draftpick/:id', async (req, res) => {
+router.post('/api/submitdraft/:id', async (req, res) => {
   await Draft.updateOne({ _id: req.body._id }, req.body);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
+router.post('/api/submitgriddraft/:id', async (req, res) => {
+  await GridDraft.updateOne({ _id: req.body._id }, req.body);
 
   return res.status(200).send({
     success: 'true',

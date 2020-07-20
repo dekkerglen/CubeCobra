@@ -17,6 +17,7 @@ import {
   isPlayableLand,
   scaleSimilarity,
   SYNERGY_SCALE,
+  unWeightedRating,
 } from 'utils/draftbots';
 import { arrayShuffle, fromEntries } from 'utils/Util';
 
@@ -65,6 +66,15 @@ export const addSeen = (seen, cards, synergies) => {
     }
   }
 };
+
+export function initGridDraft(newDraft) {
+  draft = newDraft;
+  const maxIndex = Math.max(...draft.initial_state.flat(2).map(({ index }) => index));
+  synergyMatrix = [];
+  for (let i = 0; i <= maxIndex; i++) {
+    synergyMatrix.push(new Array(maxIndex + 1).fill(null));
+  }
+}
 
 export function init(newDraft) {
   draft = newDraft;
@@ -122,7 +132,7 @@ export const getPicked = (seat) => {
   return draft.seats[seat].pickorder;
 };
 
-const botRating = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
+export const botRating = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
   botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[0];
 const botColors = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
   botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[1];
@@ -315,12 +325,11 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
   return bestNodes.map((ind) => nodes[ind]);
 };
 
-export async function buildDeck(cards, picked, synergies, initialState, basics) {
-  let nonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card));
-  const lands = cards.filter((card) => cardType(card).includes('land'));
+async function build(cards, picked, synergies, colors, basics) {
+  let nonlands = cards.filter((card) => !cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card));
+  const lands = cards.filter((card) => cardType(card).toLowerCase().includes('land'));
   const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
-  const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
   const sortFn = getSortFn(colors);
   const inColor = nonlands.filter((item) => considerInCombination(colors, item));
   const outOfColor = nonlands.filter((item) => !considerInCombination(colors, item));
@@ -433,6 +442,15 @@ export async function buildDeck(cards, picked, synergies, initialState, basics) 
     sideboard,
     colors,
   };
+}
+
+export async function buildDeck(cards, picked, synergies, initialState, basics) {
+  const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
+  return build(cards, picked, synergies, colors, basics);
+}
+export async function buildGridDraftDeck(cards, picked, synergies, basics) {
+  const colors = unWeightedRating(null, picked, null, synergies)[1];
+  return build(cards, picked, synergies, colors, basics);
 }
 
 function botPicks() {
@@ -594,7 +612,7 @@ async function finish() {
   }
 
   // save draft. if we fail, we fail
-  await csrfFetch(`/cube/api/draftpick/${draft.cube}`, {
+  await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
     method: 'POST',
     body: JSON.stringify(draft),
     headers: {

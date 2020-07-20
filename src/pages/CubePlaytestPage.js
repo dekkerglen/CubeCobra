@@ -188,28 +188,28 @@ const CustomDraftCard = ({
             <Button type="submit" color="success" className="mr-2" disabled={loading}>
               Start Draft
             </Button>
+            {canEdit && (
+              <>
+                <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
+                  Edit
+                </Button>
+                {defaultDraftFormat !== index && (
+                  <Button color="success" className="mr-2" onClick={onSetDefaultFormat} data-index={index}>
+                    Make Default
+                  </Button>
+                )}
+                <Button color="danger" id={`deleteToggler-${index}`}>
+                  Delete
+                </Button>
+                <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
+                  <h6 className="my-4">Are you sure? This action cannot be undone.</h6>
+                  <Button color="danger" onClick={onDeleteFormat} data-index={index}>
+                    Yes, delete this format
+                  </Button>
+                </UncontrolledCollapse>
+              </>
+            )}
           </div>
-          {canEdit && (
-            <>
-              <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
-                Edit
-              </Button>
-              {defaultDraftFormat !== index && (
-                <Button color="success" className="mr-3" onClick={onSetDefaultFormat} data-index={index}>
-                  Make Default
-                </Button>
-              )}
-              <Button color="danger" id={`deleteToggler-${index}`}>
-                Delete
-              </Button>
-              <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
-                <h6 className="my-4">Are you sure? This action cannot be undone.</h6>
-                <Button color="danger" onClick={onDeleteFormat} data-index={index}>
-                  Yes, delete this format
-                </Button>
-              </UncontrolledCollapse>
-            </>
-          )}
         </CardFooter>
       </CSRFForm>
     </Card>
@@ -316,6 +316,32 @@ const SealedCard = () => {
         </CardBody>
         <CardFooter>
           <Button color="success">Start Sealed</Button>
+        </CardFooter>
+      </CSRFForm>
+    </Card>
+  );
+};
+
+const GridCard = () => {
+  const { cubeID } = useContext(CubeContext);
+  return (
+    <Card className="mb-3">
+      <CSRFForm method="POST" action={`/cube/startgriddraft/${cubeID}`}>
+        <CardHeader>
+          <CardTitleH5>Grid Draft</CardTitleH5>
+        </CardHeader>
+        <CardBody>
+          <div className="description-area">
+            <p>Grid drafting is a strategic 2 player draft with completely open information.</p>
+          </div>
+          <LabelRow htmlFor="packs-grid" label="Number of Packs">
+            <Input type="select" name="packs" id="packs-grid" defaultValue="18">
+              {rangeOptions(1, 30)}
+            </Input>
+          </LabelRow>
+        </CardBody>
+        <CardFooter>
+          <Button color="success">Start Grid Draft</Button>
         </CardFooter>
       </CSRFForm>
     </Card>
@@ -510,6 +536,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
           ))}
           {defaultDraftFormat !== -1 && <StandardDraftFormatCard />}
           <SealedCard className="mb-3" />
+          <GridCard className="mb-3" />
         </Col>
         <Col xs="12" md="6" xl="6">
           {decks.length !== 0 && <DecksCard decks={decks} canEdit={canEdit} userID={userID} className="mb-3" />}
