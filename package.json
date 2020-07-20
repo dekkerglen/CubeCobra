@@ -6,6 +6,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "npm run prettier",
+    "cypress:open": "cypress open",
     "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src}'/**/*.js' '*.js'",
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
@@ -116,6 +117,7 @@
     "winston-loggly-bulk": "^3.1.0"
   },
   "devDependencies": {
+    "cypress": "^4.10.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-config-prettier": "^6.11.0",

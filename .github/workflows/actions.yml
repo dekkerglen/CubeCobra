@@ -18,4 +18,15 @@ jobs:
       run: npm run lint
     - name: Run Unit Tests
       run: npm run test
+
+  cypress-run:
+    name: Cypress tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Cypress Run
+        uses: cypress-io/github-action@v2
+        with:
+          spec: cypress/integration/landing_spec.js
   
