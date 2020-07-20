@@ -1193,6 +1193,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.cubename = cube.name;
     deck.cube = cube._id;
     deck.cubeOwner = cube.owner;
+    deck.owner = req.user._id;
     deck.seats = [
       {
         userid: req.user._id,
@@ -1669,6 +1670,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
     deck.comments = [];
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.owner = user._id;
 
     deck.seats.push({
       userid: user._id,
@@ -2800,6 +2802,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.owner = deck.seats[0].userid;
 
     for (const seat of draft.seats) {
       deck.seats.push({
@@ -2968,6 +2971,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.comments = [];
     deck.draft = base.draft;
     deck.seats = [];
+    deck.owner = req.user._id;
     deck.seats.push({
       userid: req.user._id,
       username: `${req.user.username}: ${userColors}`,
