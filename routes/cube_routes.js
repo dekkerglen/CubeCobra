@@ -1193,6 +1193,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.comments = [];
     deck.cubename = cube.name;
     deck.cube = cube._id;
+    deck.cubeOwner = cube.owner;
+    deck.owner = req.user._id;
     deck.seats = [
       {
         userid: req.user._id,
@@ -1704,7 +1706,10 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const numCards = packs * cards;
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats card_count type cards owner');
+    const cube = await Cube.findOne(
+      buildIdQuery(req.params.id),
+      '_id name draft_formats card_count type cards owner numDecks',
+    );
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1753,10 +1758,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const deck = new Deck();
     deck.cube = cube._id;
+    deck.cubeOwner = cube.owner;
     deck.date = Date.now();
     deck.comments = [];
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.owner = user._id;
 
     deck.seats.push({
       userid: user._id,
@@ -2952,11 +2959,13 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
 
     const deck = new Deck();
     deck.cube = draft.cube;
+    deck.cubeOwner = cube.owner;
     deck.date = Date.now();
     deck.comments = [];
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.owner = deck.seats[0].userid;
 
     for (const seat of draft.seats) {
       deck.seats.push({
@@ -3177,11 +3186,13 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     const deck = new Deck();
     deck.cube = base.cube;
+    deck.cubeOwner = base.owner;
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.comments = [];
     deck.draft = base.draft;
     deck.seats = [];
+    deck.owner = req.user._id;
     deck.seats.push({
       userid: req.user._id,
       username: `${req.user.username}: ${userColors}`,

@@ -55,6 +55,7 @@ const clientConfig = merge(config, {
     version: './src/version.js',
     user_blog: './src/user_blog.js',
     gridDraft: './src/gridDraft.js',
+    recent_drafts: './src/recent_drafts.js',
   },
   output: {
     filename: '[name].bundle.js',
