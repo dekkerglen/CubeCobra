@@ -175,6 +175,8 @@ async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const { name, oracle_id } = card;
 
+  const rating = await CardRating.findOne({ name });
+
   const currentDatapoint = {};
   currentDatapoint.rating = rating ? rating.rating : null;
   currentDatapoint.elo = rating ? rating.elo : null;
@@ -321,5 +323,6 @@ async function processCard(card) {
 
     mongoose.disconnect();
     console.log('done');
+    process.exit();
   });
 })();
