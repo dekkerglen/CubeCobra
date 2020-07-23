@@ -2972,7 +2972,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
-    deck.owner = deck.seats[0].userid;
+    deck.owner = draft.seats[0].userid;
 
     for (const seat of draft.seats) {
       deck.seats.push({
