@@ -302,6 +302,11 @@ export const getColor = (pickedInCombination, picked, lands) => {
   );
 };
 
+// The cost factor of playing more colors
+export const getColorScaling = (combination) => {
+  return COLOR_SCALING_FACTOR[combination.length];
+};
+
 const getCoordPairs = (pack, pick, initialState) => [
   [pack - 1, initialState[0].length],
   [pick - 1, initialState[0][Math.min(Math.max(pack - 1, 0), initialState[0].length - 1)].length],
@@ -371,13 +376,27 @@ const calculateRating = (
       (ratingScore + pickSynergyScore) * cardCastingProbability
     );
   }
-  const count = picked.cards[combination.join('')].filter(
-    (c) => !cardType(c).toLowerCase().includes('land') && getCastingProbability(c, lands) >= PROB_TO_INCLUDE,
-  ).length;
+  // We can't filter on castable because that leads to returning
+  // -Infinity for changes so we see a flat hill and stop climbing.
+  const nonlands = picked.cards.WUBRG.filter(
+    (c) => !cardType(c).toLowerCase().includes('land'), // && getCastingProbability(c, lands) >= PROB_TO_INCLUDE,
+  );
+  const count = nonlands.length;
+  const totalProbability = nonlands.reduce((acc, c) => acc + getCastingProbability(c, lands), 0);
   if (count >= 23) {
-    return (
+    console.log(
+      getColor(pickedInCombination, picked, lands),
+      getInternalSynergy(pickedInCombination, picked, synergies),
+      totalProbability,
       (getColor(pickedInCombination, picked, lands) + getInternalSynergy(pickedInCombination, picked, synergies)) *
-      count
+        totalProbability,
+    );
+    return (
+      // We can't just do pickedInCombination since that'll be empty
+      // sometimes and more than 1 step from being non-empty
+      (getColor(picked.cards[combination.join('')], picked, lands) +
+        getInternalSynergy(pickedInCombination, picked, synergies)) *
+      totalProbability
     );
   }
   return -Infinity;
@@ -387,7 +406,7 @@ const calculateRating = (
 export const botRatingAndCombination = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) => {
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
-  const pickNum = initialState?.[0]?.[packNum - 1]?.length - inPack + 1;
+  const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
   const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   // TODO: Only count dual lands in the combination we want to play.
@@ -436,6 +455,7 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
           newLands[decreaseColor] -= 1;
           if (!landCountsAreEqual(newLands, prevLands) && (!card || getCastingProbability(card, newLands) > 0)) {
             const newCombination = getCombinationForLands(newLands);
+            console.log(JSON.stringify(newLands));
             const newRating = calculateRating(
               newLands,
               newCombination,
@@ -457,20 +477,15 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
         }
       }
     }
-    if (Object.entries(nextLands).reduce((acc, [, a]) => acc + a, 0) !== 17) {
-      console.log(card.details.name);
-      console.log(currentRating, JSON.stringify(currentLands), '->', nextRating, JSON.stringify(nextLands));
+    if (!landCountsAreEqual(currentLands, nextLands)) {
+      console.log(currentRating, JSON.stringify(currentLands), '->', nextRating, JSON.stringify(nextLands), '\n');
+      currentLands = nextLands;
+      currentCombination = nextCombination;
+      currentRating = nextRating;
     }
-    currentLands = nextLands;
-    currentCombination = nextCombination;
-    currentRating = nextRating;
   }
+  console.log('Final\n\n');
   return { rating: currentRating, colors: currentCombination, lands: currentLands };
-};
-
-// The cost factor of playing more colors
-export const getColorScaling = (combination) => {
-  return COLOR_SCALING_FACTOR[combination.length];
 };
 
 export const unWeightedRating = (card, picked, seen, synergies) => {
