@@ -8,6 +8,7 @@ import {
   cardName,
   cardType,
   cardDevotion,
+  cardCost,
 } from 'utils/Card';
 import { arraysAreEqualSets, fromEntries } from 'utils/Util';
 
@@ -41,7 +42,7 @@ const OPENNESS_WEIGHTS = [
   [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
   [8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1],
 ];
-export const PROB_TO_INCLUDE = 0.75;
+export const PROB_TO_INCLUDE = 0.7;
 
 // This function gets approximate weight values when there are not 15 cards in the pack.
 // It treat pack/pick number out of 3/15 as a lattice and just average the surrounding points if the desired weight is off the lattice.
@@ -146,60 +147,67 @@ const getDevotions = (card) =>
   );
 
 export const getCastingProbability = (card, lands) => {
-  // TODO: Handle hybrid
-  const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
+  const colorSymbols = {};
+  for (const symbol of cardCost(card)) {
+    const symbolLower = symbol.toLowerCase();
+    const symbolColors = COLORS.filter(
+      (color) => symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
+    );
+    if (symbolColors.length > 0) {
+      colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+    }
+  }
+  const colors = Object.entries(colorSymbols);
   if (cardType(card).toLowerCase().includes('land') || colors.length === 0) {
     return 1;
   }
   // We assume every card has at least 1 devotion to each color in its identity.
   if (colors.length === 1) {
-    const devotion = Math.max(1, cardDevotion(card, colors[0]));
-    let landCount = lands[colors[0]];
-    for (const key of Object.keys(lands)) {
-      if (key.length > 1 && key.includes(colors[0])) {
-        landCount += lands[key];
+    const [[color, devotion]] = colors;
+    let landCount = 0;
+    for (const [key, count] of Object.entries(lands)) {
+      if ([...color].some((c) => key.includes(c))) {
+        landCount += count;
       }
     }
     return probTable[cardCmc(card)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0;
   }
   if (colors.length === 2) {
-    const devotionA = Math.max(1, cardDevotion(card, colors[0]));
-    const devotionB = Math.max(1, cardDevotion(card, colors[1]));
-    let landCountA = lands[colors[0]];
-    const landCountB = lands[colors[1]];
+    const [[colorA, devotionA], [colorB, devotionB]] = colors;
+    let landCountA = 0;
+    const landCountB = 0;
     let landCountAB = 0;
-    for (const key of Object.keys(lands)) {
-      if (key.length > 1) {
-        if (key.includes(colors[0]) && !key.includes(colors[1])) {
-          landCountA += lands[key];
-        } else if (key.includes(colors[1]) && !key.includes(colors[0])) {
-          landCountA += lands[key];
-        } else if (key.includes(colors[0]) && key.includes(colors[1])) {
-          landCountAB += lands[key];
-        }
+    for (const [key, amount] of Object.entries(lands)) {
+      const isA = [...colorA].some((c) => key.includes(c));
+      const isB = [...colorB].some((c) => key.includes(c));
+      if (isA && !isB) {
+        landCountA += amount;
+      } else if (!isA && isB) {
+        landCountA += amount;
+      } else if (isA && isB) {
+        landCountAB += amount;
       }
     }
     return probTable[cardCmc(card)]?.[devotionA]?.[devotionB]?.[landCountA]?.[landCountB]?.[landCountAB] ?? 0;
   }
   // This is a really poor approximation, it probably underestimates,
-  // but could easily overstimate as well.
+  // but could easily overestimate as well.
   let totalDevotion = 0;
   let prob = 1;
-  for (const color of colors) {
-    const devotion = Math.max(1, cardDevotion(card, color));
+  for (const [color, devotion] of colors) {
     totalDevotion += devotion;
-    let landCount = lands[color];
-    for (const key of Object.keys(lands)) {
-      if (key.length > 1 && key.includes(color)) {
-        landCount += lands[key];
+    let landCount = 0;
+    for (const [key, amount] of Object.entries(lands)) {
+      if ([...color].some((c) => key.includes(c))) {
+        landCount += amount;
       }
     }
     prob *= probTable[cardCmc(card)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0;
   }
   let landCount = 0;
-  for (const key of Object.keys(lands)) {
-    if (colors.some((color) => key.includes(color))) {
-      landCount += lands[key];
+  for (const [key, amount] of Object.entries(lands)) {
+    if (colors.some((color) => [...color].some((c) => key.includes(c)))) {
+      landCount += amount;
     }
   }
   return prob * (probTable[cardCmc(card)]?.[totalDevotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0);
@@ -359,9 +367,7 @@ const calculateRating = (
   pickNum,
   initialState,
 ) => {
-  const pickedInCombination = picked.cards[combination.join('')].filter(
-    (c) => getCastingProbability(c, lands) > PROB_TO_INCLUDE,
-  );
+  const pickedInCombination = picked.cards.WUBRG.filter((c) => getCastingProbability(c, lands) > PROB_TO_INCLUDE);
   if (card) {
     const cardCastingProbability = getCastingProbability(card, lands);
     const pickSynergyScore =
@@ -384,19 +390,10 @@ const calculateRating = (
   const count = nonlands.length;
   const totalProbability = nonlands.reduce((acc, c) => acc + getCastingProbability(c, lands), 0);
   if (count >= 23) {
-    console.log(
-      getColor(pickedInCombination, picked, lands),
-      getInternalSynergy(pickedInCombination, picked, synergies),
-      totalProbability,
-      (getColor(pickedInCombination, picked, lands) + getInternalSynergy(pickedInCombination, picked, synergies)) *
-        totalProbability,
-    );
     return (
       // We can't just do pickedInCombination since that'll be empty
       // sometimes and more than 1 step from being non-empty
-      (getColor(picked.cards[combination.join('')], picked, lands) +
-        getInternalSynergy(pickedInCombination, picked, synergies)) *
-      totalProbability
+      (getColor(nonlands, picked, lands) + getInternalSynergy(nonlands, picked, synergies)) * totalProbability
     );
   }
   return -Infinity;
@@ -455,7 +452,6 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
           newLands[decreaseColor] -= 1;
           if (!landCountsAreEqual(newLands, prevLands) && (!card || getCastingProbability(card, newLands) > 0)) {
             const newCombination = getCombinationForLands(newLands);
-            console.log(JSON.stringify(newLands));
             const newRating = calculateRating(
               newLands,
               newCombination,
@@ -478,13 +474,11 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
       }
     }
     if (!landCountsAreEqual(currentLands, nextLands)) {
-      console.log(currentRating, JSON.stringify(currentLands), '->', nextRating, JSON.stringify(nextLands), '\n');
       currentLands = nextLands;
       currentCombination = nextCombination;
       currentRating = nextRating;
     }
   }
-  console.log('Final\n\n');
   return { rating: currentRating, colors: currentCombination, lands: currentLands };
 };
 

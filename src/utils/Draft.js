@@ -3,7 +3,6 @@ import similarity from 'compute-cosine-similarity';
 import {
   COLOR_COMBINATIONS,
   cardColorIdentity,
-  cardDevotion,
   cardName,
   cardType,
   cardIsSpecialZoneType,
