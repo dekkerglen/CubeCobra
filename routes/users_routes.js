@@ -570,7 +570,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .limit(pagesize)
       .lean();
     const numDecksQ = Deck.countDocuments({
-      'seats.0.userid': userid,
+      owner: userid,
     });
 
     const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
