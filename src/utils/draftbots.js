@@ -42,7 +42,7 @@ const OPENNESS_WEIGHTS = [
   [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
   [8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1],
 ];
-export const PROB_TO_INCLUDE = 0.7;
+export const PROB_TO_INCLUDE = 0.8;
 
 // This function gets approximate weight values when there are not 15 cards in the pack.
 // It treat pack/pick number out of 3/15 as a lattice and just average the surrounding points if the desired weight is off the lattice.
@@ -147,17 +147,22 @@ const getDevotions = (card) =>
   );
 
 export const getCastingProbability = (card, lands) => {
-  const colorSymbols = {};
-  for (const symbol of cardCost(card)) {
-    const symbolLower = symbol.toLowerCase();
-    const symbolColors = COLORS.filter(
-      (color) => symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
-    );
-    if (symbolColors.length > 0) {
-      colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+  let colors = card.details.cost_colors;
+  if (!card.details.cost_colors) {
+    const colorSymbols = {};
+    for (const symbol of cardCost(card)) {
+      const symbolLower = symbol.toLowerCase();
+      const symbolColors = COLORS.filter(
+        (color) =>
+          symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
+      );
+      if (symbolColors.length > 0) {
+        colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+      }
     }
+    card.details.cost_colors = Object.entries(colorSymbols);
+    colors = card.details.cost_colors;
   }
-  const colors = Object.entries(colorSymbols);
   if (cardType(card).toLowerCase().includes('land') || colors.length === 0) {
     return 1;
   }
@@ -299,15 +304,13 @@ export const getOpenness = (combination, seen) => {
 // How good are the cards we've already picked in this color combo?
 // Scale from 0-1. Used to select a color combination.
 // Tends to recommend what we've already picked before.
-export const getColor = (pickedInCombination, picked, lands) => {
+export const getColor = (pickedInCombination, picked, probabilities) => {
   const count = picked.cards.WUBRG.length - picked.cards[''].length;
   if (count === 0) {
     return 0;
   }
 
-  return (
-    pickedInCombination.reduce((acc, card) => acc + getRating(card) * getCastingProbability(card, lands), 0) / count
-  );
+  return pickedInCombination.reduce((acc, card) => acc + getRating(card) * probabilities[card.cardID], 0) / count;
 };
 
 // The cost factor of playing more colors
@@ -367,7 +370,11 @@ const calculateRating = (
   pickNum,
   initialState,
 ) => {
-  const pickedInCombination = picked.cards.WUBRG.filter((c) => getCastingProbability(c, lands) > PROB_TO_INCLUDE);
+  const probabilities = {};
+  for (const c of picked.cards.WUBRG) {
+    probabilities[c.cardID] = getCastingProbability(c, lands);
+  }
+  const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
   if (card) {
     const cardCastingProbability = getCastingProbability(card, lands);
     const pickSynergyScore =
@@ -377,23 +384,22 @@ const calculateRating = (
       getOpenness(combination, seen) *
         getOpennessWeight(packNum, pickNum, initialState) *
         getColorScaling(combination) +
-      getColor(pickedInCombination, picked, lands) * getColorWeight(packNum, pickNum, initialState) +
+      getColor(pickedInCombination, picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
       getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState) +
       (ratingScore + pickSynergyScore) * cardCastingProbability
     );
   }
   // We can't filter on castable because that leads to returning
   // -Infinity for changes so we see a flat hill and stop climbing.
-  const nonlands = picked.cards.WUBRG.filter(
-    (c) => !cardType(c).toLowerCase().includes('land'), // && getCastingProbability(c, lands) >= PROB_TO_INCLUDE,
-  );
+  const nonlands = picked.cards.WUBRG.filter((c) => !cardType(c).toLowerCase().includes('land'));
   const count = nonlands.length;
-  const totalProbability = nonlands.reduce((acc, c) => acc + getCastingProbability(c, lands), 0);
+  const totalProbability = nonlands.reduce((acc, c) => acc + probabilities[c.cardID], 0);
   if (count >= 23) {
     return (
       // We can't just do pickedInCombination since that'll be empty
       // sometimes and more than 1 step from being non-empty
-      (getColor(nonlands, picked, lands) + getInternalSynergy(nonlands, picked, synergies)) * totalProbability
+      (getColor(nonlands, picked, probabilities) + getInternalSynergy(pickedInCombination, picked, synergies)) *
+      totalProbability
     );
   }
   return -Infinity;
@@ -468,6 +474,8 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
               nextLands = newLands;
               nextCombination = newCombination;
               nextRating = newRating;
+              // We assume we won't get caught in a local maxima so it's safe to take first ascent.
+              break;
             }
           }
         }
