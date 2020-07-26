@@ -224,6 +224,8 @@ async function processCard(card) {
       cardHistory.cardName = name;
       cardHistory.oracleId = oracle_id; // eslint-disable-line camelcase
       cardHistory.versions = versions;
+    } else if(!cardHistory.oracleId || cardHistory.oracleId.length === 0) {
+      cardHistory.oracle_id = oracle_id;
     }
 
     cardHistory.cubes = cubes;
@@ -251,37 +253,6 @@ async function processCard(card) {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     console.log('creating correlation matrix...');
     createCorrelations();
-
-    /*
-    console.log('fetching embeddings...');
-
-    const allIds = carddb.allOracleIds();
-    const batchSize = 500;
-    for (let i = 0; i < allIds.length; i += batchSize) {
-      const batch = allIds.slice(i * batchSize, (i + 1) * batchSize);
-
-      const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-        method: 'post',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cards: batch.map((oracleId) => carddb.getVersionsByOracleId(oracleId)[0].name_lower),
-        }),
-      });
-      if (response.ok) {
-        const json = await response.json();
-
-        for (const key of Object.keys(json)) {
-          embeddings[key] = json[key];
-        }
-      } else {
-        console.log(`Missed an embedding batch`);
-        i -= batchSize;
-      }
-    }
-
-    console.log(embeddings);
-
-    */
 
     // process all cube objects
     console.log('Started: cubes');
@@ -323,6 +294,6 @@ async function processCard(card) {
 
     mongoose.disconnect();
     console.log('done');
-    process.exit();
+    process.exit(); 
   });
 })();
