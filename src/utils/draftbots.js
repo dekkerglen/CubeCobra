@@ -122,7 +122,7 @@ export const getSynergy = (index1, index2, synergies) => {
     }
     // This happens when similarityValue is 1, usually because a card is a duplicate.
     if (!Number.isFinite(synergyMatrix[index1][index2])) {
-      synergyMatrix[index1][index2] = MAX_SYNERGY;
+      synergyMatrix[index1][index2] = synergyMatrix[index1][index2] > 0 ? MAX_SYNERGY : 0;
     }
     synergyMatrix[index2][index1] = synergyMatrix[index1][index2];
   }
@@ -147,12 +147,10 @@ const getDevotions = (card) =>
   );
 
 export const getCastingProbability = (card, lands) => {
-  let colors = card.details.cost_colors;
   if (!card.details.cost_colors) {
     const colorSymbols = {};
     const cost = cardCost(card);
     if (cost) {
-      console.log(card.details.name, cost);
       for (const symbol of cost) {
         const symbolLower = symbol.toLowerCase();
         const symbolColors = COLORS.filter(
@@ -165,8 +163,8 @@ export const getCastingProbability = (card, lands) => {
       }
     }
     card.details.cost_colors = Object.entries(colorSymbols);
-    colors = card.details.cost_colors;
   }
+  const colors = card.details.cost_colors;
   if (cardType(card).toLowerCase().includes('land') || colors.length === 0) {
     return 1;
   }
@@ -184,7 +182,7 @@ export const getCastingProbability = (card, lands) => {
   if (colors.length === 2) {
     const [[colorA, devotionA], [colorB, devotionB]] = colors;
     let landCountA = 0;
-    const landCountB = 0;
+    let landCountB = 0;
     let landCountAB = 0;
     for (const [key, amount] of Object.entries(lands)) {
       const isA = [...colorA].some((c) => key.includes(c));
@@ -192,7 +190,7 @@ export const getCastingProbability = (card, lands) => {
       if (isA && !isB) {
         landCountA += amount;
       } else if (!isA && isB) {
-        landCountA += amount;
+        landCountB += amount;
       } else if (isA && isB) {
         landCountAB += amount;
       }
@@ -294,6 +292,11 @@ export const getInternalSynergy = (pickedInCombination, picked, synergies) => {
   return synergy / numPairs;
 };
 
+// The cost factor of playing more colors
+export const getColorScaling = (combination) => {
+  return COLOR_SCALING_FACTOR[combination.length];
+};
+
 // Has this color combination been flowing openly?
 // Scale from roughly 0-10. Used to select a color combination.
 // Tends to recommend new colors to try.
@@ -302,7 +305,7 @@ export const getOpenness = (combination, seen) => {
     return 0;
   }
 
-  return seen.values[combination.join('')] / seen.cards.WUBRG.length;
+  return (getColorScaling(combination) * seen.values[combination.join('')]) / seen.cards.WUBRG.length;
 };
 
 // How good are the cards we've already picked in this color combo?
@@ -315,11 +318,6 @@ export const getColor = (pickedInCombination, picked, probabilities) => {
   }
 
   return pickedInCombination.reduce((acc, card) => acc + getRating(card) * probabilities[card.cardID], 0) / count;
-};
-
-// The cost factor of playing more colors
-export const getColorScaling = (combination) => {
-  return COLOR_SCALING_FACTOR[combination.length];
 };
 
 const getCoordPairs = (pack, pick, initialState) => [
@@ -385,9 +383,7 @@ const calculateRating = (
       getPickSynergy(pickedInCombination, card, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState);
     return (
       getInternalSynergy(pickedInCombination, picked, synergies) * getSynergyWeight(packNum, pickNum, initialState) +
-      getOpenness(combination, seen) *
-        getOpennessWeight(packNum, pickNum, initialState) *
-        getColorScaling(combination) +
+      getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
       getColor(pickedInCombination, picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
       getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState) +
       (ratingScore + pickSynergyScore) * cardCastingProbability
@@ -492,42 +488,6 @@ export const botRatingAndCombination = (card, picked, seen, synergies, initialSt
     }
   }
   return { rating: currentRating, colors: currentCombination, lands: currentLands };
-};
-
-export const unWeightedRating = (card, picked, seen, synergies) => {
-  // Find the color combination that gives us the highest score1
-  // that'll be the color combination we want to play currently.
-  let bestRating = -Infinity;
-  let bestCombination = [];
-
-  for (const combination of COLOR_COMBINATIONS) {
-    let rating = -Infinity;
-    if (card && (considerInCombination(combination, card) || isPlayableLand(combination, card))) {
-      const colorScaling = getColorScaling(combination);
-      const synergy = getPickSynergy(combination, card, picked, synergies);
-      const internalSynergy = getInternalSynergy(combination, picked);
-      const opennes = getOpenness(combination, seen);
-      const color = getColor(combination, picked);
-      const fixing = getFixing(combination, card);
-
-      rating = colorScaling * (+synergy + internalSynergy + opennes + color) + fixing;
-    } else if (!card) {
-      const count = picked.cards[combination.join('')].filter((c) => !cardType(c).toLowerCase().includes('land'))
-        .length;
-      if (count >= 23) {
-        rating =
-          COLOR_SCALING_FACTOR[combination.length] ** 2 *
-          (getColor(combination, picked) + getInternalSynergy(combination, picked)) *
-          count;
-      }
-    }
-
-    if (rating > bestRating) {
-      bestRating = rating;
-      bestCombination = combination;
-    }
-  }
-  return [bestRating + getRating(card), bestCombination];
 };
 
 export default {
