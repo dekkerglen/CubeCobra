@@ -17,6 +17,7 @@ import {
   InputGroupText,
   CustomInput,
   Table,
+  Badge,
 } from 'reactstrap';
 
 import CardImage from 'components/CardImage';
@@ -105,6 +106,29 @@ Graph.propTypes = {
 
 Graph.defaultProps = {
   yRange: null,
+};
+
+const convertLegality = {
+  legal: ['success', 'Legal'],
+  not_legal: ['secondary', 'Not Legal'],
+  banned: ['danger', 'Banned'],
+  restricted: ['warning', 'Restricted'],
+};
+
+const LegalityBadge = ({ legality, status }) => {
+  return (
+    <h6>
+      <Badge className="legality-badge" color={convertLegality[status][0]}>
+        {convertLegality[status][1]}
+      </Badge>{' '}
+      {legality}
+    </h6>
+  );
+};
+
+LegalityBadge.propTypes = {
+  legality: PropTypes.string.isRequired,
+  status: PropTypes.string.isRequired,
 };
 
 const Tab = ({ tab, setTab, index, children }) => {
@@ -255,8 +279,8 @@ const CardPage = ({ card, data, related, versions }) => {
                     <Graph
                       unit="Percent of Cubes"
                       data={data.history}
-                      yFunc={(point) => (point[cubeType] || [0, 0])[1]}
-                      yRange={[0, 1]}
+                      yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
+                      yRange={[0, 100]}
                     />
                     <Row className="pt-2">
                       <Col xs="12" sm="6" md="6" lg="6">
@@ -285,6 +309,17 @@ const CardPage = ({ card, data, related, versions }) => {
                         </Table>
                       </Col>
                     </Row>
+                  </TabPane>
+                  <TabPane tabId="3">
+                    <CardBody>
+                      <Row>
+                        {Object.keys(card.legalities).map((key) => (
+                          <Col xs="12" sm="6">
+                            <LegalityBadge legality={key} status={card.legalities[key]} />
+                          </Col>
+                        ))}
+                      </Row>
+                    </CardBody>
                   </TabPane>
                 </TabContent>
               </CardBody>
@@ -374,6 +409,7 @@ CardPage.propTypes = {
     set: PropTypes.string.isRequired,
     set_name: PropTypes.string.isRequired,
     collector_number: PropTypes.string.isRequired,
+    legalities: PropTypes.shape({}).isRequired,
     prices: PropTypes.shape({
       usd: PropTypes.number,
       usd_foil: PropTypes.number,

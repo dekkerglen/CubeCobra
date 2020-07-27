@@ -632,7 +632,7 @@ export function cardGetLabels(card, sort) {
     return [card.details.artist];
   } else if (sort == 'Legality') {
     return Object.entries(card.details.legalities)
-      .filter(([k, v]) => v)
+      .filter(([k, v]) => ['legal','banned'].includes(v))
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
