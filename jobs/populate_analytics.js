@@ -26,6 +26,7 @@ const cardSizeUses = {
   size540: {},
   size720: {},
   pauper: {},
+  peasant: {},
   legacy: {},
   modern: {},
   standard: {},
@@ -41,6 +42,7 @@ const cubeCounts = {
   size540: 0,
   size720: 0,
   pauper: 0,
+  peasant: 0,
   legacy: 0,
   modern: 0,
   standard: 0,
@@ -129,25 +131,31 @@ async function processCube(cube) {
     cubeCounts.size720 += 1;
   }
 
-  const isPauper = false;
+  let isPauper = false;
+  let isPeasant = false;
   if (cube.type) {
-    if (cube.type.toLowerCase().includes('standard')) {
+    if (cube.type.toLowerCase().includes('standard') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Standard'))) {
       cubeLegalityDict = cardSizeUses.standard;
       cubeCounts.standard += 1;
-    } else if (cube.type.toLowerCase().includes('modern')) {
+    } else if (cube.type.toLowerCase().includes('modern') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Modern'))) {
       cubeLegalityDict = cardSizeUses.modern;
       cubeCounts.modern += 1;
-    } else if (cube.type.toLowerCase().includes('legacy')) {
+    } else if (cube.type.toLowerCase().includes('legacy') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Legacy'))) {
       cubeLegalityDict = cardSizeUses.legacy;
       cubeCounts.legacy += 1;
-    } else if (cube.type.toLowerCase().includes('vintage')) {
+    } else if (cube.type.toLowerCase().includes('vintage') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Vintage'))) {
       cubeLegalityDict = cardSizeUses.vintage;
       cubeCounts.vintage += 1;
     }
 
-    if (cube.type.toLowerCase().includes('pauper')) {
-      cubeLegalityDict = cardSizeUses.pauper;
+    if (cube.type.toLowerCase().includes('pauper') || (cube.overrideCategory && cube.cube.categoryPrefixes.includes('Pauper'))) {
       cubeCounts.pauper += 1;
+      isPauper = true;
+    }
+    
+    if (cube.type.toLowerCase().includes('peasant') || (cube.overrideCategory && cube.cube.categoryPrefixes.includes('Peasant'))) {
+      cubeCounts.peasant += 1;
+      isPeasant = true;
     }
   }
 
@@ -167,6 +175,9 @@ async function processCube(cube) {
     attemptIncrement(cubeLegalityDict, oracle_id);
     if (isPauper) {
       attemptIncrement(cardSizeUses.pauper, oracle_id);
+    }
+    if (isPeasant) {
+      attemptIncrement(cardSizeUses.peasant, oracle_id);
     }
   });
 }
@@ -196,11 +207,11 @@ async function processCard(card) {
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
     const { prices } = carddb.cardFromId(id);
-    if (prices.usd) {
-      versionPrice.price = prices.usd;
-    }
-    if (prices.usd_foil) {
+    if (prices) {
+      versionPrice.price_foil = prices.usd;
       versionPrice.price_foil = prices.usd_foil;
+      versionPrice.eur = prices.eur;
+      versionPrice.tix = prices.tix;
     }
     return versionPrice;
   });

@@ -575,7 +575,9 @@ function convertCard(card, isExtra) {
   const name = convertName(card, isExtra);
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
+  newcard.set_name = card.set_name;
   newcard.collector_number = card.collector_number;
+  newcard.released_at = card.released_at;
 
   newcard.promo =
     card.promo ||

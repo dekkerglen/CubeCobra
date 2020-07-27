@@ -168,20 +168,20 @@ router.get('/card/:id', async (req, res) => {
       id = english;
     }
 
-    // if id is a scryfall ID, redirect to oracle
-    const scryfall = carddb.cardFromId(id);
-    if (!scryfall.error) {
-      id = scryfall.oracle_id;
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
     }
 
-    if (!carddb.oracleToId[id]) {
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return res.redirect('/404');
     }
 
     // otherwise just go to this ID.
-    const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
-    const data = await CardHistory.findOne({ oracleId: id });
+    const data = await CardHistory.findOne({ oracleId: card.oracle_id });
     if (!data) {
       req.flash(
         'danger',
@@ -194,6 +194,7 @@ router.get('/card/:id', async (req, res) => {
       card,
       data,
       related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
+      versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),
