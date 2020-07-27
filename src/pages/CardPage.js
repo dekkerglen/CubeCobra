@@ -18,6 +18,7 @@ import {
   CustomInput,
   Table,
   Badge,
+  Button,
 } from 'reactstrap';
 
 import CardImage from 'components/CardImage';
@@ -25,8 +26,11 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
+import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import ChartComponent from 'react-chartjs-2';
+
+import { getTCGLink } from 'utils/Affiliate';
 
 const AutocardA = withAutocard('a');
 
@@ -226,7 +230,7 @@ const CardPage = ({ card, data, related, versions }) => {
                   Legality
                 </Tab>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="4">
-                  Tools
+                  Resources
                 </Tab>
               </Nav>
               <CardBody>
@@ -318,6 +322,50 @@ const CardPage = ({ card, data, related, versions }) => {
                             <LegalityBadge legality={key} status={card.legalities[key]} />
                           </Col>
                         ))}
+                      </Row>
+                    </CardBody>
+                  </TabPane>
+                  <TabPane tabId="4">
+                    <CardBody>
+                      <Row>
+                        <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
+                            View on Scryfall
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
+                            href={getTCGLink({ details: card })}
+                            target="_blank"
+                          >
+                            View on TCGPlayer
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
+                            href={`https://edhrec.com/cards/${card.name}`}
+                            target="_blank"
+                          >
+                            View on EDHRec
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
+                            href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
+                            target="_blank"
+                          >
+                            {`MTG Top 8 Decks with ${card.name}`}
+                          </ButtonLink>
+                        </Col>
                       </Row>
                     </CardBody>
                   </TabPane>
