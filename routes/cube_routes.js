@@ -2199,7 +2199,10 @@ router.get('/griddraft/:id', async (req, res) => {
     // insert card details everywhere that needs them
     for (const pack of draft.unopenedPacks) {
       for (const card of pack) {
-        card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+        card.details = carddb.cardFromId(
+          card.cardID,
+          'cmc type image_normal image_flip name color_identity parsed_cost',
+        );
       }
     }
 
@@ -3458,7 +3461,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
-    const draft = deck.draft ? await Draft.findById(deck.draft).lean() : null;
+    const draft = deck.draft
+      ? (await Draft.findById(deck.draft).lean()) || (await GridDraft.findById(deck.draft).lean())
+      : null;
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 

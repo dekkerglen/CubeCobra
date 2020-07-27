@@ -30,8 +30,8 @@ import CubeLayout from 'layouts/CubeLayout';
 import CSRFForm from 'components/CSRFForm';
 import { csrfFetch } from 'utils/CSRF';
 
-import { createSeen, addSeen, initGridDraft, buildGridDraftDeck } from 'utils/Draft';
-import { unWeightedRating } from 'utils/draftbots';
+import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
+import { botRatingAndCombination } from 'utils/draftbots';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -146,7 +146,7 @@ for (let index = 0; index < 3; index++) {
 }
 
 const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
-  useMemo(() => initGridDraft(initialDraft), [initialDraft]);
+  useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
   const [packNumber, setPackNumber] = useState(1);
@@ -169,7 +169,15 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
       let rating = 0;
 
       for (const card of cards) {
-        rating += unWeightedRating(card, picked, seen, initialDraft.synergies, null, 9, 2)[0];
+        rating += botRatingAndCombination(
+          card,
+          picked,
+          seen,
+          initialDraft.synergies,
+          [initialDraft.initial_state],
+          cardsSeen.length,
+          packNumber,
+        ).rating;
       }
 
       return rating;
@@ -205,7 +213,7 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
     const updatedDraft = JSON.parse(JSON.stringify(initialDraft));
 
     if (initialDraft.draftType === 'bot') {
-      const { deck, sideboard, colors } = await buildGridDraftDeck(
+      const { deck, sideboard, colors } = await buildDeck(
         botPicks.flat(3),
         picked,
         initialDraft.synergies,
@@ -397,6 +405,7 @@ GridDraftPage.propTypes = {
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.array.isRequired,
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
     synergies: PropTypes.array.isRequired,
     basics: PropTypes.shape([]),
     cube: PropTypes.string.isRequired,

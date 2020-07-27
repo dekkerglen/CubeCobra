@@ -150,14 +150,18 @@ export const getCastingProbability = (card, lands) => {
   let colors = card.details.cost_colors;
   if (!card.details.cost_colors) {
     const colorSymbols = {};
-    for (const symbol of cardCost(card)) {
-      const symbolLower = symbol.toLowerCase();
-      const symbolColors = COLORS.filter(
-        (color) =>
-          symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
-      );
-      if (symbolColors.length > 0) {
-        colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+    const cost = cardCost(card);
+    if (cost) {
+      console.log(card.details.name, cost);
+      for (const symbol of cost) {
+        const symbolLower = symbol.toLowerCase();
+        const symbolColors = COLORS.filter(
+          (color) =>
+            symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
+        );
+        if (symbolColors.length > 0) {
+          colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+        }
       }
     }
     card.details.cost_colors = Object.entries(colorSymbols);

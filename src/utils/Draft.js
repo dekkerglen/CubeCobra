@@ -26,12 +26,13 @@ import { fromEntries } from 'utils/Util';
 
 let draft = null;
 
-export const createSeen = (desiredLandCount = 17) => {
+export const createSeen = () => {
   const result = {
     values: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
     cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
     lands: { W: 0, U: 0, B: 3, R: 3, G: 3 },
   };
+  let desiredLandCount = 17;
   for (let i = 5; i > 0; i--) {
     result.lands[COLORS[5 - i]] = Math.floor(desiredLandCount / i);
     desiredLandCount -= result.lands[COLORS[5 - i]];
@@ -76,17 +77,11 @@ export const addSeen = (seen, cards) => {
   }
 };
 
-export function initGridDraft(newDraft) {
-  draft = newDraft;
-  const maxIndex = Math.max(...draft.initial_state.flat(2).map(({ index }) => index));
-  setSynergyMatrix(maxIndex);
-}
-
 export function init(newDraft) {
   draft = newDraft;
   const maxIndex = Math.max(...draft.initial_state.flat(3).map(({ index }) => index));
   setSynergyMatrix(maxIndex);
-  if (draft.seats[0].packbacklog.length > 0) {
+  if (draft.seats[0].packbacklog && draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
       addSeen(seat.seen, seat.packbacklog[0].slice());
@@ -150,9 +145,7 @@ function getSortFn(bot) {
 }
 
 export const calculateBasicCounts = (main, synergies) => {
-  const nonlands = main.filter((card) => !cardType(card).toLowerCase().includes('land'));
-  const desiredLandCount = Math.round((17 * nonlands.length) / 23);
-  const picked = createSeen(desiredLandCount);
+  const picked = createSeen();
   addSeen(picked, main);
   const { lands, colors } = botRatingAndCombination(null, picked, null, synergies, null, 0, 0);
 
@@ -429,22 +422,9 @@ async function build(cards, lands, synergies, colors, basics) {
   };
 }
 
-export async function buildDeck(cards, picked, synergies, initialState, basics) {
-  const { colors, lands } = botRatingAndCombination(
-    null,
-    picked,
-    null,
-    null,
-    synergies,
-    initialState,
-    1,
-    initialState[0].length,
-  );
+export async function buildDeck(cards, picked, synergies, basics) {
+  const { colors, lands } = botRatingAndCombination(null, picked, null, null, synergies, null);
   return build(cards, lands, synergies, colors, basics);
-}
-export async function buildGridDraftDeck(cards, picked, synergies, basics) {
-  const colors = unWeightedRating(null, picked, null, synergies)[1];
-  return build(cards, {}, synergies, colors, basics);
 }
 
 function botPicks() {
@@ -556,7 +536,7 @@ async function pick(cardIndex) {
 async function finish() {
   // build bot decks
   const decksPromise = draft.seats.map((seat) => {
-    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.initial_state, draft.basics);
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.basics);
   });
   const decks = await Promise.all(decksPromise);
 
