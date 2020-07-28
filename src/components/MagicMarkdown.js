@@ -12,7 +12,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
     return '';
   }
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/({[wubrgcmWUBRGCM\d/-]+}|\[\[!?\d+\]\]|%%\d+%%|\n\n)/gm);
+  const split = markdownStr.split(/({[wubrgcmtqeWUBRGCMTQE\d/-]+}|\[\[!?\d+\]\]|%%\d+%%|\n\n)/gm);
   return (
     <>
       {split.map((section, position) => {
@@ -21,9 +21,9 @@ const MagicMarkdown = ({ markdown, cube }) => {
           return (
             <img
               key={/* eslint-disable-line react/no-array-index-key */ `symbol-${position}`}
-              src={`/content/symbols/${symbol}.png`}
+              src={`/content/symbols/${symbol.replace('/', '-')}.png`}
               alt={symbol}
-              className="mana-symbol"
+              className="mana-symbol-sm"
             />
           );
         }

@@ -18,7 +18,6 @@ import {
   CustomInput,
   Table,
   Badge,
-  Button,
 } from 'reactstrap';
 
 import CardImage from 'components/CardImage';
@@ -26,11 +25,12 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
+import MagicMarkdown from 'components/MagicMarkdown';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import ChartComponent from 'react-chartjs-2';
 
-import { getTCGLink } from 'utils/Affiliate';
+import { getTCGLink, getCardMarketLink, getCardHoarderLink } from 'utils/Affiliate';
 
 const AutocardA = withAutocard('a');
 
@@ -218,27 +218,92 @@ const CardPage = ({ card, data, related, versions }) => {
             <Col className="breakdown px-0" xs="12" sm="9">
               <Nav tabs>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="0">
-                  Elo
+                  Card
                 </Tab>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
-                  Price
+                  Elo
                 </Tab>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
-                  Play Rate
+                  Price
                 </Tab>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="3">
-                  Legality
+                  Play Rate
                 </Tab>
                 <Tab tab={selectedTab} setTab={setSelectedTab} index="4">
-                  Resources
+                  Links
                 </Tab>
               </Nav>
               <CardBody>
                 <TabContent activeTab={selectedTab}>
                   <TabPane tabId="0">
-                    <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
+                    <CardBody>
+                      <Row>
+                        <Col xs="6">
+                          <div className="text-left">
+                            <b>{card.name}</b>
+                          </div>
+                        </Col>
+                        <Col xs="6">
+                          <div className="text-right">
+                            {card.parsed_cost
+                              .slice(0)
+                              .reverse()
+                              .map((symbol, index) => (
+                                <img
+                                  key={`mana-symbol-${symbol}-${index}`}
+                                  alt={symbol}
+                                  className="mana-symbol"
+                                  src={`/content/symbols/${symbol}.png`}
+                                />
+                              ))}
+                          </div>
+                        </Col>
+                      </Row>
+                      <hr />
+                      <p className="my-0">{card.type}</p>
+                      <hr />
+                      <p className="my-0">
+                        {card.oracle_text.split('\n').map((text, index) => (
+                          <p>
+                            <MagicMarkdown key={`oracle-text-${index}`} markdown={text} />
+                          </p>
+                        ))}
+                      </p>
+                      <Row>
+                        <Col xs="6">
+                          <div className="text-left">
+                            <small>
+                              <i>{`Illustrated by ${card.artist}`}</i>
+                            </small>
+                          </div>
+                        </Col>
+                        <Col xs="6">
+                          <div className="text-right">
+                            <>{card.loyalty && <p>{card.loyalty}</p>}</>
+                            <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
+                          </div>
+                        </Col>
+                      </Row>
+
+                      <hr />
+                      <Row>
+                        <Col xs="12" sm="6">
+                          {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
+                            <LegalityBadge legality={key} status={card.legalities[key]} />
+                          ))}
+                        </Col>
+                        <Col xs="12" sm="6">
+                          {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
+                            <LegalityBadge legality={key} status={card.legalities[key]} />
+                          ))}
+                        </Col>
+                      </Row>
+                    </CardBody>
                   </TabPane>
                   <TabPane tabId="1">
+                    <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
+                  </TabPane>
+                  <TabPane tabId="2">
                     <InputGroup className="mb-3">
                       <InputGroupAddon addonType="prepend">
                         <InputGroupText>Price Type: </InputGroupText>
@@ -260,7 +325,7 @@ const CardPage = ({ card, data, related, versions }) => {
                       yFunc={(point) => point.prices.filter((item) => item.version === card._id)[0][priceType]}
                     />
                   </TabPane>
-                  <TabPane tabId="2">
+                  <TabPane tabId="3">
                     <InputGroup className="mb-3">
                       <InputGroupAddon addonType="prepend">
                         <InputGroupText>Cube Type: </InputGroupText>
@@ -313,17 +378,6 @@ const CardPage = ({ card, data, related, versions }) => {
                         </Table>
                       </Col>
                     </Row>
-                  </TabPane>
-                  <TabPane tabId="3">
-                    <CardBody>
-                      <Row>
-                        {Object.keys(card.legalities).map((key) => (
-                          <Col xs="12" sm="6">
-                            <LegalityBadge legality={key} status={card.legalities[key]} />
-                          </Col>
-                        ))}
-                      </Row>
-                    </CardBody>
                   </TabPane>
                   <TabPane tabId="4">
                     <CardBody>
@@ -423,7 +477,54 @@ const CardPage = ({ card, data, related, versions }) => {
               <h4>Purchase</h4>
             </CardHeader>
             <CardBody>
-              <p>Pruchase widget</p>
+              <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+                <Row>
+                  <Col xs="6">
+                    <div className="text-left">
+                      <b>TCGPlayer</b>
+                    </div>
+                  </Col>
+                  {card.prices.usd && (
+                    <Col xs="6">
+                      <div className="text-right">
+                        <b>{`$${card.prices.usd.toFixed(2)}`}</b>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              </ButtonLink>
+              <ButtonLink outline color="success" block href={getCardMarketLink({ details: card })} target="_blank">
+                <Row>
+                  <Col xs="6">
+                    <div className="text-left">
+                      <b>CardMarket</b>
+                    </div>
+                  </Col>
+                  {card.prices.eur && (
+                    <Col xs="6">
+                      <div className="text-right">
+                        <b>{`€${card.prices.eur.toFixed(2)}`}</b>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              </ButtonLink>
+              <ButtonLink outline color="success" block href={getCardHoarderLink({ details: card })} target="_blank">
+                <Row>
+                  <Col xs="6">
+                    <div className="text-left">
+                      <b>CardHoarder</b>
+                    </div>
+                  </Col>
+                  {card.prices.tix && (
+                    <Col xs="6">
+                      <div className="text-right">
+                        <b>{`${card.prices.tix.toFixed(2)} TIX`}</b>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              </ButtonLink>
             </CardBody>
           </Card>
         </Col>
@@ -433,6 +534,12 @@ const CardPage = ({ card, data, related, versions }) => {
           <h4>Often Drafted With</h4>
         </CardHeader>
         <CardBody>
+          <h5>Most Synergistic Cards</h5>
+          <h5>Top Cards</h5>
+          <h5>Creatures</h5>
+          <h5>Spells</h5>
+          <h5>Artifacts</h5>
+          <h5>Other</h5>
           <CardGrid
             cardList={cardList}
             Tag={CardImage}

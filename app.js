@@ -270,10 +270,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+const BATCH_SIZE = 1000;
+
 // scryfall updates this data at 9, so his will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
   const ratings = await CardRating.find({}, 'name elo').lean();
+
   updatedb.updateCardbase(ratings);
 });
 

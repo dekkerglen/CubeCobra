@@ -6,6 +6,7 @@ let cardRatingSchema = mongoose.Schema({
   elo: Number,
   picks: Number,
   name: String,
+  embedding: [Number],
 });
 
 cardRatingSchema.index({

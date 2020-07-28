@@ -75,6 +75,7 @@ function initializeCatalog() {
   catalog.oracleToId = {};
   catalog.english = {};
   catalog.elodict = {};
+  catalog.embeddingdict = {};
 }
 
 initializeCatalog();
@@ -605,6 +606,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
   };
   newcard.elo = catalog.elodict[name];
+  newcard.embedding = catalog.embeddingdict[name];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -732,6 +734,7 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   // create Elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
+    catalog.embeddingdict[rating.name] = rating.embedding;
   }
 
   winston.info('Processing cards...');

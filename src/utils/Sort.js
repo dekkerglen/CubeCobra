@@ -273,7 +273,7 @@ function getLabelsRaw(cube, sort) {
       'Other',
     ];
   } else if (sort == 'Legality') {
-    return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pauper'];
+    return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
   } else if (sort == 'Power') {
     var items = [];
     cube.forEach(function (card, index) {
@@ -632,7 +632,7 @@ export function cardGetLabels(card, sort) {
     return [card.details.artist];
   } else if (sort == 'Legality') {
     return Object.entries(card.details.legalities)
-      .filter(([k, v]) => ['legal','banned'].includes(v))
+      .filter(([k, v]) => ['legal', 'banned'].includes(v))
       .map(([k, v]) => k);
   } else if (sort == 'Power') {
     if (card.details.power) {
