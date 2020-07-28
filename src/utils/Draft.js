@@ -16,7 +16,6 @@ import {
   getPickSynergy,
   isPlayableLand,
   setSynergyMatrix,
-  unWeightedRating,
   getCastingProbability,
   COLORS,
   FETCH_LANDS,
