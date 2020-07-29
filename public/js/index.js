@@ -15,5 +15,3 @@ function toggleDraft() {
     x.innerHTML = 'View More...';
   }
 }
-
-console.log(messages);
