@@ -3202,7 +3202,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         base.seats[req.params.index].pickorder,
         userPicked,
         srcDraft.synergies,
-        srcDraft.initial_state,
         srcDraft.basics,
       );
 
@@ -3229,7 +3228,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
             base.seats[i].pickorder,
             picked,
             srcDraft.synergies,
-            srcDraft.initial_state,
             srcDraft.basics,
           );
           deck.seats.push({

@@ -42,7 +42,7 @@ const OPENNESS_WEIGHTS = [
   [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
   [8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1],
 ];
-export const PROB_TO_INCLUDE = 0.8;
+export const PROB_TO_INCLUDE = 0.67;
 
 // This function gets approximate weight values when there are not 15 cards in the pack.
 // It treat pack/pick number out of 3/15 as a lattice and just average the surrounding points if the desired weight is off the lattice.
