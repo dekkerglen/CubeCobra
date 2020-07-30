@@ -310,11 +310,9 @@ async function build(cards, lands, synergies, colors, basics) {
   const outOfColor = nonlands.filter((item) => getCastingProbability(item, lands) < PROB_TO_INCLUDE);
 
   landCards.sort(sortFn);
-  inColor.sort(sortFn);
 
   const playableLands = landCards.filter((land) => isPlayableLand(colors, land));
   const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, land));
-
   nonlands = inColor;
   let side = outOfColor;
   if (nonlands.length < 23) {

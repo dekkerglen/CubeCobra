@@ -2273,7 +2273,10 @@ router.get('/draft/:id', async (req, res) => {
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+          card.details = carddb.cardFromId(
+            card.cardID,
+            'cmc type image_normal image_flip name color_identity parsed_cost',
+          );
         }
       }
     }
@@ -3222,7 +3225,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
             card.details = carddb.cardFromId(card.cardID);
           }
           const picked = deckutil.default.createSeen();
-          deckutil.default.addSeen(picked, base.seats[i].pickorder, srcDraft.synergies);
+          deckutil.default.addSeen(picked, base.seats[i].pickorder);
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
