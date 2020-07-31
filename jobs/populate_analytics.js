@@ -101,11 +101,7 @@ function createSynergyMatrix() {
       console.log(`Finished: ${i + 1} of ${ allOracleIds.length} synergies.`);
     } 
   }
-  console.log('Finish init of synergy matrix.');
-  console.log(`${synergies[correlationIndex['ef027846-be81-4959-a6b5-56bd01b1e68a']][correlationIndex['91c380f6-2c41-48b7-9f07-104e8659e397']]}`)
-  console.log(`${synergies[correlationIndex['91c380f6-2c41-48b7-9f07-104e8659e397']][correlationIndex['ef027846-be81-4959-a6b5-56bd01b1e68a']]}`)
   console.log(getSynergy('91c380f6-2c41-48b7-9f07-104e8659e397','ef027846-be81-4959-a6b5-56bd01b1e68a'));
-  console.log(getSynergy('ef027846-be81-4959-a6b5-56bd01b1e68a','91c380f6-2c41-48b7-9f07-104e8659e397'));
 }
 
 function attemptIncrement(obj, propname) {
