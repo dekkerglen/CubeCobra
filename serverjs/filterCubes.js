@@ -3,7 +3,7 @@ const { Grammar, Parser } = require('nearley');
 const filterCubeGrammar = require('../dist/generated/filtering/cubeFilters');
 const { fromEntries } = require('../dist/utils/Util');
 
-const Card = require('../models/card');
+const CardHistory = require('../models/cardHistory');
 
 const compiledGrammar = Grammar.fromCompiled(filterCubeGrammar);
 
@@ -29,7 +29,7 @@ async function getCardCubes(value, carddb) {
 
   // otherwise just go to this ID.
   const card = carddb.cardFromId(value);
-  const data = await Card.findOne({ cardName: card.name_lower });
+  const data = await CardHistory.findOne({ oracleId: card.oracle_id });
   if (!data) {
     return { _id: { $in: [] } };
   }

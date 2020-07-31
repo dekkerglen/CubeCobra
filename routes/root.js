@@ -316,6 +316,8 @@ router.get('/search/:query/:page', async (req, res) => {
 
     const count = await Cube.countDocuments(query);
 
+    console.log(JSON.stringify(query, null, 2));
+
     const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
       .lean()
       .sort(sort)

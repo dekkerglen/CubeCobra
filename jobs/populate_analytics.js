@@ -11,6 +11,7 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
+const similarity = require('compute-cosine-similarity');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
@@ -18,6 +19,10 @@ const d = new Date();
 const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
 const cardUses = {};
+
+const ratingsDict = {};
+
+let distinctOracles = [];
 
 const cardSizeUses = {
   size180: {},
@@ -51,6 +56,7 @@ const cubeCounts = {
 
 const correlationIndex = {};
 const correlations = [];
+const synergies = [];
 
 // use correlationIndex for index
 const cubesWithCard = [];
@@ -70,6 +76,36 @@ function createCorrelations() {
     }
   }
   console.log('Finish init of correlation matrix.');
+}
+
+const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
+
+function getSynergy(oracle1, oracle2) {  
+  const em1 =  cardFromOracle(oracle1).embedding;
+  const em2 =  cardFromOracle(oracle2).embedding;
+  if(em1 && em2) {
+    return similarity(em1, em2);
+  }
+  return 0;
+}
+
+function createSynergyMatrix() {
+  const allOracleIds = carddb.allOracleIds();
+  for (let i = 0; i <  allOracleIds.length; i += 1) {
+    synergies.push([]);
+    cubesWithCard.push([]);
+    for (let j = 0; j <  allOracleIds.length; j += 1) {
+      synergies[i].push(getSynergy(allOracleIds[i], allOracleIds[j]));
+    }
+    if ((i + 1) % 100 === 0) {
+      console.log(`Finished: ${i + 1} of ${ allOracleIds.length} synergies.`);
+    } 
+  }
+  console.log('Finish init of synergy matrix.');
+  console.log(`${synergies[correlationIndex['ef027846-be81-4959-a6b5-56bd01b1e68a']][correlationIndex['91c380f6-2c41-48b7-9f07-104e8659e397']]}`)
+  console.log(`${synergies[correlationIndex['91c380f6-2c41-48b7-9f07-104e8659e397']][correlationIndex['ef027846-be81-4959-a6b5-56bd01b1e68a']]}`)
+  console.log(getSynergy('91c380f6-2c41-48b7-9f07-104e8659e397','ef027846-be81-4959-a6b5-56bd01b1e68a'));
+  console.log(getSynergy('ef027846-be81-4959-a6b5-56bd01b1e68a','91c380f6-2c41-48b7-9f07-104e8659e397'));
 }
 
 function attemptIncrement(obj, propname) {
@@ -134,26 +170,26 @@ async function processCube(cube) {
   let isPauper = false;
   let isPeasant = false;
   if (cube.type) {
-    if (cube.type.toLowerCase().includes('standard') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Standard'))) {
+    if (cube.type.toLowerCase().includes('standard') || (cube.overrideCategory && cube.categoryOverride.includes('Standard'))) {
       cubeLegalityDict = cardSizeUses.standard;
       cubeCounts.standard += 1;
-    } else if (cube.type.toLowerCase().includes('modern') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Modern'))) {
+    } else if (cube.type.toLowerCase().includes('modern') || (cube.overrideCategory && cube.categoryOverride.includes('Modern'))) {
       cubeLegalityDict = cardSizeUses.modern;
       cubeCounts.modern += 1;
-    } else if (cube.type.toLowerCase().includes('legacy') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Legacy'))) {
+    } else if (cube.type.toLowerCase().includes('legacy') || (cube.overrideCategory && cube.categoryOverride.includes('Legacy'))) {
       cubeLegalityDict = cardSizeUses.legacy;
       cubeCounts.legacy += 1;
-    } else if (cube.type.toLowerCase().includes('vintage') || (cube.overrideCategory && cube.cube.categoryOverride.includes('Vintage'))) {
+    } else if (cube.type.toLowerCase().includes('vintage') || (cube.overrideCategory && cube.categoryOverride.includes('Vintage'))) {
       cubeLegalityDict = cardSizeUses.vintage;
       cubeCounts.vintage += 1;
     }
 
-    if (cube.type.toLowerCase().includes('pauper') || (cube.overrideCategory && cube.cube.categoryPrefixes.includes('Pauper'))) {
+    if (cube.type.toLowerCase().includes('pauper') || (cube.overrideCategory && cube.categoryPrefixes.includes('Pauper'))) {
       cubeCounts.pauper += 1;
       isPauper = true;
     }
     
-    if (cube.type.toLowerCase().includes('peasant') || (cube.overrideCategory && cube.cube.categoryPrefixes.includes('Peasant'))) {
+    if (cube.type.toLowerCase().includes('peasant') || (cube.overrideCategory && cube.categoryPrefixes.includes('Peasant'))) {
       cubeCounts.peasant += 1;
       isPeasant = true;
     }
@@ -182,11 +218,12 @@ async function processCube(cube) {
   });
 }
 
+
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const { name, oracle_id } = card;
 
-  const rating = await CardRating.findOne({ name });
+  const rating = ratingsDict[name]; //await CardRating.findOne({ name });
 
   const currentDatapoint = {};
   currentDatapoint.rating = rating ? rating.rating : null;
@@ -208,7 +245,7 @@ async function processCard(card) {
     const versionPrice = { version: id };
     const { prices } = carddb.cardFromId(id);
     if (prices) {
-      versionPrice.price_foil = prices.usd;
+      versionPrice.price = prices.usd;
       versionPrice.price_foil = prices.usd_foil;
       versionPrice.eur = prices.eur;
       versionPrice.tix = prices.tix;
@@ -218,16 +255,33 @@ async function processCard(card) {
 
   // cubed with
   // create correl dict
-  const cubedWith = carddb.allOracleIds().map((otherOracleId) => ({
-    other: otherOracleId,
+  const cubedWith = distinctOracles.map((otherOracleId) => ({
+    oracle: otherOracleId,
     count: correlations[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
-  }));
+    type: cardFromOracle(otherOracleId).type.toLowerCase(),
+  })).filter((item) => item.oracle != oracle_id && !item.type.includes('basic land'));
+
+
+  const synergyWith = distinctOracles.map((otherOracleId) => ({
+    oracle: otherOracleId,
+    synergy: synergies[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
+    type: cardFromOracle(otherOracleId).type.toLowerCase(),
+  })).filter((item) => Number.isFinite(item.synergy) && item.oracle != oracle_id && !item.type.includes('basic'));
 
   // quickselect isn't sorting correctly for some reason
   cubedWith.sort((first, second) => {
     return second.count - first.count;
   });
 
+  synergyWith.sort((first, second) => {
+    if (second.synergy < first.synergy) {
+      return -1;
+    }
+    if (second.synergy > first.synergy) {
+      return 1;
+    }
+    return 0;
+  });
   let cardHistory = await CardHistory.findOne({ oracleId: oracle_id });
   try {
     if (!cardHistory) {
@@ -241,7 +295,14 @@ async function processCard(card) {
 
     cardHistory.cubes = cubes;
     cardHistory.current = currentDatapoint;
-    cardHistory.cubedWith = cubedWith.slice(0, 100);
+
+    cardHistory.cubedWith = {
+      synergistic: synergyWith.slice(0,24).map((item)=>item.oracle),
+      top: cubedWith.slice(0, 24).map((item)=>item.oracle),
+      creatures: cubedWith.filter((item)=> item.type.includes('creature')).slice(0, 24).map((item)=>item.oracle),
+      spells: cubedWith.filter((item)=> item.type.includes('instant') || item.type.includes('sorcery')).slice(0, 24).map((item)=>item.oracle),
+      other: cubedWith.filter((item)=> !item.type.includes('creature') && !item.type.includes('instant') && !item.type.includes('sorcery')).slice(0, 24).map((item)=>item.oracle),
+    };
 
     if (!cardHistory.history) {
       cardHistory.history = [];
@@ -255,15 +316,32 @@ async function processCard(card) {
     await cardHistory.save();
   } catch (error) {
     console.error(error);
-    console.log(card);
   }
 }
 
 (async () => {
   await carddb.initializeCardDb();
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
+    console.log('creating distinct oracles');
+    
+    distinctOracles = [...new Set(carddb.allOracleIds())];
+    const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
+    distinctOracles = [...new Set(
+      distinctNames
+        .map((name) => carddb.cardFromId(carddb.nameToId[name][0]).oracle_id)
+        .filter((oracle) => oracle)
+      )];
+
     console.log('creating correlation matrix...');
     createCorrelations();
+    console.log('creating synergy matrix...');
+    createSynergyMatrix();
+
+    console.log('building ratings dict...');
+    const ratings = await CardRating.find({}).lean();
+    for (const rating of ratings) {
+      ratingsDict[rating.name] = rating;
+    }
 
     // process all cube objects
     console.log('Started: cubes');
@@ -296,8 +374,7 @@ async function processCard(card) {
     const totalCards = allOracleIds.length;
     let processed = 0;
     for (const oracleId of allOracleIds) {
-      const cardId = carddb.getVersionsByOracleId(oracleId)[0];
-      const card = carddb.cardFromId(cardId);
+      const card = cardFromOracle(oracleId);
       await processCard(card); // eslint-disable-line no-await-in-loop
       processed += 1;
       console.log(`Finished: ${processed} of ${totalCards} cards.`);

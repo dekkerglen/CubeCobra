@@ -190,11 +190,19 @@ router.get('/card/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const related = {};
+
+    for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
+      related[category] = data.cubedWith[category].map((oracle) =>
+        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
+      );
+    }
+
     const reactProps = {
       card,
       data,
-      related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
       versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+      related,
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),

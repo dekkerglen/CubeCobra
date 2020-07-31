@@ -10,14 +10,14 @@ const carddb = require('../serverjs/cards.js');
 const CardRating = require('../models/cardrating');
 const fetch = require('node-fetch');
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 1000;
 
 const updateEmbeddings = async (names, embeddings) => {
   const ratings = await CardRating.find({name:{$in:names}});
 
 
   ratings.forEach((rating, index) => {
-    rating.embedding = embeddings[index];
+    rating.embedding = embeddings[names.indexOf(rating.name)];
   });
 
   await Promise.all(ratings.map((rating) => rating.save()));
@@ -29,7 +29,6 @@ const updateEmbeddings = async (names, embeddings) => {
     const ratings = await CardRating.find({}, 'name elo embedding').lean();
 
     for (let i = 0; i < ratings.length; i += BATCH_SIZE) {
-      console.log(i);
       try {
         // eslint-disable-next-line no-await-in-loop
         const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {

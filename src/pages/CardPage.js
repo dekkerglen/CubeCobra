@@ -28,8 +28,12 @@ import withAutocard from 'components/WithAutocard';
 import MagicMarkdown from 'components/MagicMarkdown';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
+import Tooltip from 'components/Tooltip';
+import TextBadge from 'components/TextBadge';
 import ChartComponent from 'react-chartjs-2';
+import similarity from 'compute-cosine-similarity';
 
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink } from 'utils/Affiliate';
 
 const AutocardA = withAutocard('a');
@@ -45,7 +49,11 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
         backgroundColor: '#28A745',
         data: data
           .map((point) => {
-            return { x: new Date(point.date), y: yFunc(point.data) };
+            try {
+              return { x: new Date(point.date), y: yFunc(point.data) };
+            } catch (exc) {
+              return {}; // if the yFunc fails this will get filtered out
+            }
           })
           .filter((point) => point.y),
       },
@@ -164,11 +172,10 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, related, versions }) => {
+const CardPage = ({ card, data, versions, related }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
-  const cardList = related.map((item) => ({ details: item }));
 
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
@@ -204,15 +211,31 @@ const CardPage = ({ card, data, related, versions }) => {
                   Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
                   <span className="percent">{data.current.total[0]}</span> Cubes total.
                 </p>
-                <div className="price-area">
-                  {card.prices.usd && <div className="card-price">USD: {card.prices.usd.toFixed(2)}</div>}
-                  {card.prices.usd_foil && (
-                    <div className="card-price">USD Foil: {card.prices.usd_foil.toFixed(2)}</div>
-                  )}
-                  {card.prices.eur && <div className="card-price">EUR: {card.prices.eur.toFixed(2)}</div>}
-                  {card.prices.tix && <div className="card-price">TIX: {card.prices.tix.toFixed(2)}</div>}
-                  {card.elo && <div className="card-price">Elo: {card.elo.toFixed(0)}</div>}
-                </div>
+                {card.prices && Number.isFinite(cardPrice({ details: card })) && (
+                  <TextBadge name="Price" className="mt-1" fill>
+                    <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                  </TextBadge>
+                )}
+                {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
+                  <TextBadge name="Foil" className="mt-1" fill>
+                    <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
+                  </TextBadge>
+                )}
+                {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
+                  <TextBadge name="EUR" className="mt-1" fill>
+                    <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
+                  </TextBadge>
+                )}
+                {card.prices && Number.isFinite(cardTix({ details: card })) && (
+                  <TextBadge name="TIX" className="mt-1" fill>
+                    <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(cardElo({ details: card })) && (
+                  <TextBadge name="Elo" className="mt-1" fill>
+                    {cardElo({ details: card }).toFixed(0)}
+                  </TextBadge>
+                )}
               </CardBody>
             </Col>
             <Col className="breakdown px-0" xs="12" sm="9">
@@ -383,6 +406,17 @@ const CardPage = ({ card, data, related, versions }) => {
                     <CardBody>
                       <Row>
                         <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
+                            href={`/search/card:"${card.name}"/0`}
+                            target="_blank"
+                          >
+                            {`Cubes with ${card.name}`}
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
                           <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
                             View on Scryfall
                           </ButtonLink>
@@ -535,15 +569,42 @@ const CardPage = ({ card, data, related, versions }) => {
         </CardHeader>
         <CardBody>
           <h5>Most Synergistic Cards</h5>
+          <CardGrid
+            cardList={related.synergistic.map((card) => ({ details: card }))}
+            Tag={CardImage}
+            colProps={{ xs: 4, sm: 3, md: 2 }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
           <h5>Top Cards</h5>
+          <CardGrid
+            cardList={related.top.map((card) => ({ details: card }))}
+            Tag={CardImage}
+            colProps={{ xs: 4, sm: 3, md: 2 }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
           <h5>Creatures</h5>
+          <CardGrid
+            cardList={related.creatures.map((card) => ({ details: card }))}
+            Tag={CardImage}
+            colProps={{ xs: 4, sm: 3, md: 2 }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
           <h5>Spells</h5>
-          <h5>Artifacts</h5>
+          <CardGrid
+            cardList={related.spells.map((card) => ({ details: card }))}
+            Tag={CardImage}
+            colProps={{ xs: 4, sm: 3, md: 2 }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
           <h5>Other</h5>
           <CardGrid
-            cardList={cardList}
+            cardList={related.other.map((card) => ({ details: card }))}
             Tag={CardImage}
-            colProps={{ xs: 6, sm: 4, className: 'col-md-1-5 col-lg-1-5 col-xl-1-5' }}
+            colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
             linkDetails
           />
