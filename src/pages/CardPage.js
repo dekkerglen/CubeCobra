@@ -34,7 +34,7 @@ import ChartComponent from 'react-chartjs-2';
 import similarity from 'compute-cosine-similarity';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
-import { getTCGLink, getCardMarketLink, getCardHoarderLink } from 'utils/Affiliate';
+import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
 
 const AutocardA = withAutocard('a');
 
@@ -437,6 +437,17 @@ const CardPage = ({ card, data, versions, related }) => {
                             outline
                             color="success"
                             block
+                            href={getCardKingdomLink({ details: card })}
+                            target="_blank"
+                          >
+                            View on Card Kingdom
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
                             href={`https://edhrec.com/cards/${card.name}`}
                             target="_blank"
                           >
@@ -525,6 +536,15 @@ const CardPage = ({ card, data, versions, related }) => {
                       </div>
                     </Col>
                   )}
+                </Row>
+              </ButtonLink>
+              <ButtonLink outline color="success" block href={getCardKingdomLink({ details: card })} target="_blank">
+                <Row>
+                  <Col xs="6">
+                    <div className="text-left">
+                      <b>Card Kingdom</b>
+                    </div>
+                  </Col>
                 </Row>
               </ButtonLink>
               <ButtonLink outline color="success" block href={getCardMarketLink({ details: card })} target="_blank">
