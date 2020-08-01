@@ -71,9 +71,6 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
     );
   }
 
-  console.log(data);
-  console.log(count);
-
   return (
     <>
       <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />
@@ -102,6 +99,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
           ))}
         </tbody>
       </Table>
+      <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />
     </>
   );
 };

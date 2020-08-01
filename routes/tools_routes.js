@@ -19,7 +19,7 @@ const router = express.Router();
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Page size for results */
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 96;
 
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
@@ -58,7 +58,7 @@ async function matchingCards(filter) {
   return filterCardsDetails(cards, filter);
 }
 
-async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending') {
+async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
   const cards = await matchingCards(filter);
   const oracleIdMap = new Map();
   for (const card of cards) {
@@ -71,8 +71,8 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
 
   const oracleIds = [...oracleIdMap.keys()];
   const query = filter
-    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gt: MIN_PICKS } }
-    : { 'current.picks': { $gt: MIN_PICKS } };
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
+    : { 'current.picks': { $gte: minPicks } };
   const selectedVersions = new Map(
     [...oracleIdMap.entries()].map(([oracleId, versions]) => [
       oracleId,
@@ -112,6 +112,49 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
   };
 }
 
+async function searchCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
+  const cards = await matchingCards(filter);
+  const oracleIdMap = new Map();
+  for (const card of cards) {
+    if (oracleIdMap.has(card.oracle_id)) {
+      oracleIdMap.get(card.oracle_id).push(card);
+    } else {
+      oracleIdMap.set(card.oracle_id, [card]);
+    }
+  }
+
+  const oracleIds = [...oracleIdMap.keys()];
+  const query = filter
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
+    : { 'current.picks': { $gte: minPicks } };
+  const selectedVersions = new Map(
+    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
+      oracleId,
+      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
+    ]),
+  );
+
+  const sortName = `current.${sortField}`;
+  const sort = {};
+  sort[sortName] = direction === 'ascending' ? 1 : -1;
+
+  const dataQ = await CardHistory.find(query)
+    .sort(sort)
+    .skip(PAGE_SIZE * page)
+    .limit(PAGE_SIZE)
+    .lean();
+  const numResultsQ = CardHistory.countDocuments(query);
+
+  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
+
+  return {
+    numResults,
+    data: data
+      .filter(({ oracleId }) => selectedVersions.has(oracleId))
+      .map(({ oracleId }) => selectedVersions.get(oracleId)),
+  };
+}
+
 router.get('/api/topcards', async (req, res) => {
   try {
     const { err, filter } = makeFilter(req.query.f);
@@ -124,6 +167,32 @@ router.get('/api/topcards', async (req, res) => {
       return;
     }
     const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    res.status(200).send({
+      success: 'true',
+      ...results,
+    });
+  } catch (err) {
+    req.logger.error(err);
+    res.status(500).send({
+      success: 'false',
+      numResults: 0,
+      data: [],
+    });
+  }
+});
+
+router.get('/api/searchcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
+    if (err) {
+      res.status(400).send({
+        success: 'false',
+        numResults: 0,
+        data: [],
+      });
+      return;
+    }
+    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, 0);
     res.status(200).send({
       success: 'true',
       ...results,
@@ -337,6 +406,13 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
       success: 'false',
     });
   }
+});
+
+router.get('/searchcards', async (req, res) => {
+  return res.render('tool/searchcards', {
+    reactProps: serialize({}),
+    title: 'Search Cards',
+  });
 });
 
 module.exports = router;

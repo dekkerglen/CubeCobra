@@ -588,7 +588,7 @@ const CardPage = ({ card, data, versions, related }) => {
           <h4>Often Drafted With</h4>
         </CardHeader>
         <CardBody>
-          <h5>Most Synergistic Cards</h5>
+          <h4>Most Synergistic Cards</h4>
           <CardGrid
             cardList={related.synergistic.map((card) => ({ details: card }))}
             Tag={CardImage}
@@ -596,7 +596,8 @@ const CardPage = ({ card, data, versions, related }) => {
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
             linkDetails
           />
-          <h5>Top Cards</h5>
+          <hr />
+          <h4>Top Cards</h4>
           <CardGrid
             cardList={related.top.map((card) => ({ details: card }))}
             Tag={CardImage}
@@ -604,7 +605,8 @@ const CardPage = ({ card, data, versions, related }) => {
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
             linkDetails
           />
-          <h5>Creatures</h5>
+          <hr />
+          <h4>Creatures</h4>
           <CardGrid
             cardList={related.creatures.map((card) => ({ details: card }))}
             Tag={CardImage}
@@ -612,7 +614,8 @@ const CardPage = ({ card, data, versions, related }) => {
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
             linkDetails
           />
-          <h5>Spells</h5>
+          <hr />
+          <h4>Spells</h4>
           <CardGrid
             cardList={related.spells.map((card) => ({ details: card }))}
             Tag={CardImage}
@@ -620,7 +623,8 @@ const CardPage = ({ card, data, versions, related }) => {
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
             linkDetails
           />
-          <h5>Other</h5>
+          <hr />
+          <h4>Other</h4>
           <CardGrid
             cardList={related.other.map((card) => ({ details: card }))}
             Tag={CardImage}
