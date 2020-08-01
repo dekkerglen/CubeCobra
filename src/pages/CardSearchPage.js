@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
-import { Card, CardHeader, CardFooter, CardBody, Spinner, Row, Col } from 'reactstrap';
+import {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardBody,
+  Spinner,
+  Row,
+  Col,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
+} from 'reactstrap';
 
 import Query from 'utils/Query';
 import Paginate from 'components/Paginate';
@@ -16,18 +28,18 @@ const CardSearchPage = () => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState(Query.get('f') || '');
   const [count, setCount] = useState(Query.get('m') || '');
-  const [sortConfig, setSortConfig] = useState({
-    key: Query.get('s') || 'elo',
-    direction: Query.get('d') || 'descending',
-  });
+  const [distinct, setDistinct] = useState(Query.get('di') || 'names');
+  const [sort, setSort] = useState(Query.get('s') || 'elo');
+  const [direction, setDirection] = useState(Query.get('d') || 'descending');
 
   useEffect(() => {
     const fetchData = async () => {
       const params = new URLSearchParams([
         ['p', page],
         ['f', filter],
-        ['s', sortConfig.key],
-        ['d', sortConfig.direction],
+        ['s', sort],
+        ['d', direction],
+        ['di', distinct],
       ]);
       const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
       if (!response.ok) {
@@ -36,7 +48,9 @@ const CardSearchPage = () => {
 
       Query.set('f', filter);
       Query.set('p', page);
-      Query.set('s', sortConfig.key);
+      Query.set('s', sort);
+      Query.set('d', direction);
+      Query.set('di', distinct);
 
       const json = await response.json();
 
@@ -48,27 +62,34 @@ const CardSearchPage = () => {
     };
     if (filter && filter !== '') {
       fetchData();
+    } else {
+      setLoading(false);
+      setCards([]);
     }
-  }, [page, filter, sortConfig]);
+  }, [page, filter, direction, distinct, sort]);
 
   const updateFilter = (_, filterInput) => {
     setLoading(true);
+    setPage(0);
+    setCount(0);
     setFilter(filterInput);
   };
 
   const updatePage = (index) => {
     setLoading(true);
-    setPage(0);
     setPage(index);
   };
-
-  const updateSort = (key) => {
+  const updateSort = (index) => {
     setLoading(true);
-    let direction = 'descending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'descending') {
-      direction = 'ascending';
-    }
-    setSortConfig({ key, direction });
+    setSort(index);
+  };
+  const updateDirection = (index) => {
+    setLoading(true);
+    setDirection(index);
+  };
+  const updateDistinct = (index) => {
+    setLoading(true);
+    setDistinct(index);
   };
 
   return (
@@ -93,42 +114,78 @@ const CardSearchPage = () => {
           numCards={count}
           isOpen
         />
+        <Row className="px-3">
+          <Col xs={12} sm={4}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Sort: </InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" value={sort} onChange={(event) => updateSort(event.target.value)}>
+                <option value="elo">Elo</option>
+                <option value="date">Release Date</option>
+                <option value="price">Price</option>
+                <option value="alphabetical">Alphabetical</option>
+              </CustomInput>
+            </InputGroup>
+          </Col>
+          <Col xs={12} sm={4}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Direction: </InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" value={direction} onChange={(event) => updateDirection(event.target.value)}>
+                <option value="ascending">Ascending</option>
+                <option value="descending">Descending</option>
+              </CustomInput>
+            </InputGroup>
+          </Col>
+          <Col xs={12} sm={4}>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Distinct: </InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" value={distinct} onChange={(event) => updateDistinct(event.target.value)}>
+                <option value="names">Names</option>
+                <option value="printings">Printings</option>
+              </CustomInput>
+            </InputGroup>
+          </Col>
+        </Row>
       </div>
       <br />
       <DynamicFlash />
-      {loading && (
-        <CardBody>
-          <div className="centered py-3">
-            <Spinner className="position-absolute" />
-          </div>
-        </CardBody>
-      )}
-      {!loading && (
-        <>
-          {(cards && cards.length) > 0 ? (
-            <Card>
-              {count / 100 > 0 && (
-                <CardHeader>
-                  <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
-                </CardHeader>
-              )}
-              <CardGrid
-                cardList={cards.map((card) => ({ details: card }))}
-                Tag={CardImage}
-                colProps={{ xs: 4, sm: 3, md: 2 }}
-                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-                linkDetails
-              />
-              {count / 100 > 0 && (
-                <CardFooter>
-                  <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
-                </CardFooter>
-              )}
-            </Card>
-          ) : (
-            <h4>No Results</h4>
+      {(cards && cards.length) > 0 ? (
+        <Card>
+          {count / 100 > 1 && (
+            <CardHeader>
+              <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+            </CardHeader>
           )}
-        </>
+
+          {loading && (
+            <CardBody>
+              <div className="centered py-3">
+                <Spinner className="position-absolute" />
+              </div>
+            </CardBody>
+          )}
+          {!loading && (
+            <CardGrid
+              cardList={cards.map((card) => ({ details: card }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+          )}
+          {count / 100 > 1 && (
+            <CardFooter>
+              <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+            </CardFooter>
+          )}
+        </Card>
+      ) : (
+        <h4>No Results</h4>
       )}
     </>
   );

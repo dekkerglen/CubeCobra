@@ -112,46 +112,69 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
   };
 }
 
-async function searchCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
-  const cards = await matchingCards(filter);
-  const oracleIdMap = new Map();
-  for (const card of cards) {
-    if (oracleIdMap.has(card.oracle_id)) {
-      oracleIdMap.get(card.oracle_id).push(card);
-    } else {
-      oracleIdMap.set(card.oracle_id, [card]);
+// sorts: ['elo', 'date', 'price', 'alphabetical']
+// direction: ['ascending', 'descending']
+// distinct: ['names', 'printings']
+
+const sortFunctions = {
+  elo: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.elo > b.elo) {
+      return factor;
     }
+    if (a.elo < b.elo) {
+      return -factor;
+    }
+    return 0;
+  },
+  date: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.released_at > b.released_at) {
+      return factor;
+    }
+    if (a.released_at < b.released_at) {
+      return -factor;
+    }
+    return 0;
+  },
+  price: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if ((a.prices.usd || a.prices.usd_foil) > (b.prices.usd || b.prices.usd_foil)) {
+      return factor;
+    }
+    if ((a.prices.usd || a.prices.usd_foil) < (b.prices.usd || b.prices.usd_foil)) {
+      return -factor;
+    }
+    return 0;
+  },
+  alphabetical: (direction) => (a, b) => {
+    const factor = direction === 'descending' ? 1 : -1;
+    return a.name.localeCompare(b.name) * factor;
+  },
+};
+
+async function searchCards(filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') {
+  let cards = await matchingCards(filter);
+
+  if (distinct === 'names') {
+    const keys = new Set();
+    const filtered = [];
+    for (const card of cards) {
+      if (!keys.has(card.name_lower)) {
+        filtered.push(carddb.getMostReasonableById(card._id));
+        keys.add(card.name_lower);
+      }
+    }
+    cards = filtered;
   }
 
-  const oracleIds = [...oracleIdMap.keys()];
-  const query = filter
-    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
-    : { 'current.picks': { $gte: minPicks } };
-  const selectedVersions = new Map(
-    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
-      oracleId,
-      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
-    ]),
-  );
+  cards = cards.sort(sortFunctions[sort](direction));
 
-  const sortName = `current.${sortField}`;
-  const sort = {};
-  sort[sortName] = direction === 'ascending' ? 1 : -1;
-
-  const dataQ = await CardHistory.find(query)
-    .sort(sort)
-    .skip(PAGE_SIZE * page)
-    .limit(PAGE_SIZE)
-    .lean();
-  const numResultsQ = CardHistory.countDocuments(query);
-
-  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
+  page = parseInt(page, 10);
 
   return {
-    numResults,
-    data: data
-      .filter(({ oracleId }) => selectedVersions.has(oracleId))
-      .map(({ oracleId }) => selectedVersions.get(oracleId)),
+    numResults: cards.length,
+    data: cards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
   };
 }
 
@@ -192,7 +215,7 @@ router.get('/api/searchcards', async (req, res) => {
       });
       return;
     }
-    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, 0);
+    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
     res.status(200).send({
       success: 'true',
       ...results,
