@@ -417,6 +417,17 @@ const CardPage = ({ card, data, versions, related }) => {
                           </ButtonLink>
                         </Col>
                         <Col className="pb-2" xs="12" sm="6">
+                          <ButtonLink
+                            outline
+                            color="success"
+                            block
+                            href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
+                            target="_blank"
+                          >
+                            View all Printings
+                          </ButtonLink>
+                        </Col>
+                        <Col className="pb-2" xs="12" sm="6">
                           <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
                             View on Scryfall
                           </ButtonLink>
