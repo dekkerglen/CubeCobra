@@ -11,12 +11,19 @@ const mongoose = require('mongoose');
 
 const Cube = require('../models/cube');
 const carddb = require('../serverjs/cards.js');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 
 const batchSize = 1000;
 
 const processCube = (cube) => {
   return cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower);
 };
+
+const folder = 'august2';
 
 (async () => {
   await carddb.initializeCardDb();
@@ -40,8 +47,15 @@ const processCube = (cube) => {
         }
       }
 
-      fs.writeFileSync(path(i / batchSize), JSON.stringify(cubes.map(processCube)), 'utf8');
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
+     const params = {
+         Bucket: 'cubecobra', // pass your bucket name
+         Key: `${folder}/cubes/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
+         Body: JSON.stringify(cubes.map(processCube))
+     };
+     await s3.upload(params).promise();
+     
+    console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
+     
     }
     mongoose.disconnect();
     console.log('done');

@@ -11,8 +11,16 @@ const mongoose = require('mongoose');
 
 const Deck = require('../models/deck');
 const carddb = require('../serverjs/cards.js');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 
-const batchSize = 100;
+
+const batchSize = 1000;
+
+const folder = 'august2';
 
 const processDeck = (deck) => {
   const main = [];
@@ -60,9 +68,14 @@ const processDeck = (deck) => {
           }
         }
       }
+     const params = {
+         Bucket: 'cubecobra', // pass your bucket name
+         Key: `${folder}/decks/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
+         Body: JSON.stringify(decks)
+     };
+     await s3.upload(params).promise();
+    console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
 
-      fs.writeFileSync(path(i / batchSize), JSON.stringify(decks), 'utf8');
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
     mongoose.disconnect();
     console.log('done');

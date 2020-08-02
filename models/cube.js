@@ -9,19 +9,16 @@ const Card = {
   ],
   finish: {
     type: String,
-    enum: ['Foil', 'Non-foil'],
     default: 'Non-foil',
   },
   status: {
     type: String,
-    enum: ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'],
     default: 'Not Owned',
   },
   colors: {
     type: [
       {
         type: String,
-        enum: ['W', 'U', 'B', 'R', 'G', 'C', ''],
       },
     ],
     default: null,
@@ -42,7 +39,6 @@ const Card = {
   notes: String,
   colorCategory: {
     type: String,
-    enum: [null, 'White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'],
     default: null,
   },
 };
