@@ -882,6 +882,7 @@ router.get('/analysis/:id', async (req, res) => {
       defaultFormatId: Number(req.query.formatId),
       defaultFilterText: req.query.f,
       defaultTab: Number(req.query.tab),
+      cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
     };
 
     return res.render('cube/cube_analysis', {
@@ -3943,9 +3944,7 @@ router.post(
   '/api/adds/:id',
   util.wrapAsyncApi(async (req, res) => {
     const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${req.params.id}&num_recs=${1000}&root=${encodeURIComponent(
-        process.env.HOST,
-      )}`,
+      `${process.env.FLASKROOT}/?cube_name=dekkaru&num_recs=${1000}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
       req.logger.error({ message: 'Flask server response not OK.' });
@@ -4005,14 +4004,51 @@ router.get(
 );
 
 router.post(
-  '/api/maybe/:id',
+  '/api/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
         message: 'Maybeboard can only be updated by cube owner.',
+      });
+    }
+
+    cube.cards.push(util.newCard(req.body.add.details));
+    await cube.save();
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
+
+router.post(
+  '/api/maybe/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Cube can only be updated by owner.',
       });
     }
 

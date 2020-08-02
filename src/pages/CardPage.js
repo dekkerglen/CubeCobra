@@ -18,6 +18,7 @@ import {
   CustomInput,
   Table,
   Badge,
+  Button,
 } from 'reactstrap';
 
 import CardImage from 'components/CardImage';
@@ -30,13 +31,16 @@ import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
 import TextBadge from 'components/TextBadge';
+import AddToCubeModal from 'components/AddToCubeModal';
+import withModal from 'components/WithModal';
+
 import ChartComponent from 'react-chartjs-2';
-import similarity from 'compute-cosine-similarity';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
 
 const AutocardA = withAutocard('a');
+const AddModal = withModal(Button, AddToCubeModal);
 
 const Graph = ({ data, yFunc, unit, yRange }) => {
   const plot = {
@@ -172,7 +176,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, versions, related }) => {
+const CardPage = ({ card, data, versions, related, cubes }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
@@ -211,6 +215,15 @@ const CardPage = ({ card, data, versions, related }) => {
                   Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
                   <span className="percent">{data.current.total[0]}</span> Cubes total.
                 </p>
+                <AddModal
+                  color="success"
+                  block
+                  outline
+                  className="mb-2 mr-2"
+                  modalProps={{ card, cubes, hideAnalytics: true }}
+                >
+                  Add to Cube...
+                </AddModal>
                 {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                   <TextBadge name="Price" className="mt-1" fill>
                     <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
@@ -271,9 +284,9 @@ const CardPage = ({ card, data, versions, related }) => {
                             {card.parsed_cost
                               .slice(0)
                               .reverse()
-                              .map((symbol, index) => (
+                              .map((symbol) => (
                                 <img
-                                  key={`mana-symbol-${symbol}-${index}`}
+                                  key={`mana-symbol-${symbol}`}
                                   alt={symbol}
                                   className="mana-symbol"
                                   src={`/content/symbols/${symbol}.png`}
@@ -286,9 +299,9 @@ const CardPage = ({ card, data, versions, related }) => {
                       <p className="my-0">{card.type}</p>
                       <hr />
                       <p className="my-0">
-                        {card.oracle_text.split('\n').map((text, index) => (
+                        {card.oracle_text.split('\n').map((text) => (
                           <p>
-                            <MagicMarkdown key={`oracle-text-${index}`} markdown={text} />
+                            <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
                           </p>
                         ))}
                       </p>
@@ -601,7 +614,7 @@ const CardPage = ({ card, data, versions, related }) => {
         <CardBody>
           <h4>Most Synergistic Cards</h4>
           <CardGrid
-            cardList={related.synergistic.map((card) => ({ details: card }))}
+            cardList={related.synergistic.map((item) => ({ details: item }))}
             Tag={CardImage}
             colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -610,7 +623,7 @@ const CardPage = ({ card, data, versions, related }) => {
           <hr />
           <h4>Top Cards</h4>
           <CardGrid
-            cardList={related.top.map((card) => ({ details: card }))}
+            cardList={related.top.map((item) => ({ details: item }))}
             Tag={CardImage}
             colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -619,7 +632,7 @@ const CardPage = ({ card, data, versions, related }) => {
           <hr />
           <h4>Creatures</h4>
           <CardGrid
-            cardList={related.creatures.map((card) => ({ details: card }))}
+            cardList={related.creatures.map((item) => ({ details: item }))}
             Tag={CardImage}
             colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -628,7 +641,7 @@ const CardPage = ({ card, data, versions, related }) => {
           <hr />
           <h4>Spells</h4>
           <CardGrid
-            cardList={related.spells.map((card) => ({ details: card }))}
+            cardList={related.spells.map((item) => ({ details: item }))}
             Tag={CardImage}
             colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -637,7 +650,7 @@ const CardPage = ({ card, data, versions, related }) => {
           <hr />
           <h4>Other</h4>
           <CardGrid
-            cardList={related.other.map((card) => ({ details: card }))}
+            cardList={related.other.map((item) => ({ details: item }))}
             Tag={CardImage}
             colProps={{ xs: 4, sm: 3, md: 2 }}
             cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
@@ -661,6 +674,13 @@ CardPage.propTypes = {
     set_name: PropTypes.string.isRequired,
     collector_number: PropTypes.string.isRequired,
     legalities: PropTypes.shape({}).isRequired,
+    parsed_cost: PropTypes.string.isRequired,
+    oracle_text: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    artist: PropTypes.string.isRequired,
+    loyalty: PropTypes.string.isRequired,
+    power: PropTypes.string.isRequired,
+    toughness: PropTypes.shape({}).isRequired,
     prices: PropTypes.shape({
       usd: PropTypes.number,
       usd_foil: PropTypes.number,
@@ -693,12 +713,38 @@ CardPage.propTypes = {
       total: PropTypes.arrayOf(PropTypes.number).isRequired,
     }),
   }).isRequired,
-  related: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      image_normal: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  related: PropTypes.shape({
+    top: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    synergistic: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    creatures: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    spells: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    other: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
   versions: PropTypes.arrayOf(
     PropTypes.shape({
       set_name: PropTypes.string.isRequired,
@@ -713,6 +759,11 @@ CardPage.propTypes = {
       }).isRequired,
     }).isRequired,
   ).isRequired,
+  cubes: PropTypes.arrayOf(PropTypes.shape([])),
+};
+
+CardPage.defaultProps = {
+  cubes: [],
 };
 
 export default CardPage;
