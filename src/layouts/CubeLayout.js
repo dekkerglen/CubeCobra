@@ -39,7 +39,7 @@ const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
       <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
         <div className="nav-item px-lg-4 px-3 text-sm-left text-center font-weight-boldish mt-auto mb-2">
           {cube.name}
-          {cube.type && <span className="d-none d-sm-inline"> ({subtitle})</span>}
+          {cube.type && <span className="d-sm-inline"> ({subtitle})</span>}
         </div>
         <div className="d-flex flex-row flex-wrap">
           <CubeNavItem link="overview" activeLink={activeLink}>

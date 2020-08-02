@@ -515,7 +515,6 @@ router.get('/view/:id', async (req, res) => {
 
     const following = req.user ? user.users_following.includes(req.user.id) : false;
     delete user.users_following;
-
     return res.render('user/user_view', {
       reactProps: serialize({
         user,
