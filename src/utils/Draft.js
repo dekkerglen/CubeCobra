@@ -3,7 +3,7 @@ import similarity from 'compute-cosine-similarity';
 import {
   COLOR_COMBINATIONS,
   cardColorIdentity,
-  cardDevotion,
+  cardName,
   cardType,
   cardIsSpecialZoneType,
   COLOR_INCLUSION_MAP,
@@ -15,24 +15,48 @@ import {
   considerInCombination,
   getPickSynergy,
   isPlayableLand,
-  scaleSimilarity,
-  SYNERGY_SCALE,
-  unWeightedRating,
+  setSynergyMatrix,
+  getCastingProbability,
+  COLORS,
+  FETCH_LANDS,
+  PROB_TO_INCLUDE,
 } from 'utils/draftbots';
-import { arrayShuffle, fromEntries } from 'utils/Util';
+import { fromEntries } from 'utils/Util';
 
 let draft = null;
 
-export const createSeen = () => ({
-  values: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
-  synergies: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
-  cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
-});
+export const createSeen = () => {
+  const result = {
+    values: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
+    cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
+    lands: { W: 0, U: 0, B: 3, R: 3, G: 3 },
+  };
+  let desiredLandCount = 17;
+  for (let i = 5; i > 0; i--) {
+    result.lands[COLORS[5 - i]] = Math.floor(desiredLandCount / i);
+    desiredLandCount -= result.lands[COLORS[5 - i]];
+  }
+  return result;
+};
 
-let synergyMatrix;
 // This function tracks the total goodness of the cards we've seen or picked in this color.
-export const addSeen = (seen, cards, synergies) => {
+export const addSeen = (seen, cards) => {
   for (const card of cards) {
+    if (cardType(card).toLowerCase().includes('land')) {
+      const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
+      seen.lands[colors.join('')] = (seen.lands[colors.join('')] ?? 0) + 1;
+      let removed = false;
+      for (const color of colors) {
+        if (!removed && seen.lands[color] > 0) {
+          removed = true;
+          seen.lands[color] -= 1;
+        }
+      }
+      if (!removed) {
+        const color = COLORS.find((c) => seen.lands[c] > 0);
+        if (color) seen.lands[color] -= 1;
+      }
+    }
     if (card.index || card.index === 0) {
       const rating = getRating(card);
       const colors = cardColorIdentity(card);
@@ -40,21 +64,6 @@ export const addSeen = (seen, cards, synergies) => {
       for (const comb of COLOR_COMBINATIONS) {
         const combStr = comb.join('');
         if (COLOR_INCLUSION_MAP[combStr][colorsStr] || isPlayableLand(comb, card)) {
-          if (synergies) {
-            for (const { index } of seen.cards[combStr]) {
-              if (synergyMatrix[index][card.index] === null) {
-                const similarityValue = similarity(synergies[card.index], synergies[index]);
-                if (Number.isFinite(similarityValue)) {
-                  synergyMatrix[card.index][index] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
-                }
-                if (!Number.isFinite(synergyMatrix[card.index][index])) {
-                  synergyMatrix[card.index][index] = 0;
-                }
-                synergyMatrix[index][card.index] = synergyMatrix[card.index][index];
-              }
-              seen.synergies[combStr] += synergyMatrix[index][card.index];
-            }
-          }
           seen.cards[combStr].push(card);
           // We ignore colorless because they just reduce variance by
           // being in all color combinations.
@@ -67,23 +76,11 @@ export const addSeen = (seen, cards, synergies) => {
   }
 };
 
-export function initGridDraft(newDraft) {
-  draft = newDraft;
-  const maxIndex = Math.max(...draft.initial_state.flat(2).map(({ index }) => index));
-  synergyMatrix = [];
-  for (let i = 0; i <= maxIndex; i++) {
-    synergyMatrix.push(new Array(maxIndex + 1).fill(null));
-  }
-}
-
 export function init(newDraft) {
   draft = newDraft;
   const maxIndex = Math.max(...draft.initial_state.flat(3).map(({ index }) => index));
-  synergyMatrix = [];
-  for (let i = 0; i <= maxIndex; i++) {
-    synergyMatrix.push(new Array(maxIndex + 1).fill(null));
-  }
-  if (draft.seats[0].packbacklog.length > 0) {
+  setSynergyMatrix(maxIndex);
+  if (draft.seats[0].packbacklog && draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
       addSeen(seat.seen, seat.packbacklog[0].slice());
@@ -133,9 +130,9 @@ export const getPicked = (seat) => {
 };
 
 export const botRating = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[0];
+  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum).rating;
 const botColors = (card, picked, seen, synergies, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum)[1];
+  botRatingAndCombination(card, picked, seen, synergies, initialState, inPack, packNum).colors;
 
 function getSortFn(bot) {
   return (a, b) => {
@@ -146,25 +143,11 @@ function getSortFn(bot) {
   };
 }
 
-export const calculateBasicCounts = (main, colors) => {
-  // add up colors
-  const symbols = {
-    W: 0,
-    U: 0,
-    B: 0,
-    R: 0,
-    G: 0,
-  };
+export const calculateBasicCounts = (main, synergies) => {
+  const picked = createSeen();
+  addSeen(picked, main);
+  const { lands, colors } = botRatingAndCombination(null, picked, null, synergies, null, 0, 0);
 
-  for (const card of main) {
-    for (const symbol of ['W', 'U', 'B', 'R', 'G']) {
-      symbols[symbol] += cardDevotion(card, symbol) ?? 0;
-    }
-  }
-  const colorWeights = Object.values(symbols);
-  const totalColor = colorWeights.reduce((a, b) => {
-    return a + b;
-  }, 0);
   const result = {};
 
   const landDict = {
@@ -174,18 +157,10 @@ export const calculateBasicCounts = (main, colors) => {
     R: 'Mountain',
     G: 'Forest',
   };
-  const desiredLength = Math.floor((40 * main.filter((c) => !cardType(c).toLowerCase().includes('land')).length) / 23);
-  const toAdd = desiredLength - main.length;
-  let added = 0;
-  for (const [symbol, weight] of Object.entries(symbols)) {
-    const amount = Math.floor((weight / totalColor) * toAdd);
-    result[landDict[symbol]] = amount;
-    added += amount;
+  for (const [symbol, name] of Object.entries(landDict)) {
+    result[name] = lands[symbol];
   }
-  for (let i = main.length + added; i < desiredLength; i++) {
-    result[landDict[colors[i % colors.length]]] += 1;
-  }
-  return result;
+  return { lands: result, colors };
 };
 
 const allPairsShortestPath = (distances) => {
@@ -325,21 +300,19 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
   return bestNodes.map((ind) => nodes[ind]);
 };
 
-async function build(cards, picked, synergies, colors, basics) {
+async function build(cards, lands, synergies, colors, basics) {
   let nonlands = cards.filter((card) => !cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card));
-  const lands = cards.filter((card) => cardType(card).toLowerCase().includes('land'));
+  const landCards = cards.filter((card) => cardType(card).toLowerCase().includes('land'));
   const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
   const sortFn = getSortFn(colors);
-  const inColor = nonlands.filter((item) => considerInCombination(colors, item));
-  const outOfColor = nonlands.filter((item) => !considerInCombination(colors, item));
+  const inColor = nonlands.filter((item) => getCastingProbability(item, lands) >= PROB_TO_INCLUDE);
+  const outOfColor = nonlands.filter((item) => getCastingProbability(item, lands) < PROB_TO_INCLUDE);
 
-  lands.sort(sortFn);
-  inColor.sort(sortFn);
+  landCards.sort(sortFn);
 
-  const playableLands = lands.filter((land) => isPlayableLand(colors, land));
-  const unplayableLands = lands.filter((land) => !isPlayableLand(colors, land));
-
+  const playableLands = landCards.filter((land) => isPlayableLand(colors, land));
+  const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, land));
   nonlands = inColor;
   let side = outOfColor;
   if (nonlands.length < 23) {
@@ -383,7 +356,9 @@ async function build(cards, picked, synergies, colors, basics) {
 
       for (let j = 1; j < nonlands.length; j++) {
         const card = nonlands[j];
-        const score = getPickSynergy(colors, card, played, synergies) + getRating(colors, card);
+        const score =
+          (getPickSynergy(chosen, card, played, synergies) + getRating(colors, card)) *
+          getCastingProbability(card, lands);
         if (score > bestScore) {
           best = j;
           bestScore = score;
@@ -406,10 +381,10 @@ async function build(cards, picked, synergies, colors, basics) {
   side.push(...specialZoneCards);
 
   if (basics) {
-    const basicsToAdd = calculateBasicCounts(main, colors);
-    for (const [basic, count] of Object.entries(basicsToAdd)) {
-      for (let i = 0; i < count; i++) {
-        main.push(basics[[basic]]);
+    ({ lands, colors } = calculateBasicCounts(main, synergies));
+    for (const [name, amount] of Object.entries(lands)) {
+      for (let i = 0; i < amount; i++) {
+        main.push(basics[name]);
       }
     }
   }
@@ -444,13 +419,9 @@ async function build(cards, picked, synergies, colors, basics) {
   };
 }
 
-export async function buildDeck(cards, picked, synergies, initialState, basics) {
-  const colors = botColors(null, picked, null, null, synergies, initialState, 1, initialState[0].length);
-  return build(cards, picked, synergies, colors, basics);
-}
-export async function buildGridDraftDeck(cards, picked, synergies, basics) {
-  const colors = unWeightedRating(null, picked, null, synergies)[1];
-  return build(cards, picked, synergies, colors, basics);
+export async function buildDeck(cards, picked, synergies, basics) {
+  const { colors, lands } = botRatingAndCombination(null, picked, null, null, synergies, null);
+  return build(cards, lands, synergies, colors, basics);
 }
 
 function botPicks() {
@@ -464,28 +435,32 @@ function botPicks() {
     } = draft.seats[botIndex];
     if (packFrom.length > 0 && bot) {
       const { initial_state, synergies } = draft;
-      let ratedPicks = [];
-      const unratedPicks = [];
+      const ratedPicks = [];
       const inPack = packFrom.length;
       const [packNum] = packPickNumber();
       for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-        if (packFrom[cardIndex].rating) {
-          ratedPicks.push(cardIndex);
-        } else {
-          unratedPicks.push(cardIndex);
+        if (!packFrom[cardIndex].rating) {
+          packFrom[cardIndex].rating = 1200;
         }
+        ratedPicks.push(cardIndex);
       }
-      ratedPicks = ratedPicks
-        .map((cardIndex) => [
-          botRating(packFrom[cardIndex], picked, seen, synergies, initial_state, inPack, packNum),
-          cardIndex,
-        ])
-        .sort(([a], [b]) => b - a)
-        .map(([, cardIndex]) => cardIndex);
-      arrayShuffle(unratedPicks);
+      const ratedPicksWithRating = ratedPicks
+        .map((cardIndex) => {
+          const { rating, lands } = botRatingAndCombination(
+            packFrom[cardIndex],
+            picked,
+            seen,
+            synergies,
+            initial_state,
+            inPack,
+            packNum,
+          );
+          return [rating, lands, cardIndex];
+        })
+        .sort(([a], [b]) => b - a);
 
-      const pickOrder = ratedPicks.concat(unratedPicks);
-      const pickedCard = draft.seats[botIndex].packbacklog[0].splice(pickOrder[0], 1)[0];
+      [[, picked.lands]] = ratedPicksWithRating;
+      const pickedCard = draft.seats[botIndex].packbacklog[0].splice(ratedPicksWithRating[0][2], 1)[0];
       draft.seats[botIndex].pickorder.push(pickedCard);
       addSeen(picked, [pickedCard], draft.synergies);
     }
@@ -558,7 +533,7 @@ async function pick(cardIndex) {
 async function finish() {
   // build bot decks
   const decksPromise = draft.seats.map((seat) => {
-    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.initial_state, draft.basics);
+    return seat.bot && buildDeck(seat.pickorder, seat.picked, draft.synergies, draft.basics);
   });
   const decks = await Promise.all(decksPromise);
 

@@ -2200,7 +2200,10 @@ router.get('/griddraft/:id', async (req, res) => {
     // insert card details everywhere that needs them
     for (const pack of draft.unopenedPacks) {
       for (const card of pack) {
-        card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+        card.details = carddb.cardFromId(
+          card.cardID,
+          'cmc type image_normal image_flip name color_identity parsed_cost',
+        );
       }
     }
 
@@ -2271,7 +2274,10 @@ router.get('/draft/:id', async (req, res) => {
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID, 'cmc type image_normal image_flip name color_identity');
+          card.details = carddb.cardFromId(
+            card.cardID,
+            'cmc type image_normal image_flip name color_identity parsed_cost',
+          );
         }
       }
     }
@@ -2973,7 +2979,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
-    deck.owner = deck.seats[0].userid;
+    deck.owner = draft.seats[0].userid;
 
     for (const seat of draft.seats) {
       deck.seats.push({
@@ -3200,7 +3206,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         base.seats[req.params.index].pickorder,
         userPicked,
         srcDraft.synergies,
-        srcDraft.initial_state,
         srcDraft.basics,
       );
 
@@ -3221,13 +3226,12 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
             card.details = carddb.cardFromId(card.cardID);
           }
           const picked = deckutil.default.createSeen();
-          deckutil.default.addSeen(picked, base.seats[i].pickorder, srcDraft.synergies);
+          deckutil.default.addSeen(picked, base.seats[i].pickorder);
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
             picked,
             srcDraft.synergies,
-            srcDraft.initial_state,
             srcDraft.basics,
           );
           deck.seats.push({
@@ -3459,7 +3463,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.status(404).render('misc/404', {});
     }
-    const draft = deck.draft ? await Draft.findById(deck.draft).lean() : null;
+    const draft = deck.draft
+      ? (await Draft.findById(deck.draft).lean()) || (await GridDraft.findById(deck.draft).lean())
+      : null;
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
 

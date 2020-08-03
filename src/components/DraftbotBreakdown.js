@@ -12,7 +12,6 @@ import { addSeen, createSeen, init } from 'utils/Draft';
 import {
   botRatingAndCombination,
   getColor,
-  getColorScaling,
   getColorWeight,
   getFixing,
   getFixingWeight,
@@ -23,8 +22,11 @@ import {
   getRating,
   getRatingWeight,
   getSynergyWeight,
+  getCastingProbability,
+  PROB_TO_INCLUDE,
 } from 'utils/draftbots';
 import Query from 'utils/Query';
+import { fromEntries } from 'utils/Util';
 import useToggle from 'hooks/UseToggle';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -77,6 +79,7 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   return [cardsInPack, picks, pack, picksList, seat];
 };
 
+// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities)
 const TRAITS = [
   {
     name: 'Rating',
@@ -88,13 +91,15 @@ const TRAITS = [
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (combination, _, picked) => getInternalSynergy(combination, picked),
+    function: (_, __, picked, synergies, ___, ____, pickedInCombination) =>
+      getInternalSynergy(pickedInCombination, picked, synergies),
   },
   {
-    name: 'Synergy',
+    name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (combination, card, picked, synergies) => getPickSynergy(combination, card, picked, synergies),
+    function: (_, card, picked, synergies, __, ___, pickedInCombination) =>
+      getPickSynergy(pickedInCombination, card, picked, synergies),
   },
   {
     name: 'Openness',
@@ -106,7 +111,8 @@ const TRAITS = [
     name: 'Color',
     description: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (combination, card, picked) => getColor(combination, picked, card),
+    function: (_, _____, picked, __, ___, ____, pickedInCombination, probabilities) =>
+      getColor(pickedInCombination, picked, probabilities),
   },
   {
     name: 'Fixing',
@@ -115,13 +121,13 @@ const TRAITS = [
     function: (combination, card) => getFixing(combination, card),
   },
   {
-    name: 'Color Scaling',
+    name: 'Casting Probability',
     description:
-      'A score of how much it costs to play this many colors. The rest of the factors are multiplied by this amount as an additional weight',
-    function: (combination) => getColorScaling(combination),
+      'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
+    function: (_, card, __, ___, ____, lands) => getCastingProbability(card, lands),
   },
   {
-    name: 'Combination',
+    name: 'Lands',
     description: 'This is the color combination the bot is assuming that will maximize the total score.',
   },
   {
@@ -146,7 +152,7 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
 
   for (const card of cardsInPack) {
     card.scores = [];
-    const [score, combination] = botRatingAndCombination(
+    const { rating, colors, lands } = botRatingAndCombination(
       card,
       picked,
       seen,
@@ -155,12 +161,19 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
       cardsInPack.length,
       pack + 1,
     );
+    const probabilities = {};
+    for (const c of picked.cards.WUBRG) {
+      probabilities[c.cardID] = getCastingProbability(c, lands);
+    }
+    const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
 
     for (let i = 0; i < TRAITS.length - 2; i++) {
-      card.scores.push(TRAITS[i].function(combination, card, picked, draft.synergies, seen));
+      card.scores.push(
+        TRAITS[i].function(colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities),
+      );
     }
-    card.scores.push(combination.join(''));
-    card.scores.push(score.toFixed(2));
+    card.scores.push(JSON.stringify(fromEntries(Object.entries(lands).filter(([, c]) => c))));
+    card.scores.push(rating.toFixed(2));
   }
   if (normalized) {
     for (let i = 0; i < TRAITS.length - 2; i++) {
@@ -268,7 +281,9 @@ Internal.propTypes = {
   }).isRequired,
   pack: PropTypes.number.isRequired,
   picks: PropTypes.number.isRequired,
-  picked: PropTypes.shape({}).isRequired,
+  picked: PropTypes.shape({
+    cards: PropTypes.shape({ WUBRG: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })) }).isRequired,
+  }).isRequired,
   seen: PropTypes.shape({}).isRequired,
 };
 
