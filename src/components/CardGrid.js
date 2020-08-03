@@ -1,8 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { encodeName } from 'utils/Card';
-
 import { Row, Col } from 'reactstrap';
 
 function cardImage(Tag, card, cardProps, linkDetails) {

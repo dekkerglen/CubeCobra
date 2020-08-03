@@ -52,12 +52,17 @@ Suggestion.propTypes = {
     }).isRequired,
   }).isRequired,
   cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
     maybe: PropTypes.arrayOf(
       PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
     ),
   }).isRequired,
   index: PropTypes.number.isRequired,
-  cubes: PropTypes.arrayOf(PropTypes.shape({})),
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ),
 };
 
 Suggestion.defaultProps = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ImageFallback from 'components/ImageFallback';
 import { csrfFetch } from 'utils/CSRF';
@@ -100,8 +100,8 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext, cube
       <ModalHeader toggle={toggle}>{`Add ${card.name} to Cube`}</ModalHeader>
       <ModalBody>
         {' '}
-        {alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert key={index} color={color} className="mt-2">
+        {alerts.map(({ color, message }) => (
+          <UncontrolledAlert key={message} color={color} className="mt-2">
             {message}
           </UncontrolledAlert>
         ))}
@@ -143,12 +143,25 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext, cube
 };
 
 AddToCubeModal.propTypes = {
-  card: PropTypes.shape({}).isRequired,
-  userid: PropTypes.string.isRequired,
+  card: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    image_normal: PropTypes.string.isRequired,
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  isOpen: PropTypes.bool.isRequired,
+  hideAnalytics: PropTypes.bool,
+  toggle: PropTypes.func.isRequired,
+  cubeContext: PropTypes.string,
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
 };
 
-AddToCubeModal.defaultPropTypes = {
+AddToCubeModal.defaultProps = {
   hideAnalytics: false,
+  cubeContext: null,
 };
 
 export default AddToCubeModal;
