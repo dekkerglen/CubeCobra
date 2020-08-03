@@ -2,24 +2,6 @@ import React, { useState } from 'react';
 
 import { Col, Card, CardBody } from 'reactstrap';
 
-const TCG = () => {
-  return (
-    <Col xs="12">
-      <div className="centered pt-2">
-        <iframe
-          title="tcg"
-          className="advertisement"
-          src="https://content.tcg20life.com/tcgafa2.html?pk=CubeCobra&categoryId=1&campaign=affiliate&source=CubeCobra&medium=CubeCobra"
-          id="tcg-a1"
-          width="728"
-          height="90"
-          frameBorder="0"
-        />
-      </div>
-    </Col>
-  );
-};
-
 const Advertisment = () => {
   const [option] = useState(Math.floor(Math.random() * 4));
 
@@ -58,7 +40,7 @@ const Advertisment = () => {
     );
   }
 
-  return <TCG />;
+  return <></>;
 };
 
 export default Advertisment;

@@ -116,14 +116,18 @@ function cardsAreEquivalent(card, details) {
   return true;
 }
 
+function cardIsLegal(card, legality) {
+  return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
+}
+
 function setCubeType(cube, carddb) {
   let pauper = true;
   let type = legalityToInt('Standard');
   for (const card of cube.cards) {
-    if (pauper && !carddb.cardFromId(card.cardID).legalities.Pauper) {
+    if (pauper && !['legal', 'banned'].includes(carddb.cardFromId(card.cardID).legalities.Pauper)) {
       pauper = false;
     }
-    while (type > 0 && !carddb.cardFromId(card.cardID).legalities[intToLegality(type)]) {
+    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type).toLowerCase())) {
       type -= 1;
     }
   }

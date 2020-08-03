@@ -75,6 +75,7 @@ function initializeCatalog() {
   catalog.oracleToId = {};
   catalog.english = {};
   catalog.elodict = {};
+  catalog.embeddingdict = {};
 }
 
 initializeCatalog();
@@ -434,19 +435,29 @@ function convertCmc(card, isExtra) {
 function convertLegalities(card, isExtra) {
   if (isExtra) {
     return {
-      Legacy: false,
-      Modern: false,
-      Standard: false,
-      Pauper: false,
-      Pioneer: false,
+      Legacy: 'not_legal',
+      Modern: 'not_legal',
+      Standard: 'not_legal',
+      Pioneer: 'not_legal',
+      Pauper: 'not_legal',
+      Brawl: 'not_legal',
+      Historic: 'not_legal',
+      Commander: 'not_legal',
+      Penny: 'not_legal',
+      Vintage: 'not_legal',
     };
   }
   return {
-    Legacy: card.legalities.legacy === 'legal',
-    Modern: card.legalities.modern === 'legal' || card.legalities.modern === 'banned',
-    Standard: card.legalities.standard === 'legal' || card.legalities.standard === 'banned',
-    Pioneer: card.legalities.pioneer === 'legal' || card.legalities.pioneer === 'banned',
-    Pauper: card.legalities.pauper === 'legal' || card.legalities.pauper === 'banned',
+    Legacy: card.legalities.legacy,
+    Modern: card.legalities.modern,
+    Standard: card.legalities.standard,
+    Pioneer: card.legalities.pioneer,
+    Pauper: card.legalities.pauper,
+    Brawl: card.legalities.brawl,
+    Historic: card.legalities.historic,
+    Commander: card.legalities.commander,
+    Penny: card.legalities.penny,
+    Vintage: card.legalities.vintage,
   };
 }
 
@@ -575,7 +586,9 @@ function convertCard(card, isExtra) {
   const name = convertName(card, isExtra);
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
+  newcard.set_name = card.set_name;
   newcard.collector_number = card.collector_number;
+  newcard.released_at = card.released_at;
 
   newcard.promo =
     card.promo ||
@@ -593,6 +606,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
   };
   newcard.elo = catalog.elodict[name];
+  newcard.embedding = catalog.embeddingdict[name];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -720,6 +734,7 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   // create Elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
+    catalog.embeddingdict[rating.name] = rating.embedding;
   }
 
   winston.info('Processing cards...');

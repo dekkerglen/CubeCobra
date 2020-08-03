@@ -7,7 +7,7 @@ const RealPage = ({ index, active, urlF, onClick }) => (
   <PaginationItem active={active === index}>
     <PaginationLink
       tag="a"
-      href={urlF ? urlF(index) : '#'}
+      href={urlF ? urlF(index) : ''}
       data-index={onClick ? index : undefined}
       onClick={onClick ? () => onClick(index) : () => {}}
     >
@@ -52,7 +52,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
   const bigPagination = (
     <>
       <RealPage index={0} active={active} urlF={urlF} onClick={onClick} />
-      {active < 5 && (
+      {active < 4 && (
         <>
           {range(1, 4).map((index) => (
             // eslint-disable-next-line react/no-array-index-key
@@ -70,7 +70,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
           ))}
         </>
       )}
-      {active >= 5 && active <= count - 5 && (
+      {active >= 4 && active <= count - 5 && (
         <>
           <FakePage text="..." />
           {range(active - 1, active + 1).map((index) => (
@@ -90,7 +90,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <PaginationLink
           tag="a"
           previous
-          href={urlF ? urlF(active - 1) : '#'}
+          href={urlF ? urlF(active - 1) : ''}
           data-index={onClick ? active - 1 : undefined}
           onClick={() => onClick(active - 1)}
         />
@@ -100,7 +100,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <PaginationLink
           tag="a"
           next
-          href={urlF ? urlF(active + 1) : '#'}
+          href={urlF ? urlF(active + 1) : ''}
           data-index={onClick ? active + 1 : undefined}
           onClick={() => onClick(active + 1)}
         />

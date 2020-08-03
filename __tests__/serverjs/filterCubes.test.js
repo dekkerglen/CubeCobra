@@ -127,13 +127,4 @@ describe('filterCubes', () => {
       ],
     });
   });
-
-  it('correctly parses card condition', async () => {
-    const { err, filter } = await makeFilter('card:murder', carddb);
-
-    expect(err).toBeFalsy();
-    const { query, fieldsUsed } = filter;
-    expect(fieldsUsed).toEqual(['card']);
-    expect(query).toEqual({ _id: { $in: TEST_IDS } });
-  });
 });

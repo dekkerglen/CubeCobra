@@ -834,3 +834,11 @@ img.mana-symbol-sm {
 		min-height: 100px;
 	}
 }
+
+.legality-badge {
+	min-width: 8rem;
+}
+
+.btn:hover { 
+	text-decoration: none !important; 
+} 

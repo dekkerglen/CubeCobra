@@ -6,6 +6,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
 import TopCardsTable from 'components/TopCardsTable';
+import { Row, Col } from 'reactstrap';
+import ButtonLink from 'components/ButtonLink';
 
 import Query from 'utils/Query';
 
@@ -20,7 +22,18 @@ const TopCards = ({ data, numResults }) => {
   return (
     <>
       <div className="usercontrols pt-3 mb-3">
-        <h4 className="mx-3 mb-3">Top Cards</h4>
+        <Row className="pb-3 mr-1">
+          <Col xs="6">
+            <h3 className="mx-3">Top Cards</h3>
+          </Col>
+          <Col xs="6">
+            <div className="text-right">
+              <ButtonLink outline color="success" href="/tool/searchcards">
+                Search All Cards
+              </ButtonLink>
+            </div>
+          </Col>
+        </Row>
         <FilterCollapse
           isOpen
           defaultFilterText=""

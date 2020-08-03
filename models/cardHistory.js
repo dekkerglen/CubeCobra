@@ -5,12 +5,13 @@ const Datapoint = {
   rating: Number,
   picks: Number,
   cubes: Number,
-  embedding: [Number],
   prices: [
     {
       version: String,
       price: Number,
       price_foil: Number,
+      eur: Number,
+      tix: Number,
     },
   ],
   size180: [Number],
@@ -33,12 +34,14 @@ const cardHistorySchema = mongoose.Schema({
   oracleId: String,
   versions: [String], // Card IDs for all versions of this card.
   current: Datapoint,
-  cubedWith: [
-    {
-      other: String, // Oracle ID
-      count: Number,
-    },
-  ], // this is list of card ids
+  cubedWith: {
+    // Oracle ID
+    synergistic: [String],
+    top: [String],
+    creatures: [String],
+    spells: [String],
+    other: [String],
+  },
   cubes: [String], // this is a list of cube ids
   history: {
     type: [

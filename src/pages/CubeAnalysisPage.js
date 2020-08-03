@@ -32,7 +32,7 @@ import FilterCollapse from 'components/FilterCollapse';
 import useToggle from 'hooks/UseToggle';
 import Query from 'utils/Query';
 
-const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, defaultFormatId }) => {
+const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, defaultFormatId, cubes }) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
@@ -116,6 +116,7 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
           cuts={cutCards}
           filter={filter}
           loading={isLoading}
+          cubes={cubes}
         />
       ),
     },
@@ -213,12 +214,14 @@ CubeAnalysisPage.propTypes = {
   defaultFilterText: PropTypes.string,
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
+  cubes: PropTypes.arrayOf(PropTypes.shape({})),
 };
 
 CubeAnalysisPage.defaultProps = {
   defaultFilterText: '',
   defaultTab: 0,
   defaultFormatId: null,
+  cubes: [],
 };
 
 export default CubeAnalysisPage;

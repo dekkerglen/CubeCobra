@@ -19,7 +19,7 @@ const router = express.Router();
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
 /* Page size for results */
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 96;
 
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
@@ -58,7 +58,7 @@ async function matchingCards(filter) {
   return filterCardsDetails(cards, filter);
 }
 
-async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending') {
+async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
   const cards = await matchingCards(filter);
   const oracleIdMap = new Map();
   for (const card of cards) {
@@ -71,8 +71,8 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
 
   const oracleIds = [...oracleIdMap.keys()];
   const query = filter
-    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gt: MIN_PICKS } }
-    : { 'current.picks': { $gt: MIN_PICKS } };
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
+    : { 'current.picks': { $gte: minPicks } };
   const selectedVersions = new Map(
     [...oracleIdMap.entries()].map(([oracleId, versions]) => [
       oracleId,
@@ -112,6 +112,72 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
   };
 }
 
+// sorts: ['elo', 'date', 'price', 'alphabetical']
+// direction: ['ascending', 'descending']
+// distinct: ['names', 'printings']
+
+const sortFunctions = {
+  elo: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.elo > b.elo) {
+      return factor;
+    }
+    if (a.elo < b.elo) {
+      return -factor;
+    }
+    return 0;
+  },
+  date: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.released_at > b.released_at) {
+      return factor;
+    }
+    if (a.released_at < b.released_at) {
+      return -factor;
+    }
+    return 0;
+  },
+  price: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if ((a.prices.usd || a.prices.usd_foil) > (b.prices.usd || b.prices.usd_foil)) {
+      return factor;
+    }
+    if ((a.prices.usd || a.prices.usd_foil) < (b.prices.usd || b.prices.usd_foil)) {
+      return -factor;
+    }
+    return 0;
+  },
+  alphabetical: (direction) => (a, b) => {
+    const factor = direction === 'descending' ? 1 : -1;
+    return a.name.localeCompare(b.name) * factor;
+  },
+};
+
+async function searchCards(filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') {
+  let cards = await matchingCards(filter);
+
+  if (distinct === 'names') {
+    const keys = new Set();
+    const filtered = [];
+    for (const card of cards) {
+      if (!keys.has(card.name_lower)) {
+        filtered.push(carddb.getMostReasonableById(card._id));
+        keys.add(card.name_lower);
+      }
+    }
+    cards = filtered;
+  }
+
+  cards = cards.sort(sortFunctions[sort](direction));
+
+  page = parseInt(page, 10);
+
+  return {
+    numResults: cards.length,
+    data: cards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+  };
+}
+
 router.get('/api/topcards', async (req, res) => {
   try {
     const { err, filter } = makeFilter(req.query.f);
@@ -124,6 +190,32 @@ router.get('/api/topcards', async (req, res) => {
       return;
     }
     const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    res.status(200).send({
+      success: 'true',
+      ...results,
+    });
+  } catch (err) {
+    req.logger.error(err);
+    res.status(500).send({
+      success: 'false',
+      numResults: 0,
+      data: [],
+    });
+  }
+});
+
+router.get('/api/searchcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
+    if (err) {
+      res.status(400).send({
+        success: 'false',
+        numResults: 0,
+        data: [],
+      });
+      return;
+    }
+    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
     res.status(200).send({
       success: 'true',
       ...results,
@@ -168,20 +260,20 @@ router.get('/card/:id', async (req, res) => {
       id = english;
     }
 
-    // if id is a scryfall ID, redirect to oracle
-    const scryfall = carddb.cardFromId(id);
-    if (!scryfall.error) {
-      id = scryfall.oracle_id;
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
     }
 
-    if (!carddb.oracleToId[id]) {
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return res.redirect('/404');
     }
 
     // otherwise just go to this ID.
-    const card = carddb.getMostReasonableById(carddb.oracleToId[id][0]);
-    const data = await CardHistory.findOne({ oracleId: id });
+    const data = await CardHistory.findOne({ oracleId: card.oracle_id });
     if (!data) {
       req.flash(
         'danger',
@@ -190,10 +282,20 @@ router.get('/card/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
+    const related = {};
+
+    for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
+      related[category] = data.cubedWith[category].map((oracle) =>
+        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
+      );
+    }
+
     const reactProps = {
       card,
       data,
-      related: data.cubedWith.map((obj) => carddb.getMostReasonableById(carddb.oracleToId[obj.other][0])),
+      versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+      related,
+      cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),
@@ -328,6 +430,13 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
       success: 'false',
     });
   }
+});
+
+router.get('/searchcards', async (req, res) => {
+  return res.render('tool/searchcards', {
+    reactProps: serialize({}),
+    title: 'Search Cards',
+  });
 });
 
 module.exports = router;

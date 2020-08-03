@@ -1,13 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { encodeName } from 'utils/Card';
-
 import { Row, Col } from 'reactstrap';
 
 function cardImage(Tag, card, cardProps, linkDetails) {
   const cardTag = <Tag card={card} {...cardProps} />;
-  if (linkDetails) return <a href={`/tool/card/${encodeName(card.details.name)}`}>{cardTag}</a>;
+  if (linkDetails) return <a href={`/tool/card/${card.details._id}`}>{cardTag}</a>;
   return cardTag;
 }
 

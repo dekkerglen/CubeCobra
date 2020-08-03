@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import withAutocard from 'components/WithAutocard';
 import { encodeName } from 'utils/Card';
 import PagedList from 'components/PagedList';
+import withModal from 'components/WithModal';
+import AddToCubeModal from 'components/AddToCubeModal';
 
 import {
   Card,
@@ -19,20 +21,22 @@ import {
 import useToggle from 'hooks/UseToggle';
 
 const AutocardA = withAutocard('a');
+const AddModal = withModal(AutocardA, AddToCubeModal);
 
-const Suggestion = ({ card, index }) => {
+const Suggestion = ({ card, index, cubes, cube }) => {
   return (
     <ListGroupItem>
       <h6>
         {index + 1}
         {'. '}
-        <AutocardA
+        <AddModal
           front={card.details.image_normal}
           back={card.details.image_flip || undefined}
           href={`/tool/card/${encodeName(card.cardID)}`}
+          modalProps={{ card: card.details, cubes, hideAnalytics: true, cubeContext: cube._id }}
         >
           {card.details.name}
-        </AutocardA>
+        </AddModal>
       </h6>
     </ListGroupItem>
   );
@@ -47,10 +51,25 @@ Suggestion.propTypes = {
       name: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    maybe: PropTypes.arrayOf(
+      PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
+    ),
+  }).isRequired,
   index: PropTypes.number.isRequired,
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ),
 };
 
-const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
+Suggestion.defaultProps = {
+  cubes: [],
+};
+
+const Suggestions = ({ adds, cuts, loading, cube, filter, cubes }) => {
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
@@ -83,7 +102,7 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
               <input className="mr-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
               <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
             </CardHeader>
-            <ListGroup>
+            <ListGroup className="pb-3">
               {loading && (
                 <CardBody>
                   <div className="centered py-3">
@@ -98,7 +117,7 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
                     rows={filteredAdds.slice(0).map(([add, index]) => (
-                      <Suggestion key={add.cardID} index={index} card={add} />
+                      <Suggestion key={add.cardID} index={index} card={add} cubes={cubes} cube={cube} />
                     ))}
                   />
                 ) : (
@@ -114,7 +133,7 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
             <CardHeader>
               <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
             </CardHeader>
-            <ListGroup>
+            <ListGroup className="pb-3">
               {loading && (
                 <CardBody>
                   <div className="centered py-3">
@@ -129,7 +148,7 @@ const Suggestions = ({ adds, cuts, loading, cube, filter }) => {
                     showBottom
                     pageWrap={(element) => <CardBody>{element}</CardBody>}
                     rows={filteredCuts.slice(0).map(([card, index]) => (
-                      <Suggestion key={card.cardID} index={index} card={card} />
+                      <Suggestion key={card.cardID} index={index} card={card} cubes={cubes} cube={cube} />
                     ))}
                   />
                 ) : (
@@ -155,9 +174,12 @@ Suggestions.propTypes = {
     ),
   }).isRequired,
   filter: PropTypes.func,
+  cubes: PropTypes.arrayOf(PropTypes.shape({})),
 };
+
 Suggestions.defaultProps = {
   filter: null,
+  cubes: [],
 };
 
 export default Suggestions;
