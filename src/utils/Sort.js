@@ -54,22 +54,21 @@ export function GetColorCategory(type, colors, full) {
     return 'Colorless';
   }
   if (colors.length > 1) {
-    if(full){
+    if (full) {
       const ordered = [...'WUBRG'].filter((c) => colors.includes(c)).join('');
-      if(colors.length == 2){
+      if (colors.length == 2) {
         return [GUILD_MAP[ordered]];
       }
-      if(colors.length == 3){
+      if (colors.length == 3) {
         return [WEDGE_MAP[ordered]];
       }
-      if(colors.length == 4){
+      if (colors.length == 4) {
         return '4c';
       }
-      if(colors.length == 5){
+      if (colors.length == 5) {
         return '5c';
       }
-    }
-    else{
+    } else {
       return 'Multicolored';
     }
   }
@@ -143,8 +142,8 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .concat(['1000000']);
 
 const SINGLE_COLOR_AND_COLORLESS = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Lands'];
-const GUILDS = ['Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Izzet','Golgari','Boros','Simic'];
-const SHARDS = ['Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur'];
+const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
+const SHARDS = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
 const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
 
 const allDevotions = (cube, color) => {
@@ -160,9 +159,7 @@ function getLabelsRaw(cube, sort) {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort == 'Color Category Full') {
-    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS)
-                                      .concat(SHARDS)
-                                      .concat(FOUR_AND_FIVE_COLOR);
+    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS).concat(SHARDS).concat(FOUR_AND_FIVE_COLOR);
   }
   if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
