@@ -21,7 +21,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
           return (
             <img
               key={/* eslint-disable-line react/no-array-index-key */ `symbol-${position}`}
-              src={`/content/symbols/${symbol.replace('/', '-')}.png`}
+              src={`/content/symbols/${symbol.replace('/', '-').toLowerCase()}.png`}
               alt={symbol}
               className="mana-symbol-sm"
             />

@@ -1,23 +1,18 @@
 p
-	a I'm very excited to bring you this release today! I needed to skip the last release, as I was (still am really) in the proces of moving to a new place, and I didn't have the extra time to prepare a proper release. I'm back to (almost) fully operational now, so you can expect us to resume the normal schedule. You may have also noticed a TCGPlayer advertisment banner, or a banner displaying a donation or merchandise link. This was more a experiment to see if I could help cover the gap in server costs, and I did learn a lot. The TCGPlayer ad got some clicks, but had a conversion rate of 0%, compared to our typical 7%. This tells me that it provided basically no value, so I won't be showing that anymore. I did however, get a consistent uptick in new Patreons, so you will occasionally see the other two banners.
-p
-	a Today's release mainly consists of two changes. The first is the addition of Grid Draft! This feature request had sat on our backlog for a while, until one of our 'Lotus Cobra' tier patreons had requested higher priority on this feature, so here it is! This mode is particularly exciting because it provides a way to do a draft with another human player, on one machine locally, in addition to the normal bot drafts. I debuted this feature in 
-		a(href="https://discord.gg/r6XeCv" target="_blank") Cube Outside The Box
-		a 's stream earlier this week. You can watch the vod 
-		a(href="https://t.co/2yGNimzDt0?amp=1" target="_blank") here
-		a . This release also represents a huge milestone with our performance improvements. I understand the downtime yesterday was quite brutal, and I'm sorry for any inconvience due to that. That downtime did allow me to fix several issues related to how we lookup decks, which was a huge bottleneck in overall server performance. It's still quite early to know for sure, but the current metrics are looking very promising. The biggest bottleneck right now is using the cube search feature, which is a challenging issue to tackle. Be sure to expect more performance improvements in the future.
-p
+	a 
+p	
 	a New Features:
 p
 	ul
-		li Added Grid Draft.
-		li Minor Draft bot tweaks.
-		li Added donation/affiliate banner to a few pages.
-		li Fixed the 'recent drafts' page. You can view this page from your dashboard.
+		li Added card search.
+		li Reworked card pages.
+		li Added a popup to quickly add cards to your cube from recommender.
+		li Added more fields for 'legality' sort and filter.
+		li Draft bots now take devotion into account.
 p
 	a Bugfixes:
 p
 	ul
-		li Made started sealed pool with too small card pool fail more gracefully.
-		li Fixed deckbuilder displaying wrong card counts by card type.
-		li Fixed cube popularity rating (again, I promise for real this time).
+		li Fixed flash errors on cube creation.
+		li Planeswalkers are now counted correctly in deckbuilder counts.
+		li Cube type now displayed on mobile
