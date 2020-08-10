@@ -14,15 +14,15 @@ async function addVars(deck) {
   try {
     if (!ownerCache[deck.cube]) {
       const cube = await Cube.findById(deck.cube);
-      if(cube) {
+      if (cube) {
         ownerCache[deck.cube] = cube.owner;
       }
     }
     deck.cubeOwner = ownerCache[deck.cube];
     deck.owner = deck.seats[0].userid;
-  
+
     return deck.save();
-  } catch(err) {
+  } catch (err) {
     console.error(err);
   }
 }
