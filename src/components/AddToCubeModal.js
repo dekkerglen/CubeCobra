@@ -16,7 +16,10 @@ import {
 } from 'reactstrap';
 
 const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext, cubes }) => {
-  const def = cubes.map((cube) => cube._id).includes(cubeContext) ? cubeContext : cubes[0]._id;
+  let def = cubeContext;
+  if (cubes.length > 0) {
+    def = cubes.map((cube) => cube._id).includes(cubeContext) ? cubeContext : cubes[0]._id;
+  }
   const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? def : '');
   const [alerts, setAlerts] = useState([]);
 
