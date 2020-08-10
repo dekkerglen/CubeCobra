@@ -46,7 +46,7 @@ export function GetColorIdentity(colors) {
   }
 }
 
-export function GetColorCategory(type, colors) {
+export function GetColorCategory(type, colors, full) {
   if (type.toLowerCase().includes('land')) {
     return 'Lands';
   }
@@ -54,7 +54,24 @@ export function GetColorCategory(type, colors) {
     return 'Colorless';
   }
   if (colors.length > 1) {
-    return 'Multicolored';
+    if(full){
+      const ordered = [...'WUBRG'].filter((c) => colors.includes(c)).join('');
+      if(colors.length == 2){
+        return [GUILD_MAP[ordered]];
+      }
+      if(colors.length == 3){
+        return [WEDGE_MAP[ordered]];
+      }
+      if(colors.length == 4){
+        return '4c';
+      }
+      if(colors.length == 5){
+        return '5c';
+      }
+    }
+    else{
+      return 'Multicolored';
+    }
   }
   if (colors.length == 1) {
     switch (colors[0]) {
@@ -85,6 +102,7 @@ export function getSorts() {
     'Artist',
     'CMC',
     'Color Category',
+    'Color Category Full',
     'Color Count',
     'Color Identity',
     'Color',
@@ -124,6 +142,11 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
+const SINGLE_COLOR_AND_COLORLESS = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Lands'];
+const GUILDS = ['Azorius','Dimir','Rakdos','Gruul','Selesnya','Orzhov','Izzet','Golgari','Boros','Simic'];
+const SHARDS = ['Bant','Esper','Grixis','Jund','Naya','Abzan','Jeskai','Sultai','Mardu','Temur'];
+const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
+
 const allDevotions = (cube, color) => {
   const counts = new Set();
   for (const card in cube) {
@@ -135,6 +158,11 @@ const allDevotions = (cube, color) => {
 function getLabelsRaw(cube, sort) {
   if (sort == 'Color Category') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
+  }
+  if (sort == 'Color Category Full') {
+    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS)
+                                      .concat(SHARDS)
+                                      .concat(FOUR_AND_FIVE_COLOR);
   }
   if (sort == 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
@@ -194,9 +222,9 @@ function getLabelsRaw(cube, sort) {
   } else if (sort == 'Finish') {
     return ['Non-foil', 'Foil'];
   } else if (sort == 'Guilds') {
-    return ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Golgari', 'Simic', 'Izzet', 'Boros'];
+    return GUILDS;
   } else if (sort == 'Shards / Wedges') {
-    return ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
+    return SHARDS;
   } else if (sort == 'Color Count') {
     return ['0', '1', '2', '3', '4', '5'];
   } else if (sort == 'Set') {
@@ -489,7 +517,11 @@ export function cardCanBeSorted(card, sort) {
 export function cardGetLabels(card, sort) {
   if (sort == 'Color Category') {
     if (card.colorCategory) return [card.colorCategory];
-    return [GetColorCategory(typeLine(card), colorIdentity(card))];
+    return [GetColorCategory(typeLine(card), colorIdentity(card), false)];
+  }
+  if (sort == 'Color Category Full') {
+    if (card.colorCategory) return [card.colorCategory];
+    return [GetColorCategory(typeLine(card), colorIdentity(card), true)];
   }
   if (sort == 'Color Identity') {
     return [GetColorIdentity(colorIdentity(card))];
