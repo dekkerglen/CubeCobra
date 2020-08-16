@@ -40,15 +40,14 @@ export const subtitle = (cards) => {
   const numCreatures = cards.filter((card) => /creature/i.test(cardType(card))).length;
   const numNonCreatures = numNonlands - numCreatures;
   const numSpecial = cards.filter(cardIsSpecialZoneType).length;
-  return `${
+  return (
     `${numCards} card${numCards === 1 ? '' : 's'}: ` +
     `${numLands} land${numLands === 1 ? '' : 's'}, ` +
     `${numNonlands} nonland: ` +
     `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}`
-  }${numSpecial}` > 0
-    ? ` ${numSpecial} special${numSpecial === 1 ? '' : 's'}`
-    : '';
+    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}` +
+    `${numSpecial > 0 ? ` ${numSpecial} special${numSpecial === 1 ? '' : 's'}` : ''}`
+  );
 };
 
 const canDrop = (_, target) => {
