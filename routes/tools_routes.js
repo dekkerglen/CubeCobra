@@ -59,7 +59,18 @@ async function matchingCards(filter) {
 }
 
 async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
-  const cards = await matchingCards(filter);
+  let cards = await matchingCards(filter);
+
+  const keys = new Set();
+  const filtered = [];
+  for (const card of cards) {
+    if (!keys.has(card.name_lower)) {
+      filtered.push(carddb.getMostReasonableById(card._id));
+      keys.add(card.name_lower);
+    }
+  }
+  cards = filtered;
+
   const oracleIdMap = new Map();
   for (const card of cards) {
     if (oracleIdMap.has(card.oracle_id)) {

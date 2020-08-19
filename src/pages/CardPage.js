@@ -42,6 +42,27 @@ import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink }
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
 
+const formatDate = (date) => `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
+
+const distinct = (list) => {
+  const res = [];
+  const dates = new Set();
+  for (const item of list) {
+    const date = formatDate(item.x);
+    if (!dates.has(date)) {
+      res.push(item);
+      dates.add(date);
+    }
+  }
+  if (res.length > 0 && !dates.has(formatDate(new Date()))) {
+    res.push({
+      x: new Date(),
+      y: res[res.length - 1].y,
+    });
+  }
+  return res;
+};
+
 const Graph = ({ data, yFunc, unit, yRange }) => {
   const plot = {
     labels: [unit],
@@ -51,15 +72,17 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
         fill: false,
         borderColor: '#28A745',
         backgroundColor: '#28A745',
-        data: data
-          .map((point) => {
-            try {
-              return { x: new Date(point.date), y: yFunc(point.data) };
-            } catch (exc) {
-              return {}; // if the yFunc fails this will get filtered out
-            }
-          })
-          .filter((point) => point.y),
+        data: distinct(
+          data
+            .map((point) => {
+              try {
+                return { x: new Date(point.date), y: yFunc(point.data) };
+              } catch (exc) {
+                return {}; // if the yFunc fails this will get filtered out
+              }
+            })
+            .filter((point) => point.y),
+        ),
       },
     ],
   };
