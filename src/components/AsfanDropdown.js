@@ -58,31 +58,33 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
 
   return (
     <Row>
-      <Col>
+      <Col xs="12" sm="6">
         <Label>
           <input type="checkbox" checked={useAsfans} onChange={toggleUseAsfans} /> Use expected count per player in a
           draft format instead of card count.
         </Label>
       </Col>
-      <Col>
-        <Form inline>
-          Draft Format:
-          <UncontrolledDropdown disabled={!useAsfans} className="ml-2">
-            <DropdownToggle caret={useAsfans} color={useAsfans ? 'success' : 'disabled'}>
-              {labelText(useAsfans)}
-            </DropdownToggle>
-            <DropdownMenu>
-              <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
-              {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
-              {cube.draft_formats.map((format, index) => (
-                <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                  {format.title}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </UncontrolledDropdown>
-        </Form>
-      </Col>
+      {useAsfans && (
+        <Col xs="12" sm="6">
+          <Form inline>
+            Draft Format:
+            <UncontrolledDropdown disabled={!useAsfans} className="ml-2">
+              <DropdownToggle caret={useAsfans} color={useAsfans ? 'success' : 'disabled'}>
+                {labelText(useAsfans)}
+              </DropdownToggle>
+              <DropdownMenu>
+                <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
+                {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
+                {cube.draft_formats.map((format, index) => (
+                  <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
+                    {format.title}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </UncontrolledDropdown>
+          </Form>
+        </Col>
+      )}
     </Row>
   );
 };
