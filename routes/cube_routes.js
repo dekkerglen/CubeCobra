@@ -4312,7 +4312,7 @@ router.post(
       if (!rating.picks) {
         rating.picks = 0;
       }
-      rating.picks++;
+      rating.picks += 1;
 
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
