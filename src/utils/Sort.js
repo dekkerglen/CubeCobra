@@ -378,7 +378,7 @@ function getLabelsRaw(cube, sort) {
     return ['Gold', 'Hybrid', 'Phyrexian'];
   } else if (sort == 'Creature/Non-Creature') {
     return ['Creature', 'Non-Creature'];
-  } else if (['Price', 'Price USD','Price Foil', 'Price USD Foil'].includes(sort)) {
+  } else if (['Price', 'Price USD', 'Price Foil', 'Price USD Foil'].includes(sort)) {
     const labels = [];
     for (let i = 0; i <= price_buckets.length; i++) {
       labels.push(price_bucket_label(i, '$'));
