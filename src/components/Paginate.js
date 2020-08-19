@@ -5,12 +5,7 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 const RealPage = ({ index, active, urlF, onClick }) => (
   <PaginationItem active={active === index}>
-    <PaginationLink
-      tag="a"
-      href={urlF ? urlF(index) : ''}
-      data-index={onClick ? index : undefined}
-      onClick={onClick ? () => onClick(index) : () => {}}
-    >
+    <PaginationLink tag="a" href={urlF(index)} data-index={onClick ? index : undefined} onClick={() => onClick(index)}>
       {index + 1}
     </PaginationLink>
   </PaginationItem>
@@ -24,8 +19,8 @@ RealPage.propTypes = {
 };
 
 RealPage.defaultProps = {
-  urlF: null,
-  onClick: undefined,
+  urlF: () => '#',
+  onClick: () => {},
 };
 
 const FakePage = ({ text }) => (
@@ -90,7 +85,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <PaginationLink
           tag="a"
           previous
-          href={urlF ? urlF(active - 1) : ''}
+          href={urlF(active - 1)}
           data-index={onClick ? active - 1 : undefined}
           onClick={() => onClick(active - 1)}
         />
@@ -100,7 +95,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <PaginationLink
           tag="a"
           next
-          href={urlF ? urlF(active + 1) : ''}
+          href={urlF(active + 1)}
           data-index={onClick ? active + 1 : undefined}
           onClick={() => onClick(active + 1)}
         />
@@ -117,8 +112,8 @@ Paginate.propTypes = {
 };
 
 Paginate.defaultProps = {
-  urlF: null,
-  onClick: undefined,
+  urlF: () => '#',
+  onClick: () => {},
 };
 
 export default Paginate;
