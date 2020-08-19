@@ -551,7 +551,7 @@ body.busy-cursor {
 }
 
 .profile-thumbnail {
-	border-radius: 50%;
+	border-radius: 10%;
 	object-fit: cover;
 	width: 60px;
 	height: 60px;
@@ -842,3 +842,19 @@ img.mana-symbol-sm {
 .btn:hover { 
 	text-decoration: none !important; 
 } 
+
+.blog-body { 
+	overflow: 'auto'; 
+	max-height: '50vh';
+ }
+
+ .comment-container {
+	 display: flex;
+	 flex-direction: row;
+	 flex-wrap: nowrap;
+	 justify-content: flex-start;
+ }
+
+ .comment-body {
+	 flex-grow: 1;
+ }

@@ -121,6 +121,10 @@ function fromEntries(entries) {
 }
 
 async function addNotification(user, from, url, text) {
+  if (!user) {
+    return; // if the target for notification doesn't exist anymore, lets fail gracefully
+  }
+
   if (user.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }

@@ -9,7 +9,6 @@ class CommentEntry extends React.Component {
       inputValue: '',
     };
 
-    this.toggle = this.toggle.bind(this);
     this.clickSubmit = this.clickSubmit.bind(this);
     this.updateInputValue = this.updateInputValue.bind(this);
   }
@@ -40,6 +39,9 @@ class CommentEntry extends React.Component {
       const json = await response.json().catch((err) => this.error(err));
       this.props.onPost(json.comment);
       document.body.classList.remove('busy-cursor');
+      if (this.props.expanded) {
+        this.props.toggle();
+      }
     }
   }
 
@@ -49,33 +51,24 @@ class CommentEntry extends React.Component {
     });
   }
 
-  toggle() {
-    this.setState({ collapse: !this.state.collapse });
-  }
-
   render() {
     return (
-      <>
-        <Collapse isOpen={!this.state.collapse}>
-          <a onClick={this.toggle}>{this.props.children}</a>
-        </Collapse>
-        <Collapse isOpen={this.state.collapse}>
-          <textarea
-            value={this.state.inputValue}
-            onChange={this.updateInputValue}
-            className="form-control"
-            id="exampleFormControlTextarea1"
-            rows="2"
-            maxLength="500"
-          ></textarea>
-          <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.clickSubmit}>
-            Submit
-          </a>{' '}
-          <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.toggle}>
-            Cancel
-          </a>
-        </Collapse>
-      </>
+      <Collapse isOpen={this.props.expanded}>
+        <textarea
+          value={this.state.inputValue}
+          onChange={this.updateInputValue}
+          className="form-control"
+          id="exampleFormControlTextarea1"
+          rows="2"
+          maxLength="500"
+        />
+        <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.clickSubmit}>
+          Submit
+        </a>{' '}
+        <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.props.toggle}>
+          Cancel
+        </a>
+      </Collapse>
     );
   }
 }

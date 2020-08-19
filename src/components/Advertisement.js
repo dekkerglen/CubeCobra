@@ -7,7 +7,7 @@ const Advertisment = () => {
 
   if (option === 0) {
     return (
-      <Col xs="12" d className="py-2">
+      <Col xs="12" className="py-2">
         <Card>
           <CardBody>
             Cube Cobra's hosting fees are covered completely by donations. If you enjoy the service Cube Cobra provides,

@@ -7,8 +7,11 @@ import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentEntry from 'components/CommentEntry';
-import CommentsSection from 'components/CommentsSection';
+import UseCommentsSection from 'components/UseCommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
+import Comment from 'components/Comment'
+
+const CommentsSection = UseCommentsSection(Comment);
 
 const DeckStacksStatic = ({ cards }) => (
   <CardBody className="pt-0 border-bottom">

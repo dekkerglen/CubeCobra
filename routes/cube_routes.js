@@ -2486,7 +2486,9 @@ router.post(
     const post = await Blog.findById(req.body.id);
     const { user } = req;
 
-    if (!user._id.equals(post.owner)) {
+    const owner = getOwnerFromComment(post.comments, req.body.position.slice(0, 22));
+
+    if (!user._id.equals(owner)) {
       return res.status(403).send({
         success: 'false',
         message: 'Only post owner may edit',
@@ -2679,7 +2681,8 @@ router.post(
     const comment = insertComment(deck.comments, req.body.position.slice(0, 22), {
       owner: user._id,
       ownerName: user.username,
-      ownerImage: '',
+      image: user.image,
+      artist: user.artist,
       content: sanitize(req.body.content),
       // the -1000 is to prevent weird time display error
       timePosted: Date.now() - 1000,
@@ -2740,7 +2743,8 @@ router.post(
     const comment = insertComment(post.comments, req.body.position.slice(0, 22), {
       owner: user._id,
       ownerName: user.username,
-      ownerImage: '',
+      image: user.image,
+      artist: user.artist,
       content: sanitize(req.body.content),
       // the -1000 is to prevent weird time display error
       timePosted: Date.now() - 1000,
