@@ -10,6 +10,8 @@ const { sanitize } = require('../serverjs/cubefn.js');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
+const Deck = require('../models/deck');
+const Blog = require('../models/blog');
 
 const router = express.Router();
 
@@ -28,6 +30,22 @@ router.get(
     });
   }),
 );
+
+const getReplyContext = {
+  comment: async (id) => {
+    const comment = await Comment.findById(id);
+    return [comment.owner, 'comment'];
+  },
+  blog: async (id) => {
+    const blog = await Blog.findById(id);
+    return [blog.owner, 'blogpost'];
+  },
+  deck: async (id) => {
+    const deck = await Deck.findById(id);
+    return [deck.owner, 'deck'];
+  },
+  default: async () => null, // nobody gets a notification for this
+};
 
 router.post(
   '/:type/:parent',
@@ -49,6 +67,19 @@ router.post(
     comment.timePosted = Date.now() - 1000;
 
     await comment.save();
+
+    const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
+
+    const owner = await User.findById(ownerid);
+
+    if (owner) {
+      await util.addNotification(
+        owner,
+        poster,
+        `/comment/${comment._id}`,
+        `${poster.username} left a comment in response to your ${type}.`,
+      );
+    }
 
     return res.status(200).send({
       success: 'true',
