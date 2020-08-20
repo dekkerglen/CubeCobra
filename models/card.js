@@ -1,7 +1,7 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 // card schema for analytics only. Use card objects for most use cases
-let cardSchema = mongoose.Schema({
+const cardSchema = mongoose.Schema({
   cardName: {
     type: String,
     index: true,
@@ -17,8 +17,8 @@ let cardSchema = mongoose.Schema({
   standard: [Number],
   vintage: [Number],
   total: [Number],
-  cubedWith: [[String]], //this is list of card ids
-  cubes: [String], //this is a list of cube ids
+  cubedWith: [[String]], // this is list of card ids
+  cubes: [String], // this is a list of cube ids
   cubesLength: {
     // length of cubes for indexing purposes
     type: Number,

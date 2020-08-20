@@ -1,7 +1,7 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-//this pattern lets us define comment recursively
-var Comment = new mongoose.Schema();
+// this pattern lets us define comment recursively
+const Comment = new mongoose.Schema();
 Comment.add({
   owner: String,
   ownerName: String,
@@ -21,7 +21,7 @@ Comment.add({
 });
 
 // Blog schema
-let blogSchema = mongoose.Schema({
+const blogSchema = mongoose.Schema({
   title: String,
   body: String,
   owner: String,
@@ -69,4 +69,4 @@ blogSchema.index({
   date: -1,
 });
 
-let Blog = (module.exports = mongoose.model('Blog', blogSchema));
+module.exports = mongoose.model('Blog', blogSchema);
