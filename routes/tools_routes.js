@@ -296,6 +296,7 @@ router.get('/card/:id', async (req, res) => {
       versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
       related,
       cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
+      userid: req.user ? req.user._id : null,
     };
     return res.render('tool/cardpage', {
       reactProps: serialize(reactProps),

@@ -1,83 +1,42 @@
-import React from 'react';
-
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Collapse } from 'reactstrap';
 
-class CommentEntry extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      inputValue: '',
-    };
+import LinkButton from 'components/LinkButton';
 
-    this.toggle = this.toggle.bind(this);
-    this.clickSubmit = this.clickSubmit.bind(this);
-    this.updateInputValue = this.updateInputValue.bind(this);
-  }
+const CommentEntry = ({ submit, expanded, toggle }) => {
+  const [text, setText] = useState('');
 
-  error(message) {
-    console.log(message);
-  }
+  return (
+    <Collapse isOpen={expanded}>
+      <textarea
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        className="form-control"
+        id="exampleFormControlTextarea1"
+        rows="2"
+        maxLength="500"
+      />
+      <LinkButton
+        onClick={() => {
+          submit(text);
+          toggle();
+          setText('');
+        }}
+      >
+        <small>Submit</small>
+      </LinkButton>
+      <LinkButton className="ml-2" onClick={toggle}>
+        <small>Cancel</small>
+      </LinkButton>
+    </Collapse>
+  );
+};
 
-  async clickSubmit() {
-    if (this.state.inputValue.length > 0) {
-      document.body.classList.add('busy-cursor');
-      this.setState({
-        collapse: false,
-        inputValue: '',
-      });
-
-      const response = await csrfFetch(this.props.submitUrl, {
-        method: 'POST',
-        body: JSON.stringify({
-          id: this.props.id,
-          content: this.state.inputValue,
-          position: this.props.position,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch((err) => this.error(err));
-      const json = await response.json().catch((err) => this.error(err));
-      this.props.onPost(json.comment);
-      document.body.classList.remove('busy-cursor');
-    }
-  }
-
-  updateInputValue(evt) {
-    this.setState({
-      inputValue: evt.target.value,
-    });
-  }
-
-  toggle() {
-    this.setState({ collapse: !this.state.collapse });
-  }
-
-  render() {
-    return (
-      <>
-        <Collapse isOpen={!this.state.collapse}>
-          <a onClick={this.toggle}>{this.props.children}</a>
-        </Collapse>
-        <Collapse isOpen={this.state.collapse}>
-          <textarea
-            value={this.state.inputValue}
-            onChange={this.updateInputValue}
-            className="form-control"
-            id="exampleFormControlTextarea1"
-            rows="2"
-            maxLength="500"
-          ></textarea>
-          <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.clickSubmit}>
-            Submit
-          </a>{' '}
-          <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.toggle}>
-            Cancel
-          </a>
-        </Collapse>
-      </>
-    );
-  }
-}
+CommentEntry.propTypes = {
+  submit: PropTypes.func.isRequired,
+  expanded: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
 
 export default CommentEntry;

@@ -1,50 +1,76 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-import { Collapse } from 'reactstrap';
+import { Collapse, Spinner } from 'reactstrap';
 
-import Comment from './Comment';
-import PagedList from './PagedList';
+import CommentList from 'components/PagedCommentList';
+import LinkButton from 'components/LinkButton';
+import CommentEntry from 'components/CommentEntry';
+import useToggle from 'hooks/UseToggle';
+import useComments from 'hooks/UseComments';
 
-class CommentsSection extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+const CommentsSection = ({ parent, parentType, collapse, userid }) => {
+  const [expanded, toggle] = useToggle(!collapse);
+  const [replyExpanded, toggleReply] = useToggle(false);
+  const [comments, addComment, loading] = useComments(parentType, parent);
 
-  render() {
-    var comments = this.props.comments;
+  const replyEntry = userid && (
+    <div className="p-2 border-bottom">
+      <Collapse isOpen={!replyExpanded}>
+        <h6>
+          <LinkButton className="ml-1" onClick={toggleReply}>
+            Add a Comment
+          </LinkButton>
+        </h6>
+      </Collapse>
+      <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
+    </div>
+  );
+
+  if (loading) {
     return (
-      comments.length > 0 && (
-        <>
-          <h6 className="comment-button mb-2 text-muted clickable" onClick={this.props.toggle}>
-            {this.props.expanded ? 'Hide' : 'View'} Replies ({comments.length})
-          </h6>
-          <Collapse isOpen={this.props.expanded}>
-            <PagedList
-              pageSize={10}
-              rows={comments
-                .slice(0)
-                .reverse()
-                .map((comment) => (
-                  <Comment
-                    key={comment.index}
-                    id={this.props.id}
-                    focused={
-                      this.props.focused && this.props.focused[0] == comment.index ? this.props.focused.slice(1) : null
-                    }
-                    position={this.props.position.concat([comment.index])}
-                    comment={comment}
-                    userid={this.props.userid}
-                    loggedIn={this.props.loggedIn}
-                    submitEdit={this.props.submitEdit}
-                    submitUrl={this.props.submitUrl}
-                  />
-                ))}
-            ></PagedList>
-          </Collapse>
-        </>
-      )
+      <div className="centered py-3">
+        <Spinner className="position-absolute" />
+      </div>
     );
   }
-}
+
+  if (comments.length === 0) {
+    return replyEntry;
+  }
+
+  if (collapse) {
+    return (
+      <>
+        {replyEntry}
+        <Collapse isOpen={expanded}>
+          <h6 className="comment-button mb-2 text-muted clickable" onClick={toggle}>
+            {expanded ? 'Hide' : 'View'} Replies ({comments.length})
+          </h6>
+        </Collapse>
+        <CommentList comments={comments} userid={userid} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {replyEntry}
+      <CommentList comments={comments} userid={userid} />
+    </>
+  );
+};
+
+CommentsSection.propTypes = {
+  parent: PropTypes.string.isRequired,
+  parentType: PropTypes.string.isRequired,
+  collapse: PropTypes.bool,
+  userid: PropTypes.string,
+};
+
+CommentsSection.defaultProps = {
+  collapse: false,
+  userid: null,
+};
 
 export default CommentsSection;

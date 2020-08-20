@@ -5,12 +5,11 @@ const commentSchema = mongoose.Schema({
   parent: String,
   parentType: {
     type: String,
-    enum: ['comment', 'blog', 'deck'],
+    enum: ['comment', 'blog', 'deck', 'card'],
   },
   owner: String,
   ownerName: String,
   content: String,
-  index: Number,
   timePosted: Date,
   updated: Boolean,
   image: {
@@ -25,7 +24,7 @@ const commentSchema = mongoose.Schema({
 
 commentSchema.index({
   parent: 1,
-  date: -1,
+  timePosted: 1,
 });
 
 module.exports = mongoose.model('Comment', commentSchema);

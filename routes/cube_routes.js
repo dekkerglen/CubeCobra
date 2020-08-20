@@ -2453,7 +2453,7 @@ router.get('/blogpost/:id', async (req, res) => {
 
     return res.render('cube/blogpost', {
       post,
-      owner: owner._id,
+      owner: owner ? owner._id : null,
       loginCallback: `/blogpost/${req.params.id}`,
     });
   } catch (err) {

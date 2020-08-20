@@ -842,3 +842,28 @@ img.mana-symbol-sm {
 .btn:hover { 
 	text-decoration: none !important; 
 } 
+
+.flex-container {
+	display:flex
+}
+
+.flex-direction-col {
+	flex-direction: column
+}
+
+.flex-grow {
+	flex-grow:1;
+}
+
+.flex-space-between {
+	justify-content: space-between;
+}
+
+.comment-bg-odd {
+	background-color: #F2F2F2;    
+	border-top: 1px solid #dee2e6;
+}
+.comment-bg-even {
+	background-color: #FFF;
+	border-top: 1px solid #dee2e6;
+}

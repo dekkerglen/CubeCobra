@@ -6,7 +6,6 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'react
 import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
-import CommentEntry from 'components/CommentEntry';
 import CommentsSection from 'components/CommentsSection';
 import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
 
@@ -152,27 +151,9 @@ const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view
       <CardBody>
         <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
       </CardBody>
-      <CardBody className="px-4 pt-2 pb-0 border-top">
-        <CommentEntry id={deckid} position={[]} onPost={onPost} submitUrl="/cube/api/postdeckcomment">
-          <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
-        </CommentEntry>
-      </CardBody>
-      {commentList.length > 0 && (
-        <CardBody className=" px-4 pt-2 pb-0 border-top">
-          <CommentsSection
-            expanded={childExpanded}
-            toggle={toggleChildCollapse}
-            id={deckid}
-            comments={commentList}
-            position={[]}
-            userid={userid}
-            loggedIn
-            submitEdit={submitEdit}
-            focused={false}
-            submitUrl="/cube/api/postdeckcomment"
-          />
-        </CardBody>
-      )}
+      <div className="border-top">
+        <CommentsSection parentType="deck" parent={deck._id} userid={userid} />
+      </div>
     </Card>
   );
 };

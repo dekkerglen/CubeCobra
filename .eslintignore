@@ -20,10 +20,6 @@ src/components/Changelist.js
 src/components/ChangelistContext.js
 src/components/ClientOnly.js
 src/components/ColorCheck.js
-src/components/Comment.js
-src/components/CommentContextMenu.js
-src/components/CommentEntry.js
-src/components/CommentsSection.js
 src/components/CompareView.js
 src/components/ContentEditable.js
 src/components/CountTableRow.js
