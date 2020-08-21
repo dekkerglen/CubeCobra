@@ -4,8 +4,8 @@ import { Collapse } from 'reactstrap';
 
 import LinkButton from 'components/LinkButton';
 
-const CommentEntry = ({ submit, expanded, toggle }) => {
-  const [text, setText] = useState('');
+const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
+  const [text, setText] = useState(defaultValue);
 
   return (
     <Collapse isOpen={expanded}>
@@ -37,6 +37,11 @@ CommentEntry.propTypes = {
   submit: PropTypes.func.isRequired,
   expanded: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
+  defaultValue: PropTypes.String,
+};
+
+CommentEntry.defaultProps = {
+  defaultValue: '',
 };
 
 export default CommentEntry;

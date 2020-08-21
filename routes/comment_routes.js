@@ -53,18 +53,26 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const poster = await User.findById(req.user.id);
 
+    if (!['comment', 'blog', 'deck', 'card'].includes(req.params.type)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid comment parent type.',
+      });
+    }
+
     const comment = new Comment();
 
-    comment.parent = req.params.parent;
+    comment.parent = req.params.parent.substring(0, 500);
     comment.parentType = req.params.type;
     comment.owner = poster._id;
     comment.ownerName = poster.username;
     comment.image = poster.image;
     comment.artist = poster.artist;
     comment.updated = false;
-    comment.content = sanitize(req.body.comment);
+    comment.content = sanitize(req.body.comment.substring(0, 500));
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
+    comment.date = Date.now() - 1000;
 
     await comment.save();
 
@@ -84,6 +92,50 @@ router.post(
     return res.status(200).send({
       success: 'true',
       comment,
+    });
+  }),
+);
+
+router.post(
+  '/edit',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const newComment = req.body.comment;
+
+    const comment = await Comment.findById(newComment._id);
+
+    if (comment.owner !== req.user.id) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Comments can only be edited by their owner.',
+      });
+    }
+
+    if (
+      ![null, comment.owner].includes(newComment.owner) ||
+      ![null, comment.ownerName].includes(newComment.ownerName)
+    ) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid comment update.',
+      });
+    }
+
+    comment.owner = newComment.owner;
+    comment.ownerName = newComment.ownerName;
+    comment.image = newComment.owner
+      ? 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021'
+      : req.user.image;
+    comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
+    comment.updated = true;
+    comment.content = sanitize(newComment.content.substring(0, 500));
+    // the -1000 is to prevent weird time display error
+    comment.timePosted = Date.now() - 1000;
+
+    await comment.save();
+
+    return res.status(200).send({
+      success: 'true',
     });
   }),
 );

@@ -15,10 +15,32 @@ const useToggle = (type, parent) => {
         comment,
       }),
     });
-    const val = await response.json(); // parses JSON response into native JavaScript objects
+    const val = await response.json();
 
     const clone = JSON.parse(JSON.stringify(comments));
     clone.push(val.comment);
+    setComments(clone);
+  };
+
+  const editComment = async (comment) => {
+    await csrfFetch(`/comment/edit`, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        comment,
+      }),
+    });
+
+    const clone = JSON.parse(JSON.stringify(comments));
+
+    for (let i = 0; i < clone.length; i++) {
+      if (clone[i]._id === comment._id) {
+        clone[i] = comment;
+      }
+    }
+
     setComments(clone);
   };
 
@@ -32,7 +54,7 @@ const useToggle = (type, parent) => {
           // 'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
-      const val = await response.json(); // parses JSON response into native JavaScript objects
+      const val = await response.json();
       return val;
     };
 
@@ -42,7 +64,7 @@ const useToggle = (type, parent) => {
     });
   }, [parent, type]);
 
-  return [comments, addComment, loading];
+  return [comments, addComment, loading, editComment];
 };
 
 export default useToggle;

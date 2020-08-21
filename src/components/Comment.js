@@ -25,13 +25,44 @@ import CommentEntry from 'components/CommentEntry';
 
 const maxDepth = 4;
 
-const Comment = ({ comment, index, depth, userid, noReplies }) => {
+const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
-  const [comments, addComment] = useComments('comment', comment._id);
+  const [comments, addComment, , editChildComment] = useComments('comment', comment._id);
   const [loaded, setLoaded] = useState(false);
   const [shareModalOpen, toggleShareModal] = useToggle(false);
   const [reportModalOpen, toggleReportModal] = useToggle(false);
+  const [isEdit, setIsEdit] = useState(false);
+
+  const remove = () => {
+    editComment({
+      _id: comment._id,
+      parent: comment.parent,
+      parentType: comment.parentType,
+      owner: null,
+      ownerName: null,
+      content: '[deleted]',
+      timePosted: new Date(),
+      updated: true,
+      image: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+      artist: 'Allan Pollack',
+    });
+  };
+
+  const edit = (content) => {
+    editComment({
+      _id: comment._id,
+      parent: comment.parent,
+      parentType: comment.parentType,
+      owner: comment.owner,
+      ownerName: comment.ownerName,
+      content,
+      timePosted: new Date(),
+      updated: true,
+      image: comment.image,
+      artist: comment.artist,
+    });
+  };
 
   return (
     <>
@@ -104,14 +135,24 @@ const Comment = ({ comment, index, depth, userid, noReplies }) => {
               </div>
               {comment.owner === userid && (
                 <div>
-                  <CommentContextMenu comment={comment} value="..." edit={() => {}} remove={() => {}}>
+                  <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                     <small>...</small>
                   </CommentContextMenu>
                 </div>
               )}
             </div>
-            <p className="mb-0">{comment.content}</p>
-
+            <Collapse isOpen={!isEdit}>
+              <p className="mb-0">{comment.content}</p>
+            </Collapse>
+            <CommentEntry
+              submit={(res) => {
+                edit(res);
+                setIsEdit(false);
+              }}
+              expanded={isEdit}
+              defaultValue={comment.content}
+              toggle={() => setIsEdit(false)}
+            />
             <div>
               {!noReplies && userid && (
                 <LinkButton onClick={toggleReply}>
@@ -164,6 +205,7 @@ const Comment = ({ comment, index, depth, userid, noReplies }) => {
                       index={index + comments.length - pos}
                       depth={depth + 1}
                       userid={userid}
+                      editComment={editChildComment}
                     />
                   ))}
                 {comments.length > 10 && (
@@ -185,6 +227,8 @@ Comment.propTypes = {
     timePosted: PropTypes.instanceOf(Date).isRequired,
     ownerName: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
+    parent: PropTypes.string.isRequired,
+    parentType: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
     content: PropTypes.string.isRequired,
@@ -195,6 +239,7 @@ Comment.propTypes = {
   depth: PropTypes.number,
   userid: PropTypes.string,
   noReplies: PropTypes.bool,
+  editComment: PropTypes.func.isRequired,
 };
 
 Comment.defaultProps = {

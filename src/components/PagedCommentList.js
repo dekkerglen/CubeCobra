@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Comment from 'components/Comment';
 import PagedList from 'components/PagedList';
 
-const CommentList = ({ comments, startIndex, userid }) => (
+const CommentList = ({ comments, startIndex, userid, editComment }) => (
   <PagedList
     pageSize={10}
     rows={comments
@@ -16,6 +16,7 @@ const CommentList = ({ comments, startIndex, userid }) => (
           comment={comment}
           index={startIndex + comments.length - index}
           userid={userid}
+          editComment={editComment}
         />
       ))}
   />
@@ -25,6 +26,7 @@ CommentList.propTypes = {
   comments: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   startIndex: PropTypes.number,
   userid: PropTypes.string,
+  editComment: PropTypes.func.isRequired,
 };
 
 CommentList.defaultProps = {

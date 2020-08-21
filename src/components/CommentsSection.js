@@ -12,7 +12,7 @@ import useComments from 'hooks/UseComments';
 const CommentsSection = ({ parent, parentType, collapse, userid }) => {
   const [expanded, toggle] = useToggle(!collapse);
   const [replyExpanded, toggleReply] = useToggle(false);
-  const [comments, addComment, loading] = useComments(parentType, parent);
+  const [comments, addComment, loading, editComment] = useComments(parentType, parent);
 
   if (loading) {
     return (
@@ -48,7 +48,7 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
             </div>
           )}
           <Collapse isOpen={expanded}>
-            <CommentList comments={comments} userid={userid} />
+            <CommentList comments={comments} userid={userid} editComment={editComment} />
           </Collapse>
         </>
       )}

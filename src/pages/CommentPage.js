@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardHeader } from 'reactstrap';
@@ -22,18 +22,20 @@ const translateLink = {
 };
 
 const CommentPage = ({ comment, userid }) => {
+  const [content, setContent] = useState(comment);
+
   return (
     <div className="pb-2">
       <DynamicFlash />
       <Card className="mt-2">
         <CardHeader>
-          <a href={translateLink[comment.parentType](comment.parent)}>
-            {`Responding to this ${translateType[comment.parentType]}`}
+          <a href={translateLink[content.parentType](content.parent)}>
+            {`Responding to this ${translateType[content.parentType]}`}
           </a>
         </CardHeader>
-        <Comment comment={comment} userid={userid} index={0} noReplies />
+        <Comment comment={content} userid={userid} index={0} noReplies editComment={setContent} />
         <div className="ml-4 border-left border-top">
-          <CommentsSection parentType="comment" parent={comment._id} userid={userid} />
+          <CommentsSection parentType="comment" parent={content._id} userid={userid} />
         </div>
       </Card>
     </div>

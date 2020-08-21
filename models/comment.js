@@ -20,11 +20,12 @@ const commentSchema = mongoose.Schema({
     type: String,
     default: 'Allan Pollack',
   },
+  date: Date,
 });
 
 commentSchema.index({
   parent: 1,
-  timePosted: 1,
+  date: 1,
 });
 
 module.exports = mongoose.model('Comment', commentSchema);
