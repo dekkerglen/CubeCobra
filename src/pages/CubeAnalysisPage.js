@@ -16,6 +16,7 @@ import Table from 'analytics/Table';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
+import Asfans from 'analytics/Asfans';
 import {
   cardCmc,
   cardDevotion,
@@ -93,6 +94,10 @@ const CubeAnalysisPage = ({ cube, cubeID, defaultFilterText, defaultTab, default
       component: (collection) => (
         <Table cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
       ),
+    },
+    {
+      name: 'Asfans',
+      component: (collection) => <Asfans cards={collection} cube={cube} />,
     },
     {
       name: 'Chart',
