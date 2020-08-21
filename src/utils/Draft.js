@@ -1,13 +1,6 @@
 import similarity from 'compute-cosine-similarity';
 
-import {
-  COLOR_COMBINATIONS,
-  cardColorIdentity,
-  cardName,
-  cardType,
-  cardIsSpecialZoneType,
-  COLOR_INCLUSION_MAP,
-} from 'utils/Card';
+import { cardColorIdentity, cardName, cardType, cardIsSpecialZoneType } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import {
   getRating,
@@ -21,14 +14,12 @@ import {
   FETCH_LANDS,
   PROB_TO_INCLUDE,
 } from 'utils/draftbots';
-import { fromEntries } from 'utils/Util';
 
 let draft = null;
 
 export const createSeen = () => {
   const result = {
-    values: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
-    cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
+    cards: [],
     lands: { W: 0, U: 0, B: 3, R: 3, G: 3 },
   };
   let desiredLandCount = 17;
@@ -58,20 +49,7 @@ export const addSeen = (seen, cards) => {
       }
     }
     if (card.index || card.index === 0) {
-      const rating = getRating(card);
-      const colors = cardColorIdentity(card);
-      const colorsStr = colors.join('');
-      for (const comb of COLOR_COMBINATIONS) {
-        const combStr = comb.join('');
-        if (COLOR_INCLUSION_MAP[combStr][colorsStr] || isPlayableLand(comb, card)) {
-          seen.cards[combStr].push(card);
-          // We ignore colorless because they just reduce variance by
-          // being in all color combinations.
-          if (colors.length > 0) {
-            seen.values[combStr] += rating;
-          }
-        }
-      }
+      seen.cards.push(card);
     }
   }
 };
@@ -349,6 +327,10 @@ async function build(cards, lands, synergies, colors, basics) {
     const played = createSeen();
     addSeen(played, chosen, synergies);
     const size = Math.min(23 - chosen.length, nonlands.length);
+    const probabilities = {};
+    for (const c of nonlands) {
+      probabilities[c.cardID] = getCastingProbability(c, lands);
+    }
     for (let i = 0; i < size; i++) {
       // add in new synergy data
       let best = 0;
@@ -357,8 +339,7 @@ async function build(cards, lands, synergies, colors, basics) {
       for (let j = 1; j < nonlands.length; j++) {
         const card = nonlands[j];
         const score =
-          (getPickSynergy(chosen, card, played, synergies) + getRating(colors, card)) *
-          getCastingProbability(card, lands);
+          getPickSynergy(chosen, card, played, synergies, probabilities) + getRating(colors, card, probabilities);
         if (score > bestScore) {
           best = j;
           bestScore = score;

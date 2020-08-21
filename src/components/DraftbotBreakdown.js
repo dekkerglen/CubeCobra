@@ -85,27 +85,27 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (_, card) => getRating(card),
+    function: (_1, card, _3, _4, _5, _6, _7, probabilities) => getRating(card, probabilities),
   },
   {
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (_, __, picked, synergies, ___, ____, pickedInCombination) =>
-      getInternalSynergy(pickedInCombination, picked, synergies),
+    function: (_, __, picked, synergies, ___, ____, pickedInCombination, probabilities) =>
+      getInternalSynergy(pickedInCombination, picked, synergies, probabilities),
   },
   {
     name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (_, card, picked, synergies, __, ___, pickedInCombination) =>
-      getPickSynergy(pickedInCombination, card, picked, synergies),
+    function: (_, card, picked, synergies, __, ___, pickedInCombination, probabilities) =>
+      getPickSynergy(pickedInCombination, card, picked, synergies, probabilities),
   },
   {
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, _, __, ___, seen) => getOpenness(combination, seen),
+    function: (_1, _2, _3, _4, seen, _6, _7, probabilities) => getOpenness(seen, probabilities),
   },
   {
     name: 'Color',
@@ -162,10 +162,11 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
       pack + 1,
     );
     const probabilities = {};
-    for (const c of picked.cards.WUBRG) {
+    for (const c of picked.cards) {
       probabilities[c.cardID] = getCastingProbability(c, lands);
     }
-    const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
+    probabilities[card.cardID] = getCastingProbability(card, lands);
+    const pickedInCombination = picked.cards.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
 
     for (let i = 0; i < TRAITS.length - 2; i++) {
       card.scores.push(
@@ -282,7 +283,7 @@ Internal.propTypes = {
   pack: PropTypes.number.isRequired,
   picks: PropTypes.number.isRequired,
   picked: PropTypes.shape({
-    cards: PropTypes.shape({ WUBRG: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })) }).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
   seen: PropTypes.shape({}).isRequired,
 };
