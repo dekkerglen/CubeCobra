@@ -171,4 +171,4 @@ DeckCard.defaultProps = {
   view: 'deck',
 };
 
-export deaul eckCard;
+export default DeckCard;
