@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
@@ -18,6 +19,12 @@ const CommentContextMenu = ({ edit, remove, children }) => {
       </DropdownMenu>
     </Dropdown>
   );
+};
+
+CommentContextMenu.propTypes = {
+  edit: PropTypes.func.isRequired,
+  remove: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 export default CommentContextMenu;

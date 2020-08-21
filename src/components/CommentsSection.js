@@ -14,19 +14,6 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
   const [replyExpanded, toggleReply] = useToggle(false);
   const [comments, addComment, loading] = useComments(parentType, parent);
 
-  const replyEntry = userid && (
-    <div className="p-2 border-bottom">
-      <Collapse isOpen={!replyExpanded}>
-        <h6>
-          <LinkButton className="ml-1" onClick={toggleReply}>
-            Add a Comment
-          </LinkButton>
-        </h6>
-      </Collapse>
-      <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="centered py-3">
@@ -35,28 +22,36 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
     );
   }
 
-  if (comments.length === 0) {
-    return replyEntry;
-  }
-
-  if (collapse) {
-    return (
-      <>
-        {replyEntry}
-        <Collapse isOpen={expanded}>
-          <h6 className="comment-button mb-2 text-muted clickable" onClick={toggle}>
-            {expanded ? 'Hide' : 'View'} Replies ({comments.length})
-          </h6>
-        </Collapse>
-        <CommentList comments={comments} userid={userid} />
-      </>
-    );
-  }
-
   return (
     <>
-      {replyEntry}
-      <CommentList comments={comments} userid={userid} />
+      {userid && (
+        <div className="p-2 border-bottom">
+          <Collapse isOpen={!replyExpanded}>
+            <h6>
+              <LinkButton className="ml-1" onClick={toggleReply}>
+                Add a Comment
+              </LinkButton>
+            </h6>
+          </Collapse>
+          <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
+        </div>
+      )}
+      {comments.length > 0 && (
+        <>
+          {collapse && (
+            <div className="p-2 border-bottom">
+              <h6>
+                <LinkButton className="ml-1" onClick={toggle}>
+                  {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
+                </LinkButton>
+              </h6>
+            </div>
+          )}
+          <Collapse isOpen={expanded}>
+            <CommentList comments={comments} userid={userid} />
+          </Collapse>
+        </>
+      )}
     </>
   );
 };
@@ -64,13 +59,13 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
 CommentsSection.propTypes = {
   parent: PropTypes.string.isRequired,
   parentType: PropTypes.string.isRequired,
-  collapse: PropTypes.bool,
   userid: PropTypes.string,
+  collapse: PropTypes.bool,
 };
 
 CommentsSection.defaultProps = {
-  collapse: false,
   userid: null,
+  collapse: true,
 };
 
 export default CommentsSection;

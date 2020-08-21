@@ -89,4 +89,4 @@ UserSchema.index({
   email: 1,
 });
 
-const User = (module.exports = mongoose.model('User', UserSchema));
+module.exports = mongoose.model('User', UserSchema);

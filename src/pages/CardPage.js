@@ -486,7 +486,7 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
               </TabPane>
               <TabPane tabId="5">
                 <div className="border-left border-bottom">
-                  <CommentsSection parentType="card" parent={card.oracle_id} userid={userid} />
+                  <CommentsSection parentType="card" parent={card.oracle_id} userid={userid} collapse={false} />
                 </div>
               </TabPane>
             </TabContent>

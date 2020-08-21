@@ -22,7 +22,6 @@ import CSRFForm from 'components/CSRFForm';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
-import CommentsSection from 'components/CommentsSection';
 
 const maxDepth = 4;
 
