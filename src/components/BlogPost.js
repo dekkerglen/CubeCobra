@@ -103,7 +103,7 @@ class BlogPost extends React.Component {
           )}
         </div>
         <div className="border-top">
-        <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} />
+          <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} />
         </div>
       </Card>
     );
