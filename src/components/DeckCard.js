@@ -169,7 +169,6 @@ DeckCard.propTypes = {
 DeckCard.defaultProps = {
   userid: null,
   view: 'deck',
-  comments: [],
 };
 
-export default DeckCard;
+export deaul eckCard;
