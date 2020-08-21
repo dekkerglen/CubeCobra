@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'reactstrap';
@@ -42,31 +42,7 @@ DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
 };
 
-const DeckCard = ({ seat, comments, deckid, userid, deck, seatIndex, draft, view }) => {
-  const [commentList, setCommentList] = useState(comments);
-  const [childExpanded, setChildCollapse] = useState(false);
-
-  const onPost = (comment) => {
-    comment.index = commentList.length;
-    const newList = commentList.slice();
-    newList.push(comment);
-    setCommentList(newList);
-  };
-  const saveEdit = (subComments, position, comment) => {
-    if (position.length === 1) {
-      subComments[position[0]] = comment;
-    } else if (position.length > 1) {
-      saveEdit(subComments[position[0]].comments, position.slice(1), comment);
-    }
-  };
-  const submitEdit = async (comment, position) => {
-    // update current state
-    saveEdit(comments, position, comment);
-  };
-  const toggleChildCollapse = () => {
-    setChildCollapse(!childExpanded);
-  };
-
+const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
   const stackedDeck = [seat.deck.slice(0, 8), seat.deck.slice(8, 16)];
   const stackedSideboard = [seat.sideboard.slice(0, 16)];
   let sbCount = 0;
@@ -169,8 +145,6 @@ DeckCard.propTypes = {
     name: PropTypes.string.isRequired,
   }).isRequired,
   userid: PropTypes.string,
-  deckid: PropTypes.string.isRequired,
-  comments: PropTypes.arrayOf(PropTypes.object),
   view: PropTypes.string,
   draft: PropTypes.shape({}).isRequired,
   deck: PropTypes.shape({
