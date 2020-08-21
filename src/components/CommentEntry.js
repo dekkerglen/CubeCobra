@@ -37,7 +37,7 @@ CommentEntry.propTypes = {
   submit: PropTypes.func.isRequired,
   expanded: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
-  defaultValue: PropTypes.String,
+  defaultValue: PropTypes.string,
 };
 
 CommentEntry.defaultProps = {
