@@ -598,7 +598,8 @@ function convertCard(card, isExtra) {
     card.frame === 'art_series' ||
     card.set.toLowerCase() === 'mps' || // kaladesh masterpieces
     card.set.toLowerCase() === 'mp2' || // invocations
-    card.set.toLowerCase() === 'exp'; // expeditions
+    card.set.toLowerCase() === 'exp' || // expeditions
+    card.set.toLowerCase() === 'amh1'; // mh1 art cards
   newcard.prices = {
     usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
     usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
