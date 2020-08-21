@@ -101,7 +101,6 @@ DecksPickBreakdown.propTypes = {
       }),
     ).isRequired,
     cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   seatIndex: PropTypes.number.isRequired,
   defaultIndex: PropTypes.number,

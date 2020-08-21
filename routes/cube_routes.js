@@ -26,9 +26,6 @@ const {
   removeCardHtml,
   replaceCardHtml,
   abbreviate,
-  insertComment,
-  getOwnerFromComment,
-  saveEdit,
   buildTagColors,
   maybeCards,
   getElo,
@@ -1191,7 +1188,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     const deck = new Deck();
     deck.date = Date.now();
-    deck.comments = [];
     deck.cubename = cube.name;
     deck.cube = cube._id;
     deck.cubeOwner = cube.owner;
@@ -1768,7 +1764,6 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
     deck.cube = cube._id;
     deck.cubeOwner = cube.owner;
     deck.date = Date.now();
-    deck.comments = [];
     deck.cubename = cube.name;
     deck.seats = [];
     deck.owner = user._id;
@@ -2453,61 +2448,13 @@ router.get('/blogpost/:id', async (req, res) => {
 
     return res.render('cube/blogpost', {
       post,
-      owner: owner._id,
+      owner: owner ? owner._id : null,
       loginCallback: `/blogpost/${req.params.id}`,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
 });
-
-router.get('/viewcomment/:id/:position', async (req, res) => {
-  try {
-    const { position, id } = req.params;
-
-    const post = await Blog.findById(req.params.id);
-    const owner = await User.findById(post.owner);
-
-    return res.render('cube/blogpost', {
-      post,
-      owner: owner._id,
-      loginCallback: `/blogpost/${id}`,
-      position: position.split('-'),
-    });
-  } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
-  }
-});
-
-router.post(
-  '/api/editcomment',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const post = await Blog.findById(req.body.id);
-    const { user } = req;
-
-    if (!user._id.equals(post.owner)) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Only post owner may edit',
-      });
-    }
-
-    if (!post) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Post not found',
-      });
-    }
-
-    req.body.comment.content = sanitize(req.body.comment.content);
-    saveEdit(post.comments, req.body.position.slice(0, 22), req.body.comment);
-    await post.save();
-    return res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
 
 router.post(
   '/api/editoverview',
@@ -2651,133 +2598,6 @@ router.post(
 
     await cube.save();
     return res.status(200).send({ success: 'true' });
-  }),
-);
-
-router.post(
-  '/api/postdeckcomment',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const deck = await Deck.findById(req.body.id);
-    const { user } = req;
-
-    if (!user) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!deck) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Deck not found',
-      });
-    }
-
-    // slice limits the recursive depth
-    const comment = insertComment(deck.comments, req.body.position.slice(0, 22), {
-      owner: user._id,
-      ownerName: user.username,
-      ownerImage: '',
-      content: sanitize(req.body.content),
-      // the -1000 is to prevent weird time display error
-      timePosted: Date.now() - 1000,
-      comments: [],
-    });
-
-    // give notification to owner
-    if (req.body.position.length === 0) {
-      // owner is blog deck owner
-      const owner = await User.findById(deck.seats[0].userid);
-      await util.addNotification(
-        owner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} added a comment to ${deck.name}`,
-      );
-    } else {
-      // need to find owner from comment tree
-      const owner = await User.findById(getOwnerFromComment(deck.comments, req.body.position));
-      await util.addNotification(
-        owner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} replied to your comment on ${deck.name}`,
-      );
-    }
-
-    await deck.save();
-    return res.status(200).send({
-      success: 'true',
-      comment,
-    });
-  }),
-);
-
-router.post(
-  '/api/postcomment',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const post = await Blog.findById(req.body.id);
-    const { user } = req;
-
-    if (!user) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!post) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Post not found',
-      });
-    }
-
-    // slice limits the recursive depth
-    const comment = insertComment(post.comments, req.body.position.slice(0, 22), {
-      owner: user._id,
-      ownerName: user.username,
-      ownerImage: '',
-      content: sanitize(req.body.content),
-      // the -1000 is to prevent weird time display error
-      timePosted: Date.now() - 1000,
-      comments: [],
-    });
-
-    // give notification to owner
-    if (req.body.position.length === 0) {
-      // owner is blog post owner
-      const owner = await User.findById(post.owner);
-      await util.addNotification(
-        owner,
-        user,
-        `/cube/blogpost/${post._id}`,
-        `${user.username} added a comment to ${post.title}`,
-      );
-    } else {
-      // need to find owner from comment tree
-      const owner = await User.findById(getOwnerFromComment(post.comments, req.body.position));
-      let positionText = '';
-      for (const pos of req.body.position) {
-        positionText += `${pos}-`;
-      }
-      positionText += comment.index;
-      await util.addNotification(
-        owner,
-        user,
-        `/cube/viewcomment/${post._id}/${positionText}`,
-        `${user.username} replied to your comment on ${post.title}`,
-      );
-    }
-
-    await post.save();
-    return res.status(200).send({
-      success: 'true',
-      comment,
-    });
   }),
 );
 
@@ -2975,7 +2795,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.cube = draft.cube;
     deck.cubeOwner = cube.owner;
     deck.date = Date.now();
-    deck.comments = [];
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
@@ -3034,7 +2853,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     const deck = new Deck();
     deck.cube = draft.cube;
     deck.date = Date.now();
-    deck.comments = [];
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
@@ -3190,7 +3008,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.cubeOwner = base.owner;
     deck.date = Date.now();
     deck.cubename = cube.name;
-    deck.comments = [];
     deck.draft = base.draft;
     deck.seats = [];
     deck.owner = req.user._id;

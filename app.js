@@ -248,12 +248,14 @@ const cubes = require('./routes/cube_routes');
 const users = require('./routes/users_routes');
 const devs = require('./routes/dev_routes');
 const tools = require('./routes/tools_routes');
+const comments = require('./routes/comment_routes');
 app.use('', require('./routes/root'));
 
 app.use('/cube', cubes);
 app.use('/user', users);
 app.use('/dev', devs);
 app.use('/tool', tools);
+app.use('/comment', comments);
 
 app.use((req, res) => {
   res.status(404).render('misc/404', {});

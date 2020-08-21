@@ -169,33 +169,6 @@ function abbreviate(name) {
   return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
-function insertComment(comments, position, comment) {
-  if (position.length <= 0) {
-    comment.index = comments.length;
-    comments.push(comment);
-    return comment;
-  }
-  return insertComment(comments[position[0]].comments, position.slice(1), comment);
-}
-
-function getOwnerFromComment(comments, position) {
-  if (position.length <= 0) {
-    return '';
-  }
-  if (position.length === 1) {
-    return comments[position[0]].owner;
-  }
-  return getOwnerFromComment(comments[position[0]].comments, position.slice(1));
-}
-
-function saveEdit(comments, position, comment) {
-  if (position.length === 1) {
-    comments[position[0]] = comment;
-  } else if (position.length > 1) {
-    saveEdit(comments[position[0]].comments, position.slice(1), comment);
-  }
-}
-
 function buildTagColors(cube) {
   let { tag_colors: tagColor } = cube;
   const tags = tagColor.map((item) => item.tag);
@@ -572,9 +545,6 @@ const methods = {
   removeCardHtml,
   replaceCardHtml,
   abbreviate,
-  insertComment,
-  getOwnerFromComment,
-  saveEdit,
   buildTagColors,
   maybeCards,
   getCardElo,

@@ -2,8 +2,7 @@ import React from 'react';
 import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
-import CommentsSection from './CommentsSection';
-import CommentEntry from './CommentEntry';
+import CommentsSection from 'components/CommentsSection';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -103,29 +102,9 @@ class BlogPost extends React.Component {
             </CardBody>
           )}
         </div>
-        {this.props.loggedIn && (
-          <CardBody className="px-4 pt-2 pb-0 border-top">
-            <CommentEntry id={post._id} position={[]} onPost={this.onPost} submitUrl={`/cube/api/postcomment`}>
-              <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
-            </CommentEntry>
-          </CardBody>
-        )}
-        {post.comments && post.comments.length > 0 && (
-          <CardBody className=" px-4 pt-2 pb-0 border-top">
-            <CommentsSection
-              expanded={this.state.childExpanded}
-              toggle={this.toggleChildCollapse}
-              id={post._id}
-              comments={post.comments}
-              position={[]}
-              userid={this.props.userid}
-              loggedIn={this.props.loggedIn}
-              submitEdit={this.submitEdit}
-              focused={this.props.focused}
-              submitUrl={`/cube/api/postcomment`}
-            />
-          </CardBody>
-        )}
+        <div className="border-top">
+          <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} />
+        </div>
       </Card>
     );
   }

@@ -1,19 +1,19 @@
-let mongoose = require('mongoose');
-let cardSchema = require('./cardSchema');
+const mongoose = require('mongoose');
+const cardSchema = require('./cardSchema');
 
-//data for each seat, human or bot
+// data for each seat, human or bot
 const Seat = {
-  bot: [String], //null bot value means human player
+  bot: [String], // null bot value means human player
   name: String,
   userid: String,
-  drafted: [[cardSchema]], //organized draft picks
-  sideboard: [[cardSchema]], //organized draft picks
+  drafted: [[cardSchema]], // organized draft picks
+  sideboard: [[cardSchema]], // organized draft picks
   pickorder: [cardSchema],
   packbacklog: [[cardSchema]],
 };
 
 // Cube schema
-let draftSchema = mongoose.Schema({
+const draftSchema = mongoose.Schema({
   cube: String,
   initial_state: [[[cardSchema]]],
   seats: [Seat],
@@ -28,4 +28,4 @@ let draftSchema = mongoose.Schema({
   },
 });
 
-let Draft = (module.exports = mongoose.model('Draft', draftSchema));
+module.exports = mongoose.model('Draft', draftSchema);

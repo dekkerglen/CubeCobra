@@ -32,6 +32,7 @@ import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
 import TextBadge from 'components/TextBadge';
 import AddToCubeModal from 'components/AddToCubeModal';
+import CommentsSection from 'components/CommentsSection';
 import withModal from 'components/WithModal';
 
 import ChartComponent from 'react-chartjs-2';
@@ -199,7 +200,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, versions, related, cubes }) => {
+const CardPage = ({ card, data, versions, related, cubes, userid }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
@@ -224,302 +225,296 @@ const CardPage = ({ card, data, versions, related, cubes }) => {
           <h4>{card.name}</h4>
           <h6>{`${card.set_name} [${card.set.toUpperCase()}-${card.collector_number}]`}</h6>
         </CardHeader>
-        <CardBody className="pb-0">
-          <Row>
-            <Col className="px-0" xs="12" sm="3">
-              <ImageFallback
-                className="w-100"
-                src={card.image_normal}
-                fallbackSrc="/content/default_card.png"
-                alt={card.name}
-              />
-              <CardBody className="breakdown p-1">
-                <p>
-                  Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
-                  <span className="percent">{data.current.total[0]}</span> Cubes total.
-                </p>
-                <AddModal
-                  color="success"
-                  block
-                  outline
-                  className="mb-2 mr-2"
-                  modalProps={{ card, cubes, hideAnalytics: true }}
-                >
-                  Add to Cube...
-                </AddModal>
-                {card.prices && Number.isFinite(cardPrice({ details: card })) && (
-                  <TextBadge name="Price" className="mt-1" fill>
-                    <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
-                  <TextBadge name="Foil" className="mt-1" fill>
-                    <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
-                  <TextBadge name="EUR" className="mt-1" fill>
-                    <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.prices && Number.isFinite(cardTix({ details: card })) && (
-                  <TextBadge name="TIX" className="mt-1" fill>
-                    <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {Number.isFinite(cardElo({ details: card })) && (
-                  <TextBadge name="Elo" className="mt-1" fill>
-                    {cardElo({ details: card }).toFixed(0)}
-                  </TextBadge>
-                )}
-              </CardBody>
-            </Col>
-            <Col className="breakdown px-0" xs="12" sm="9">
-              <Nav tabs>
-                <Tab tab={selectedTab} setTab={setSelectedTab} index="0">
-                  Card
-                </Tab>
-                <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
-                  Elo
-                </Tab>
-                <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
-                  Price
-                </Tab>
-                <Tab tab={selectedTab} setTab={setSelectedTab} index="3">
-                  Play Rate
-                </Tab>
-                <Tab tab={selectedTab} setTab={setSelectedTab} index="4">
-                  Links
-                </Tab>
-              </Nav>
-              <CardBody>
-                <TabContent activeTab={selectedTab}>
-                  <TabPane tabId="0">
-                    <CardBody>
-                      <Row>
-                        <Col xs="6">
-                          <div className="text-left">
-                            <b>{card.name}</b>
-                          </div>
-                        </Col>
-                        <Col xs="6">
-                          <div className="text-right">
-                            {card.parsed_cost
-                              .slice(0)
-                              .reverse()
-                              .map((symbol) => (
-                                <img
-                                  key={`mana-symbol-${symbol}`}
-                                  alt={symbol}
-                                  className="mana-symbol"
-                                  src={`/content/symbols/${symbol}.png`}
-                                />
-                              ))}
-                          </div>
-                        </Col>
-                      </Row>
-                      <hr />
-                      <p className="my-0">{card.type}</p>
-                      <hr />
-                      <p className="my-0">
-                        {card.oracle_text.split('\n').map((text) => (
-                          <p>
-                            <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
-                          </p>
-                        ))}
+        <Row className="mt-2" noGutters>
+          <Col className="pl-2 pb-2" xs="12" sm="3">
+            <ImageFallback
+              className="w-100"
+              src={card.image_normal}
+              fallbackSrc="/content/default_card.png"
+              alt={card.name}
+            />
+            <CardBody className="breakdown p-1">
+              <p>
+                Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
+                <span className="percent">{data.current.total[0]}</span> Cubes total.
+              </p>
+              <AddModal
+                color="success"
+                block
+                outline
+                className="mb-2 mr-2"
+                modalProps={{ card, cubes, hideAnalytics: true }}
+              >
+                Add to Cube...
+              </AddModal>
+              {card.prices && Number.isFinite(cardPrice({ details: card })) && (
+                <TextBadge name="Price" className="mt-1" fill>
+                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
+                <TextBadge name="Foil" className="mt-1" fill>
+                  <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
+                <TextBadge name="EUR" className="mt-1" fill>
+                  <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {card.prices && Number.isFinite(cardTix({ details: card })) && (
+                <TextBadge name="TIX" className="mt-1" fill>
+                  <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {Number.isFinite(cardElo({ details: card })) && (
+                <TextBadge name="Elo" className="mt-1" fill>
+                  {cardElo({ details: card }).toFixed(0)}
+                </TextBadge>
+              )}
+            </CardBody>
+          </Col>
+          <Col className="breakdown" xs="12" sm="9">
+            <Nav tabs>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="0">
+                Card
+              </Tab>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
+                Elo
+              </Tab>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
+                Price
+              </Tab>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="3">
+                Play Rate
+              </Tab>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="4">
+                Links
+              </Tab>
+              <Tab tab={selectedTab} setTab={setSelectedTab} index="5">
+                Discussion
+              </Tab>
+            </Nav>
+            <TabContent activeTab={selectedTab}>
+              <TabPane tabId="0">
+                <CardBody>
+                  <Row>
+                    <Col xs="6">
+                      <div className="text-left">
+                        <b>{card.name}</b>
+                      </div>
+                    </Col>
+                    <Col xs="6">
+                      <div className="text-right">
+                        {card.parsed_cost
+                          .slice(0)
+                          .reverse()
+                          .map((symbol) => (
+                            <img
+                              key={`mana-symbol-${symbol}`}
+                              alt={symbol}
+                              className="mana-symbol"
+                              src={`/content/symbols/${symbol}.png`}
+                            />
+                          ))}
+                      </div>
+                    </Col>
+                  </Row>
+                  <hr />
+                  <p className="my-0">{card.type}</p>
+                  <hr />
+                  <p className="my-0">
+                    {card.oracle_text.split('\n').map((text) => (
+                      <p>
+                        <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
                       </p>
-                      <Row>
-                        <Col xs="6">
-                          <div className="text-left">
-                            <small>
-                              <i>{`Illustrated by ${card.artist}`}</i>
-                            </small>
-                          </div>
-                        </Col>
-                        <Col xs="6">
-                          <div className="text-right">
-                            <>{card.loyalty && <p>{card.loyalty}</p>}</>
-                            <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
-                          </div>
-                        </Col>
-                      </Row>
+                    ))}
+                  </p>
+                  <Row>
+                    <Col xs="6">
+                      <div className="text-left">
+                        <small>
+                          <i>{`Illustrated by ${card.artist}`}</i>
+                        </small>
+                      </div>
+                    </Col>
+                    <Col xs="6">
+                      <div className="text-right">
+                        <>{card.loyalty && <p>{card.loyalty}</p>}</>
+                        <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
+                      </div>
+                    </Col>
+                  </Row>
 
-                      <hr />
-                      <Row>
-                        <Col xs="12" sm="6">
-                          {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
-                            <LegalityBadge legality={key} status={card.legalities[key]} />
-                          ))}
-                        </Col>
-                        <Col xs="12" sm="6">
-                          {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
-                            <LegalityBadge legality={key} status={card.legalities[key]} />
-                          ))}
-                        </Col>
-                      </Row>
-                    </CardBody>
-                  </TabPane>
-                  <TabPane tabId="1">
-                    <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
-                  </TabPane>
-                  <TabPane tabId="2">
-                    <InputGroup className="mb-3">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText>Price Type: </InputGroupText>
-                      </InputGroupAddon>
-                      <CustomInput
-                        type="select"
-                        value={priceType}
-                        onChange={(event) => setPriceType(event.target.value)}
+                  <hr />
+                  <Row>
+                    <Col xs="12" sm="6">
+                      {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
+                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                      ))}
+                    </Col>
+                    <Col xs="12" sm="6">
+                      {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
+                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                      ))}
+                    </Col>
+                  </Row>
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="1">
+                <CardBody>
+                  <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="2">
+                <CardBody>
+                  <InputGroup className="mb-3">
+                    <InputGroupAddon addonType="prepend">
+                      <InputGroupText>Price Type: </InputGroupText>
+                    </InputGroupAddon>
+                    <CustomInput type="select" value={priceType} onChange={(event) => setPriceType(event.target.value)}>
+                      <option value="price">USD</option>
+                      <option value="price_foil">USD Foil</option>
+                      <option value="eur">EUR</option>
+                      <option value="tix">TIX</option>
+                    </CustomInput>
+                  </InputGroup>
+                  <Graph
+                    unit={getPriceTypeUnit[priceType]}
+                    data={data.history}
+                    yFunc={(point) => point.prices.filter((item) => item.version === card._id)[0][priceType]}
+                  />
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="3">
+                <CardBody>
+                  <InputGroup className="mb-3">
+                    <InputGroupAddon addonType="prepend">
+                      <InputGroupText>Cube Type: </InputGroupText>
+                    </InputGroupAddon>
+                    <CustomInput type="select" value={cubeType} onChange={(event) => setCubeType(event.target.value)}>
+                      <option value="total">All</option>
+                      <option value="vintage">Vintage</option>
+                      <option value="legacy">Legacy</option>
+                      <option value="modern">Modern</option>
+                      <option value="standard">Standard</option>
+                      <option value="peasant">Peasant</option>
+                      <option value="pauper">Pauper</option>
+                      <option value="size180">1-180 Cards</option>
+                      <option value="size360">181-360 Cards</option>
+                      <option value="size450">361-450 Cards</option>
+                      <option value="size540">451-540 Cards</option>
+                      <option value="size720">541+ Cards</option>
+                    </CustomInput>
+                  </InputGroup>
+                  <Graph
+                    unit="Percent of Cubes"
+                    data={data.history}
+                    yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
+                    yRange={[0, 100]}
+                  />
+                  <Row className="pt-2">
+                    <Col xs="12" sm="6" md="6" lg="6">
+                      <h5>By Legality:</h5>
+                      <Table bordered>
+                        <tbody>
+                          <CountTableRow label="Vintage" value={data.current.vintage || [0, 0]} />
+                          <CountTableRow label="Legacy" value={data.current.legacy || [0, 0]} />
+                          <CountTableRow label="Modern" value={data.current.modern || [0, 0]} />
+                          <CountTableRow label="Standard" value={data.current.standard || [0, 0]} />
+                          <CountTableRow label="Peasant" value={data.current.peasant || [0, 0]} />
+                          <CountTableRow label="Pauper" value={data.current.pauper || [0, 0]} />
+                        </tbody>
+                      </Table>
+                    </Col>
+                    <Col xs="12" sm="6" md="6" lg="6">
+                      <h5>By Size:</h5>
+                      <Table bordered>
+                        <tbody>
+                          <CountTableRow label="1-180" value={data.current.size180 || [0, 0]} />
+                          <CountTableRow label="181-360" value={data.current.size360 || [0, 0]} />
+                          <CountTableRow label="361-450" value={data.current.size450 || [0, 0]} />
+                          <CountTableRow label="451-540" value={data.current.size540 || [0, 0]} />
+                          <CountTableRow label="541+" value={data.current.size720 || [0, 0]} />
+                        </tbody>
+                      </Table>
+                    </Col>
+                  </Row>
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="4">
+                <CardBody>
+                  <Row>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink outline color="success" block href={`/search/card:"${card.name}"/0`} target="_blank">
+                        {`Cubes with ${card.name}`}
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink
+                        outline
+                        color="success"
+                        block
+                        href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
+                        target="_blank"
                       >
-                        <option value="price">USD</option>
-                        <option value="price_foil">USD Foil</option>
-                        <option value="eur">EUR</option>
-                        <option value="tix">TIX</option>
-                      </CustomInput>
-                    </InputGroup>
-                    <Graph
-                      unit={getPriceTypeUnit[priceType]}
-                      data={data.history}
-                      yFunc={(point) => point.prices.filter((item) => item.version === card._id)[0][priceType]}
-                    />
-                  </TabPane>
-                  <TabPane tabId="3">
-                    <InputGroup className="mb-3">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText>Cube Type: </InputGroupText>
-                      </InputGroupAddon>
-                      <CustomInput type="select" value={cubeType} onChange={(event) => setCubeType(event.target.value)}>
-                        <option value="total">All</option>
-                        <option value="vintage">Vintage</option>
-                        <option value="legacy">Legacy</option>
-                        <option value="modern">Modern</option>
-                        <option value="standard">Standard</option>
-                        <option value="peasant">Peasant</option>
-                        <option value="pauper">Pauper</option>
-                        <option value="size180">1-180 Cards</option>
-                        <option value="size360">181-360 Cards</option>
-                        <option value="size450">361-450 Cards</option>
-                        <option value="size540">451-540 Cards</option>
-                        <option value="size720">541+ Cards</option>
-                      </CustomInput>
-                    </InputGroup>
-                    <Graph
-                      unit="Percent of Cubes"
-                      data={data.history}
-                      yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
-                      yRange={[0, 100]}
-                    />
-                    <Row className="pt-2">
-                      <Col xs="12" sm="6" md="6" lg="6">
-                        <h5>By Legality:</h5>
-                        <Table bordered>
-                          <tbody>
-                            <CountTableRow label="Vintage" value={data.current.vintage || [0, 0]} />
-                            <CountTableRow label="Legacy" value={data.current.legacy || [0, 0]} />
-                            <CountTableRow label="Modern" value={data.current.modern || [0, 0]} />
-                            <CountTableRow label="Standard" value={data.current.standard || [0, 0]} />
-                            <CountTableRow label="Peasant" value={data.current.peasant || [0, 0]} />
-                            <CountTableRow label="Pauper" value={data.current.pauper || [0, 0]} />
-                          </tbody>
-                        </Table>
-                      </Col>
-                      <Col xs="12" sm="6" md="6" lg="6">
-                        <h5>By Size:</h5>
-                        <Table bordered>
-                          <tbody>
-                            <CountTableRow label="1-180" value={data.current.size180 || [0, 0]} />
-                            <CountTableRow label="181-360" value={data.current.size360 || [0, 0]} />
-                            <CountTableRow label="361-450" value={data.current.size450 || [0, 0]} />
-                            <CountTableRow label="451-540" value={data.current.size540 || [0, 0]} />
-                            <CountTableRow label="541+" value={data.current.size720 || [0, 0]} />
-                          </tbody>
-                        </Table>
-                      </Col>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="4">
-                    <CardBody>
-                      <Row>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={`/search/card:"${card.name}"/0`}
-                            target="_blank"
-                          >
-                            {`Cubes with ${card.name}`}
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
-                            target="_blank"
-                          >
-                            View all Printings
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
-                            View on Scryfall
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={getTCGLink({ details: card })}
-                            target="_blank"
-                          >
-                            View on TCGPlayer
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={getCardKingdomLink({ details: card })}
-                            target="_blank"
-                          >
-                            View on Card Kingdom
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={`https://edhrec.com/cards/${card.name}`}
-                            target="_blank"
-                          >
-                            View on EDHRec
-                          </ButtonLink>
-                        </Col>
-                        <Col className="pb-2" xs="12" sm="6">
-                          <ButtonLink
-                            outline
-                            color="success"
-                            block
-                            href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
-                            target="_blank"
-                          >
-                            {`MTG Top 8 Decks with ${card.name}`}
-                          </ButtonLink>
-                        </Col>
-                      </Row>
-                    </CardBody>
-                  </TabPane>
-                </TabContent>
-              </CardBody>
-            </Col>
-          </Row>
-        </CardBody>
+                        View all Printings
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
+                        View on Scryfall
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+                        View on TCGPlayer
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink
+                        outline
+                        color="success"
+                        block
+                        href={getCardKingdomLink({ details: card })}
+                        target="_blank"
+                      >
+                        View on Card Kingdom
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink
+                        outline
+                        color="success"
+                        block
+                        href={`https://edhrec.com/cards/${card.name}`}
+                        target="_blank"
+                      >
+                        View on EDHRec
+                      </ButtonLink>
+                    </Col>
+                    <Col className="pb-2" xs="12" sm="6">
+                      <ButtonLink
+                        outline
+                        color="success"
+                        block
+                        href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
+                        target="_blank"
+                      >
+                        {`MTG Top 8 Decks with ${card.name}`}
+                      </ButtonLink>
+                    </Col>
+                  </Row>
+                </CardBody>
+              </TabPane>
+              <TabPane tabId="5">
+                <div className="border-left border-bottom">
+                  <CommentsSection parentType="card" parent={card.oracle_id} userid={userid} collapse={false} />
+                </div>
+              </TabPane>
+            </TabContent>
+          </Col>
+        </Row>
       </Card>
       <Row>
         <Col xs="12" sm="6">
@@ -699,6 +694,7 @@ CardPage.propTypes = {
     legalities: PropTypes.shape({}).isRequired,
     parsed_cost: PropTypes.string.isRequired,
     oracle_text: PropTypes.string.isRequired,
+    oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
     loyalty: PropTypes.string.isRequired,
@@ -783,10 +779,12 @@ CardPage.propTypes = {
     }).isRequired,
   ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape([])),
+  userid: PropTypes.string,
 };
 
 CardPage.defaultProps = {
   cubes: [],
+  userid: null,
 };
 
 export default CardPage;

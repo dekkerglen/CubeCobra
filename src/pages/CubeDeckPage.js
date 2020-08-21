@@ -186,7 +186,6 @@ const CubeDeckPage = ({ cube, deck, canEdit, userid, draft, defaultSeat, default
           <Col>
             <DeckCard
               seat={deck.seats[seatIndex]}
-              comments={deck.comments}
               deckid={deck._id}
               userid={userid}
               deck={deck}
@@ -217,7 +216,6 @@ CubeDeckPage.propTypes = {
       }),
     ).isRequired,
     cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   canEdit: PropTypes.bool,
   userid: PropTypes.string,

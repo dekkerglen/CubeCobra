@@ -21,4 +21,4 @@ PasswordResetSchema.index({
   email: 1,
 });
 
-const PasswordReset = (module.exports = mongoose.model('PasswordReset', PasswordResetSchema));
+module.exports = mongoose.model('PasswordReset', PasswordResetSchema);
