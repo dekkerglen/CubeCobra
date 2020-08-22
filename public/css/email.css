@@ -1,0 +1,22 @@
+.banner-container {
+  background-color: #343a40;
+  padding: 0.5rem 0.75rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border: 1 solid transparent;
+  border-radius: 0.25rem;
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+  text-decoration: none;
+}
+
+code {
+  display: block;
+  color: #e83e8c;
+  font-size: 24px;
+  margin: 0.5rem 0;
+}
