@@ -5,6 +5,8 @@ const passport = require('passport');
 const mailer = require('nodemailer');
 const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
+const Email = require('email-templates');
+const path = require('path');
 const util = require('../serverjs/util.js');
 const carddb = require('../serverjs/cards.js');
 
@@ -168,8 +170,9 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
           if (err2) {
             req.logger.error(err2);
           } else {
-            // Use Smtp Protocol to send Email
             const smtpTransport = mailer.createTransport({
+              name: 'CubeCobra.com',
+              secure: true,
               service: 'Gmail',
               auth: {
                 user: process.env.EMAIL_CONFIG_USERNAME,
@@ -177,24 +180,27 @@ router.post('/lostpassword', [body('email', 'Email is required').isEmail()], fla
               },
             });
 
-            const mail = {
-              from: 'Cube Cobra Team <support@cubecobra.com>',
-              to: passwordReset.email,
-              subject: 'Password Reset',
-              html:
-                `A password reset was requested for the account that belongs to this email.<br> To proceed, click <a href="https://cubecobra.com/user/passwordreset/${passwordReset._id}">here</a>.<br> Your recovery code is: ${passwordReset.code}<br> This link expires in 15 minutes.` +
-                `<br> If you did not request a password reset, ignore this email.`,
-              text:
-                `A password reset was requested for the account that belongs to this email.\nTo proceed, go to https://cubecobra.com/user/passwordreset/${passwordReset._id}\nYour recovery code is: ${passwordReset.code}\nThis link expires in 15 minutes.` +
-                `\nIf you did not request a password reset, ignore this email.`,
-            };
+            const email = new Email({
+              message: {
+                from: 'Cube Cobra Team <support@cubecobra.com>',
+                to: passwordReset.email,
+                subject: 'Password Reset',
+              },
+              juiceResources: {
+                webResources: {
+                  relativeTo: path.join(__dirname, '..', 'public'),
+                  images: true,
+                },
+              },
+              transport: smtpTransport,
+            });
 
-            smtpTransport.sendMail(mail, (err3) => {
-              if (err3) {
-                req.logger.error(err3);
-              }
-
-              smtpTransport.close();
+            email.send({
+              template: 'password_reset',
+              locals: {
+                id: passwordReset.id,
+                code: passwordReset.code,
+              },
             });
 
             req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
@@ -370,7 +376,6 @@ router.post(
                           if (err5) {
                             req.logger.error(err5);
                           } else {
-                            // Use Smtp Protocol to send Email
                             const smtpTransport = mailer.createTransport({
                               name: 'CubeCobra.com',
                               secure: true,
@@ -380,21 +385,26 @@ router.post(
                                 pass: process.env.EMAIL_CONFIG_PASSWORD,
                               },
                             });
+                            const confirmEmail = new Email({
+                              message: {
+                                from: 'Cube Cobra Team <support@cubecobra.com>',
+                                to: email,
+                                subject: 'Confirm Account',
+                              },
+                              juiceResources: {
+                                webResources: {
+                                  relativeTo: path.join(__dirname, '..', 'public'),
+                                  images: true,
+                                },
+                              },
+                              transport: smtpTransport,
+                            });
 
-                            const mail = {
-                              from: 'Cube Cobra Team <support@cubecobra.com>',
-                              to: email,
-                              subject: 'Confirm Account',
-                              html: `Hi ${newUser.username},</br> Thanks for joining! To confirm your email, click <a href="https://cubecobra.com/user/register/confirm/${newUser._id}">here</a>.`,
-                              text: `Hi ${newUser.username},\nThanks for joining! To confirm your email, go to https://cubecobra.com/user/register/confirm/${newUser._id}`,
-                            };
-
-                            smtpTransport.sendMail(mail, (error) => {
-                              if (error) {
-                                req.logger.error(error);
-                              }
-
-                              smtpTransport.close();
+                            confirmEmail.send({
+                              template: 'confirm_email',
+                              locals: {
+                                id: newUser._id,
+                              },
                             });
 
                             // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
