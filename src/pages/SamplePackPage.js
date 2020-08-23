@@ -5,13 +5,11 @@ import { Row, Col } from 'reactstrap';
 
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
+import CubeLayout from 'layouts/CubeLayout';
 
-const SamplePackPage = ({ cube_id, seed, pack }) => {
-  // eslint-disable-next-line camelcase
-  const cubeId = cube_id;
-
+const SamplePackPage = ({ cubeID, seed, pack, cube, canEdit }) => {
   return (
-    <div>
+    <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
       <div className="container" />
       <br />
       <div className="card">
@@ -21,10 +19,10 @@ const SamplePackPage = ({ cube_id, seed, pack }) => {
               <h5 className="card-title">Sample Pack</h5>
             </Col>
             <Col md={6} className="text-right">
-              <a className="btn btn-success mr-2" href={`/cube/samplepack/${cubeId}`}>
+              <a className="btn btn-success mr-2" href={`/cube/samplepack/${cubeID}`}>
                 New Pack
               </a>
-              <a className="btn btn-success" href={`/cube/samplepackimage/${cubeId}/${seed}`}>
+              <a className="btn btn-success" href={`/cube/samplepackimage/${cubeID}/${seed}`}>
                 Get Image
               </a>
             </Col>
@@ -44,14 +42,16 @@ const SamplePackPage = ({ cube_id, seed, pack }) => {
           </Row>
         </div>
       </div>
-    </div>
+    </CubeLayout>
   );
 };
 
 SamplePackPage.propTypes = {
-  cube_id: PropTypes.string.isRequired,
+  cubeID: PropTypes.string.isRequired,
   seed: PropTypes.string.isRequired,
   pack: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cube: PropTypes.shape({}).isRequired,
+  canEdit: PropTypes.bool.isRequired,
 };
 
 export default SamplePackPage;

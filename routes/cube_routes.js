@@ -908,9 +908,11 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
     const reactProps = {
-      cube_id: req.params.id,
+      cubeID: cube._id,
       seed: pack.seed,
       pack: pack.pack,
+      cube,
+      canEdit: false,
     };
 
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
@@ -990,11 +992,14 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
 
     if (missing.length > 0) {
       const reactProps = {
+        cube,
+        canEdit: true,
         cubeID: req.params.id,
         missing,
         added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
         blogpost: blogpost.toObject(),
       };
+
       return res.render('cube/bulk_upload', {
         reactHTML: BulkUploadPage
           ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
