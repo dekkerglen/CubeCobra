@@ -60,6 +60,8 @@ const clientConfig = merge(config, {
     comment: './src/comment.js',
     devblog: './src/devblog.js',
     login: './src/login.js',
+    lostpassword: './src/lostpassword.js',
+    passwordreset: './src/passwordreset.js',
   },
   output: {
     filename: '[name].bundle.js',
