@@ -1,21 +1,14 @@
 extends ../layout
 
 block content
-  include ../flash
-  br
-  h2 Login
-  br
-  form(method='POST', action='/user/login')
-    input(type='hidden', name='_csrf', value=csrfToken)
-    .form-group.row
-      label.col-sm-3.col-form-label Username or Email Address:
-      input#email.form-control.col-sm-9(name='username', type='text')
-    .form-group.row
-      label.col-sm-3.col-form-label Password:
-      input#password.form-control.col-sm-9(name='password', type='password')
-    .row
-      .col-sm-3
-      .col-sm-9
-        a(href='/user/lostpassword') Forgot password?
-    br
-    input.btn.btn-success(type='submit',value='Login')
+  link(rel='stylesheet' href='/css/draft.css')
+
+  include ../dynamic_flash
+  #react-root !{reactHTML}
+
+block scripts
+  include ../react
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  script(src='/js/login.bundle.js')

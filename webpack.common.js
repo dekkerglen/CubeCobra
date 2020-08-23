@@ -59,6 +59,7 @@ const clientConfig = merge(config, {
     cardsearch: './src/cardsearch.js',
     comment: './src/comment.js',
     devblog: './src/devblog.js',
+    login: './src/login.js',
   },
   output: {
     filename: '[name].bundle.js',
