@@ -1,62 +1,14 @@
 extends ../layout
 
 block content
-  br
-  h4 Developer Blog
-  if user
-    if admin == 'true'
-      br
-      .card(style='padding:10px')
-        h5 Create New Blog Post
-        form(method='POST', action='/dev/blogpost/')
-          input(type='hidden', name='_csrf', value=csrfToken)
-          #form-group
-            label Title:
-            input.form-control(maxlength='200' name='title', type='text')
-          #form-group
-            label Body:
-            textarea.form-control(name='body')
-          #form-group
-            label HTML:
-            textarea.form-control(name='html')
-          br
-          input.btn.btn-success(type='submit',value='Submit')     
-      br 
-  if pages      
-    hr
-    nav(aria-label='pagination')
-      ul.pagination
-        each page, i in pages
-          if page.active
-            li.page-item.active(aria-current='page')
-              a.page-link(href=page.url)=page.content
-                span.sr-only (current)
-          else
-            li.page-item
-              a.page-link(href=page.url)=page.content
-    hr
-  if blogs
-    each post, i in blogs
-      .card
-        .card-header
-          h5.card-title=post.title
-          h6.card-subtitle.mb-2.text-muted=post.date_formatted
-        .card-body
-          if post.body
-            p.card-text=post.body
-          if post.html
-            p.card-text !{post.html}
-      br
-    if pages      
-      hr
-      nav(aria-label='pagination')
-        ul.pagination
-          each page, i in pages
-            if page.active
-              li.page-item.active(aria-current='page')
-                a.page-link(href=page.url)=page.content
-                  span.sr-only (current)
-            else
-              li.page-item
-                a.page-link(href=page.url)=page.content
-      hr
+  link(rel='stylesheet' href='/css/draft.css')
+
+  include ../dynamic_flash
+  #react-root !{reactHTML}
+
+block scripts
+  include ../react
+  script(src='/js/autocard.js')
+  script(type='text/javascript').
+    window.reactProps = !{reactProps};
+  script(src='/js/devblog.bundle.js')
