@@ -62,6 +62,7 @@ const clientConfig = merge(config, {
     login: './src/login.js',
     lostpassword: './src/lostpassword.js',
     passwordreset: './src/passwordreset.js',
+    register: './src/register.js',
   },
   output: {
     filename: '[name].bundle.js',
