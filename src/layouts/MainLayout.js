@@ -12,6 +12,8 @@ import {
   DropdownToggle,
   DropdownItem,
   DropdownMenu,
+  Row,
+  Col,
 } from 'reactstrap';
 
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -25,10 +27,10 @@ const LoginModalLink = withModal(NavLink, LoginModal);
 const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 
 const MainLayout = ({ user, children }) => {
-  const [expanded, toggle] = useToggle(true);
+  const [expanded, toggle] = useToggle(false);
 
   return (
-    <div>
+    <div className="flex-container flex-vertical viewport">
       <Navbar color="dark" expand="md" dark>
         <Container>
           <div className="d-flex flex-nowrap w-100 header-banner">
@@ -104,11 +106,149 @@ const MainLayout = ({ user, children }) => {
           </Collapse>
         </Container>
       </Navbar>
-      <Container>
+      <Container className="flex-grow">
         <ErrorBoundary>{children}</ErrorBoundary>
-        <hr />
-        <footer />
       </Container>
+      <footer>
+        <Container className="pt-3">
+          <Row>
+            <Col xs="6" sm="3">
+              <small>
+                <h6 className="footer-header">Cubes</h6>
+                <ul className="footer-ul pl-0">
+                  <li>
+                    <a className="footer-link" href="/explore">
+                      Explore Cubes
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/search">
+                      Search Cubes
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/random">
+                      Random Cube
+                    </a>
+                  </li>
+                </ul>
+              </small>
+            </Col>
+            <Col xs="6" sm="3">
+              <small>
+                <h6 className="footer-header">Cards</h6>
+                <ul className="footer-ul pl-0">
+                  <li>
+                    <a className="footer-link" href="/tool/topcards">
+                      Top Cards
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/tool/searchcards">
+                      Search Cards
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/tool/randomcard">
+                      Random Card
+                    </a>
+                  </li>
+                </ul>
+              </small>
+            </Col>
+            <Col xs="6" sm="3">
+              <small>
+                <h6 className="footer-header">Cube Cobra</h6>
+                <ul className="footer-ul pl-0">
+                  <li>
+                    <a className="footer-link" href="/dev/blog">
+                      Dev Blog
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/contact">
+                      Contact
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className="footer-link"
+                      href="https://www.inkedgaming.com/collections/artists/gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
+                    >
+                      Merchandise
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/ourstory">
+                      Our Story
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/faq">
+                      FAQ
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/donate">
+                      Donate
+                    </a>
+                  </li>
+                </ul>
+              </small>
+            </Col>
+            <Col xs="6" sm="3">
+              <small>
+                <h6 className="footer-header">Misc</h6>
+                <ul className="footer-ul pl-0">
+                  <li>
+                    <a className="footer-link" href="https://github.com/dekkerglen/CubeCobra">
+                      Github
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/privacy">
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/tos">
+                      Terms & Conditions
+                    </a>
+                  </li>
+                  <li>
+                    <a className="footer-link" href="/cookies">
+                      Cookies
+                    </a>
+                  </li>
+                </ul>
+              </small>
+            </Col>
+          </Row>
+          <p className="center footer-text">
+            Magic: The Gathering is ©{' '}
+            <a className="footer-link" href="https://company.wizards.com/">
+              Wizards of the Coast
+            </a>
+            . Cube Cobra is not affiliated nor produced nor endorsed by Wizards of the Coast.
+            <br />
+            All card images, mana symbols, expansions and art related to Magic the Gathering is a property of Wizards of
+            the Coast/Hasbro.
+            <br />
+            This site is not affiliated nor endorsed by Scryfall LLC. This site endeavours to adhere to the Scryfall
+            data guidelines.
+            <br />
+            Custom card images displayed in Cube Cobra are subject to the license terms under which they were uploaded
+            to their hosts. Cube Cobra is not responsible for the content of custom card images. To report a custom card
+            image violation, message the development team on{' '}
+            <a className="footer-link" href="https://discord.gg/Hn39bCU">
+              Discord
+            </a>
+            .
+            <br />
+            All other content Copyright © 2019 Cube Cobra
+          </p>
+        </Container>
+      </footer>
     </div>
   );
 };

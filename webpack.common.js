@@ -43,7 +43,7 @@ const clientConfig = merge(config, {
     cube_list: './src/cube_list.js',
     cube_overview: './src/cube_overview.js',
     cube_playtest: './src/cube_playtest.js',
-    dashboard: './src/dashboard.js',
+    DashboardPage: './src/pages/DashboardPage.js',
     notifications: './src/notifications.js',
     topcards: './src/topcards.js',
     user_account: './src/user_account.js',

@@ -8,6 +8,7 @@ import DeckPreview from 'components/DeckPreview';
 import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
@@ -104,4 +105,4 @@ DashboardPage.defaultProps = {
   user: null,
 };
 
-export default DashboardPage;
+export default RenderToRoot(DashboardPage);

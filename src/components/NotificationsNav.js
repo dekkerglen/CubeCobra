@@ -31,7 +31,9 @@ const NotificationsNav = ({ user }) => {
               </div>
             ))
           ) : (
-            <em>You don't have any notifications to show.</em>
+            <div className="my-2">
+              <em className="mx-4">You don't have any notifications to show.</em>
+            </div>
           )}
         </div>
         <CardFooter className="pb-1 pt-1">

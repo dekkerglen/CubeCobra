@@ -171,7 +171,7 @@ router.get('/dashboard', async (req, res) => {
       }
     }
 
-    return render(req, res, 'dashboard', { posts, cubes, decks, canEdit: true, userId: user._id });
+    return render(req, res, 'DashboardPage', { posts, cubes, decks, canEdit: true, userId: user._id });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }

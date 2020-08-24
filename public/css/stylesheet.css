@@ -882,3 +882,39 @@ img.mana-symbol-sm {
 .banner-collapse { 
 	flex: 0 1 auto;
 }
+
+.footer-ul {
+	list-style-type: none;
+}
+
+p.center {
+	text-align: center; 
+	font-size:12px;
+}
+
+footer {
+	background-color: #343A40;
+  bottom: 0; /* stick to bottom */
+}
+
+.footer-link {
+	color: #EEE;
+}
+.footer-link:hover {
+	color: #CCC;
+}
+
+.footer-text {
+	color: #BBB
+}
+.footer-header {
+	color: #EEE
+}
+
+.flex-vertical {
+	flex-direction: column;
+}
+
+div.viewport {
+  min-height: 100vh;
+}
