@@ -179,6 +179,11 @@ export const cardOracleId = (card) => card.details.oracle_id;
 
 export const cardLegalities = (card) => card.details.legalities;
 
+export const cardLegalIn = (card) => {
+  const legalities = cardLegalities(card);
+  return Object.keys(legalities).filter((format) => legalities[format] === 'legal');
+};
+
 export const cardColors = (card) => card.details.colors;
 
 export const cardLanguage = (card) => card.details.language;
@@ -247,6 +252,7 @@ export default {
   cardOracleText,
   cardOracleId,
   cardLegalities,
+  cardLegalIn,
   cardColors,
   cardLanguage,
   cardMtgoId,

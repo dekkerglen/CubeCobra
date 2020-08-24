@@ -40,6 +40,7 @@ import {
   cardStatus,
   cardCost,
   cardDevotion,
+  cardLegalIn
 } from 'utils/Card';
 %} # %}
 
@@ -85,6 +86,7 @@ condition -> (
   | devotionCondition
   | picksCondition
   | cubesCondition
+  | legalityCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -115,6 +117,8 @@ toughnessCondition -> ("tou"i | "tough"i | "toughness"i) halfIntOpValue {% ([, v
 tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
+
+legalityCondition -> ("leg"i | "legal"i | "legality"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred) %}
 
 priceCondition -> ("p"i | "usd"i | "price"i) dollarOpValue {% ([, valuePred]) => genericCondition('price', cardPrice, valuePred) %}
 

@@ -46,6 +46,7 @@ const allFields = [
   'toughness',
   'loyalty',
   'rarity',
+  'legality',
   'artist',
   'is',
 ];
@@ -60,6 +61,7 @@ const numFields = [
   'toughness',
   'loyalty',
   'rarity',
+  'legality',
 ];
 const colorFields = ['color', 'identity'];
 
@@ -253,6 +255,32 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           value={values.rarity}
           onChange={onChange}
         />
+        <InputGroup className="mb-3" {...props}>
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>Legality</InputGroupText>
+          </InputGroupAddon>
+          <CustomInput type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
+            <option value="=">legal</option>
+            <option value="!=">not legal</option>
+          </CustomInput>
+          <Input type="select" name="legality" value={values.legality} onChange={onChange}>
+            {[
+              '',
+              'Standard',
+              'Pioneer',
+              'Modern',
+              'Legacy',
+              'Vintage',
+              'Brawl',
+              'Historic',
+              'Pauper',
+              'Penny',
+              'Commander',
+            ].map((legality) => (
+              <option key={legality}>{legality}</option>
+            ))}
+          </Input>
+        </InputGroup>
         <TextField
           name="artist"
           humanName="Artist"
