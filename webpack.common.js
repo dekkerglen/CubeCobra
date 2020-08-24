@@ -83,6 +83,7 @@ const serverConfig = merge(config, {
     'pages/CubeListPage': './src/pages/CubeListPage.js',
     'pages/CubePlaytestPage': './src/pages/CubePlaytestPage.js',
     'pages/DashboardPage': './src/pages/DashboardPage.js',
+    'pages/Loading': './src/pages/Loading.js',
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
     'utils/Draft': './src/utils/Draft.js',

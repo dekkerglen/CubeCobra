@@ -1,9 +1,6 @@
 const serialize = require('serialize-javascript');
 const express = require('express');
 
-const React = require('react');
-const ReactDOMServer = require('react-dom/server');
-
 const util = require('../serverjs/util.js');
 
 const Blog = require('../models/blog');
@@ -11,16 +8,10 @@ const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
 
-const { NODE_ENV } = process.env;
-
-let DashboardPage = null;
-if (NODE_ENV === 'production') {
-  DashboardPage = require('../dist/pages/DashboardPage').default;
-}
-
 const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
 const { addAutocard } = require('../serverjs/cubefn');
+const { render } = require('../serverjs/render');
 const { csrfProtection } = require('./middleware');
 
 const router = express.Router();
@@ -180,16 +171,7 @@ router.get('/dashboard', async (req, res) => {
       }
     }
 
-    const reactProps = { posts, cubes, decks, canEdit: true, userId: user._id };
-
-    return res.render('dashboard', {
-      reactHTML:
-        NODE_ENV === 'production'
-          ? ReactDOMServer.renderToString(React.createElement(DashboardPage, reactProps))
-          : undefined,
-      reactProps: serialize(reactProps),
-      loginCallback: '/',
-    });
+    return render(req, res, 'dashboard', { posts, cubes, decks, canEdit: true, userId: user._id });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }

@@ -6,12 +6,15 @@ import PagedList from 'components/PagedList';
 import CubePreview from 'components/CubePreview';
 import DeckPreview from 'components/DeckPreview';
 import Advertisement from 'components/Advertisement';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
-const DashboardPage = ({ posts, cubes, decks, canEdit, userId }) => (
-  <>
+const DashboardPage = ({ posts, cubes, decks, canEdit, user }) => (
+  <MainLayout user={user}>
     <Advertisement />
+    <DynamicFlash />
     <Row className="mt-3">
       <Col xs="12" md="6">
         <Card>
@@ -68,7 +71,7 @@ const DashboardPage = ({ posts, cubes, decks, canEdit, userId }) => (
             pageSize={10}
             showBottom
             rows={posts.slice(0).map((post) => (
-              <BlogPost key={post._id} post={post} canEdit={false} userid={userId} loggedIn />
+              <BlogPost key={post._id} post={post} canEdit={false} userid={user.id} loggedIn />
             ))}
           />
         ) : (
@@ -78,7 +81,7 @@ const DashboardPage = ({ posts, cubes, decks, canEdit, userId }) => (
         )}
       </Col>
     </Row>
-  </>
+  </MainLayout>
 );
 
 DashboardPage.propTypes = {
@@ -90,7 +93,15 @@ DashboardPage.propTypes = {
   ).isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   canEdit: PropTypes.bool.isRequired,
-  userId: PropTypes.string.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+};
+
+DashboardPage.defaultProps = {
+  user: null,
 };
 
 export default DashboardPage;

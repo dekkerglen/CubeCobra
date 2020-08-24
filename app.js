@@ -225,16 +225,6 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use((req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
-app.post('*', (req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
 // apply a rate limiter to the cube json endpoint
 const apiLimiter = rateLimit({
   windowMs: 60000,

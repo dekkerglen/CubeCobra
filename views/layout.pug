@@ -142,50 +142,6 @@ html(lang='en')
 					a  | 
 					a(href='/cookies') Cookies Policy
 
-		// Login modal
-		#loginModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='loginModalLabel', aria-hidden='true')
-			.modal-dialog(role='document')
-				.modal-content
-					form(method='POST', action='/user/login')
-						input(type='hidden', name='_csrf', value=csrfToken)
-						.modal-header
-							h5#loginModalLabel.modal-title Login
-							button.close(type='button', data-dismiss='modal', aria-label='Close')
-								span(aria-hidden='true') ×
-						.modal-body
-							.form-group
-								label.col-form-label Username or Email Address:
-								input#username.form-control(name='username', type='text', autocomplete='username')
-							.form-group
-								label.col-form-label Password:
-								input#password.form-control(name='password', type='password', autocomplete='current-password')
-							a(href='/user/lostpassword') Forgot password?
-							if loginCallback
-								input(type='hidden', name='loginCallback', value=loginCallback)     
-							br
-						.modal-footer
-							input.btn.btn-success(type='submit',value='Login')
-							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-
-		// Add cube modal
-		#cubeModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='cubeModalLabel', aria-hidden='true')
-			.modal-dialog(role='document')
-				.modal-content
-					form(method='POST', action='/cube/add', onsubmit='createButton.disabled = true; return true;')
-						input(type='hidden', name='_csrf', value=csrfToken)
-						.modal-header
-							h5#loginModalLabel.modal-title Create New Cube
-							button.close(type='button', data-dismiss='modal', aria-label='Close')
-								span(aria-hidden='true') ×
-						.modal-body
-							.form-group
-								label.col-form-label Cube Name:
-								input.form-control(name='name', type='text')
-							br
-						.modal-footer
-							input.btn.btn-success(name='createButton', type='submit', value='Create')
-							button.btn.btn-secondary(type='button', data-dismiss='modal') Close
-
 		if node_env === 'production'
 			script(src='https://code.jquery.com/jquery-3.4.1.slim.min.js', integrity='sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n', crossorigin='anonymous')
 			script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js', integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6', crossorigin='anonymous', async)

@@ -524,6 +524,8 @@ body.busy-cursor {
 }
 .notification-icon {
 	background: #9a9d90;
+	height: 18px; 
+	margin: 0 0;
 }
 
 .nav-item:hover .notification-icon {
@@ -866,4 +868,17 @@ img.mana-symbol-sm {
 .comment-bg-even {
 	background-color: #FFF;
 	border-top: 1px solid #dee2e6;
+}
+
+.header-banner {
+	flex: 10000 1 auto; 
+	min-width: 0;
+}
+
+.banner-image {
+	height: 45px; margin: 0 0;
+}
+
+.banner-collapse { 
+	flex: 0 1 auto;
 }
