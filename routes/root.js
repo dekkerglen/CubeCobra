@@ -91,16 +91,11 @@ router.get('/explore', async (req, res) => {
 
   const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }, CUBE_PREVIEW_FIELDS).lean();
 
-  const reactProps = {
+  return render(req, res, 'ExplorePage', {
     recents,
     featured,
     drafted,
     recentlyDrafted,
-  };
-
-  res.render('explore', {
-    reactProps: serialize(reactProps),
-    loginCallback: '/explore',
   });
 });
 
@@ -203,15 +198,11 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       .lean()
       .exec();
 
-    const reactProps = {
+    return render(req, res, 'RecentDraftsPage', {
       decks,
       currentPage: parseInt(page, 10),
       totalPages: Math.ceil(numDecks / pagesize),
       count: numDecks,
-    };
-
-    return res.render('recent_drafts', {
-      reactProps: serialize(reactProps),
     });
   } catch (err) {
     req.logger.error(err);
@@ -226,37 +217,25 @@ router.get('/landing', async (req, res) => {
 
   const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
 
-  // this regex add commas to the number
-  res.render('landing', {
+  return render(req, res, 'LandingPage', {
     numusers: user.toLocaleString('en-US'),
     numcubes: cube.toLocaleString('en-US'),
     numdrafts: deck.toLocaleString('en-US'),
     version: process.env.CUBECOBRA_VERSION,
-    loginCallback: '/',
   });
 });
 
 router.get('/version', async (req, res) => {
-  try {
-    const reactProps = { version: process.env.CUBECOBRA_VERSION, host: process.env.HOST };
-
-    return res.render('version', {
-      reactProps: serialize(reactProps),
-      loginCallback: '/version',
-    });
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/landing`);
-  }
+  return render(req, res, 'VersionPage', {
+    version: process.env.CUBECOBRA_VERSION,
+    host: process.env.HOST,
+  });
 });
 
 router.get('/search', async (req, res) => {
-  const reactProps = {
+  return render(req, res, 'SearchPage', {
     query: '',
     cubes: [],
-  };
-  return res.render('search', {
-    reactProps: serialize(reactProps),
-    loginCallback: `/search`,
   });
 });
 
@@ -304,34 +283,24 @@ router.get('/search/:query/:page', async (req, res) => {
       .skip(perPage * page)
       .limit(perPage);
 
-    const reactProps = {
+    return render(req, res, 'SearchPage', {
       query: req.params.query,
       cubes,
       count,
       perPage,
       page,
       order,
-    };
-
-    return res.render('search', {
-      reactProps: serialize(reactProps),
-      loginCallback: `/search/${req.params.id}`,
     });
   } catch (err) {
-    const reactProps = {
+    req.logger.error(err);
+    req.flash('danger', 'Invalid Search Syntax');
+
+    return render(req, res, 'SearchPage', {
       query: req.params.query,
       cubes: [],
       count: 0,
       perPage: 0,
       page: 0,
-    };
-
-    req.logger.error(err);
-    req.flash('danger', 'Invalid Search Syntax');
-
-    return res.render('search', {
-      reactProps: serialize(reactProps),
-      loginCallback: `/search/${req.params.id}`,
     });
   }
 });

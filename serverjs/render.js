@@ -45,6 +45,10 @@ if (NODE_ENV === 'production') {
   pages.UserDecksPage = require('../dist/pages/UserDecksPage').default;
   pages.UserSocialPage = require('../dist/pages/UserSocialPage').default;
   pages.UserCubePage = require('../dist/pages/UserCubePage').default;
+  pages.ExplorePage = require('../dist/pages/ExplorePage').default;
+  pages.SearchPage = require('../dist/pages/SearchPage').default;
+  pages.RecentDraftsPage = require('../dist/pages/RecentDraftsPage').default;
+  pages.VersionPage = require('../dist/pages/VersionPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;

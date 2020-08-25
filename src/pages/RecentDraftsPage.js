@@ -2,17 +2,21 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import DeckPreview from 'components/DeckPreview';
-import Advertisement from 'components/Advertisement';
 import Paginate from 'components/Paginate';
+import DynamicFlash from 'components/DynamicFlash';
+import Advertisement from 'components/Advertisement';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
 const PER_PAGE = 30;
 
-const RecentDrafts = ({ decks, currentPage, totalPages, count }) => (
-  <>
+const RecentDraftsPage = ({ user, decks, currentPage, totalPages, count }) => (
+  <MainLayout user={user}>
     <Advertisement />
-    <Row className="mt-3">
+    <DynamicFlash />
+    <Row className="my-3">
       <Col xs="12">
         <Card>
           <CardHeader>
@@ -46,14 +50,23 @@ const RecentDrafts = ({ decks, currentPage, totalPages, count }) => (
         </Card>
       </Col>
     </Row>
-  </>
+  </MainLayout>
 );
 
-RecentDrafts.propTypes = {
+RecentDraftsPage.propTypes = {
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   count: PropTypes.number.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
-export default RecentDrafts;
+RecentDraftsPage.defaultProps = {
+  user: null,
+};
+
+export default RenderToRoot(RecentDraftsPage);

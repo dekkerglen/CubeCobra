@@ -566,14 +566,6 @@ router.get('/decks/:userid/:page', async (req, res) => {
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,
     });
-
-    const reactProps = {};
-
-    return res.render('user/user_decks', {
-      reactProps: serialize(reactProps),
-      title: user.username,
-      loginCallback: `/user/decks/${userid}`,
-    });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -658,11 +650,7 @@ router.post(
           email: user.email,
           about: user.about,
         };
-        res.render('user/user_account', {
-          selected: 'changepw',
-          user: userLimited,
-          loginCallback: '/user/account?nav=password',
-        });
+        res.redirect('/user/account');
       });
     } else {
       User.findById(req.user._id, (err, user) => {
