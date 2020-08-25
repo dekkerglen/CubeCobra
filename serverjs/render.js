@@ -25,13 +25,26 @@ if (NODE_ENV === 'production') {
   pages.CubeOverviewPage = require('../dist/pages/CubeOverviewPage').default;
   pages.CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
   pages.CubeSamplePackPage = require('../dist/pages/CubeSamplePackPage').default;
-  pages.CubeGridDraftPage = require('../dist/pages/CubeGridDraftPage').default;
+  pages.CubeGridDraftPage = require('../dist/pages/GridDraftPage').default;
   pages.ContactPage = require('../dist/pages/ContactPage').default;
-  pages.CookiesPage = require('../dist/pages/CookiesPage').default;
   pages.InfoPage = require('../dist/pages/InfoPage').default;
   pages.DonatePage = require('../dist/pages/DonatePage').default;
   pages.DownTimePage = require('../dist/pages/DownTimePage').default;
   pages.FiltersPage = require('../dist/pages/FiltersPage').default;
+  pages.CardSearchPage = require('../dist/pages/CardSearchPage').default;
+  pages.TopCardsPage = require('../dist/pages/TopCardsPage').default;
+  pages.CardPage = require('../dist/pages/CardPage').default;
+  pages.CommentPage = require('../dist/pages/CommentPage').default;
+  pages.LoginPage = require('../dist/pages/LoginPage').default;
+  pages.RegisterPage = require('../dist/pages/RegisterPage').default;
+  pages.LostPasswordPage = require('../dist/pages/LostPasswordPage').default;
+  pages.NotificationsPage = require('../dist/pages/NotificationsPage').default;
+  pages.PasswordResetPage = require('../dist/pages/PasswordResetPage').default;
+  pages.UserAccountPage = require('../dist/pages/UserAccountPage').default;
+  pages.UserBlogPage = require('../dist/pages/UserBlogPage').default;
+  pages.UserDecksPage = require('../dist/pages/UserDecksPage').default;
+  pages.UserSocialPage = require('../dist/pages/UserSocialPage').default;
+  pages.UserCubePage = require('../dist/pages/UserCubePage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;
@@ -42,6 +55,11 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         id: req.user._id,
         notifications: req.user.notifications,
         username: req.user.username,
+        email: req.user.email,
+        about: req.user.about,
+        image: req.user.image,
+        image_name: req.user.image_name,
+        artist: req.user.artist,
       }
     : null;
 

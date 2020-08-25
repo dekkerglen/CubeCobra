@@ -17,18 +17,16 @@ const ContactPage = ({ user, title, content }) => (
         <h5>{title}</h5>
       </CardHeader>
       <CardBody>
-        <Row>
-          {content.map((item) => (
-            <>
-              <Col xs="12" sm="3">
-                <strong>{item.label}</strong>
-              </Col>
-              <Col xs="12" sm="9" className="mb-3">
-                <p>{item.text}</p>
-              </Col>
-            </>
-          ))}
-        </Row>
+        {content.map((item) => (
+          <Row key={item.label} className={item.label.length > 0 ? 'mt-3' : 'my-0'}>
+            <Col xs="12" sm="3">
+              <strong>{item.label}</strong>
+            </Col>
+            <Col xs="12" sm="9">
+              <p>{item.text}</p>
+            </Col>
+          </Row>
+        ))}
       </CardBody>
     </Card>
   </MainLayout>

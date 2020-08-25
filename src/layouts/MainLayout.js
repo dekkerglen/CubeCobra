@@ -153,6 +153,11 @@ const MainLayout = ({ user, children }) => {
                       Random Card
                     </a>
                   </li>
+                  <li>
+                    <a className="footer-link" href="/filters">
+                      Filter Syntax
+                    </a>
+                  </li>
                 </ul>
               </small>
             </Col>
