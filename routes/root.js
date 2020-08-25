@@ -337,9 +337,7 @@ router.get('/search/:query/:page', async (req, res) => {
 });
 
 router.get('/contact', (req, res) => {
-  res.render('info/contact', {
-    loginCallback: '/contact',
-  });
+  return render(req, res, 'ContactPage');
 });
 
 router.get('/tos', (req, res) => {
@@ -349,9 +347,7 @@ router.get('/tos', (req, res) => {
 });
 
 router.get('/filters', (req, res) => {
-  res.render('info/filters', {
-    loginCallback: '/filters',
-  });
+  return render(req, res, 'FiltersPage');
 });
 
 router.get('/privacy', (req, res) => {
@@ -361,8 +357,34 @@ router.get('/privacy', (req, res) => {
 });
 
 router.get('/cookies', (req, res) => {
-  res.render('info/cookies', {
-    loginCallback: '/cookies',
+  return render(req, res, 'InfoPage', {
+    title: 'Cookies Policy',
+    content: [
+      {
+        label: "Do we use 'cookies'?",
+        text:
+          "Yes. Cookies are small files that a site or its service provider transfers to your computer's hard drive through your Web browser (if you allow)" +
+          " that enables the site's or service provider's systems to recognize your browser and capture and remember certain information. For instance, we use" +
+          ' cookies to maintan login sessions. They are also used to help us understand your preferences based on previous or' +
+          ' current site activity, which enables us to provide you with improved services. We also use cookies to help us compile aggregate data about site traffic' +
+          ' and site interaction so that we can offer better site experiences and tools in the future.',
+      },
+      {
+        label: 'We use cookies to:',
+        text:
+          "Understand and save user's preferences for future visits, Compile aggregate data about site traffic and site interactions in order to offer better site" +
+          ' experiences and tools in the future. We may also use trusted third' +
+          ' party services that track this information on our behalf.' +
+          ' You can choose to have your computer warn you each time a cookie is being sent, or you can choose to turn off all cookies. You do this through your browser (like Internet Explorer) settings.' +
+          " Each browser is a little different, so look at your browser's Help menu to learn the correct way to modify your cookies.",
+      },
+      {
+        label: 'If users disable cookies in their browser',
+        text:
+          'If you turn cookies off, some features will be disabled. It will turn off some of the features that make your site experience more efficient and some of our services will' +
+          ' not function properly, including but not limited to Persistent Login.',
+      },
+    ],
   });
 });
 
@@ -373,15 +395,47 @@ router.get('/ourstory', (req, res) => {
 });
 
 router.get('/faq', (req, res) => {
-  res.render('info/faq', {
-    loginCallback: '/faq',
+  return render(req, res, 'InfoPage', {
+    title: 'Frequently Asked Questions',
+    content: [
+      {
+        label: 'What does Cube Cobra provide that other tools do not?',
+        text:
+          'Cube Cobra offers the most tools catered specifically towards cube construction. The website is powered by Scryfall,' +
+          ' which means that newly spoiled cards will be available to use up to 48 hours after being spoiled. The biggest advantage' +
+          ' Cube Cobra has right now is a more modern and maintainable technology stack compared to other tools. This means Cube' +
+          ' Cobra is updated frequently and is committed to adding features that the community asks for. ',
+      },
+      {
+        label: 'What tech stack does Cube Cobra use?',
+        text: 'Cube Cobra used NodeJS with MongoDB for server side, and React front end with Bootstrap for CSS.',
+      },
+      {
+        label: 'Is Cube Cobra Open Source?',
+        text:
+          "Yes! Given the goals of Cube Cobra, we've felt the best way to give the community the tool that they want is to make it a collaborative project. For the community, by the community. If you're interested in contributing, feel free to reach out and we will help you get started.",
+      },
+      {
+        label: 'I am not a developer, can I still help improve Cube Cobra?',
+        text:
+          'Yes! Even if you are not a developer, you can still get involved in helping Cube Cobra become a better platform for everyone! If you want to be more involved in the community, join the discord linked under contact. You can submit bug reports, make feature requests, and talk to the developers directly there.',
+      },
+      {
+        label: "I'm having trouble building my cube, where can I go for help?",
+        text:
+          'Head on over to our Discord! You can find the link under our contact page! We have an avid cubing community that would be more than happy to help you build your cube!',
+      },
+      {
+        label: 'How can I put my lands into my guild sections?',
+        text:
+          'From your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
+      },
+    ],
   });
 });
 
 router.get('/donate', (req, res) => {
-  res.render('info/donate', {
-    loginCallback: '/donate',
-  });
+  return render(req, res, 'DonatePage');
 });
 
 router.get('/c/:id', (req, res) => {

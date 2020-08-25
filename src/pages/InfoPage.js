@@ -1,0 +1,56 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+
+import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
+
+import Advertisement from 'components/Advertisement';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
+
+const ContactPage = ({ user, title, content }) => (
+  <MainLayout user={user}>
+    <Advertisement />
+    <DynamicFlash />
+    <Card className="my-3 mx-4">
+      <CardHeader>
+        <h5>{title}</h5>
+      </CardHeader>
+      <CardBody>
+        <Row>
+          {content.map((item) => (
+            <>
+              <Col xs="12" sm="3">
+                <strong>{item.label}</strong>
+              </Col>
+              <Col xs="12" sm="9" className="mb-3">
+                <p>{item.text}</p>
+              </Col>
+            </>
+          ))}
+        </Row>
+      </CardBody>
+    </Card>
+  </MainLayout>
+);
+
+ContactPage.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+  title: PropTypes.string.isRequired,
+  content: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      text: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+};
+
+ContactPage.defaultProps = {
+  user: null,
+};
+
+export default RenderToRoot(ContactPage);

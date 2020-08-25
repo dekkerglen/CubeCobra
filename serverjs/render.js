@@ -25,11 +25,18 @@ if (NODE_ENV === 'production') {
   pages.CubeOverviewPage = require('../dist/pages/CubeOverviewPage').default;
   pages.CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
   pages.CubeSamplePackPage = require('../dist/pages/CubeSamplePackPage').default;
+  pages.CubeGridDraftPage = require('../dist/pages/CubeGridDraftPage').default;
+  pages.ContactPage = require('../dist/pages/ContactPage').default;
+  pages.CookiesPage = require('../dist/pages/CookiesPage').default;
+  pages.InfoPage = require('../dist/pages/InfoPage').default;
+  pages.DonatePage = require('../dist/pages/DonatePage').default;
+  pages.DownTimePage = require('../dist/pages/DownTimePage').default;
+  pages.FiltersPage = require('../dist/pages/FiltersPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;
 
-const render = (req, res, page, reactProps, options = {}) => {
+const render = (req, res, page, reactProps = {}, options = {}) => {
   reactProps.user = req.user
     ? {
         id: req.user._id,
