@@ -10,6 +10,9 @@ import ChangelistContext, { ChangelistContextProvider } from 'components/Changel
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import CubeLayout from 'layouts/CubeLayout';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube, canEdit }) => {
   const [addValue, setAddValue] = useState('');
@@ -109,15 +112,18 @@ BulkUploadPageRaw.propTypes = {
   }).isRequired,
 };
 
-const BulkUploadPage = ({ cubeID, added, ...props }) => (
-  <ChangelistContextProvider
-    cubeID={cubeID}
-    noSave
-    initialChanges={added.map((details, index) => ({ add: { details }, id: index }))}
-    setOpenCollapse={() => {}}
-  >
-    <BulkUploadPageRaw cubeID={cubeID} {...props} />
-  </ChangelistContextProvider>
+const BulkUploadPage = ({ user, cubeID, added, ...props }) => (
+  <MainLayout user={user}>
+    <DynamicFlash />
+    <ChangelistContextProvider
+      cubeID={cubeID}
+      noSave
+      initialChanges={added.map((details, index) => ({ add: { details }, id: index }))}
+      setOpenCollapse={() => {}}
+    >
+      <BulkUploadPageRaw cubeID={cubeID} {...props} />
+    </ChangelistContextProvider>
+  </MainLayout>
 );
 
 BulkUploadPage.propTypes = {
@@ -129,6 +135,15 @@ BulkUploadPage.propTypes = {
     }),
   ).isRequired,
   ...BulkUploadPageRaw.propTypes,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
-export default BulkUploadPage;
+BulkUploadPage.defaultProps = {
+  user: null,
+};
+
+export default RenderToRoot(BulkUploadPage);

@@ -28,8 +28,10 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
 import CSRFForm from 'components/CSRFForm';
-import { csrfFetch } from 'utils/CSRF';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
+import { csrfFetch } from 'utils/CSRF';
 import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
 import { botRatingAndCombination } from 'utils/draftbots';
 
@@ -145,7 +147,7 @@ for (let index = 0; index < 3; index++) {
   options.push(mask);
 }
 
-const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
+const GridDraftPage = ({ user, cube, initialDraft }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
@@ -337,70 +339,74 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   };
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <Navbar expand="xs" light className="usercontrols">
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <CSRFForm
-          className="d-none"
-          innerRef={submitDeckForm}
-          method="POST"
-          action={`/cube/submitgriddeck/${initialDraft.cube}`}
-        >
-          <Input type="hidden" name="body" value={initialDraft._id} />
-        </CSRFForm>
-        <DndProvider>
-          <ErrorBoundary>
-            {initialDraft.draftType === 'bot' ? (
-              <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
-            ) : (
-              <Pack
-                pack={pack}
-                packNumber={packNumber}
-                pickNumber={pickNumber}
-                pickRow={pickRow}
-                pickCol={pickCol}
-                turn={turn + 1}
-              />
-            )}
-          </ErrorBoundary>
-          <ErrorBoundary className="mt-3">
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picks}
-                title="Picks"
-                subtitle={subtitle(picks.flat().flat())}
-                locationType={Location.PICKS}
-                canDrop={() => false}
-                onMoveCard={() => {}}
-              />
-            </Card>
-            <Card className="mt-3">
-              <DeckStacks
-                cards={botPicks}
-                title="Bot Picks"
-                subtitle={subtitle(botPicks.flat().flat())}
-                locationType={Location.PICKS}
-                canDrop={() => false}
-                onMoveCard={() => {}}
-              />
-            </Card>
-          </ErrorBoundary>
-        </DndProvider>
-      </DisplayContextProvider>
-    </CubeLayout>
+    <MainLayout user={user}>
+      <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+        <DisplayContextProvider>
+          <Navbar expand="xs" light className="usercontrols">
+            <Collapse navbar>
+              <Nav navbar>
+                <CustomImageToggler />
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <DynamicFlash />
+          <CSRFForm
+            className="d-none"
+            innerRef={submitDeckForm}
+            method="POST"
+            action={`/cube/submitgriddeck/${initialDraft.cube}`}
+          >
+            <Input type="hidden" name="body" value={initialDraft._id} />
+          </CSRFForm>
+          <DndProvider>
+            <ErrorBoundary>
+              {initialDraft.draftType === 'bot' ? (
+                <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
+              ) : (
+                <Pack
+                  pack={pack}
+                  packNumber={packNumber}
+                  pickNumber={pickNumber}
+                  pickRow={pickRow}
+                  pickCol={pickCol}
+                  turn={turn + 1}
+                />
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary className="mt-3">
+              <Card className="mt-3">
+                <DeckStacks
+                  cards={picks}
+                  title="Picks"
+                  subtitle={subtitle(picks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={() => false}
+                  onMoveCard={() => {}}
+                />
+              </Card>
+              <Card className="my-3">
+                <DeckStacks
+                  cards={botPicks}
+                  title="Bot Picks"
+                  subtitle={subtitle(botPicks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={() => false}
+                  onMoveCard={() => {}}
+                />
+              </Card>
+            </ErrorBoundary>
+          </DndProvider>
+        </DisplayContextProvider>
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 GridDraftPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    owner: PropTypes.string.isRequired,
+  }).isRequired,
   initialDraft: PropTypes.shape({
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
@@ -411,6 +417,15 @@ GridDraftPage.propTypes = {
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,
   }).isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
-export default GridDraftPage;
+GridDraftPage.defaultProps = {
+  user: null,
+};
+
+export default RenderToRoot(GridDraftPage);

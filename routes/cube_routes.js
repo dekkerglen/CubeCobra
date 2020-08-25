@@ -61,17 +61,7 @@ const CardRating = require('../models/cardrating');
 
 const { NODE_ENV } = process.env;
 
-let BulkUploadPage = null;
-let CubeDraftPage = null;
-let CubeListPage = null;
-let CubePlaytestPage = null;
-if (NODE_ENV === 'production') {
-  BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
-  CubeDraftPage = require('../dist/pages/CubeDraftPage').default;
-  CubeListPage = require('../dist/pages/CubeListPage').default;
-  CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
-}
-
+const { render } = require('../serverjs/render');
 const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors } = require('./middleware');
 
 router.use(csrfProtection);
@@ -402,6 +392,7 @@ router.get('/overview/:id', async (req, res) => {
       cube: cube._id,
     })
       .sort({ date: -1 })
+      .limit(1)
       .lean();
 
     const followersQ = User.find(
@@ -477,32 +468,29 @@ router.get('/overview/:id', async (req, res) => {
     delete cube.draft_formats;
     delete cube.maybe;
 
-    const reactProps = {
-      cube,
-      cubeID,
-      loggedIn: !!req.user,
-      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      owner: cube.owner_name || 'unknown',
-      ownerID: cube.owner || null,
-      post: blogs ? blogs[0] : null,
-      followed: req.user && cube.users_following ? cube.users_following.includes(req.user.id) : false,
-      followers,
-      editorvalue: cube.raw_desc,
-      priceOwned: !cube.privatePrices ? totalPriceOwned : null,
-      pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
-      admin,
-    };
-    return res.render('cube/cube_overview', {
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Overview`,
-      metadata: generateMeta(
-        `Cube Cobra Overview: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/overview/${req.params.id}`,
-      ),
-      loginCallback: `/cube/overview/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeOverviewPage',
+      {
+        cube,
+        post: blogs ? blogs[0] : null,
+        followed: req.user && cube.users_following ? cube.users_following.includes(req.user.id) : false,
+        followers,
+        priceOwned: !cube.privatePrices ? totalPriceOwned : null,
+        pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
+        admin,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Overview`,
+        metadata: generateMeta(
+          `Cube Cobra Overview: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/overview/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -527,8 +515,7 @@ router.get('/blog/:id', (req, res) => {
 
 router.get('/blog/:id/:page', async (req, res) => {
   try {
-    const cubeID = req.params.id;
-    const cube = await Cube.findOne(buildIdQuery(cubeID), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), Cube.LAYOUT_FIELDS).lean();
 
     const page = parseInt(req.params.page, 10) || 0;
 
@@ -536,8 +523,6 @@ router.get('/blog/:id/:page', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.status(404).render('misc/404', {});
     }
-
-    const userQ = User.findById(cube.owner);
 
     const countQ = Blog.countDocuments({ cube: cube._id });
     const blogsQ = Blog.find({
@@ -547,7 +532,7 @@ router.get('/blog/:id/:page', async (req, res) => {
       .skip(page * 10)
       .limit(10)
       .lean();
-    const [user, blogs, count] = await Promise.all([userQ, blogsQ, countQ]);
+    const [blogs, count] = await Promise.all([blogsQ, countQ]);
 
     for (const item of blogs) {
       if (!item.date_formatted) {
@@ -558,28 +543,26 @@ router.get('/blog/:id/:page', async (req, res) => {
       }
     }
 
-    const reactProps = {
-      cube,
-      cubeID,
-      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      posts: blogs,
-      pages: Math.ceil(count / 10),
-      activePage: page,
-      userid: user._id,
-      loggedIn: !!req.user,
-    };
-
-    return res.render('cube/cube_blog', {
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Blog`,
-      metadata: generateMeta(
-        `Cube Cobra Blog: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/blog/${req.params.id}`,
-      ),
-      loginCallback: `/cube/blog/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeBlogPage',
+      {
+        cube,
+        posts: blogs,
+        pages: Math.ceil(count / 10),
+        activePage: page,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Blog`,
+        metadata: generateMeta(
+          `Cube Cobra Blog: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/blog/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -675,31 +658,31 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeA.cards, cubeB.cards);
 
-    const reactProps = {
-      cube: cubeA,
-      cubeID: idA,
-      cubeB,
-      cubeBID: idB,
-      onlyA: aNames,
-      onlyB: bNames,
-      both: inBoth.map((card) => card.details.name),
-      cards: allCards.map((card, index) => Object.assign(card, { index })),
-      defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
-      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
-      defaultSorts: cubeA.default_sorts,
-    };
-
-    return res.render('cube/cube_compare', {
-      reactProps: serialize(reactProps),
-      title: `Comparing ${cubeA.name} to ${cubeB.name}`,
-      metadata: generateMeta(
-        'Cube Cobra Compare Cubes',
-        `Comparing "${cubeA.name}" To "${cubeB.name}"`,
-        cubeA.image_uri,
-        `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
-      ),
-      loginCallback: `/cube/compare/${idA}/to/${idB}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeComparePage',
+      {
+        cube: cubeA,
+        cubeB,
+        onlyA: aNames,
+        onlyB: bNames,
+        both: inBoth.map((card) => card.details.name),
+        cards: allCards.map((card, index) => Object.assign(card, { index })),
+        defaultTagColors: [...cubeA.tag_colors, ...cubeB.tag_colors],
+        defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+        defaultSorts: cubeA.default_sorts,
+      },
+      {
+        title: `Comparing ${cubeA.name} to ${cubeB.name}`,
+        metadata: generateMeta(
+          'Cube Cobra Compare Cubes',
+          `Comparing "${cubeA.name}" To "${cubeB.name}"`,
+          cubeA.image_uri,
+          `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404/');
   }
@@ -731,37 +714,29 @@ router.get('/list/:id', async (req, res) => {
     cube.cards = addDetails(cube.cards);
     cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
 
-    const reactProps = {
-      cube,
-      cubeID: req.params.id,
-      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      defaultView: req.query.view || 'table',
-      defaultPrimarySort: req.query.s1 || '',
-      defaultSecondarySort: req.query.s2 || '',
-      defaultFilterText: req.query.f || '',
-      defaultTagColors: cube.tag_colors || [],
-      defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
-      defaultSorts: cube.default_sorts,
-      maybe: cube.maybe,
-    };
-
-    return res.render('cube/cube_list', {
-      reactHTML: CubeListPage
-        ? ReactDOMServer.renderToString(React.createElement(CubeListPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      cube,
-      cubeID: req.params.id,
-      activeLink: 'list',
-      title: `${abbreviate(cube.name)} - List`,
-      metadata: generateMeta(
-        `Cube Cobra List: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/list/${req.params.id}`,
-      ),
-      loginCallback: `/cube/list/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeListPage',
+      {
+        cube,
+        defaultView: req.query.view || 'table',
+        defaultPrimarySort: req.query.s1 || '',
+        defaultSecondarySort: req.query.s2 || '',
+        defaultFilterText: req.query.f || '',
+        defaultTagColors: cube.tag_colors || [],
+        defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
+      },
+      {
+        title: `${abbreviate(cube.name)} - List`,
+        metadata: generateMeta(
+          `Cube Cobra List: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/list/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -797,29 +772,25 @@ router.get('/playtest/:id', async (req, res) => {
       }));
     }
 
-    const reactProps = {
-      cube,
-      cubeID: req.params.id,
-      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      userID: req.user ? req.user._id : null,
-      decks,
-      draftFormats,
-    };
-
-    return res.render('cube/cube_playtest', {
-      reactHTML: CubePlaytestPage
-        ? ReactDOMServer.renderToString(React.createElement(CubePlaytestPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Playtest`,
-      metadata: generateMeta(
-        `Cube Cobra Playtest: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/playtest/${req.params.id}`,
-      ),
-      loginCallback: `/cube/playtest/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubePlaytestPage',
+      {
+        cube,
+        decks,
+        draftFormats,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Playtest`,
+        metadata: generateMeta(
+          `Cube Cobra Playtest: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/playtest/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -872,27 +843,29 @@ router.get('/analysis/:id', async (req, res) => {
     cube.cards = addDetails(cube.cards || []);
     cube.maybe = addDetails(cube.maybe || []);
 
-    const reactProps = {
-      cube,
-      cubeID: req.params.id,
-      defaultNav: req.query.nav,
-      defaultFormatId: Number(req.query.formatId),
-      defaultFilterText: req.query.f,
-      defaultTab: Number(req.query.tab),
-      cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
-    };
-
-    return res.render('cube/cube_analysis', {
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Analysis`,
-      metadata: generateMeta(
-        `Cube Cobra Analysis: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/analysis/${req.params.id}`,
-      ),
-      loginCallback: `/cube/analysis/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeAnalysisPage',
+      {
+        cube,
+        cubeID: req.params.id,
+        defaultNav: req.query.nav,
+        defaultFormatId: Number(req.query.formatId),
+        defaultFilterText: req.query.f,
+        defaultTab: Number(req.query.tab),
+        cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
+      },
+      {
+        metadata: generateMeta(
+          `Cube Cobra Analysis: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/analysis/${req.params.id}`,
+        ),
+        title: `${abbreviate(cube.name)} - Analysis`,
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
   }
@@ -907,32 +880,30 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
-    const reactProps = {
-      cubeID: cube._id,
-      seed: pack.seed,
-      pack: pack.pack,
-      cube,
-      canEdit: false,
-    };
-
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
     const height = Math.ceil(pack.pack.length / width);
 
-    return res.render('cube/cube_samplepack', {
-      cube,
-      title: `${abbreviate(cube.name)} - Sample Pack`,
-      reactProps: serialize(reactProps),
-      activeLink: 'playtest',
-      metadata: generateMeta(
-        'Cube Cobra Sample Pack',
-        `A sample pack from ${cube.name}`,
-        `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
-        `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
-        CARD_WIDTH * width,
-        CARD_HEIGHT * height,
-      ),
-      loginCallback: `/cube/samplepack/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeSamplePackPage',
+      {
+        seed: pack.seed,
+        pack: pack.pack,
+        cube,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Sample Pack`,
+        metadata: generateMeta(
+          'Cube Cobra Sample Pack',
+          `A sample pack from ${cube.name}`,
+          `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
+          `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
+          CARD_WIDTH * width,
+          CARD_HEIGHT * height,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
   }
@@ -991,23 +962,13 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
     blogpost.cubename = cube.name;
 
     if (missing.length > 0) {
-      const reactProps = {
+      return render(req, res, 'BulkUploadPage', {
         cube,
         canEdit: true,
         cubeID: req.params.id,
         missing,
         added: added.map(({ _id, name, image_normal, image_flip }) => ({ _id, name, image_normal, image_flip })),
         blogpost: blogpost.toObject(),
-      };
-
-      return res.render('cube/bulk_upload', {
-        reactHTML: BulkUploadPage
-          ? ReactDOMServer.renderToString(React.createElement(BulkUploadPage, reactProps))
-          : undefined,
-        reactProps: serialize(reactProps),
-        cube,
-        cube_id: req.params.id,
-        title: `${abbreviate(cube.name)} - Bulk Upload`,
       });
     }
     await blogpost.save();
@@ -2225,25 +2186,24 @@ router.get('/griddraft/:id', async (req, res) => {
       }
     }
 
-    const reactProps = {
-      cube,
-      cubeID: getCubeId(cube),
-      initialDraft: draft,
-    };
-
-    return res.render('cube/grid_draft', {
-      reactHTML: CubeDraftPage
-        ? ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Grift Draft`,
-      metadata: generateMeta(
-        `Cube Cobra Grid Draft: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/griddraft/${req.params.id}`,
-      ),
-    });
+    return render(
+      req,
+      res,
+      'GridDraftPage',
+      {
+        cube,
+        initialDraft: draft,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Grift Draft`,
+        metadata: generateMeta(
+          `Cube Cobra Grid Draft: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/griddraft/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -2300,26 +2260,24 @@ router.get('/draft/:id', async (req, res) => {
       }
     }
 
-    const reactProps = {
-      cube,
-      cubeID: getCubeId(cube),
-      initialDraft: draft,
-    };
-
-    return res.render('cube/cube_draft', {
-      reactHTML: CubeDraftPage
-        ? ReactDOMServer.renderToString(React.createElement(CubeDraftPage, reactProps))
-        : undefined,
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Draft`,
-      metadata: generateMeta(
-        `Cube Cobra Draft: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/draft/${req.params.id}`,
-      ),
-      loginCallback: `/cube/draft/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeDraftPage',
+      {
+        cube,
+        initialDraft: draft,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Draft`,
+        metadata: generateMeta(
+          `Cube Cobra Draft: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/draft/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -2449,12 +2407,9 @@ router.get('/api/cardimages', (_, res) => {
 router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.findById(req.params.id);
-    const owner = await User.findById(post.owner);
 
-    return res.render('cube/blogpost', {
+    return render(req, res, 'BlogPostPage', {
       post,
-      owner: owner ? owner._id : null,
-      loginCallback: `/blogpost/${req.params.id}`,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -2964,27 +2919,26 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     const [numDecks, decks] = await Promise.all([numDecksq, decksq]);
 
-    const reactProps = {
-      cube,
-      cubeID: cubeid,
-      decks,
-      userID: req.user ? req.user._id : null,
-      canEdit: req.user ? req.user._id.equals(cube.owner) : false,
-      pages: Math.ceil(numDecks / pagesize),
-      activePage: page,
-    };
-
-    return res.render('cube/cube_decks', {
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - Draft Decks`,
-      metadata: generateMeta(
-        `Cube Cobra Decks: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/user/decks/${req.params.cubeid}`,
-      ),
-      loginCallback: `/user/decks/${cubeid}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeDecksPage',
+      {
+        cube,
+        decks,
+        pages: Math.ceil(numDecks / pagesize),
+        activePage: page,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Draft Decks`,
+        metadata: generateMeta(
+          `Cube Cobra Decks: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/user/decks/${req.params.cubeid}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.cubeid}`);
   }
@@ -3322,26 +3276,26 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.status(404).render('misc/404', {});
     }
 
-    const reactProps = {
-      cube,
-      cubeID: getCubeId(cube),
-      initialDeck: deck,
-      basics: getBasics(carddb),
-      draft,
-    };
-
-    return res.render('cube/cube_deckbuilder', {
-      reactProps: serialize(reactProps),
-      activeLink: 'playtest',
-      title: `${abbreviate(cube.name)} - Deckbuilder`,
-      metadata: generateMeta(
-        `Cube Cobra Draft: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/draft/${req.params.id}`,
-      ),
-      loginCallback: `/cube/draft/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeDeckbuilderPage',
+      {
+        cube,
+        initialDeck: deck,
+        basics: getBasics(carddb),
+        draft,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Deckbuilder`,
+        metadata: generateMeta(
+          `Cube Cobra Draft: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/draft/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -3412,25 +3366,25 @@ router.get('/deck/:id', async (req, res) => {
       }
     }
 
-    const reactProps = {
-      cube,
-      deck,
-      draft,
-      canEdit: req.user ? req.user.id === deck.seats[0].userid : false,
-      userid: req.user ? req.user.id : null,
-    };
-
-    return res.render('cube/cube_deck', {
-      reactProps: serialize(reactProps),
-      title: `${abbreviate(cube.name)} - ${drafter}'s deck`,
-      metadata: generateMeta(
-        `Cube Cobra Deck: ${cube.name}`,
-        cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
-        cube.image_uri,
-        `https://cubecobra.com/cube/deck/${req.params.id}`,
-      ),
-      loginCallback: `/cube/deck/${req.params.id}`,
-    });
+    return render(
+      req,
+      res,
+      'CubeDeckPage',
+      {
+        cube,
+        deck,
+        draft,
+      },
+      {
+        title: `${abbreviate(cube.name)} - ${drafter}'s deck`,
+        metadata: generateMeta(
+          `Cube Cobra Deck: ${cube.name}`,
+          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/deck/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }

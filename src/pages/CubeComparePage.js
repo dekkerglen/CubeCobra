@@ -11,6 +11,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortContextProvider } from 'components/SortContext';
 import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const deduplicateTags = (tagColors) => {
   const used = new Set();
@@ -25,10 +27,9 @@ const deduplicateTags = (tagColors) => {
 };
 
 const CubeComparePage = ({
+  user,
   cards,
-  cubeID,
   cube,
-  cubeBID,
   cubeB,
   defaultTagColors,
   defaultShowTagColors,
@@ -45,44 +46,47 @@ const CubeComparePage = ({
   }));
   const filteredCards = filter ? cards.filter(filter) : cards;
   return (
-    <SortContextProvider defaultSorts={defaultSorts}>
-      <DisplayContextProvider>
-        <TagContextProvider
-          cubeID={cubeID}
-          defaultTagColors={deduplicateTags(defaultTagColors)}
-          defaultShowTagColors={defaultShowTagColors}
-          defaultTags={defaultTags}
-        >
-          <CubeCompareNavbar
-            cubeA={cube}
-            cubeAID={cubeID}
-            cubeB={cubeB}
-            cubeBID={cubeBID}
-            cards={filteredCards}
-            openCollapse={openCollapse}
-            setOpenCollapse={setOpenCollapse}
-            filter={filter}
-            setFilter={setFilter}
-          />
-          <DynamicFlash />
-          <ErrorBoundary>
-            <CardModalForm>
-              <CompareView cards={filteredCards} {...props} />
-            </CardModalForm>
-          </ErrorBoundary>
-        </TagContextProvider>
-      </DisplayContextProvider>
-    </SortContextProvider>
+    <MainLayout user={user}>
+      <SortContextProvider defaultSorts={defaultSorts}>
+        <DisplayContextProvider>
+          <TagContextProvider
+            cubeID={cube._id}
+            defaultTagColors={deduplicateTags(defaultTagColors)}
+            defaultShowTagColors={defaultShowTagColors}
+            defaultTags={defaultTags}
+          >
+            <CubeCompareNavbar
+              cubeA={cube}
+              cubeAID={cube._id}
+              cubeB={cubeB}
+              cubeBID={cubeB._id}
+              cards={filteredCards}
+              openCollapse={openCollapse}
+              setOpenCollapse={setOpenCollapse}
+              filter={filter}
+              setFilter={setFilter}
+            />
+            <DynamicFlash />
+            <ErrorBoundary>
+              <CardModalForm>
+                <CompareView cards={filteredCards} {...props} />
+              </CardModalForm>
+            </ErrorBoundary>
+          </TagContextProvider>
+        </DisplayContextProvider>
+      </SortContextProvider>
+    </MainLayout>
   );
 };
 
 CubeComparePage.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  cubeB: PropTypes.shape({}).isRequired,
-  cubeBID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  cubeB: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,
@@ -91,10 +95,15 @@ CubeComparePage.propTypes = {
   ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
 CubeComparePage.defaultProps = {
-  canEdit: false,
+  user: null,
 };
 
-export default CubeComparePage;
+export default RenderToRoot(CubeComparePage);

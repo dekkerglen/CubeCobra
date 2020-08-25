@@ -1,8 +1,8 @@
 const express = require('express');
-const serialize = require('serialize-javascript');
 const util = require('../serverjs/util.js');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
+const { render } = require('../serverjs/render');
 
 // Bring in models
 const User = require('../models/user');
@@ -38,16 +38,12 @@ router.get('/blog/:id', async (req, res) => {
     }
   }
 
-  const reactProps = {
+  return render(req, res, 'DevBlog', {
     blogs,
     pages: Math.ceil(count / PAGESIZE),
     activePage: req.params.id,
     userid: req.user ? req.user._id : null,
     admin,
-  };
-
-  return res.render('blog/devblog', {
-    reactProps: serialize(reactProps),
   });
 });
 

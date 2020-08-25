@@ -6,34 +6,41 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
 import CubeLayout from 'layouts/CubeLayout';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const CubeDecksPage = ({ cube, cubeID, canEdit, userID, decks, pages, activePage }) => (
-  <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-    {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cubeID}/${i}`} />}
-    <Card>
-      <CardHeader>
-        <h5 className="mb-0">All Decks</h5>
-      </CardHeader>
-      <CardBody className="p-0">
-        {decks.map((deck) => (
-          <DeckPreview
-            key={deck._id}
-            deck={deck}
-            canEdit={canEdit || userID === deck.seats[0].userid}
-            nextURL={`/cube/decks/${cubeID}/${activePage}`}
-          />
-        ))}
-      </CardBody>
-    </Card>
-    {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cubeID}/${i}`} />}
-  </CubeLayout>
+const CubeDecksPage = ({ user, cube, decks, pages, activePage }) => (
+  <MainLayout user={user}>
+    <DynamicFlash />
+    <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+      <div className="my-3">
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cube._id}/${i}`} />}
+        <Card>
+          <CardHeader>
+            <h5 className="mb-0">All Decks</h5>
+          </CardHeader>
+          <CardBody className="p-0">
+            {decks.map((deck) => (
+              <DeckPreview
+                key={deck._id}
+                deck={deck}
+                canEdit={user.id === deck.owner}
+                nextURL={`/cube/decks/${cube._id}/${activePage}`}
+              />
+            ))}
+          </CardBody>
+        </Card>
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cube._id}/${i}`} />}
+      </div>
+    </CubeLayout>
+  </MainLayout>
 );
 
 CubeDecksPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  userID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool.isRequired,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
   decks: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
@@ -41,6 +48,15 @@ CubeDecksPage.propTypes = {
   ).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
-export default CubeDecksPage;
+CubeDecksPage.defaultProps = {
+  user: null,
+};
+
+export default RenderToRoot(CubeDecksPage);

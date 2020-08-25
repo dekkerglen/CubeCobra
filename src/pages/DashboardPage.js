@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
-const DashboardPage = ({ posts, cubes, decks, canEdit, user }) => (
+const DashboardPage = ({ posts, cubes, decks, user }) => (
   <MainLayout user={user}>
     <Advertisement />
     <DynamicFlash />
@@ -50,7 +50,7 @@ const DashboardPage = ({ posts, cubes, decks, canEdit, user }) => (
           </CardHeader>
           <CardBody className="p-0">
             {decks.length > 0 ? (
-              decks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" canEdit={canEdit} />)
+              decks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" canEdit />)
             ) : (
               <p className="m-2">
                 Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
@@ -72,7 +72,7 @@ const DashboardPage = ({ posts, cubes, decks, canEdit, user }) => (
             pageSize={10}
             showBottom
             rows={posts.slice(0).map((post) => (
-              <BlogPost key={post._id} post={post} canEdit={false} userid={user.id} loggedIn />
+              <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user.id : null} loggedIn />
             ))}
           />
         ) : (
@@ -93,7 +93,6 @@ DashboardPage.propTypes = {
     }),
   ).isRequired,
   decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  canEdit: PropTypes.bool.isRequired,
   user: PropTypes.shape({
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,

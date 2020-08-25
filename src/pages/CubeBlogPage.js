@@ -23,6 +23,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
 import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
   const { cubeID } = useContext(CubeContext);
@@ -68,7 +70,7 @@ EditBlogModal.defaultProps = {
   post: null,
 };
 
-const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid, loggedIn }) => {
+const CubeBlogPage = ({ user, cube, pages, activePage, posts }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
   const [editHtml, setEditHtml] = useState('');
@@ -89,63 +91,69 @@ const CubeBlogPage = ({ cube, cubeID, canEdit, pages, activePage, posts, userid,
   const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="blog">
-      <Navbar expand light className="usercontrols mb-3">
-        <Collapse navbar>
-          <Nav navbar>
-            <NavItem>
-              <NavLink href="#" onClick={handleNew}>
-                Create new blog post
-              </NavLink>
-            </NavItem>
-          </Nav>
-        </Collapse>
-      </Navbar>
-      <DynamicFlash />
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cubeID}/${i}`} />}
-      {posts.length > 0 ? (
-        posts.map((post) => (
-          <BlogPost
-            key={post._id}
-            post={post}
-            canEdit={canEdit}
-            userid={userid}
-            loggedIn={loggedIn}
-            onEdit={handleEdit}
-          />
-        ))
-      ) : (
-        <h5>No blog posts for this cube.</h5>
-      )}
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cubeID}/${i}`} />}
-      <EditBlogModal
-        isOpen={editOpen}
-        toggle={toggleEdit}
-        post={posts[editPostIndex]}
-        html={editHtml}
-        setHtml={setEditHtml}
-      />
-    </CubeLayout>
+    <MainLayout user={user}>
+      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="blog">
+        <Navbar expand light className="usercontrols mb-3">
+          <Collapse navbar>
+            <Nav navbar>
+              <NavItem>
+                <NavLink href="#" onClick={handleNew}>
+                  Create new blog post
+                </NavLink>
+              </NavItem>
+            </Nav>
+          </Collapse>
+        </Navbar>
+        <DynamicFlash />
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cube._id}/${i}`} />}
+        {posts.length > 0 ? (
+          posts.map((post) => (
+            <BlogPost
+              key={post._id}
+              post={post}
+              canEdit={user && post.owner === user.id}
+              userid={user ? user.id : null}
+              loggedIn={user !== null}
+              onEdit={handleEdit}
+            />
+          ))
+        ) : (
+          <h5>No blog posts for this cube.</h5>
+        )}
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cube._id}/${i}`} />}
+        <EditBlogModal
+          isOpen={editOpen}
+          toggle={toggleEdit}
+          post={posts[editPostIndex]}
+          html={editHtml}
+          setHtml={setEditHtml}
+        />
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 CubeBlogPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    owner: PropTypes.string.isRequired,
+  }).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   posts: PropTypes.arrayOf(
     PropTypes.shape({
-      html: PropTypes.string.isRequired,
+      html: PropTypes.string,
     }),
   ).isRequired,
-  userid: PropTypes.string.isRequired,
-  loggedIn: PropTypes.bool.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
 CubeBlogPage.defaultProps = {
-  canEdit: false,
+  user: null,
 };
 
-export default CubeBlogPage;
+export default RenderToRoot(CubeBlogPage);

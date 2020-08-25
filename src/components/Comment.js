@@ -224,7 +224,7 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
 
 Comment.propTypes = {
   comment: PropTypes.shape({
-    timePosted: PropTypes.instanceOf(Date).isRequired,
+    timePosted: PropTypes.string.isRequired,
     ownerName: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
     parent: PropTypes.string.isRequired,

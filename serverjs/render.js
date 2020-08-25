@@ -9,14 +9,34 @@ const { NODE_ENV } = process.env;
 
 const pages = {};
 if (NODE_ENV === 'production') {
-  pages.loading = require('../dist/pages/Loading').default;
-  pages.dashboard = require('../dist/pages/DashboardPage').default;
+  pages.Loading = require('../dist/pages/Loading').default;
+  pages.DashboardPage = require('../dist/pages/DashboardPage').default;
+  pages.DevBlog = require('../dist/pages/DevBlog').default;
+  pages.BlogPostPage = require('../dist/pages/BlogPostPage').default;
+  pages.BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
+  pages.CubeComparePage = require('../dist/pages/CubeComparePage').default;
+  pages.CubeAnalysisPage = require('../dist/pages/CubeAnalysisPage').default;
+  pages.CubeBlogPage = require('../dist/pages/CubeBlogPage').default;
+  pages.CubeDeckPage = require('../dist/pages/CubeDeckPage').default;
+  pages.CubeDeckbuilderPage = require('../dist/pages/CubeDeckbuilderPage').default;
+  pages.CubeDecksPage = require('../dist/pages/CubeDecksPage').default;
+  pages.CubeDraftPage = require('../dist/pages/CubeDraftPage').default;
+  pages.CubeListPage = require('../dist/pages/CubeListPage').default;
+  pages.CubeOverviewPage = require('../dist/pages/CubeOverviewPage').default;
+  pages.CubePlaytestPage = require('../dist/pages/CubePlaytestPage').default;
+  pages.CubeSamplePackPage = require('../dist/pages/CubeSamplePackPage').default;
 }
 
-const getPage = (page) => pages[page] || pages.loading;
+const getPage = (page) => pages[page] || pages.Loading;
 
-const render = (req, res, page, reactProps) => {
-  reactProps.user = req.user;
+const render = (req, res, page, reactProps, options = {}) => {
+  reactProps.user = req.user
+    ? {
+        id: req.user._id,
+        notifications: req.user.notifications,
+        username: req.user.username,
+      }
+    : null;
 
   return res.render('main', {
     reactHTML:
@@ -24,6 +44,8 @@ const render = (req, res, page, reactProps) => {
     reactProps: serialize(reactProps),
     loginCallback: req.path,
     page,
+    metadata: options.metadata ? options.metadata : null,
+    title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
   });
 };
 

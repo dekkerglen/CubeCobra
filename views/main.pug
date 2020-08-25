@@ -14,12 +14,17 @@ html(lang='en')
 				if metadatum.property
 					meta(property=metadatum.property, content=metadatum.content)
 		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
-		title=title ? title + ' - Cube Cobra' : 'Cube Cobra'
+		title=title
 		if node_env === 'production'
 			link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css', integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh', crossorigin='anonymous')
 		else
 			link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
+		link(rel='stylesheet' href='/css/autocomplete.css')
+		link(rel='stylesheet' href='/css/draft.css')
+		link(rel='stylesheet' href='/css/editcube.css')
 		link(rel='stylesheet' href='/css/stylesheet.css')
+		link(rel='stylesheet' href='/css/tags.css')
+		link(rel='stylesheet' href='/css/texteditor.css')
 
 	body  
 		#autocardPopup.d-none
@@ -42,7 +47,6 @@ html(lang='en')
 			script(src='/bower_components/jquery/dist/jquery.slim.min.js')
 			script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
 		script(src='/js/csrf.js', async)
-		script(src='/js/toolbar.js', async)
 		
 		if node_env === 'production'
 			script(src='https://unpkg.com/react@16/umd/react.production.min.js', crossorigin)
