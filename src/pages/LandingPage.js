@@ -5,7 +5,11 @@ import { Row, Col, Button } from 'reactstrap';
 
 import RenderToRoot from 'utils/RenderToRoot';
 import Footer from 'layouts/Footer';
+import LoginModal from 'components/LoginModal';
+import withModal from 'components/WithModal';
 import CardSearchBar from 'components/CardSearchBar';
+
+const LoginModalButton = withModal(Button, LoginModal);
 
 const LandingPage = ({ numusers, numcubes, numdrafts }) => {
   return (
@@ -29,12 +33,12 @@ const LandingPage = ({ numusers, numcubes, numdrafts }) => {
               <strong>{numdrafts}</strong>
               {' Completed Drafts'}
             </h5>
-            <Button className="landing-btn my-3" color="success">
+            <Button href="/user/register" className="landing-btn my-3" color="success">
               Sign Up
             </Button>
-            <Button className="landing-btn mb-3" color="success" outline>
+            <LoginModalButton className="landing-btn mb-3" color="success" outline>
               Login
-            </Button>
+            </LoginModalButton>
           </div>
           <Footer />
         </Col>
