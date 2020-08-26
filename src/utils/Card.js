@@ -218,7 +218,6 @@ export const cardIsSpecialZoneType = (card) => {
     /(plane|phenomenon|vanguard|scheme|conspiracy|contraption)/i.test(cardType(card)) &&
     !/planeswalker/i.test(cardType(card))
   );
-  1;
 };
 
 export const makeSubtitle = (cards) => {

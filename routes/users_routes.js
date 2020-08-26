@@ -643,7 +643,7 @@ router.post(
   flashValidationErrors,
   (req, res) => {
     if (!req.validated) {
-      User.findById(req.user._id, (err, user) => {
+      User.findById(req.user._id, () => {
         res.redirect('/user/account');
       });
     } else {

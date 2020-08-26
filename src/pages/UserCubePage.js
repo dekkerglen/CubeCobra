@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Card, CardBody, CardFooter, CardHeader, Col, Row } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import CubePreview from 'components/CubePreview';
 import UserLayout from 'layouts/UserLayout';
