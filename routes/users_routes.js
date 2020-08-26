@@ -3,7 +3,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
-const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
@@ -645,11 +644,6 @@ router.post(
   (req, res) => {
     if (!req.validated) {
       User.findById(req.user._id, (err, user) => {
-        const userLimited = {
-          username: user.username,
-          email: user.email,
-          about: user.about,
-        };
         res.redirect('/user/account');
       });
     } else {
@@ -794,7 +788,7 @@ router.get('/social', ensureAuth, async (req, res) => {
       },
     );
   } catch (err) {
-    util.handleRouteError(req, res, err, '/');
+    return util.handleRouteError(req, res, err, '/');
   }
 });
 

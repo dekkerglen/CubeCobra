@@ -1,4 +1,3 @@
-const serialize = require('serialize-javascript');
 const express = require('express');
 
 const util = require('../serverjs/util.js');

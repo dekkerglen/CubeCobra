@@ -3,14 +3,10 @@ const express = require('express');
 const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
-const serialize = require('serialize-javascript');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
 
 Canvas.Image = Image;
-
-const React = require('react');
-const ReactDOMServer = require('react-dom/server');
 
 const {
   addAutocard,
@@ -21,7 +17,6 @@ const {
   getBasics,
   generateShortId,
   buildIdQuery,
-  getCubeId,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -58,8 +53,6 @@ const User = require('../models/user');
 const Draft = require('../models/draft');
 const GridDraft = require('../models/gridDraft');
 const CardRating = require('../models/cardrating');
-
-const { NODE_ENV } = process.env;
 
 const { render } = require('../serverjs/render');
 const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors } = require('./middleware');
