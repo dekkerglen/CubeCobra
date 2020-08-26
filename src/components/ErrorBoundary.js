@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import {Card} from 'reactstrap';
+import { Card } from 'reactstrap';
 
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { hasError: false, error:'', stack: '' };
+    this.state = { hasError: false, error: '', stack: '' };
   }
 
   static getDerivedStateFromError(error) {
@@ -23,10 +23,14 @@ class ErrorBoundary extends Component {
         <div className={'mt-3' || this.props.className}>
           <h1 className="text-center">Something went wrong.</h1>
           <p className="text-center">You may want to try reloading the page.</p>
-          <br/>
-          <Card>            
-            <p><code>{this.state.error}</code></p>
-            <p><code>{this.state.stack}</code></p>
+          <br />
+          <Card>
+            <p>
+              <code>{this.state.error}</code>
+            </p>
+            <p>
+              <code>{this.state.stack}</code>
+            </p>
           </Card>
         </div>
       );
