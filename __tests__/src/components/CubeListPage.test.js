@@ -3,16 +3,21 @@ import { FetchMock } from '@react-mock/fetch';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
-import exampleCardsFull from '../../../fixtures/examplecardsdetails';
-import exampleCube from '../../../fixtures/examplecube';
 import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
 import { fromEntries } from 'utils/Util';
+import exampleCube from '../../../fixtures/examplecube';
+import exampleCardsFull from '../../../fixtures/examplecardsdetails';
 
 const cube = {
   ...exampleCube,
   cards: exampleCardsFull,
+  maybe: exampleCardsFull,
+  default_sorts: ['Category', 'Types-Multicolor'],
+  owner: '1',
+  tag_colors: [],
+  _id: '1',
 };
 
 const element = () => (
@@ -44,14 +49,13 @@ const element = () => (
   >
     <CubeListPage
       cube={cube}
-      cubeID="1"
-      canEdit
-      maybe={exampleCardsFull}
       defaultView="table"
+      defaultPrimarySort=""
+      defaultSecondarySort=""
       defaultFilterText=""
       defaultTagColors={[]}
-      defaultShowTagColors={true}
-      defaultSorts={['Color Category', 'Types-Multicolor']}
+      defaultShowTagColors
+      user={null}
     />
     ;
   </FetchMock>
