@@ -459,7 +459,7 @@ body.busy-cursor {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-  }
+}
 
 .centered-max400 {
 	margin: auto;
@@ -915,6 +915,67 @@ footer {
 	flex-direction: column;
 }
 
+.flex-row-reverse {
+	flex-direction: row-reverse;
+}
+
+.flex-align-stretch {
+	align-items: stretch
+}
+
+.flex-shrink {
+	flex-shrink: 1
+}
+
 div.viewport {
   min-height: 100vh;
+}
+
+.bg-dark {
+	background-color: #343A40;
+}
+
+.bg-green{
+	background-color: #498007;
+}
+
+
+@media (max-width: 575.98px) {
+	.landing-half {
+		min-height: 40vh;
+	}
+}
+
+.landing-logo-container {	
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.landing-logo {
+  width: 50%;
+}
+
+.landing-btn {
+	width:50%
+}
+
+.search-button {
+	min-width: 10rem;
+}
+
+@media (max-width: 575.98px) {
+	.landing-logo {
+		width: 80%;
+	}
+	.landing-btn {
+		width:100%
+	}
+	.search-button {
+		min-width: 0rem;
+	}
+}
+
+.search-bar {
+	height: calc(1.5em + .75rem + 2px);
 }

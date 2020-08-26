@@ -54,7 +54,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     if (req.params.index > user.notifications.length) {
       req.flash('danger', 'Not Found');
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     const notification = user.notifications.splice(req.params.index, 1)[0];
@@ -62,7 +62,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     if (!notification) {
       req.flash('danger', 'Not Found');
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     return res.redirect(notification.url);

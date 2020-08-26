@@ -627,11 +627,11 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     if (!cubeA) {
       req.flash('danger', `Base cube not found: ${idA}`);
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
     if (!cubeB) {
       req.flash('danger', `Comparison cube not found: ${idB}`);
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     const pids = new Set();
