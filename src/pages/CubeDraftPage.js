@@ -250,10 +250,15 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
                   packNumber={packNumber}
                   pickNumber={pickNumber}
                   picking={picking}
-                  onMoveCard={handleMoveCard}
-                  onClickCard={handleClickCard}
+                  onMoveCard={sealed ? () => {} : handleMoveCard}
+                  onClickCard={sealed ? () => {} : handleClickCard}
                 />
               </ErrorBoundary>
+              {sealed && (
+                <Button color="primary" onClick={nextPack}>
+                  Next Pack
+                </Button>
+              )}
               {showBotBreakdown && (
                 <ErrorBoundary>
                   <Card className="mt-3">
