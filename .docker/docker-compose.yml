@@ -15,7 +15,7 @@ services:
     depends_on:
       - 'cubecobra-mongodb'
     env_file:
-      - '../.env-EXAMPLE'
+      - '../.env_EXAMPLE'
   cubecobra:
     build:
       dockerfile: .docker/Dockerfile.full
@@ -27,6 +27,6 @@ services:
     depends_on:
       - "cubecobra-mongodb"
     env_file:
-      - '../.env-EXAMPLE'
+      - '../.env_EXAMPLE'
 volumes:
   cubecobra-mongodb-volume:
