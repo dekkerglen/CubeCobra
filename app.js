@@ -20,6 +20,7 @@ const rateLimit = require('express-rate-limit');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 const CardRating = require('./models/cardrating');
+const { render } = require('./serverjs/render');
 
 const formatInfo = ({ message }) => {
   try {
@@ -225,16 +226,6 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use((req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
-app.post('*', (req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
 // apply a rate limiter to the cube json endpoint
 const apiLimiter = rateLimit({
   windowMs: 60000,
@@ -258,7 +249,10 @@ app.use('/tool', tools);
 app.use('/comment', comments);
 
 app.use((req, res) => {
-  res.status(404).render('misc/404', {});
+  return render(req, res, 'ErrorPage', {
+    requestId: req.uuid,
+    title: '404: Page not found',
+  });
 });
 
 // eslint-disable-next-line no-unused-vars
@@ -267,8 +261,10 @@ app.use((err, req, res, next) => {
   if (!res.statusCode) {
     res.status(500);
   }
-  res.render('misc/500', {
+  return render(req, res, 'ErrorPage', {
     error: err.message,
+    requestId: req.uuid,
+    title: 'Oops! Something went wrong.',
   });
 });
 

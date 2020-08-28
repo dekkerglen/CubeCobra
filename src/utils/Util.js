@@ -167,6 +167,10 @@ export function isTouchDevice() {
   return mq(query);
 }
 
+export function getCubeId(cube) {
+  return cube.urlAlias || cube.shortID || cube._id;
+}
+
 export default {
   arraysEqual,
   arrayRotate,

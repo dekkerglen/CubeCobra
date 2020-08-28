@@ -4,37 +4,54 @@ import PropTypes from 'prop-types';
 import UserLayout from 'layouts/UserLayout';
 import BlogPost from 'components/BlogPost';
 import PagedList from 'components/PagedList';
+import DynamicFlash from 'components/DynamicFlash';
+import Advertisement from 'components/Advertisement';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ user, followers, following, canEdit, posts, userId }) => (
-  <UserLayout user={user} followers={followers} following={following} canEdit={canEdit} activeLink="blog">
-    {posts.length > 0 ? (
-      <PagedList
-        pageSize={10}
-        showBottom
-        rows={posts.slice(0).map((post) => (
-          <BlogPost key={post._id} post={post} canEdit={canEdit} userid={userId} loggedIn />
-        ))}
-      />
-    ) : (
-      <p>This user has no blog posts!</p>
-    )}
-  </UserLayout>
+const UserBlogPage = ({ user, followers, following, posts, owner }) => (
+  <MainLayout user={user}>
+    <UserLayout
+      user={owner}
+      followers={followers}
+      following={following}
+      canEdit={user && user.id === owner._id}
+      activeLink="blog"
+    >
+      <Advertisement />
+      <DynamicFlash />
+      {posts.length > 0 ? (
+        <PagedList
+          pageSize={10}
+          showBottom
+          rows={posts.slice(0).map((post) => (
+            <BlogPost key={post._id} post={post} canEdit={user && user.id === owner._id} userid={user.id} loggedIn />
+          ))}
+        />
+      ) : (
+        <p>This user has no blog posts!</p>
+      )}
+    </UserLayout>
+  </MainLayout>
 );
 
-UserDecksPage.propTypes = {
+UserBlogPage.propTypes = {
   user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+  owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  canEdit: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  userId: PropTypes.string,
 };
 
-UserDecksPage.defaultProps = {
-  userId: '',
+UserBlogPage.defaultProps = {
+  user: null,
 };
 
-export default UserDecksPage;
+export default RenderToRoot(UserBlogPage);

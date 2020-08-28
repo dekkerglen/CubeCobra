@@ -50,7 +50,7 @@ class CubeCompareNavbar extends Component {
     return (
       <>
         <div className="cubenav">
-          <ul className="nav nav-tabs nav-fill mt-3">
+          <ul className="nav nav-tabs nav-fill pt-2">
             <li className="nav-item">
               <h5 style={{ color: '#218937' }}>Compare Cubes</h5>
               <h6 className="my-3" style={{ color: '#218937' }}>

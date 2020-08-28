@@ -21,6 +21,8 @@ import {
   Button,
 } from 'reactstrap';
 
+import ChartComponent from 'react-chartjs-2';
+
 import CardImage from 'components/CardImage';
 import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
@@ -34,8 +36,9 @@ import TextBadge from 'components/TextBadge';
 import AddToCubeModal from 'components/AddToCubeModal';
 import CommentsSection from 'components/CommentsSection';
 import withModal from 'components/WithModal';
-
-import ChartComponent from 'react-chartjs-2';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
@@ -200,7 +203,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, versions, related, cubes, userid }) => {
+const CardPage = ({ user, card, data, versions, related, cubes }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
@@ -219,7 +222,8 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
   });
 
   return (
-    <>
+    <MainLayout user={user}>
+      <DynamicFlash />
       <Card className="mt-2">
         <CardHeader>
           <h4>{card.name}</h4>
@@ -509,7 +513,12 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
               </TabPane>
               <TabPane tabId="5">
                 <div className="border-left border-bottom">
-                  <CommentsSection parentType="card" parent={card.oracle_id} userid={userid} collapse={false} />
+                  <CommentsSection
+                    parentType="card"
+                    parent={card.oracle_id}
+                    userid={user && user.id}
+                    collapse={false}
+                  />
                 </div>
               </TabPane>
             </TabContent>
@@ -625,7 +634,7 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
           </Card>
         </Col>
       </Row>
-      <Card className="mt-4">
+      <Card className="my-3">
         <CardHeader>
           <h4>Often Drafted With</h4>
         </CardHeader>
@@ -676,7 +685,7 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
           />
         </CardBody>
       </Card>
-    </>
+    </MainLayout>
   );
 };
 
@@ -779,12 +788,16 @@ CardPage.propTypes = {
     }).isRequired,
   ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape([])),
-  userid: PropTypes.string,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
 };
 
 CardPage.defaultProps = {
   cubes: [],
-  userid: null,
+  user: null,
 };
 
-export default CardPage;
+export default RenderToRoot(CardPage);

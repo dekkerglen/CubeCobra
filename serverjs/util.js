@@ -165,7 +165,7 @@ function handleRouteError(req, res, err, reroute) {
   res.redirect(reroute);
 }
 
-const toExport = {
+module.exports = {
   shuffle(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -205,5 +205,3 @@ const toExport = {
   wrapAsyncApi,
   handleRouteError,
 };
-
-module.exports = toExport;

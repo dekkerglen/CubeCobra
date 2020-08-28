@@ -7,7 +7,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentsSection from 'components/CommentsSection';
-import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
+import { makeSubtitle } from 'utils/Card';
 
 const DeckStacksStatic = ({ cards }) => (
   <CardBody className="pt-0 border-bottom">
@@ -128,7 +128,7 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
         <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="deck" parent={deck._id} userid={userid} />
+        <CommentsSection parentType="deck" parent={deck._id} userid={userid} collapse={false} />
       </div>
     </Card>
   );
@@ -161,7 +161,6 @@ DeckCard.propTypes = {
       }),
     ).isRequired,
     cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
   }).isRequired,
   seatIndex: PropTypes.string.isRequired,
 };
