@@ -38,7 +38,7 @@ const Seat = {
 // Cube schema
 const draftSchema = mongoose.Schema({
   cube: String,
-  initial_state: [[[Number]]],
+  initial_state: [[Pack]],
   seats: [Seat],
   cards: [cardSchema],
   basics: {

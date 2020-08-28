@@ -84,7 +84,7 @@ export function init(newDraft) {
   if (draft.seats[0].packbacklog && draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
-      addSeen(seat.seen, seat.packbacklog[0].slice(), draft.cards);
+      addSeen(seat.seen, seat.packbacklog[0].cards.slice(), draft.cards);
       seat.picked = createSeen();
     }
   }
@@ -139,9 +139,9 @@ export const getPicked = (seat) => {
 };
 
 const botRating = (cards, card, picked, seen, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(cards, card, picked, seen, initialState, inPack, packNum)[0];
+  botRatingAndCombination(cards, card, picked, seen, initialState, inPack, packNum).rating;
 const botColors = (cards, card, picked, seen, initialState, inPack = 1, packNum = 1) =>
-  botRatingAndCombination(cards, card, picked, seen, initialState, inPack, packNum)[1];
+  botRatingAndCombination(cards, card, picked, seen, initialState, inPack, packNum).colors;
 
 function getSortFn(draftCards) {
   return (a, b) => {
@@ -362,7 +362,13 @@ async function build(cards, cardIndices, lands, colors, basics) {
     for (let j = 1; j < nonlands.length; j++) {
       const card = nonlands[j];
       const score =
-        (getPickSynergy(chosen, card, played, cards) + getRating(card, cards)) *
+        (getPickSynergy(
+          chosen.map((c) => cards[c]),
+          card,
+          played,
+          cards,
+        ) +
+          getRating(card, cards)) *
         getCastingProbability(cards[card], lands);
       if (score > bestScore) {
         best = j;
@@ -435,15 +441,15 @@ function botPicks() {
       packbacklog: [packFrom],
       bot,
     } = draft.seats[botIndex];
-    if (packFrom.length > 0 && bot) {
+    if (packFrom.cards.length > 0 && bot) {
       const { cards, initial_state } = draft;
       const ratedPicks = [];
-      const inPack = packFrom.length;
+      const inPack = packFrom.cards.length;
       const [packNum] = packPickNumber();
-      for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
+      for (let cardIndex = 0; cardIndex < inPack; cardIndex++) {
         ratedPicks.push(cardIndex);
-        if (!cards[packFrom[cardIndex]].rating) {
-          cards[packFrom[cardIndex]].rating = 1200;
+        if (!cards[packFrom.cards[cardIndex]].rating) {
+          cards[packFrom.cards[cardIndex]].rating = 1200;
         }
       }
       const ratedPicksWithRating = ratedPicks
@@ -453,7 +459,7 @@ function botPicks() {
         ])
         .sort(([a], [b]) => b - a)
         .map(([, cardIndex]) => cardIndex);
-      const pickedCard = draft.seats[botIndex].packbacklog[0].splice(ratedPicksWithRating[0][2], 1)[0];
+      const pickedCard = draft.seats[botIndex].packbacklog[0].cards.splice(ratedPicksWithRating[0][2], 1)[0];
       draft.seats[botIndex].pickorder.push(pickedCard);
       addSeen(picked, [pickedCard], cards);
     }
@@ -499,7 +505,7 @@ const passPackInternal = () => {
   const { cards } = draft;
   for (const seat of draft.seats) {
     if (seat.packbacklog && seat.packbacklog.length > 0) {
-      addSeen(seat.seen, seat.packbacklog[0], cards);
+      addSeen(seat.seen, seat.packbacklog[0].cards, cards);
     }
   }
 };
