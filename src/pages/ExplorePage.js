@@ -8,9 +8,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ExplorePage = ({ user, recents, featured, drafted, recentlyDrafted }) => {
+const ExplorePage = ({ user, recents, featured, drafted, recentlyDrafted, loginCallback }) => {
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeSearchNavBar />
       <DynamicFlash />
       <Row>
@@ -56,10 +56,12 @@ ExplorePage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 ExplorePage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(ExplorePage);

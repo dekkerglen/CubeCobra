@@ -11,7 +11,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import Query from 'utils/Query';
 
-const TopCardsPage = ({ user, data, numResults }) => {
+const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
   const [filter, setFilter] = useState(Query.get('f') || '');
   const [count, setCount] = useState(numResults);
 
@@ -20,7 +20,7 @@ const TopCardsPage = ({ user, data, numResults }) => {
   };
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <div className="usercontrols pt-3 mb-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
@@ -57,10 +57,12 @@ TopCardsPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 TopCardsPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(TopCardsPage);

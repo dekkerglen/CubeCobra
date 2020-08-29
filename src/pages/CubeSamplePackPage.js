@@ -10,9 +10,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const SamplePackPage = ({ user, seed, pack, cube }) => {
+const SamplePackPage = ({ user, seed, pack, cube, loginCallback }) => {
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="playtest">
         <DynamicFlash />
         <div className="container" />
@@ -64,9 +64,11 @@ SamplePackPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 SamplePackPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(SamplePackPage);

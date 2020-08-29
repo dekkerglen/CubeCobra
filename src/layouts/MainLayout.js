@@ -25,7 +25,7 @@ import Footer from 'layouts/Footer';
 const LoginModalLink = withModal(NavLink, LoginModal);
 const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 
-const MainLayout = ({ user, children }) => {
+const MainLayout = ({ user, children, loginCallback }) => {
   const [expanded, toggle] = useToggle(false);
 
   return (
@@ -50,11 +50,20 @@ const MainLayout = ({ user, children }) => {
             <Nav className="mr-auto" navbar>
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
-                  Browse
+                  Content
                 </DropdownToggle>
                 <DropdownMenu right>
-                  <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
-                  <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
+                  <DropdownItem href="/content/browse">Browse</DropdownItem>
+                  <DropdownItem href="/content/articles">Articles</DropdownItem>
+                  <DropdownItem href="/content/podcasts">Podcasts</DropdownItem>
+                  <DropdownItem href="/content/videos">Videos</DropdownItem>
+                </DropdownMenu>
+              </UncontrolledDropdown>
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>
+                  Cube
+                </DropdownToggle>
+                <DropdownMenu right>
                   <DropdownItem href="/explore">Explore Cubes</DropdownItem>
                   <DropdownItem href="/search">Search Cubes</DropdownItem>
                   <DropdownItem href="/random">Random Cube</DropdownItem>
@@ -62,17 +71,29 @@ const MainLayout = ({ user, children }) => {
               </UncontrolledDropdown>
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
+                  Cards
+                </DropdownToggle>
+                <DropdownMenu right>
+                  <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
+                  <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
+                  <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
+                  <DropdownItem href="/filters">Filter Syntax</DropdownItem>
+                </DropdownMenu>
+              </UncontrolledDropdown>
+              <UncontrolledDropdown nav inNavbar>
+                <DropdownToggle nav caret>
                   About
                 </DropdownToggle>
                 <DropdownMenu right>
+                  <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
+                  <DropdownItem href="/contact">Contact</DropdownItem>
                   <DropdownItem href="https://www.inkedgaming.com/collections/artists/gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
                     Merchandise
                   </DropdownItem>
-                  <DropdownItem href="/contact">Contact</DropdownItem>
-                  <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
                   <DropdownItem href="/ourstory">Our Story</DropdownItem>
                   <DropdownItem href="/faq">FAQ</DropdownItem>
                   <DropdownItem href="/donate">Donate</DropdownItem>
+                  <DropdownItem href="https://github.com/dekkerglen/CubeCobra">Github</DropdownItem>
                 </DropdownMenu>
               </UncontrolledDropdown>
               {user ? (
@@ -84,6 +105,9 @@ const MainLayout = ({ user, children }) => {
                     </DropdownToggle>
                     <DropdownMenu right>
                       <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
+                      {user.roles && user.roles.includes('Admin') && (
+                        <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>
+                      )}
                       <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
                       <DropdownItem href="/user/social">Social</DropdownItem>
                       <DropdownItem href="/user/account">Account Information</DropdownItem>
@@ -97,7 +121,7 @@ const MainLayout = ({ user, children }) => {
                     <NavLink href="/user/register">Register</NavLink>
                   </NavItem>
                   <NavItem>
-                    <LoginModalLink>Login</LoginModalLink>
+                    <LoginModalLink modalProps={{ loginCallback }}>Login</LoginModalLink>
                   </NavItem>
                 </>
               )}
@@ -119,11 +143,14 @@ MainLayout.propTypes = {
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+    roles: PropTypes.arrayOf(PropTypes.string),
   }),
+  loginCallback: PropTypes.string,
 };
 
 MainLayout.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default MainLayout;

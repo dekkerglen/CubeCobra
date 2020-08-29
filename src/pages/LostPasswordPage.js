@@ -9,8 +9,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const LostPassword = ({ user }) => (
-  <MainLayout user={user}>
+const LostPassword = ({ user, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Card className="my-3">
@@ -51,10 +51,12 @@ LostPassword.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 LostPassword.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(LostPassword);

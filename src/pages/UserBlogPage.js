@@ -9,8 +9,8 @@ import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserBlogPage = ({ user, followers, following, posts, owner }) => (
-  <MainLayout user={user}>
+const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <UserLayout
       user={owner}
       followers={followers}
@@ -48,10 +48,12 @@ UserBlogPage.propTypes = {
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  loginCallback: PropTypes.string,
 };
 
 UserBlogPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(UserBlogPage);

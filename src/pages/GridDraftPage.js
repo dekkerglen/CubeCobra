@@ -50,7 +50,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
+const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn, loginCallback }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
@@ -339,7 +339,7 @@ const GridDraftPage = ({ user, cube, initialDraft }) => {
   };
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
         <DisplayContextProvider>
           <Navbar expand="xs" light className="usercontrols">
@@ -422,10 +422,12 @@ GridDraftPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 GridDraftPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(GridDraftPage);

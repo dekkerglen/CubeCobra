@@ -146,7 +146,7 @@ router.post(
     const { commentid, info, reason } = req.body;
 
     const report = new Report();
-    report.commentid = info;
+    report.commentid = commentid;
     report.info = info;
     report.reason = reason;
     report.reportee = req.user ? req.user.id : null;

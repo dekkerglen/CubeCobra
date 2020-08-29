@@ -9,8 +9,8 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Advertisement from 'components/Advertisement';
 
-const LoginPage = ({ user }) => (
-  <MainLayout user={user}>
+const LoginPage = ({ user, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Card className="my-3">
@@ -60,10 +60,12 @@ LoginPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 LoginPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(LoginPage);

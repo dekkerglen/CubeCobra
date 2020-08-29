@@ -70,7 +70,7 @@ EditBlogModal.defaultProps = {
   post: null,
 };
 
-const CubeBlogPage = ({ user, cube, pages, activePage, posts }) => {
+const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
   const [editHtml, setEditHtml] = useState('');
@@ -91,7 +91,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts }) => {
   const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="blog">
         <Navbar expand light className="usercontrols mb-3">
           <Collapse navbar>
@@ -150,10 +150,12 @@ CubeBlogPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeBlogPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeBlogPage);

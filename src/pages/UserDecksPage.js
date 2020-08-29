@@ -11,8 +11,8 @@ import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage }) => (
-  <MainLayout user={user}>
+const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <UserLayout
       user={owner}
       followers={followers}
@@ -66,10 +66,12 @@ UserDecksPage.propTypes = {
   ).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
+  loginCallback: PropTypes.string,
 };
 
 UserDecksPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(UserDecksPage);

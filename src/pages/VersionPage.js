@@ -6,9 +6,9 @@ import { Card, CardHeader, CardBody } from 'reactstrap';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const VersionPage = ({ user, version, host }) => {
+const VersionPage = ({ user, version, host, loginCallback }) => {
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <Card className="my-3">
         <CardHeader>
           <h4>Deployment Details</h4>
@@ -40,10 +40,12 @@ VersionPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 VersionPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(VersionPage);

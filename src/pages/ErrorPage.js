@@ -7,8 +7,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const BlogPostPage = ({ user, title, error, requestId }) => (
-  <MainLayout user={user}>
+const BlogPostPage = ({ user, title, error, requestId, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
@@ -44,10 +44,12 @@ BlogPostPage.propTypes = {
   title: PropTypes.string.isRequired,
   requestId: PropTypes.string,
   error: PropTypes.string,
+  loginCallback: PropTypes.string,
 };
 
 BlogPostPage.defaultProps = {
   user: null,
+  loginCallback: '/',
   requestId: null,
   error: null,
 };

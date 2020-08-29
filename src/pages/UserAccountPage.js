@@ -26,7 +26,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserAccountPage = ({ user, defaultNav }) => {
+const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
   const [nav, setNav] = useState(defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -74,7 +74,7 @@ const UserAccountPage = ({ user, defaultNav }) => {
   }, [nav]);
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <Advertisement />
       <h2 className="mt-3">My Account </h2>
       <DynamicFlash />
@@ -230,6 +230,7 @@ UserAccountPage.propTypes = {
     users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
   }).isRequired,
   defaultNav: PropTypes.string.isRequired,
+  loginCallback: PropTypes.string,
 };
 
 export default RenderToRoot(UserAccountPage);

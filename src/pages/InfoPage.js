@@ -8,8 +8,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ContactPage = ({ user, title, content }) => (
-  <MainLayout user={user}>
+const ContactPage = ({ user, title, content, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -45,10 +45,12 @@ ContactPage.propTypes = {
       text: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  loginCallback: PropTypes.string,
 };
 
 ContactPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(ContactPage);

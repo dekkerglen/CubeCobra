@@ -25,7 +25,7 @@ import FilterCollapse from 'components/FilterCollapse';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CardSearchPage = ({ user }) => {
+const CardSearchPage = ({ user, loginCallback }) => {
   const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -96,7 +96,7 @@ const CardSearchPage = ({ user }) => {
   };
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <div className="usercontrols pt-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
@@ -200,10 +200,12 @@ CardSearchPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CardSearchPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CardSearchPage);

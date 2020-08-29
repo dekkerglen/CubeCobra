@@ -10,8 +10,8 @@ import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserCubePage = ({ user, owner, followers, following, cubes }) => (
-  <MainLayout user={user}>
+const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <UserLayout
       user={owner}
       followers={followers}
@@ -88,10 +88,12 @@ UserCubePage.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
+  loginCallback: PropTypes.string,
 };
 
 UserCubePage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(UserCubePage);

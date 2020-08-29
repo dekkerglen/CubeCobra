@@ -90,7 +90,7 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const CubeDraftPage = ({ user, cube, initialDraft }) => {
+const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   console.log('hi');
   useMemo(() => init(initialDraft), [initialDraft]);
 
@@ -188,7 +188,7 @@ const CubeDraftPage = ({ user, cube, initialDraft }) => {
   addSeen(picked, getPicked(0));
   const seen = getSeen(0);
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
         <DisplayContextProvider>
           <Navbar expand="xs" light className="usercontrols">
@@ -279,10 +279,12 @@ CubeDraftPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeDraftPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeDraftPage);

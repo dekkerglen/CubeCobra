@@ -235,18 +235,14 @@ const apiLimiter = rateLimit({
 app.use('/cube/api/cubeJSON', apiLimiter);
 
 // Route files; they manage their own CSRF protection
-const cubes = require('./routes/cube_routes');
-const users = require('./routes/users_routes');
-const devs = require('./routes/dev_routes');
-const tools = require('./routes/tools_routes');
-const comments = require('./routes/comment_routes');
 app.use('', require('./routes/root'));
 
-app.use('/cube', cubes);
-app.use('/user', users);
-app.use('/dev', devs);
-app.use('/tool', tools);
-app.use('/comment', comments);
+app.use('/cube', require('./routes/cube_routes'));
+app.use('/user', require('./routes/users_routes'));
+app.use('/dev', require('./routes/dev_routes'));
+app.use('/tool', require('./routes/tools_routes'));
+app.use('/comment', require('./routes/comment_routes'));
+app.use('/admin', require('./routes/admin_routes'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {

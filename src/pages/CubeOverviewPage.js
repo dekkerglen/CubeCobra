@@ -119,14 +119,14 @@ class CubeOverview extends Component {
   }
 
   render() {
-    const { post, priceOwned, pricePurchase, admin, followers, user } = this.props;
+    const { post, priceOwned, pricePurchase, admin, followers, user, loginCallback } = this.props;
     const { cube, deleteConfirm, alerts, followed } = this.state;
     const { addAlert, onCubeUpdate } = this;
 
     const numFollowers = followers.length;
 
     return (
-      <MainLayout user={user}>
+      <MainLayout loginCallback={loginCallback} user={user}>
         <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="overview">
           {user && cube.owner === user.id ? (
             <Navbar expand="md" light className="usercontrols mb-3">
@@ -376,6 +376,7 @@ CubeOverview.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeOverview.defaultProps = {
@@ -385,6 +386,7 @@ CubeOverview.defaultProps = {
   admin: false,
   followers: [],
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeOverview);

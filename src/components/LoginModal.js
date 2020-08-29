@@ -5,7 +5,7 @@ import { Col, Modal, ModalBody, ModalHeader, Row, FormGroup, Label, Input, Butto
 
 import CSRFForm from 'components/CSRFForm';
 
-const LoginModal = ({ isOpen, toggle }) => (
+const LoginModal = ({ isOpen, toggle, loginCallback }) => (
   <Modal size="lg" isOpen={isOpen} toggle={toggle}>
     <ModalHeader toggle={toggle}>Login</ModalHeader>
     <CSRFForm method="POST" action="/user/login">
@@ -36,6 +36,7 @@ const LoginModal = ({ isOpen, toggle }) => (
             </Col>
           </Row>
         </FormGroup>
+        <Input type="hidden" name="loginCallback" value={loginCallback} />
       </ModalBody>
       <ModalFooter>
         <Button type="submit" color="success" block outline>
@@ -49,6 +50,7 @@ const LoginModal = ({ isOpen, toggle }) => (
 LoginModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
+  loginCallback: PropTypes.string.isRequired,
 };
 
 export default LoginModal;

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Card } from 'reactstrap';
+import { Card, Container } from 'reactstrap';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -24,14 +24,21 @@ class ErrorBoundary extends Component {
           <h1 className="text-center">Something went wrong.</h1>
           <p className="text-center">You may want to try reloading the page.</p>
           <br />
-          <Card>
-            <p>
-              <code>{this.state.error}</code>
-            </p>
-            <p>
-              <code>{this.state.stack}</code>
-            </p>
-          </Card>
+          <Container>
+            <Card>
+              <p>
+                <code>{this.state.error}</code>
+              </p>
+              <p>
+                <code>{this.state.stack.split('\n').map((text) => (
+                  <>
+                  {text}
+                  <br/>
+                  </>
+                ))}</code>
+              </p>
+            </Card>
+          </Container>
         </div>
       );
     } else {

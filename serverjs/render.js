@@ -49,6 +49,9 @@ if (NODE_ENV === 'production') {
   pages.SearchPage = require('../dist/pages/SearchPage').default;
   pages.RecentDraftsPage = require('../dist/pages/RecentDraftsPage').default;
   pages.VersionPage = require('../dist/pages/VersionPage').default;
+  pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
+  pages.ApplicationsPage = require('../dist/pages/ApplicationsPage').default;
+  pages.CommentReportsPage = require('../dist/pages/CommentReportsPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;
@@ -64,14 +67,16 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         image: req.user.image,
         image_name: req.user.image_name,
         artist: req.user.artist,
+        roles: req.user.roles,
       }
     : null;
+
+  reactProps.loginCallback = req.baseUrl + req.path;
 
   return res.render('main', {
     reactHTML:
       NODE_ENV === 'production' ? ReactDOMServer.renderToString(React.createElement(getPage(page), reactProps)) : null,
     reactProps: serialize(reactProps),
-    loginCallback: req.path,
     page,
     metadata: options.metadata ? options.metadata : null,
     title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',

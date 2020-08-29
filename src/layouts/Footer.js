@@ -8,7 +8,34 @@ const Footer = () => (
       <Row>
         <Col xs="6" sm="3">
           <small>
-            <h6 className="footer-header">Cubes</h6>
+            <h6 className="footer-header">Content</h6>
+            <ul className="footer-ul pl-0">
+              <li>
+                <a className="footer-link" href="/content/browse">
+                  Browse
+                </a>
+              </li>
+              <li>
+                <a className="footer-link" href="/content/articles">
+                  Articles
+                </a>
+              </li>
+              <li>
+                <a className="footer-link" href="/content/podcasts">
+                  Podcasts
+                </a>
+              </li>
+              <li>
+                <a className="footer-link" href="/content/videos">
+                  Videos
+                </a>
+              </li>
+            </ul>
+          </small>
+        </Col>
+        <Col xs="6" sm="3">
+          <small>
+            <h6 className="footer-header">Cube</h6>
             <ul className="footer-ul pl-0">
               <li>
                 <a className="footer-link" href="/explore">
@@ -92,31 +119,9 @@ const Footer = () => (
                   Donate
                 </a>
               </li>
-            </ul>
-          </small>
-        </Col>
-        <Col xs="6" sm="3">
-          <small>
-            <h6 className="footer-header">Misc</h6>
-            <ul className="footer-ul pl-0">
               <li>
                 <a className="footer-link" href="https://github.com/dekkerglen/CubeCobra">
                   Github
-                </a>
-              </li>
-              <li>
-                <a className="footer-link" href="/privacy">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a className="footer-link" href="/tos">
-                  Terms & Conditions
-                </a>
-              </li>
-              <li>
-                <a className="footer-link" href="/cookies">
-                  Cookies
                 </a>
               </li>
             </ul>
@@ -124,6 +129,18 @@ const Footer = () => (
         </Col>
       </Row>
       <p className="center footer-text">
+        <a className="footer-link" href="/privacy">
+          Privacy Policy
+        </a>
+        {' | '}
+        <a className="footer-link" href="/tos">
+          Terms & Conditions
+        </a>
+        {' | '}
+        <a className="footer-link" href="/cookies">
+          Cookies
+        </a>
+        <br />
         Magic: The Gathering is ©{' '}
         <a className="footer-link" href="https://company.wizards.com/">
           Wizards of the Coast

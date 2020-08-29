@@ -203,7 +203,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ user, card, data, versions, related, cubes }) => {
+const CardPage = ({ user, card, data, versions, related, cubes, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
@@ -222,7 +222,7 @@ const CardPage = ({ user, card, data, versions, related, cubes }) => {
   });
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
       <Card className="mt-2">
         <CardHeader>
@@ -793,11 +793,13 @@ CardPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
   cubes: [],
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CardPage);

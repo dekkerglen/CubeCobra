@@ -12,8 +12,8 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
-const DashboardPage = ({ posts, cubes, decks, user }) => (
-  <MainLayout user={user}>
+const DashboardPage = ({ posts, cubes, decks, user, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Row className="mt-3">
@@ -98,10 +98,12 @@ DashboardPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 DashboardPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(DashboardPage);

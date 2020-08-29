@@ -112,8 +112,8 @@ BulkUploadPageRaw.propTypes = {
   }).isRequired,
 };
 
-const BulkUploadPage = ({ user, cubeID, added, ...props }) => (
-  <MainLayout user={user}>
+const BulkUploadPage = ({ user, cubeID, added, loginCallback, ...props }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
     <ChangelistContextProvider
       cubeID={cubeID}
@@ -140,10 +140,12 @@ BulkUploadPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 BulkUploadPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(BulkUploadPage);

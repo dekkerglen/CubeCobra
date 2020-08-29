@@ -1,8 +1,6 @@
 const shuffleSeed = require('shuffle-seed');
 const winston = require('winston');
 
-const adminname = 'Dekkaru';
-
 function hasProfanity(text) {
   if (!text) return false;
 
@@ -199,7 +197,7 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.username === adminname;
+    return user && user.roles.includes('Admin');
   },
   addNotification,
   wrapAsyncApi,

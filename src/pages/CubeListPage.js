@@ -147,8 +147,9 @@ const CubeListPage = ({
   defaultView,
   defaultPrimarySort,
   defaultSecondarySort,
+  loginCallback,
 }) => (
-  <MainLayout user={user}>
+  <MainLayout loginCallback={loginCallback} user={user}>
     <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="list">
       <CubeListPageRaw
         defaultShowTagColors={defaultShowTagColors}
@@ -183,10 +184,12 @@ CubeListPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeListPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeListPage);

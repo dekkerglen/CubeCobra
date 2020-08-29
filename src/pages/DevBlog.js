@@ -11,8 +11,8 @@ import RenderToRoot from 'utils/RenderToRoot';
 import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 
-const DevBlog = ({ blogs, pages, userid, admin, activePage, user }) => (
-  <MainLayout user={user}>
+const DevBlog = ({ blogs, pages, userid, admin, activePage, user, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <div className="mt-3">
@@ -65,10 +65,12 @@ DevBlog.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 DevBlog.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(DevBlog);

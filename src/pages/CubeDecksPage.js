@@ -10,8 +10,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CubeDecksPage = ({ user, cube, decks, pages, activePage }) => (
-  <MainLayout user={user}>
+const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
     <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
       <div className="my-3">
@@ -53,10 +53,12 @@ CubeDecksPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeDecksPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeDecksPage);

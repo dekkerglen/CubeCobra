@@ -9,8 +9,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const RegisterPage = ({ user, username, email }) => (
-  <MainLayout user={user}>
+const RegisterPage = ({ user, username, email, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Card className="mt-3">
@@ -76,10 +76,12 @@ RegisterPage.propTypes = {
   }),
   email: PropTypes.string,
   username: PropTypes.string,
+  loginCallback: PropTypes.string,
 };
 
 RegisterPage.defaultProps = {
   user: null,
+  loginCallback: '/',
   email: '',
   username: '',
 };

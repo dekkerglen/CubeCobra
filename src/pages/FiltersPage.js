@@ -9,8 +9,8 @@ import Accordion from 'components/Accordion';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ContactPage = ({ user }) => (
-  <MainLayout user={user}>
+const ContactPage = ({ user, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -585,10 +585,12 @@ ContactPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 ContactPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(ContactPage);

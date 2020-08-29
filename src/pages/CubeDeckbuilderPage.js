@@ -37,7 +37,7 @@ const makeInitialStacks = (playerDeck) => {
   return sortDeck(playerDeck);
 };
 
-const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft }) => {
+const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
   const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
   const [sideboard, setSideboard] = useState(() => {
     const initial = initialDeck.seats[0].sideboard;
@@ -109,7 +109,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft }) => {
   const [description, setDescription] = useState(initialDeck.seats[0].description);
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
         <DisplayContextProvider>
           <DeckbuilderNavbar
@@ -204,10 +204,12 @@ CubeDeckbuilderPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeDeckbuilderPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeDeckbuilderPage);

@@ -23,6 +23,7 @@ import {
   Row,
   Spinner,
   UncontrolledCollapse,
+  loginCallback,
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -508,7 +509,7 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats }) => {
     />
   );
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="playtest">
         {user && cube.owner === user.id ? (
           <Navbar light expand className="usercontrols mb-3">
@@ -581,10 +582,12 @@ CubePlaytestPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubePlaytestPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubePlaytestPage);

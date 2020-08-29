@@ -34,6 +34,7 @@ const CubeComparePage = ({
   defaultTagColors,
   defaultShowTagColors,
   defaultSorts,
+  loginCallback,
   ...props
 }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
@@ -46,7 +47,7 @@ const CubeComparePage = ({
   }));
   const filteredCards = filter ? cards.filter(filter) : cards;
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <SortContextProvider defaultSorts={defaultSorts}>
         <DisplayContextProvider>
           <TagContextProvider
@@ -100,10 +101,12 @@ CubeComparePage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeComparePage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeComparePage);

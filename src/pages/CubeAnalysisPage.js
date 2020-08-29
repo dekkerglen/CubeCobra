@@ -35,7 +35,16 @@ import Query from 'utils/Query';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CubeAnalysisPage = ({ user, cube, cubeID, defaultFilterText, defaultTab, defaultFormatId, cubes }) => {
+const CubeAnalysisPage = ({
+  user,
+  cube,
+  cubeID,
+  defaultFilterText,
+  defaultTab,
+  defaultFormatId,
+  cubes,
+  loginCallback,
+}) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
@@ -169,7 +178,7 @@ const CubeAnalysisPage = ({ user, cube, cubeID, defaultFilterText, defaultTab, d
   }, [cubeID]);
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
         <DynamicFlash />
         {cube.cards.length === 0 ? (
@@ -234,6 +243,7 @@ CubeAnalysisPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeAnalysisPage.defaultProps = {
@@ -242,6 +252,7 @@ CubeAnalysisPage.defaultProps = {
   defaultFormatId: null,
   cubes: [],
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeAnalysisPage);

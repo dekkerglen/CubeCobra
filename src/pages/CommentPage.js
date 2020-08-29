@@ -24,11 +24,11 @@ const translateLink = {
   card: (id) => `/tool/card/${id}`,
 };
 
-const CommentPage = ({ comment, user }) => {
+const CommentPage = ({ comment, user, loginCallback }) => {
   const [content, setContent] = useState(comment);
 
   return (
-    <MainLayout user={user}>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <Advertisement />
       <DynamicFlash />
       <Card className="my-3">
@@ -64,10 +64,12 @@ CommentPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CommentPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CommentPage);

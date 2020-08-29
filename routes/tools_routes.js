@@ -263,6 +263,11 @@ router.get('/topcards', async (req, res) => {
   }
 });
 
+router.get('/randomcard', async (req, res) => {
+  const card = carddb.allCards()[Math.floor(Math.random() * carddb.allCards().length)];
+  res.redirect(`/tool/card/${card.oracle_id}`);
+});
+
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;

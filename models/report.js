@@ -10,8 +10,11 @@ const reportSchema = mongoose.Schema({
 });
 
 reportSchema.index({
-  reason: 1,
   timePosted: -1,
+});
+
+reportSchema.index({
+  commentid: 1,
 });
 
 module.exports = mongoose.model('Report', reportSchema);
