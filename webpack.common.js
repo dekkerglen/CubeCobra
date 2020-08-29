@@ -84,6 +84,7 @@ const serverConfig = merge(config, {
     'filtering/FilterCards': './src/filtering/FilterCards.js',
     'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',
+    'utils/deckutils': './src/utils/deckutils.js',
   },
   output: {
     filename: '[name].js',
