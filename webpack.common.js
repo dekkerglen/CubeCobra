@@ -74,6 +74,7 @@ const clientConfig = merge(config, {
     CommentReportsPage: './src/pages/CommentReportsPage.js',
     ApplicationsPage: './src/pages/ApplicationsPage.js',
     AdminCommentsPage: './src/pages/AdminCommentsPage.js',
+    ApplicationPage: './src/pages/ApplicationPage.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -135,6 +136,7 @@ const serverConfig = merge(config, {
     'pages/CommentReportsPage': './src/pages/CommentReportsPage.js',
     'pages/ApplicationsPage': './src/pages/ApplicationsPage.js',
     'pages/AdminCommentsPage': './src/pages/AdminCommentsPage.js',
+    'pages/ApplicationPage': './src/pages/ApplicationPage.js',
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
     'utils/Draft': './src/utils/Draft.js',

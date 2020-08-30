@@ -45,6 +45,10 @@ const ContactPage = ({ user, loginCallback }) => (
             </a>
           </Col>
         </Row>
+        <p className="mt-4">
+          If you're looking to apply to be a Cube Cobra content creator partner, please fill out the application{' '}
+          <a href="/content/application">here</a>.
+        </p>
       </CardBody>
     </Card>
   </MainLayout>

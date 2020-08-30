@@ -243,6 +243,7 @@ app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
+app.use('/content', require('./routes/content_routes'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {

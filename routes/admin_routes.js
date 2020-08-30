@@ -2,6 +2,9 @@
 require('dotenv').config();
 
 const express = require('express');
+const mailer = require('nodemailer');
+const path = require('path');
+const Email = require('email-templates');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const User = require('../models/user');
@@ -132,6 +135,107 @@ router.get('/removecomment/:id', ensureAuth, async (req, res) => {
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect(`/admin/ignorereport/${report._id}`);
+});
+
+router.get('/application/approve/:id', ensureAuth, async (req, res) => {
+  const caller = await User.findById(req.user.id);
+
+  if (!caller || !caller.roles.includes('Admin')) {
+    return res.redirect('/404');
+  }
+
+  const application = await Application.findById(req.params.id);
+
+  const user = await User.findById(application.userid);
+  if (!user.roles) {
+    user.roles = [];
+  }
+  if (!user.roles.includes('ContentCreator')) {
+    user.roles.push('ContentCreator');
+  }
+  await user.save();
+
+  await Application.deleteOne({ _id: application._id });
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: user.email,
+      subject: 'Cube Cobra Content Creator',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'application_approve',
+    locals: {},
+  });
+
+  req.flash('success', `Application for ${user.username} approved.`);
+  return res.redirect(`/admin/applications/0`);
+});
+
+router.get('/application/decline/:id', ensureAuth, async (req, res) => {
+  const caller = await User.findById(req.user.id);
+
+  if (!caller || !caller.roles.includes('Admin')) {
+    return res.redirect('/404');
+  }
+
+  const application = await Application.findById(req.params.id);
+
+  await Application.deleteOne({ _id: application._id });
+
+  const user = await User.findById(application.userid);
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: user.email,
+      subject: 'Cube Cobra Content Creator',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'application_decline',
+    locals: {},
+  });
+
+  req.flash('danger', `Application declined.`);
+  return res.redirect(`/admin/applications/0`);
 });
 
 module.exports = router;
