@@ -59,7 +59,9 @@ const processDeck = async (deck) => {
       .slice(0, index)
       .map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
     const chosenCard = cardToInt[carddb.cardFromId(card.cardID).name_lower];
-    picks.push({ pack, pick, picked, cardsInPack, chosenCard, seen: [...seen] });
+    const packs = draft.initial_state[0].length;
+    const packSize = draft.initial_state[0][pack].length;
+    picks.push({ pack, packs, pick, packSize, picked, cardsInPack, chosenCard, seen: [...seen] });
     index += 1;
   }
   const main = deck.seats[0].deck.flat(2).map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
@@ -72,7 +74,13 @@ const processDeck = async (deck) => {
   await carddb.initializeCardDb();
   const cardNames = new Set(carddb.allCards().map((c) => c.name_lower));
   cardToInt = Object.fromEntries([...cardNames].map((name, index) => [name, index]));
+  const intToCard = new Array([...cardNames].length);
+  for (const card of carddb.allCards()) {
+    intToCard[cardToInt[card.name_lower]] = card;
+  }
+
   fs.writeFileSync('jobs/export/cardToInt.json', JSON.stringify(cardToInt), 'utf8');
+  fs.writeFileSync('jobs/export/intToCard.json', JSON.stringify(intToCard), 'utf8');
 
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     // process all deck objects
