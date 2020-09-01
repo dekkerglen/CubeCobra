@@ -11,7 +11,7 @@ import CardSearchBar from 'components/CardSearchBar';
 
 const LoginModalButton = withModal(Button, LoginModal);
 
-const LandingPage = ({ numusers, numcubes, numdrafts, loginCallback }) => {
+const LandingPage = ({ numusers, numcubes, numdrafts }) => {
   return (
     <div className="flex-container flex-vertical viewport">
       <Row className="m-0 p-0 flex-grow">
@@ -51,7 +51,6 @@ LandingPage.propTypes = {
   numusers: PropTypes.string.isRequired,
   numcubes: PropTypes.string.isRequired,
   numdrafts: PropTypes.string.isRequired,
-  loginCallback: PropTypes.string,
 };
 
 export default RenderToRoot(LandingPage);
