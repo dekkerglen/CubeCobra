@@ -2,13 +2,23 @@
 require('dotenv').config();
 const fs = require('fs');
 const mongoose = require('mongoose');
+const AWS = require('aws-sdk');
 
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const carddb = require('../serverjs/cards.js');
 const deckutils = require('../dist/utils/deckutils');
 
-const path = (batch) => `jobs/export/drafts/${batch}.json`;
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
+const monthNames = ["january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december"
+];
+
+const date = new Date();
+const folder = `${monthNames[date.getMonth()]}${date.getDate()}`;
 
 const batchSize = 100;
 
@@ -70,6 +80,15 @@ const processDeck = async (deck) => {
   return { picks, main, sideboard, cards };
 };
 
+const writeToS3 = async (fileName, body) => {
+  const params = {
+    Bucket: 'cubecobra',
+    Key: `${folder}/${fileName}`,
+    Body: JSON.stringify(body),
+  }
+  await s3.upload(params).promise();
+}
+
 (async () => {
   await carddb.initializeCardDb();
   const cardNames = new Set(carddb.allCards().map((c) => c.name_lower));
@@ -78,9 +97,8 @@ const processDeck = async (deck) => {
   for (const card of carddb.allCards()) {
     intToCard[cardToInt[card.name_lower]] = card;
   }
-
-  fs.writeFileSync('jobs/export/cardToInt.json', JSON.stringify(cardToInt), 'utf8');
-  fs.writeFileSync('jobs/export/intToCard.json', JSON.stringify(intToCard), 'utf8');
+  
+  await Promise.all([writeToS3('cardToInt.json', cardToInt), writeToS3('intToCard.json', intToCard)]);
 
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     // process all deck objects
@@ -88,6 +106,7 @@ const processDeck = async (deck) => {
     const count = await Deck.countDocuments();
     console.log(`Counted ${count} documents`);
     const cursor = Deck.find().lean().cursor();
+    let counter = 0;
 
     for (let i = 0; i < count; i += batchSize) {
       const deckQs = [];
@@ -103,7 +122,8 @@ const processDeck = async (deck) => {
       // eslint-disable-next-line no-await-in-loop
       const decks =  (await Promise.all(deckQs)).filter((d) => d);
       if (decks.length > 0) {
-        fs.writeFileSync(path(i / batchSize), JSON.stringify(decks), 'utf8');
+        await writeToS3(`drafts/${counter}.json`, decks);
+        counter += 1;
       }
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
