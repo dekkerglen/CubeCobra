@@ -220,6 +220,23 @@ export const cardIsSpecialZoneType = (card) => {
   );
 };
 
+export const makeSubtitle = (cards) => {
+  const numCards = cards.length;
+  const numLands = cards.filter((card) => /land/i.test(cardType(card))).length;
+  const numNonlands = cards.filter((card) => !/land/i.test(cardType(card)) && !cardIsSpecialZoneType(card)).length;
+  const numCreatures = cards.filter((card) => /creature/i.test(cardType(card))).length;
+  const numNonCreatures = numNonlands - numCreatures;
+  const numSpecial = cards.filter(cardIsSpecialZoneType).length;
+  return (
+    `${numCards} card${numCards === 1 ? '' : 's'}: ` +
+    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
+    `${numNonlands} nonland: ` +
+    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
+    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}` +
+    `${numSpecial > 0 ? ` ${numSpecial} special${numSpecial === 1 ? '' : 's'}` : ''}`
+  );
+};
+
 export default {
   cardTags,
   cardFinish,
@@ -273,4 +290,5 @@ export default {
   encodeName,
   decodeName,
   cardsAreEquivalent,
+  makeSubtitle,
 };

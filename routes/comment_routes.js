@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 const express = require('express');
-const serialize = require('serialize-javascript');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util.js');
@@ -12,6 +11,7 @@ const User = require('../models/user');
 const Report = require('../models/report');
 const Deck = require('../models/deck');
 const Blog = require('../models/blog');
+const { render } = require('../serverjs/render');
 
 const router = express.Router();
 
@@ -146,7 +146,7 @@ router.post(
     const { commentid, info, reason } = req.body;
 
     const report = new Report();
-    report.commentid = info;
+    report.commentid = commentid;
     report.info = info;
     report.reason = reason;
     report.reportee = req.user ? req.user.id : null;
@@ -167,13 +167,17 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const comment = await Comment.findById(req.params.id).lean();
 
-    return res.render('tool/comment', {
-      reactProps: serialize({
+    return render(
+      req,
+      res,
+      'CommentPage',
+      {
         comment,
-        userid: req.user ? req.user.id : null,
-      }),
-      title: 'Comment',
-    });
+      },
+      {
+        title: 'Comment',
+      },
+    );
   }),
 );
 

@@ -28,4 +28,8 @@ commentSchema.index({
   date: 1,
 });
 
+commentSchema.index({
+  timePosted: -1,
+});
+
 module.exports = mongoose.model('Comment', commentSchema);

@@ -3,16 +3,20 @@ import { FetchMock } from '@react-mock/fetch';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
-import exampleCardsFull from '../../../fixtures/examplecardsdetails';
-import exampleCube from '../../../fixtures/examplecube';
 import CubeListPage from 'pages/CubeListPage';
 import { treeCache } from 'components/AutocompleteInput';
 import { act } from 'react-dom/test-utils';
 import { fromEntries } from 'utils/Util';
+import exampleCube from '../../../fixtures/examplecube';
+import exampleCardsFull from '../../../fixtures/examplecardsdetails';
+
+process.env.DEBUG_PRINT_LIMIT = 100000;
 
 const cube = {
   ...exampleCube,
   cards: exampleCardsFull,
+  maybe: exampleCardsFull,
+  default_sorts: ['Color Category', 'Types-Multicolor'],
 };
 
 const element = () => (
@@ -44,16 +48,19 @@ const element = () => (
   >
     <CubeListPage
       cube={cube}
-      cubeID="1"
-      canEdit
       maybe={exampleCardsFull}
       defaultView="table"
       defaultFilterText=""
       defaultTagColors={[]}
-      defaultShowTagColors={true}
-      defaultSorts={['Color Category', 'Types-Multicolor']}
+      defaultShowTagColors
+      defaultPrimarySort=""
+      defaultSecondarySort=""
+      user={{
+        id: '5d671c495c4dcdeca1a2f7c8',
+        username: 'sensitiveemmett',
+        notifications: [],
+      }}
     />
-    ;
   </FetchMock>
 );
 
@@ -74,7 +81,7 @@ test('CubeListPage has major functionality', async () => {
   // The tests in this file should be integration tests for the whole CubeListPage thing.
   // Test View
   const viewSelect = await findByDisplayValue('Table View');
-  for (const view of ['table', 'list', 'curve']) {
+  for (const view of ['table', 'curve']) {
     fireEvent.change(viewSelect, { target: { value: view } });
     expect(await findByText(exampleCardsFull[0].details.name));
   }
@@ -84,15 +91,6 @@ test('CubeListPage has major functionality', async () => {
 
   fireEvent.change(viewSelect, { target: { value: 'table' } });
   await findByText(exampleCardsFull[0].details.name);
-
-  // Test Edit Collapse
-  fireEvent.click(getByText('Add/Remove'));
-  await findByPlaceholderText('Card to Remove');
-
-  // Avoid act warnings.
-  await act(() => Promise.all(Object.values(treeCache)));
-
-  expect(getByPlaceholderText('Card to Remove')).toBeInTheDocument();
 
   // Test Sort Collapse: can we change the sort?
   fireEvent.click(getByText('Sort'));

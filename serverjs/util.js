@@ -1,8 +1,6 @@
 const shuffleSeed = require('shuffle-seed');
 const winston = require('winston');
 
-const adminname = 'Dekkaru';
-
 function hasProfanity(text) {
   if (!text) return false;
 
@@ -165,7 +163,7 @@ function handleRouteError(req, res, err, reroute) {
   res.redirect(reroute);
 }
 
-const toExport = {
+module.exports = {
   shuffle(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -199,11 +197,9 @@ const toExport = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.username === adminname;
+    return user && user.roles.includes('Admin');
   },
   addNotification,
   wrapAsyncApi,
   handleRouteError,
 };
-
-module.exports = toExport;

@@ -7,12 +7,14 @@ import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
 import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
+const SearchPage = ({ user, cubes, query, count, perPage, page, order, loginCallback }) => {
   const pages = Math.ceil(count / perPage);
 
   return (
-    <>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeSearchNavBar query={query} order={order} title="Cube Search" />
       <br />
       <DynamicFlash />
@@ -46,7 +48,7 @@ const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
       ) : (
         <h4>No Results</h4>
       )}
-    </>
+    </MainLayout>
   );
 };
 
@@ -74,6 +76,12 @@ SearchPage.propTypes = {
   perPage: PropTypes.number,
   page: PropTypes.number,
   order: PropTypes.string,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+  loginCallback: PropTypes.string,
 };
 
 SearchPage.defaultProps = {
@@ -82,6 +90,8 @@ SearchPage.defaultProps = {
   perPage: 0,
   page: 0,
   order: 'date',
+  user: null,
+  loginCallback: '/',
 };
 
-export default SearchPage;
+export default RenderToRoot(SearchPage);

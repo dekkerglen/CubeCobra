@@ -19,7 +19,7 @@ import {
 import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
-import { cardType, cardIsSpecialZoneType } from 'utils/Card';
+import { makeSubtitle } from 'utils/Card';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -32,23 +32,8 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
 import useToggle from 'hooks/UseToggle';
 import { Internal } from 'components/DraftbotBreakdown';
-
-export const subtitle = (cards) => {
-  const numCards = cards.length;
-  const numLands = cards.filter((card) => /land/i.test(cardType(card))).length;
-  const numNonlands = cards.filter((card) => !/land/i.test(cardType(card)) && !cardIsSpecialZoneType(card)).length;
-  const numCreatures = cards.filter((card) => /creature/i.test(cardType(card))).length;
-  const numNonCreatures = numNonlands - numCreatures;
-  const numSpecial = cards.filter(cardIsSpecialZoneType).length;
-  return (
-    `${numCards} card${numCards === 1 ? '' : 's'}: ` +
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numNonlands} nonland: ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}` +
-    `${numSpecial > 0 ? ` ${numSpecial} special${numSpecial === 1 ? '' : 's'}` : ''}`
-  );
-};
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = (_, target) => {
   return target.type === Location.PICKS;
@@ -105,7 +90,8 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
+const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
+  console.log('hi');
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);
@@ -202,90 +188,103 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
   addSeen(picked, getPicked(0));
   const seen = getSeen(0);
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <Navbar expand="xs" light className="usercontrols">
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-            <Nav>
-              <NavLink href="#" onClick={toggleShowBotBreakdown}>
-                Toggle Bot Breakdown
-              </NavLink>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <CSRFForm
-          className="d-none"
-          innerRef={submitDeckForm}
-          method="POST"
-          action={`/cube/submitdeck/${Draft.cube()}`}
-        >
-          <Input type="hidden" name="body" value={Draft.id()} />
-        </CSRFForm>
-        <DndProvider>
-          {showPack(initialDraft, packNumber) && (
-            <>
-              <ErrorBoundary>
-                <Pack
-                  pack={pack}
-                  packNumber={packNumber}
-                  pickNumber={pickNumber}
-                  picking={picking}
-                  onMoveCard={handleMoveCard}
-                  onClickCard={handleClickCard}
-                />
-              </ErrorBoundary>
-              {showBotBreakdown && (
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+        <DisplayContextProvider>
+          <Navbar expand="xs" light className="usercontrols">
+            <Collapse navbar>
+              <Nav navbar>
+                <CustomImageToggler />
+              </Nav>
+              <Nav>
+                <NavLink href="#" onClick={toggleShowBotBreakdown}>
+                  Toggle Bot Breakdown
+                </NavLink>
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <DynamicFlash />
+          <CSRFForm
+            className="d-none"
+            innerRef={submitDeckForm}
+            method="POST"
+            action={`/cube/submitdeck/${Draft.cube()}`}
+          >
+            <Input type="hidden" name="body" value={Draft.id()} />
+          </CSRFForm>
+          <DndProvider>
+            {showPack(initialDraft, packNumber) && (
+              <>
                 <ErrorBoundary>
-                  <Card className="mt-3">
-                    <CardHeader className="mb-0">
-                      <h4 className="mb-0">Draftbot Breakdown</h4>
-                    </CardHeader>
-                    <CardBody>
-                      <Internal
-                        cardsInPack={pack}
-                        pack={packNumber - 1}
-                        picks={pickNumber - 1}
-                        draft={initialDraft}
-                        seen={seen}
-                        picked={picked}
-                      />
-                    </CardBody>
-                  </Card>
+                  <Pack
+                    pack={pack}
+                    packNumber={packNumber}
+                    pickNumber={pickNumber}
+                    picking={picking}
+                    onMoveCard={handleMoveCard}
+                    onClickCard={handleClickCard}
+                  />
                 </ErrorBoundary>
-              )}
-            </>
-          )}
-          <ErrorBoundary className="mt-3">
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picks}
-                title="Picks"
-                subtitle={subtitle(picks.flat().flat())}
-                locationType={Location.PICKS}
-                canDrop={canDrop}
-                onMoveCard={handleMoveCard}
-              />
-            </Card>
-          </ErrorBoundary>
-        </DndProvider>
-      </DisplayContextProvider>
-    </CubeLayout>
+                {showBotBreakdown && (
+                  <ErrorBoundary>
+                    <Card className="mt-3">
+                      <CardHeader className="mb-0">
+                        <h4 className="mb-0">Draftbot Breakdown</h4>
+                      </CardHeader>
+                      <CardBody>
+                        <Internal
+                          cardsInPack={pack}
+                          pack={packNumber - 1}
+                          picks={pickNumber - 1}
+                          draft={initialDraft}
+                          seen={seen}
+                          picked={picked}
+                        />
+                      </CardBody>
+                    </Card>
+                  </ErrorBoundary>
+                )}
+              </>
+            )}
+            <ErrorBoundary className="mt-3">
+              <Card className="my-3">
+                <DeckStacks
+                  cards={picks}
+                  title="Picks"
+                  subtitle={makeSubtitle(picks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={canDrop}
+                  onMoveCard={handleMoveCard}
+                />
+              </Card>
+            </ErrorBoundary>
+          </DndProvider>
+        </DisplayContextProvider>
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 CubeDraftPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cube: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
   initialDraft: PropTypes.shape({
     _id: PropTypes.string,
     bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-    packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
     ratings: PropTypes.objectOf(PropTypes.number),
   }).isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+  loginCallback: PropTypes.string,
 };
 
-export default CubeDraftPage;
+CubeDraftPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(CubeDraftPage);
