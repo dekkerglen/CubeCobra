@@ -838,7 +838,9 @@ img.mana-symbol-sm {
 }
 
 .legality-badge {
-	min-width: 8rem;
+	min-width: 6rem;
+	padding: .6em .4em;
+	margin-right: .75em;
 }
 
 .btn:hover { 
