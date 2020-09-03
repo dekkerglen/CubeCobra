@@ -55,6 +55,7 @@ if (NODE_ENV === 'production') {
   pages.CreatorsPage = require('../dist/pages/CreatorsPage').default;
   pages.MarkdownPage = require('../dist/pages/MarkdownPage').default;
   pages.ReviewArticlesPage = require('../dist/pages/ReviewArticlesPage').default;
+  pages.ArticlesPage = require('../dist/pages/ArticlesPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;

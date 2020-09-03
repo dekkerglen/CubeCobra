@@ -79,9 +79,6 @@ const Article = ({ article, userid }) => {
           if (markdown.startsWith('###### ')) {
             return <h6>{markdown.substring(7)}</h6>;
           }
-          if (markdown.startsWith('<<<')) {
-            const sub = markdown.substring(3, markdown.length - 3);
-          }
           if (markdown.startsWith('<<')) {
             const sub = markdown.substring(2, markdown.length - 2);
             return (

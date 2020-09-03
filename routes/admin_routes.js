@@ -188,7 +188,7 @@ router.get('/removearticlerewview/:id', ensureAdmin, async (req, res) => {
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: owner.email,
-      subject: 'Your article has been published',
+      subject: 'Your article was not published',
     },
     juiceResources: {
       webResources: {

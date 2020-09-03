@@ -80,6 +80,7 @@ const clientConfig = merge(config, {
     ArticlePage: './src/pages/ArticlePage.js',
     MarkdownPage: './src/pages/MarkdownPage.js',
     ReviewArticlesPage: './src/pages/ReviewArticlesPage.js',
+    ArticlesPage: './src/pages/ArticlesPage.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -147,6 +148,7 @@ const serverConfig = merge(config, {
     'pages/EditArticlePage': './src/pages/EditArticlePage.js',
     'pages/MarkdownPage': './src/pages/MarkdownPage.js',
     'pages/ReviewArticlesPage': './src/pages/ReviewArticlesPage.js',
+    'pages/ArticlesPage': './src/pages/ArticlesPage.js',
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
     'utils/Draft': './src/utils/Draft.js',

@@ -33,8 +33,6 @@ const CreatorArticles = ({ user }) => {
     setPage(index);
   };
 
-  const addArticle = () => {};
-
   if (loading) {
     return <Loading />;
   }

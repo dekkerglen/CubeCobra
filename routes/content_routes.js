@@ -7,6 +7,8 @@ const { render } = require('../serverjs/render');
 const Application = require('../models/application');
 const Article = require('../models/article');
 
+const PAGE_SIZE = 24;
+
 const ensureContentCreator = ensureRole('ContentCreator');
 
 const router = express.Router();
@@ -49,7 +51,21 @@ router.get('/creators', ensureContentCreator, async (req, res) => {
 
 router.get('/browse', async (req, res) => {});
 
-router.get('/articles', async (req, res) => {});
+router.get('/articles', async (req, res) => {
+  return res.redirect('/content/articles/0');
+});
+
+router.get('/articles/:page', async (req, res) => {
+  const count = await Article.countDocuments();
+  const articles = await Article.find({ status: 'published' })
+    .sort({ date: -1 })
+    .skip(req.params.page * PAGE_SIZE)
+    .limit(PAGE_SIZE)
+    .lean();
+
+  return render(req, res, 'ArticlesPage', { articles, count, page: req.params.page });
+});
+
 router.get('/podcasts', async (req, res) => {});
 router.get('/videos', async (req, res) => {});
 
@@ -163,8 +179,6 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
 
   res.redirect(`/content/article/edit/${article._id}`);
 });
-
-const PAGE_SIZE = 24;
 
 router.get('/api/articles/:user/:page', ensureContentCreator, async (req, res) => {
   const numResults = await Article.countDocuments({ owner: req.user.id });
