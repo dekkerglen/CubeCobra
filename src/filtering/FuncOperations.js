@@ -160,12 +160,10 @@ const canCastWith = (mana, cost) => {
       return symbol;
     })
     .sort((a, b) => b.length < a.length);
-  console.log(cost.map((c) => c.join('/')).join('|'), mana.join('|'));
   for (const symbol of mana) {
     let intValue = parseInt(symbol, 10);
     if (!Number.isInteger(intValue)) {
       const index = cost.findIndex((costSymbol) => costSymbol.indexOf(symbol) >= 0);
-      console.log(index, symbol);
       if (index >= 0) {
         cost.splice(index, 1);
       } else {
@@ -195,7 +193,6 @@ const canCastWith = (mana, cost) => {
       }
     }
   }
-  console.log(cost);
   return cost.length === 0;
 };
 const canCastWithInfinite = (mana, cost) => {
@@ -209,7 +206,6 @@ const canCastWithInfinite = (mana, cost) => {
       symbol[1] === '2'
     );
   });
-  console.log(cost.join('|'));
   for (const symbol of mana) {
     cost = cost.filter((costSymbol) => costSymbol.indexOf(symbol) < 0);
   }

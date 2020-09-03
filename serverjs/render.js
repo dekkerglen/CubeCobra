@@ -52,6 +52,9 @@ if (NODE_ENV === 'production') {
   pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
   pages.ApplicationsPage = require('../dist/pages/ApplicationsPage').default;
   pages.CommentReportsPage = require('../dist/pages/CommentReportsPage').default;
+  pages.CreatorsPage = require('../dist/pages/CreatorsPage').default;
+  pages.MarkdownPage = require('../dist/pages/MarkdownPage').default;
+  pages.ReviewArticlesPage = require('../dist/pages/ReviewArticlesPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;

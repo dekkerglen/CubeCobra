@@ -57,8 +57,6 @@ const CardSearchPage = ({ user, loginCallback }) => {
 
       const json = await response.json();
 
-      console.log(json);
-
       setCards(json.data);
       setCount(json.numResults);
       setLoading(false);

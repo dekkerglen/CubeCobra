@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { getTCGLink } from 'utils/Affiliate';
 import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
+
+import { Col } from 'reactstrap';
 
 const AutocardLink = withAutocard('a');
 
@@ -12,10 +13,33 @@ const MagicMarkdown = ({ markdown, cube }) => {
     return '';
   }
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/({[wubrgcmtqeWUBRGCMTQE\d/-]+}|\[\[!?\d+\]\]|%%\d+%%|\n\n)/gm);
+  const split = markdownStr.split(
+    /(@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[a-zA-Z ]+\]\]|%%\d+%%|\n)/gm,
+  );
   return (
     <>
       {split.map((section, position) => {
+        if (section.startsWith('@')) {
+          const sub = section.substring(1);
+          return (
+            <a href={`/user/view/${sub}`} target="_blank" rel="noopener noreferrer">
+              @{sub}
+            </a>
+          );
+        }
+        if (section.startsWith('***')) {
+          return (
+            <em>
+              <strong>{section.substring(3, section.length - 3)}</strong>
+            </em>
+          );
+        }
+        if (section.startsWith('**')) {
+          return <strong>{section.substring(2, section.length - 2)}</strong>;
+        }
+        if (section.startsWith('*')) {
+          return <em>{section.substring(1, section.length - 1)}</em>;
+        }
         if (section.startsWith('{')) {
           const symbol = section.substring(1, section.length - 1);
           return (
@@ -28,27 +52,37 @@ const MagicMarkdown = ({ markdown, cube }) => {
           );
         }
         if (section.startsWith('[[!')) {
-          const cardIndex = parseInt(section.substring(3, section.length - 2), 10);
-          const card = cube.cards[cardIndex];
+          const card = section.substring(3, section.length - 2);
           return (
-            <a
-              key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
-              href={getTCGLink(card)}
-            >
-              <FoilCardImage autocard card={card} className="clickable" />
-            </a>
+            <Col xs="6" md="4" lg="3">
+              <a
+                key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
+                href={`/tool/card/${card}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FoilCardImage
+                  autocard
+                  card={{ details: { image_normal: `/tool/cardimage/${card}` } }}
+                  className="clickable"
+                />
+              </a>
+            </Col>
           );
         }
         if (section.startsWith('[[')) {
-          const cardIndex = parseInt(section.substring(2, section.length - 2), 10);
-          const card = cube.cards[cardIndex];
+          const card = section.substring(2, section.length - 2);
+          const name = card.includes('|') ? card.split('|')[0] : card;
+          const id = card.includes('|') ? card.split('|')[1] : card;
           return (
             <AutocardLink
               key={/* eslint-disable-line react/no-array-index-key */ `${position}-card.cardID`}
-              href={`/tool/card/${card.cardID}`}
-              card={card}
+              href={`/tool/card/${id}`}
+              card={{ details: { image_normal: `/tool/cardimage/${id}` } }}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              {card.details.name}
+              {name}
             </AutocardLink>
           );
         }

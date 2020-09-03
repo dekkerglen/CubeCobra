@@ -8,7 +8,7 @@ import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const AdminDashboardPage = ({ user, loginCallback, commentReportCount, applicationCount }) => (
+const AdminDashboardPage = ({ user, loginCallback, commentReportCount, applicationCount, articlesInReview }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -25,6 +25,9 @@ const AdminDashboardPage = ({ user, loginCallback, commentReportCount, applicati
         <ButtonLink href="/admin/comments" block outline color="success">
           Recent Comments
         </ButtonLink>
+        <ButtonLink href="/admin/reviewarticles" block outline color="success">
+          {`Review Articles (${articlesInReview})`}
+        </ButtonLink>
       </CardBody>
     </Card>
   </MainLayout>
@@ -39,6 +42,7 @@ AdminDashboardPage.propTypes = {
   loginCallback: PropTypes.string,
   commentReportCount: PropTypes.number.isRequired,
   applicationCount: PropTypes.number.isRequired,
+  articlesInReview: PropTypes.number.isRequired,
 };
 
 AdminDashboardPage.defaultProps = {

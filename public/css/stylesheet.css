@@ -939,6 +939,10 @@ div.viewport {
 	background-color: #498007;
 }
 
+.bg-light{
+	background-color: #F7F7F7;
+}
+
 
 @media (max-width: 575.98px) {
 	.landing-half {
@@ -978,4 +982,8 @@ div.viewport {
 
 .search-bar {
 	height: calc(1.5em + .75rem + 2px);
+}
+
+.article-area {
+	min-height: 40rem;
 }

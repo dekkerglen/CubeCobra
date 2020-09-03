@@ -15,6 +15,9 @@ const translateType = {
   blog: 'Blog Post',
   deck: 'Drafted Deck',
   card: 'Card Page',
+  article: 'Article',
+  podcast: 'Podcast',
+  video: 'Video',
 };
 
 const translateLink = {
@@ -22,6 +25,9 @@ const translateLink = {
   blog: (id) => `/cube/blogpost/${id}`,
   deck: (id) => `/cube/deck/${id}`,
   card: (id) => `/tool/card/${id}`,
+  article: (id) => `/content/article/${id}`,
+  video: (id) => `/content/video/${id}`,
+  podcast: (id) => `/content/podcast/${id}`,
 };
 
 const CommentPage = ({ comment, user, loginCallback }) => {

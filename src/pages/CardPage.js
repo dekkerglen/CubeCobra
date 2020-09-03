@@ -39,6 +39,7 @@ import withModal from 'components/WithModal';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
@@ -172,28 +173,6 @@ const LegalityBadge = ({ legality, status }) => {
 LegalityBadge.propTypes = {
   legality: PropTypes.string.isRequired,
   status: PropTypes.string.isRequired,
-};
-
-const Tab = ({ tab, setTab, index, children }) => {
-  return (
-    <NavItem className="ml-2 clickable">
-      <NavLink
-        active={tab === index}
-        onClick={() => {
-          setTab(index);
-        }}
-      >
-        {children}
-      </NavLink>
-    </NavItem>
-  );
-};
-
-Tab.propTypes = {
-  tab: PropTypes.string.isRequired,
-  setTab: PropTypes.func.isRequired,
-  index: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
 };
 
 const getPriceTypeUnit = {

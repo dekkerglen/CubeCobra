@@ -10,6 +10,7 @@ const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
 const Deck = require('../models/deck');
+const Article = require('../models/article');
 const Blog = require('../models/blog');
 const { render } = require('../serverjs/render');
 
@@ -44,6 +45,10 @@ const getReplyContext = {
     const deck = await Deck.findById(id);
     return [deck.owner, 'deck'];
   },
+  article: async (id) => {
+    const article = await Article.findById(id);
+    return [article.owner, 'article'];
+  },
   default: async () => null, // nobody gets a notification for this
 };
 
@@ -53,7 +58,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const poster = await User.findById(req.user.id);
 
-    if (!['comment', 'blog', 'deck', 'card'].includes(req.params.type)) {
+    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video'].includes(req.params.type)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',
