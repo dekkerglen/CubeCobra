@@ -30,12 +30,14 @@ class ErrorBoundary extends Component {
                 <code>{this.state.error}</code>
               </p>
               <p>
-                <code>{this.state.stack.split('\n').map((text) => (
-                  <>
-                  {text}
-                  <br/>
-                  </>
-                ))}</code>
+                <code>
+                  {this.state.stack.split('\n').map((text) => (
+                    <>
+                      {text}
+                      <br />
+                    </>
+                  ))}
+                </code>
               </p>
             </Card>
           </Container>

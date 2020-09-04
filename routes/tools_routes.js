@@ -5,6 +5,7 @@ const express = require('express');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
+const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
@@ -298,15 +299,11 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const data = await CardHistory.findOne({ oracleId: card.oracle_id });
+    let data = await CardHistory.findOne({ oracleId: card.oracle_id });
+    // id is valid but has no matching history
     if (!data) {
-      req.flash(
-        'danger',
-        `Card with identifier ${req.params.id} not found. Acceptable identifiers are card name (english only), scryfall ID, or oracle ID.`,
-      );
-      return res.redirect('404');
+      data = getBlankCardHistory(id);
     }
-
     const related = {};
 
     for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
