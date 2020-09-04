@@ -582,12 +582,10 @@ CubePlaytestPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
-  loginCallback: PropTypes.string,
 };
 
 CubePlaytestPage.defaultProps = {
   user: null,
-  loginCallback: '/',
 };
 
 export default RenderToRoot(CubePlaytestPage);
