@@ -1,6 +1,5 @@
 // Load Environment Variables
 require('dotenv').config();
-const fs = require('fs');
 const mongoose = require('mongoose');
 const AWS = require('aws-sdk');
 
@@ -24,23 +23,8 @@ const batchSize = 100;
 
 let cardToInt;
 
-const processDeck = async (deck) => {
+const processDeck = async (deck, draft) => {
   const picks = [];
-  if (
-    !deck.seats ||
-    !deck.seats[0] ||
-    !deck.seats[0].deck ||
-    !deck.seats[0].pickorder ||
-    !deck.draft ||
-    !deck.seats[0].sideboard ||
-    !deck.seats[0].pickorder.length ||
-    deck.cards ||
-    deck.seats[0].bot
-  ) {
-    return null;
-  }
-
-  const draft = await Draft.findOne({ _id: deck.draft }).lean();
   if (!draft || !draft.initial_state || !draft.initial_state[0].length || !draft.initial_state[0][0].length) {
     return null;
   }
@@ -108,22 +92,35 @@ const writeToS3 = async (fileName, body) => {
     console.log(`Counted ${count} documents`);
     const cursor = Deck.find().lean().cursor();
     let counter = 0;
-
     for (let i = 0; i < count; i += batchSize) {
-      const deckQs = [];
+      const decks = [];
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {
           // eslint-disable-next-line no-await-in-loop
           const deck = await cursor.next();
-          if (deck) {
-            deckQs.push(processDeck(deck));
+          if (deck &&
+              deck.seats &&
+              deck.seats[0] &&
+              deck.seats[0].deck &&
+              deck.seats[0].pickorder &&
+              deck.draft &&
+              deck.seats[0].sideboard &&
+              deck.seats[0].pickorder.length &&
+              !deck.cards &&
+              !deck.seats[0].bot) {
+            decks.push(deck);
           }
         }
       }
+      draftIds = decks.map(({ draft }) => draft);
       // eslint-disable-next-line no-await-in-loop
-      const decks =  (await Promise.all(deckQs)).filter((d) => d);
-      if (decks.length > 0) {
-        await writeToS3(`drafts/${counter}.json`, decks);
+      const drafts = await Draft.find({ _id: { $in: decks } }).lean();
+      const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
+      const deckQs = decks.map((deck) => processDeck(deck, draftsById[deck.draft]));
+      // eslint-disable-next-line no-await-in-loop
+      const processedDecks =  (await Promise.all(deckQs)).filter((d) => d);
+      if (processedDecks.length > 0) {
+        await writeToS3(`drafts/${counter}.json`, processedDecks);
         counter += 1;
       }
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
