@@ -12,6 +12,7 @@ const Report = require('../models/report');
 const Application = require('../models/application');
 const Comment = require('../models/comment');
 const Article = require('../models/article');
+const Video = require('../models/video');
 const { render } = require('../serverjs/render');
 const util = require('../serverjs/util.js');
 
@@ -25,8 +26,14 @@ router.get('/dashboard', ensureAdmin, async (req, res) => {
   const commentReportCount = await Report.countDocuments();
   const applicationCount = await Application.countDocuments();
   const articlesInReview = await Article.countDocuments({ status: 'inReview' });
+  const videosInReview = await Video.countDocuments({ status: 'inReview' });
 
-  return render(req, res, 'AdminDashboardPage', { commentReportCount, applicationCount, articlesInReview });
+  return render(req, res, 'AdminDashboardPage', {
+    commentReportCount,
+    applicationCount,
+    articlesInReview,
+    videosInReview,
+  });
 });
 
 const PAGE_SIZE = 24;
@@ -50,6 +57,10 @@ router.get('/reviewarticles', async (req, res) => {
   res.redirect('/admin/reviewarticles/0');
 });
 
+router.get('/reviewvideos', async (req, res) => {
+  res.redirect('/admin/reviewvideos/0');
+});
+
 router.get('/reviewarticles/:page', ensureAdmin, async (req, res) => {
   const count = await Article.countDocuments({ status: 'inReview' });
   const articles = await Article.find({ status: 'inReview' })
@@ -59,6 +70,17 @@ router.get('/reviewarticles/:page', ensureAdmin, async (req, res) => {
     .lean();
 
   return render(req, res, 'ReviewArticlesPage', { articles, count, page: req.params.page });
+});
+
+router.get('/reviewvideos/:page', ensureAdmin, async (req, res) => {
+  const count = await Video.countDocuments({ status: 'inReview' });
+  const videos = await Video.find({ status: 'inReview' })
+    .sort({ date: -1 })
+    .skip(req.params.page * PAGE_SIZE)
+    .limit(PAGE_SIZE)
+    .lean();
+
+  return render(req, res, 'ReviewVideosPage', { videos, count, page: req.params.page });
 });
 
 router.get('/commentreports', async (req, res) => {
@@ -150,7 +172,66 @@ router.get('/publisharticle/:id', ensureAdmin, async (req, res) => {
   return res.redirect('/admin/reviewarticles/0');
 });
 
-router.get('/removearticlerewview/:id', ensureAdmin, async (req, res) => {
+router.get('/publishvideo/:id', ensureAdmin, async (req, res) => {
+  const video = await Video.findById(req.params.id);
+
+  if (video.status !== 'inReview') {
+    req.flash('danger', `Video not in review`);
+    return res.redirect('/admin/reviewvideos/0');
+  }
+
+  video.status = 'published';
+  video.date = new Date();
+
+  const owner = await User.findById(video.owner);
+
+  await video.save();
+
+  if (owner) {
+    await util.addNotification(
+      owner,
+      req.user,
+      `/content/video/${video._id}`,
+      `${req.user.username} has approved and published your video: ${video.title}`,
+    );
+  }
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: owner.email,
+      subject: 'Your video has been published',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'content_publish',
+    locals: { title: video.title, url: `https://cubecobra.com/content/video/${video._id}`, type: 'video' },
+  });
+
+  req.flash('success', `Video published: ${video.title}`);
+
+  return res.redirect('/admin/reviewvideos/0');
+});
+
+router.get('/removearticlereview/:id', ensureAdmin, async (req, res) => {
   const article = await Article.findById(req.params.id);
 
   if (article.status !== 'inReview') {
@@ -207,6 +288,65 @@ router.get('/removearticlerewview/:id', ensureAdmin, async (req, res) => {
   req.flash('success', `Article declined: ${article.title}`);
 
   return res.redirect('/admin/reviewarticles/0');
+});
+
+router.get('/removevideoreview/:id', ensureAdmin, async (req, res) => {
+  const video = await Video.findById(req.params.id);
+
+  if (video.status !== 'inReview') {
+    req.flash('danger', `Video not in review`);
+    return res.redirect('/admin/reviewvideos/0');
+  }
+
+  video.status = 'draft';
+  video.date = new Date();
+
+  const owner = await User.findById(video.owner);
+
+  await video.save();
+
+  if (owner) {
+    await util.addNotification(
+      owner,
+      req.user,
+      `/content/video/${video._id}`,
+      `${req.user.username} has declined to publish your video: ${video.title}`,
+    );
+  }
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: owner.email,
+      subject: 'Your video was not published',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'content_decline',
+    locals: { title: video.title, url: `https://cubecobra.com/content/video/${video._id}`, type: 'video' },
+  });
+
+  req.flash('success', `Video declined: ${video.title}`);
+
+  return res.redirect('/admin/reviewvideos/0');
 });
 
 router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {

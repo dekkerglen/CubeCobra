@@ -8,44 +8,44 @@ import Paginate from 'components/Paginate';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import ButtonLink from 'components/ButtonLink';
-import ArticlePreview from 'components/ArticlePreview';
+import VideoPreview from 'components/VideoPreview';
 
 const PAGE_SIZE = 24;
 
-const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
+const ReviewVideosPage = ({ user, loginCallback, videos, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Articles in Review</h5>
+        <h5>Videos in Review</h5>
         {count > PAGE_SIZE ? (
           <>
             <h6>
-              {`Displaying ${PAGE_SIZE * page + 1}-${Math.min(count, PAGE_SIZE * (page + 1))} of ${count} Articles`}
+              {`Displaying ${PAGE_SIZE * page + 1}-${Math.min(count, PAGE_SIZE * (page + 1))} of ${count} Videos`}
             </h6>
             <Paginate
               count={Math.ceil(count / PAGE_SIZE)}
               active={parseInt(page, 10)}
-              urlF={(i) => `/admin/reviewarticles/${i}`}
+              urlF={(i) => `/admin/reviewvideos/${i}`}
             />
           </>
         ) : (
-          <h6>{`Displaying all ${count} Articles`}</h6>
+          <h6>{`Displaying all ${count} Videos`}</h6>
         )}
       </CardHeader>
-      {articles.map((article) => (
+      {videos.map((video) => (
         <CardBody className="border-top">
           <Row>
             <Col xs="12" sm="4">
-              <ArticlePreview article={article} />
+              <VideoPreview video={video} />
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="success" outline block href={`/admin/publisharticle/${article._id}`}>
+              <ButtonLink color="success" outline block href={`/admin/publishvideo/${video._id}`}>
                 Publish
               </ButtonLink>
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="danger" outline block href={`/admin/removearticlereview/${article._id}`}>
+              <ButtonLink color="danger" outline block href={`/admin/removevideoreview/${video._id}`}>
                 Remove from Reviews
               </ButtonLink>
             </Col>
@@ -56,14 +56,14 @@ const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
   </MainLayout>
 );
 
-ReviewArticlesPage.propTypes = {
+ReviewVideosPage.propTypes = {
   user: PropTypes.shape({
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
   loginCallback: PropTypes.string,
-  articles: PropTypes.arrayOf(
+  videos: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string,
     }),
@@ -72,9 +72,9 @@ ReviewArticlesPage.propTypes = {
   page: PropTypes.number.isRequired,
 };
 
-ReviewArticlesPage.defaultProps = {
+ReviewVideosPage.defaultProps = {
   user: null,
   loginCallback: '/',
 };
 
-export default RenderToRoot(ReviewArticlesPage);
+export default RenderToRoot(ReviewVideosPage);

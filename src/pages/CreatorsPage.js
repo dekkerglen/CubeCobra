@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Nav, NavItem, NavLink, CardHeader, Card, TabContent, TabPane } from 'reactstrap';
+import { Nav, CardHeader, Card, TabContent, TabPane } from 'reactstrap';
 
 import DynamicFlash from 'components/DynamicFlash';
 import Tab from 'components/Tab';
 import CreatorArticles from 'components/CreatorArticles';
+import CreatorVideos from 'components/CreatorVideos';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -35,7 +36,9 @@ const CreatorsPage = ({ user, loginCallback }) => {
             <CreatorArticles user={user} />
           </TabPane>
           <TabPane tabId="1" />
-          <TabPane tabId="2" />
+          <TabPane tabId="2">
+            <CreatorVideos user={user} />
+          </TabPane>
         </TabContent>
       </Card>
     </MainLayout>
