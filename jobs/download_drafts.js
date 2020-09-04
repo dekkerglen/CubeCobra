@@ -34,7 +34,8 @@ const processDeck = async (deck) => {
     !deck.draft ||
     !deck.seats[0].sideboard ||
     !deck.seats[0].pickorder.length ||
-    deck.cards
+    deck.cards ||
+    deck.seats[0].bot
   ) {
     return null;
   }
