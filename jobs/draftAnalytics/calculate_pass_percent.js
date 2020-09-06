@@ -120,20 +120,3 @@ console.log(
     .map(([name, value]) => outputLine(name, value, inPackWhenSeenCount[cardToInt[name]], seenCount[cardToInt[name]]))
     .join('\n'),
 );
-const sortedNormalizedPickOrder = Object.entries(normalizedPickedOver)
-  .filter(([name]) => seenCount[cardToInt[name]] > 99)
-  .sort(([, position], [, position2]) => position2 - position);
-console.log('\nBest Cards');
-console.log(
-  sortedNormalizedPickOrder
-    .slice(0, 25)
-    .map(([name, value]) => outputLine(name, value, pickedOverCounts[name], passPercents[name]))
-    .join('\n'),
-);
-console.log('\nWorst Cards:');
-console.log(
-  sortedNormalizedPickOrder
-    .slice(sortedNormalizedPickOrder.length - 25, sortedNormalizedPickOrder.length)
-    .map(([name, value]) => outputLine(name, value, pickedOverCounts[name], passPercents[name]))
-    .join('\n'),
-);
