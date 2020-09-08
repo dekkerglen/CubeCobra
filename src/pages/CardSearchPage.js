@@ -57,8 +57,6 @@ const CardSearchPage = ({ user, loginCallback }) => {
 
       const json = await response.json();
 
-      console.log(json);
-
       setCards(json.data);
       setCount(json.numResults);
       setLoading(false);
@@ -159,7 +157,7 @@ const CardSearchPage = ({ user, loginCallback }) => {
       <DynamicFlash />
       {(cards && cards.length) > 0 ? (
         <Card className="mb-3">
-          {count / 100 > 1 && (
+          {count / 96 > 1 && (
             <CardHeader>
               <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
             </CardHeader>

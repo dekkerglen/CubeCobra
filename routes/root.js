@@ -405,6 +405,9 @@ router.get('/tos', (req, res) => {
 router.get('/filters', (req, res) => {
   return render(req, res, 'FiltersPage');
 });
+router.get('/markdown', (req, res) => {
+  return render(req, res, 'MarkdownPage');
+});
 
 router.get('/privacy', (req, res) => {
   return render(req, res, 'InfoPage', {

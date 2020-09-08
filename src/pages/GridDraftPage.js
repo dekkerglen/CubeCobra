@@ -148,7 +148,7 @@ for (let index = 0; index < 3; index++) {
   options.push(mask);
 }
 
-const GridDraftPage = ({ user, cube, initialDraft }) => {
+const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);

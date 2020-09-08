@@ -233,4 +233,8 @@ UserAccountPage.propTypes = {
   defaultNav: PropTypes.string.isRequired,
 };
 
+UserAccountPage.defaultProps = {
+  loginCallback: '/',
+};
+
 export default RenderToRoot(UserAccountPage);

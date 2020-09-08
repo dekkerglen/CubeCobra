@@ -17,7 +17,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Spinner,
-  loginCallback,
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -33,7 +32,7 @@ import Query from 'utils/Query';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CubeDeckPage = ({ user, cube, deck, draft }) => {
+const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
   const [seatIndex, setSeatIndex] = useState(0);
   const [view, setView] = useState('deck');
   const didMountRef1 = useRef(false);

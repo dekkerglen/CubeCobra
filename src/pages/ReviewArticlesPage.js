@@ -1,0 +1,80 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+
+import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
+
+import DynamicFlash from 'components/DynamicFlash';
+import Paginate from 'components/Paginate';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
+import ButtonLink from 'components/ButtonLink';
+import ArticlePreview from 'components/ArticlePreview';
+
+const PAGE_SIZE = 24;
+
+const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
+    <DynamicFlash />
+    <Card className="my-3">
+      <CardHeader>
+        <h5>Articles in Review</h5>
+        {count > PAGE_SIZE ? (
+          <>
+            <h6>
+              {`Displaying ${PAGE_SIZE * page + 1}-${Math.min(count, PAGE_SIZE * (page + 1))} of ${count} Articles`}
+            </h6>
+            <Paginate
+              count={Math.ceil(count / PAGE_SIZE)}
+              active={parseInt(page, 10)}
+              urlF={(i) => `/admin/reviewarticles/${i}`}
+            />
+          </>
+        ) : (
+          <h6>{`Displaying all ${count} Articles`}</h6>
+        )}
+      </CardHeader>
+      {articles.map((article) => (
+        <CardBody className="border-top">
+          <Row>
+            <Col xs="12" sm="4">
+              <ArticlePreview article={article} />
+            </Col>
+            <Col xs="12" sm="4">
+              <ButtonLink color="success" outline block href={`/admin/publisharticle/${article._id}`}>
+                Publish
+              </ButtonLink>
+            </Col>
+            <Col xs="12" sm="4">
+              <ButtonLink color="danger" outline block href={`/admin/removearticlereview/${article._id}`}>
+                Remove from Reviews
+              </ButtonLink>
+            </Col>
+          </Row>
+        </CardBody>
+      ))}
+    </Card>
+  </MainLayout>
+);
+
+ReviewArticlesPage.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  }),
+  loginCallback: PropTypes.string,
+  articles: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string,
+    }),
+  ).isRequired,
+  count: PropTypes.number.isRequired,
+  page: PropTypes.number.isRequired,
+};
+
+ReviewArticlesPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(ReviewArticlesPage);

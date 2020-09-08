@@ -17,7 +17,6 @@ const VisualSpoiler = ({ cards }) => {
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);
 
-  const size = [6, 4];
   let sizes = 'col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1-5';
 
   if (scale === 'small') {
@@ -25,8 +24,6 @@ const VisualSpoiler = ({ cards }) => {
   } else if (scale === 'large') {
     sizes = 'col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3';
   }
-
-  console.log(size);
 
   return (
     <>

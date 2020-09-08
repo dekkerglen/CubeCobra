@@ -26,7 +26,6 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
     if (useAsfans) {
       try {
         const asfans = calculateAsfans(cube, draftFormat);
-        console.log('asfans preset', asfans);
         setAsfans(asfans);
       } catch (e) {
         console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);

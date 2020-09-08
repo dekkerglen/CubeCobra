@@ -52,6 +52,15 @@ if (NODE_ENV === 'production') {
   pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
   pages.ApplicationsPage = require('../dist/pages/ApplicationsPage').default;
   pages.CommentReportsPage = require('../dist/pages/CommentReportsPage').default;
+  pages.CreatorsPage = require('../dist/pages/CreatorsPage').default;
+  pages.MarkdownPage = require('../dist/pages/MarkdownPage').default;
+  pages.ReviewArticlesPage = require('../dist/pages/ReviewArticlesPage').default;
+  pages.ArticlesPage = require('../dist/pages/ArticlesPage').default;
+  pages.ReviewVideosPage = require('../dist/pages/ReviewVideosPage').default;
+  pages.VideosPage = require('../dist/pages/VideosPage').default;
+  pages.ReviewPodcastsPage = require('../dist/pages/ReviewPodcastsPage').default;
+  pages.PodcastsPage = require('../dist/pages/PodcastsPage').default;
+  pages.PodcastEpisodePage = require('../dist/pages/PodcastEpisodePage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;

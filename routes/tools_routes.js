@@ -338,6 +338,41 @@ router.get('/card/:id', async (req, res) => {
   }
 });
 
+router.get('/cardimage/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_normal);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404/');
+  }
+});
+
 const cubePageSize = 100;
 
 router.get('/api/downloadcubes/:page/:key', async (req, res) => {

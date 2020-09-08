@@ -10,7 +10,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import TimeAgo from 'react-timeago';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 24;
 
 const CommentReportsPage = ({ user, loginCallback, reports, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
