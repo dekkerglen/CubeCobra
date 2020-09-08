@@ -233,4 +233,8 @@ UserAccountPage.propTypes = {
   loginCallback: PropTypes.string,
 };
 
+UserAccountPage.defaultProps = {
+  loginCallback: '/',
+};
+
 export default RenderToRoot(UserAccountPage);

@@ -54,4 +54,8 @@ LandingPage.propTypes = {
   loginCallback: PropTypes.string,
 };
 
+LandingPage.defaultProps = {
+  loginCallback: '/',
+};
+
 export default RenderToRoot(LandingPage);

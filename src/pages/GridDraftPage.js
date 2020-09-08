@@ -50,7 +50,7 @@ export const subtitle = (cards) => {
   );
 };
 
-const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn, loginCallback }) => (
+const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
@@ -147,7 +147,7 @@ for (let index = 0; index < 3; index++) {
   options.push(mask);
 }
 
-const GridDraftPage = ({ user, cube, initialDraft }) => {
+const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
