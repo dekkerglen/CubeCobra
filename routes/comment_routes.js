@@ -11,6 +11,9 @@ const User = require('../models/user');
 const Report = require('../models/report');
 const Deck = require('../models/deck');
 const Article = require('../models/article');
+const Video = require('../models/video');
+const Podcast = require('../models/podcast');
+const PodcastEpisode = require('../models/podcastEpisode');
 const Blog = require('../models/blog');
 const { render } = require('../serverjs/render');
 
@@ -49,6 +52,18 @@ const getReplyContext = {
     const article = await Article.findById(id);
     return [article.owner, 'article'];
   },
+  podcast: async (id) => {
+    const podcast = await Podcast.findById(id);
+    return [podcast.owner, 'podcast'];
+  },
+  video: async (id) => {
+    const video = await Video.findById(id);
+    return [video.owner, 'video'];
+  },
+  episode: async (id) => {
+    const episode = await PodcastEpisode.findById(id);
+    return [episode.owner, 'podcast episode'];
+  },
   default: async () => null, // nobody gets a notification for this
 };
 
@@ -58,7 +73,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const poster = await User.findById(req.user.id);
 
-    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video'].includes(req.params.type)) {
+    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode'].includes(req.params.type)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',

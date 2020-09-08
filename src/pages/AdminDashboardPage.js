@@ -15,6 +15,7 @@ const AdminDashboardPage = ({
   applicationCount,
   articlesInReview,
   videosInReview,
+  podcastsInReview,
 }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
@@ -38,6 +39,9 @@ const AdminDashboardPage = ({
         <ButtonLink href="/admin/reviewvideos" block outline color="success">
           {`Review Videos (${videosInReview})`}
         </ButtonLink>
+        <ButtonLink href="/admin/reviewpodcasts" block outline color="success">
+          {`Review Podcasts (${podcastsInReview})`}
+        </ButtonLink>
       </CardBody>
     </Card>
   </MainLayout>
@@ -54,6 +58,7 @@ AdminDashboardPage.propTypes = {
   applicationCount: PropTypes.number.isRequired,
   articlesInReview: PropTypes.number.isRequired,
   videosInReview: PropTypes.number.isRequired,
+  podcastsInReview: PropTypes.number.isRequired,
 };
 
 AdminDashboardPage.defaultProps = {

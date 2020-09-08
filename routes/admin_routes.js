@@ -13,6 +13,7 @@ const Application = require('../models/application');
 const Comment = require('../models/comment');
 const Article = require('../models/article');
 const Video = require('../models/video');
+const Podcast = require('../models/podcast');
 const { render } = require('../serverjs/render');
 const util = require('../serverjs/util.js');
 
@@ -27,12 +28,14 @@ router.get('/dashboard', ensureAdmin, async (req, res) => {
   const applicationCount = await Application.countDocuments();
   const articlesInReview = await Article.countDocuments({ status: 'inReview' });
   const videosInReview = await Video.countDocuments({ status: 'inReview' });
+  const podcastsInReview = await Podcast.countDocuments({ status: 'inReview' });
 
   return render(req, res, 'AdminDashboardPage', {
     commentReportCount,
     applicationCount,
     articlesInReview,
     videosInReview,
+    podcastsInReview,
   });
 });
 
@@ -61,6 +64,10 @@ router.get('/reviewvideos', async (req, res) => {
   res.redirect('/admin/reviewvideos/0');
 });
 
+router.get('/reviewpodcasts', async (req, res) => {
+  res.redirect('/admin/reviewpodcasts/0');
+});
+
 router.get('/reviewarticles/:page', ensureAdmin, async (req, res) => {
   const count = await Article.countDocuments({ status: 'inReview' });
   const articles = await Article.find({ status: 'inReview' })
@@ -81,6 +88,17 @@ router.get('/reviewvideos/:page', ensureAdmin, async (req, res) => {
     .lean();
 
   return render(req, res, 'ReviewVideosPage', { videos, count, page: req.params.page });
+});
+
+router.get('/reviewpodcasts/:page', ensureAdmin, async (req, res) => {
+  const count = await Podcast.countDocuments({ status: 'inReview' });
+  const podcasts = await Podcast.find({ status: 'inReview' })
+    .sort({ date: -1 })
+    .skip(req.params.page * PAGE_SIZE)
+    .limit(PAGE_SIZE)
+    .lean();
+
+  return render(req, res, 'ReviewPodcastsPage', { podcasts, count, page: req.params.page });
 });
 
 router.get('/commentreports', async (req, res) => {
@@ -231,6 +249,65 @@ router.get('/publishvideo/:id', ensureAdmin, async (req, res) => {
   return res.redirect('/admin/reviewvideos/0');
 });
 
+router.get('/publishpodcast/:id', ensureAdmin, async (req, res) => {
+  const podcast = await Podcast.findById(req.params.id);
+
+  if (podcast.status !== 'inReview') {
+    req.flash('danger', `Podcast not in review`);
+    return res.redirect('/admin/reviewpodcasts/0');
+  }
+
+  podcast.status = 'published';
+  podcast.date = new Date();
+
+  const owner = await User.findById(podcast.owner);
+
+  await podcast.save();
+
+  if (owner) {
+    await util.addNotification(
+      owner,
+      req.user,
+      `/content/podcast/${podcast._id}`,
+      `${req.user.username} has approved your podcast: ${podcast.title}`,
+    );
+  }
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: owner.email,
+      subject: 'Your podcast has been approved',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'content_publish',
+    locals: { title: podcast.title, url: `https://cubecobra.com/content/podcast/${podcast._id}`, type: 'podcast' },
+  });
+
+  req.flash('success', `Podcast published: ${podcast.title}`);
+
+  return res.redirect('/admin/reviewpodcasts/0');
+});
+
 router.get('/removearticlereview/:id', ensureAdmin, async (req, res) => {
   const article = await Article.findById(req.params.id);
 
@@ -347,6 +424,65 @@ router.get('/removevideoreview/:id', ensureAdmin, async (req, res) => {
   req.flash('success', `Video declined: ${video.title}`);
 
   return res.redirect('/admin/reviewvideos/0');
+});
+
+router.get('/removepodcastreview/:id', ensureAdmin, async (req, res) => {
+  const podcast = await Podcast.findById(req.params.id);
+
+  if (podcast.status !== 'inReview') {
+    req.flash('danger', `podcast not in review`);
+    return res.redirect('/admin/reviewpodcasts/0');
+  }
+
+  podcast.status = 'draft';
+  podcast.date = new Date();
+
+  const owner = await User.findById(podcast.owner);
+
+  await podcast.save();
+
+  if (owner) {
+    await util.addNotification(
+      owner,
+      req.user,
+      `/content/podcast/${podcast._id}`,
+      `${req.user.username} has declined your podcast: ${podcast.title}`,
+    );
+  }
+
+  const smtpTransport = mailer.createTransport({
+    name: 'CubeCobra.com',
+    secure: true,
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_CONFIG_USERNAME,
+      pass: process.env.EMAIL_CONFIG_PASSWORD,
+    },
+  });
+
+  const email = new Email({
+    message: {
+      from: 'Cube Cobra Team <support@cubecobra.com>',
+      to: owner.email,
+      subject: 'Your podcast was not approved',
+    },
+    juiceResources: {
+      webResources: {
+        relativeTo: path.join(__dirname, '..', 'public'),
+        images: true,
+      },
+    },
+    transport: smtpTransport,
+  });
+
+  email.send({
+    template: 'content_decline',
+    locals: { title: podcast.title, url: `https://cubecobra.com/content/podcast/${podcast._id}`, type: 'podcast' },
+  });
+
+  req.flash('success', `Podcast declined: ${podcast.title}`);
+
+  return res.redirect('/admin/reviewpodcasts/0');
 });
 
 router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {

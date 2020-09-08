@@ -18,6 +18,7 @@ const translateType = {
   article: 'Article',
   podcast: 'Podcast',
   video: 'Video',
+  episode: 'Podcast Epsiode',
 };
 
 const translateLink = {
@@ -28,6 +29,7 @@ const translateLink = {
   article: (id) => `/content/article/${id}`,
   video: (id) => `/content/video/${id}`,
   podcast: (id) => `/content/podcast/${id}`,
+  episode: (id) => `/content/episode/${id}`,
 };
 
 const CommentPage = ({ comment, user, loginCallback }) => {

@@ -4,8 +4,11 @@ require('dotenv').config();
 const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
+const { getFeedData, getFeedEpisodes } = require('../serverjs/rss');
 const Application = require('../models/application');
 const Article = require('../models/article');
+const Podcast = require('../models/podcast');
+const PodcastEpisode = require('../models/podcastEpisode');
 const Video = require('../models/video');
 
 const PAGE_SIZE = 24;
@@ -50,7 +53,23 @@ router.get('/creators', ensureContentCreator, async (req, res) => {
   return render(req, res, 'CreatorsPage');
 });
 
-router.get('/browse', async (req, res) => {});
+const BROWSE_SIZE = 3;
+
+router.get('/browse', async (req, res) => {
+  const [articles, videos, podcasts, episodes] = await Promise.all([
+    Article.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
+    Video.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
+    Podcast.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
+    PodcastEpisode.find().sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
+  ]);
+
+  return render(req, res, 'BrowseContentPage', {
+    articles,
+    videos,
+    podcasts,
+    episodes,
+  });
+});
 
 router.get('/articles', async (req, res) => {
   return res.redirect('/content/articles/0');
@@ -67,7 +86,22 @@ router.get('/articles/:page', async (req, res) => {
   return render(req, res, 'ArticlesPage', { articles, count, page: req.params.page });
 });
 
-router.get('/podcasts', async (req, res) => {});
+router.get('/podcasts', async (req, res) => {
+  return res.redirect('/content/podcasts/0');
+});
+
+router.get('/podcasts/:page', async (req, res) => {
+  const count = await PodcastEpisode.countDocuments();
+  const episodes = await PodcastEpisode.find()
+    .sort({ date: -1 })
+    .skip(req.params.page * PAGE_SIZE)
+    .limit(PAGE_SIZE)
+    .lean();
+
+  const podcasts = await Podcast.find({ status: 'published' }).sort({ date: -1 }).lean();
+
+  return render(req, res, 'PodcastsPage', { podcasts, count, episodes, page: req.params.page });
+});
 
 router.get('/videos', async (req, res) => {
   res.redirect('/content/videos/0');
@@ -95,7 +129,28 @@ router.get('/article/:id', async (req, res) => {
   return render(req, res, 'ArticlePage', { article });
 });
 
-router.get('/podcast/:id', async (req, res) => {});
+router.get('/podcast/:id', async (req, res) => {
+  const podcast = await Podcast.findById(req.params.id);
+
+  if (!podcast) {
+    req.flash('danger', 'Podcast not found');
+    res.redirect('/content/browse');
+  }
+  const episodes = await PodcastEpisode.find({ podcast: podcast._id }).sort({ date: -1 });
+
+  return render(req, res, 'PodcastPage', { podcast, episodes });
+});
+
+router.get('/episode/:id', async (req, res) => {
+  const episode = await PodcastEpisode.findById(req.params.id);
+
+  if (!episode) {
+    req.flash('danger', 'Podcast episode not found');
+    res.redirect('/content/browse');
+  }
+
+  return render(req, res, 'PodcastEpisodePage', { episode });
+});
 
 router.get('/video/:id', async (req, res) => {
   const video = await Video.findById(req.params.id);
@@ -127,6 +182,82 @@ router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
   }
 
   return render(req, res, 'EditArticlePage', { article });
+});
+
+router.get('/podcast/edit/:id', ensureContentCreator, async (req, res) => {
+  const podcast = await Podcast.findById(req.params.id);
+
+  if (!podcast) {
+    req.flash('danger', 'Podcast not found');
+    res.redirect('/404');
+  }
+
+  if (podcast.owner !== req.user.id) {
+    req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  if (podcast.status === 'published') {
+    req.flash('danger', 'Unauthorized: Podcasts cannot be editted after being published.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  return render(req, res, 'EditPodcastPage', { podcast });
+});
+
+router.get('/podcast/update/:id', ensureContentCreator, async (req, res) => {
+  const podcast = await Podcast.findById(req.params.id);
+
+  if (!podcast) {
+    req.flash('danger', 'Podcast not found');
+    res.redirect('/404');
+  }
+
+  if (podcast.owner !== req.user.id) {
+    req.flash('danger', 'Unauthorized: Only podcast owners can fetch podcast episodes.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  if (podcast.status !== 'published') {
+    req.flash('danger', 'Unauthorized: Only podcasts that have been published can have episodes fetched.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  const episodes = await getFeedEpisodes(podcast.rss);
+
+  const liveEpisodes = await PodcastEpisode.find({ guid: { $in: episodes.map((episode) => episode.guid) } });
+
+  const guids = liveEpisodes.map((episode) => episode.guid);
+
+  const filtered = episodes.filter((episode) => !guids.includes(episode.guid));
+
+  await Promise.all(
+    filtered.map((episode) => {
+      const podcastEpisode = new PodcastEpisode();
+
+      podcastEpisode.title = episode.title;
+      podcastEpisode.description = episode.description;
+      podcastEpisode.source = episode.source;
+      podcastEpisode.guid = episode.guid;
+      podcastEpisode.link = episode.link;
+      podcastEpisode.date = new Date(episode.date);
+
+      podcastEpisode.podcast = podcast._id;
+      podcastEpisode.owner = podcast.owner;
+      podcastEpisode.image = podcast.image;
+      podcastEpisode.username = podcast.username;
+      podcastEpisode.podcastname = podcast.title;
+
+      return podcastEpisode.save();
+    }),
+  );
+
+  podcast.date = new Date();
+  await podcast.save();
+
+  req.flash('success', 'Podcast has been updated with all episodes.');
+
+  return res.redirect(`/content/podcast/${podcast._id}`);
 });
 
 router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
@@ -174,6 +305,33 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
   await article.save();
 
   res.redirect(`/content/article/edit/${article._id}`);
+});
+
+router.post('/editpodcast', ensureContentCreator, async (req, res) => {
+  const { podcastid, rss } = req.body;
+
+  const podcast = await Podcast.findById(podcastid);
+
+  if (podcast.owner !== req.user.id) {
+    req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  if (podcast.status === 'published') {
+    req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  podcast.rss = rss;
+  const fields = await getFeedData(rss);
+  podcast.title = fields.title;
+  podcast.description = fields.description;
+  podcast.url = fields.url;
+  podcast.image = fields.image;
+
+  await podcast.save();
+
+  res.redirect(`/content/podcast/edit/${podcast._id}`);
 });
 
 router.post('/editvideo', ensureContentCreator, async (req, res) => {
@@ -234,6 +392,38 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
   res.redirect(`/content/article/edit/${article._id}`);
 });
 
+router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
+  const { podcastid, rss } = req.body;
+
+  const podcast = await Podcast.findById(podcastid);
+
+  if (podcast.owner !== req.user.id) {
+    req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  if (podcast.status === 'published') {
+    req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
+    res.redirect(`/content/podcast/${podcast._id}`);
+  }
+
+  podcast.rss = rss;
+  const fields = await getFeedData(rss);
+  podcast.title = fields.title;
+  podcast.description = fields.description;
+  podcast.url = fields.url;
+  podcast.image = fields.image;
+  podcast.status = 'inReview';
+
+  await podcast.save();
+  req.flash(
+    'success',
+    'Your podcast has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
+  );
+
+  res.redirect(`/content/podcast/edit/${podcast._id}`);
+});
+
 router.post('/submitvideo', ensureContentCreator, async (req, res) => {
   const { videoid, title, image, imagename, artist, body, url } = req.body;
 
@@ -285,6 +475,26 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
   res.redirect(`/content/article/edit/${article._id}`);
 });
 
+router.get('/newpodcast', ensureContentCreator, async (req, res) => {
+  const podcast = new Podcast();
+
+  podcast.title = 'New Podcast';
+  podcast.description = '';
+  podcast.url = '';
+  podcast.rss = '';
+  podcast.owner = req.user.id;
+  podcast.image =
+    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192';
+  podcast.date = new Date();
+
+  podcast.status = 'draft';
+  podcast.username = req.user.username;
+
+  await podcast.save();
+
+  res.redirect(`/content/podcast/edit/${podcast._id}`);
+});
+
 router.get('/newvideo', ensureContentCreator, async (req, res) => {
   const video = new Video();
 
@@ -317,6 +527,21 @@ router.get('/api/articles/:user/:page', ensureContentCreator, async (req, res) =
     success: 'true',
     numResults,
     articles,
+  });
+});
+
+router.get('/api/podcasts/:user/:page', ensureContentCreator, async (req, res) => {
+  const numResults = await Podcast.countDocuments({ owner: req.user.id });
+  const podcasts = await Podcast.find({ owner: req.user.id })
+    .sort({ date: -1 })
+    .skip(req.params.page * PAGE_SIZE)
+    .limit(PAGE_SIZE)
+    .lean();
+
+  res.status(200).send({
+    success: 'true',
+    numResults,
+    podcasts,
   });
 });
 

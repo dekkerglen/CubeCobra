@@ -5,7 +5,7 @@ const commentSchema = mongoose.Schema({
   parent: String,
   parentType: {
     type: String,
-    enum: ['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video'],
+    enum: ['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode'],
   },
   owner: String,
   ownerName: String,

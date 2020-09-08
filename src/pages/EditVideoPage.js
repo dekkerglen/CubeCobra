@@ -59,7 +59,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Card className="pb-3 h-100">
+      <Card>
         <CardBody>
           <Row>
             <Col xs="12" sm="6">

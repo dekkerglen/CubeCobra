@@ -7,6 +7,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Tab from 'components/Tab';
 import CreatorArticles from 'components/CreatorArticles';
 import CreatorVideos from 'components/CreatorVideos';
+import CreatorPodcasts from 'components/CreatorPodcasts';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -35,7 +36,9 @@ const CreatorsPage = ({ user, loginCallback }) => {
           <TabPane tabId="0">
             <CreatorArticles user={user} />
           </TabPane>
-          <TabPane tabId="1" />
+          <TabPane tabId="1">
+            <CreatorPodcasts user={user} />
+          </TabPane>
           <TabPane tabId="2">
             <CreatorVideos user={user} />
           </TabPane>

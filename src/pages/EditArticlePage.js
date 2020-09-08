@@ -58,7 +58,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Card className="pb-3 h-100">
+      <Card>
         <CardBody>
           <Row>
             <Col xs="12" sm="6">
@@ -185,7 +185,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
           </TabPane>
           <TabPane tabId="1">
             <CardBody>
-              <Row className="px-3">
+              <Row>
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <ArticlePreview
                     article={{
@@ -234,6 +234,7 @@ EditArticlePage.propTypes = {
     artist: PropTypes.string,
     _id: PropTypes.string,
     date: PropTypes.string,
+    status: PropTypes.string,
   }).isRequired,
 };
 

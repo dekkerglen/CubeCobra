@@ -43,6 +43,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
           <li>
             <a href="#lists">Lists</a>
           </li>
+          <li>
+            <a href="#links">Links</a>
+          </li>
         </ol>
       </CardBody>
       <CardBody className="border-top">
@@ -486,6 +489,33 @@ const MarkdownPage = ({ user, loginCallback }) => (
                   <li>item 2</li>
                   <li>item 3</li>
                 </ol>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="links">Links</h5>
+        <p>
+          You can add any hyperlink, with any text, by using square brackets around text followed immediately by
+          parenthesis around the url. This is the only way to provide a custom link, and will create a warning popup for
+          the user. Try out the following link to see the popup.
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>[outside link](https://scryfall.com)</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="[outside link](https://scryfall.com)" />
               </CardBody>
             </Card>
           </Col>

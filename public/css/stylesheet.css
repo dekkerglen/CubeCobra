@@ -998,3 +998,7 @@ div.viewport {
   top: 0;
   left: 0;
 }
+
+audio {
+	width: 100%;
+}
