@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Navbar, Nav, NavItem, NavLink, Row, Col } from 'reactstrap';
-
+import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 import Loading from 'pages/Loading';
 import VideoPreview from 'components/VideoPreview';
+import Paginate from 'components/Paginate';
 import { csrfFetch } from 'utils/CSRF';
+
+const PAGE_SIZE = 24;
 
 const CreatorVideos = ({ user }) => {
   const [videos, setVideos] = useState([]);
@@ -21,21 +23,17 @@ const CreatorVideos = ({ user }) => {
       }
       const json = await response.json();
 
-      setPages(json.numResults);
+      setPages(Math.ceil(json.numResults / PAGE_SIZE));
       setVideos(json.videos);
       setLoading(false);
     };
     fetchData();
-  }, [page]);
+  }, [page, user]);
 
   const updatePage = (index) => {
     setLoading(true);
     setPage(index);
   };
-
-  if (loading) {
-    return <Loading />;
-  }
 
   return (
     <>
@@ -48,13 +46,22 @@ const CreatorVideos = ({ user }) => {
           </NavItem>
         </Nav>
       </Navbar>
-      <Row className="px-3">
-        {videos.map((video) => (
-          <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
-            <VideoPreview video={video} />
-          </Col>
-        ))}
-      </Row>
+      {pages > 1 && (
+        <CardBody className="pt-0">
+          <Paginate count={pages} active={page} onClick={(i) => updatePage(i)} />
+        </CardBody>
+      )}
+      {loading ? (
+        <Loading />
+      ) : (
+        <Row className="px-3">
+          {videos.map((video) => (
+            <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
+              <VideoPreview video={video} />
+            </Col>
+          ))}
+        </Row>
+      )}
     </>
   );
 };

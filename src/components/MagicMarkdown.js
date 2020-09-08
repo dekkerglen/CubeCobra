@@ -11,7 +11,7 @@ import { Col } from 'reactstrap';
 const AutocardLink = withAutocard('a');
 const Link = withModal('a', LinkModal);
 
-const MagicMarkdown = ({ markdown, cube }) => {
+const MagicMarkdown = ({ markdown }) => {
   if (markdown === undefined) {
     return '';
   }
@@ -121,23 +121,7 @@ const MagicMarkdown = ({ markdown, cube }) => {
 };
 
 MagicMarkdown.propTypes = {
-  markdown: PropTypes.string,
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(
-      PropTypes.shape({
-        cardID: PropTypes.string.isRequired,
-        details: PropTypes.shape({
-          image_normal: PropTypes.string.isRequired,
-          name: PropTypes.string.isRequired,
-        }).isRequired,
-      }),
-    ).isRequired,
-  }),
-};
-
-MagicMarkdown.defaultProps = {
-  markdown: '',
-  cube: null,
+  markdown: PropTypes.string.isRequired,
 };
 
 export default MagicMarkdown;

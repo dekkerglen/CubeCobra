@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-import { Navbar, Nav, NavItem, NavLink, Row, Col } from 'reactstrap';
+import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 
 import Loading from 'pages/Loading';
 import PodcastPreview from 'components/PodcastPreview';
+import Paginate from 'components/Paginate';
 import { csrfFetch } from 'utils/CSRF';
+
+const PAGE_SIZE = 24;
 
 const CreatorPodcasts = ({ user }) => {
   const [podcasts, setPodcasts] = useState([]);
@@ -21,21 +24,17 @@ const CreatorPodcasts = ({ user }) => {
       }
       const json = await response.json();
 
-      setPages(json.numResults);
+      setPages(Math.ceil(json.numResults / PAGE_SIZE));
       setPodcasts(json.podcasts);
       setLoading(false);
     };
     fetchData();
-  }, [page]);
+  }, [page, user]);
 
   const updatePage = (index) => {
     setLoading(true);
     setPage(index);
   };
-
-  if (loading) {
-    return <Loading />;
-  }
 
   return (
     <>
@@ -48,13 +47,22 @@ const CreatorPodcasts = ({ user }) => {
           </NavItem>
         </Nav>
       </Navbar>
-      <Row className="px-3">
-        {podcasts.map((podcast) => (
-          <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
-            <PodcastPreview podcast={podcast} />
-          </Col>
-        ))}
-      </Row>
+      {pages > 1 && (
+        <CardBody className="pt-0">
+          <Paginate count={pages} active={page} onClick={(i) => updatePage(i)} />
+        </CardBody>
+      )}
+      {loading ? (
+        <Loading />
+      ) : (
+        <Row className="px-3">
+          {podcasts.map((podcast) => (
+            <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
+              <PodcastPreview podcast={podcast} />
+            </Col>
+          ))}
+        </Row>
+      )}
     </>
   );
 };
