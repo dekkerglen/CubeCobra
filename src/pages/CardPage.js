@@ -8,8 +8,6 @@ import {
   Col,
   CardBody,
   Nav,
-  NavItem,
-  NavLink,
   TabContent,
   TabPane,
   InputGroup,

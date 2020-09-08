@@ -23,7 +23,6 @@ import {
   Row,
   Spinner,
   UncontrolledCollapse,
-  loginCallback,
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -414,7 +413,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
-const CubePlaytestPage = ({ user, cube, decks, draftFormats }) => {
+const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
