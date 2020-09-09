@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';

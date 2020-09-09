@@ -5,7 +5,7 @@ import { Card, FormGroup, FormText, Input, Label } from 'reactstrap';
 
 import TextEntry from 'components/TextEntry';
 
-const BlogpostEditor = ({ name, value, onChange, ...props }) => (
+const BlogpostEditor = ({ name, value, onChange }) => (
   <>
     <h6>Blog Post</h6>
     <FormGroup>
