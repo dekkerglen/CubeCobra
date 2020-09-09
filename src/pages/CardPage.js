@@ -222,7 +222,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
   });
 
   const filteredVersions = sortedVersions.filter((version) => {
-    return version._id != card._id;
+    return version._id !== card._id;
   });
 
   return (
