@@ -26,9 +26,10 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
+const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
   const { cubeID } = useContext(CubeContext);
-  const handleChangeHtml = useCallback((event) => setHtml(event.target.value), [setHtml]);
+  const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
+
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
@@ -40,7 +41,7 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
           <Input maxLength="200" name="title" type="text" defaultValue={post ? post.title : ''} />
           <Label>Body:</Label>
           {post && <Input type="hidden" name="id" value={post._id} />}
-          <TextEntry name="html" value={html} onChange={handleChangeHtml} />
+          <TextEntry name="markdown" value={markdown} onChange={handleChangeMarkdown} maxLength={10000} />
         </ModalBody>
         <ModalFooter>
           <Button color="success" type="submit">
@@ -58,8 +59,8 @@ const EditBlogModal = ({ isOpen, toggle, html, setHtml, post }) => {
 EditBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
-  html: PropTypes.string.isRequired,
-  setHtml: PropTypes.func.isRequired,
+  markdown: PropTypes.string.isRequired,
+  setMarkdown: PropTypes.func.isRequired,
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
@@ -73,7 +74,7 @@ EditBlogModal.defaultProps = {
 const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
-  const [editHtml, setEditHtml] = useState('');
+  const [editMarkdown, setEditMarkdown] = useState('');
   const toggleEdit = useCallback(() => setEditOpen((open) => !open), []);
 
   const handleEdit = useCallback(
@@ -82,7 +83,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
       setEditPostIndex(postIndex);
       setEditOpen(true);
       if (postIndex > -1) {
-        setEditHtml(posts[postIndex].html);
+        setEditMarkdown(posts[postIndex].markdown);
       }
     },
     [posts],
@@ -125,8 +126,8 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
           isOpen={editOpen}
           toggle={toggleEdit}
           post={posts[editPostIndex]}
-          html={editHtml}
-          setHtml={setEditHtml}
+          markdown={editMarkdown}
+          setMarkdown={setEditMarkdown}
         />
       </CubeLayout>
     </MainLayout>
@@ -142,7 +143,7 @@ CubeBlogPage.propTypes = {
   activePage: PropTypes.number.isRequired,
   posts: PropTypes.arrayOf(
     PropTypes.shape({
-      html: PropTypes.string,
+      markdown: PropTypes.string,
     }),
   ).isRequired,
   user: PropTypes.shape({

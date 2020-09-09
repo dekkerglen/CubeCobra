@@ -7,6 +7,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentsSection from 'components/CommentsSection';
+import MagicMarkdown from 'components/MagicMarkdown';
 import { makeSubtitle } from 'utils/Card';
 
 const DeckStacksStatic = ({ cards }) => (
@@ -125,7 +126,7 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
         </CardBody>
       )}
       <CardBody>
-        <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
+        <MagicMarkdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="deck" parent={deck._id} userid={userid} collapse={false} />

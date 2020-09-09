@@ -30,6 +30,7 @@ import CubeContext from 'components/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
+import MagicMarkdown from 'components/MagicMarkdown';
 import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
@@ -168,10 +169,17 @@ const CustomDraftCard = ({
           </CardTitleH5>
         </CardHeader>
         <CardBody>
-          <div
-            className="description-area"
-            dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
-          />
+          {format.markdown ? (
+            <div className="mb-3">
+              <MagicMarkdown markdown={format.markdown} />
+            </div>
+          ) : (
+            <div
+              className="description-area"
+              dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
+            />
+          )}
+
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
               {rangeOptions(2, 17)}
@@ -222,7 +230,8 @@ CustomDraftCard.propTypes = {
   format: PropTypes.shape({
     index: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
-    html: PropTypes.string.isRequired,
+    html: PropTypes.string,
+    markdown: PropTypes.string,
   }).isRequired,
   onEditFormat: PropTypes.func.isRequired,
   onDeleteFormat: PropTypes.func.isRequired,
@@ -574,6 +583,7 @@ CubePlaytestPage.propTypes = {
   draftFormats: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
+      markdown: PropTypes.string,
     }),
   ).isRequired,
   user: PropTypes.shape({

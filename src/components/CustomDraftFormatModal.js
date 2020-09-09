@@ -32,10 +32,13 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const formRef = useRef();
 
   const handleChangeDescription = useCallback((event) => {
-    setFormat((format) => ({
-      ...format,
-      html: event.target.value,
-    }));
+    const target = event.target;
+    if(target) {
+      setFormat((format) => ({
+        ...format,
+        markdown: target.value,
+      }));
+  }
   });
 
   const handleAddCard = useCallback((event) => {
@@ -95,7 +98,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   }, []);
 
   const packs = format.packs || [['']];
-  const description = format.html || '';
+  const description = format.markdown || format.html;
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
@@ -126,7 +129,10 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             </Col>
           </Row>
           <h6>Description</h6>
-          <TextEntry name="html" value={description} onChange={handleChangeDescription} />
+          <TextEntry name="markdown" value={description} onChange={handleChangeDescription} maxLength={5000}/>          
+          <FormText>
+                  Having trouble formatting your posts? Check out the <a href="/markdown">markdown guide</a>.
+                </FormText>
           <FormText className="mt-3 mb-1">
             Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.
             3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags can be
