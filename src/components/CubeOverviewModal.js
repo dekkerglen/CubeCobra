@@ -14,7 +14,7 @@ import {
   Input,
   CardBody,
   Button,
-  FormText
+  FormText,
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';

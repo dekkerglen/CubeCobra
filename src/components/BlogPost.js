@@ -91,11 +91,11 @@ class BlogPost extends React.Component {
               </Col>
               <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
-                {post.markdown ? (
-                  <MagicMarkdown markdown={post.markdown} />
-                ) : (
-                  <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
-                )}
+                  {post.markdown ? (
+                    <MagicMarkdown markdown={post.markdown} />
+                  ) : (
+                    <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                  )}
                 </CardBody>
               </Col>
             </Row>
@@ -103,13 +103,12 @@ class BlogPost extends React.Component {
             <CardBody className="py-2">
               {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
               {post.body && <CardText>{post.body}</CardText>}
-              {(post.html || post.markdown) && 
+              {(post.html || post.markdown) &&
                 (post.markdown ? (
                   <MagicMarkdown markdown={post.markdown} />
                 ) : (
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
-                ))
-              }
+                ))}
             </CardBody>
           )}
         </div>
