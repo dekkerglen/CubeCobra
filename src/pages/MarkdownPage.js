@@ -256,6 +256,26 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
+        <p>For DFCs, you can similarly add a slash to get the back side in autocard.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>[[!/Delver of Secrets]]</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="[[!/Delver of Secrets]]" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
         <p>
           If you want to display card images along side eachother in a row, you'll need to wrap those card images with
           double angle brackets. This feature is not available for blog posts. Take the following example:
