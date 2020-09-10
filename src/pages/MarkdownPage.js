@@ -207,6 +207,33 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
+          To use a double faced card autocard, add a slash to beginning of the card name. This also works with linking
+          specific IDs.
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>[[/Delver of Secrets]]</code>
+                <br />
+                <code>[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="[[/Delver of Secrets]]" />
+                <br />
+                <MagicMarkdown markdown="[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>
           You can display card images by adding a exclamation point before the card name. These images scale with the
           width of the screen, so try it out on different screen widths to make sure you're happy with it, like so:
         </p>
