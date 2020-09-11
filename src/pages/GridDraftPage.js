@@ -14,7 +14,6 @@ import {
   Row,
   Input,
   Badge,
-  loginCallback,
 } from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
@@ -423,10 +422,12 @@ GridDraftPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 GridDraftPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(GridDraftPage);
