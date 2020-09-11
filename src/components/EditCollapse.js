@@ -209,7 +209,7 @@ const EditCollapse = ({ ...props }) => {
               </div>
             </Col>
             <Col>
-              <BlogpostEditor name="blog" value={postContent} onChange={handleChange} />
+              <BlogpostEditor maxLength={10000} name="blog" value={postContent} onChange={handleChange} />
             </Col>
           </Row>
           <Row className="mb-2">
