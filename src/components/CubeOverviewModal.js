@@ -14,6 +14,7 @@ import {
   Input,
   CardBody,
   Button,
+  FormText,
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
@@ -157,7 +158,8 @@ class CubeOverviewModal extends Component {
 
     const cube = { ...this.state.cube };
     cube.tags = this.state.tags.map((tag) => tag.text);
-    cube.descriptionhtml = cube.raw_desc;
+    cube.description = cube.raw_desc;
+    cube.descriptionhtml = 'undefined';
     const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -173,10 +175,7 @@ class CubeOverviewModal extends Component {
         if (this.state.cube.urlAlias) cubeID = this.state.cube.urlAlias;
         window.location.href = `/cube/overview/${cubeID}`;
       }
-      this.props.onCubeUpdate({
-        ...this.state.cube,
-        descriptionhtml: json.descriptionhtml,
-      });
+      this.props.onCubeUpdate(cube);
     } else {
       if (json.message) {
         this.error(json.message);
@@ -340,6 +339,9 @@ class CubeOverviewModal extends Component {
                   value={cube.raw_desc && cube.raw_desc !== 'undefined' ? cube.raw_desc : cube.description}
                   onChange={this.handleDescriptionChange}
                 />
+                <FormText>
+                  Having trouble formatting your posts? Check out the <a href="/markdown">markdown guide</a>.
+                </FormText>
                 <br />
 
                 <h6>Tags</h6>

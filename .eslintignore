@@ -8,7 +8,6 @@ src/components/AutocardListItem.js
 src/components/AutocompleteInput.js
 src/components/BlogContextMenu.js
 src/components/BlogPost.js
-src/components/BlogpostEditor.js
 src/components/ButtonLink.js
 src/components/CSRFForm.js
 src/components/CardModal.js
@@ -20,7 +19,6 @@ src/components/ChangelistContext.js
 src/components/ClientOnly.js
 src/components/ColorCheck.js
 src/components/CompareView.js
-src/components/ContentEditable.js
 src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeListNavbar.js
@@ -50,7 +48,6 @@ src/components/TagColorsModal.js
 src/components/TagContext.js
 src/components/TagInput.js
 src/components/TextBadge.js
-src/components/TextEntry.js
 src/components/TokenAnalysis.js
 src/components/Tooltip.js
 src/components/TypeAnalysis.js

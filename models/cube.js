@@ -125,6 +125,7 @@ const cubeSchema = mongoose.Schema({
         title: String,
         multiples: Boolean,
         html: String,
+        markdown: String,
         packs: String,
       },
     ],
