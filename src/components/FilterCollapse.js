@@ -26,6 +26,8 @@ import LoadingButton from 'components/LoadingButton';
 
 import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
+import AutocompleteInput from 'components/AutocompleteInput';
+import CubeContext from 'components/CubeContext';
 
 const allFields = [
   'name',
@@ -149,13 +151,30 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           value={values.set}
           onChange={onChange}
         />
-        <TextField
-          name="tag"
-          humanName="Tag"
-          placeholder={'Any text, e.g. "Zombie Testing"'}
-          value={values.tag}
-          onChange={onChange}
-        />
+        <CubeContext.Consumer>
+          {({ cubeID }) =>
+            cubeID && (
+              <InputGroup className="mb-3" {...props}>
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Tag</InputGroupText>
+                </InputGroupAddon>
+                <AutocompleteInput
+                  treeUrl={`/cube/api/cubecardtags/${cubeID}`}
+                  treePath="tags"
+                  type="text"
+                  name="tag"
+                  value={values.tag}
+                  onChange={onChange}
+                  placeholder={'Any text, e.g. "Zombie Testing"'}
+                  autoComplete="off"
+                  data-lpignore
+                  className="tag-autocomplete-input"
+                  wrapperClassName="tag-autocomplete-wrapper"
+                />
+              </InputGroup>
+            )
+          }
+        </CubeContext.Consumer>
         <Row className="row-mid-padding">
           <Col md={6}>
             <InputGroup className="mb-3">

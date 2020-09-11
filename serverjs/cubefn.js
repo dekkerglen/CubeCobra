@@ -197,6 +197,19 @@ function buildTagColors(cube) {
   return tagColor;
 }
 
+function cubeCardTags(cube) {
+  const tags = [];
+  for (const card of cube.cards) {
+    for (let tag of card.tags) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tags.push(tag);
+      }
+    }
+  }
+  return tags;
+}
+
 function maybeCards(cube, carddb) {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
@@ -546,6 +559,7 @@ const methods = {
   replaceCardHtml,
   abbreviate,
   buildTagColors,
+  cubeCardTags,
   maybeCards,
   getCardElo,
   getElo,

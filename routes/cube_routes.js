@@ -22,6 +22,7 @@ const {
   replaceCardHtml,
   abbreviate,
   buildTagColors,
+  cubeCardTags,
   maybeCards,
   getElo,
   CSVtoCards,
@@ -2566,6 +2567,19 @@ router.get(
     return res.status(200).send({
       success: 'true',
       cardnames: result,
+    });
+  }),
+);
+
+router.get(
+  '/api/cubecardtags/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const tags = cubeCardTags(cube);
+
+    return res.status(200).send({
+      success: 'true',
+      tags: util.turnToTree(tags),
     });
   }),
 );
