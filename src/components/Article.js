@@ -62,22 +62,46 @@ const Article = ({ article, userid }) => {
             );
           }
           if (markdown.startsWith('# ')) {
-            return <h1>{markdown.substring(2)}</h1>;
+            return (
+              <h1>
+                <MagicMarkdown markdown={markdown.substring(2)} />
+              </h1>
+            );
           }
           if (markdown.startsWith('## ')) {
-            return <h2>{markdown.substring(3)}</h2>;
+            return (
+              <h2>
+                <MagicMarkdown markdown={markdown.substring(3)} />
+              </h2>
+            );
           }
           if (markdown.startsWith('### ')) {
-            return <h3>{markdown.substring(4)}</h3>;
+            return (
+              <h3>
+                <MagicMarkdown markdown={markdown.substring(4)} />
+              </h3>
+            );
           }
           if (markdown.startsWith('#### ')) {
-            return <h4>{markdown.substring(5)}</h4>;
+            return (
+              <h4>
+                <MagicMarkdown markdown={markdown.substring(5)} />
+              </h4>
+            );
           }
           if (markdown.startsWith('##### ')) {
-            return <h5>{markdown.substring(6)}</h5>;
+            return (
+              <h5>
+                <MagicMarkdown markdown={markdown.substring(6)} />
+              </h5>
+            );
           }
           if (markdown.startsWith('###### ')) {
-            return <h6>{markdown.substring(7)}</h6>;
+            return (
+              <h6>
+                <MagicMarkdown markdown={markdown.substring(7)} />
+              </h6>
+            );
           }
           if (markdown.startsWith('<<')) {
             const sub = markdown.substring(2, markdown.length - 2);

@@ -17,7 +17,7 @@ const MagicMarkdown = ({ markdown }) => {
   }
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ]+\]\]|%%\d+%%|\n)/gm,
+    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-]+\]\]|%%\d+%%|\n)/gm,
   );
   return (
     <>
@@ -56,7 +56,6 @@ const MagicMarkdown = ({ markdown }) => {
             );
           }
           if (section.startsWith('[[!/')) {
-            console.log(section);
             const card = section.substring(4, section.length - 2);
             return (
               <Col xs="6" md="4" lg="3">
