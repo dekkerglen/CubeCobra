@@ -17,7 +17,7 @@ const MagicMarkdown = ({ markdown }) => {
   }
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[a-zA-Z ]+\]\]|%%\d+%%|\n)/gm,
+    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-]+\]\]|%%\d+%%|\n)/gm,
   );
   return (
     <>
@@ -55,6 +55,27 @@ const MagicMarkdown = ({ markdown }) => {
               />
             );
           }
+          if (section.startsWith('[[!/')) {
+            const card = section.substring(4, section.length - 2);
+            return (
+              <Col xs="6" md="4" lg="3">
+                <a
+                  key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
+                  href={`/tool/card/${card}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FoilCardImage
+                    autocard
+                    card={{
+                      details: { image_normal: `/tool/cardimage/${card}`, image_flip: `/tool/cardimageflip/${card}` },
+                    }}
+                    className="clickable"
+                  />
+                </a>
+              </Col>
+            );
+          }
           if (section.startsWith('[[!')) {
             const card = section.substring(3, section.length - 2);
             return (
@@ -74,10 +95,28 @@ const MagicMarkdown = ({ markdown }) => {
               </Col>
             );
           }
+          if (section.startsWith('[[/')) {
+            const card = section.substring(3, section.length - 2);
+            const name = card.includes('|') ? card.split('|')[0] : card;
+            const id = card.includes('|') ? card.split('|')[1] : card;
+
+            return (
+              <AutocardLink
+                key={/* eslint-disable-line react/no-array-index-key */ `${position}-card.cardID`}
+                href={`/tool/card/${id}`}
+                card={{ details: { image_normal: `/tool/cardimage/${id}`, image_flip: `/tool/cardimageflip/${id}` } }}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {name}
+              </AutocardLink>
+            );
+          }
           if (section.startsWith('[[')) {
             const card = section.substring(2, section.length - 2);
             const name = card.includes('|') ? card.split('|')[0] : card;
             const id = card.includes('|') ? card.split('|')[1] : card;
+
             return (
               <AutocardLink
                 key={/* eslint-disable-line react/no-array-index-key */ `${position}-card.cardID`}

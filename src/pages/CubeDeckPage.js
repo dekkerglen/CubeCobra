@@ -234,10 +234,12 @@ CubeDeckPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubeDeckPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeDeckPage);
