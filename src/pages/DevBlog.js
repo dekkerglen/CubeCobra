@@ -11,13 +11,13 @@ import RenderToRoot from 'utils/RenderToRoot';
 import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 
-const DevBlog = ({ blogs, pages, userid, admin, activePage, user, loginCallback }) => (
+const DevBlog = ({ blogs, pages, userid, activePage, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
     <div className="mt-3">
       <h3 className="centered">Developer Blog</h3>
-      {admin && (
+      {user && user.roles.includes('Admin') && (
         <Card>
           <CardBody>
             <h5>Create New Blog Post</h5>
@@ -59,11 +59,11 @@ DevBlog.propTypes = {
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   userid: PropTypes.string.isRequired,
-  admin: PropTypes.bool.isRequired,
   user: PropTypes.shape({
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+    roles: PropTypes.arrayOf(PropTypes.string).isRequired,
   }),
   loginCallback: PropTypes.string,
 };
