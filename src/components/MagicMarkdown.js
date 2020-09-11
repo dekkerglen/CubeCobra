@@ -11,7 +11,7 @@ import { Col } from 'reactstrap';
 const AutocardLink = withAutocard('a');
 const Link = withModal('a', LinkModal);
 
-const MagicMarkdown = ({ markdown }) => {
+const InnerMarkdown = ({ markdown }) => {
   if (markdown === undefined) {
     return '';
   }
@@ -154,6 +154,91 @@ const MagicMarkdown = ({ markdown }) => {
           console.error(err);
         }
         return section;
+      })}
+    </>
+  );
+};
+InnerMarkdown.propTypes = {
+  markdown: PropTypes.string.isRequired,
+};
+
+const MagicMarkdown = ({ markdown }) => {
+  if (markdown === undefined) {
+    return '';
+  }
+  const markdownStr = markdown.toString();
+  const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:1\. .+\r?\n)+|(?:- .+\r?\n)+)/gm);
+
+  return (
+    <>
+      {split.map((section) => {
+        if (section.startsWith('1. ')) {
+          const lines = section.split(/(1\. .+\r?\n)/gm).filter((line) => line.length > 0);
+          return (
+            <ol>
+              {lines.map((line) => (
+                <li>
+                  <InnerMarkdown markdown={line.substring(3)} />
+                </li>
+              ))}
+            </ol>
+          );
+        }
+        if (section.startsWith('- ')) {
+          const lines = section.split(/(- .+\r?\n)/gm).filter((line) => line.length > 0);
+          return (
+            <ul>
+              {lines.map((line) => (
+                <li>
+                  <InnerMarkdown markdown={line.substring(2)} />
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        if (section.startsWith('# ')) {
+          return (
+            <h1>
+              <InnerMarkdown markdown={section.substring(2)} />
+            </h1>
+          );
+        }
+        if (section.startsWith('## ')) {
+          return (
+            <h2>
+              <InnerMarkdown markdown={section.substring(3)} />
+            </h2>
+          );
+        }
+        if (section.startsWith('### ')) {
+          return (
+            <h3>
+              <InnerMarkdown markdown={section.substring(4)} />
+            </h3>
+          );
+        }
+        if (section.startsWith('#### ')) {
+          return (
+            <h4>
+              <InnerMarkdown markdown={section.substring(5)} />
+            </h4>
+          );
+        }
+        if (section.startsWith('##### ')) {
+          return (
+            <h5>
+              <InnerMarkdown markdown={section.substring(6)} />
+            </h5>
+          );
+        }
+        if (section.startsWith('###### ')) {
+          return (
+            <h6>
+              <InnerMarkdown markdown={section.substring(7)} />
+            </h6>
+          );
+        }
+        return <InnerMarkdown markdown={section} />;
       })}
     </>
   );

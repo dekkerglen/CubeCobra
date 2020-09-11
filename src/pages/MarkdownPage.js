@@ -112,7 +112,6 @@ const MarkdownPage = ({ user, loginCallback }) => (
         <br />
         <p>
           Add headings with by adding 1 to 6 #'s to the begginning of a line. Make sure to put a space after the #'s.
-          This feature is not available for blog posts.
         </p>
         <Row>
           <Col xs="12" sm="6">

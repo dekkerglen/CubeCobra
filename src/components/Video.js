@@ -11,7 +11,7 @@ import { Row, Card, CardBody, CardHeader } from 'reactstrap';
 
 const Video = ({ video, userid }) => {
   const markdownStr = video.body.toString();
-  const split = markdownStr.split(/(<<.+>>|#{1,6} .+\r?\n|(?:1\. .+\r?\n)+|(?:- .+\r?\n)+|(?:> .{0,}\r?\n)+)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:> .{0,}\r?\n)+)/gm);
 
   return (
     <>
@@ -29,34 +29,18 @@ const Video = ({ video, userid }) => {
         </div>
       </CardBody>
       <CardBody>
-        {split.map((markdown) => {
-          if (markdown.startsWith('1. ')) {
-            const lines = markdown.split(/(1\. .+\r?\n)/gm).filter((line) => line.length > 0);
+        {split.map((section) => {
+          if (section.startsWith('<<')) {
+            const sub = section.substring(2, section.length - 2);
             return (
-              <ol>
-                {lines.map((line) => (
-                  <li>
-                    <MagicMarkdown markdown={line.substring(3)} />
-                  </li>
-                ))}
-              </ol>
+              <Row>
+                <MagicMarkdown section={sub} />
+              </Row>
             );
           }
-          if (markdown.startsWith('- ')) {
-            const lines = markdown.split(/(- .+\r?\n)/gm).filter((line) => line.length > 0);
-            return (
-              <ul>
-                {lines.map((line) => (
-                  <li>
-                    <MagicMarkdown markdown={line.substring(2)} />
-                  </li>
-                ))}
-              </ul>
-            );
-          }
-          if (markdown.startsWith('> ')) {
-            console.log(markdown);
-            const lines = markdown.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
+          if (section.startsWith('> ')) {
+            console.log(section);
+            const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
             console.log(lines);
             return (
               <Card className="bg-light">
@@ -68,33 +52,7 @@ const Video = ({ video, userid }) => {
               </Card>
             );
           }
-          if (markdown.startsWith('# ')) {
-            return <h1>{markdown.substring(2)}</h1>;
-          }
-          if (markdown.startsWith('## ')) {
-            return <h2>{markdown.substring(3)}</h2>;
-          }
-          if (markdown.startsWith('### ')) {
-            return <h3>{markdown.substring(4)}</h3>;
-          }
-          if (markdown.startsWith('#### ')) {
-            return <h4>{markdown.substring(5)}</h4>;
-          }
-          if (markdown.startsWith('##### ')) {
-            return <h5>{markdown.substring(6)}</h5>;
-          }
-          if (markdown.startsWith('###### ')) {
-            return <h6>{markdown.substring(7)}</h6>;
-          }
-          if (markdown.startsWith('<<')) {
-            const sub = markdown.substring(2, markdown.length - 2);
-            return (
-              <Row>
-                <MagicMarkdown markdown={sub} />
-              </Row>
-            );
-          }
-          return <MagicMarkdown markdown={markdown} />;
+          return <MagicMarkdown markdown={section} />;
         })}
       </CardBody>
       <div className="border-top">
