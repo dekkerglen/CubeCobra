@@ -24,7 +24,7 @@ const ArticlePage = ({ user, loginCallback, article }) => {
             </h5>
           </CardHeader>
         )}
-        <Article article={article} userid={user.id} />
+        <Article article={article} userid={user && user.id} />
       </Card>
     </MainLayout>
   );

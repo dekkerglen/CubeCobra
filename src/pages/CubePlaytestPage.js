@@ -556,7 +556,7 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
             <GridCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <DecksCard decks={decks} userID={user.id} className="mb-3" />}
+            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user.id} className="mb-3" />}
             <SamplePackCard className="mb-3" />
           </Col>
         </Row>

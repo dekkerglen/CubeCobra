@@ -38,7 +38,7 @@ const PodcastEpisodePage = ({ user, loginCallback, episode }) => {
           </Col>
         </Row>
         <div className="border-top">
-          <CommentsSection parentType="episode" parent={episode._id} userid={user.id} collapse={false} />
+          <CommentsSection parentType="episode" parent={episode._id} userid={user && user.id} collapse={false} />
         </div>
       </Card>
     </MainLayout>

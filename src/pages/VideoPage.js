@@ -24,7 +24,7 @@ const VideoPage = ({ user, loginCallback, video }) => {
             </h5>
           </CardHeader>
         )}
-        <Video video={video} userid={user.id} />
+        <Video video={video} userid={user && user.id} />
       </Card>
     </MainLayout>
   );
