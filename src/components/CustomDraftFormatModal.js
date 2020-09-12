@@ -131,7 +131,11 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           <h6>Description</h6>
           <TextEntry name="markdown" value={description} onChange={handleChangeDescription} maxLength={5000} />
           <FormText>
-            Having trouble formatting your posts? Check out the <a href="/markdown" target="_blank">markdown guide</a>.
+            Having trouble formatting your posts? Check out the{' '}
+            <a href="/markdown" target="_blank">
+              markdown guide
+            </a>
+            .
           </FormText>
           <FormText className="mt-3 mb-1">
             Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.

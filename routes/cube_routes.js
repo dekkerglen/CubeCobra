@@ -2450,7 +2450,9 @@ router.post(
       cube.image_name = updatedCube.image_name;
     }
 
-    cube.description = updatedCube.description;
+    if (updatedCube.description) {
+      cube.description = updatedCube.description;
+    }
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     setCubeType(cube, carddb);
