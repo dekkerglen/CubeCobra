@@ -11,7 +11,7 @@ import { Row, Card, CardBody, CardHeader } from 'reactstrap';
 
 const Video = ({ video, userid }) => {
   const markdownStr = video.body.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:> .{0,}\r?\n)+)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
 
   return (
     <>
@@ -34,7 +34,7 @@ const Video = ({ video, userid }) => {
             const sub = section.substring(2, section.length - 2);
             return (
               <Row>
-                <MagicMarkdown section={sub} />
+                <MagicMarkdown markdown={sub} />
               </Row>
             );
           }
