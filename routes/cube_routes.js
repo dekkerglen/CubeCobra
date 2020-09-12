@@ -9,7 +9,6 @@ const { Canvas, Image } = require('canvas');
 Canvas.Image = Image;
 
 const {
-  addAutocard,
   generatePack,
   sanitize,
   setCubeType,
@@ -438,16 +437,6 @@ router.get('/overview/:id', async (req, res) => {
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
-    if (blogs) {
-      for (const item of blogs) {
-        if (!item.date_formatted) {
-          item.date_formatted = item.date.toLocaleString('en-US');
-        }
-        if (item.html) {
-          item.html = addAutocard(item.html, carddb, cube);
-        }
-      }
-    }
     cube.raw_desc = cube.body;
 
     // Performance

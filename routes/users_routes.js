@@ -19,7 +19,6 @@ const Blog = require('../models/blog');
 
 const router = express.Router();
 
-const { addAutocard } = require('../serverjs/cubefn');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
@@ -581,15 +580,6 @@ router.get('/blog/:userid', async (req, res) => {
     }).sort({
       date: -1,
     });
-
-    // autocard the posts
-    if (posts) {
-      for (const post of posts) {
-        if (post.html) {
-          post.html = addAutocard(post.html, carddb);
-        }
-      }
-    }
 
     const followers = await User.find(
       { _id: { $in: user.users_following } },
