@@ -159,7 +159,6 @@ class CubeOverviewModal extends Component {
     const cube = { ...this.state.cube };
     cube.tags = this.state.tags.map((tag) => tag.text);
     cube.description = cube.raw_desc;
-    cube.descriptionhtml = 'undefined';
     const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),

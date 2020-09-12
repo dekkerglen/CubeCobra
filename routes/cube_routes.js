@@ -2451,7 +2451,6 @@ router.post(
     }
 
     cube.description = updatedCube.description;
-    cube.descriptionhtml = 'undefined';
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     setCubeType(cube, carddb);
@@ -2498,7 +2497,6 @@ router.post(
     await cube.save();
     return res.status(200).send({
       success: 'true',
-      descriptionhtml: addAutocard(cube.descriptionhtml, carddb, cube),
     });
   }),
 );

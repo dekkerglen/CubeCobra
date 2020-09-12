@@ -275,11 +275,7 @@ class CubeOverview extends Component {
                   <h5 className="card-title">Description</h5>
                 </CardHeader>
                 <CardBody>
-                  {cube.descriptionhtml && cube.descriptionhtml !== 'undefined' ? (
-                    <CardText dangerouslySetInnerHTML={{ __html: cube.descriptionhtml }} />
-                  ) : (
-                    <MagicMarkdown markdown={cube.description || ''} />
-                  )}
+                  <MagicMarkdown markdown={cube.description || ''} />
                 </CardBody>
                 {cube.tags && cube.tags.length > 0 && (
                   <CardFooter>

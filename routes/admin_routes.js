@@ -298,7 +298,7 @@ router.get('/publishpodcast/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'content_publish',
     locals: { title: podcast.title, url: `https://cubecobra.com/content/podcast/${podcast._id}`, type: 'podcast' },
   });
@@ -357,7 +357,7 @@ router.get('/removearticlereview/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'content_decline',
     locals: { title: article.title, url: `https://cubecobra.com/content/article/${article._id}`, type: 'article' },
   });
@@ -416,7 +416,7 @@ router.get('/removevideoreview/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'content_decline',
     locals: { title: video.title, url: `https://cubecobra.com/content/video/${video._id}`, type: 'video' },
   });
@@ -475,7 +475,7 @@ router.get('/removepodcastreview/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'content_decline',
     locals: { title: podcast.title, url: `https://cubecobra.com/content/podcast/${podcast._id}`, type: 'podcast' },
   });
@@ -553,7 +553,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'application_approve',
     locals: {},
   });
@@ -594,7 +594,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  await email.send({
     template: 'application_decline',
     locals: {},
   });

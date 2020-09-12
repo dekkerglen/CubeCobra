@@ -197,7 +197,7 @@ router.post(
         transport: smtpTransport,
       });
 
-      email.send({
+      await email.send({
         template: 'password_reset',
         locals: {
           id: passwordReset.id,
@@ -377,16 +377,18 @@ router.post(
                 transport: smtpTransport,
               });
 
-              confirmEmail.send({
-                template: 'confirm_email',
-                locals: {
-                  id: newUser._id,
-                },
-              });
-
-              // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-              req.flash('success', 'Account successfully created. You are now able to login.');
-              res.redirect('/user/login');
+              confirmEmail
+                .send({
+                  template: 'confirm_email',
+                  locals: {
+                    id: newUser._id,
+                  },
+                })
+                .then(() => {
+                  // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                  req.flash('success', 'Account successfully created. You are now able to login.');
+                  res.redirect('/user/login');
+                });
             }
           });
         }
