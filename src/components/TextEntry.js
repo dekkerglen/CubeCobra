@@ -27,7 +27,7 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
             type="textarea"
             name={name}
             maxLength={maxLength}
-            className="w-100"
+            className="w-100 text-input"
             value={value}
             onChange={onChange}
           />

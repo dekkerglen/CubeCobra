@@ -1004,3 +1004,7 @@ div.viewport {
 audio {
 	width: 100%;
 }
+
+.text-input {
+	min-height: 20rem;
+}

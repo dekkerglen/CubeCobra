@@ -339,7 +339,7 @@ class CubeOverviewModal extends Component {
                   onChange={this.handleDescriptionChange}
                 />
                 <FormText>
-                  Having trouble formatting your posts? Check out the <a href="/markdown">markdown guide</a>.
+                  Having trouble formatting your posts? Check out the <a href="/markdown" target="_blank">markdown guide</a>.
                 </FormText>
                 <br />
 
