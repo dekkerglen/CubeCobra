@@ -226,18 +226,6 @@ test('sanitize allows the correct tags', () => {
   expect(result).toBe(expected);
 });
 
-test('addAutocard correctly replaces autocard format strings', () => {
-  expect.assertions(1);
-  const promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(() => {
-    const exampleHtml = '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
-    const expected =
-      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/a/a/aaae15dd-11b6-4421-99e9-365c7fe4a5d6.jpg?1572490333">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
-    const result = cubefn.addAutocard(exampleHtml, carddb);
-    expect(result).toBe(expected);
-  });
-});
-
 describe('CSVtoCards', () => {
   it('can find a card', async () => {
     const expectedId = 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6';
