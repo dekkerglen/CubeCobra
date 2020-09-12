@@ -109,7 +109,6 @@ const cubeSchema = mongoose.Schema({
     default: 0,
   },
   description: String,
-  descriptionhtml: String,
   image_uri: String,
   image_artist: String,
   image_name: String,

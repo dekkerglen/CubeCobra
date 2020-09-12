@@ -9,7 +9,7 @@ import { Row, Card, CardBody, CardHeader } from 'reactstrap';
 
 const Article = ({ article, userid }) => {
   const markdownStr = article.body.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:> .{0,}\r?\n)+)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
 
   return (
     <>
@@ -27,7 +27,7 @@ const Article = ({ article, userid }) => {
             const sub = section.substring(2, section.length - 2);
             return (
               <Row>
-                <MagicMarkdown section={sub} />
+                <MagicMarkdown markdown={sub} />
               </Row>
             );
           }
