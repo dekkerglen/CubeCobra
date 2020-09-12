@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardBody,
   CardFooter,
-  CardText,
   Col,
   Nav,
   Navbar,

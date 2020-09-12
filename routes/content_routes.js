@@ -304,7 +304,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
 
   await article.save();
 
-  res.redirect(`/content/article/edit/${article._id}`);
+  return res.redirect(`/content/article/edit/${article._id}`);
 });
 
 router.post('/editpodcast', ensureContentCreator, async (req, res) => {
@@ -331,7 +331,7 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 
   await podcast.save();
 
-  res.redirect(`/content/podcast/edit/${podcast._id}`);
+  return res.redirect(`/content/podcast/edit/${podcast._id}`);
 });
 
 router.post('/editvideo', ensureContentCreator, async (req, res) => {
@@ -358,7 +358,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 
   await video.save();
 
-  res.redirect(`/content/video/edit/${video._id}`);
+  return res.redirect(`/content/video/edit/${video._id}`);
 });
 
 router.post('/submitarticle', ensureContentCreator, async (req, res) => {
@@ -389,7 +389,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
     'Your article has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  res.redirect(`/content/article/edit/${article._id}`);
+  return res.redirect(`/content/article/edit/${article._id}`);
 });
 
 router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
@@ -421,7 +421,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
     'Your podcast has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  res.redirect(`/content/podcast/edit/${podcast._id}`);
+  return res.redirect(`/content/podcast/edit/${podcast._id}`);
 });
 
 router.post('/submitvideo', ensureContentCreator, async (req, res) => {
@@ -453,7 +453,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
     'Your video has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  res.redirect(`/content/video/edit/${video._id}`);
+  return res.redirect(`/content/video/edit/${video._id}`);
 });
 
 router.get('/newarticle', ensureContentCreator, async (req, res) => {
