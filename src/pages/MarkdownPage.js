@@ -20,7 +20,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
       <CardBody>
         <p>
           For blog posts, only a subset of this syntax is available. Features not available for blog posts will be
-          labaled accordingly. If you need any help regarding how to use markdown, please{' '}
+          labeled accordingly. If you need any help regarding how to use markdown, please{' '}
           <a href="/contact">contact us</a>.
         </p>
         <h5>Contents</h5>
@@ -50,13 +50,15 @@ const MarkdownPage = ({ user, loginCallback }) => (
       </CardBody>
       <CardBody className="border-top">
         <h5 id="formatting">Basic Formatting</h5>
-        <p>For italic text, wrap the text in single asterisks.</p>
+        <p>For italic text, wrap the text in single asterisks or underscores.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
                 <code>*This text is italicized*</code>
+                <br />
+                <code>_This text is italicized_</code>
               </CardBody>
             </Card>
           </Col>
@@ -65,6 +67,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardHeader>Result</CardHeader>
               <CardBody>
                 <MagicMarkdown markdown="*This text is italicized*" />
+                <br />
+                <MagicMarkdown markdown="_This text is italicized_" />
               </CardBody>
             </Card>
           </Col>
@@ -110,9 +114,67 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
-        <p>
-          Add headings with by adding 1 to 6 #'s to the begginning of a line. Make sure to put a space after the #'s.
-        </p>
+        <p>For underlined text, wrap the text in double underscores.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>__This text is underlined__</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="__This text is underlined__" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>For underlined and italicized text, wrap the text in triple underscores.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>___This text is underlined and italicized___</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="___This text is underlined and italicized___" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>For strikethrough text, wrap the text in double tilde.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>~~This text is strikethrough~~</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown="~~This text is strikethrough~~" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>Add headings by adding 1 to 6 #'s to the begginning of a line. Make sure to put a space after the #'s.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -152,8 +214,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
       <CardBody className="border-top">
         <h5 id="cards">Linking Cards</h5>
         <p>
-          There are multiple to link cards. To link a card with autocard, you can use double square brackets to wrap a
-          card name, like so:
+          There are multiple ways to link cards. To link a card with autocard, you can use double square brackets to
+          wrap a card name, like so:
         </p>
         <Row>
           <Col xs="12" sm="6">
@@ -175,10 +237,13 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
-          You can put the card in whatever case you want. It will always link to the cube cobra card page. If you want
-          to link to a specific version, you can supply a scryfall id. These IDs can be found form the URL of card
-          pages, for the version you are looking for. The text displayed will be whatever is to the left of the pipe
-          (|).For example:
+          You can put the card in whatever case you want. It will always link to the Cube Cobra card page. If you want
+          to link to a specific version, you can supply a{' '}
+          <a href="https://scryfall.com/docs/api/cards/id" target="_blank" rel="noopener noreferrer">
+            Scryfall ID
+          </a>
+          . These IDs can be found from the URL of card pages, for the version you are looking for. The text displayed
+          will be whatever is to the left of the pipe (|).For example:
         </p>
         <Row>
           <Col xs="12" sm="6">
@@ -187,7 +252,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardBody>
                 <code>[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]</code>
                 <br />
-                <code>[[New Borer Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
+                <code>[[New Border Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
               </CardBody>
             </Card>
           </Col>
@@ -206,7 +271,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
-          To use a double faced card autocard, add a slash to beginning of the card name. This also works with linking
+          To use a double-faced card autocard, add a slash to beginning of the card name. This also works with linking
           specific IDs.
         </p>
         <Row>
@@ -276,7 +341,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
-          If you want to display card images along side eachother in a row, you'll need to wrap those card images with
+          If you want to display card images alongside each other in a row, you'll need to wrap those card images with
           double angle brackets. This feature is not available for blog posts. Take the following example:
         </p>
         <Row>
@@ -324,7 +389,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
       </CardBody>
       <CardBody className="border-top">
         <h5 id="symbols">Symbols</h5>
-        <p>Symbols can be added using curly braces. Most mtg symbols are supported.</p>
+        <p>Symbols can be added using curly braces. Most MTG symbols are supported.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -345,7 +410,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
-          Hybrid symbols are done by including a slash. If a symbol doesn't load this way, try swapping the order of the
+          Create hybrid symbols by including a slash. If a symbol doesn't load this way, try swapping the order of the
           colors.
         </p>
         <Row>
@@ -353,7 +418,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{W/U}{U/G}{B/R}{R/W}{G/B}'}</code>
+                <code>{'{W/U}{G/U}{B/R}{R/W}{B/G}'}</code>
               </CardBody>
             </Card>
           </Col>
@@ -367,7 +432,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
-        <p>Similarly, we can do hybrid color/2 colorless symbols, and phrexian mana.</p>
+        <p>Similarly, we can do hybrid color/2 colorless symbols, and Phrexian mana.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -389,7 +454,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
-        <p>There are many more symbols available. Anything you'd see in a text box, we should support.</p>
+        <p>There are many more symbols available. Anything you'd see in a text box, we should support. For example:</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -413,8 +478,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
       <CardBody className="border-top">
         <h5 id="quotes">Quotes</h5>
         <p>
-          {'Quotes blocks can be added by adding a ' >
-            ' and  space at the beginning of a line. Consecutive lines will be grouped together in the same quote. This feature is not available for blog posts.'}
+          {
+            'You can add a quote block by adding a ">" and a space at the beginning of a line. Consecutive lines will be grouped together in the same quote. This feature is not available for blog posts.'
+          }
         </p>
         <Row>
           <Col xs="12" sm="6">
@@ -455,7 +521,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
       </CardBody>
       <CardBody className="border-top">
         <h5 id="users">Linking Users</h5>
-        <p>Users can be linked by adding an @ before the username.</p>
+        <p>You can link to a user by adding an @ before the username.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -479,8 +545,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
       <CardBody className="border-top">
         <h5 id="lists">Lists</h5>
         <p>
-          Unordered lists can be added by adding a '-' and a space at the beginning of a line. Consecutive lines marked
-          this was will be joined into a bullet pointed list.
+          Create an unordered (bulleted) list by adding a '-' followed by a space at the beginning of a line.
+          Consecutive lines with this formatting will be joined into a bullet-pointed list.
         </p>
         <Row>
           <Col xs="12" sm="6">
@@ -510,8 +576,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
         </Row>
         <br />
         <p>
-          Similarly, ordered lists can be added by using '1.' and a space at the beginning of the line. Make sure to
-          only use '1.', and not any other numbers. The numbers will be added automatically.
+          Similarly, you can add ordered lists by using '1.' and a space at the beginning of the line. Make sure to only
+          use '1.', and not any other numbers. The numbering will be added automatically.
         </p>
         <Row>
           <Col xs="12" sm="6">
@@ -545,7 +611,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
         <h5 id="links">Links</h5>
         <p>
           You can add any hyperlink, with any text, by using square brackets around text followed immediately by
-          parenthesis around the url. This is the only way to provide a custom link, and will create a warning popup for
+          parentheses around the URL. This is the only way to provide a custom link, and will create a warning popup for
           the user. Try out the following link to see the popup.
         </p>
         <Row>
