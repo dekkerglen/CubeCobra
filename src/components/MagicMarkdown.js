@@ -14,7 +14,7 @@ const Link = withModal('a', LinkModal);
 const InnerMarkdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]_|__[^_]__|___[^_]___|~~[^~]~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-]+\]\]|%%\d+%%|\n)/gm,
+    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]_|__[^_]__|___[^_]___|~~[^~]~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-|]+\]\]|%%\d+%%|\n)/gm,
   );
   return (
     <>
@@ -70,18 +70,20 @@ const InnerMarkdown = ({ markdown }) => {
           }
           if (section.startsWith('[[!/')) {
             const card = section.substring(4, section.length - 2);
+            const id = card.includes('|') ? card.split('|')[1] : card;
+
             return (
               <Col xs="6" md="4" lg="3">
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
-                  href={`/tool/card/${card}`}
+                  href={`/tool/card/${id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <FoilCardImage
                     autocard
                     card={{
-                      details: { image_normal: `/tool/cardimage/${card}`, image_flip: `/tool/cardimageflip/${card}` },
+                      details: { image_normal: `/tool/cardimage/${id}`, image_flip: `/tool/cardimageflip/${id}` },
                     }}
                     className="clickable"
                   />
@@ -91,17 +93,18 @@ const InnerMarkdown = ({ markdown }) => {
           }
           if (section.startsWith('[[!')) {
             const card = section.substring(3, section.length - 2);
+            const id = card.includes('|') ? card.split('|')[1] : card;
             return (
               <Col xs="6" md="4" lg="3">
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
-                  href={`/tool/card/${card}`}
+                  href={`/tool/card/${id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <FoilCardImage
                     autocard
-                    card={{ details: { image_normal: `/tool/cardimage/${card}` } }}
+                    card={{ details: { image_normal: `/tool/cardimage/${id}` } }}
                     className="clickable"
                   />
                 </a>
