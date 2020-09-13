@@ -6,18 +6,15 @@ import withAutocard from 'components/WithAutocard';
 import LinkModal from 'components/LinkModal';
 import withModal from 'components/WithModal';
 
-import { Col } from 'reactstrap';
+import { Col, Row, Card, CardBody } from 'reactstrap';
 
 const AutocardLink = withAutocard('a');
 const Link = withModal('a', LinkModal);
 
 const InnerMarkdown = ({ markdown }) => {
-  if (markdown === undefined) {
-    return '';
-  }
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-]+\]\]|%%\d+%%|\n)/gm,
+    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]_|__[^_]__|___[^_]___|~~[^~]~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-]+\]\]|%%\d+%%|\n)/gm,
   );
   return (
     <>
@@ -30,6 +27,22 @@ const InnerMarkdown = ({ markdown }) => {
                 @{sub}
               </a>
             );
+          }
+          if (section.startsWith('~~')) {
+            return <s>{section.substring(2, section.length - 2)}</s>;
+          }
+          if (section.startsWith('___')) {
+            return (
+              <em>
+                <u>{section.substring(3, section.length - 3)}</u>
+              </em>
+            );
+          }
+          if (section.startsWith('__')) {
+            return <u>{section.substring(2, section.length - 2)}</u>;
+          }
+          if (section.startsWith('_')) {
+            return <em>{section.substring(1, section.length - 1)}</em>;
           }
           if (section.startsWith('***')) {
             return (
@@ -162,10 +175,7 @@ InnerMarkdown.propTypes = {
   markdown: PropTypes.string.isRequired,
 };
 
-const MagicMarkdown = ({ markdown }) => {
-  if (markdown === undefined) {
-    return '';
-  }
+const Markdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:^1\. .+\r?\n)+|(?:^- .+\r?\n)+)/gm);
   return (
@@ -247,8 +257,55 @@ const MagicMarkdown = ({ markdown }) => {
   );
 };
 
-MagicMarkdown.propTypes = {
+Markdown.propTypes = {
   markdown: PropTypes.string.isRequired,
 };
 
-export default MagicMarkdown;
+const OuterMarkdown = ({ markdown, limited }) => {
+  if (limited) {
+    return <Markdown markdown={markdown} />;
+  }
+
+  const markdownStr = markdown.toString();
+  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
+  return (
+    <>
+      {split.map((section) => {
+        if (section.startsWith('<<')) {
+          const sub = section.substring(2, section.length - 2);
+          return (
+            <Row>
+              <Markdown markdown={sub} />
+            </Row>
+          );
+        }
+        if (section.startsWith('> ')) {
+          console.log(section);
+          const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
+          console.log(lines);
+          return (
+            <Card className="bg-light">
+              <CardBody>
+                {lines.map((line) => (
+                  <Markdown markdown={line.substring(2)} />
+                ))}
+              </CardBody>
+            </Card>
+          );
+        }
+        return <Markdown markdown={section} />;
+      })}
+    </>
+  );
+};
+
+OuterMarkdown.propTypes = {
+  markdown: PropTypes.string.isRequired,
+  limited: PropTypes.bool,
+};
+
+OuterMarkdown.defaultProps = {
+  limited: false,
+};
+
+export default OuterMarkdown;

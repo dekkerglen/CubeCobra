@@ -5,12 +5,9 @@ import MagicMarkdown from 'components/MagicMarkdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 
-import { Row, Card, CardBody, CardHeader } from 'reactstrap';
+import { CardBody, CardHeader } from 'reactstrap';
 
 const Article = ({ article, userid }) => {
-  const markdownStr = article.body.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
-
   return (
     <>
       <CardHeader>
@@ -22,31 +19,7 @@ const Article = ({ article, userid }) => {
         </h6>
       </CardHeader>
       <CardBody>
-        {split.map((section) => {
-          if (section.startsWith('<<')) {
-            const sub = section.substring(2, section.length - 2);
-            return (
-              <Row>
-                <MagicMarkdown markdown={sub} />
-              </Row>
-            );
-          }
-          if (section.startsWith('> ')) {
-            console.log(section);
-            const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
-            console.log(lines);
-            return (
-              <Card className="bg-light">
-                <CardBody>
-                  {lines.map((line) => (
-                    <MagicMarkdown markdown={line.substring(2)} />
-                  ))}
-                </CardBody>
-              </Card>
-            );
-          }
-          return <MagicMarkdown markdown={section} />;
-        })}
+        <MagicMarkdown markdown={article.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="article" parent={article._id} userid={userid} collapse={false} />
