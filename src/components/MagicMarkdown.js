@@ -14,7 +14,7 @@ const Link = withModal('a', LinkModal);
 const InnerMarkdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+\]\(.+\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]_|__[^_]__|___[^_]___|~~[^~]~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+}|\[\[!?[/]?[a-zA-Z ',-|]+\]\]|%%\d+%%|\n)/gm,
+    /(\[.+?\]\(.+?\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*|_[^_]+?_|__[^_]+?__|___[^_]+?___|~~[^~]+?~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+?}|\[\[!?[/]?[a-zA-Z ',-|]+?\]\]|%%\d+%%|\n)/gm,
   );
   return (
     <>
