@@ -180,7 +180,7 @@ InnerMarkdown.propTypes = {
 
 const Markdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:^1\. .+\r?\n)+|(?:^- .+(?:\r?\n|$))+)/gm);
+  const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:^1\. .+(?:\r?\n|$))+|(?:^- .+(?:\r?\n|$))+)/gm);
   return (
     <>
       {split.map((section) => {
