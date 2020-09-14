@@ -33,3 +33,12 @@
 	background-color: #28A745 !important;
 	color: #ffffff;
 }
+
+.tag-autocomplete-wrapper {
+  flex: 1 1 0%;
+}
+
+.tag-autocomplete-input {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

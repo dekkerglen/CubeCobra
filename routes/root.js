@@ -9,7 +9,6 @@ const User = require('../models/user');
 
 const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
-const { addAutocard } = require('../serverjs/cubefn');
 const { render } = require('../serverjs/render');
 const { csrfProtection } = require('./middleware');
 
@@ -155,15 +154,6 @@ router.get('/dashboard', async (req, res) => {
       })
       .lean()
       .limit(13);
-
-    // autocard the posts
-    if (posts) {
-      for (const post of posts) {
-        if (post.html) {
-          post.html = addAutocard(post.html, carddb);
-        }
-      }
-    }
 
     return render(req, res, 'DashboardPage', { posts, cubes, decks });
   } catch (err) {
@@ -404,6 +394,9 @@ router.get('/tos', (req, res) => {
 
 router.get('/filters', (req, res) => {
   return render(req, res, 'FiltersPage');
+});
+router.get('/markdown', (req, res) => {
+  return render(req, res, 'MarkdownPage');
 });
 
 router.get('/privacy', (req, res) => {

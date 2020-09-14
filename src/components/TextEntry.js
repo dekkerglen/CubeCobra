@@ -1,64 +1,56 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
-import ContentEditable from './ContentEditable';
+import { Card, CardHeader, Input, Nav, TabPane, TabContent, CardBody } from 'reactstrap';
 
-import { Card, CardHeader, Input, Row } from 'reactstrap';
+import Tab from 'components/Tab';
+import MagicMarkdown from 'components/MagicMarkdown';
+import ErrorBoundary from 'components/ErrorBoundary';
 
-function clickToolbar(event) {
-  event.preventDefault();
-  const command = event.currentTarget.getAttribute('data-command');
-  if (command == 'h5' || command == 'h6') {
-    document.execCommand('formatBlock', false, command);
-  } else if (command == 'AC') {
-    card = /* global */ prompt('Enter the card name here: ', '');
-    document.execCommand('insertHTML', false, "<a class='autocard', card='" + card + "'>" + card + '</a>');
-    /* global */ autocard_init('autocard');
-  } else document.execCommand(command, false, null);
-}
+const TextEntry = ({ name, value, onChange, maxLength }) => {
+  const [tab, setTab] = useState('0');
 
-const Toolbar = (props) => <div className="toolbar" {...props} />;
-const ToolbarItem = (props) => <a href="#" className="toolbar-item" onClick={clickToolbar} {...props} />;
-
-class TextEntry extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    const { name, value, onChange } = this.props;
-    return (
-      <Card>
+  return (
+    <Card>
+      <ErrorBoundary>
         <CardHeader className="p-0">
-          <Toolbar>
-            <Row noGutters>
-              <ToolbarItem data-command="bold">
-                <strong>B</strong>
-              </ToolbarItem>
-              <ToolbarItem data-command="italic">
-                <em>I</em>
-              </ToolbarItem>
-              <ToolbarItem data-command="underline">
-                <u>U</u>
-              </ToolbarItem>
-              <ToolbarItem data-command="strikethrough">
-                <s>S</s>
-              </ToolbarItem>
-              <ToolbarItem data-command="h5">
-                <h5>H1</h5>
-              </ToolbarItem>
-              <ToolbarItem data-command="h6">
-                <h6>H2</h6>
-              </ToolbarItem>
-              <ToolbarItem data-command="insertUnorderedList">ul</ToolbarItem>
-              <ToolbarItem data-command="insertOrderedList">ol</ToolbarItem>
-            </Row>
-          </Toolbar>
+          <Nav className="mt-2" tabs justified>
+            <Tab tab={tab} setTab={setTab} index="0">
+              Source
+            </Tab>
+            <Tab tab={tab} setTab={setTab} index="1">
+              Preview
+            </Tab>
+          </Nav>
         </CardHeader>
-        <ContentEditable className="text-entry" value={value} onChange={onChange} />
-        <Input type="hidden" name={name} value={value} />
-      </Card>
-    );
-  }
-}
+        <TabContent activeTab={tab}>
+          <TabPane tabId="0">
+            <Input
+              type="textarea"
+              name="textarea"
+              maxLength={maxLength}
+              className="w-100 text-input"
+              value={value}
+              onChange={onChange}
+            />
+          </TabPane>
+          <TabPane tabId="1">
+            <CardBody>
+              <MagicMarkdown markdown={value} />
+            </CardBody>
+          </TabPane>
+        </TabContent>
+      </ErrorBoundary>
+      <Input type="hidden" name={name} maxLength={maxLength} value={value} />
+    </Card>
+  );
+};
+
+TextEntry.propTypes = {
+  name: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  maxLength: PropTypes.number.isRequired,
+};
 
 export default TextEntry;

@@ -91,7 +91,6 @@ Pack.defaultProps = {
 };
 
 const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
-  console.log('hi');
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);

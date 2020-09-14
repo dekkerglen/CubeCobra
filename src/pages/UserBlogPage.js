@@ -25,7 +25,13 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback 
           pageSize={10}
           showBottom
           rows={posts.slice(0).map((post) => (
-            <BlogPost key={post._id} post={post} canEdit={user && user.id === owner._id} userid={user.id} loggedIn />
+            <BlogPost
+              key={post._id}
+              post={post}
+              canEdit={user && user.id === owner._id}
+              userid={user && user.id}
+              loggedIn
+            />
           ))}
         />
       ) : (

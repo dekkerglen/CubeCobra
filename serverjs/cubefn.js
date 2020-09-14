@@ -197,6 +197,19 @@ function buildTagColors(cube) {
   return tagColor;
 }
 
+function cubeCardTags(cube) {
+  const tags = [];
+  for (const card of cube.cards) {
+    for (let tag of card.tags) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tags.push(tag);
+      }
+    }
+  }
+  return tags;
+}
+
 function maybeCards(cube, carddb) {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
@@ -495,33 +508,6 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  addAutocard(src, carddb, cube) {
-    while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
-      const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
-      let mid = cardname;
-      if (carddb.nameToId[cardname.toLowerCase()]) {
-        const possible = carddb.nameToId[cardname.toLowerCase()];
-        let cardID = null;
-        if (cube && cube.cards) {
-          const allVersions = cube.cards.map((card) => card.cardID);
-          const matchingNameIds = allVersions.filter((id) => possible.includes(id));
-          [cardID] = matchingNameIds;
-        }
-        if (!cardID) {
-          [cardID] = possible;
-        }
-        const card = carddb.cardFromId(cardID);
-        if (card.image_flip) {
-          mid = `<a class="autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
-        } else {
-          mid = `<a class="autocard" card="${card.image_normal}">${card.name}</a>`;
-        }
-      }
-      // front + autocard + back
-      src = src.substring(0, src.indexOf('[[')) + mid + src.substring(src.indexOf(']]') + 2);
-    }
-    return src;
-  },
   generatePack: async (cubeId, carddb, seed) => {
     const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
     if (!seed) {
@@ -546,6 +532,7 @@ const methods = {
   replaceCardHtml,
   abbreviate,
   buildTagColors,
+  cubeCardTags,
   maybeCards,
   getCardElo,
   getElo,

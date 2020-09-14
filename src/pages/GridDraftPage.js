@@ -14,7 +14,6 @@ import {
   Row,
   Input,
   Badge,
-  loginCallback,
 } from 'reactstrap';
 
 import Location from 'utils/DraftLocation';
@@ -148,7 +147,7 @@ for (let index = 0; index < 3; index++) {
   options.push(mask);
 }
 
-const GridDraftPage = ({ user, cube, initialDraft }) => {
+const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
@@ -423,10 +422,12 @@ GridDraftPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 GridDraftPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(GridDraftPage);

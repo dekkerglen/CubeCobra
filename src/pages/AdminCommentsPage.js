@@ -9,7 +9,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Comment from 'components/Comment';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 24;
 
 const AdminCommentsPage = ({ user, loginCallback, comments, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>

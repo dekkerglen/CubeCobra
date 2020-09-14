@@ -23,7 +23,6 @@ import {
   Row,
   Spinner,
   UncontrolledCollapse,
-  loginCallback,
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -31,6 +30,7 @@ import CubeContext from 'components/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
+import MagicMarkdown from 'components/MagicMarkdown';
 import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
@@ -169,10 +169,17 @@ const CustomDraftCard = ({
           </CardTitleH5>
         </CardHeader>
         <CardBody>
-          <div
-            className="description-area"
-            dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
-          />
+          {format.markdown ? (
+            <div className="mb-3">
+              <MagicMarkdown markdown={format.markdown} />
+            </div>
+          ) : (
+            <div
+              className="description-area"
+              dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
+            />
+          )}
+
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
               {rangeOptions(2, 17)}
@@ -223,7 +230,8 @@ CustomDraftCard.propTypes = {
   format: PropTypes.shape({
     index: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
-    html: PropTypes.string.isRequired,
+    html: PropTypes.string,
+    markdown: PropTypes.string,
   }).isRequired,
   onEditFormat: PropTypes.func.isRequired,
   onDeleteFormat: PropTypes.func.isRequired,
@@ -414,7 +422,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
 };
-const CubePlaytestPage = ({ user, cube, decks, draftFormats }) => {
+const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -548,7 +556,7 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats }) => {
             <GridCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <DecksCard decks={decks} userID={user.id} className="mb-3" />}
+            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user.id} className="mb-3" />}
             <SamplePackCard className="mb-3" />
           </Col>
         </Row>
@@ -575,6 +583,7 @@ CubePlaytestPage.propTypes = {
   draftFormats: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
+      markdown: PropTypes.string,
     }),
   ).isRequired,
   user: PropTypes.shape({
@@ -582,10 +591,12 @@ CubePlaytestPage.propTypes = {
     username: PropTypes.string.isRequired,
     notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   }),
+  loginCallback: PropTypes.string,
 };
 
 CubePlaytestPage.defaultProps = {
   user: null,
+  loginCallback: '/',
 };
 
 export default RenderToRoot(CubePlaytestPage);

@@ -184,7 +184,7 @@ const fetchTree = async (treeUrl, treePath) => {
 };
 
 const AutocompleteInput = forwardRef(
-  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, ...props }, ref) => {
+  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, ...props }, ref) => {
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
@@ -278,7 +278,7 @@ const AutocompleteInput = forwardRef(
     );
 
     return (
-      <div>
+      <div className={wrapperClassName}>
         <Input ref={ref} value={inputValue} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
         {showMatches && (
           <ul className="autocomplete-list">

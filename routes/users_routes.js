@@ -19,7 +19,6 @@ const Blog = require('../models/blog');
 
 const router = express.Router();
 
-const { addAutocard } = require('../serverjs/cubefn');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
@@ -197,7 +196,7 @@ router.post(
         transport: smtpTransport,
       });
 
-      email.send({
+      await email.send({
         template: 'password_reset',
         locals: {
           id: passwordReset.id,
@@ -377,16 +376,18 @@ router.post(
                 transport: smtpTransport,
               });
 
-              confirmEmail.send({
-                template: 'confirm_email',
-                locals: {
-                  id: newUser._id,
-                },
-              });
-
-              // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-              req.flash('success', 'Account successfully created. You are now able to login.');
-              res.redirect('/user/login');
+              confirmEmail
+                .send({
+                  template: 'confirm_email',
+                  locals: {
+                    id: newUser._id,
+                  },
+                })
+                .then(() => {
+                  // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                  req.flash('success', 'Account successfully created. You are now able to login.');
+                  res.redirect('/user/login');
+                });
             }
           });
         }
@@ -579,15 +580,6 @@ router.get('/blog/:userid', async (req, res) => {
     }).sort({
       date: -1,
     });
-
-    // autocard the posts
-    if (posts) {
-      for (const post of posts) {
-        if (post.html) {
-          post.html = addAutocard(post.html, carddb);
-        }
-      }
-    }
 
     const followers = await User.find(
       { _id: { $in: user.users_following } },

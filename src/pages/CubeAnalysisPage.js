@@ -138,7 +138,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Tokens',
-      component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
+      component: (collection, cubeObj) => <Tokens cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',

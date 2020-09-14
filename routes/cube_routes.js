@@ -9,7 +9,6 @@ const { Canvas, Image } = require('canvas');
 Canvas.Image = Image;
 
 const {
-  addAutocard,
   generatePack,
   sanitize,
   setCubeType,
@@ -22,6 +21,7 @@ const {
   replaceCardHtml,
   abbreviate,
   buildTagColors,
+  cubeCardTags,
   maybeCards,
   getElo,
   CSVtoCards,
@@ -171,8 +171,6 @@ router.get('/view/:id', (req, res) => {
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
-    req.body.html = sanitize(req.body.html);
-
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Formats can only be changed by cube owner.');
@@ -187,7 +185,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       cube.draft_formats.push({
         title: req.body.title,
         multiples: req.body.multiples === 'true',
-        html: req.body.html,
+        markdown: req.body.markdown.substring(0, 5000),
         packs: req.body.format,
       });
       message = 'Custom format successfully added.';
@@ -195,7 +193,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       cube.draft_formats[req.body.id] = {
         title: req.body.title,
         multiples: req.body.multiples === 'true',
-        html: req.body.html,
+        markdown: req.body.markdown.substring(0, 5000),
         packs: req.body.format,
       };
       message = 'Custom format successfully edited.';
@@ -211,7 +209,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
 router.post('/blog/post/:id', ensureAuth, async (req, res) => {
   try {
-    req.body.html = sanitize(req.body.html);
     if (req.body.title.length < 5 || req.body.title.length > 100) {
       req.flash('danger', 'Blog title length must be between 5 and 100 characters.');
       return res.redirect(`/cube/blog/${req.params.id}`);
@@ -228,7 +225,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
         return res.redirect(`/cube/blog/${req.params.id}`);
       }
 
-      blog.html = req.body.html;
+      blog.markdown = req.body.markdown.substring(0, 10000);
       blog.title = req.body.title;
 
       await blog.save();
@@ -252,7 +249,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
     await cube.save();
 
     const blogpost = new Blog();
-    blogpost.html = req.body.html;
+    blogpost.markdown = req.body.markdown.substring(0, 10000);
     blogpost.title = req.body.title;
     blogpost.owner = user._id;
     blogpost.date = Date.now();
@@ -440,21 +437,7 @@ router.get('/overview/:id', async (req, res) => {
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
-    if (blogs) {
-      for (const item of blogs) {
-        if (!item.date_formatted) {
-          item.date_formatted = item.date.toLocaleString('en-US');
-        }
-        if (item.html) {
-          item.html = addAutocard(item.html, carddb, cube);
-        }
-      }
-    }
     cube.raw_desc = cube.body;
-    if (cube.descriptionhtml) {
-      cube.raw_desc = cube.descriptionhtml;
-      cube.descriptionhtml = addAutocard(cube.descriptionhtml, carddb, cube);
-    }
 
     // Performance
     delete cube.cards;
@@ -526,15 +509,6 @@ router.get('/blog/:id/:page', async (req, res) => {
       .limit(10)
       .lean();
     const [blogs, count] = await Promise.all([blogsQ, countQ]);
-
-    for (const item of blogs) {
-      if (!item.date_formatted) {
-        item.date_formatted = item.date.toLocaleString('en-US');
-      }
-      if (item.html) {
-        item.html = addAutocard(item.html, carddb, cube);
-      }
-    }
 
     return render(
       req,
@@ -2279,7 +2253,6 @@ router.get('/draft/:id', async (req, res) => {
 // Edit Submit POST Route
 router.post('/edit/:id', ensureAuth, async (req, res) => {
   try {
-    req.body.blog = sanitize(req.body.blog);
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!req.user._id.equals(cube.owner)) {
@@ -2359,7 +2332,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const blogpost = new Blog();
     blogpost.title = req.body.title;
     if (req.body.blog.length > 0) {
-      blogpost.html = req.body.blog;
+      blogpost.markdown = req.body.blog.substring(0, 10000);
     }
     blogpost.changelist = changelog;
     blogpost.owner = cube.owner;
@@ -2466,7 +2439,9 @@ router.post(
       cube.image_name = updatedCube.image_name;
     }
 
-    cube.descriptionhtml = sanitize(updatedCube.descriptionhtml);
+    if (updatedCube.description) {
+      cube.description = updatedCube.description;
+    }
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
     setCubeType(cube, carddb);
@@ -2513,7 +2488,6 @@ router.post(
     await cube.save();
     return res.status(200).send({
       success: 'true',
-      descriptionhtml: addAutocard(cube.descriptionhtml, carddb, cube),
     });
   }),
 );
@@ -2582,6 +2556,19 @@ router.get(
     return res.status(200).send({
       success: 'true',
       cardnames: result,
+    });
+  }),
+);
+
+router.get(
+  '/api/cubecardtags/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const tags = cubeCardTags(cube);
+
+    return res.status(200).send({
+      success: 'true',
+      tags: util.turnToTree(tags),
     });
   }),
 );

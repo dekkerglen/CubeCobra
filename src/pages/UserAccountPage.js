@@ -15,7 +15,6 @@ import {
   TabPane,
   Card,
   CardBody,
-  loginCallback,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -27,7 +26,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserAccountPage = ({ user, defaultNav }) => {
+const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
   const [nav, setNav] = useState(defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -231,6 +230,11 @@ UserAccountPage.propTypes = {
     users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
   }).isRequired,
   defaultNav: PropTypes.string.isRequired,
+  loginCallback: PropTypes.string,
+};
+
+UserAccountPage.defaultProps = {
+  loginCallback: '/',
 };
 
 export default RenderToRoot(UserAccountPage);

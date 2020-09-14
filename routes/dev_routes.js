@@ -19,10 +19,6 @@ router.get('/blog', (req, res) => {
 const PAGESIZE = 10;
 
 router.get('/blog/:id', async (req, res) => {
-  const user = await User.findById(req.user ? req.user.id : '');
-
-  const admin = user && util.isAdmin(user);
-
   const blogs = await Blog.find({
     dev: 'true',
   })
@@ -43,7 +39,6 @@ router.get('/blog/:id', async (req, res) => {
     pages: Math.ceil(count / PAGESIZE),
     activePage: req.params.id,
     userid: req.user ? req.user._id : null,
-    admin,
   });
 });
 

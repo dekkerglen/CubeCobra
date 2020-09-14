@@ -22,6 +22,7 @@ import CSRFForm from 'components/CSRFForm';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
+import MagicMarkdown from 'components/MagicMarkdown';
 
 const maxDepth = 4;
 
@@ -142,7 +143,9 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
               )}
             </div>
             <Collapse isOpen={!isEdit}>
-              <p className="mb-0">{comment.content}</p>
+              <p className="mb-0">
+                <MagicMarkdown markdown={comment.content} limited />
+              </p>
             </Collapse>
             <CommentEntry
               submit={(res) => {

@@ -52,7 +52,6 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
         .filter((row) => row.count > 0),
     [characteristic, characteristics, groups],
   );
-  console.log(counts);
 
   const { items, requestSort, sortConfig } = useSortableData(counts);
 
