@@ -187,6 +187,7 @@ router.post(
           to: passwordReset.email,
           subject: 'Password Reset',
         },
+        send: true,
         juiceResources: {
           webResources: {
             relativeTo: path.join(__dirname, '..', 'public'),
@@ -367,6 +368,7 @@ router.post(
                   to: email,
                   subject: 'Confirm Account',
                 },
+                send: true,
                 juiceResources: {
                   webResources: {
                     relativeTo: path.join(__dirname, '..', 'public'),
