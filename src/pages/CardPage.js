@@ -198,6 +198,10 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
     return 0;
   });
 
+  const filteredVersions = sortedVersions.filter((version) => {
+    return version._id !== card._id;
+  });
+
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
@@ -508,40 +512,46 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
             <CardHeader>
               <h4>Versions</h4>
             </CardHeader>
-            <PagedList
-              pageSize={10}
-              pageWrap={(element) => (
-                <table className="table table-striped mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col">Version</th>
-                      <th scope="col">USD</th>
-                      <th scope="col">USD Foil</th>
-                      <th scope="col">EUR</th>
-                      <th scope="col">TIX</th>
-                    </tr>
-                  </thead>
-                  <tbody>{element}</tbody>
-                </table>
-              )}
-              rows={sortedVersions.slice(0).map((version) => (
-                <tr>
-                  <td>
-                    <AutocardA
-                      front={version.image_normal}
-                      back={version.image_flip || undefined}
-                      href={`/tool/card/${version._id}`}
-                    >
-                      {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
-                    </AutocardA>
-                  </td>
-                  <td>{version.prices.usd ? `$${version.prices.usd}` : ''}</td>
-                  <td>{version.prices.usd_foil ? `$${version.prices.usd_foil}` : ''}</td>
-                  <td>{version.prices.eur ? `€${version.prices.eur}` : ''}</td>
-                  <td>{version.prices.tix ? `${version.prices.tix}` : ''}</td>
-                </tr>
-              ))}
-            />
+            {filteredVersions.length > 0 ? (
+              <PagedList
+                pageSize={10}
+                pageWrap={(element) => (
+                  <table className="table table-striped mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">USD</th>
+                        <th scope="col">USD Foil</th>
+                        <th scope="col">EUR</th>
+                        <th scope="col">TIX</th>
+                      </tr>
+                    </thead>
+                    <tbody>{element}</tbody>
+                  </table>
+                )}
+                rows={filteredVersions.slice(0).map((version) => (
+                  <tr>
+                    <td>
+                      <AutocardA
+                        front={version.image_normal}
+                        back={version.image_flip || undefined}
+                        href={`/tool/card/${version._id}`}
+                      >
+                        {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
+                      </AutocardA>
+                    </td>
+                    <td>{version.prices.usd ? `$${version.prices.usd}` : ''}</td>
+                    <td>{version.prices.usd_foil ? `$${version.prices.usd_foil}` : ''}</td>
+                    <td>{version.prices.eur ? `€${version.prices.eur}` : ''}</td>
+                    <td>{version.prices.tix ? `${version.prices.tix}` : ''}</td>
+                  </tr>
+                ))}
+              />
+            ) : (
+              <CardBody>
+                <p>No other versions</p>
+              </CardBody>
+            )}
           </Card>
         </Col>
         <Col xs="12" sm="6">
