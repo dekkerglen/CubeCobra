@@ -7,12 +7,9 @@ import TimeAgo from 'react-timeago';
 
 import ReactPlayer from 'react-player';
 
-import { Row, Card, CardBody, CardHeader } from 'reactstrap';
+import { CardBody, CardHeader } from 'reactstrap';
 
 const Video = ({ video, userid }) => {
-  const markdownStr = video.body.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
-
   return (
     <>
       <CardHeader>
@@ -29,31 +26,7 @@ const Video = ({ video, userid }) => {
         </div>
       </CardBody>
       <CardBody>
-        {split.map((section) => {
-          if (section.startsWith('<<')) {
-            const sub = section.substring(2, section.length - 2);
-            return (
-              <Row>
-                <MagicMarkdown markdown={sub} />
-              </Row>
-            );
-          }
-          if (section.startsWith('> ')) {
-            console.log(section);
-            const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
-            console.log(lines);
-            return (
-              <Card className="bg-light">
-                <CardBody>
-                  {lines.map((line) => (
-                    <MagicMarkdown markdown={line.substring(2)} />
-                  ))}
-                </CardBody>
-              </Card>
-            );
-          }
-          return <MagicMarkdown markdown={section} />;
-        })}
+        <MagicMarkdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="video" parent={video._id} userid={userid} collapse={false} />

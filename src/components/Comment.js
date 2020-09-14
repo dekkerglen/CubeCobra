@@ -144,7 +144,7 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
             </div>
             <Collapse isOpen={!isEdit}>
               <p className="mb-0">
-                <MagicMarkdown markdown={comment.content} />
+                <MagicMarkdown markdown={comment.content} limited />
               </p>
             </Collapse>
             <CommentEntry
