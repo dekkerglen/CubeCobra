@@ -571,20 +571,36 @@ router.get('/decks/:userid/:page', async (req, res) => {
   }
 });
 
-router.get('/blog/:userid', async (req, res) => {
+router.get('/blog/:userid', (req, res) => {
+  res.redirect(`/user/blog/${req.params.userid}/0`);
+});
+
+router.get('/blog/:userid/:page', async (req, res) => {
   try {
+    const pagesize = 30;
+
     const user = await User.findById(req.params.userid, '_id username users_following').lean();
 
-    const posts = await Blog.find({
+    const postsq = Blog.find({
       owner: user._id,
-    }).sort({
-      date: -1,
+    })
+      .sort({
+        date: -1,
+      })
+      .skip(req.params.page * pagesize)
+      .limit(pagesize)
+      .lean();
+
+    const numBlogsq = Blog.countDocuments({
+      owner: user._id,
     });
 
-    const followers = await User.find(
+    const followersq = User.find(
       { _id: { $in: user.users_following } },
       '_id username image_name image artist users_following',
     );
+
+    const [posts, numBlogs, followers] = await Promise.all([postsq, numBlogsq, followersq]);
 
     delete user.users_following;
 
@@ -598,6 +614,8 @@ router.get('/blog/:userid', async (req, res) => {
         canEdit: req.user && req.user._id.equals(user._id),
         followers,
         following: req.user && req.user.followed_users.includes(user.id),
+        pages: Math.ceil(numBlogs / pagesize),
+        activePage: req.params.page,
       },
       {
         title: user.username,

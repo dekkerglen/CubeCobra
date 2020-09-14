@@ -29,6 +29,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
   const [tab, setTab] = useState('0');
   const [body, setBody] = useState(article.body);
   const [title, setTitle] = useState(article.title);
+  const [short, setShort] = useState(article.short || '');
   const [imageName, setImageName] = useState(article.imagename);
   const [imageArtist, setImageArtist] = useState(article.artist);
   const [imageUri, setImageUri] = useState(article.image);
@@ -54,7 +55,8 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
     }
   }, [imageName, imageDict]);
 
-  const hasChanges = article.body !== body || article.title !== title || article.imagename !== imageName;
+  const hasChanges =
+    article.body !== body || article.title !== title || article.imagename !== imageName || article.short !== short;
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -75,6 +77,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
               <CSRFForm method="POST" action="/content/editarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article._id} />
                 <Input type="hidden" name="title" value={title} />
+                <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
@@ -88,6 +91,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
               <CSRFForm method="POST" action="/content/submitarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article._id} />
                 <Input type="hidden" name="title" value={title} />
+                <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
@@ -128,6 +132,17 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
                   </Col>
                   <Col sm="10">
                     <Input maxlength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
+                  </Col>
+                </Row>
+              </FormGroup>
+              <FormGroup>
+                <Row>
+                  <Col sm="2">
+                    <Label>Short Description:</Label>
+                  </Col>
+                  <Col sm="10">
+                    <Input maxlength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
+                    <p>Plaintext only. This short description will be used for the article preview.</p>
                   </Col>
                 </Row>
               </FormGroup>
@@ -185,13 +200,29 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
           </TabPane>
           <TabPane tabId="1">
             <CardBody>
+              <h5>Article Previews</h5>
               <Row>
+                <Col xs="12" sm="6" md="4" className="mb-3">
+                  <ArticlePreview
+                    article={{
+                      username: user.username,
+                      title,
+                      body,
+                      short,
+                      artist: imageArtist,
+                      imagename: imageName,
+                      image: imageUri,
+                      date: article.date,
+                    }}
+                  />
+                </Col>
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <ArticlePreview
                     article={{
                       username: user.username,
                       title,
                       body,
+                      short,
                       artist: imageArtist,
                       imagename: imageName,
                       image: imageUri,

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const videoSchema = mongoose.Schema({
   title: String,
   body: String,
+  short: String,
   url: String,
   owner: String,
   date: Date,

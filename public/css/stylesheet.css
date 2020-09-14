@@ -472,7 +472,7 @@ body.busy-cursor {
 }
 
 .deck-preview {
-	padding: 1rem 1.25rem;
+	padding: .83rem 1rem;
 	border-top: 1px solid #dee2e6;
 }
 
@@ -514,6 +514,7 @@ body.busy-cursor {
 .cube-preview-element {
 	height: 73%;
 }
+
 .cube-preview-artist {
 	font-size: small;
 	position: absolute;
@@ -522,6 +523,37 @@ body.busy-cursor {
 	color: white;
 	text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
+
+.content-preview-banner {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	color: white;
+	width: 100%;
+	margin-bottom: 0;
+	padding: 3px;
+}
+
+.article-preview-bg {
+	background: rgba(116, 198, 135, 0.5);
+}
+
+.video-preview-bg {
+	background: rgba(254, 66, 66, 0.5);
+}
+
+.podcast-preview-bg {
+	background: rgba(0, 0, 0, 0.6);
+}
+
+.preview-footer-bg {
+	background: #F3F3F3
+}
+
+.preview-footer-bg-hover {
+	background: #e0e0e0
+}
+
 .notification-icon {
 	background: #9a9d90;
 	height: 18px; 
@@ -559,6 +591,11 @@ body.busy-cursor {
 	height: 60px;
 	float: left;
 	box-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.content-preview-img {
+	object-fit: cover;
+	width:100%;
 }
 
 .table-view.row {
