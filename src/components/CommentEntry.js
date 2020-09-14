@@ -15,7 +15,7 @@ const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
         className="form-control"
         id="exampleFormControlTextarea1"
         rows="2"
-        maxLength="500"
+        maxLength="5000"
       />
       <LinkButton
         onClick={() => {

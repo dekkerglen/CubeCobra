@@ -83,13 +83,13 @@ router.post(
     const comment = new Comment();
 
     comment.parent = req.params.parent.substring(0, 500);
-    comment.parentType = req.params.type;
+    comment.parentType = req.params.type.substring(0, 500);
     comment.owner = poster._id;
     comment.ownerName = poster.username;
     comment.image = poster.image;
     comment.artist = poster.artist;
     comment.updated = false;
-    comment.content = sanitize(req.body.comment.substring(0, 500));
+    comment.content = sanitize(req.body.comment.substring(0, 5000));
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
     comment.date = Date.now() - 1000;
