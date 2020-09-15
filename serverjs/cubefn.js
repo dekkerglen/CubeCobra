@@ -129,7 +129,8 @@ function setCubeType(cube, carddb) {
       pauper = false;
       peasant = true;
     }
-    if (!pauper && peasant /* && card only at rare or mythic */) {
+    if (!pauper && peasant) {
+      // check rarities of all card versions
       const rarities = carddb.allVersions(carddb.cardFromId(card.cardID)).map((id) => carddb.cardFromId(id).rarity);
       if (!rarities.includes('common') && !rarities.includes('uncommon')) {
         peasant = false;
