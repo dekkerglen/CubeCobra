@@ -26,21 +26,27 @@ const VideoPreview = ({ video }) => {
       onMouseOut={handleMouseOut}
       onBlur={handleMouseOut}
     >
-      <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <img className="w-100" alt={video.title} src={video.image} />
-        <em className="cube-preview-artist">Art by {video.artist}</em>
+      <AspectRatioBox ratio={2} className="text-ellipsis">
+        <img className="content-preview-img" alt={video.title} src={video.image} />
+        <h6 className="content-preview-banner video-preview-bg">
+          <strong>Video</strong>
+        </h6>
       </AspectRatioBox>
-      <div className="w-100 py-1 px-2">
-        <h5 className="text-muted text-ellipsis my-0">{video.title}</h5>
+      <div className="w-100 pt-1 pb-1 px-2">
+        <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{video.title}</h6>
         <small>
-          <em className="text-muted text-ellipsis">
-            Posted by{' '}
-            <a data-sublink href={`/user/view/${video.owner}`}>
-              {video.username}
-            </a>
-            {' | '}
-            <TimeAgo date={video.date} />
-          </em>
+          <p className="mb-0">{video.short}</p>
+        </small>
+      </div>
+      <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
+        <small className="float-left">
+          By{' '}
+          <a data-sublink href={`/user/view/${video.owner}`}>
+            {video.username}
+          </a>
+        </small>
+        <small className="float-right">
+          <TimeAgo date={video.date} />
         </small>
       </div>
     </Card>
@@ -51,6 +57,7 @@ VideoPreview.propTypes = {
   video: PropTypes.shape({
     title: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
+    short: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,

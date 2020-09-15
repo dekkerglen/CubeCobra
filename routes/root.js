@@ -6,6 +6,9 @@ const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
+const Article = require('../models/article');
+const Video = require('../models/video');
+const PodcastEpisode = require('../models/podcastEpisode');
 
 const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
@@ -141,10 +144,52 @@ router.get('/dashboard', async (req, res) => {
       .sort({
         date: -1,
       })
-      .limit(200);
+      .limit(10);
+
+    const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(10);
+    const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(10);
+    const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(10);
 
     // We can do these queries in parallel
-    const [cubes, posts] = await Promise.all([cubesq, postsq]);
+    const [cubes, posts, articles, videos, episodes] = await Promise.all([
+      cubesq,
+      postsq,
+      articlesq,
+      videosq,
+      episodesq,
+    ]);
+
+    const content = [];
+
+    for (const article of articles) {
+      content.push({
+        type: 'article',
+        date: article.date,
+        content: article,
+      });
+    }
+    for (const video of videos) {
+      content.push({
+        type: 'video',
+        date: video.date,
+        content: video,
+      });
+    }
+    for (const episode of episodes) {
+      content.push({
+        type: 'episode',
+        date: episode.date,
+        content: episode,
+      });
+    }
+
+    content.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB - dateA;
+    });
+
+    content.splice(10);
 
     const decks = await Deck.find({
       cubeOwner: user._id,
@@ -153,9 +198,9 @@ router.get('/dashboard', async (req, res) => {
         date: -1,
       })
       .lean()
-      .limit(13);
+      .limit(12);
 
-    return render(req, res, 'DashboardPage', { posts, cubes, decks });
+    return render(req, res, 'DashboardPage', { posts, cubes, decks, content });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }
