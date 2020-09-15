@@ -46,6 +46,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
           <li>
             <a href="#links">Links</a>
           </li>
+          <li>
+            <a href="#latex">LaTeX</a>
+          </li>
         </ol>
       </CardBody>
       <CardBody className="border-top">
@@ -633,6 +636,71 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="latex">LaTeX</h5>
+        <p>You can add latex expressions using double '$' for inline latex, and triple '$' for block latex.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>{`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`}</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown={`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>{`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`}</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown={`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>You can use latex in headers, and in block quotes as well.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>{`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `}</code>
+                <br />
+                <code>{`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `}</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown={`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+                <br />
+                <MagicMarkdown markdown={`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
       </CardBody>
     </Card>
   </MainLayout>
