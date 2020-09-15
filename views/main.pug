@@ -26,7 +26,9 @@ html(lang='en')
 		link(rel='stylesheet' href='/css/tags.css')
 		link(href='//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css', rel='stylesheet')
 
-	body  
+	body
+		#redditMetaData.d-none
+			img.foilOverlay(src=reddit_thumbnail)
 		#autocardPopup.d-none
 			.autocard-background
 				.row.no-gutters
