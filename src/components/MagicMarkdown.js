@@ -5,6 +5,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
 import LinkModal from 'components/LinkModal';
 import withModal from 'components/WithModal';
+import Latex from 'react-latex';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
 
@@ -14,12 +15,20 @@ const Link = withModal('a', LinkModal);
 const InnerMarkdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+?\]\(.+?\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*|_[^_]+?_|__[^_]+?__|___[^_]+?___|~~[^~]+?~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+?}|\[\[!?[/]?[a-zA-Z ',-|]+?\]\]|%%\d+%%|\n)/gm,
+    /(\[.+?\]\(.+?\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*|_[^_]+?_|__[^_]+?__|___[^_]+?___|~~[^~]+?~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+?}|\[\[!?[/]?[a-zA-Z ',-|]+?\]\]|%%\d+%%|\$\$[^$]+?\$\$|\$\$\$[^$]+?\$\$\$|\n)/gm,
   );
   return (
     <>
       {split.map((section, position) => {
         try {
+          if (section.startsWith('$$$')) {
+            const sub = section.substring(1, section.length - 1);
+            return <Latex displayMode>{sub}</Latex>;
+          }
+          if (section.startsWith('$$')) {
+            const sub = section.substring(1, section.length - 1);
+            return <Latex>{sub}</Latex>;
+          }
           if (section.startsWith('@')) {
             const sub = section.substring(1);
             return (
