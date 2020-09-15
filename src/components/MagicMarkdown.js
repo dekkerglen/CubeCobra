@@ -23,11 +23,15 @@ const InnerMarkdown = ({ markdown }) => {
         try {
           if (section.startsWith('$$$')) {
             const sub = section.substring(1, section.length - 1);
-            return <Latex displayMode>{sub}</Latex>;
+            return (
+              <Latex displayMode trust={false}>
+                {sub}
+              </Latex>
+            );
           }
           if (section.startsWith('$$')) {
             const sub = section.substring(1, section.length - 1);
-            return <Latex>{sub}</Latex>;
+            return <Latex trust={false}>{sub}</Latex>;
           }
           if (section.startsWith('@')) {
             const sub = section.substring(1);
