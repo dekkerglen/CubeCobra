@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { CardHeader, Card, Row, Col, CardFooter } from 'reactstrap';
+import { CardHeader, Card, Row, Col } from 'reactstrap';
 
 import DynamicFlash from 'components/DynamicFlash';
 import PodcastPreview from 'components/PodcastPreview';

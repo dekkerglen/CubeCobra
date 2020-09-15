@@ -53,8 +53,6 @@ router.get('/creators', ensureContentCreator, async (req, res) => {
   return render(req, res, 'CreatorsPage');
 });
 
-const BROWSE_SIZE = 3;
-
 router.get('/browse', async (req, res) => {
   const results = 36;
 

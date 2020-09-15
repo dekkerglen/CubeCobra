@@ -1,6 +1,5 @@
 const express = require('express');
 
-const { number } = require('prop-types');
 const util = require('../serverjs/util.js');
 
 const Blog = require('../models/blog');

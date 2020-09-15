@@ -260,6 +260,7 @@ EditArticlePage.propTypes = {
   article: PropTypes.shape({
     body: PropTypes.string,
     title: PropTypes.string,
+    short: PropTypes.string,
     image: PropTypes.string,
     imagename: PropTypes.string,
     artist: PropTypes.string,
