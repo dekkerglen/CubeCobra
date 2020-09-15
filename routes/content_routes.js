@@ -5,6 +5,7 @@ const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
 const { getFeedData, getFeedEpisodes } = require('../serverjs/rss');
+const generateMeta = require('../serverjs/meta.js');
 const Application = require('../models/application');
 const Article = require('../models/article');
 const Podcast = require('../models/podcast');
@@ -155,7 +156,21 @@ router.get('/article/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'ArticlePage', { article });
+  return render(
+    req,
+    res,
+    'ArticlePage',
+    { article },
+    {
+      title: article.title,
+      metadata: generateMeta(
+        article.title,
+        article.short || 'An article posted to Cube Cobra',
+        article.image,
+        `https://cubecobra.com/content/article/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/podcast/:id', async (req, res) => {
@@ -167,7 +182,21 @@ router.get('/podcast/:id', async (req, res) => {
   }
   const episodes = await PodcastEpisode.find({ podcast: podcast._id }).sort({ date: -1 });
 
-  return render(req, res, 'PodcastPage', { podcast, episodes });
+  return render(
+    req,
+    res,
+    'PodcastPage',
+    { podcast, episodes },
+    {
+      title: podcast.title,
+      metadata: generateMeta(
+        podcast.title,
+        `Listen to ${podcast.title} on Cube Cobra!`,
+        podcast.image,
+        `https://cubecobra.com/content/podcast/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/episode/:id', async (req, res) => {
@@ -178,7 +207,21 @@ router.get('/episode/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'PodcastEpisodePage', { episode });
+  return render(
+    req,
+    res,
+    'PodcastEpisodePage',
+    { episode },
+    {
+      title: episode.title,
+      metadata: generateMeta(
+        episode.title,
+        `Listen to ${episode.title} on Cube Cobra!`,
+        episode.image,
+        `https://cubecobra.com/content/episode/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/video/:id', async (req, res) => {
@@ -189,7 +232,21 @@ router.get('/video/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'VideoPage', { video });
+  return render(
+    req,
+    res,
+    'VideoPage',
+    { video },
+    {
+      title: video.title,
+      metadata: generateMeta(
+        video.title,
+        video.short || 'A video posted to Cube Cobra',
+        video.image,
+        `https://cubecobra.com/content/video/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
