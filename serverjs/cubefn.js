@@ -122,10 +122,18 @@ function cardIsLegal(card, legality) {
 
 function setCubeType(cube, carddb) {
   let pauper = true;
+  let peasant = false;
   let type = legalityToInt('Standard');
   for (const card of cube.cards) {
     if (pauper && !['legal', 'banned'].includes(carddb.cardFromId(card.cardID).legalities.Pauper)) {
       pauper = false;
+      peasant = true;
+    }
+    if (!pauper && peasant /* && card only at rare or mythic */) {
+      const rarities = carddb.allVersions(carddb.cardFromId(card.cardID)).map((id) => carddb.cardFromId(id).rarity);
+      if (!rarities.includes('common') && !rarities.includes('uncommon')) {
+        peasant = false;
+      }
     }
     while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type).toLowerCase())) {
       type -= 1;
@@ -135,6 +143,9 @@ function setCubeType(cube, carddb) {
   cube.type = intToLegality(type);
   if (pauper) {
     cube.type += ' Pauper';
+  }
+  if (peasant) {
+    cube.type += ' Peasant';
   }
   cube.card_count = cube.cards.length;
   return cube;
