@@ -148,7 +148,7 @@ const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
-  for (const card in cube) {
+  for (const card of cube) {
     counts.add(cardDevotion(card, color));
   }
   return [...counts].sort((a, b) => b - a);
