@@ -1,0 +1,37 @@
+:root {
+  --border: #5f6a75;
+  --border-dark: #818c96;
+  --border-darker: #98a2ab;
+  --border-light: #252a2e;
+  --bg: #343A40;
+  --bg-dark: #343A40;
+  --bg-secondary: #24292e;
+  --bg-hover: #4a5057;
+  --success: #28a745;
+  --secondary: #6c757d;
+  --danger: #dc3545;
+  --link: #0056b5;
+  --glow: #599bff;
+  --text:#fff;
+  --text-secondary:#b0b0b0;
+  --link-secondary:#EEE;
+  --link-secondary-hover:#CCC;
+  --text-light:#535a5f;
+  --header: rgba(255,255,255,.03);
+  --hover: rgba(255,255,255,.1);
+  --shadow: rgba(255,255,255,.2);
+  --shadow-light: rgba(255,255,255,.06);
+  --hover-inverse: rgba(0,0,0,.2);
+  --card-white: #ffffeb;
+  --card-blue: #d4edff;
+  --card-black: #d6cbd6;
+  --card-red: #ffc8c8;
+  --card-green: #e9ffd4;
+  --card-multi: #fcf8a9;
+  --card-colorless: #e9e7eb;
+  --card-lands: #ffe0c0;
+  --preview-article: rgba(116, 198, 135, 0.5);
+  --preview-podcast:rgba(0, 0, 0, 0.6);
+  --preview-video:  rgba(254, 66, 66, 0.5);
+  --nav-link: rgba(255,255,255,.5);
+}

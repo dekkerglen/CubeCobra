@@ -15,6 +15,10 @@ import {
   TabPane,
   Card,
   CardBody,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -94,6 +98,11 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
             <NavItem>
               <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>
                 Update Email
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" active={nav === 'theme'} data-nav="theme" onClick={handleClickNav}>
+                Themes
               </NavLink>
             </NavItem>
           </Nav>
@@ -212,6 +221,26 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                 </CardBody>
               </Card>
             </TabPane>
+            <TabPane tabId="theme">
+              <Card>
+                <CardBody>
+                  <CSRFForm method="POST" action="/user/changetheme">
+                    <InputGroup className="mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>Theme</InputGroupText>
+                      </InputGroupAddon>
+                      <CustomInput type="select" id="theme" name="theme" defaultValue={user.theme}>
+                        <option value="default">Default</option>
+                        <option value="dark">Dark Mode</option>
+                      </CustomInput>
+                    </InputGroup>
+                    <Button block outline color="success" type="submit">
+                      Update
+                    </Button>
+                  </CSRFForm>
+                </CardBody>
+              </Card>
+            </TabPane>
           </TabContent>
         </Col>
       </Row>
@@ -227,6 +256,7 @@ UserAccountPage.propTypes = {
     image_name: PropTypes.string,
     image: PropTypes.string,
     artist: PropTypes.string,
+    theme: PropTypes.string,
     users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
   }).isRequired,
   defaultNav: PropTypes.string.isRequired,
