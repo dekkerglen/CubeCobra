@@ -82,13 +82,13 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
   reactProps.loginCallback = req.baseUrl + req.path;
 
-  let reddit_thumbnail = '/content/sticker.png';
+  let redditthumbnail = '/content/sticker.png';
 
   if (options.metadata) {
     const filtered = options.metadata.filter((data) => data.property === 'og:image');
 
     if (filtered[0]) {
-      reddit_thumbnail = filtered[0].content;
+      redditthumbnail = filtered[0].content;
     }
   }
 
@@ -99,7 +99,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
     page,
     metadata: options.metadata ? options.metadata : null,
     title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
-    reddit_thumbnail,
+    redditthumbnail,
   });
 };
 
