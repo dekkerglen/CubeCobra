@@ -82,6 +82,16 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
   reactProps.loginCallback = req.baseUrl + req.path;
 
+  if (!options.metadata) {
+    options.metadata = [];
+  }
+  if (options.metadata.filter((data) => data.property === 'og:image').length === 0) {
+    options.metadata.push({
+      property: 'og:image',
+      content: '/content/sticker.png',
+    });
+  }
+
   return res.render('main', {
     reactHTML:
       NODE_ENV === 'production' ? ReactDOMServer.renderToString(React.createElement(getPage(page), reactProps)) : null,

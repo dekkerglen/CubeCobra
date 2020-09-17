@@ -30,7 +30,6 @@ src/components/DisplayContext.js
 src/components/DndProvider.js
 src/components/DraggableCard.js
 src/components/DynamicFlash.js
-src/components/EditCollapse.js
 src/components/ErrorBoundary.js
 src/components/FilterCollapse.js
 src/components/FoilCardImage.js

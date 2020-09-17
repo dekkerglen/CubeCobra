@@ -1,17 +1,31 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
-import { Button, Col, Collapse, Form, InputGroup, InputGroupAddon, Row, UncontrolledAlert } from 'reactstrap';
+import {
+  Button,
+  Col,
+  Collapse,
+  Form,
+  InputGroup,
+  InputGroupAddon,
+  Row,
+  UncontrolledAlert,
+  FormGroup,
+  Label,
+  Input,
+  Card,
+  FormText,
+} from 'reactstrap';
 
-import { encodeName } from '../utils/Card';
+import { encodeName } from 'utils/Card';
 
-import AutocompleteInput from './AutocompleteInput';
-import BlogpostEditor from './BlogpostEditor';
-import Changelist from './Changelist';
-import ChangelistContext from './ChangelistContext';
-import CubeContext from './CubeContext';
-import CSRFForm from './CSRFForm';
-import DisplayContext from './DisplayContext';
-import ResizeModal from './ResizeModal';
+import AutocompleteInput from 'components/AutocompleteInput';
+import Changelist from 'components/Changelist';
+import ChangelistContext from 'components/ChangelistContext';
+import CubeContext from 'components/CubeContext';
+import CSRFForm from 'components/CSRFForm';
+import DisplayContext from 'components/DisplayContext';
+import ResizeModal from 'components/ResizeModal';
+import TextEntry from 'components/TextEntry';
 
 export const getCard = async (cubeID, name, setAlerts) => {
   if (name && name.length > 0) {
@@ -39,6 +53,7 @@ export const getCard = async (cubeID, name, setAlerts) => {
     }
     return json.card;
   }
+  return null;
 };
 
 const EditCollapse = ({ ...props }) => {
@@ -61,13 +76,17 @@ const EditCollapse = ({ ...props }) => {
 
   const changelistForm = useRef();
 
-  const handleChange = useCallback((event) => {
-    return {
-      blog: setPostContent,
-      add: setAddValue,
-      remove: setRemoveValue,
-    }[event.target.name](event.target.value);
-  }, []);
+  const handleChange = useCallback(
+    (event) => {
+      console.log(event.target.name);
+      return {
+        textarea: setPostContent,
+        add: setAddValue,
+        remove: setRemoveValue,
+      }[event.target.name](event.target.value);
+    },
+    [setAddValue, setRemoveValue],
+  );
 
   const handleAdd = useCallback(
     async (event, newValue) => {
@@ -80,12 +99,14 @@ const EditCollapse = ({ ...props }) => {
         addChange({ add: { details: card } });
         setAddValue('');
         setRemoveValue('');
-        addInputRef.current && addInputRef.current.focus();
+        if (addInputRef.current) {
+          addInputRef.current.focus();
+        }
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addValue, addInputRef, cubeID],
+    [addChange, addValue, addInputRef, cubeID, setAddValue, setRemoveValue],
   );
 
   const handleRemoveReplace = useCallback(
@@ -103,8 +124,8 @@ const EditCollapse = ({ ...props }) => {
             ),
         );
         if (!cardOut) {
-          setAlerts((alerts) => [
-            ...alerts,
+          setAlerts((items) => [
+            ...items,
             { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` },
           ]);
           return;
@@ -122,26 +143,30 @@ const EditCollapse = ({ ...props }) => {
         setRemoveValue('');
         /* If replace, put focus back in addInputRef; otherwise leave it here. */
         const focus = replace ? addInputRef : removeInputRef;
-        focus.current && focus.current.focus();
+        if (focus.current) {
+          focus.current.focus();
+        }
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, cubeID, changes],
+    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, cubeID, changes, setAddValue, setRemoveValue],
   );
 
-  const handleDiscardAll = useCallback((event) => {
+  const handleDiscardAll = useCallback(() => {
     setChanges([]);
-  }, []);
+  }, [setChanges]);
 
-  const handleSaveChanges = useCallback((event) => {
-    changelistForm.current && changelistForm.current.submit();
-  });
+  const handleSaveChanges = useCallback(() => {
+    if (changelistForm.current) {
+      changelistForm.current.submit();
+    }
+  }, [changelistForm]);
 
   return (
     <Collapse className="px-3" {...props}>
-      {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert key={index} color={color} className="mt-2">
+      {alerts.map(({ color, message }) => (
+        <UncontrolledAlert color={color} className="mt-2">
           {message}
         </UncontrolledAlert>
       ))}
@@ -209,7 +234,24 @@ const EditCollapse = ({ ...props }) => {
               </div>
             </Col>
             <Col>
-              <BlogpostEditor maxLength={10000} name="blog" value={postContent} onChange={handleChange} />
+              <h6>Blog Post</h6>
+              <FormGroup>
+                <Label className="sr-only">Blog Title</Label>
+                <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
+              </FormGroup>
+              <FormGroup>
+                <Label className="sr-only">Blog Body</Label>
+                <Card>
+                  <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
+                </Card>
+                <FormText>
+                  Having trouble formatting your posts? Check out the{' '}
+                  <a href="/markdown" target="_blank">
+                    markdown guide
+                  </a>
+                  .
+                </FormText>
+              </FormGroup>
             </Col>
           </Row>
           <Row className="mb-2">
