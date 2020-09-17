@@ -85,7 +85,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
   if (!options.metadata) {
     options.metadata = [];
   }
-  if (options.metadata.filter((data) => data.property === 'og:image').length === 0) {
+  if (!options.metadata.some((data) => data.property === 'og:image')) {
     options.metadata.push({
       property: 'og:image',
       content: '/content/sticker.png',
@@ -97,7 +97,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       NODE_ENV === 'production' ? ReactDOMServer.renderToString(React.createElement(getPage(page), reactProps)) : null,
     reactProps: serialize(reactProps),
     page,
-    metadata: options.metadata ? options.metadata : null,
+    metadata: options.metadata,
     title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
   });
 };
