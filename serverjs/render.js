@@ -101,7 +101,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
     metadata: options.metadata ? options.metadata : null,
     title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
     redditthumbnail,
-    colors: req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
+    colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
   });
 };
 

@@ -62,7 +62,7 @@ body {
 
 .pagination > .active > a,
 .pagination > .active > button {
-	color: var(--bg) !important;
+	color: #fff !important;
 	background-color: var(--success) !important;
 	border: solid 1px var(--success) !important;
 }
@@ -116,7 +116,7 @@ body {
 	cursor: pointer;
 	font-size: 8.5pt;
 
-	color:var(--text);
+	color:var(--card-text);
 	padding: 3px 4px;
 	text-decoration: none;
 }
@@ -344,7 +344,8 @@ body {
 	padding: 0.75rem 1.25rem;
 }
 code {
-	background: var(--bg-dark);
+	background: var(--bg-darker);
+	color: var(--code-color)
 }
 #syntax-accordion .card-header {
 	cursor: pointer;
@@ -514,8 +515,8 @@ body.busy-cursor {
 	position: absolute;
 	bottom: 0;
 	right: 2px;
-	color: var(--bg);
-	text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+	color: #fff;
+	text-shadow: -1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000;
 }
 
 .content-preview-banner {
@@ -797,6 +798,7 @@ img.mana-symbol-sm {
 .cube-id-btn {
 	border: none;
 	background-color: var(--bg);
+	color: var(--text);
 	margin: -8px;
 }
 .cube-id-btn:focus {
@@ -822,6 +824,10 @@ img.mana-symbol-sm {
 		width: 100%;
 		min-height: 100px;
 	}
+}
+
+.sortIcon {
+    max-height: 1rem;
 }
 
 .legality-badge {
@@ -1005,4 +1011,126 @@ audio {
 	color: var(--bg);
 	text-decoration: none;
 	background-color: var(--success);
+}
+
+/*** Styles necessary for Palette Swaps ***/
+
+.modal-content,
+.dropdown-menu,
+.dropdown-menu a,
+.dropdown-menu button,
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active,
+.bg-white,
+.pvtAxisContainer li span.pvtAttr{
+	background-color: var(--bg) !important;
+	color:var(--text);
+}
+
+
+.pvtAxisContainer,
+.pvtVals{
+	background-color: var(--bg) !important;
+
+}
+
+.form-control,
+.custom-select,
+.custom-select:disabled,
+.form-control:focus,
+.custom-select:focus {
+	background-color: var(--bg);
+	color:var(--text);
+	border-color: var(--border);
+}
+.pvtDropdownCurrent {
+	background-color: var(--bg) !important;
+	color:var(--text) !important;
+	border-color: var(--border) !important;
+}
+
+.input-group-text {
+	background-color: var(--bg-dark);
+	color:var(--text);
+	border-color: var(--border);
+}
+
+.close,
+.table {
+	color:var(--text)
+}
+
+.btn-success {
+	background-color: var(--button-green);	
+	border-color: var(--button-green);
+}
+
+.btn-danger {
+	background-color: var(--button-red); 
+	border-color: var(--button-red);
+}
+
+.modal-header,
+.modal-footer {
+	border-color: var(--border-dark);
+}
+.nav-tabs,
+.border-bottom,
+.border-top{
+	border-color: var(--border-light) !important;
+
+}
+
+.navbar-light .navbar-nav .nav-link {
+	color:var(--secondary-nav-link)
+}
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link:focus {
+	color:var(--secondary-nav-link-hover)
+}
+
+.nav-tabs .nav-item.show .nav-link,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link:hover {
+	border-color:var(--border-light) var(--border-light) var(--bg)
+}
+
+a{
+	color: var(--link);
+}
+
+.page-item.disabled .page-link {
+	background-color: var(--bg);
+}
+
+.dropdown-item:focus,
+.dropdown-item:hover {
+	background-color: var(--bg);
+}
+
+.dropdown-item:focus,
+.dropdown-item:hover{
+	color:var(--dropdown-hover);
+}
+
+.border-left{
+    border-left: 1px solid var(--border-light) !important;
+}
+
+.table thead th,
+.table-bordered td,
+.table-bordered th {
+	border-color: var(--border);
+}
+.blog-post-border  {
+	border-right: 1px solid var(--border-light);
+}
+
+.form-control:disabled, .form-control[readonly] {
+	background-color: var(--read-only-disabled);
+}
+
+.pvtUi,
+.pvtTable {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important
 }
