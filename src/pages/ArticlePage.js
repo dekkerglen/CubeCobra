@@ -6,12 +6,14 @@ import { CardHeader, Card } from 'reactstrap';
 import DynamicFlash from 'components/DynamicFlash';
 import Article from 'components/Article';
 import ButtonLink from 'components/ButtonLink';
+import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const ArticlePage = ({ user, loginCallback, article }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
+      <Advertisement />
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === article.owner && article.status !== 'published' && (

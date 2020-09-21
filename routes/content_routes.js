@@ -5,6 +5,7 @@ const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
 const { getFeedData, getFeedEpisodes } = require('../serverjs/rss');
+const generateMeta = require('../serverjs/meta.js');
 const Application = require('../models/application');
 const Article = require('../models/article');
 const Podcast = require('../models/podcast');
@@ -53,21 +54,50 @@ router.get('/creators', ensureContentCreator, async (req, res) => {
   return render(req, res, 'CreatorsPage');
 });
 
-const BROWSE_SIZE = 3;
-
 router.get('/browse', async (req, res) => {
-  const [articles, videos, podcasts, episodes] = await Promise.all([
-    Article.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
-    Video.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
-    Podcast.find({ status: 'published' }).sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
-    PodcastEpisode.find().sort({ date: -1 }).limit(BROWSE_SIZE).lean(),
-  ]);
+  const results = 36;
+
+  const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(results);
+  const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(results);
+  const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(results);
+
+  // We can do these queries in parallel
+  const [articles, videos, episodes] = await Promise.all([articlesq, videosq, episodesq]);
+
+  const content = [];
+
+  for (const article of articles) {
+    content.push({
+      type: 'article',
+      date: article.date,
+      content: article,
+    });
+  }
+  for (const video of videos) {
+    content.push({
+      type: 'video',
+      date: video.date,
+      content: video,
+    });
+  }
+  for (const episode of episodes) {
+    content.push({
+      type: 'episode',
+      date: episode.date,
+      content: episode,
+    });
+  }
+
+  content.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB - dateA;
+  });
+
+  content.splice(results);
 
   return render(req, res, 'BrowseContentPage', {
-    articles,
-    videos,
-    podcasts,
-    episodes,
+    content,
   });
 });
 
@@ -126,7 +156,21 @@ router.get('/article/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'ArticlePage', { article });
+  return render(
+    req,
+    res,
+    'ArticlePage',
+    { article },
+    {
+      title: article.title,
+      metadata: generateMeta(
+        article.title,
+        article.short || 'An article posted to Cube Cobra',
+        article.image,
+        `https://cubecobra.com/content/article/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/podcast/:id', async (req, res) => {
@@ -138,7 +182,21 @@ router.get('/podcast/:id', async (req, res) => {
   }
   const episodes = await PodcastEpisode.find({ podcast: podcast._id }).sort({ date: -1 });
 
-  return render(req, res, 'PodcastPage', { podcast, episodes });
+  return render(
+    req,
+    res,
+    'PodcastPage',
+    { podcast, episodes },
+    {
+      title: podcast.title,
+      metadata: generateMeta(
+        podcast.title,
+        `Listen to ${podcast.title} on Cube Cobra!`,
+        podcast.image,
+        `https://cubecobra.com/content/podcast/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/episode/:id', async (req, res) => {
@@ -149,7 +207,21 @@ router.get('/episode/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'PodcastEpisodePage', { episode });
+  return render(
+    req,
+    res,
+    'PodcastEpisodePage',
+    { episode },
+    {
+      title: episode.title,
+      metadata: generateMeta(
+        episode.title,
+        `Listen to ${episode.title} on Cube Cobra!`,
+        episode.image,
+        `https://cubecobra.com/content/episode/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/video/:id', async (req, res) => {
@@ -160,7 +232,21 @@ router.get('/video/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  return render(req, res, 'VideoPage', { video });
+  return render(
+    req,
+    res,
+    'VideoPage',
+    { video },
+    {
+      title: video.title,
+      metadata: generateMeta(
+        video.title,
+        video.short || 'A video posted to Cube Cobra',
+        video.image,
+        `https://cubecobra.com/content/video/${req.params.id}`,
+      ),
+    },
+  );
 });
 
 router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
@@ -282,7 +368,7 @@ router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/editarticle', ensureContentCreator, async (req, res) => {
-  const { articleid, title, image, imagename, artist, body } = req.body;
+  const { articleid, title, image, imagename, artist, body, short } = req.body;
 
   const article = await Article.findById(articleid);
 
@@ -297,6 +383,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
   }
 
   article.title = title.substring(0, 1000);
+  article.short = short.substring(0, 1000);
   article.image = image.substring(0, 1000);
   article.imagename = imagename.substring(0, 1000);
   article.artist = artist.substring(0, 1000);
@@ -335,7 +422,7 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/editvideo', ensureContentCreator, async (req, res) => {
-  const { videoid, title, image, imagename, artist, body, url } = req.body;
+  const { videoid, title, image, imagename, artist, body, url, short } = req.body;
 
   const video = await Video.findById(videoid);
 
@@ -350,6 +437,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
   }
 
   video.title = title.substring(0, 1000);
+  video.short = short.substring(0, 1000);
   video.image = image.substring(0, 1000);
   video.imagename = imagename.substring(0, 1000);
   video.artist = artist.substring(0, 1000);
@@ -362,7 +450,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/submitarticle', ensureContentCreator, async (req, res) => {
-  const { articleid, title, image, imagename, artist, body } = req.body;
+  const { articleid, title, image, imagename, artist, body, short } = req.body;
 
   const article = await Article.findById(articleid);
 
@@ -377,6 +465,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
   }
 
   article.title = title.substring(0, 1000);
+  article.short = short.substring(0, 1000);
   article.image = image.substring(0, 1000);
   article.imagename = imagename.substring(0, 1000);
   article.artist = artist.substring(0, 1000);
@@ -425,7 +514,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/submitvideo', ensureContentCreator, async (req, res) => {
-  const { videoid, title, image, imagename, artist, body, url } = req.body;
+  const { videoid, title, image, imagename, artist, body, url, short } = req.body;
 
   const video = await Video.findById(videoid);
 
@@ -440,6 +529,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
   }
 
   video.title = title.substring(0, 1000);
+  video.short = short.substring(0, 1000);
   video.image = image.substring(0, 1000);
   video.imagename = imagename.substring(0, 1000);
   video.artist = artist.substring(0, 1000);
@@ -466,6 +556,7 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
   article.image =
     'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192';
   article.artist = 'Craig J Spearing';
+  article.short = 'This is a brand new article!';
   article.imagename = 'emmessi tome [mb1-1579]';
   article.status = 'draft';
   article.username = req.user.username;
@@ -500,6 +591,7 @@ router.get('/newvideo', ensureContentCreator, async (req, res) => {
 
   video.title = 'New Video';
   video.body = '';
+  video.short = 'This is a brand new video!';
   video.url = '';
   video.owner = req.user.id;
   video.date = new Date();

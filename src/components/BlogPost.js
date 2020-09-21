@@ -59,7 +59,7 @@ class BlogPost extends React.Component {
       post.html = null;
     }
     return (
-      <Card className="shadowed rounded-0 mt-3">
+      <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
             {post.title}

@@ -187,8 +187,8 @@ cubeSchema.index({
 
 const Cube = mongoose.model('Cube', cubeSchema);
 
-Cube.LAYOUT_FIELDS = '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+Cube.LAYOUT_FIELDS = '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri';
 Cube.PREVIEW_FIELDS =
-  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name';
+  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
 
 module.exports = Cube;

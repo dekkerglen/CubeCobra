@@ -28,6 +28,7 @@ import CSRFForm from 'components/CSRFForm';
 const EditVideoPage = ({ user, loginCallback, video }) => {
   const [tab, setTab] = useState('0');
   const [body, setBody] = useState(video.body);
+  const [short, setShort] = useState(video.short);
   const [url, setUrl] = useState(video.url);
   const [title, setTitle] = useState(video.title);
   const [imageName, setImageName] = useState(video.imagename);
@@ -76,6 +77,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
               <CSRFForm method="POST" action="/content/editvideo" autoComplete="off">
                 <Input type="hidden" name="videoid" value={video._id} />
                 <Input type="hidden" name="title" value={title} />
+                <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
@@ -90,6 +92,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
               <CSRFForm method="POST" action="/content/submitvideo" autoComplete="off">
                 <Input type="hidden" name="videoid" value={video._id} />
                 <Input type="hidden" name="title" value={title} />
+                <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
@@ -141,6 +144,17 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
                   </Col>
                   <Col sm="10">
                     <Input maxlength="1000" value={url} onChange={(event) => setUrl(event.target.value)} />
+                  </Col>
+                </Row>
+              </FormGroup>
+              <FormGroup>
+                <Row>
+                  <Col sm="2">
+                    <Label>Short Description:</Label>
+                  </Col>
+                  <Col sm="10">
+                    <Input maxlength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
+                    <p>Plaintext only. This short description will be used for the video preview.</p>
                   </Col>
                 </Row>
               </FormGroup>
@@ -199,12 +213,27 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
           <TabPane tabId="1">
             <CardBody>
               <Row className="px-3">
+                <Col xs="12" sm="6" md="4" className="mb-3">
+                  <VideoPreview
+                    video={{
+                      username: user.username,
+                      title,
+                      body,
+                      short,
+                      artist: imageArtist,
+                      imagename: imageName,
+                      image: imageUri,
+                      date: video.date,
+                    }}
+                  />
+                </Col>
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <VideoPreview
                     video={{
                       username: user.username,
                       title,
                       body,
+                      short,
                       artist: imageArtist,
                       imagename: imageName,
                       image: imageUri,
@@ -219,6 +248,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
                 username: user.username,
                 title,
                 body,
+                short,
                 artist: imageArtist,
                 imagename: imageName,
                 image: imageUri,
@@ -244,6 +274,7 @@ EditVideoPage.propTypes = {
     body: PropTypes.string,
     title: PropTypes.string,
     image: PropTypes.string,
+    short: PropTypes.string,
     imagename: PropTypes.string,
     artist: PropTypes.string,
     _id: PropTypes.string,

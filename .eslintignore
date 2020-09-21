@@ -23,14 +23,12 @@ src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeListNavbar.js
 src/components/CubeOverviewModal.js
-src/components/CurveAnalysis.js
 src/components/CustomDraftFormatModal.js
 src/components/CustomImageToggler.js
 src/components/DisplayContext.js
 src/components/DndProvider.js
 src/components/DraggableCard.js
 src/components/DynamicFlash.js
-src/components/EditCollapse.js
 src/components/ErrorBoundary.js
 src/components/FilterCollapse.js
 src/components/FoilCardImage.js
@@ -38,7 +36,6 @@ src/components/FoilOverlay.js
 src/components/GroupModal.js
 src/components/GroupModalContext.js
 src/components/ImageFallback.js
-src/components/MulticoloredAnalysis.js
 src/components/Notification.js
 src/components/SortCollapse.js
 src/components/SortContext.js
@@ -48,9 +45,7 @@ src/components/TagColorsModal.js
 src/components/TagContext.js
 src/components/TagInput.js
 src/components/TextBadge.js
-src/components/TokenAnalysis.js
 src/components/Tooltip.js
-src/components/TypeAnalysis.js
 src/components/WithAutocard.js
 src/components/WithLoading.js
 src/components/WithModal.js

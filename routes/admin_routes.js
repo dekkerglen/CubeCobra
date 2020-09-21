@@ -171,6 +171,7 @@ router.get('/publisharticle/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your article has been published',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -230,6 +231,7 @@ router.get('/publishvideo/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your video has been published',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -289,6 +291,7 @@ router.get('/publishpodcast/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your podcast has been approved',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -348,6 +351,7 @@ router.get('/removearticlereview/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your article was not published',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -407,6 +411,7 @@ router.get('/removevideoreview/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your video was not published',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -466,6 +471,7 @@ router.get('/removepodcastreview/:id', ensureAdmin, async (req, res) => {
       to: owner.email,
       subject: 'Your podcast was not approved',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -544,6 +550,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
       to: user.email,
       subject: 'Cube Cobra Content Creator',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
@@ -585,6 +592,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
       to: user.email,
       subject: 'Cube Cobra Content Creator',
     },
+    send: true,
     juiceResources: {
       webResources: {
         relativeTo: path.join(__dirname, '..', 'public'),
