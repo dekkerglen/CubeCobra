@@ -195,6 +195,23 @@ function priceBucketLabel(index, prefix) {
   return `${prefix}${priceBuckets[index - 1]} - ${prefix}${priceBuckets[index] - 0.01}`;
 }
 
+function priceBucketIndex(price) {
+  if (price < priceBuckets[0]) {
+    return 0;
+  }
+  for (let i = 1; i < priceBuckets.length; i++) {
+    if (price >= priceBuckets[i - 1] && price < priceBuckets[i]) {
+      return i;
+    }
+  }
+  // Last bucket catches any remaining prices
+  return priceBuckets.length;
+}
+
+function getPriceBucket(price, prefix) {
+  return priceBucketLabel(priceBucketIndex(price), prefix);
+}
+
 function getEloBucket(elo) {
   const bucketFloor = Math.floor(elo / 50) * 50;
   return `${bucketFloor}-${bucketFloor + 49}`;
@@ -741,78 +758,30 @@ export function cardGetLabels(card, sort) {
   if (sort === 'Price USD' || sort === 'Price') {
     const price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
-      // fence post first and last term
-      if (price < priceBuckets[0]) {
-        return [priceBucketLabel(0, '$')];
-      }
-      if (price >= priceBuckets[priceBuckets.length - 1]) {
-        return [priceBucketLabel(priceBuckets.length, '$')];
-      }
-      for (let i = 1; i < priceBuckets.length; i++) {
-        if (price >= priceBuckets[i - 1] && price < priceBuckets[i]) {
-          return [priceBucketLabel(i, '$')];
-        }
-      }
-    } else {
-      return ['No Price Available'];
+      return [getPriceBucket(price, '$')];
     }
+    return ['No Price Available'];
   }
   if (sort === 'Price USD Foil') {
     const price = card.details.prices.usd_foil;
     if (price) {
-      // fence post first and last term
-      if (price < priceBuckets[0]) {
-        return [priceBucketLabel(0, '$')];
-      }
-      if (price >= priceBuckets[priceBuckets.length - 1]) {
-        return [priceBucketLabel(priceBuckets.length, '$')];
-      }
-      for (let i = 1; i < priceBuckets.length; i++) {
-        if (price >= priceBuckets[i - 1] && price < priceBuckets[i]) {
-          return [priceBucketLabel(i, '$')];
-        }
-      }
-    } else {
-      return ['No Price Available'];
+      return [getPriceBucket(price, '$')];
     }
+    return ['No Price Available'];
   }
   if (sort === 'Price EUR') {
     const price = cardPriceEur(card);
     if (price) {
-      // fence post first and last term
-      if (price < priceBuckets[0]) {
-        return [priceBucketLabel(0, '€')];
-      }
-      if (price >= priceBuckets[priceBuckets.length - 1]) {
-        return [priceBucketLabel(priceBuckets.length, '€')];
-      }
-      for (let i = 1; i < priceBuckets.length; i++) {
-        if (price >= priceBuckets[i - 1] && price < priceBuckets[i]) {
-          return [priceBucketLabel(i, '€')];
-        }
-      }
-    } else {
-      return ['No Price Available'];
+      return [getPriceBucket(price, '€')];
     }
+    return ['No Price Available'];
   }
   if (sort === 'MTGO TIX') {
     const price = cardTix(card);
     if (price) {
-      // fence post first and last term
-      if (price < priceBuckets[0]) {
-        return [priceBucketLabel(0, '')];
-      }
-      if (price >= priceBuckets[priceBuckets.length - 1]) {
-        return [priceBucketLabel(priceBuckets.length, '')];
-      }
-      for (let i = 1; i < priceBuckets.length; i++) {
-        if (price >= priceBuckets[i - 1] && price < priceBuckets[i]) {
-          return [priceBucketLabel(i, '')];
-        }
-      }
-    } else {
-      return ['No Price Available'];
+      return [getPriceBucket(price, '')];
     }
+    return ['No Price Available'];
   }
   if (sort === 'Devotion to White') {
     return [cardDevotion(card, 'w').toString()];
