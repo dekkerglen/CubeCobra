@@ -716,8 +716,8 @@ export function cardGetLabels(card, sort) {
   }
   if (sort === 'Legality') {
     return Object.entries(card.details.legalities)
-      .filter(([k, v]) => ['legal', 'banned'].includes(v))
-      .map(([k, v]) => k);
+      .filter(([k, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
+      .map(([k, v]) => k); // eslint-disable-line no-unused-vars
   }
   if (sort === 'Power') {
     if (card.details.power) {
@@ -875,7 +875,7 @@ export function sortDeep(cards, ...sorts) {
 
 export function countGroup(group) {
   if (Array.isArray(group[0])) {
-    const counts = group.map(([label, group2]) => countGroup(group2));
+    const counts = group.map(([label, group2]) => countGroup(group2)); // eslint-disable-line no-unused-vars
     return counts.reduce((a, b) => a + b, 0);
   }
   return group.length;
