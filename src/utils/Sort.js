@@ -246,13 +246,13 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Tags') {
     const tags = [];
-    cube.forEach((card) => {
-      card.tags.forEach((tag) => {
+    for (const card of cube) {
+      for (const tag of card.tags) {
         if (tag.length > 0 && !tags.includes(tag)) {
           tags.push(tag);
         }
-      });
-    });
+      }
+    }
     return tags.sort();
   }
   if (sort === 'Date Added') {
@@ -277,20 +277,20 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Set') {
     const sets = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (!sets.includes(card.details.set.toUpperCase())) {
         sets.push(card.details.set.toUpperCase());
       }
-    });
+    }
     return sets.sort();
   }
   if (sort === 'Artist') {
     const artists = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (!artists.includes(card.details.artist)) {
         artists.push(card.details.artist);
       }
-    });
+    }
     return artists.sort();
   }
   if (sort === 'Rarity') {
@@ -305,7 +305,10 @@ function getLabelsRaw(cube, sort) {
       const split = card.type_line.split(/[-–—]/);
       if (split.length > 1) {
         const subtypes = split[1].trim().split(' ');
-        subtypes.filter((x) => x.trim()).forEach((subtype) => types.add(subtype.trim()));
+        const nonemptySubtypes = subtypes.filter((x) => x.trim());
+        for (const subtype of nonemptySubtypes) {
+          types.add(subtype.trim());
+        }
       }
     }
     return [...types];
@@ -359,13 +362,13 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Power') {
     const items = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (card.details.power) {
         if (!items.includes(card.details.power)) {
           items.push(card.details.power);
         }
       }
-    });
+    }
     return items.sort((x, y) => {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
@@ -387,13 +390,13 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Toughness') {
     const items = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (card.details.toughness) {
         if (!items.includes(card.details.toughness)) {
           items.push(card.details.toughness);
         }
       }
-    });
+    }
     return items.sort((x, y) => {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
@@ -415,13 +418,13 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Loyalty') {
     const items = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (card.details.loyalty) {
         if (!items.includes(card.details.loyalty)) {
           items.push(card.details.loyalty);
         }
       }
-    });
+    }
     return items.sort((x, y) => {
       if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
         if (x > y) {
@@ -491,13 +494,13 @@ function getLabelsRaw(cube, sort) {
   }
   if (sort === 'Elo') {
     let elos = [];
-    cube.forEach((card) => {
+    for (const card of cube) {
       if (card.details.elo) {
         if (!elos.includes(card.details.elo)) {
           elos.push(card.details.elo);
         }
       }
-    });
+    }
     elos = elos.sort((x, y) => {
       if (x - y > 0) {
         return 1;
