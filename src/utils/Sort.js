@@ -1,47 +1,6 @@
 import { alphaCompare, fromEntries } from 'utils/Util';
 import { cardDevotion, cardPriceEur, cardTix, cardCmc } from 'utils/Card';
 
-function ISODateToYYYYMMDD(dateString) {
-  const locale = 'en-US';
-
-  if (dateString === undefined) {
-    return undefined;
-  }
-
-  return new Date(dateString).toLocaleDateString(locale);
-}
-
-function removeAdjacentDuplicates(arr) {
-  return arr.filter((x, i) => i === 0 || x !== arr[i - 1]);
-}
-
-export function GetColorIdentity(colors) {
-  if (colors.length === 0) {
-    return 'Colorless';
-  }
-  if (colors.length > 1) {
-    return 'Multicolored';
-  }
-  if (colors.length === 1) {
-    switch (colors[0]) {
-      case 'W':
-        return 'White';
-      case 'U':
-        return 'Blue';
-      case 'B':
-        return 'Black';
-      case 'R':
-        return 'Red';
-      case 'G':
-        return 'Green';
-      case 'C':
-        return 'Colorless';
-      default:
-        return 'None';
-    }
-  }
-}
-
 const COLOR_MAP = {
   W: 'White',
   U: 'Blue',
@@ -85,12 +44,53 @@ const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Iz
 const SHARDS = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
 const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
 
+function ISODateToYYYYMMDD(dateString) {
+  const locale = 'en-US';
+
+  if (dateString === undefined) {
+    return undefined;
+  }
+
+  return new Date(dateString).toLocaleDateString(locale);
+}
+
+function removeAdjacentDuplicates(arr) {
+  return arr.filter((x, i) => i === 0 || x !== arr[i - 1]);
+}
+
+export function GetColorIdentity(colors) {
+  if (colors.length === 0) {
+    return 'Colorless';
+  }
+  if (colors.length === 1) {
+    if (Object.keys(COLOR_MAP).includes(colors[0])) {
+      return COLOR_MAP[colors[0]];
+    }
+    if (colors[0] === 'C') {
+      return 'Colorless';
+    }
+    return 'None';
+  }
+  if (colors.length > 1) {
+    return 'Multicolored';
+  }
+}
+
 export function GetColorCategory(type, colors, full) {
   if (type.toLowerCase().includes('land')) {
     return 'Lands';
   }
   if (colors.length === 0) {
     return 'Colorless';
+  }
+  if (colors.length === 1) {
+    if (Object.keys(COLOR_MAP).includes(colors[0])) {
+      return COLOR_MAP[colors[0]];
+    }
+    if (colors[0] === 'C') {
+      return 'Colorless';
+    }
+    return 'None';
   }
   if (colors.length > 1) {
     if (full) {
@@ -109,24 +109,6 @@ export function GetColorCategory(type, colors, full) {
       }
     } else {
       return 'Multicolored';
-    }
-  }
-  if (colors.length === 1) {
-    switch (colors[0]) {
-      case 'W':
-        return 'White';
-      case 'U':
-        return 'Blue';
-      case 'B':
-        return 'Black';
-      case 'R':
-        return 'Red';
-      case 'G':
-        return 'Green';
-      case 'C':
-        return 'Colorless';
-      default:
-        return 'None';
     }
   }
 }
