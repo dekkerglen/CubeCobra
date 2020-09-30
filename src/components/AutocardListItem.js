@@ -15,21 +15,28 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
   const { name } = card.details;
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
+  const openCardToolWindow = useCallback(() => {
+    window.open(`/tool/card/${card.details._id}`);
+  }, [card.details._id]);
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
-      openCardModal(card);
+      if (event.ctrlKey) {
+        openCardToolWindow();
+      } else {
+        openCardModal(card);
+      }
     },
-    [card, openCardModal],
+    [card, openCardModal, openCardToolWindow],
   );
   const handleAuxClick = useCallback(
     (event) => {
       if (event.button == 1) {
         event.preventDefault();
-        window.open('/tool/card/' + card.details._id);
+        openCardToolWindow();
       }
     },
-    [card.details._id],
+    [openCardToolWindow],
   );
   return (
     <AutocardDiv
