@@ -160,7 +160,24 @@ const InnerMarkdown = ({ markdown }) => {
           }
           if (section.startsWith('[')) {
             const parts = section.split('](');
+            const link = parts[1].substring(0, parts[1].length - 1);
+            const text = parts[0].substring(1);
 
+            const isInternalURL = (to) => {
+              try {
+                const url = new URL(to, window.location.origin);
+                return url.hostname === window.location.hostname;
+              } catch {
+                return false;
+              }
+            };
+            if (isInternalURL(link)) {
+              return (
+                <a target="_blank" rel="noopener noreferrer" href={link}>
+                  {text}
+                </a>
+              );
+            }
             return (
               /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
               <Link href="#" modalProps={{ link: parts[1].substring(0, parts[1].length - 1) }}>
