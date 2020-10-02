@@ -283,7 +283,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
   }
 
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+|^>>>[^<>]+<<<)/gm);
   return (
     <>
       {split.map((section) => {
@@ -307,6 +307,17 @@ const OuterMarkdown = ({ markdown, limited }) => {
                 ))}
               </CardBody>
             </Card>
+          );
+        }
+        if (section.startsWith('>>>')) {
+          console.log(section);
+          const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
+          return (
+            <span className="centered">
+              {lines.map((line) => (
+                <Markdown markdown={line.replace(/(>>>)|(<<<)/g, '')} />
+              ))}
+            </span>
           );
         }
         return <Markdown markdown={section} />;
