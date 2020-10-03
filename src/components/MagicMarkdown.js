@@ -296,9 +296,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
           );
         }
         if (section.startsWith('> ')) {
-          console.log(section);
           const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
-          console.log(lines);
           return (
             <Card className="bg-light">
               <CardBody>
@@ -310,7 +308,6 @@ const OuterMarkdown = ({ markdown, limited }) => {
           );
         }
         if (section.startsWith('>>>')) {
-          console.log(section);
           const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
           return (
             <span className="centered">
