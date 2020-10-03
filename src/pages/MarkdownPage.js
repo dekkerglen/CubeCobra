@@ -751,9 +751,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`>>>`}</code> <br />
-                <code>### Centered heading</code> <br />
-                <code>{`<<<`}</code>
+                <code>
+                  {`>>>`} <br />
+                  ### Centered heading <br />
+                  {`<<<`}
+                </code>
               </CardBody>
             </Card>
           </Col>
@@ -761,7 +763,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`>>> 
+                <MagicMarkdown
+                  markdown={`>>> 
                 #### Centered heading
                 <<<`}
                 />
@@ -775,12 +778,12 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardHeader>Source</CardHeader>
               <CardBody>
                 <code>
-                  <code>{`>>>`}</code> <br />
-                  <code>Centered paragraph</code> <br />
-                  <code>spanning</code> <br />
-                  <code>multiple</code> <br />
-                  <code>lines</code> <br />
-                  <code>{`<<<`}</code> <br />
+                  {`>>>`} <br />
+                  Centered paragraph <br />
+                  spanning <br />
+                  multiple <br />
+                  lines <br />
+                  {`<<<`} <br />
                 </code>
               </CardBody>
             </Card>
@@ -789,7 +792,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`>>> 
+                <MagicMarkdown
+                  markdown={`>>> 
                 Centered paragraph 
                 spanning 
                 multiple
