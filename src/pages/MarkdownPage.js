@@ -49,6 +49,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
           <li>
             <a href="#latex">LaTeX</a>
           </li>
+          <li>
+            <a href="#centering">Centering</a>
+          </li>
         </ol>
       </CardBody>
       <CardBody className="border-top">
@@ -697,6 +700,106 @@ const MarkdownPage = ({ user, loginCallback }) => (
                 <MagicMarkdown markdown={`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
                 <br />
                 <MagicMarkdown markdown={`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="centering">Centering</h5>
+        <p>You can center elements by wrapping them in triple angle brackets.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>{`>>> This text is centered <<<`}</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown={`>>> This text is centered <<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>You can center card images, titles and multi-line paragraphs as well.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>{`>>> Centered Card: [[!Hexdrinker]] <<<`}</code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown markdown={`>>> Centered Image: [[!Hexdrinker]] <<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>
+                  {`>>>`} <br />
+                  ### Centered heading <br />
+                  {`<<<`}
+                </code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown
+                  markdown={`>>> 
+                #### Centered heading
+                <<<`}
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <code>
+                  {`>>>`} <br />
+                  Centered paragraph <br />
+                  spanning <br />
+                  multiple <br />
+                  lines <br />
+                  {`<<<`} <br />
+                </code>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <MagicMarkdown
+                  markdown={`>>> 
+                Centered paragraph 
+                spanning 
+                multiple
+                lines
+                <<<`}
+                />
               </CardBody>
             </Card>
           </Col>
