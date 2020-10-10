@@ -102,3 +102,20 @@ test('CubeListPage has major functionality', async () => {
     expect(getAllByText(card.details.name).length).toBeGreaterThan(0);
   }
 });
+
+test('CubeListPage supports modal and new window card triggers', async () => {
+  const { findByAltText, findByText, getByText } = render(element());
+
+  const cardName = exampleCardsFull[0].details.name;
+  // Show modal card dialog
+  fireEvent.click(getByText(cardName));
+  expect(await findByAltText(cardName));
+  // Close dialog
+  fireEvent.click(global.document.querySelector('.close[aria-label="Close"]'));
+  await findByText(cardName);
+
+  // Open new window if ctrl pressed
+  global.open = jest.fn();
+  fireEvent.click(getByText(cardName), { ctrlKey: true });
+  expect(global.open).toBeCalled();
+});
