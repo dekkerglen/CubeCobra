@@ -23,7 +23,6 @@ src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeListNavbar.js
 src/components/CubeOverviewModal.js
-src/components/CustomDraftFormatModal.js
 src/components/CustomImageToggler.js
 src/components/DisplayContext.js
 src/components/DndProvider.js
