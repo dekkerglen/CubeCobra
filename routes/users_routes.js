@@ -772,6 +772,22 @@ router.post('/updateemail', ensureAuth, (req, res) => {
   );
 });
 
+router.post('/changetheme', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    user.theme = req.body.theme;
+
+    await user.save();
+
+    req.flash('success', 'Your theme has been updated.');
+    res.redirect('/user/account');
+  } catch (err) {
+    req.flash('danger', `Could not save theme: ${err.message}`);
+    res.redirect('/user/account?nav=theme');
+  }
+});
+
 router.get('/social', ensureAuth, async (req, res) => {
   try {
     const followedCubesQ = Cube.find({ _id: { $in: req.user.followed_cubes } }, Cube.PREVIEW_FIELDS).lean();

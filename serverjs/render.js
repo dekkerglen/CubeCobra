@@ -77,6 +77,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         image_name: req.user.image_name,
         artist: req.user.artist,
         roles: req.user.roles,
+        theme: req.user.theme,
       }
     : null;
 
@@ -99,6 +100,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
     page,
     metadata: options.metadata,
     title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
+    colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
   });
 };
 

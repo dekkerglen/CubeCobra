@@ -84,7 +84,7 @@ class BlogPost extends React.Component {
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
           {post.changelist && (post.html || post.markdown) ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-5 col-md-4 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border" >
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
