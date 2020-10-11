@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useRef, useState } from 'react';
+import React, { useContext, useCallback, useRef } from 'react';
 
 import {
   Button,
@@ -22,80 +22,106 @@ import {
   Row,
 } from 'reactstrap';
 
-import CSRFForm from './CSRFForm';
-import CubeContext from './CubeContext';
-import TextEntry from './TextEntry';
+import PropTypes from 'prop-types';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'components/CubeContext';
+import TextEntry from 'components/TextEntry';
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
 
-  const handleChangeDescription = useCallback((event) => {
-    const target = event.target;
-    if (target) {
-      setFormat((format) => ({
-        ...format,
-        markdown: target.value,
-      }));
-    }
-  });
+  const handleChangeDescription = useCallback(
+    (event) => {
+      const { target } = event;
+      if (target) {
+        // eslint-disable-next-line no-shadow
+        setFormat((format) => ({
+          ...format,
+          markdown: target.value,
+        }));
+      }
+    },
+    [setFormat],
+  );
 
-  const handleAddCard = useCallback((event) => {
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs[index] = [...newFormat.packs[index], ''];
-      return newFormat;
-    });
-  }, []);
-  const handleRemoveCard = useCallback((event) => {
-    const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'));
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      // don't remove the last card from a pack
-      if (format.packs[packIndex].length <= 1) return format;
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
-      newFormat.packs[packIndex].splice(index, 1);
-      return newFormat;
-    });
-  }, []);
+  const handleAddCard = useCallback(
+    (event) => {
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs || [['']])];
+        newFormat.packs[index] = [...newFormat.packs[index], ''];
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
+  const handleRemoveCard = useCallback(
+    (event) => {
+      const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'), 10);
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        // don't remove the last card from a pack
+        if (format.packs[packIndex].length <= 1) return format;
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs || [['']])];
+        newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
+        newFormat.packs[packIndex].splice(index, 1);
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
   const handleChangeCard = useCallback(() => {
-    const packIndex = parseInt(event.target.getAttribute('data-pack'));
-    const index = parseInt(event.target.getAttribute('data-index'));
+    // eslint-disable-next-line no-restricted-globals
+    const packIndex = parseInt(event.target.getAttribute('data-pack'), 10);
+    // eslint-disable-next-line no-restricted-globals
+    const index = parseInt(event.target.getAttribute('data-index'), 10);
+    // eslint-disable-next-line no-shadow
     setFormat((format) => {
       const newFormat = { ...format };
       newFormat.packs = [...(newFormat.packs || [['']])];
       newFormat.packs[packIndex] = [...newFormat.packs[packIndex]];
+      // eslint-disable-next-line no-restricted-globals
       newFormat.packs[packIndex][index] = event.target.value;
       return newFormat;
     });
-  }, []);
+  }, [setFormat]);
   const handleAddPack = useCallback(() => {
+    // eslint-disable-next-line no-shadow
     setFormat(({ packs, ...format }) => ({
       ...format,
       packs: [...(packs || [['']]), ['']],
     }));
-  }, []);
-  const handleDuplicatePack = useCallback((event) => {
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs.splice(index, 0, newFormat.packs[index]);
-      return newFormat;
-    });
-  }, []);
-  const handleRemovePack = useCallback((event) => {
-    const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat(({ packs, ...format }) => ({
-      ...format,
-      packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
-    }));
-  }, []);
+  }, [setFormat]);
+  const handleDuplicatePack = useCallback(
+    (event) => {
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs || [['']])];
+        newFormat.packs.splice(index, 0, newFormat.packs[index]);
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
+  const handleRemovePack = useCallback(
+    (event) => {
+      const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat(({ packs, ...format }) => ({
+        ...format,
+        packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
+      }));
+    },
+    [setFormat],
+  );
 
   const packs = format.packs || [['']];
   const description = format.markdown || format.html;
@@ -129,7 +155,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             </Col>
           </Row>
           <h6>Description</h6>
-          <TextEntry name="markdown" value={description} onChange={handleChangeDescription} maxLength={5000} />
+          <TextEntry name="markdown" value={description || ''} onChange={handleChangeDescription} maxLength={5000} />
           <FormText>
             Having trouble formatting your posts? Check out the{' '}
             <a href="/markdown" target="_blank">
@@ -144,6 +170,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             match any card.
           </FormText>
           {packs.map((pack, index) => (
+            // eslint-disable-next-line react/no-array-index-key
             <Card key={index} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
@@ -153,6 +180,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               </CardHeader>
               <CardBody>
                 {pack.map((card, cardIndex) => (
+                  // eslint-disable-next-line react/no-array-index-key
                   <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex + 1}</InputGroupText>
@@ -205,6 +233,15 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       </CSRFForm>
     </Modal>
   );
+};
+
+CustomDraftFormatModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  formatIndex: PropTypes.number.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  format: PropTypes.object.isRequired,
+  setFormat: PropTypes.func.isRequired,
 };
 
 export default CustomDraftFormatModal;

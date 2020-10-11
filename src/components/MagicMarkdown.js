@@ -160,7 +160,24 @@ const InnerMarkdown = ({ markdown }) => {
           }
           if (section.startsWith('[')) {
             const parts = section.split('](');
+            const link = parts[1].substring(0, parts[1].length - 1);
+            const text = parts[0].substring(1);
 
+            const isInternalURL = (to) => {
+              try {
+                const url = new URL(to, window.location.origin);
+                return url.hostname === window.location.hostname;
+              } catch {
+                return false;
+              }
+            };
+            if (isInternalURL(link)) {
+              return (
+                <a target="_blank" rel="noopener noreferrer" href={link}>
+                  {text}
+                </a>
+              );
+            }
             return (
               /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
               <Link href="#" modalProps={{ link: parts[1].substring(0, parts[1].length - 1) }}>
@@ -283,7 +300,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
   }
 
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+|^>>>[^<>]+<<<)/gm);
   return (
     <>
       {split.map((section) => {
@@ -296,9 +313,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
           );
         }
         if (section.startsWith('> ')) {
-          console.log(section);
           const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
-          console.log(lines);
           return (
             <Card className="bg-light">
               <CardBody>
@@ -307,6 +322,16 @@ const OuterMarkdown = ({ markdown, limited }) => {
                 ))}
               </CardBody>
             </Card>
+          );
+        }
+        if (section.startsWith('>>>')) {
+          const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
+          return (
+            <span className="centered">
+              {lines.map((line) => (
+                <Markdown markdown={line.replace(/(>>>)|(<<<)/g, '')} />
+              ))}
+            </span>
           );
         }
         return <Markdown markdown={section} />;
