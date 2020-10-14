@@ -19,7 +19,7 @@ import {
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
-import { getCubeId } from 'utils/Util';
+import { getCubeId, getCubeDescription } from 'utils/Util';
 
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
@@ -207,15 +207,7 @@ class CubeOverview extends Component {
                   <em className="cube-preview-artist">Art by {cube.image_artist}</em>
                 </div>
                 <CardBody className="pt-2 px-3 pb-3">
-                  {cube.type && (
-                    <p className="mb-1">
-                      {cube.overrideCategory
-                        ? `${cube.card_count} Card ${
-                            cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : ''
-                          }${cube.categoryOverride} Cube`
-                        : `${cube.card_count} Card ${cube.type} Cube`}
-                    </p>
-                  )}
+                  {cube.type && <p className="mb-1">{getCubeDescription(cube)}</p>}
                   <h6 className="mb-2">
                     <i>
                       Designed by

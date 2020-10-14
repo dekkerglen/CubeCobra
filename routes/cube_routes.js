@@ -34,6 +34,7 @@ const draftutil = require('../dist/utils/draftutil.js');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
+const miscutil = require('../dist/utils/Util.js');
 const carddb = require('../serverjs/cards.js');
 
 const util = require('../serverjs/util.js');
@@ -461,7 +462,7 @@ router.get('/overview/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - Overview`,
         metadata: generateMeta(
           `Cube Cobra Overview: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/overview/${req.params.id}`,
         ),
@@ -524,7 +525,7 @@ router.get('/blog/:id/:page', async (req, res) => {
         title: `${abbreviate(cube.name)} - Blog`,
         metadata: generateMeta(
           `Cube Cobra Blog: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/blog/${req.params.id}`,
         ),
@@ -698,7 +699,7 @@ router.get('/list/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - List`,
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
@@ -752,7 +753,7 @@ router.get('/playtest/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - Playtest`,
         metadata: generateMeta(
           `Cube Cobra Playtest: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/playtest/${req.params.id}`,
         ),
@@ -826,7 +827,7 @@ router.get('/analysis/:id', async (req, res) => {
       {
         metadata: generateMeta(
           `Cube Cobra Analysis: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/analysis/${req.params.id}`,
         ),
@@ -2165,7 +2166,7 @@ router.get('/griddraft/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - Grift Draft`,
         metadata: generateMeta(
           `Cube Cobra Grid Draft: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/griddraft/${req.params.id}`,
         ),
@@ -2239,7 +2240,7 @@ router.get('/draft/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - Draft`,
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/draft/${req.params.id}`,
         ),
@@ -2913,7 +2914,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         title: `${abbreviate(cube.name)} - Draft Decks`,
         metadata: generateMeta(
           `Cube Cobra Decks: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/user/decks/${req.params.cubeid}`,
         ),
@@ -3270,7 +3271,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - Deckbuilder`,
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/draft/${req.params.id}`,
         ),
@@ -3359,7 +3360,7 @@ router.get('/deck/:id', async (req, res) => {
         title: `${abbreviate(cube.name)} - ${drafter}'s deck`,
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
-          cube.type ? `${cube.card_count} Card ${cube.type} Cube` : `${cube.card_count} Card Cube`,
+          miscutil.getCubeDescription(cube),
           cube.image_uri,
           `https://cubecobra.com/cube/deck/${req.params.id}`,
         ),

@@ -171,6 +171,16 @@ export function getCubeId(cube) {
   return cube.urlAlias || cube.shortID || cube._id;
 }
 
+export function getCubeDescription(cube) {
+  if (cube.overrideCategory) {
+    const overridePrefixes =
+      cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
+    return `${cube.card_count} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
+  }
+
+  return `${cube.card_count} Card ${cube.type} Cube`;
+}
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -185,4 +195,6 @@ export default {
   cmcColumn,
   sortDeck,
   COLORS,
+  getCubeId,
+  getCubeDescription,
 };

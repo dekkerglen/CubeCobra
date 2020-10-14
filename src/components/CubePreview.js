@@ -5,7 +5,7 @@ import { Card } from 'reactstrap';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 
-const getCubeId = (cube) => cube.urlAlias || cube.shortId || cube._id;
+import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);
@@ -19,10 +19,7 @@ const CubePreview = ({ cube }) => {
     },
     [cube],
   );
-  const defaultSubtitle = `${cube.card_count} Card ${cube.type} Cube`;
-  const overridePrefixes =
-    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
-  const overrideSubtitle = `${cube.card_count} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
+
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
@@ -38,7 +35,7 @@ const CubePreview = ({ cube }) => {
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
         <h5 className="text-muted text-ellipsis my-0">{cube.name}</h5>
-        <div className="text-muted text-ellipsis">{cube.overrideCategory ? overrideSubtitle : defaultSubtitle}</div>
+        <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
         <em className="text-muted text-ellipsis">
           Designed by{' '}
           <a data-sublink href={`/user/view/${cube.owner}`}>
