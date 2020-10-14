@@ -15,11 +15,15 @@ const Link = withModal('a', LinkModal);
 const InnerMarkdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(
-    /(\[.+?\]\(.+?\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*|_[^_]+?_|__[^_]+?__|___[^_]+?___|~~[^~]+?~~|{[wubrgcmtsqepxyzWUBRGCMTSQEPXYZ\d/-]+?}|\[\[!?[/]?[a-zA-Z ',-|]+?\]\]|%%\d+%%|\$\$[^$]+?\$\$|\$\$\$[^$]+?\$\$\$|\n)/gm,
+    /(\[.+?\]\(.+?\)|@[a-zA-Z0-9_]+|\*\*\*[^*]+?\*\*\*|\*\*[^*]+?\*\*|\*[^*]+?\*|_[^_]+?_|__[^_]+?__|___[^_]+?___|~~[^~]+?~~|{[wubrgcmtqepxyzWUBRGCMTQEPXYZ\d/-]+?}|\[\[!?[/]?[a-zA-Z ',-|]+?\]\]|%%\d+%%|\$\$[^$]+?\$\$|\$\$\$[^$]+?\$\$\$|\n)/gm,
   );
+  console.log('!!!!!!!!!!!!!!!!!\nInner Markdown split:');
+  console.log(split);
   return (
     <>
       {split.map((section, position) => {
+        console.log('Inner Markdown section:');
+        console.log(section);
         try {
           if (section.startsWith('$$$')) {
             const sub = section.substring(1, section.length - 1);
@@ -211,6 +215,8 @@ InnerMarkdown.propTypes = {
 const Markdown = ({ markdown }) => {
   const markdownStr = markdown.toString();
   const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:^1\. .+(?:\r?\n|$))+|(?:^- .+(?:\r?\n|$))+)/gm);
+  console.log('/////////////////\nMarkdown split:');
+  console.log(split);
   return (
     <>
       {split.map((section) => {
@@ -284,6 +290,8 @@ const Markdown = ({ markdown }) => {
         } catch (err) {
           console.error(err);
         }
+        console.log('Markdown section:');
+        console.log(section);
         return <InnerMarkdown markdown={section} />;
       })}
     </>
@@ -301,9 +309,13 @@ const OuterMarkdown = ({ markdown, limited }) => {
 
   const markdownStr = markdown.toString();
   const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+|^>>>[^<>]+<<<)/gm);
+  console.log('####################\nOuter Markdown split:');
+  console.log(split);
   return (
     <>
       {split.map((section) => {
+        console.log(`Outer Markdown Section:`);
+        console.log(section);
         if (section.startsWith('<<')) {
           const sub = section.substring(2, section.length - 2);
           return (
@@ -325,13 +337,21 @@ const OuterMarkdown = ({ markdown, limited }) => {
           );
         }
         if (section.startsWith('>>>')) {
-          const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
+          section = section.replace(/>>>\r?\n?|<<</gm, '');
+          const lines = section.split('\n');
+          console.log(`Lines:`);
+          console.log(lines);
+          lines.map((line) => {
+            console.log('Line:');
+            console.log(line);
+            console.log('Replaced');
+            console.log(line.replace(/(>>>)|(<<<)/g, ''));
+            return line;
+          });
           return (
-            <span className="centered">
-              {lines.map((line) => (
-                <Markdown markdown={line.replace(/(>>>)|(<<<)/g, '')} />
-              ))}
-            </span>
+            <div className="centered">
+              <Markdown markdown={section} />
+            </div>
           );
         }
         return <Markdown markdown={section} />;
