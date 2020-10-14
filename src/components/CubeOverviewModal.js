@@ -18,6 +18,7 @@ import {
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
+import { getCubeDescription } from 'utils/Util';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
@@ -239,15 +240,7 @@ class CubeOverviewModal extends Component {
                   name="name"
                   type="text"
                   disabled
-                  value={
-                    cube.overrideCategory
-                      ? cube.card_count +
-                        ' Card ' +
-                        (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                        cube.categoryOverride +
-                        ' Cube'
-                      : cube.card_count + ' Card ' + cube.type + ' Cube'
-                  }
+                  value={getCubeDescription(cube)}
                 />
 
                 <Row>
