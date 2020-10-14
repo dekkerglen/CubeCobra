@@ -308,7 +308,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
   }
 
   const markdownStr = markdown.toString();
-  const split = markdownStr.split(/(<<.+>>|(?:^> .{0,}\r?\n)+|^>>>[^<>]+<<<)/gm);
+  const split = markdownStr.split(/(<<.+>>|(?:^>(?: .*)?\r?\n)+|^>>>[^<>]+<<<)/gm);
   console.log('####################\nOuter Markdown split:');
   console.log(split);
   return (
