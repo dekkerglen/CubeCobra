@@ -1,11 +1,9 @@
-'use strict';
 const seedrandom = require('seedrandom');
 const shuffleSeed = require('shuffle-seed');
 
 const Util = require('utils/Util.js');
 require('./Card.js');
 const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
-var Sort = require('utils/Sort.js');
 
 export function matchingCards(cards, filter) {
   if (filter) {
@@ -15,7 +13,7 @@ export function matchingCards(cards, filter) {
 }
 
 function compileFilter(filterText) {
-  if (!filterText || filterText === '' || filterText == '*') {
+  if (!filterText || filterText === '' || filterText === '*') {
     return null;
   }
 
@@ -89,7 +87,7 @@ function customDraft(cards, duplicates = false, seed = false) {
     seed = Date.now().toString();
   }
   const rng = seedrandom(seed);
-  return function (cardFilters) {
+  return (cardFilters) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
@@ -103,16 +101,16 @@ function customDraft(cards, duplicates = false, seed = false) {
         index = Math.floor(rng() * cardFilters.length);
         const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
-        if (validCards.length == 0) {
+        if (validCards.length === 0) {
           // TODO: display warnings for players
           messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
           // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
-      } while (validCards.length == 0 && cardFilters.length > 0);
+      } while (validCards.length === 0 && cardFilters.length > 0);
     }
 
-    if (validCards.length == 0) {
+    if (validCards.length === 0) {
       throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
@@ -225,7 +223,7 @@ function createPacks(draft, format, seats, nextCardFn) {
 
     for (let packNum = 0; packNum < format.length; packNum++) {
       draft.initial_state[seat].push([]);
-      let pack = [];
+      const pack = [];
       for (let cardNum = 0; cardNum < format[packNum].length; cardNum++) {
         const result = nextCardFn(format[packNum][cardNum]);
         if (result.messages && result.messages.length > 0) {
@@ -292,10 +290,10 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
 
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
-      bot: i == 0 ? null : bots[i - 1],
-      name: i == 0 ? user.username : 'Bot ' + i + ': ' + bots[i - 1][0] + ', ' + bots[i - 1][1],
-      userid: i == 0 ? user._id : null,
-      drafted: [], //organized draft picks
+      bot: i === 0 ? null : bots[i - 1],
+      name: i === 0 ? user.username : `Bot ${i}: ${bots[i - 1][0]}, ${bots[i - 1][1]}`,
+      userid: i === 0 ? user._id : null,
+      drafted: [], // organized draft picks
       pickorder: [],
       packbacklog: [],
     };
