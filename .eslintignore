@@ -48,6 +48,4 @@ src/components/Tooltip.js
 src/components/WithAutocard.js
 src/components/WithLoading.js
 src/components/WithModal.js
-src/utils/draftutil.js
-src/utils/Filter.js
 src/generated
