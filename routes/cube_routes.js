@@ -3789,6 +3789,7 @@ router.post(
     }
 
     cube.cards.push(util.newCard(req.body.add.details));
+    setCubeType(cube, carddb);
     await cube.save();
 
     return res.status(200).send({
