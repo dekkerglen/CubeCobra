@@ -106,7 +106,7 @@ function setCubeType(cube, carddb) {
   let peasant = false;
   let type = FORMATS.length - 1;
   for (const card of cube.cards) {
-    if (pauper && !['legal', 'banned'].includes(carddb.cardFromId(card.cardID).legalities.Pauper)) {
+    if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
       peasant = true;
     }
