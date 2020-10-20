@@ -3784,7 +3784,7 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Maybeboard can only be updated by cube owner.',
+        message: 'Cube can only be updated by cube owner.',
       });
     }
 
@@ -3813,7 +3813,7 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Cube can only be updated by owner.',
+        message: 'Maybeboard can only be updated by owner.',
       });
     }
 
