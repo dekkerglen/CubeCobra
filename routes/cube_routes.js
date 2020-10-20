@@ -3772,7 +3772,7 @@ router.post(
   '/api/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!cube) {
       return res.status(400).send({
@@ -3789,7 +3789,7 @@ router.post(
     }
 
     cube.cards.push(util.newCard(req.body.add.details));
-    setCubeType(cube, carddb);
+    cube = setCubeType(cube, carddb);
     await cube.save();
 
     return res.status(200).send({
