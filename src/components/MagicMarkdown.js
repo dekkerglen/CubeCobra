@@ -334,7 +334,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
         if (section.startsWith('>>>')) {
           section = section.replace(/>>>\r?\n?|<<</gm, '');
           return (
-            <div className="centered">
+            <div className="centered-markdown">
               <Markdown markdown={section} />
             </div>
           );
