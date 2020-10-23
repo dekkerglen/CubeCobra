@@ -306,7 +306,7 @@ const OuterMarkdown = ({ markdown, limited }) => {
     return <Markdown markdown={markdown} />;
   }
 
-  const markdownStr = markdown.toString();
+  const markdownStr = markdown?.toString() ?? '';
   const split = markdownStr.split(/(<<.+>>|(?:^>(?: .*)?\r?\n)+|^>>>[^<>]+<<<)/gm);
   return (
     <>
