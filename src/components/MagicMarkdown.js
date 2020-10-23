@@ -84,19 +84,20 @@ const InnerMarkdown = ({ markdown }) => {
           if (section.startsWith('[[!/')) {
             const card = section.substring(4, section.length - 2);
             const id = card.includes('|') ? card.split('|')[1] : card;
+            const idURL = encodeURIComponent(id);
 
             return (
               <Col xs="6" md="4" lg="3">
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
-                  href={`/tool/card/${id}`}
+                  href={`/tool/card/${idURL}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <FoilCardImage
                     autocard
                     card={{
-                      details: { image_normal: `/tool/cardimage/${id}`, image_flip: `/tool/cardimageflip/${id}` },
+                      details: { image_normal: `/tool/cardimage/${idURL}`, image_flip: `/tool/cardimageflip/${idURL}` },
                     }}
                     className="clickable"
                   />
@@ -107,17 +108,19 @@ const InnerMarkdown = ({ markdown }) => {
           if (section.startsWith('[[!')) {
             const card = section.substring(3, section.length - 2);
             const id = card.includes('|') ? card.split('|')[1] : card;
+            const idURL = encodeURIComponent(id);
+
             return (
               <Col xs="6" md="4" lg="3">
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
-                  href={`/tool/card/${id}`}
+                  href={`/tool/card/${idURL}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <FoilCardImage
                     autocard
-                    card={{ details: { image_normal: `/tool/cardimage/${id}` } }}
+                    card={{ details: { image_normal: `/tool/cardimage/${idURL}` } }}
                     className="clickable"
                   />
                 </a>
@@ -128,12 +131,15 @@ const InnerMarkdown = ({ markdown }) => {
             const card = section.substring(3, section.length - 2);
             const name = card.includes('|') ? card.split('|')[0] : card;
             const id = card.includes('|') ? card.split('|')[1] : card;
+            const idURL = encodeURIComponent(id);
 
             return (
               <AutocardLink
                 key={/* eslint-disable-line react/no-array-index-key */ `${position}-card.cardID`}
-                href={`/tool/card/${id}`}
-                card={{ details: { image_normal: `/tool/cardimage/${id}`, image_flip: `/tool/cardimageflip/${id}` } }}
+                href={`/tool/card/${idURL}`}
+                card={{
+                  details: { image_normal: `/tool/cardimage/${idURL}`, image_flip: `/tool/cardimageflip/${idURL}` },
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -145,12 +151,13 @@ const InnerMarkdown = ({ markdown }) => {
             const card = section.substring(2, section.length - 2);
             const name = card.includes('|') ? card.split('|')[0] : card;
             const id = card.includes('|') ? card.split('|')[1] : card;
+            const idURL = encodeURIComponent(id);
 
             return (
               <AutocardLink
                 key={/* eslint-disable-line react/no-array-index-key */ `${position}-card.cardID`}
-                href={`/tool/card/${id}`}
-                card={{ details: { image_normal: `/tool/cardimage/${id}` } }}
+                href={`/tool/card/${idURL}`}
+                card={{ details: { image_normal: `/tool/cardimage/${idURL}` } }}
                 target="_blank"
                 rel="noopener noreferrer"
               >
