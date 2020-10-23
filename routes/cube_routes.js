@@ -3772,7 +3772,7 @@ router.post(
   '/api/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!cube) {
       return res.status(400).send({
@@ -3784,11 +3784,12 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Maybeboard can only be updated by cube owner.',
+        message: 'Cube can only be updated by cube owner.',
       });
     }
 
     cube.cards.push(util.newCard(req.body.add.details));
+    cube = setCubeType(cube, carddb);
     await cube.save();
 
     return res.status(200).send({
@@ -3813,7 +3814,7 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Cube can only be updated by owner.',
+        message: 'Maybeboard can only be updated by owner.',
       });
     }
 
