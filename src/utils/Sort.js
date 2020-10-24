@@ -44,6 +44,8 @@ const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Iz
 const SHARDS = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
 const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
 
+const ELO_DEFAULT = 1200;
+
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
 
@@ -450,10 +452,9 @@ function getLabelsRaw(cube, sort) {
   if (sort === 'Elo') {
     let elos = [];
     for (const card of cube) {
-      if (card.details.elo) {
-        if (!elos.includes(card.details.elo)) {
-          elos.push(card.details.elo);
-        }
+      const elo = card.details.elo ?? ELO_DEFAULT;
+      if (!elos.includes(elo)) {
+        elos.push(elo);
       }
     }
     elos = elos.sort((x, y) => (x < y ? -1 : 1));
@@ -732,10 +733,7 @@ export function cardGetLabels(card, sort) {
     return ['All'];
   }
   if (sort === 'Elo') {
-    if (card.details.elo) {
-      return [getEloBucket(card.details.elo)];
-    }
-    return [];
+    return [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
   // Unrecognized sort
   return [];
