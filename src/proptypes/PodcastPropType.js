@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 
+// An episode of a podcast, not the entire podcast
 const PodcastPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
@@ -8,6 +9,7 @@ const PodcastPropType = PropTypes.shape({
   owner: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
   image: PropTypes.string.isRequired,
+  podcastname: PropTypes.string.isRequired,
 });
 
 export default PodcastPropType;
