@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
 
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
@@ -77,12 +78,7 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
 };
 
 DeckPreview.propTypes = {
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    cube: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(PropTypes.object),
-    date: PropTypes.instanceOf(Date),
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   canEdit: PropTypes.bool.isRequired,
   nextURL: PropTypes.string,
 };

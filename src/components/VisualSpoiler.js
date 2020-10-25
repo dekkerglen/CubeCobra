@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import { sortDeep } from 'utils/Sort';
@@ -44,6 +45,6 @@ const VisualSpoiler = ({ cards }) => {
 };
 
 VisualSpoiler.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 export default VisualSpoiler;

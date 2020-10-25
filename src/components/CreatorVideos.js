@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 import Loading from 'pages/Loading';
@@ -17,7 +17,7 @@ const CreatorVideos = ({ user }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/videos/${user.id}/${page}`);
+      const response = await csrfFetch(`/content/api/videos/${user._id}/${page}`);
       if (!response.ok) {
         console.log(response);
       }
@@ -67,11 +67,7 @@ const CreatorVideos = ({ user }) => {
 };
 
 CreatorVideos.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }).isRequired,
+  user: UserPropType.isRequired,
 };
 
 export default CreatorVideos;

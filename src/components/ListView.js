@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Form, Input } from 'reactstrap';
 
@@ -318,15 +319,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
 };
 
 ListViewRow.propTypes = {
-  card: PropTypes.shape({
-    index: PropTypes.number.isRequired,
-    cardID: PropTypes.string.isRequired,
-    colors: PropTypes.arrayOf(PropTypes.oneOf([...'WUBRG'])).isRequired,
-    tags: PropTypes.arrayOf(PropTypes.string).isRequired,
-    details: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  card: CardPropType.isRequired,
   versions: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,

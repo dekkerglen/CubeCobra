@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 const MaybeboardContext = React.createContext({
   maybeboard: [],
@@ -34,17 +35,7 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
 };
 
 MaybeboardContextProvider.propTypes = {
-  initialCards: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      cardID: PropTypes.string.isRequired,
-      details: PropTypes.shape({
-        _id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        image_normal: PropTypes.string.isRequired,
-      }),
-    }),
-  ).isRequired,
+  initialCards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
 export default MaybeboardContext;

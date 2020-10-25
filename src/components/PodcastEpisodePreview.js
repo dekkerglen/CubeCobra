@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
 
 import { Card } from 'reactstrap';
 import TimeAgo from 'react-timeago';
@@ -62,16 +62,7 @@ const PodcastEpisodePreview = ({ episode }) => {
 };
 
 PodcastEpisodePreview.propTypes = {
-  episode: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    podcastname: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  episode: PodcastPropType.isRequired,
 };
 
 export default PodcastEpisodePreview;
