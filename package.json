@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "npm run prettier",
-    "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src}'/**/*.js' '*.js'",
+    "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src}/**/*.js *.js",
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",

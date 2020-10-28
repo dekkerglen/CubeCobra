@@ -249,6 +249,8 @@ CubeSearchNavBar.propTypes = {
 
 CubeSearchNavBar.defaultProps = {
   title: null,
+  query: '',
+  order: 'date',
 };
 
 export default CubeSearchNavBar;
