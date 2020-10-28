@@ -80,7 +80,7 @@ const EditPodcastPage = ({ user, loginCallback, podcast }) => {
                     <Label>RSS Link:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={rss} onChange={(event) => setRss(event.target.value)} />
+                    <Input maxLength="1000" value={rss} onChange={(event) => setRss(event.target.value)} />
                   </Col>
                 </Row>
               </FormGroup>

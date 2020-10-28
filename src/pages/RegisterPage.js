@@ -25,7 +25,7 @@ const RegisterPage = ({ user, username, email, loginCallback }) => (
                 <Label>Email Address:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="email" id="email" type="text" defaultValue={email} />
+                <Input maxLength="1000" name="email" id="email" type="text" defaultValue={email} />
               </Col>
             </Row>
           </FormGroup>
@@ -35,7 +35,7 @@ const RegisterPage = ({ user, username, email, loginCallback }) => (
                 <Label>Username:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="username" id="username" type="text" defaultValue={username} />
+                <Input maxLength="1000" name="username" id="username" type="text" defaultValue={username} />
               </Col>
             </Row>
           </FormGroup>
@@ -45,7 +45,7 @@ const RegisterPage = ({ user, username, email, loginCallback }) => (
                 <Label>Password:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="password" id="password" type="password" />
+                <Input maxLength="1000" name="password" id="password" type="password" />
               </Col>
             </Row>
           </FormGroup>
@@ -55,7 +55,7 @@ const RegisterPage = ({ user, username, email, loginCallback }) => (
                 <Label>Confirm Password:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="password2" id="confirmPassword" type="password" />
+                <Input maxLength="1000" name="password2" id="confirmPassword" type="password" />
               </Col>
             </Row>
           </FormGroup>

@@ -29,7 +29,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Email Address:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="email" id="email" type="text" />
+                <Input maxLength="1000" name="email" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>

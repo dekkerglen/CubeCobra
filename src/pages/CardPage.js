@@ -308,13 +308,13 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <hr />
                   <p className="my-0">{card.type}</p>
                   <hr />
-                  <p className="my-0">
+                  <div className="my-0">
                     {card.oracle_text.split('\n').map((text) => (
-                      <p>
-                        <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
+                      <p key={`oracle-text-${text}`}>
+                        <MagicMarkdown markdown={text} />
                       </p>
                     ))}
-                  </p>
+                  </div>
                   <Row>
                     <Col xs="6">
                       <div className="text-left">
@@ -335,12 +335,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <Row>
                     <Col xs="12" sm="6">
                       {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                     <Col xs="12" sm="6">
                       {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                   </Row>
@@ -357,7 +357,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Price Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={priceType} onChange={(event) => setPriceType(event.target.value)}>
+                    <CustomInput
+                      id="priceType"
+                      type="select"
+                      value={priceType}
+                      onChange={(event) => setPriceType(event.target.value)}
+                    >
                       <option value="price">USD</option>
                       <option value="price_foil">USD Foil</option>
                       <option value="eur">EUR</option>
@@ -377,7 +382,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Cube Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={cubeType} onChange={(event) => setCubeType(event.target.value)}>
+                    <CustomInput
+                      id="cubeType"
+                      type="select"
+                      value={cubeType}
+                      onChange={(event) => setCubeType(event.target.value)}
+                    >
                       <option value="total">All</option>
                       <option value="vintage">Vintage</option>
                       <option value="legacy">Legacy</option>
@@ -530,7 +540,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   </table>
                 )}
                 rows={filteredVersions.slice(0).map((version) => (
-                  <tr>
+                  <tr key={version._id}>
                     <td>
                       <AutocardA
                         front={version.image_normal}
@@ -682,20 +692,20 @@ CardPage.propTypes = {
     elo: PropTypes.number.isRequired,
     image_normal: PropTypes.string.isRequired,
     scryfall_uri: PropTypes.string.isRequired,
-    tcgplayer_id: PropTypes.string.isRequired,
+    tcgplayer_id: PropTypes.number.isRequired,
     _id: PropTypes.string.isRequired,
     set: PropTypes.string.isRequired,
     set_name: PropTypes.string.isRequired,
     collector_number: PropTypes.string.isRequired,
     legalities: PropTypes.shape({}).isRequired,
-    parsed_cost: PropTypes.string.isRequired,
+    parsed_cost: PropTypes.arrayOf(PropTypes.string).isRequired,
     oracle_text: PropTypes.string.isRequired,
     oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
-    loyalty: PropTypes.string.isRequired,
-    power: PropTypes.string.isRequired,
-    toughness: PropTypes.shape({}).isRequired,
+    loyalty: PropTypes.string,
+    power: PropTypes.string,
+    toughness: PropTypes.string,
     prices: PropTypes.shape({
       usd: PropTypes.number,
       usd_foil: PropTypes.number,
@@ -714,17 +724,17 @@ CardPage.propTypes = {
           tix: PropTypes.number,
         }),
       ).isRequired,
-      vintage: PropTypes.bool.isRequired,
-      legacy: PropTypes.bool.isRequired,
-      modern: PropTypes.bool.isRequired,
-      standard: PropTypes.bool.isRequired,
-      pauper: PropTypes.bool.isRequired,
-      peasant: PropTypes.bool.isRequired,
-      size180: PropTypes.number.isRequired,
-      size360: PropTypes.number.isRequired,
-      size450: PropTypes.number.isRequired,
-      size540: PropTypes.number.isRequired,
-      size720: PropTypes.number.isRequired,
+      vintage: PropTypes.arrayOf(PropTypes.number).isRequired,
+      legacy: PropTypes.arrayOf(PropTypes.number).isRequired,
+      modern: PropTypes.arrayOf(PropTypes.number).isRequired,
+      standard: PropTypes.arrayOf(PropTypes.number).isRequired,
+      pauper: PropTypes.arrayOf(PropTypes.number).isRequired,
+      peasant: PropTypes.arrayOf(PropTypes.number).isRequired,
+      size180: PropTypes.arrayOf(PropTypes.number).isRequired,
+      size360: PropTypes.arrayOf(PropTypes.number).isRequired,
+      size450: PropTypes.arrayOf(PropTypes.number).isRequired,
+      size540: PropTypes.arrayOf(PropTypes.number).isRequired,
+      size720: PropTypes.arrayOf(PropTypes.number).isRequired,
       total: PropTypes.arrayOf(PropTypes.number).isRequired,
     }),
   }).isRequired,

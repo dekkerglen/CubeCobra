@@ -24,51 +24,84 @@ const InnerMarkdown = ({ markdown }) => {
           if (section.startsWith('$$$')) {
             const sub = section.substring(1, section.length - 1);
             return (
-              <Latex displayMode trust={false}>
+              <Latex
+                displayMode
+                trust={false}
+                key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+              >
                 {sub}
               </Latex>
             );
           }
           if (section.startsWith('$$')) {
             const sub = section.substring(1, section.length - 1);
-            return <Latex trust={false}>{sub}</Latex>;
+            return (
+              <Latex trust={false} key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {sub}
+              </Latex>
+            );
           }
           if (section.startsWith('@')) {
             const sub = section.substring(1);
             return (
-              <a href={`/user/view/${sub}`} target="_blank" rel="noopener noreferrer">
+              <a
+                href={`/user/view/${sub}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+              >
                 @{sub}
               </a>
             );
           }
           if (section.startsWith('~~')) {
-            return <s>{section.substring(2, section.length - 2)}</s>;
+            return (
+              <s key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {section.substring(2, section.length - 2)}
+              </s>
+            );
           }
           if (section.startsWith('___')) {
             return (
-              <em>
+              <em key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <u>{section.substring(3, section.length - 3)}</u>
               </em>
             );
           }
           if (section.startsWith('__')) {
-            return <u>{section.substring(2, section.length - 2)}</u>;
+            return (
+              <u key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {section.substring(2, section.length - 2)}
+              </u>
+            );
           }
           if (section.startsWith('_')) {
-            return <em>{section.substring(1, section.length - 1)}</em>;
+            return (
+              <em key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {section.substring(1, section.length - 1)}
+              </em>
+            );
           }
           if (section.startsWith('***')) {
             return (
-              <em>
+              <em key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <strong>{section.substring(3, section.length - 3)}</strong>
               </em>
             );
           }
           if (section.startsWith('**')) {
-            return <strong>{section.substring(2, section.length - 2)}</strong>;
+            return (
+              <strong key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {section.substring(2, section.length - 2)}
+              </strong>
+            );
           }
           if (section.startsWith('*')) {
-            return <em>{section.substring(1, section.length - 1)}</em>;
+            return (
+              <em key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {section.substring(1, section.length - 1)}
+              </em>
+            );
           }
           if (section.startsWith('{')) {
             const symbol = section.substring(1, section.length - 1);
@@ -87,7 +120,7 @@ const InnerMarkdown = ({ markdown }) => {
             const idURL = encodeURIComponent(id);
 
             return (
-              <Col xs="6" md="4" lg="3">
+              <Col xs="6" md="4" lg="3" key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
                   href={`/tool/card/${idURL}`}
@@ -111,7 +144,7 @@ const InnerMarkdown = ({ markdown }) => {
             const idURL = encodeURIComponent(id);
 
             return (
-              <Col xs="6" md="4" lg="3">
+              <Col xs="6" md="4" lg="3" key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <a
                   key={/* eslint-disable-line react/no-array-index-key */ `card.cardID-${position}`}
                   href={`/tool/card/${idURL}`}
@@ -180,14 +213,23 @@ const InnerMarkdown = ({ markdown }) => {
             };
             if (isInternalURL(link)) {
               return (
-                <a target="_blank" rel="noopener noreferrer" href={link}>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={link}
+                  key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+                >
                   {text}
                 </a>
               );
             }
             return (
               /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
-              <Link href="#" modalProps={{ link: parts[1].substring(0, parts[1].length - 1) }}>
+              <Link
+                href="#"
+                modalProps={{ link: parts[1].substring(0, parts[1].length - 1) }}
+                key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+              >
                 {parts[0].substring(1)}
               </Link>
             );
@@ -220,14 +262,14 @@ const Markdown = ({ markdown }) => {
   const split = markdownStr.split(/(#{1,6} .+\r?\n|(?:^1\. .+(?:\r?\n|$))+|(?:^- .+(?:\r?\n|$))+)/gm);
   return (
     <>
-      {split.map((section) => {
+      {split.map((section, position) => {
         try {
           if (section.startsWith('1. ')) {
             const lines = section.split(/(1\. .+\r?\n)/gm).filter((line) => line.length > 0);
             return (
-              <ol>
-                {lines.map((line) => (
-                  <li>
+              <ol key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {lines.map((line, linePosition) => (
+                  <li key={/* eslint-disable-line react/no-array-index-key */ `section-${position}-${linePosition}`}>
                     <InnerMarkdown markdown={line.substring(3)} />
                   </li>
                 ))}
@@ -237,9 +279,9 @@ const Markdown = ({ markdown }) => {
           if (section.startsWith('- ')) {
             const lines = section.split(/(- .+\r?\n)/gm).filter((line) => line.length > 0);
             return (
-              <ul>
-                {lines.map((line) => (
-                  <li>
+              <ul key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
+                {lines.map((line, linePosition) => (
+                  <li key={/* eslint-disable-line react/no-array-index-key */ `section-${position}-${linePosition}`}>
                     <InnerMarkdown markdown={line.substring(2)} />
                   </li>
                 ))}
@@ -248,42 +290,42 @@ const Markdown = ({ markdown }) => {
           }
           if (section.startsWith('# ')) {
             return (
-              <h1>
+              <h1 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(2)} />
               </h1>
             );
           }
           if (section.startsWith('## ')) {
             return (
-              <h2>
+              <h2 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(3)} />
               </h2>
             );
           }
           if (section.startsWith('### ')) {
             return (
-              <h3>
+              <h3 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(4)} />
               </h3>
             );
           }
           if (section.startsWith('#### ')) {
             return (
-              <h4>
+              <h4 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(5)} />
               </h4>
             );
           }
           if (section.startsWith('##### ')) {
             return (
-              <h5>
+              <h5 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(6)} />
               </h5>
             );
           }
           if (section.startsWith('###### ')) {
             return (
-              <h6>
+              <h6 key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
                 <InnerMarkdown markdown={section.substring(7)} />
               </h6>
             );
@@ -291,7 +333,12 @@ const Markdown = ({ markdown }) => {
         } catch (err) {
           console.error(err);
         }
-        return <InnerMarkdown markdown={section} />;
+        return (
+          <InnerMarkdown
+            markdown={section}
+            key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+          />
+        );
       })}
     </>
   );
@@ -310,11 +357,11 @@ const OuterMarkdown = ({ markdown, limited }) => {
   const split = markdownStr.split(/(<<.+>>|(?:^>(?: .*)?\r?\n)+|^>>>[^<>]+<<<)/gm);
   return (
     <>
-      {split.map((section) => {
+      {split.map((section, position) => {
         if (section.startsWith('<<')) {
           const sub = section.substring(2, section.length - 2);
           return (
-            <Row>
+            <Row key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
               <Markdown markdown={sub} />
             </Row>
           );
@@ -322,10 +369,13 @@ const OuterMarkdown = ({ markdown, limited }) => {
         if (section.startsWith('> ')) {
           const lines = section.split(/(> .+\r?\n)/gm).filter((line) => line.length > 0);
           return (
-            <Card className="bg-light">
+            <Card className="bg-light" key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}>
               <CardBody>
-                {lines.map((line) => (
-                  <Markdown markdown={line.substring(2)} />
+                {lines.map((line, linePosition) => (
+                  <Markdown
+                    markdown={line.substring(2)}
+                    key={/* eslint-disable-line react/no-array-index-key */ `section-${position}-${linePosition}`}
+                  />
                 ))}
               </CardBody>
             </Card>
@@ -334,12 +384,17 @@ const OuterMarkdown = ({ markdown, limited }) => {
         if (section.startsWith('>>>')) {
           section = section.replace(/>>>\r?\n?|<<</gm, '');
           return (
-            <div className="centered-markdown">
+            <div
+              className="centered-markdown"
+              key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`}
+            >
               <Markdown markdown={section} />
             </div>
           );
         }
-        return <Markdown markdown={section} />;
+        return (
+          <Markdown markdown={section} key={/* eslint-disable-line react/no-array-index-key */ `section-${position}`} />
+        );
       })}
     </>
   );

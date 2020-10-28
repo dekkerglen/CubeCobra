@@ -39,7 +39,7 @@ HeaderCell.propTypes = {
     key: PropTypes.string.isRequired,
     direction: PropTypes.string.isRequired,
   }).isRequired,
-  requestSort: PropTypes.string.isRequired,
+  requestSort: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
 };
 
