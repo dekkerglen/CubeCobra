@@ -16,7 +16,7 @@ const CreateCubeModal = ({ isOpen, toggle }) => (
               <Label>Cube Name:</Label>
             </Col>
             <Col sm="9">
-              <Input maxlength="1000" name="name" type="text" />
+              <Input maxLength="1000" name="name" type="text" />
             </Col>
           </Row>
         </FormGroup>

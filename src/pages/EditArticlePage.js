@@ -131,7 +131,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
                     <Label>Title:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
+                    <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
                   </Col>
                 </Row>
               </FormGroup>
@@ -141,7 +141,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
                     <Label>Short Description:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
+                    <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
                     <p>Plaintext only. This short description will be used for the article preview.</p>
                   </Col>
                 </Row>
