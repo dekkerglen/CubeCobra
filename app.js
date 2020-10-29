@@ -9,6 +9,7 @@ const session = require('express-session');
 const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
+const compression = require('compression');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const winston = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
@@ -122,6 +123,9 @@ const store = new MongoDBStore(
     }
   },
 );
+
+// gzip middleware
+app.use(compression());
 
 // request timeout middleware
 app.use((req, res, next) => {
