@@ -821,7 +821,7 @@ router.get('/analysis/:id', async (req, res) => {
         defaultNav: req.query.nav,
         defaultFormatId: Number(req.query.formatId),
         defaultFilterText: req.query.f,
-        defaultTab: Number(req.query.tab),
+        defaultTab: req.query.tab ? Number(req.query.tab) : 0,
         cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
       },
       {

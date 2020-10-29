@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
-
-let lastID = 1000;
+import { useMemo, useState } from 'react';
 
 const useNewID = () => {
+  const [lastID, setLastID] = useState(1000);
   return useMemo(() => {
-    lastID += 1;
+    setLastID(lastID + 1);
     return `id-${lastID}`;
   }, []);
 };

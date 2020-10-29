@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import PivotTableUI from 'react-pivottable/PivotTableUI';
-import 'react-pivottable/pivottable.css';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
 
