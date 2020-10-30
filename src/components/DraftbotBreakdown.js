@@ -259,7 +259,9 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
               {weights.map((weight) => (
                 <tr key={weight.name}>
                   <th>
-                    <Tooltip text={weight.description}>{weight.name}</Tooltip>
+                    <Tooltip id={`DraftbotBreakdownWeigthID_${weight.name}`} text={weight.description}>
+                      {weight.name}
+                    </Tooltip>
                   </th>
                   <td>{weight.value}</td>
                 </tr>

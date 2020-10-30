@@ -184,7 +184,7 @@ class CubeOverview extends Component {
                     </Col>
                     <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
                       <TextBadge name="Cube ID">
-                        <Tooltip text="Click to copy to clipboard">
+                        <Tooltip id="CubeOverviewIDTooltipId" text="Click to copy to clipboard">
                           <button
                             type="button"
                             className="cube-id-btn"
@@ -219,14 +219,20 @@ class CubeOverview extends Component {
                     <Row noGutters className="mb-1">
                       {Number.isFinite(priceOwned) && (
                         <TextBadge name="Owned" className="mr-2">
-                          <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                          <Tooltip
+                            id="CubeOverviewOwnedTooltipId"
+                            text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)"
+                          >
                             ${Math.round(priceOwned).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
                       )}
                       {Number.isFinite(pricePurchase) && (
                         <TextBadge name="Buy">
-                          <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                          <Tooltip
+                            id="CubeOverviewPurchaseTooltipId"
+                            text="TCGPlayer Market Price for cheapest version of each card"
+                          >
                             ${Math.round(pricePurchase).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
