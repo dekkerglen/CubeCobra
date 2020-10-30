@@ -12,10 +12,12 @@ const RenderToRoot = (Element) => {
   );
   if (typeof document !== 'undefined') {
     const wrapper = document.getElementById('react-root');
-    if (wrapper && wrapper.children.length === 0) {
-      ReactDOM.render(element, wrapper);
-    } else {
-      ReactDOM.hydrate(element, wrapper);
+    if (wrapper) {
+      if (wrapper.children.length === 0) {
+        ReactDOM.render(element, wrapper);
+      } else {
+        ReactDOM.hydrate(element, wrapper);
+      }
     }
   }
 
