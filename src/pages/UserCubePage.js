@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
@@ -17,7 +19,7 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
       user={owner}
       followers={followers}
       following={following}
-      canEdit={user && user.id === owner._id}
+      canEdit={user && user._id === owner._id}
       activeLink="view"
     >
       <Advertisement />
@@ -40,7 +42,7 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
               <MagicMarkdown markdown={owner.about || '_This user has not yet filled out their about section._'} />
             </Col>
           </Row>
-          {user && user.id === owner._id && (
+          {user && user._id === owner._id && (
             <Button color="success" block outline href="/user/account">
               Update
             </Button>
@@ -59,25 +61,11 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
 );
 
 UserCubePage.propTypes = {
-  owner: PropTypes.shape({
-    about: PropTypes.string.isRequired,
-    image_name: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  owner: UserPropType.isRequired,
+  user: UserPropType,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
   loginCallback: PropTypes.string,
 };
 

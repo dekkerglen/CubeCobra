@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Col,
@@ -141,7 +144,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                 <NavItem>
                   <SampleHandModal deck={deck.seats[seatIndex].deck} />
                 </NavItem>
-                {user && deck.owner === user.id && (
+                {user && deck.owner === user._id && (
                   <NavItem>
                     <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
@@ -196,7 +199,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
               <DeckCard
                 seat={deck.seats[seatIndex]}
                 deckid={deck._id}
-                userid={user ? user.id : null}
+                userid={user ? user._id : null}
                 deck={deck}
                 seatIndex={`${seatIndex}`}
                 draft={draft}
@@ -211,29 +214,10 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
 };
 
 CubeDeckPage.propTypes = {
-  cube: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
-  deck: PropTypes.shape({
-    owner: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
+  deck: DeckPropType.isRequired,
   draft: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

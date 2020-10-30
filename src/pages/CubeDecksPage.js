@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -25,7 +28,7 @@ const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) 
               <DeckPreview
                 key={deck._id}
                 deck={deck}
-                canEdit={user.id === deck.owner}
+                canEdit={user._id === deck.owner}
                 nextURL={`/cube/decks/${cube._id}/${activePage}`}
               />
             ))}
@@ -38,21 +41,11 @@ const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) 
 );
 
 CubeDecksPage.propTypes = {
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cube: CubePropType.isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

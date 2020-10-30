@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import ArticlePropType from 'proptypes/ArticlePropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -16,7 +18,7 @@ const ArticlePage = ({ user, loginCallback, article }) => {
       <Advertisement />
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === article.owner && article.status !== 'published' && (
+        {user && user._id === article.owner && article.status !== 'published' && (
           <CardHeader>
             <h5>
               <em className="pr-3">*Draft*</em>
@@ -26,26 +28,16 @@ const ArticlePage = ({ user, loginCallback, article }) => {
             </h5>
           </CardHeader>
         )}
-        <Article article={article} userid={user && user.id} />
+        <Article article={article} userid={user && user._id} />
       </Card>
     </MainLayout>
   );
 };
 
 ArticlePage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  article: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
+  article: ArticlePropType.isRequired,
 };
 
 ArticlePage.defaultProps = {

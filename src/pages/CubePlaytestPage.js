@@ -1,5 +1,7 @@
 import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -385,11 +387,7 @@ const DecksCard = ({ decks, userID, ...props }) => {
 };
 
 DecksCard.propTypes = {
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   userID: PropTypes.string.isRequired,
 };
 
@@ -518,8 +516,8 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
   );
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="playtest">
-        {user && cube.owner === user.id ? (
+      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="playtest">
+        {user && cube.owner === user._id ? (
           <Navbar light expand className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>
@@ -556,7 +554,7 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
             <GridCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user.id} className="mb-3" />}
+            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user._id} className="mb-3" />}
             <SamplePackCard className="mb-3" />
           </Col>
         </Row>
@@ -579,18 +577,14 @@ CubePlaytestPage.propTypes = {
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
   }).isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   draftFormats: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
       markdown: PropTypes.string,
     }),
   ).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

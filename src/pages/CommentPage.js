@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CommentPropType from 'proptypes/CommentPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -45,9 +47,9 @@ const CommentPage = ({ comment, user, loginCallback }) => {
             {`Responding to this ${translateType[content.parentType]}`}
           </a>
         </CardHeader>
-        <Comment comment={content} userid={user && user.id} index={0} noReplies editComment={setContent} />
+        <Comment comment={content} userid={user && user._id} index={0} noReplies editComment={setContent} />
         <div className="border-top">
-          <CommentsSection parentType="comment" parent={content._id} userid={user && user.id} />
+          <CommentsSection parentType="comment" parent={content._id} userid={user && user._id} />
         </div>
       </Card>
     </MainLayout>
@@ -55,23 +57,8 @@ const CommentPage = ({ comment, user, loginCallback }) => {
 };
 
 CommentPage.propTypes = {
-  comment: PropTypes.shape({
-    timePosted: PropTypes.instanceOf(Date).isRequired,
-    ownerName: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    updated: PropTypes.bool.isRequired,
-    _id: PropTypes.string.isRequired,
-    parentType: PropTypes.string.isRequired,
-    parent: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  comment: CommentPropType.isRequired,
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

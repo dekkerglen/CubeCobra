@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
@@ -238,11 +239,7 @@ CubeAnalysisPage.propTypes = {
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
   cubes: PropTypes.arrayOf(PropTypes.shape({})),
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

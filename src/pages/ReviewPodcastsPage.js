@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -57,17 +59,9 @@ const ReviewPodcastsPage = ({ user, loginCallback, podcasts, count, page }) => (
 );
 
 ReviewPodcastsPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  podcasts: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string,
-    }),
-  ).isRequired,
+  podcasts: PropTypes.arrayOf(PodcastPropType).isRequired,
   count: PropTypes.number.isRequired,
   page: PropTypes.number.isRequired,
 };

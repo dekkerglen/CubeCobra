@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -810,11 +811,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
 );
 
 MarkdownPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

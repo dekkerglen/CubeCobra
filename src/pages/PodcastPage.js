@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -14,7 +16,7 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
     <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === podcast.owner && (
+        {user && user._id === podcast.owner && (
           <CardHeader>
             <h5>
               {podcast.status !== 'published' && (
@@ -31,25 +33,16 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
             </h5>
           </CardHeader>
         )}
-        <Podcast podcast={podcast} userid={user && user.id} episodes={episodes} />
+        <Podcast podcast={podcast} userid={user && user._id} episodes={episodes} />
       </Card>
     </MainLayout>
   );
 };
 
 PodcastPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  podcast: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
+  podcast: PodcastPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 

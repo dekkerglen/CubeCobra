@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import UserLayout from 'layouts/UserLayout';
 import BlogPost from 'components/BlogPost';
@@ -15,7 +16,7 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
       user={owner}
       followers={followers}
       following={following}
-      canEdit={user && user.id === owner._id}
+      canEdit={user && user._id === owner._id}
       activeLink="blog"
     >
       <Advertisement />
@@ -31,8 +32,8 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
             <BlogPost
               key={post._id}
               post={post}
-              canEdit={user && user.id === owner._id}
-              userid={user && user.id}
+              canEdit={user && user._id === owner._id}
+              userid={user && user._id}
               loggedIn
             />
           ))
@@ -48,15 +49,8 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
 );
 
 UserBlogPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
-  owner: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-  }).isRequired,
+  user: UserPropType,
+  owner: UserPropType.isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

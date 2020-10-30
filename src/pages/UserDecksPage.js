@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -17,7 +19,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
       user={owner}
       followers={followers}
       following={following}
-      canEdit={user && user.id === owner._id}
+      canEdit={user && user._id === owner._id}
       activeLink="decks"
     >
       <Advertisement />
@@ -33,7 +35,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
               <DeckPreview
                 key={deck._id}
                 deck={deck}
-                canEdit={user && user.id === owner._id}
+                canEdit={user && user._id === owner._id}
                 nextURL={`/user/decks/${owner._id}/${activePage}`}
               />
             ))}
@@ -48,22 +50,11 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
 );
 
 UserDecksPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
-  owner: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-  }).isRequired,
+  user: UserPropType,
+  owner: UserPropType.isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   loginCallback: PropTypes.string,

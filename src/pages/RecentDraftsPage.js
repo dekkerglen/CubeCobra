@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
@@ -54,15 +56,11 @@ const RecentDraftsPage = ({ user, decks, currentPage, totalPages, count, loginCa
 );
 
 RecentDraftsPage.propTypes = {
-  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   count: PropTypes.number.isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
@@ -150,7 +151,7 @@ const CubeListPage = ({
   loginCallback,
 }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="list">
+    <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="list">
       <CubeListPageRaw
         defaultShowTagColors={defaultShowTagColors}
         defaultFilterText={defaultFilterText}
@@ -179,11 +180,7 @@ CubeListPage.propTypes = {
   defaultView: PropTypes.string.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

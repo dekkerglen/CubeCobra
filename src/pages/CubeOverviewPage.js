@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -127,8 +129,8 @@ class CubeOverview extends Component {
 
     return (
       <MainLayout loginCallback={loginCallback} user={user}>
-        <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="overview">
-          {user && cube.owner === user.id ? (
+        <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="overview">
+          {user && cube.owner === user._id ? (
             <Navbar expand="md" light className="usercontrols mb-3">
               <Nav navbar>
                 <NavItem>
@@ -248,7 +250,7 @@ class CubeOverview extends Component {
                   )}
                 </CardBody>
                 {user &&
-                  cube.owner !== user.id &&
+                  cube.owner !== user._id &&
                   (followed ? (
                     <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                       Unfollow
@@ -288,7 +290,7 @@ class CubeOverview extends Component {
                 key={post._id}
                 post={post}
                 canEdit={false}
-                userid={user ? user.id : null}
+                userid={user ? user._id : null}
                 loggedIn={user !== null}
               />
             )}
@@ -347,23 +349,14 @@ CubeOverview.propTypes = {
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
   admin: PropTypes.bool,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    image_uri: PropTypes.string.isRequired,
-    image_name: PropTypes.string.isRequired,
-    image_artist: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   followed: PropTypes.bool.isRequired,
   followers: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
     }),
   ),
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

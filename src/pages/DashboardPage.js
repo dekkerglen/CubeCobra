@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import BlogPost from 'components/BlogPost';
 import CubePreview from 'components/CubePreview';
@@ -74,7 +77,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
           <h5 className="mt-3">Feed</h5>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user.id : null} loggedIn />
+              <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user._id : null} loggedIn />
             ))
           ) : (
             <p>
@@ -112,17 +115,9 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
 
 DashboardPage.propTypes = {
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      owner: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
+  user: UserPropType,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,
 };

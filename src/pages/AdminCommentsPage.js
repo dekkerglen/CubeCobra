@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import CommentPropType from 'proptypes/CommentPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -33,20 +35,16 @@ const AdminCommentsPage = ({ user, loginCallback, comments, count, page }) => (
         )}
       </CardHeader>
       {comments.map((comment) => (
-        <Comment comment={comment} userid={user && user.id} index={0} noReplies editComment={() => {}} />
+        <Comment comment={comment} userid={user && user._id} index={0} noReplies editComment={() => {}} />
       ))}
     </Card>
   </MainLayout>
 );
 
 AdminCommentsPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  comments: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  comments: PropTypes.arrayOf(CommentPropType).isRequired,
   count: PropTypes.number.isRequired,
   page: PropTypes.number.isRequired,
 };

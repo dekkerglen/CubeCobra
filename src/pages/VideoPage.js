@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import VideoPropType from 'proptypes/VideoPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -14,7 +16,7 @@ const VideoPage = ({ user, loginCallback, video }) => {
     <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === video.owner && video.status !== 'published' && (
+        {user && user._id === video.owner && video.status !== 'published' && (
           <CardHeader>
             <h5>
               <em className="pr-3">*Draft*</em>
@@ -24,26 +26,16 @@ const VideoPage = ({ user, loginCallback, video }) => {
             </h5>
           </CardHeader>
         )}
-        <Video video={video} userid={user && user.id} />
+        <Video video={video} userid={user && user._id} />
       </Card>
     </MainLayout>
   );
 };
 
 VideoPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  video: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired,
-  }).isRequired,
+  video: VideoPropType.isRequired,
 };
 
 VideoPage.defaultProps = {
