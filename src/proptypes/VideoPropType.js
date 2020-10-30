@@ -5,6 +5,7 @@ const VideoPropType = PropTypes.shape({
   title: PropTypes.string.isRequired,
   body: PropTypes.string.isRequired,
   date: PropTypes.string.isRequired,
+  status: PropTypes.string.isRequired,
   owner: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
@@ -12,6 +13,7 @@ const VideoPropType = PropTypes.shape({
   artist: PropTypes.string.isRequired,
   short: PropTypes.string.isRequired,
   image: PropTypes.string.isRequired,
+  imagename: PropTypes.string.isRequired,
 });
 
 export default VideoPropType;
