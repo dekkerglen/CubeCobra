@@ -12,7 +12,7 @@
             "layouts/*": ["./src/layouts/*"],
             "pages/*": ["./src/pages/*"],
             "utils/*": ["./src/utils/*"],
-            "markdown/*": ["./src/markdown"],
+            "markdown/*": ["./src/markdown/*"],
         }
     },
     "include": ["src/**/*", "app.js", "serverjs/*", "routes/*"]

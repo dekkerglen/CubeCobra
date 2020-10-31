@@ -6,6 +6,7 @@ import Latex from 'react-latex'
 import math from 'remark-math';
 import userlink from 'markdown/userlink';
 import strikethrough from 'markdown/strikethrough';
+import symbols from 'markdown/symbols';
 
 function renderMath(node) {
     return (<Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>);
@@ -27,15 +28,27 @@ function renderUserlink(node) {
         );
 }
 
+function renderSymbol(node) {
+    const symbol = node.value.replace('/', '-').toLowerCase();
+    return (<img
+              src={`/content/symbols/${symbol}.png`}
+              alt={symbol}
+              className="mana-symbol-sm"
+            />
+    );
+}
+
 const Markdown = ({ markdown, limited}) => {
     const renderers = {
         math: renderMath,
         inlineMath: renderInlineMath,
         userlink: renderUserlink,
+        symbol: renderSymbol,
     };
 
+    const validSymbols = "wubrgcmtsqepxyz/-0123456789";
     const markdownStr = markdown?.toString() ?? '';
-    return (<ReactMarkdown children={markdownStr} plugins={[math, userlink, strikethrough]} renderers={renderers}/>);
+    return (<ReactMarkdown children={markdownStr} plugins={[math, userlink, strikethrough, [symbols, {allowed: validSymbols}]]} renderers={renderers}/>);
 }
 
 Markdown.propTypes = {
