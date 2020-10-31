@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 
@@ -26,7 +26,7 @@ const Video = ({ video, userid }) => {
         </div>
       </CardBody>
       <CardBody>
-        <MagicMarkdown markdown={video.body} />
+        <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="video" parent={video._id} userid={userid} collapse={false} />

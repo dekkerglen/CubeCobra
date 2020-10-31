@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 import MassBuyButton from 'components/MassBuyButton';
 
 const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);
@@ -64,7 +64,7 @@ const Tokens = ({ cube }) => {
               </a>
               <CardBody>
                 <p className="card-text">
-                  <MagicMarkdown markdown={cardDescription} cube={cube} />
+                  <Markdown markdown={cardDescription} cube={cube} />
                 </p>
               </CardBody>
             </Card>

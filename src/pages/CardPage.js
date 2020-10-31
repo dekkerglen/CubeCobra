@@ -26,7 +26,7 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
@@ -319,7 +319,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <div className="my-0">
                     {card.oracle_text.split('\n').map((text) => (
                       <p key={`oracle-text-${text}`}>
-                        <MagicMarkdown markdown={text} />
+                        <Markdown markdown={text} />
                       </p>
                     ))}
                   </div>

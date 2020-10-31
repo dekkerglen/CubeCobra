@@ -29,7 +29,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import FollowersModal from 'components/FollowersModal';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -272,7 +272,7 @@ class CubeOverview extends Component {
                   <h5 className="card-title">Description</h5>
                 </CardHeader>
                 <CardBody>
-                  <MagicMarkdown markdown={cube.description || ''} />
+                  <Markdown markdown={cube.description || ''} />
                 </CardBody>
                 {cube.tags && cube.tags.length > 0 && (
                   <CardFooter>

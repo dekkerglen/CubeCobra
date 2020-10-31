@@ -7,7 +7,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 
 const MarkdownPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -72,9 +72,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="*This text is italicized*" />
+                <Markdown markdown="*This text is italicized*" />
                 <br />
-                <MagicMarkdown markdown="_This text is italicized_" />
+                <Markdown markdown="_This text is italicized_" />
               </CardBody>
             </Card>
           </Col>
@@ -94,7 +94,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="**This text is bold**" />
+                <Markdown markdown="**This text is bold**" />
               </CardBody>
             </Card>
           </Col>
@@ -114,7 +114,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="***This text is italicized and bold***" />
+                <Markdown markdown="***This text is italicized and bold***" />
               </CardBody>
             </Card>
           </Col>
@@ -134,7 +134,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="__This text is underlined__" />
+                <Markdown markdown="__This text is underlined__" />
               </CardBody>
             </Card>
           </Col>
@@ -154,7 +154,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="___This text is underlined and italicized___" />
+                <Markdown markdown="___This text is underlined and italicized___" />
               </CardBody>
             </Card>
           </Col>
@@ -174,7 +174,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="~~This text is strikethrough~~" />
+                <Markdown markdown="~~This text is strikethrough~~" />
               </CardBody>
             </Card>
           </Col>
@@ -236,7 +236,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[Ambush Viper]]" />
+                <Markdown markdown="[[Ambush Viper]]" />
               </CardBody>
             </Card>
           </Col>
@@ -266,7 +266,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown
+                <Markdown
                   markdown={
                     '[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]\n[[New Borer Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]'
                   }
@@ -295,9 +295,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[/Delver of Secrets]]" />
+                <Markdown markdown="[[/Delver of Secrets]]" />
                 <br />
-                <MagicMarkdown markdown="[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]" />
+                <Markdown markdown="[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]" />
               </CardBody>
             </Card>
           </Col>
@@ -320,7 +320,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!Hexdrinker]]" />
+                <Markdown markdown="[[!Hexdrinker]]" />
               </CardBody>
             </Card>
           </Col>
@@ -340,7 +340,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!/Delver of Secrets]]" />
+                <Markdown markdown="[[!/Delver of Secrets]]" />
               </CardBody>
             </Card>
           </Col>
@@ -363,7 +363,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]" />
+                <Markdown markdown="[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]" />
               </CardBody>
             </Card>
           </Col>
@@ -383,9 +383,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardHeader>Result</CardHeader>
               <CardBody>
                 <Row>
-                  <MagicMarkdown markdown="[[!Hexdrinker]]" />
-                  <MagicMarkdown markdown="[[!Lotus Cobra]]" />
-                  <MagicMarkdown markdown="[[!Snake]]" />
+                  <Markdown markdown="[[!Hexdrinker]]" />
+                  <Markdown markdown="[[!Lotus Cobra]]" />
+                  <Markdown markdown="[[!Snake]]" />
                 </Row>
               </CardBody>
             </Card>
@@ -409,7 +409,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="{W}{U}{B}{R}{G}" />
+                <Markdown markdown="{W}{U}{B}{R}{G}" />
               </CardBody>
             </Card>
           </Col>
@@ -432,7 +432,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="{W/U}{G/U}{B/R}{R/W}{B/G}" />
+                <Markdown markdown="{W/U}{G/U}{B/R}{R/W}{B/G}" />
               </CardBody>
             </Card>
           </Col>
@@ -454,7 +454,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={'{2/W}{2/U}{2/B}{2/R}{2/G}\n{W/P}{U/P}{B/P}{R/P}{G/P}\n'} />
+                <Markdown markdown={'{2/W}{2/U}{2/B}{2/R}{2/G}\n{W/P}{U/P}{B/P}{R/P}{G/P}\n'} />
               </CardBody>
             </Card>
           </Col>
@@ -474,7 +474,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={'{e}{T}{q}{s}{X}{Y}{15}'} />
+                <Markdown markdown={'{e}{T}{q}{s}{X}{Y}{15}'} />
               </CardBody>
             </Card>
           </Col>
@@ -513,7 +513,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardBody>
                 <Card className="bg-light">
                   <CardBody>
-                    <MagicMarkdown
+                    <Markdown
                       markdown={
                         'Mystic Snake - {1}{G}{U}{U}\nCreature - Snake\nFlash\nWhen Mystic Snake enters the battlefield, counter target spell.\n2/2'
                       }
@@ -541,7 +541,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="This suggestion was made by @dekkaru" />
+                <Markdown markdown="This suggestion was made by @dekkaru" />
               </CardBody>
             </Card>
           </Col>
@@ -633,7 +633,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[outside link](https://scryfall.com)" />
+                <Markdown markdown="[outside link](https://scryfall.com)" />
               </CardBody>
             </Card>
           </Col>
@@ -656,7 +656,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`} />
+                <Markdown markdown={`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`} />
               </CardBody>
             </Card>
           </Col>
@@ -675,7 +675,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`} />
+                <Markdown markdown={`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`} />
               </CardBody>
             </Card>
           </Col>
@@ -697,9 +697,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+                <Markdown markdown={`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
                 <br />
-                <MagicMarkdown markdown={`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+                <Markdown markdown={`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
               </CardBody>
             </Card>
           </Col>
@@ -721,7 +721,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`>>> This text is centered <<<`} />
+                <Markdown markdown={`>>> This text is centered <<<`} />
               </CardBody>
             </Card>
           </Col>
@@ -741,7 +741,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`>>> Centered Card: [[!Hexdrinker]] <<<`} />
+                <Markdown markdown={`>>> Centered Card: [[!Hexdrinker]] <<<`} />
               </CardBody>
             </Card>
           </Col>
@@ -763,7 +763,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown
+                <Markdown
                   markdown={`>>>
                 #### Centered heading
                 <<<`}
@@ -792,7 +792,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown
+                <Markdown
                   markdown={`>>>
                 Centered paragraph 
                 spanning 

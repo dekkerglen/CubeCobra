@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Card, CardHeader, Input, Nav, TabPane, TabContent, CardBody } from 'reactstrap';
 
 import Tab from 'components/Tab';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/MarkdownRenderer';
 import ErrorBoundary from 'components/ErrorBoundary';
 
 const TextEntry = ({ name, value, onChange, maxLength }) => {
@@ -36,7 +36,7 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
           </TabPane>
           <TabPane tabId="1">
             <CardBody>
-              <MagicMarkdown markdown={value} />
+              <Markdown markdown={value} />
             </CardBody>
           </TabPane>
         </TabContent>
