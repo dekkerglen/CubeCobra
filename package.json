@@ -104,6 +104,7 @@
     "react-tagcloud": "^2.0.0",
     "react-timeago": "^4.4.0",
     "reactstrap": "^8.0.1",
+    "remark-gfm": "^1.0.0",
     "remark-math": "^4.0.0",
     "request": "^2.88.0",
     "rss": "^1.2.2",

@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex'
 import math from 'remark-math';
 import userlink from 'markdown/userlink';
+import strikethrough from 'markdown/strikethrough';
 
 function renderMath(node) {
     return (<Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>);
@@ -34,7 +35,7 @@ const Markdown = ({ markdown, limited}) => {
     };
 
     const markdownStr = markdown?.toString() ?? '';
-    return (<ReactMarkdown children={markdownStr} plugins={[math, userlink]} renderers={renderers}/>);
+    return (<ReactMarkdown children={markdownStr} plugins={[math, userlink, strikethrough]} renderers={renderers}/>);
 }
 
 Markdown.propTypes = {
