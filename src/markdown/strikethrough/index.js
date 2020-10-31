@@ -3,10 +3,10 @@ import fromMarkdown from 'mdast-util-gfm/from-markdown';
 import { add } from '../utils';
 
 function strikethrough(options) {
-    const data = this.data();
+  const data = this.data();
 
-    add(data, 'micromarkExtensions', syntax(options));
-    add(data, 'fromMarkdownExtensions', fromMarkdown);
+  add(data, 'micromarkExtensions', syntax(options));
+  add(data, 'fromMarkdownExtensions', fromMarkdown);
 }
 
 export default strikethrough;

@@ -5,7 +5,7 @@ import { add } from '../utils';
 export default username;
 
 function username() {
-    const data = this.data();
-    add(data, 'micromarkExtensions', syntax);
-    add(data, 'fromMarkdownExtensions', fromMarkdown);
+  const data = this.data();
+  add(data, 'micromarkExtensions', syntax);
+  add(data, 'fromMarkdownExtensions', fromMarkdown);
 }

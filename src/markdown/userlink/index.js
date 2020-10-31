@@ -1,3 +1,3 @@
-import plugin from './remark-userlink'
+import plugin from './remark-userlink';
 
-export default plugin
+export default plugin;

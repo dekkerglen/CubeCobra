@@ -1,46 +1,45 @@
 import assert from 'assert';
 
 const userlink = {
-    tokenize: tokenizeUserlink
-}
+  tokenize: tokenizeUserlink,
+};
 
 export default {
-    text: {
-        64: userlink // '@'
-    }
-}
+  text: {
+    64: userlink, // '@'
+  },
+};
 
 function tokenizeUserlink(effects, ok, nok) {
-    return start;
+  return start;
 
-    function start(code) {
-        assert(code === 64, 'expected `@`');
-        effects.enter('userlink');
-        effects.enter('userlinkMarker');
-        effects.consume(code);
-        effects.exit('userlinkMarker');
-        return open;
-    }
+  function start(code) {
+    assert(code === 64, 'expected `@`');
+    effects.enter('userlink');
+    effects.enter('userlinkMarker');
+    effects.consume(code);
+    effects.exit('userlinkMarker');
+    return open;
+  }
 
-    // make sure at least one alphanum. char is after the '@'
-    function open(code) {
-        if (/[a-zA-Z0-9]/.test(String.fromCharCode(code))) {
-            effects.enter('userlinkValue');
-            effects.consume(code);
-            return more;
-        } else {
-            return nok(code);
-        }
+  // make sure at least one alphanum. char is after the '@'
+  function open(code) {
+    if (/[a-zA-Z0-9]/.test(String.fromCharCode(code))) {
+      effects.enter('userlinkValue');
+      effects.consume(code);
+      return more;
+    } else {
+      return nok(code);
     }
+  }
 
-    function more(code) {
-        if (/[a-zA-Z0-9]/.test(String.fromCharCode(code))) {
-            effects.consume(code);
-            return more;
-        }
-        effects.exit('userlinkValue');
-        effects.exit('userlink');
-        return ok(code);
+  function more(code) {
+    if (/[a-zA-Z0-9]/.test(String.fromCharCode(code))) {
+      effects.consume(code);
+      return more;
     }
+    effects.exit('userlinkValue');
+    effects.exit('userlink');
+    return ok(code);
+  }
 }
-
