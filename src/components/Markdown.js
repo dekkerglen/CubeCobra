@@ -22,7 +22,7 @@ const Link = withModal('a', LinkModal);
 function renderBlockQuote(node) {
   return (
     <Card className="bg-light">
-      <CardBody children={node.children} />
+      <CardBody>{node.children}</CardBody>
     </Card>
   );
 }
@@ -40,9 +40,17 @@ function renderLink(node) {
   };
 
   if (isInternalURL(ref)) {
-    return <a target="_blank" rel="noopen noreferrer" href={ref} children={node.children} />;
+    return (
+      <a target="_blank" rel="noopen noreferrer" href={ref}>
+        {node.children}
+      </a>
+    );
   }
-  return <Link href="#" modalProps={{ link: ref }} children={node.children} />;
+  return (
+    <Link href="#" modalProps={{ link: ref }}>
+      {node.children}
+    </Link>
+  );
 }
 
 function renderMath(node) {
@@ -112,10 +120,11 @@ const Markdown = ({ markdown, limited }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      children={markdownStr}
       plugins={[breaks, math, userlink, cardlink, strikethrough, [symbols, { allowed: validSymbols }]]}
       renderers={renderers}
-    />
+    >
+      {markdownStr}
+    </ReactMarkdown>
   );
 };
 
