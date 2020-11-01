@@ -29,7 +29,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import FollowersModal from 'components/FollowersModal';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';

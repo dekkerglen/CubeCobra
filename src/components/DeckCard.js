@@ -7,7 +7,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import CommentsSection from 'components/CommentsSection';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 import { makeSubtitle } from 'utils/Card';
 
 const DeckStacksStatic = ({ cards }) => (

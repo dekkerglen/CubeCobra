@@ -3,7 +3,7 @@ import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from 'components/CommentsSection';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 
 class BlogPost extends React.Component {
   constructor(props) {

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 import MassBuyButton from 'components/MassBuyButton';
 
 const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);

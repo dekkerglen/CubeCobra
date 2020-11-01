@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Card, CardHeader, Input, Nav, TabPane, TabContent, CardBody } from 'reactstrap';
 
 import Tab from 'components/Tab';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 
 const TextEntry = ({ name, value, onChange, maxLength }) => {

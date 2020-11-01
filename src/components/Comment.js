@@ -22,7 +22,7 @@ import CSRFForm from 'components/CSRFForm';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 
 const maxDepth = 4;
 

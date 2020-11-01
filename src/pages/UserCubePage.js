@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 
 const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>

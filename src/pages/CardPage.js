@@ -26,7 +26,7 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
-import Markdown from 'components/MarkdownRenderer';
+import Markdown from 'components/Markdown';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
