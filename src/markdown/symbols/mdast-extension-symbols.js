@@ -17,7 +17,7 @@ function exitSymbol(token) {
   node.value = data;
 }
 
-const fromMarkdown = {
+export const fromMarkdown = {
   enter: { symbol: enterSymbol, symbolValue: enterSymbolValue },
   exit: { symbol: exitSymbol, symbolValue: exitSymbolValue },
 };
