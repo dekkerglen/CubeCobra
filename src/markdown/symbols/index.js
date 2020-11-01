@@ -1,6 +1,6 @@
-import syntax from './micromark-extension-symbols';
-import { fromMarkdown } from './mdast-extension-symbols';
-import { add } from '../utils';
+import syntax from 'markdown/symbols/micromark-extension-symbols';
+import { fromMarkdown } from 'markdown/symbols/mdast-extension-symbols';
+import { add } from 'markdown/utils';
 
 export default symbols;
 

@@ -1,6 +1,6 @@
-import syntax from './micromark-extension-userlink';
-import { fromMarkdown } from './mdast-extension-userlink';
-import { add } from '../utils';
+import syntax from 'markdown/userlink/micromark-extension-userlink';
+import { fromMarkdown } from 'markdown/userlink/mdast-extension-userlink';
+import { add } from 'markdown/utils';
 
 export default username;
 

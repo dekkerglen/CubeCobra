@@ -1,6 +1,6 @@
 import syntax from 'micromark-extension-gfm';
 import fromMarkdown from 'mdast-util-gfm/from-markdown';
-import { add } from '../utils';
+import { add } from 'markdown/utils';
 
 function strikethrough(options) {
   const data = this.data();

@@ -1,7 +1,7 @@
 import visit from 'unist-util-visit';
-import syntax from './micromark-extension-cardlink';
-import { fromMarkdown } from './mdast-util-cardlink';
-import { add } from '../utils';
+import syntax from 'markdown/cardlink/micromark-extension-cardlink';
+import { fromMarkdown } from 'markdown/cardlink/mdast-util-cardlink';
+import { add } from 'markdown/utils';
 
 export default cardlinks;
 
