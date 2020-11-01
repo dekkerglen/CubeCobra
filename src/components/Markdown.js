@@ -16,6 +16,14 @@ import { Col, Row, Card, CardBody } from 'reactstrap';
 
 const AutocardLink = withAutocard('a');
 
+function renderBlockQuote(node) {
+  return (
+    <Card className="bg-light">
+      <CardBody children={node.children} />
+    </Card>
+  );
+}
+
 function renderMath(node) {
   return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
 }
@@ -69,6 +77,7 @@ function renderCardImage(node) {
 
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
+    blockquote: renderBlockQuote,
     math: renderMath,
     inlineMath: renderInlineMath,
     userlink: renderUserlink,
