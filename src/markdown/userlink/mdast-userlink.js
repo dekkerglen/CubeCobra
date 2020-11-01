@@ -12,8 +12,8 @@ function exitUserlinkValue(token) {
 }
 
 function exitUserlink(token) {
-  var data = this.resume();
-  var node = this.exit(token);
+  const data = this.resume();
+  const node = this.exit(token);
   node.value = data;
 }
 

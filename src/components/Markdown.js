@@ -41,12 +41,13 @@ function renderLink(node) {
 
   if (isInternalURL(ref)) {
     return (
-      <a target="_blank" rel="noopen noreferrer" href={ref}>
+      <a target="_blank" rel="noopener noreferrer" href={ref}>
         {node.children}
       </a>
     );
   }
   return (
+    /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
     <Link href="#" modalProps={{ link: ref }}>
       {node.children}
     </Link>
@@ -75,12 +76,10 @@ function renderSymbol(node) {
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 }
 
-function renderCardlink(node) {
-  const name = node.name;
-  const id = node.id ?? name;
-  const idURL = encodeURIComponent(id);
+function renderCardlink({ name, id, dfc }) {
+  const idURL = encodeURIComponent(id ?? name);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
-  if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
+  if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
 
   return (
     <AutocardLink href={`/tool/card/${idURL}`} card={{ details }} target="_blank" rel="noopener noreferrer">
@@ -130,7 +129,7 @@ const Markdown = ({ markdown, limited }) => {
 
 Markdown.propTypes = {
   markdown: PropTypes.string.isRequired,
-  limitied: PropTypes.bool,
+  limited: PropTypes.bool,
 };
 
 Markdown.defaultProps = {

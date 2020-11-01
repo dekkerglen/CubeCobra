@@ -18,9 +18,8 @@ function tokenizeUserlink(effects, ok, nok) {
       effects.enter('userlinkValue');
       effects.consume(code);
       return more;
-    } else {
-      return nok(code);
     }
+    return nok(code);
   }
 
   function more(code) {

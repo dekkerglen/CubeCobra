@@ -12,8 +12,8 @@ function exitSymbolValue(token) {
 }
 
 function exitSymbol(token) {
-  let data = this.resume();
-  let node = this.exit(token);
+  const data = this.resume();
+  const node = this.exit(token);
   node.value = data;
 }
 

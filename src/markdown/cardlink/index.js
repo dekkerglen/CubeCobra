@@ -16,9 +16,7 @@ function oncard(node, index, parent) {
   }
 
   if (node.type === 'cardlink') {
-    const split = node.value.split('|');
-    node.name = split[0];
-    node.id = split[1];
+    [node.name, node.id] = node.value.split('|');
   }
 }
 
