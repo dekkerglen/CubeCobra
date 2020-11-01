@@ -1,5 +1,5 @@
-import syntax from 'markdown/userlink/micromark-extension-userlink';
-import { fromMarkdown } from 'markdown/userlink/mdast-extension-userlink';
+import syntax from 'markdown/userlink/micromark-userlink';
+import { fromMarkdown } from 'markdown/userlink/mdast-userlink';
 import { add } from 'markdown/utils';
 
 function username() {

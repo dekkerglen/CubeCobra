@@ -1,6 +1,6 @@
 import visit from 'unist-util-visit';
-import syntax from 'markdown/cardlink/micromark-extension-cardlink';
-import { fromMarkdown } from 'markdown/cardlink/mdast-util-cardlink';
+import syntax from 'markdown/cardlink/micromark-cardlink';
+import { fromMarkdown } from 'markdown/cardlink/mdast-cardlink';
 import { add } from 'markdown/utils';
 
 function oncard(node, index, parent) {

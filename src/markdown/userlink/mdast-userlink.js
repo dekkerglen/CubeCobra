@@ -22,6 +22,4 @@ export const fromMarkdown = {
   exit: { userlink: exitUserlink, userlinkValue: exitUserlinkValue },
 };
 
-export default {
-  fromMarkdown: fromMarkdown,
-};
+export default { fromMarkdown };

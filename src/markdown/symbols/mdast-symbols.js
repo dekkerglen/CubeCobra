@@ -22,6 +22,4 @@ export const fromMarkdown = {
   exit: { symbol: exitSymbol, symbolValue: exitSymbolValue },
 };
 
-export default {
-  fromMarkdown: fromMarkdown,
-};
+export default { fromMarkdown };

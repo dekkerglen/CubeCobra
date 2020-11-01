@@ -22,6 +22,4 @@ export const fromMarkdown = {
   exit: { cardlink: exitCardlink, cardlinkValue: exitCardlinkValue },
 };
 
-export default {
-  fromMarkdown: fromMarkdown,
-};
+export default { fromMarkdown };
