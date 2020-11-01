@@ -10,11 +10,14 @@ import strikethrough from 'markdown/strikethrough';
 import symbols from 'markdown/symbols';
 import cardlink from 'markdown/cardlink';
 import withAutocard from 'components/WithAutocard';
+import withModal from 'components/WithModal';
+import LinkModal from 'components/LinkModal';
 import FoilCardImage from 'components/FoilCardImage';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
 
 const AutocardLink = withAutocard('a');
+const Link = withModal('a', LinkModal);
 
 function renderBlockQuote(node) {
   return (
@@ -22,6 +25,24 @@ function renderBlockQuote(node) {
       <CardBody children={node.children} />
     </Card>
   );
+}
+
+function renderLink(node) {
+  const ref = encodeURI(node.node?.url ?? '');
+
+  const isInternalURL = (to) => {
+    try {
+      const url = new URL(to, window.location.origin);
+      return url.hostname === window.location.hostname;
+    } catch {
+      return false;
+    }
+  };
+
+  if (isInternalURL(ref)) {
+    return <a target="_blank" rel="noopen noreferrer" href={ref} children={node.children} />;
+  }
+  return <Link href="#" modalProps={{ link: ref }} children={node.children} />;
 }
 
 function renderMath(node) {
@@ -77,6 +98,7 @@ function renderCardImage(node) {
 
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
+    link: renderLink,
     blockquote: renderBlockQuote,
     math: renderMath,
     inlineMath: renderInlineMath,
