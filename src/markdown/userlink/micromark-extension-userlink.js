@@ -1,15 +1,5 @@
 import assert from 'assert';
 
-const userlink = {
-  tokenize: tokenizeUserlink,
-};
-
-export default {
-  text: {
-    64: userlink, // '@'
-  },
-};
-
 function tokenizeUserlink(effects, ok, nok) {
   return start;
 
@@ -43,3 +33,13 @@ function tokenizeUserlink(effects, ok, nok) {
     return ok(code);
   }
 }
+
+const userlink = {
+  tokenize: tokenizeUserlink,
+};
+
+export default {
+  text: {
+    64: userlink, // '@'
+  },
+};

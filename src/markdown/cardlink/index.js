@@ -3,19 +3,6 @@ import syntax from 'markdown/cardlink/micromark-extension-cardlink';
 import { fromMarkdown } from 'markdown/cardlink/mdast-util-cardlink';
 import { add } from 'markdown/utils';
 
-export default cardlinks;
-
-function cardlinks() {
-  const data = this.data();
-  add(data, 'micromarkExtensions', syntax);
-  add(data, 'fromMarkdownExtensions', fromMarkdown);
-  return transform;
-}
-
-function transform(tree) {
-  visit(tree, 'cardlink', oncard);
-}
-
 function oncard(node, index, parent) {
   console.log(`Found cardlink "${node.value}"`);
   if (node.value[0] === '!') {
@@ -34,3 +21,16 @@ function oncard(node, index, parent) {
     node.id = split[1];
   }
 }
+
+function transform(tree) {
+  visit(tree, 'cardlink', oncard);
+}
+
+function cardlinks() {
+  const data = this.data();
+  add(data, 'micromarkExtensions', syntax);
+  add(data, 'fromMarkdownExtensions', fromMarkdown);
+  return transform;
+}
+
+export default cardlinks;

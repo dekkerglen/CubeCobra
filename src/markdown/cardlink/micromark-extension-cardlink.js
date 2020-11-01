@@ -1,15 +1,5 @@
 import assert from 'assert';
 
-const cardlink = {
-  tokenize: tokenizeCardlink,
-};
-
-export default {
-  text: {
-    91: cardlink,
-  },
-};
-
 function tokenizeCardlink(effects, ok, nok) {
   return start;
 
@@ -75,3 +65,13 @@ function tokenizeCardlink(effects, ok, nok) {
     return nok(code);
   }
 }
+
+const cardlink = {
+  tokenize: tokenizeCardlink,
+};
+
+export default {
+  text: {
+    91: cardlink,
+  },
+};
