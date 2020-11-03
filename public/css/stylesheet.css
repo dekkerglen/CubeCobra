@@ -461,7 +461,7 @@ body.busy-cursor {
 	text-align: center;
 }
 
-.centered-markdown > div {
+.centered-markdown .card-image {
 	margin: auto;
 }
 

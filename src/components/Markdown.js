@@ -98,7 +98,7 @@ function renderCardImage(node) {
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${nameURL}`;
 
   return (
-    <Col xs="6" md="4" lg="3">
+    <Col className="card-image" xs="6" md="4" lg="3">
       <a href={`/tool/card/${nameURL}`} target="_blank" rel="noopener noreferrer">
         <FoilCardImage autocard card={{ details }} className="clickable" />
       </a>
