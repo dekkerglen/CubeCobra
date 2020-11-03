@@ -1,16 +1,23 @@
 /* eslint-disable no-use-before-define */
 import assert from 'assert';
+import markdownLineEndingOrSpace from 'micromark/dist/character/markdown-line-ending-or-space';
 
 function tokenizeUserlink(effects, ok, nok) {
+  const self = this;
   return start;
 
   function start(code) {
     assert(code === 64, 'expected `@`');
-    effects.enter('userlink');
-    effects.enter('userlinkMarker');
-    effects.consume(code);
-    effects.exit('userlinkMarker');
-    return open;
+    // '@' shouldn't be preceded by an actual character
+    if (!self.previous || markdownLineEndingOrSpace(self.previous)) {
+      effects.enter('userlink');
+      effects.enter('userlinkMarker');
+      effects.consume(code);
+      effects.exit('userlinkMarker');
+      return open;
+    }
+
+    return nok(code);
   }
 
   // make sure at least one alphanum. char is after the '@'
