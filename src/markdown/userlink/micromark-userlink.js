@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import assert from 'assert';
 
 function tokenizeUserlink(effects, ok, nok) {

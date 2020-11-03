@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import assert from 'assert';
 
 function tokenizeCardlink(effects, ok, nok) {
