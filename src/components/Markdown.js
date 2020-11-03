@@ -3,12 +3,15 @@ import PropTypes from 'prop-types';
 
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex';
+
 import math from 'remark-math';
 import breaks from 'remark-breaks';
 import userlink from 'markdown/userlink';
 import strikethrough from 'markdown/strikethrough';
 import symbols from 'markdown/symbols';
 import cardlink from 'markdown/cardlink';
+import centering from 'markdown/centering';
+
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import LinkModal from 'components/LinkModal';
@@ -103,6 +106,10 @@ function renderCardImage(node) {
   );
 }
 
+function renderCentering(node) {
+  return <div className="centered-markdown">{node.children}</div>;
+}
+
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
     link: renderLink,
@@ -113,18 +120,29 @@ const Markdown = ({ markdown, limited }) => {
     symbol: renderSymbol,
     cardlink: renderCardlink,
     cardimage: renderCardImage,
+    centering: renderCentering,
   };
 
   const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      plugins={[breaks, math, userlink, cardlink, strikethrough, [symbols, { allowed: validSymbols }]]}
+      plugins={[centering, breaks, math, userlink, cardlink, strikethrough, [symbols, { allowed: validSymbols }]]}
       renderers={renderers}
     >
       {markdownStr}
     </ReactMarkdown>
   );
+};
+
+renderCardlink.propTypes = {
+  name: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
+  dfc: PropTypes.bool,
+};
+
+renderCardlink.defaultProps = {
+  dfc: false,
 };
 
 Markdown.propTypes = {

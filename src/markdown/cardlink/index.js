@@ -3,8 +3,7 @@ import syntax from 'markdown/cardlink/micromark-cardlink';
 import { fromMarkdown } from 'markdown/cardlink/mdast-cardlink';
 import { add } from 'markdown/utils';
 
-function oncard(node, index, parent) {
-  console.log(`Found cardlink "${node.value}"`);
+function oncard(node) {
   if (node.value[0] === '!') {
     node.value = node.value.substring(1);
     node.type = 'cardimage';

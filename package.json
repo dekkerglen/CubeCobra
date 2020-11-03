@@ -73,6 +73,7 @@
     "jquery-ui": "^1.12.1",
     "jquery-ui-dist": "^1.12.1",
     "jsdom": "^16.2.2",
+    "micromark": "^2.10.1",
     "mongoose": "5.7.7",
     "mongoose-seed": "^0.6.0",
     "nearley": "^2.19.3",
