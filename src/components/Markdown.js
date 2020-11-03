@@ -22,15 +22,15 @@ import { Col, Row, Card, CardBody } from 'reactstrap';
 const AutocardLink = withAutocard('a');
 const Link = withModal('a', LinkModal);
 
-function renderBlockQuote(node) {
+const renderBlockQuote = (node) => {
   return (
     <Card className="bg-light">
       <CardBody>{node.children}</CardBody>
     </Card>
   );
-}
+};
 
-function renderLink(node) {
+const renderLink = (node) => {
   const ref = encodeURI(node.node?.url ?? '');
 
   const isInternalURL = (to) => {
@@ -55,31 +55,31 @@ function renderLink(node) {
       {node.children}
     </Link>
   );
-}
+};
 
-function renderMath(node) {
+const renderMath = (node) => {
   return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
-}
+};
 
-function renderInlineMath(node) {
+const renderInlineMath = (node) => {
   return <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
-}
+};
 
-function renderUserlink(node) {
+const renderUserlink = (node) => {
   const name = node.value;
   return (
     <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
       @{name}
     </a>
   );
-}
+};
 
-function renderSymbol(node) {
+const renderSymbol = (node) => {
   const symbol = node.value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
-}
+};
 
-function renderCardlink({ name, id, dfc }) {
+const renderCardlink = ({ name, id, dfc }) => {
   const idURL = encodeURIComponent(id ?? name);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -89,9 +89,9 @@ function renderCardlink({ name, id, dfc }) {
       {name}
     </AutocardLink>
   );
-}
+};
 
-function renderCardImage(node) {
+const renderCardImage = (node) => {
   const name = node.value;
   const nameURL = encodeURIComponent(name);
   const details = { image_normal: `/tool/cardimage/${nameURL}` };
@@ -104,11 +104,11 @@ function renderCardImage(node) {
       </a>
     </Col>
   );
-}
+};
 
-function renderCentering(node) {
+const renderCentering = (node) => {
   return <div className="centered-markdown">{node.children}</div>;
-}
+};
 
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
