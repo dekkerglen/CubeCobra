@@ -40,7 +40,7 @@ On the surface, the userlink extension could very easily be written as a transfo
 In the end, which approach you take will depend on what your plugin is trying to achieve. You can take a look at our plugins or the official [list of remark plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins) for inspiration.
 
 ### Rendering elements
-While the parser has built-in support for converting most standard Markdown tags to HTML, we may want to override it and render some elements our own way. The parser of course also has no way of knowing how to render elements of custom types added by plugins. To modify the renderer, we can pass it a `renderers` object. Its keys are the types of elements we want to render ourselves and the corresponding values are functions that take a node of that type and return a generated HTML element.
+While the parser has built-in support for converting most standard Markdown tags to HTML, we may want to override it and render some elements our own way. The parser of course also has no way of knowing how to render elements of custom types added by plugins. To modify the renderer, we can give our parser a `renderers` object. Its keys are the types of elements we want to render ourselves and the corresponding values are functions that take a node of that type and return a generated HTML element.
 
 ## Other Useful Information
 Hopefully this document served you as a brief overview of remark and its plugin system. You can find more information at the following sites:
@@ -48,6 +48,7 @@ Hopefully this document served you as a brief overview of remark and its plugin 
 - <https://github.com/micromark/micromark>
 - <https://github.com/syntax-tree/mdast-util-from-markdown>
 - <https://github.com/remarkjs/remark>
+- <https://github.com/remarkjs/remark/tree/main/packages/remark-parse>
 - <https://unifiedjs.com/learn/guide/create-a-plugin/>
 - <https://github.com/micromark/common-markup-state-machine>
 
