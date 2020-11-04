@@ -652,7 +652,7 @@ router.get('/faq', (req, res) => {
       },
       {
         label: 'What tech stack does Cube Cobra use?',
-        text: 'Cube Cobra used NodeJS with MongoDB for server side, and React front end with Bootstrap for CSS.',
+        text: 'Cube Cobra uses NodeJS with MongoDB for server side, and React front end with Bootstrap for CSS.',
       },
       {
         label: 'Is Cube Cobra Open Source?',
@@ -662,7 +662,7 @@ router.get('/faq', (req, res) => {
       {
         label: 'I am not a developer, can I still help improve Cube Cobra?',
         text:
-          'Yes! Even if you are not a developer, you can still get involved in helping Cube Cobra become a better platform for everyone! If you want to be more involved in the community, join the discord linked under contact. You can submit bug reports, make feature requests, and talk to the developers directly there.',
+          'Yes! Even if you are not a developer, you can still get involved in helping Cube Cobra become a better platform for everyone! If you want to be more involved in the community, join the Discord linked under Contact. You can submit bug reports, make feature requests, and talk to the developers directly there.',
       },
       {
         label: "I'm having trouble building my cube, where can I go for help?",
