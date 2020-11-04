@@ -11,6 +11,7 @@ import strikethrough from 'markdown/strikethrough';
 import symbols from 'markdown/symbols';
 import cardlink from 'markdown/cardlink';
 import centering from 'markdown/centering';
+import cardrow from 'markdown/cardrow';
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -110,6 +111,10 @@ const renderCentering = (node) => {
   return <div className="centered-markdown">{node.children}</div>;
 };
 
+const renderCardrow = (node) => {
+  return <Row className="cardRow">{node.children}</Row>;
+};
+
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
     link: renderLink,
@@ -121,13 +126,23 @@ const Markdown = ({ markdown, limited }) => {
     cardlink: renderCardlink,
     cardimage: renderCardImage,
     centering: renderCentering,
+    cardrow: renderCardrow,
   };
 
   const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      plugins={[centering, breaks, math, userlink, cardlink, strikethrough, [symbols, { allowed: validSymbols }]]}
+      plugins={[
+        cardrow,
+        centering,
+        breaks,
+        math,
+        userlink,
+        cardlink,
+        strikethrough,
+        [symbols, { allowed: validSymbols }],
+      ]}
       renderers={renderers}
     >
       {markdownStr}
