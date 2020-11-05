@@ -31,8 +31,12 @@ const renderBlockQuote = (node) => {
   );
 };
 
+const renderImage = (node) => {
+  return <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />;
+};
+
 const renderLink = (node) => {
-  const ref = encodeURI(node.node?.url ?? '');
+  const ref = encodeURI(node.href ?? '');
 
   const isInternalURL = (to) => {
     try {
@@ -117,8 +121,11 @@ const renderCardrow = (node) => {
 
 const Markdown = ({ markdown, limited }) => {
   const renderers = {
+    // overridden defaults
     link: renderLink,
+    image: renderImage,
     blockquote: renderBlockQuote,
+    // plugins
     math: renderMath,
     inlineMath: renderInlineMath,
     userlink: renderUserlink,

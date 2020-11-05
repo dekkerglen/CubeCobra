@@ -469,6 +469,10 @@ body.busy-cursor {
 	margin-bottom: 0;
 }
 
+.markdown-image {
+	max-width: 100%;
+}
+
 .centered-max400 {
 	margin: auto;
 	max-width: 400px;
