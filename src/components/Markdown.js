@@ -123,7 +123,9 @@ const Markdown = ({ markdown, limited }) => {
   const renderers = {
     // overridden defaults
     link: renderLink,
+    linkReference: renderLink,
     image: renderImage,
+    imageReference: renderImage,
     blockquote: renderBlockQuote,
     // plugins
     math: renderMath,
