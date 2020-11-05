@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 const CubePropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
@@ -6,6 +7,7 @@ const CubePropType = PropTypes.shape({
   urlAlias: PropTypes.string,
   name: PropTypes.string.isRequired,
   card_count: PropTypes.number.isRequired,
+  cards: PropTypes.arrayOf(CardPropType),
   type: PropTypes.string.isRequired,
   overrideCategory: PropTypes.bool,
   categoryOverride: PropTypes.string,
