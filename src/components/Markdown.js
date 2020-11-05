@@ -25,7 +25,7 @@ const Link = withModal('a', LinkModal);
 
 const renderBlockQuote = (node) => {
   return (
-    <Card className="bg-light">
+    <Card className="bg-light block-quote">
       <CardBody>{node.children}</CardBody>
     </Card>
   );

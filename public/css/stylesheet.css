@@ -465,6 +465,10 @@ body.busy-cursor {
 	margin: auto;
 }
 
+.block-quote p:last-child {
+	margin-bottom: 0;
+}
+
 .centered-max400 {
 	margin: auto;
 	max-width: 400px;
