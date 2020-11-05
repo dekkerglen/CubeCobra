@@ -3,8 +3,8 @@ import assert from 'assert';
 import markdownSpace from 'micromark/dist/character/markdown-space';
 import markdownLineEnding from 'micromark/dist/character/markdown-line-ending';
 import spaceFactory from 'micromark/dist/tokenize/factory-space';
-import types from 'micromark/dist/constant/types';
-import codes from 'micromark/dist/character/codes';
+import types from 'micromark/lib/constant/types';
+import codes from 'micromark/lib/character/codes';
 import { shallowEqual } from 'markdown/utils';
 
 function centering() {
