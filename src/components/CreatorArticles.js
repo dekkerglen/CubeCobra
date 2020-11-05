@@ -18,7 +18,7 @@ const CreatorArticles = ({ user }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/articles/${user._id}/${page}`);
+      const response = await csrfFetch(`/content/api/articles/${user.id}/${page}`);
       if (!response.ok) {
         console.log(response);
       }

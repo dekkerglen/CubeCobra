@@ -19,7 +19,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
       user={owner}
       followers={followers}
       following={following}
-      canEdit={user && user._id === owner._id}
+      canEdit={user && user.id === owner._id}
       activeLink="decks"
     >
       <Advertisement />
@@ -35,7 +35,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
               <DeckPreview
                 key={deck._id}
                 deck={deck}
-                canEdit={user && user._id === owner._id}
+                canEdit={user && user.id === owner._id}
                 nextURL={`/user/decks/${owner._id}/${activePage}`}
               />
             ))}
@@ -51,7 +51,10 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
 
 UserDecksPage.propTypes = {
   user: UserPropType,
-  owner: UserPropType.isRequired,
+  owner: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+  }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,

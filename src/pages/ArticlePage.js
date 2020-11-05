@@ -18,7 +18,7 @@ const ArticlePage = ({ user, loginCallback, article }) => {
       <Advertisement />
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user._id === article.owner && article.status !== 'published' && (
+        {user && user.id === article.owner && article.status !== 'published' && (
           <CardHeader>
             <h5>
               <em className="pr-3">*Draft*</em>
@@ -28,7 +28,7 @@ const ArticlePage = ({ user, loginCallback, article }) => {
             </h5>
           </CardHeader>
         )}
-        <Article article={article} userid={user && user._id} />
+        <Article article={article} userid={user && user.id} />
       </Card>
     </MainLayout>
   );

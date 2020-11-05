@@ -16,7 +16,7 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
       user={owner}
       followers={followers}
       following={following}
-      canEdit={user && user._id === owner._id}
+      canEdit={user && user.id === owner._id}
       activeLink="blog"
     >
       <Advertisement />
@@ -32,8 +32,8 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
             <BlogPost
               key={post._id}
               post={post}
-              canEdit={user && user._id === owner._id}
-              userid={user && user._id}
+              canEdit={user && user.id === owner._id}
+              userid={user && user.id}
               loggedIn
             />
           ))
@@ -50,7 +50,10 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
 
 UserBlogPage.propTypes = {
   user: UserPropType,
-  owner: UserPropType.isRequired,
+  owner: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+  }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

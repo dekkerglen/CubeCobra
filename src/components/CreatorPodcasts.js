@@ -18,7 +18,7 @@ const CreatorPodcasts = ({ user }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/podcasts/${user._id}/${page}`);
+      const response = await csrfFetch(`/content/api/podcasts/${user.id}/${page}`);
       if (!response.ok) {
         console.log(response);
       }

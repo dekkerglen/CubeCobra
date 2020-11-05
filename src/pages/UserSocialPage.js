@@ -81,8 +81,16 @@ const UserSocialPage = ({ user, followedCubes, followedUsers, followers, loginCa
 
 UserSocialPage.propTypes = {
   followedCubes: PropTypes.arrayOf(CubePropType).isRequired,
-  followedUsers: PropTypes.arrayOf(UserPropType).isRequired,
-  followers: PropTypes.arrayOf(UserPropType).isRequired,
+  followedUsers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  followers: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 const UserPropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   email: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
   about: PropTypes.string.isRequired,

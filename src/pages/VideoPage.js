@@ -16,7 +16,7 @@ const VideoPage = ({ user, loginCallback, video }) => {
     <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user._id === video.owner && video.status !== 'published' && (
+        {user && user.id === video.owner && video.status !== 'published' && (
           <CardHeader>
             <h5>
               <em className="pr-3">*Draft*</em>
@@ -26,7 +26,7 @@ const VideoPage = ({ user, loginCallback, video }) => {
             </h5>
           </CardHeader>
         )}
-        <Video video={video} userid={user && user._id} />
+        <Video video={video} userid={user && user.id} />
       </Card>
     </MainLayout>
   );

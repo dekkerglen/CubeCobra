@@ -516,8 +516,8 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
   );
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="playtest">
-        {user && cube.owner === user._id ? (
+      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="playtest">
+        {user && cube.owner === user.id ? (
           <Navbar light expand className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>
@@ -554,7 +554,7 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
             <GridCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user._id} className="mb-3" />}
+            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user.id} className="mb-3" />}
             <SamplePackCard className="mb-3" />
           </Col>
         </Row>

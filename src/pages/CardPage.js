@@ -500,7 +500,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <CommentsSection
                     parentType="card"
                     parent={card.oracle_id}
-                    userid={user && user._id}
+                    userid={user && user.id}
                     collapse={false}
                   />
                 </div>

@@ -16,7 +16,7 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
     <MainLayout loginCallback={loginCallback} user={user}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user._id === podcast.owner && (
+        {user && user.id === podcast.owner && (
           <CardHeader>
             <h5>
               {podcast.status !== 'published' && (
@@ -33,7 +33,7 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
             </h5>
           </CardHeader>
         )}
-        <Podcast podcast={podcast} userid={user && user._id} episodes={episodes} />
+        <Podcast podcast={podcast} userid={user && user.id} episodes={episodes} />
       </Card>
     </MainLayout>
   );

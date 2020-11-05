@@ -144,7 +144,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                 <NavItem>
                   <SampleHandModal deck={deck.seats[seatIndex].deck} />
                 </NavItem>
-                {user && deck.owner === user._id && (
+                {user && deck.owner === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
@@ -199,7 +199,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
               <DeckCard
                 seat={deck.seats[seatIndex]}
                 deckid={deck._id}
-                userid={user ? user._id : null}
+                userid={user ? user.id : null}
                 deck={deck}
                 seatIndex={`${seatIndex}`}
                 draft={draft}

@@ -77,7 +77,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
           <h5 className="mt-3">Feed</h5>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user._id : null} loggedIn />
+              <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user.id : null} loggedIn />
             ))
           ) : (
             <p>

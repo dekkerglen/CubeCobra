@@ -129,8 +129,8 @@ class CubeOverview extends Component {
 
     return (
       <MainLayout loginCallback={loginCallback} user={user}>
-        <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="overview">
-          {user && cube.owner === user._id ? (
+        <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="overview">
+          {user && cube.owner === user.id ? (
             <Navbar expand="md" light className="usercontrols mb-3">
               <Nav navbar>
                 <NavItem>
@@ -250,7 +250,7 @@ class CubeOverview extends Component {
                   )}
                 </CardBody>
                 {user &&
-                  cube.owner !== user._id &&
+                  cube.owner !== user.id &&
                   (followed ? (
                     <Button outline color="danger" className="rounded-0" onClick={this.unfollow}>
                       Unfollow
@@ -290,7 +290,7 @@ class CubeOverview extends Component {
                 key={post._id}
                 post={post}
                 canEdit={false}
-                userid={user ? user._id : null}
+                userid={user ? user.id : null}
                 loggedIn={user !== null}
               />
             )}

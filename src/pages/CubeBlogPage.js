@@ -95,7 +95,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user._id} activeLink="blog">
+      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="blog">
         <Navbar expand light className="usercontrols mb-3">
           <Collapse navbar>
             <Nav navbar>
@@ -114,8 +114,8 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
             <BlogPost
               key={post._id}
               post={post}
-              canEdit={user && post.owner === user._id}
-              userid={user ? user._id : null}
+              canEdit={user && post.owner === user.id}
+              userid={user ? user.id : null}
               loggedIn={user !== null}
               onEdit={handleEdit}
             />

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import UserPropType from 'proptypes/UserPropType';
+import PropTypes from 'prop-types';
 
 import { Card } from 'reactstrap';
 
@@ -37,7 +37,13 @@ const UserPreview = ({ user }) => {
 };
 
 UserPreview.propTypes = {
-  user: UserPropType.isRequired,
+  user: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
+    artist: PropTypes.string.isRequired,
+    users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
+  }).isRequired,
 };
 
 export default UserPreview;
