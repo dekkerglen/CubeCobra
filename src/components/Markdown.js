@@ -6,12 +6,13 @@ import Latex from 'react-latex';
 
 import math from 'remark-math';
 import breaks from 'remark-breaks';
+import gfm from 'remark-gfm';
 import userlink from 'markdown/userlink';
-import strikethrough from 'markdown/strikethrough';
 import symbols from 'markdown/symbols';
 import cardlink from 'markdown/cardlink';
 import centering from 'markdown/centering';
 import cardrow from 'markdown/cardrow';
+
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -150,7 +151,7 @@ const Markdown = ({ markdown, limited }) => {
         math,
         userlink,
         cardlink,
-        strikethrough,
+        [gfm, { singleTilde: false }],
         [symbols, { allowed: validSymbols }],
       ]}
       renderers={renderers}
