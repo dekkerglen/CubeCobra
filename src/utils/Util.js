@@ -181,6 +181,15 @@ export function getCubeDescription(cube) {
   return `${cube.card_count} Card ${cube.type} Cube`;
 }
 
+export function isInternalURL(to) {
+  try {
+    const url = new URL(to, window.location.origin);
+    return url.hostname === window.location.hostname;
+  } catch {
+    return false;
+  }
+}
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -197,4 +206,5 @@ export default {
   COLORS,
   getCubeId,
   getCubeDescription,
+  isInternalURL,
 };

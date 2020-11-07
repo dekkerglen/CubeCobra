@@ -13,11 +13,11 @@ import cardlink from 'markdown/cardlink';
 import centering from 'markdown/centering';
 import cardrow from 'markdown/cardrow';
 
-
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import LinkModal from 'components/LinkModal';
 import FoilCardImage from 'components/FoilCardImage';
+import { isInternalURL } from 'utils/Util';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
 
@@ -38,15 +38,6 @@ const renderImage = (node) => {
 
 const renderLink = (node) => {
   const ref = encodeURI(node.href ?? '');
-
-  const isInternalURL = (to) => {
-    try {
-      const url = new URL(to, window.location.origin);
-      return url.hostname === window.location.hostname;
-    } catch {
-      return false;
-    }
-  };
 
   if (isInternalURL(ref)) {
     return (
