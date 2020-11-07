@@ -1988,7 +1988,7 @@ router.get('/deck/download/cockatrice/:id/:seat', async (req, res) => {
 router.post(
   '/startdraft/:id',
   body('id').toInt(),
-  body('botsOnly').toBoolean(),
+  body('type'),
   body('seats').toInt({ min: 2, max: 16 }),
   body('packs').toInt({ min: 1, max: 36 }),
   body('cards').toInt({ min: 1, max: 90 }),
@@ -2064,7 +2064,7 @@ router.post(
         draft.synergies = null;
       }
       await draft.save();
-      if (req.body.botsOnly) {
+      if (req.body.type === 'onlyBots') {
         draft = await Draft.findById(draft._id).lean();
         // insert card details everywhere that needs them
         for (const seat of draft.unopenedPacks) {

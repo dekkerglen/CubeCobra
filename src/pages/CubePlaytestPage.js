@@ -103,14 +103,14 @@ LabelRow.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const useBotsOnlyCallback = (botsOnly, cubeID) => {
+const useBotsOnlyCallback = (draftType, cubeID) => {
   const formRef = useRef();
   const submitDeckForm = useRef();
   const [draftId, setDraftId] = useState('');
   const [loading, setLoading] = useState(false);
   const submitForm = useCallback(
     async (e) => {
-      if (botsOnly) {
+      if (draftType === 'justbots') {
         setLoading(true);
         e.preventDefault();
         const body = new FormData(formRef.current);
@@ -125,7 +125,7 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
         submitDeckForm.current.submit();
       }
     },
-    [botsOnly, cubeID, formRef, setDraftId, submitDeckForm],
+    [draftType, cubeID, formRef, setDraftId, submitDeckForm],
   );
 
   return [submitForm, draftId, submitDeckForm, formRef, loading];
@@ -241,8 +241,8 @@ CustomDraftCard.propTypes = {
 
 const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
   const { cubeID, canEdit } = useContext(CubeContext);
-  const [botsOnly, toggleBotsOnly] = useToggle(false);
-  const [submitForm, draftId, submitDeckForm, formRef, loading] = useBotsOnlyCallback(botsOnly, cubeID);
+  const [draftType, setDraftType] = useState('bots');
+  const [submitForm, draftId, submitDeckForm, formRef, loading] = useBotsOnlyCallback(draftType, cubeID);
   return (
     <Card className="mb-3">
       <CSRFForm
@@ -275,11 +275,19 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
               {rangeOptions(2, 17)}
             </Input>
           </LabelRow>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="botsOnly" onClick={toggleBotsOnly} value={botsOnly} /> Have just bots draft.
-            </Label>
-          </FormGroup>
+          <LabelRow htmlFor="type" label="Type">
+            <Input
+              type="select"
+              name="type"
+              id="type"
+              value={draftType}
+              onChange={(event) => setDraftType(event.target.value)}
+            >
+              <option value="bots">Against Bots</option>
+              <option value="multiplayer">Multiplayer</option>
+              <option value="justbots">Bots Only Draft</option>
+            </Input>
+          </LabelRow>
         </CardBody>
         <CardFooter>
           <Input type="hidden" name="id" value="-1" />
