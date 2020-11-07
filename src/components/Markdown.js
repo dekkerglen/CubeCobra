@@ -7,6 +7,8 @@ import Latex from 'react-latex';
 import math from 'remark-math';
 import breaks from 'remark-breaks';
 import gfm from 'remark-gfm';
+import slug from 'remark-slug';
+import headings from 'remark-autolink-headings';
 import userlink from 'markdown/userlink';
 import symbols from 'markdown/symbols';
 import cardlink from 'markdown/cardlink';
@@ -52,6 +54,10 @@ const renderLink = (node) => {
       {node.children}
     </Link>
   );
+};
+
+const renderHeading = (node) => {
+  return React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 };
 
 const renderMath = (node) => {
@@ -119,6 +125,7 @@ const Markdown = ({ markdown, limited }) => {
     image: renderImage,
     imageReference: renderImage,
     blockquote: renderBlockQuote,
+    heading: renderHeading,
     // plugins
     math: renderMath,
     inlineMath: renderInlineMath,
@@ -142,6 +149,8 @@ const Markdown = ({ markdown, limited }) => {
         math,
         userlink,
         cardlink,
+        slug,
+        headings,
         [gfm, { singleTilde: false }],
         [symbols, { allowed: validSymbols }],
       ]}
