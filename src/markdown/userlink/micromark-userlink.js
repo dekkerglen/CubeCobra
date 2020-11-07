@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import assert from 'assert';
 import markdownLineEndingOrSpace from 'micromark/dist/character/markdown-line-ending-or-space';
 

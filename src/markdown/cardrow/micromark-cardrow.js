@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import assert from 'assert';
 import markdownLineEnding from 'micromark/dist/character/markdown-line-ending';
 import chunkedSplice from 'micromark/dist/util/chunked-splice';
