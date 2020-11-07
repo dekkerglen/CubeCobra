@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "npm run prettier",
-    "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src}'/**/*.js' '*.js'",
+    "prettier-base": "prettier {__tests__,fixtures,models,one_shot_scripts,public,routes,serverjs,src}/**/*.js *.js",
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
@@ -48,6 +48,7 @@
     "canvas": "^2.6.1",
     "chart.js": "^2.9.2",
     "cheerio": "^1.0.0-rc.3",
+    "compression": "^1.7.4",
     "compute-cosine-similarity": "^1.0.0",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.2.0",

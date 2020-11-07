@@ -235,13 +235,7 @@ class CubeOverviewModal extends Component {
 
                 <h6>Category</h6>
 
-                <input
-                  className="form-control"
-                  name="name"
-                  type="text"
-                  disabled
-                  value={getCubeDescription(cube)}
-                />
+                <input className="form-control" name="name" type="text" disabled value={getCubeDescription(cube)} />
 
                 <Row>
                   <Col>

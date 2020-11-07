@@ -19,7 +19,7 @@ const monthNames = ["january", "february", "march", "april", "may", "june",
 const date = new Date();
 const folder = `${monthNames[date.getMonth()]}${date.getDate()}`;
 
-const batchSize = 100;
+const batchSize = 1000;
 
 let cardToInt;
 

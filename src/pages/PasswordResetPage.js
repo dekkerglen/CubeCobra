@@ -25,7 +25,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Email Address:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="email" id="email" type="text" />
+                <Input maxLength="1000" name="email" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -35,7 +35,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Recovery Code:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="code" id="code" type="text" />
+                <Input maxLength="1000" name="code" id="code" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -45,7 +45,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>New Password:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="password" id="password" type="password" />
+                <Input maxLength="1000" name="password" id="password" type="password" />
               </Col>
             </Row>
           </FormGroup>
@@ -55,7 +55,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Confirm New Password:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="password2" id="confirmPassword" type="password" />
+                <Input maxLength="1000" name="password2" id="confirmPassword" type="password" />
               </Col>
             </Row>
           </FormGroup>

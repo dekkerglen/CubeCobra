@@ -131,6 +131,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             humanName="Number of Decks"
             placeholder={'Any value, e.g. "2"'}
             value={decks}
+            valueOp={decksOp}
             onChange={handleChange}
           />
           <NumericField
@@ -138,6 +139,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             humanName="Number of Cards"
             placeholder={'Any value, e.g. "360"'}
             value={cards}
+            valueOp={cardsOp}
             onChange={handleChange}
           />
           <SelectField
@@ -240,13 +242,15 @@ const CubeSearchNavBar = ({ query, order, title }) => {
 };
 
 CubeSearchNavBar.propTypes = {
-  query: PropTypes.string.isRequired,
-  order: PropTypes.string.isRequired,
+  query: PropTypes.string,
+  order: PropTypes.string,
   title: PropTypes.string,
 };
 
 CubeSearchNavBar.defaultProps = {
   title: null,
+  query: '',
+  order: 'date',
 };
 
 export default CubeSearchNavBar;

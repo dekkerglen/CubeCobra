@@ -103,7 +103,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     if (!other.users_following.includes(user.id)) {
@@ -133,7 +133,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
@@ -477,7 +477,7 @@ router.get('/view/:id', async (req, res) => {
       ).lean();
       if (!user) {
         req.flash('danger', 'User not found');
-        return res.redirect('404');
+        return res.redirect('/404');
       }
     }
 
@@ -550,7 +550,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const followers = await User.find(
