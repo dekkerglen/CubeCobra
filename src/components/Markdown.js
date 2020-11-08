@@ -83,6 +83,14 @@ const renderCode = ({ language, value }) => {
   );
 };
 
+const renderTable = (node) => {
+  return (
+    <div className="table-responsive">
+      <table className="table table-bordered">{node.children}</table>
+    </div>
+  );
+};
+
 const renderMath = (node) => {
   return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
 };
@@ -150,6 +158,7 @@ const Markdown = ({ markdown, limited }) => {
     blockquote: renderBlockQuote,
     heading: renderHeading,
     code: renderCode,
+    table: renderTable,
     // plugins
     math: renderMath,
     inlineMath: renderInlineMath,
