@@ -473,6 +473,17 @@ body.busy-cursor {
 	max-width: 100%;
 }
 
+.heading-link {
+	margin-left: -1.2rem;
+	margin-right: 0.2rem;
+	color: var(--text);
+}
+
+.card-body {
+	padding-left: 1.5rem;
+	padding-right: 1.5rem;
+}
+
 .centered-max400 {
 	margin: auto;
 	max-width: 400px;

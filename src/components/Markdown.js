@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex';
+import { LinkIcon } from '@primer/octicons-react';
 
 import math from 'remark-math';
 import breaks from 'remark-breaks';
@@ -40,8 +41,17 @@ const renderImage = (node) => {
 
 const renderLink = (node) => {
   const ref = encodeURI(node.href ?? '');
+  console.log(node);
 
   if (isInternalURL(ref)) {
+    // heading autolink
+    if (node.node.data?.hChildren) {
+      return (
+        <a href={ref} className="heading-link">
+          <LinkIcon size={14} className="align-middle" />
+        </a>
+      );
+    }
     return (
       <a target="_blank" rel="noopener noreferrer" href={ref}>
         {node.children}
@@ -139,7 +149,6 @@ const Markdown = ({ markdown, limited }) => {
 
   const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
   const markdownStr = markdown?.toString() ?? '';
-  // const markdownStr = '>>> \n# asdfasdf\n <<<\nqwerty';
   return (
     <ReactMarkdown
       plugins={[
