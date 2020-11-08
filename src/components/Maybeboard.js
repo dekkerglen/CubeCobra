@@ -156,7 +156,7 @@ const Maybeboard = ({ filter, ...props }) => {
         if (response.ok) {
           const json = await response.json();
           if (json.success === 'true') {
-            addMaybeboardCard({ _id: json.added[card._id], cardID: card._id, details: card });
+            addMaybeboardCard({ _id: json.added[card._id], cardID: card._id, details: card, tags: [] });
           } else {
             console.error(json.message);
           }
