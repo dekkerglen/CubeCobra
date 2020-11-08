@@ -456,32 +456,49 @@ body.busy-cursor {
 	align-items: center;
 }
 
-.centered-markdown {
+.markdown {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.markdown .centered-markdown {
 	width: 100%;
 	text-align: center;
 }
 
-.centered-markdown .card-image {
+.markdown .centered-markdown .card-image {
 	margin: auto;
 }
 
-.block-quote p:last-child {
+.markdown .block-quote p:last-child {
 	margin-bottom: 0;
 }
 
-.markdown-image {
+.markdown .markdown-image {
 	max-width: 100%;
 }
 
-.heading-link {
-	margin-left: -1.2rem;
-	margin-right: 0.2rem;
-	color: var(--text);
+.markdown .heading-link {
+	float: left;
+	margin-left: -1.5rem;
+	padding-right: 0.5rem;
+	vertical-align: middle;
+	text-decoration: none;
+	color: currentColor;
 }
 
-.card-body {
-	padding-left: 1.5rem;
-	padding-right: 1.5rem;
+.markdown .heading-link .link-icon {
+	vertical-align: middle !important;
+	visibility: hidden;
+}
+
+.markdown h1:hover .heading-link .link-icon,
+.markdown h2:hover .heading-link .link-icon,
+.markdown h3:hover .heading-link .link-icon,
+.markdown h4:hover .heading-link .link-icon,
+.markdown h5:hover .heading-link .link-icon,
+.markdown h6:hover .heading-link .link-icon {
+	visibility: visible;
 }
 
 .centered-max400 {

@@ -48,7 +48,7 @@ const renderLink = (node) => {
     if (node.node.data?.hChildren) {
       return (
         <a href={ref} className="heading-link">
-          <LinkIcon size={14} className="align-middle" />
+          <LinkIcon size={16} className="link-icon" />
         </a>
       );
     }
@@ -151,6 +151,7 @@ const Markdown = ({ markdown, limited }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
+      className="markdown"
       plugins={[
         cardrow,
         centering,
