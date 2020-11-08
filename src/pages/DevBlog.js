@@ -25,7 +25,7 @@ const DevBlog = ({ blogs, pages, userid, activePage, user, loginCallback }) => (
             <CSRFForm method="POST" action="/dev/blogpost/">
               <FormGroup>
                 <Label>Title:</Label>
-                <Input maxlength="200" name="title" type="text" />
+                <Input maxLength="200" name="title" type="text" />
               </FormGroup>
               <FormGroup>
                 <Label>HTML:</Label>

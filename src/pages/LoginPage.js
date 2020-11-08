@@ -26,7 +26,7 @@ const LoginPage = ({ user, loginCallback }) => (
                 <Label>Username or Email Address:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="username" id="email" type="text" />
+                <Input maxLength="1000" name="username" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -36,7 +36,7 @@ const LoginPage = ({ user, loginCallback }) => (
                 <Label>Password:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="password" id="password" type="password" />
+                <Input maxLength="1000" name="password" id="password" type="password" />
               </Col>
             </Row>
             <Row>

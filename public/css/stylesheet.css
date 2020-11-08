@@ -451,11 +451,17 @@ body.busy-cursor {
 }
 
 .centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.centered-markdown {
 	width: 100%;
 	text-align: center;
 }
 
-.centered > div {
+.centered-markdown > div {
 	margin: auto;
 }
 

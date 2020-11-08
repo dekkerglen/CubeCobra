@@ -498,7 +498,7 @@ router.get('/blog/:id/:page', async (req, res) => {
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const countQ = Blog.countDocuments({ cube: cube._id });
@@ -579,7 +579,7 @@ router.get('/rss/:id', async (req, res) => {
     res.set('Content-Type', 'text/xml');
     return res.status(200).send(feed.xml());
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -652,7 +652,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -821,7 +821,7 @@ router.get('/analysis/:id', async (req, res) => {
         defaultNav: req.query.nav,
         defaultFormatId: Number(req.query.formatId),
         defaultFilterText: req.query.f,
-        defaultTab: Number(req.query.tab),
+        defaultTab: req.query.tab ? Number(req.query.tab) : 0,
         cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
       },
       {
@@ -1222,7 +1222,7 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
@@ -1248,7 +1248,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
@@ -1274,7 +1274,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     const { cards } = await Cube.findOne(buildIdQuery(req.params.id), 'cards').lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Not Authorized');
@@ -1551,7 +1551,7 @@ router.post(
 
       if (!cube) {
         req.flash('danger', 'Cube not found');
-        return res.redirect('404');
+        return res.redirect('/404');
       }
 
       if (cube.cards.length < numCards) {
@@ -1651,7 +1651,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     if (cube.cards.length < numCards) {
@@ -2001,7 +2001,7 @@ router.post(
 
       if (!cube) {
         req.flash('danger', 'Cube not found');
-        return res.redirect('404');
+        return res.redirect('/404');
       }
 
       if (cube.cards.length === 0) {
@@ -2110,20 +2110,20 @@ router.get('/griddraft/:id', async (req, res) => {
     const draft = await GridDraft.findById(req.params.id).lean();
     if (!draft) {
       req.flash('danger', 'Draft not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const user = await User.findById(cube.owner);
     if (!user) {
       req.flash('danger', 'Owner not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     // insert card details everywhere that needs them
@@ -2182,20 +2182,20 @@ router.get('/draft/:id', async (req, res) => {
     const draft = await Draft.findById(req.params.id).lean();
     if (!draft) {
       req.flash('danger', 'Draft not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const user = await User.findById(cube.owner);
     if (!user) {
       req.flash('danger', 'Owner not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     // insert card details everywhere that needs them
@@ -2703,7 +2703,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Unauthorized');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const newdeck = JSON.parse(req.body.draftraw);
@@ -2852,7 +2852,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
 
     if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Unauthorized');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     await Deck.deleteOne(query);
@@ -2878,7 +2878,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const decksq = Deck.find(
@@ -2934,7 +2934,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const base = await Deck.findById(req.params.id).lean();
     if (!base) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     const cube = await Cube.findById(base.cube);
     const srcDraft = await Draft.findById(base.draft).lean();
@@ -3073,7 +3073,7 @@ router.get('/redraft/:id', async (req, res) => {
 
     if (!(base && base.draft)) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const srcDraft = await Draft.findById(base.draft).lean();
@@ -3218,7 +3218,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
     const deck = await Deck.findById(req.params.id).lean();
     if (!deck) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     const draft = deck.draft
       ? (await Draft.findById(deck.draft).lean()) || (await GridDraft.findById(deck.draft).lean())
@@ -3254,7 +3254,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     return render(
@@ -3286,20 +3286,20 @@ router.get('/deck/:id', async (req, res) => {
   try {
     if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
       req.flash('danger', 'Invalid deck ID.');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const deck = await Deck.findById(req.params.id).lean();
 
     if (!deck) {
       req.flash('danger', 'Deck not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     let draft = null;
@@ -3772,7 +3772,7 @@ router.post(
   '/api/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     if (!cube) {
       return res.status(400).send({
@@ -3784,11 +3784,12 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Maybeboard can only be updated by cube owner.',
+        message: 'Cube can only be updated by cube owner.',
       });
     }
 
     cube.cards.push(util.newCard(req.body.add.details));
+    cube = setCubeType(cube, carddb);
     await cube.save();
 
     return res.status(200).send({
@@ -3813,7 +3814,7 @@ router.post(
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
-        message: 'Cube can only be updated by owner.',
+        message: 'Maybeboard can only be updated by owner.',
       });
     }
 
@@ -3913,7 +3914,7 @@ router.delete('/blog/remove/:id', ensureAuth, async (req, res) => {
 
     if (!req.user._id.equals(blog.owner)) {
       req.flash('danger', 'Unauthorized');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
     await Blog.deleteOne(query);
 

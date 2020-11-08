@@ -44,6 +44,8 @@ const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Iz
 const SHARDS = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
 const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
 
+const ELO_DEFAULT = 1200;
+
 function ISODateToYYYYMMDD(dateString) {
   const locale = 'en-US';
 
@@ -56,6 +58,13 @@ function ISODateToYYYYMMDD(dateString) {
 
 function removeAdjacentDuplicates(arr) {
   return arr.filter((x, i) => i === 0 || x !== arr[i - 1]);
+}
+
+function defaultSort(x, y) {
+  if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
+    return x < y ? -1 : 1;
+  }
+  return parseInt(x, 10) < parseInt(y, 10) ? -1 : 1;
 }
 
 export function GetColorIdentity(colors) {
@@ -255,7 +264,7 @@ function getLabelsRaw(cube, sort) {
     return tags.sort();
   }
   if (sort === 'Date Added') {
-    const dates = cube.map((card) => card.addedTmsp).sort();
+    const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
     return removeAdjacentDuplicates(days);
   }
@@ -368,24 +377,7 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort((x, y) => {
-      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
-        if (x > y) {
-          return 1;
-        }
-        if (y > x) {
-          return -1;
-        }
-        return 1;
-      }
-      if (parseInt(x, 10) > parseInt(y, 10)) {
-        return 1;
-      }
-      if (parseInt(y, 10) > parseInt(x, 10)) {
-        return -1;
-      }
-      return 1;
-    });
+    return items.sort(defaultSort);
   }
   if (sort === 'Toughness') {
     const items = [];
@@ -396,24 +388,7 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort((x, y) => {
-      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
-        if (x > y) {
-          return 1;
-        }
-        if (y > x) {
-          return -1;
-        }
-        return 1;
-      }
-      if (parseInt(x, 10) > parseInt(y, 10)) {
-        return 1;
-      }
-      if (parseInt(y, 10) > parseInt(x, 10)) {
-        return -1;
-      }
-      return 1;
-    });
+    return items.sort(defaultSort);
   }
   if (sort === 'Loyalty') {
     const items = [];
@@ -424,24 +399,7 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort((x, y) => {
-      if (!/^\d+$/.test(x) || !/^\d+$/.test(y)) {
-        if (x > y) {
-          return 1;
-        }
-        if (y > x) {
-          return -1;
-        }
-        return 1;
-      }
-      if (parseInt(x, 10) > parseInt(y, 10)) {
-        return 1;
-      }
-      if (parseInt(y, 10) > parseInt(x, 10)) {
-        return -1;
-      }
-      return 1;
-    });
+    return items.sort(defaultSort);
   }
   if (sort === 'Manacost Type') {
     return ['Gold', 'Hybrid', 'Phyrexian'];
@@ -494,21 +452,12 @@ function getLabelsRaw(cube, sort) {
   if (sort === 'Elo') {
     let elos = [];
     for (const card of cube) {
-      if (card.details.elo) {
-        if (!elos.includes(card.details.elo)) {
-          elos.push(card.details.elo);
-        }
+      const elo = card.details.elo ?? ELO_DEFAULT;
+      if (!elos.includes(elo)) {
+        elos.push(elo);
       }
     }
-    elos = elos.sort((x, y) => {
-      if (x - y > 0) {
-        return 1;
-      }
-      if (y - x > 0) {
-        return -1;
-      }
-      return 1;
-    });
+    elos = elos.sort((x, y) => (x < y ? -1 : 1));
     const buckets = elos.map(getEloBucket);
     const res = [];
     for (const bucket of buckets) {
@@ -784,10 +733,7 @@ export function cardGetLabels(card, sort) {
     return ['All'];
   }
   if (sort === 'Elo') {
-    if (card.details.elo) {
-      return [getEloBucket(card.details.elo)];
-    }
-    return [];
+    return [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
   // Unrecognized sort
   return [];

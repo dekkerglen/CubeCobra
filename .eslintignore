@@ -11,7 +11,6 @@ src/components/BlogPost.js
 src/components/ButtonLink.js
 src/components/CSRFForm.js
 src/components/CardModal.js
-src/components/CardModalContext.js
 src/components/CardModalForm.js
 src/components/CardStack.js
 src/components/Changelist.js
@@ -31,9 +30,7 @@ src/components/DynamicFlash.js
 src/components/ErrorBoundary.js
 src/components/FilterCollapse.js
 src/components/FoilCardImage.js
-src/components/FoilOverlay.js
 src/components/GroupModal.js
-src/components/GroupModalContext.js
 src/components/ImageFallback.js
 src/components/Notification.js
 src/components/SortCollapse.js
@@ -47,5 +44,4 @@ src/components/TextBadge.js
 src/components/Tooltip.js
 src/components/WithAutocard.js
 src/components/WithLoading.js
-src/components/WithModal.js
 src/generated

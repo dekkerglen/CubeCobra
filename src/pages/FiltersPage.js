@@ -349,7 +349,7 @@ const ContactPage = ({ user, loginCallback }) => (
         </p>
         <p>
           You can use <code>loy:</code> or
-          <coode>loyalty:</coode> to search for cards with certain starting loyalty.
+          <code>loyalty:</code> to search for cards with certain starting loyalty.
         </p>
         <p>
           Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
