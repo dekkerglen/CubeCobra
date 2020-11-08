@@ -141,11 +141,13 @@ router.post(
       });
     }
 
+    console.log(newComment.owner);
+
     comment.owner = newComment.owner;
     comment.ownerName = newComment.ownerName;
     comment.image = newComment.owner
-      ? 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021'
-      : req.user.image;
+      ? req.user.image
+      : 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
     comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
     comment.updated = true;
     comment.content = sanitize(newComment.content.substring(0, 500));
