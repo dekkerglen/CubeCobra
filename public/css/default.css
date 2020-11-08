@@ -1,4 +1,5 @@
 :root {
+  --mode: default;
   --border: #d4d4d4;
   --border-dark: #bbb;
   --border-darker: #999;

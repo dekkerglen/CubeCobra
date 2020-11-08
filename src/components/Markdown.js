@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
 import math from 'remark-math';
@@ -72,8 +73,15 @@ const renderHeading = (node) => {
 };
 
 const renderCode = ({ language, value }) => {
-  return <SyntaxHighlighter language={language}>{value}</SyntaxHighlighter>
-}
+  const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
+  const style = mode === 'dark' ? a11yDark : a11yLight;
+
+  return (
+    <SyntaxHighlighter language={language || 'text'} style={style}>
+      {value}
+    </SyntaxHighlighter>
+  );
+};
 
 const renderMath = (node) => {
   return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
