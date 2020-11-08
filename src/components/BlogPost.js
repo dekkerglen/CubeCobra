@@ -92,7 +92,7 @@ class BlogPost extends React.Component {
               <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
                   {post.markdown ? (
-                    <Markdown markdown={post.markdown} />
+                    <Markdown markdown={post.markdown} limited />
                   ) : (
                     <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                   )}
