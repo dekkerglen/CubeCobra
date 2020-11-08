@@ -62,9 +62,7 @@ class BlogPost extends React.Component {
       <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
-            <a href={`/cube/blogpost/${post._id}`}>
-              {post.title}
-            </a>
+            <a href={`/cube/blogpost/${post._id}`}>{post.title}</a>
             <div className="float-sm-right">
               {this.props.canEdit && (
                 <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />
