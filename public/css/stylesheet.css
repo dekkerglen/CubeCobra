@@ -501,6 +501,12 @@ body.busy-cursor {
 	visibility: visible;
 }
 
+@media (max-width: 1280px) {
+	.markdown .heading-link .link-icon {
+		visibility: visible;
+	}
+}
+
 .centered-max400 {
 	margin: auto;
 	max-width: 400px;
