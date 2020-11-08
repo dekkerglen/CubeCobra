@@ -52,6 +52,7 @@ const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const User = require('../models/user');
 const Draft = require('../models/draft');
+const MultiplayerDraft = require('../models/multiplayerDraft');
 const GridDraft = require('../models/gridDraft');
 const CardRating = require('../models/cardrating');
 
@@ -2025,7 +2026,13 @@ router.post(
       const bots = draftutil.getDraftBots(params);
       const format = draftutil.getDraftFormat(params, cube);
 
-      let draft = new Draft();
+      let draft;
+      if (req.body.type === 'multiplayer') {
+        draft = new MultiplayerDraft();
+      } else {
+        draft = new Draft();
+      }
+
       let populated = {};
       try {
         populated = draftutil.createDraft(
