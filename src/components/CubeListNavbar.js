@@ -86,8 +86,8 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
       <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
         <ModalBody>
           <p>
-            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
-            our .csv export.
+            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the same format as
+            our .csv export (columns may be ommitted and re-arranged, default values may be used).
           </p>
           <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
           <Label for="uploadBulkFile" className="sr-only">
