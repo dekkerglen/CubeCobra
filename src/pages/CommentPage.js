@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CommentPropType from 'proptypes/CommentPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -55,23 +57,8 @@ const CommentPage = ({ comment, user, loginCallback }) => {
 };
 
 CommentPage.propTypes = {
-  comment: PropTypes.shape({
-    timePosted: PropTypes.instanceOf(Date).isRequired,
-    ownerName: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    updated: PropTypes.bool.isRequired,
-    _id: PropTypes.string.isRequired,
-    parentType: PropTypes.string.isRequired,
-    parent: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  comment: CommentPropType.isRequired,
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

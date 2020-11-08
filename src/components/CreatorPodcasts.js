@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 
@@ -68,11 +68,7 @@ const CreatorPodcasts = ({ user }) => {
 };
 
 CreatorPodcasts.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }).isRequired,
+  user: UserPropType.isRequired,
 };
 
 export default CreatorPodcasts;

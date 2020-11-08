@@ -1,5 +1,7 @@
 import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -385,11 +387,7 @@ const DecksCard = ({ decks, userID, ...props }) => {
 };
 
 DecksCard.propTypes = {
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   userID: PropTypes.string.isRequired,
 };
 
@@ -579,18 +577,14 @@ CubePlaytestPage.propTypes = {
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
   }).isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   draftFormats: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
       markdown: PropTypes.string,
     }),
   ).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

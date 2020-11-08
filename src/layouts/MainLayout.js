@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Container,
@@ -142,12 +143,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
 
 MainLayout.propTypes = {
   children: PropTypes.node.isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    roles: PropTypes.arrayOf(PropTypes.string),
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

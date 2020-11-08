@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -44,13 +44,7 @@ const PodcastPreview = ({ podcast }) => {
 };
 
 PodcastPreview.propTypes = {
-  podcast: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  podcast: PodcastPropType.isRequired,
 };
+
 export default PodcastPreview;

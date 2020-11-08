@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { CardHeader, Card, Row, Col, CardBody } from 'reactstrap';
 
@@ -46,24 +48,9 @@ const PodcastEpisodePage = ({ user, loginCallback, episode }) => {
 };
 
 PodcastEpisodePage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  episode: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    source: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    podcast: PropTypes.string.isRequired,
-    podcastname: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  episode: PodcastPropType.isRequired,
 };
 
 PodcastEpisodePage.defaultProps = {

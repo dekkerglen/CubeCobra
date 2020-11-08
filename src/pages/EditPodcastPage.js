@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Nav, CardBody, Card, TabContent, TabPane, Input, FormGroup, Row, Col, Label, Button } from 'reactstrap';
 
@@ -103,18 +105,9 @@ const EditPodcastPage = ({ user, loginCallback, podcast }) => {
 };
 
 EditPodcastPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  podcast: PropTypes.shape({
-    title: PropTypes.string,
-    rss: PropTypes.string,
-    _id: PropTypes.string,
-    status: PropTypes.string,
-  }).isRequired,
+  podcast: PodcastPropType.isRequired,
 };
 
 EditPodcastPage.defaultProps = {

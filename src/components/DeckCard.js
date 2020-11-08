@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import DraftSeatPropType from 'proptypes/DraftSeatPropType';
+import DeckPropType from 'proptypes/DeckPropType';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
@@ -136,33 +138,11 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
 };
 
 DeckCard.propTypes = {
-  seat: PropTypes.shape({
-    description: PropTypes.string.isRequired,
-    deck: PropTypes.array.isRequired,
-    sideboard: PropTypes.array.isRequired,
-    username: PropTypes.string.isRequired,
-    userid: PropTypes.string,
-    bot: PropTypes.array,
-    name: PropTypes.string.isRequired,
-  }).isRequired,
+  seat: DraftSeatPropType.isRequired,
   userid: PropTypes.string,
   view: PropTypes.string,
   draft: PropTypes.shape({}).isRequired,
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
 };
 

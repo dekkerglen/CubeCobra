@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import PodcastPropType from 'proptypes/PodcastPropType';
 
 import CommentsSection from 'components/CommentsSection';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
@@ -46,15 +47,7 @@ const Podcast = ({ podcast, userid, episodes }) => {
   );
 };
 Podcast.propTypes = {
-  podcast: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-  }).isRequired,
+  podcast: PodcastPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})),
   userid: PropTypes.string,
 };

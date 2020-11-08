@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -265,19 +267,13 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 };
 
 CubeDraftPage.propTypes = {
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
     _id: PropTypes.string,
     bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
     ratings: PropTypes.objectOf(PropTypes.number),
   }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import ArticlePropType from 'proptypes/ArticlePropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -54,15 +54,6 @@ const ArticlePreview = ({ article }) => {
 };
 
 ArticlePreview.propTypes = {
-  article: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    short: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  article: ArticlePropType.isRequired,
 };
 export default ArticlePreview;
