@@ -141,8 +141,6 @@ router.post(
       });
     }
 
-    console.log(newComment.owner);
-
     comment.owner = newComment.owner;
     comment.ownerName = newComment.ownerName;
     comment.image = newComment.owner
