@@ -105,7 +105,7 @@ class BlogPost extends React.Component {
               {post.body && <CardText>{post.body}</CardText>}
               {(post.html || post.markdown) &&
                 (post.markdown ? (
-                  <Markdown markdown={post.markdown} />
+                  <Markdown markdown={post.markdown} limited />
                 ) : (
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                 ))}

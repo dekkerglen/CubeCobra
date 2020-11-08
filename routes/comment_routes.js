@@ -5,7 +5,6 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util.js');
-const { sanitize } = require('../serverjs/cubefn.js');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
