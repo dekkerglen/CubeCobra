@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { LinkIcon } from '@primer/octicons-react';
 
 import math from 'remark-math';
@@ -70,6 +71,10 @@ const renderHeading = (node) => {
   return React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 };
 
+const renderCode = ({ language, value }) => {
+  return <SyntaxHighlighter language={language}>{value}</SyntaxHighlighter>
+}
+
 const renderMath = (node) => {
   return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
 };
@@ -136,6 +141,7 @@ const Markdown = ({ markdown, limited }) => {
     imageReference: renderImage,
     blockquote: renderBlockQuote,
     heading: renderHeading,
+    code: renderCode,
     // plugins
     math: renderMath,
     inlineMath: renderInlineMath,
