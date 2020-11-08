@@ -43,7 +43,7 @@ const generateMeta = require('../serverjs/meta.js');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
+  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -1345,11 +1345,16 @@ function writeCard(res, card, maybe) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
   const { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
-  let { imgUrl } = card;
+  let { imgUrl, imgBackUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
+  }
+  if (imgBackUrl) {
+    imgBackUrl = `"${imgBackUrl}"`;
+  } else {
+    imgBackUrl = '';
   }
   res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc},`);
@@ -1363,6 +1368,7 @@ function writeCard(res, card, maybe) {
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
   res.write(`${imgUrl},"`);
+  res.write(`${imgBackUrl},"`);
   card.tags.forEach((tag, tagIndex) => {
     if (tagIndex !== 0) {
       res.write(', ');
@@ -3883,7 +3889,7 @@ router.post(
       });
     }
     const newVersion = updated.cardID && updated.cardID !== card.cardID;
-    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {
+    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'imgBackUrl', 'colors']) {
       if (Object.prototype.hasOwnProperty.call(updated, field)) {
         card[field] = updated[field];
       }

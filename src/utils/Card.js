@@ -108,6 +108,7 @@ export function cardsAreEquivalent(a, b) {
     arraysEqual(a.tags, b.tags) &&
     a.finish === b.finish &&
     a.imgUrl === b.imgUrl &&
+    a.imgBackUrl === b.imgBackUrl &&
     a.notes === b.notes &&
     a.colorCategory === b.colorCategory &&
     a.rarity === b.rarity
@@ -133,6 +134,8 @@ export const cardRarity = (card) => card.rarity ?? card.details.rarity;
 export const cardAddedTime = (card) => card.addedTmsp;
 
 export const cardImageUrl = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
+
+export const cardImageBackUrl = (card) => card.imgBackUrl ?? card.details.image_flip;
 
 export const cardNotes = (card) => card.notes;
 
