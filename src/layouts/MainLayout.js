@@ -100,6 +100,18 @@ const MainLayout = ({ user, children, loginCallback }) => {
               {user ? (
                 <>
                   <NotificationsNav user={user} />
+                  {user.cubes && user.cubes.length > 0 && (
+                    <UncontrolledDropdown nav inNavbar>
+                      <DropdownToggle nav caret>
+                        Your Cubes
+                      </DropdownToggle>
+                      <DropdownMenu right>
+                        {user.cubes.map((item) => (
+                          <DropdownItem href={`/cube/overview/${item._id}`}>{item.name}</DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </UncontrolledDropdown>
+                  )}
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
                       {user.username}

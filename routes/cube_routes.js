@@ -2543,6 +2543,22 @@ router.get('/api/fullnames', (_, res) => {
   });
 });
 
+router.get('/api/usercubes/:id', async (req, res) => {
+  const cubes = await Cube.find({
+    owner: req.params.id,
+    ...(req.user && req.user._id.equals(req.params.id)
+      ? {}
+      : {
+          isListed: true,
+        }),
+  }).lean();
+
+  res.status(200).send({
+    success: 'true',
+    cubes,
+  });
+});
+
 router.get(
   '/api/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
