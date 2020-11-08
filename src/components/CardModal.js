@@ -165,6 +165,12 @@ const CardModal = ({
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>Image Back URL</InputGroupText>
+                </InputGroupAddon>
+                <Input type="text" name="imgBackUrl" value={values.imgBackUrl} onChange={onChange} />
+              </InputGroup>
+              <InputGroup className="mb-3">
                 <InputGroupText className="square-right">Color</InputGroupText>
                 <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
               </InputGroup>

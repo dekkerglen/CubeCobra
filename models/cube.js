@@ -36,6 +36,7 @@ const Card = {
   },
   addedTmsp: Date,
   imgUrl: String,
+  imgBackUrl: String,
   notes: String,
   colorCategory: {
     type: String,

@@ -106,10 +106,6 @@ function addCardToCube(cube, cardDetails, tags) {
   cube.cards.push(card);
 }
 
-function getCardImageURL(card) {
-  return card.imgUrl || card.details.image_normal;
-}
-
 function fromEntries(entries) {
   const obj = {};
   for (const [k, v] of entries) {
@@ -180,7 +176,6 @@ module.exports = {
   binaryInsert,
   newCard,
   addCardToCube,
-  getCardImageURL,
   arraysEqual(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;

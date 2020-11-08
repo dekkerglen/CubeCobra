@@ -4,6 +4,7 @@ const CardPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
   imgUrl: PropTypes.string,
+  imgBackUrl: PropTypes.string,
   cardID: PropTypes.string.isRequired,
   colors: PropTypes.arrayOf(PropTypes.oneOf([...'WUBRG'])).isRequired,
   tags: PropTypes.arrayOf(PropTypes.string).isRequired,
