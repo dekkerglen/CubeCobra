@@ -39,6 +39,7 @@ import {
   cardRarity,
   cardStatus,
   cardCost,
+  cardLayout,
   cardDevotion,
   cardLegalIn
 } from 'utils/Card';
@@ -87,6 +88,7 @@ condition -> (
   | picksCondition
   | cubesCondition
   | legalityCondition
+  | layoutCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -138,6 +140,8 @@ loyaltyCondition -> ("l"i | "loy"i | "loyal"i | "loyalty"i) integerOpValue {% ([
 
 artistCondition -> ("a"i | "art"i | "artist"i) stringOpValue {% ([, valuePred]) => genericCondition('artist', cardArtist, valuePred) %}
 
+layoutCondition -> "layout"i  stringOpValue {% ([, valuePred]) => genericCondition('layout', cardLayout, valuePred) %}
+
 eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('elo', cardElo, valuePred) %}
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
@@ -158,4 +162,4 @@ isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details',
 
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
-isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i) {% ([[category]]) => category.toLowerCase() %}
+isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i) {% ([[category]]) => category.toLowerCase() %}
