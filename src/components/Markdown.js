@@ -72,13 +72,13 @@ const renderHeading = (node) => {
   return React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 };
 
-const renderCode = ({ language, value }) => {
+const renderCode = (node) => {
   const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
   const style = mode === 'dark' ? a11yDark : a11yLight;
 
   return (
-    <SyntaxHighlighter language={language || 'text'} style={style}>
-      {value}
+    <SyntaxHighlighter language={node.language || 'text'} style={style}>
+      {node.value}
     </SyntaxHighlighter>
   );
 };
@@ -149,6 +149,9 @@ const renderCardrow = (node) => {
 };
 
 const Markdown = ({ markdown, limited }) => {
+  const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
+  const markdownStr = markdown?.toString() ?? '';
+
   const renderers = {
     // overridden defaults
     link: renderLink,
@@ -170,25 +173,23 @@ const Markdown = ({ markdown, limited }) => {
     cardrow: renderCardrow,
   };
 
-  const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
-  const markdownStr = markdown?.toString() ?? '';
+  const plugins = [
+    cardrow,
+    centering,
+    breaks,
+    math,
+    userlink,
+    cardlink,
+    [gfm, { singleTilde: false }],
+    [symbols, { allowed: validSymbols }],
+  ];
+
+  if (!limited) {
+    plugins.push(slug, headings);
+  }
+
   return (
-    <ReactMarkdown
-      className="markdown"
-      plugins={[
-        cardrow,
-        centering,
-        breaks,
-        math,
-        userlink,
-        cardlink,
-        slug,
-        headings,
-        [gfm, { singleTilde: false }],
-        [symbols, { allowed: validSymbols }],
-      ]}
-      renderers={renderers}
-    >
+    <ReactMarkdown className="markdown" plugins={plugins} renderers={renderers}>
       {markdownStr}
     </ReactMarkdown>
   );
