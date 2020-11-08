@@ -12,8 +12,8 @@ import CardGrid from 'components/CardGrid';
 const VisualSpoiler = ({ cards }) => {
   const [scale, setScale] = useState('medium');
 
-  const { primary, secondary, tertiary } = useContext(SortContext);
-  const sorted = sortDeep(cards, primary, secondary, tertiary);
+  const { primary, secondary } = useContext(SortContext);
+  const sorted = sortDeep(cards, primary, secondary, 'CMC-Full');
   const cardList = sorted
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);
