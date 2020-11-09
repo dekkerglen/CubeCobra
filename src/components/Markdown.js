@@ -78,7 +78,7 @@ const renderCode = (node) => {
 
   return (
     <SyntaxHighlighter language={node.language || 'text'} style={style}>
-      {node.value}
+      {node.value || ''}
     </SyntaxHighlighter>
   );
 };
