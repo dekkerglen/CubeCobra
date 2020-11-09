@@ -74,7 +74,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[Ambush Viper]]</code>
+                <p>
+                  <code>[[Ambush Viper]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -102,9 +104,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]</code>
-                <br />
-                <code>[[New Border Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
+                <p>
+                  <code>[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]</code>
+                  <br />
+                  <code>[[New Border Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -131,9 +135,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[/Delver of Secrets]]</code>
-                <br />
-                <code>[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]</code>
+                <p>
+                  <code>[[/Delver of Secrets]]</code>
+                  <br />
+                  <code>[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -178,7 +184,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[!/Delver of Secrets]]</code>
+                <p>
+                  <code>[[!/Delver of Secrets]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -201,7 +209,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]</code>
+                <p>
+                  <code>[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -220,7 +230,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'<<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>'}</code>
+                <p>
+                  <code>{'<<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -243,7 +255,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{W}{U}{B}{R}{G}'}</code>
+                <p>
+                  <code>{'{W}{U}{B}{R}{G}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -266,7 +280,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{W/U}{G/U}{B/R}{R/W}{B/G}'}</code>
+                <p>
+                  <code>{'{W/U}{G/U}{B/R}{R/W}{B/G}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -286,9 +302,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{2/W}{2/U}{2/B}{2/R}{2/G}'}</code>
-                <br />
-                <code>{'{W/P}{U/P}{B/P}{R/P}{G/P}'}</code>
+                <p>
+                  <code>{'{2/W}{2/U}{2/B}{2/R}{2/G}'}</code>
+                  <br />
+                  <code>{'{W/P}{U/P}{B/P}{R/P}{G/P}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -308,7 +326,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{e}{T}{q}{s}{X}{Y}{15}'}</code>
+                <p>
+                  <code>{'{e}{T}{q}{s}{X}{Y}{15}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -331,7 +351,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>This suggestion was made by @dekkaru</code>
+                <p>
+                  <code>This suggestion was made by @dekkaru</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -357,7 +379,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'Some inline latex here $\\frac{\\sum_{i=1}^N x_i}{N}$ text after'}</code>
+                <p>
+                  <code>{'Some inline latex here $\\frac{\\sum_{i=1}^N x_i}{N}$ text after'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -376,11 +400,13 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>$$</code>
-                <br />
-                <code>{'frac{\\sum_{i=1}^N x_i}{N}'}</code>
-                <br />
-                <code>$$</code>
+                <p>
+                  <code>$$</code>
+                  <br />
+                  <code>{'frac{\\sum_{i=1}^N x_i}{N}'}</code>
+                  <br />
+                  <code>$$</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -400,9 +426,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'> $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
-                <br />
-                <code>{'### $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
+                <p>
+                  <code>{'> $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
+                  <br />
+                  <code>{'### $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -426,7 +454,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>~~This text is strikethrough~~</code>
+                <p>
+                  <code>~~This text is strikethrough~~</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -448,7 +478,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`>>> This text is centered <<<`}</code>
+                <p>
+                  <code>{`>>> This text is centered <<<`}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -471,7 +503,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`>>> Centered Card: [[!Hexdrinker]] <<<`}</code>
+                <p>
+                  <code>{`>>> Centered Card: [[!Hexdrinker]] <<<`}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -489,11 +523,13 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>
-                  {`>>>`} <br />
-                  ### Centered heading <br />
-                  {`<<<`}
-                </code>
+                <p>
+                  <code>
+                    {`>>>`} <br />
+                    ### Centered heading <br />
+                    {`<<<`}
+                  </code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -511,14 +547,16 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>
-                  {`>>>`} <br />
-                  Centered paragraph <br />
-                  spanning <br />
-                  multiple <br />
-                  lines <br />
-                  {`<<<`} <br />
-                </code>
+                <p>
+                  <code>
+                    {`>>>`} <br />
+                    Centered paragraph <br />
+                    spanning <br />
+                    multiple <br />
+                    lines <br />
+                    {`<<<`} <br />
+                  </code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -543,11 +581,13 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>| W | U | B | R | G |</code>
-                <br />
-                <code>|---|---|---|---|---|</code>
-                <br />
-                <code>| 15| 7 | 12| 35| 0 |</code>
+                <p>
+                  <code>| W | U | B | R | G |</code>
+                  <br />
+                  <code>|---|---|---|---|---|</code>
+                  <br />
+                  <code>| 15| 7 | 12| 35| 0 |</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -570,13 +610,15 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>| Left align | Center align | Right align |</code>
-                <br />
-                <code>| :--------- | :----------: | ----------: |</code>
-                <br />
-                <code>| Aligned left | Aligned center | Aligned right |</code>
-                <br />
-                <code>{`| {W}{U}{B}{R} | [[Hexdrinker]] | *emphasized* |`}</code>
+                <p>
+                  <code>| Left align | Center align | Right align |</code>
+                  <br />
+                  <code>| :--------- | :----------: | ----------: |</code>
+                  <br />
+                  <code>| Aligned left | Aligned center | Aligned right |</code>
+                  <br />
+                  <code>{`| {W}{U}{B}{R} | [[Hexdrinker]] | *emphasized* |`}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -602,15 +644,17 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>- [x] Completed item.</code>
-                <br />
-                <code>- [ ] Not completed item.</code>
-                <br />
-                <code>&nbsp;&nbsp;- [x] Task lists can be nested.</code>
-                <br /> <br />
-                <code>1. [x] Numbered task.</code>
-                <br />
-                <code>2. [ ] Unfinished numbered task.</code>
+                <p>
+                  <code>- [x] Completed item.</code>
+                  <br />
+                  <code>- [ ] Not completed item.</code>
+                  <br />
+                  <code>&nbsp;&nbsp;- [x] Task lists can be nested.</code>
+                  <br /> <br />
+                  <code>1. [x] Numbered task.</code>
+                  <br />
+                  <code>2. [ ] Unfinished numbered task.</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -642,19 +686,21 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>```js</code>
-                <br />
-                <code>{'const x = { a: b+1 };'}</code>
-                <br />
-                <code>console.log(this);</code>
-                <br />
-                <code>```</code>
+                <p>
+                  <code>```js</code>
+                  <br />
+                  <code>{'const x = { a: b+1 };'}</code>
+                  <br />
+                  <code>console.log(this);</code>
+                  <br />
+                  <code>```</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
           <Col xs="12" sm="6">
             <Card>
-              <CardHeader>Source</CardHeader>
+              <CardHeader>Result</CardHeader>
               <CardBody>
                 <Markdown markdown={'```js\nconst x = { a: b+1 };\nconsole.log(this);\n```'} />
               </CardBody>
