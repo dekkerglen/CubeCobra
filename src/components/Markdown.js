@@ -148,48 +148,47 @@ const renderCardrow = (node) => {
   return <Row className="cardRow">{node.children}</Row>;
 };
 
+const VALID_SYMBOLS = 'wubrgcmtsqepxyz/-0123456789';
+
+const BASE_PLUGINS = [
+  cardrow,
+  centering,
+  breaks,
+  math,
+  userlink,
+  cardlink,
+  [gfm, { singleTilde: false }],
+  [symbols, { allowed: VALID_SYMBOLS }],
+];
+
+const ALL_PLUGINS = [...BASE_PLUGINS, slug, headings];
+
+const RENDERERS = {
+  // overridden defaults
+  link: renderLink,
+  linkReference: renderLink,
+  image: renderImage,
+  imageReference: renderImage,
+  blockquote: renderBlockQuote,
+  heading: renderHeading,
+  code: renderCode,
+  table: renderTable,
+  // plugins
+  math: renderMath,
+  inlineMath: renderInlineMath,
+  userlink: renderUserlink,
+  symbol: renderSymbol,
+  cardlink: renderCardlink,
+  cardimage: renderCardImage,
+  centering: renderCentering,
+  cardrow: renderCardrow,
+};
+
 const Markdown = ({ markdown, limited }) => {
-  const validSymbols = 'wubrgcmtsqepxyz/-0123456789';
   const markdownStr = markdown?.toString() ?? '';
 
-  const renderers = {
-    // overridden defaults
-    link: renderLink,
-    linkReference: renderLink,
-    image: renderImage,
-    imageReference: renderImage,
-    blockquote: renderBlockQuote,
-    heading: renderHeading,
-    code: renderCode,
-    table: renderTable,
-    // plugins
-    math: renderMath,
-    inlineMath: renderInlineMath,
-    userlink: renderUserlink,
-    symbol: renderSymbol,
-    cardlink: renderCardlink,
-    cardimage: renderCardImage,
-    centering: renderCentering,
-    cardrow: renderCardrow,
-  };
-
-  const plugins = [
-    cardrow,
-    centering,
-    breaks,
-    math,
-    userlink,
-    cardlink,
-    [gfm, { singleTilde: false }],
-    [symbols, { allowed: validSymbols }],
-  ];
-
-  if (!limited) {
-    plugins.push(slug, headings);
-  }
-
   return (
-    <ReactMarkdown className="markdown" plugins={plugins} renderers={renderers}>
+    <ReactMarkdown className="markdown" plugins={limited ? BASE_PLUGINS : ALL_PLUGINS} renderers={RENDERERS}>
       {markdownStr}
     </ReactMarkdown>
   );
