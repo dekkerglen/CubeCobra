@@ -477,6 +477,10 @@ body.busy-cursor {
 	margin-bottom: 0;
 }
 
+.markdown hr {
+	border-color: var(--border);
+}
+
 .markdown .markdown-image {
 	max-width: 100%;
 }
