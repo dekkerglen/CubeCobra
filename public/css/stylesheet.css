@@ -465,8 +465,13 @@ body.busy-cursor {
 	text-align: center;
 }
 
-.markdown .centered-markdown .card-image {
+.markdown .centered-markdown > .card-image,
+.markdown .centered-markdown :not(.cardRow) > .card-image {
 	margin: auto;
+}
+
+.markdown .centered-markdown .cardRow {
+	justify-content: center;
 }
 
 .markdown .quote {
