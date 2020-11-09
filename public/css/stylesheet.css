@@ -469,7 +469,11 @@ body.busy-cursor {
 	margin: auto;
 }
 
-.markdown .block-quote p:last-child {
+.markdown .quote {
+	background-color: var(--bg-dark);
+}
+
+.markdown .quote p:last-child {
 	margin-bottom: 0;
 }
 
