@@ -607,6 +607,10 @@ const MarkdownPage = ({ user, loginCallback }) => (
                 <code>- [ ] Not completed item.</code>
                 <br />
                 <code>&nbsp;&nbsp;- [x] Task lists can be nested.</code>
+                <br /> <br />
+                <code>1. [x] Numbered task.</code>
+                <br />
+                <code>2. [ ] Unfinished numbered task.</code>
               </CardBody>
             </Card>
           </Col>
@@ -615,7 +619,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardHeader>Result</CardHeader>
               <CardBody>
                 <Markdown
-                  markdown={'- [x] Completed item.\n- [ ] Not completed item.\n  - [x] Task lists can be nested.'}
+                  markdown={
+                    '- [x] Completed item.\n- [ ] Not completed item.\n  - [x] Task lists can be nested.\n\n1. [x] Numbered task.\n2. [ ] Unfinished numbered task.'
+                  }
                 />
               </CardBody>
             </Card>

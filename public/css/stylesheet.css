@@ -474,6 +474,10 @@ body.busy-cursor {
 	justify-content: center;
 }
 
+.markdown li > input[type="checkbox"] {
+	margin-right: 0.2em;
+}
+
 .markdown .quote {
 	background-color: var(--bg-dark);
 }
