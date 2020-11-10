@@ -43,5 +43,6 @@
   --secondary-nav-link-hover:rgba(255,255,255,.8);
   --dropdown-hover: #b6b8bb;
   --code-color:#fb7edc;
+  --code-bg: rgb(43, 43, 43);
   --read-only-disabled: #797c8f;
 }
