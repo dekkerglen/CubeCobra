@@ -687,7 +687,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
               <CardHeader>Source</CardHeader>
               <CardBody>
                 <p>
-                  <code>```js</code>
+                  <code>```javascript</code>
                   <br />
                   <code>{'const x = { a: b+1 };'}</code>
                   <br />

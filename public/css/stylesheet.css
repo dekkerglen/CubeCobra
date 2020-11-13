@@ -484,6 +484,7 @@ body.busy-cursor {
 
 .markdown .quote {
 	background-color: var(--bg-dark);
+    margin-bottom: 1rem;
 }
 
 .markdown .quote p:last-child {
