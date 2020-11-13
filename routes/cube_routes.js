@@ -1367,7 +1367,7 @@ function writeCard(res, card, maybe) {
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
-  res.write(`${imgUrl},"`);
+  res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);
   card.tags.forEach((tag, tagIndex) => {
     if (tagIndex !== 0) {
