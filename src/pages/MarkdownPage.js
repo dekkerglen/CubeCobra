@@ -416,10 +416,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
-        <p>
-          Create hybrid symbols by including a slash. If a symbol doesn't load this way, try swapping the order of the
-          colors.
-        </p>
+        <p>Create hybrid symbols by including a slash.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
