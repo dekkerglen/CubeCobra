@@ -35,13 +35,13 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
       deck && deck.seats && deck.seats[0].name
         ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
         : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
-    [deck]
+    [deck],
   );
 
   const handleClick = useKeyHandlers(
     useCallback(() => {
       window.location.href = `/cube/deck/${deck._id}`;
-    }, [deck._id])
+    }, [deck._id]),
   );
 
   const openDeleteModal = (event) => {
@@ -88,9 +88,7 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
         </a>{' '}
         by{' '}
         {deck.seats[0].userid ? (
-          <a href={`/user/view/${deck.seats[0].userid}`}>
-            {deck.seats[0].username}
-          </a>
+          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
         ) : (
           'Anonymous'
         )}{' '}
