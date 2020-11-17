@@ -16,7 +16,12 @@ const DEFAULT_DECK_NAME = 'Untitled Deck';
  *  Pulled string truncation logic out of component render and made it more
  *  abstract and reusable. Consider refactoring into shared utilities.
  */
-const truncateToLength = (len, s) => (!s ? '' : s.length > len ? `${s.slice(0, len - 3)}...` : s);
+const truncateToLength = (len, s) => {
+  if (!s) {
+    return '';
+  }
+  return s.length > len ? `${s.slice(0, len - 3)}...` : s;
+};
 
 const DeckPreview = ({ deck, canEdit, nextURL }) => {
   const { date } = deck;
@@ -25,18 +30,18 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
   /** 2020-11-17 struesdell:
    *  Refactored name derivation to take advantage of react.useMemo
    */
-  let [fullName, name] = useMemo(
+  const [fullName, name] = useMemo(
     () =>
       deck && deck.seats && deck.seats[0].name
         ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
         : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
-    [deck],
+    [deck]
   );
 
   const handleClick = useKeyHandlers(
     useCallback(() => {
       window.location.href = `/cube/deck/${deck._id}`;
-    }, [deck._id]),
+    }, [deck._id])
   );
 
   const openDeleteModal = (event) => {
@@ -83,7 +88,9 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
         </a>{' '}
         by{' '}
         {deck.seats[0].userid ? (
-          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
+          <a href={`/user/view/${deck.seats[0].userid}`}>
+            {deck.seats[0].username}
+          </a>
         ) : (
           'Anonymous'
         )}{' '}
