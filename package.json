@@ -48,6 +48,7 @@
     "canvas": "^2.6.1",
     "chart.js": "^2.9.2",
     "cheerio": "^1.0.0-rc.3",
+    "classnames": "^2.2.6",
     "compression": "^1.7.4",
     "compute-cosine-similarity": "^1.0.0",
     "connect-flash": "^0.1.1",
