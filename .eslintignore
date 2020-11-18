@@ -3,8 +3,6 @@ webpack.*.js
 jobs/*.js
 public/js/autocard.js
 public/js/index.js
-# src/components/AspectRatioBox.js
-src/components/AutocardListItem.js
 src/components/AutocompleteInput.js
 src/components/BlogContextMenu.js
 src/components/BlogPost.js

@@ -1,23 +1,47 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import cx from 'classnames';
+import propTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
-import { Button } from 'reactstrap';
-
-import CardModalContext from './CardModalContext';
-import DisplayContext from './DisplayContext';
-import TagContext from './TagContext';
-import withAutocard from './WithAutocard';
-
-import Affiliate from '../utils/Affiliate';
+import CardModalContext from 'components/CardModalContext';
+import TagContext from 'components/TagContext';
+import withAutocard from 'components/WithAutocard';
 
 const AutocardDiv = withAutocard('li');
 
+const CARD_NAME_FALLBACK = 'Unidentified Card';
+const CARD_ID_FALLBACK = 'undefined';
+
+/** 2020-11-18 struesdell:
+ *  Added noOp callback to allow props to fall through without passing undefined to children.
+ */
+const noOp = () => undefined;
+
+/** 2020-11-18 struesdell:
+ *  Pulled out className constants for maintainability
+ */
+const styles = {
+  root: 'card-list-item list-group-item',
+  name: 'card-list-item_name',
+  children: 'card-list-item_children',
+};
+
 const AutocardListItem = ({ card, noCardModal, inModal, className, children }) => {
-  const { name } = card.details;
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
+
+  /** 2020-11-18 struesdell:
+   *  Replaced destructuring with `useMemo` tuple to minimize rerenders
+   */
+  const [cardName, cardId] = useMemo(
+    () => (card && card.details ? [card.details.name, card.details._id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
+    [card],
+  );
+
   const openCardToolWindow = useCallback(() => {
-    window.open(`/tool/card/${card.details._id}`);
-  }, [card.details._id]);
+    window.open(`/tool/card/${cardId}`);
+  }, [cardId]);
+
   const handleClick = useCallback(
     (event) => {
       event.preventDefault();
@@ -29,28 +53,49 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
     },
     [card, openCardModal, openCardToolWindow],
   );
+
   const handleAuxClick = useCallback(
     (event) => {
-      if (event.button == 1) {
+      if (event.button === 1) {
         event.preventDefault();
         openCardToolWindow();
       }
     },
     [openCardToolWindow],
   );
+
+  /** 2020-11-18 struesdell:
+   *  Memoized card color (WUBRG) derivation to minimize rerenders
+   *  @note: tag coloring is handled by AutocardDiv automatically.
+   */
+  const colorClassname = useMemo(() => cardColorClass(card), [card, cardColorClass]);
+
   return (
     <AutocardDiv
-      className={`card-list-item list-group-item ${cardColorClass(card)} ${className || ''}`}
+      className={cx(styles.root, colorClassname, className)}
       card={card}
-      onAuxClick={noCardModal ? undefined : handleAuxClick}
-      onClick={noCardModal ? undefined : handleClick}
+      onAuxClick={noCardModal ? noOp : handleAuxClick}
+      onClick={noCardModal ? noOp : handleClick}
       inModal={inModal}
       role="button"
     >
-      {name}
-      {children}
+      <span className={styles.name}>{cardName}</span>
+      <span className={styles.children}>{children}</span>
     </AutocardDiv>
   );
+};
+AutocardListItem.propTypes = {
+  card: CardPropType.isRequired,
+  noCardModal: propTypes.bool,
+  inModal: propTypes.bool,
+  className: propTypes.string,
+  children: propTypes.node,
+};
+AutocardListItem.defaultProps = {
+  noCardModal: false,
+  inModal: false,
+  className: '',
+  children: undefined,
 };
 
 export default AutocardListItem;
