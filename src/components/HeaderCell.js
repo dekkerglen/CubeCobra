@@ -19,7 +19,7 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
     <th scope="col">
       <NavLink href="#" onClick={() => requestSort(fieldName)}>
         {tooltip ? (
-          <Tooltip id={`HeaderCellTooltipId-${fieldName}`} text={tooltip}>
+          <Tooltip id={`HeaderCellTooltipId-${fieldName.replace(' ', '_')}`} text={tooltip}>
             {label} <img src={icon} className="sortIcon" alt="" />
           </Tooltip>
         ) : (

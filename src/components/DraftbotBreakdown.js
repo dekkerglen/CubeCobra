@@ -260,7 +260,10 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
               {weights.map((weight) => (
                 <tr key={weight.name}>
                   <th>
-                    <Tooltip id={`DraftbotBreakdownWeigthID_${weight.name}`} text={weight.description}>
+                    <Tooltip
+                      id={`DraftbotBreakdownWeightID_${weight.name.replace(' ', '_')}`}
+                      text={weight.description}
+                    >
                       {weight.name}
                     </Tooltip>
                   </th>
