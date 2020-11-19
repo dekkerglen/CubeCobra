@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
@@ -6,19 +6,37 @@ import DeckPropType from 'proptypes/DeckPropType';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 
+/** 2020-11-17 struesdell:
+ *  Pulled constants out of component render so that they are defined only once
+ */
+const MAX_LENGTH = 35;
+const DEFAULT_DECK_NAME = 'Untitled Deck';
+
+/** 2020-11-17 struesdell:
+ *  Pulled string truncation logic out of component render and made it more
+ *  abstract and reusable. Consider refactoring into shared utilities.
+ */
+const truncateToLength = (len, s) => {
+  if (!s) {
+    return '';
+  }
+  return s.length > len ? `${s.slice(0, len - 3)}...` : s;
+};
+
 const DeckPreview = ({ deck, canEdit, nextURL }) => {
-  const maxLength = 35;
   const { date } = deck;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  let { name } = deck.seats[0];
-
-  if (!name) {
-    name = 'Untitled Deck';
-  }
-  if (name.length > maxLength) {
-    name = `${name.slice(0, maxLength - 3)}...`;
-  }
+  /** 2020-11-17 struesdell:
+   *  Refactored name derivation to take advantage of react.useMemo
+   */
+  const [fullName, name] = useMemo(
+    () =>
+      deck && deck.seats && deck.seats[0].name
+        ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
+        : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
+    [deck],
+  );
 
   const handleClick = useKeyHandlers(
     useCallback(() => {
@@ -65,7 +83,10 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
         </>
       )}
       <h6 className="mb-0 text-muted">
-        <a href={`/cube/deck/${deck._id}`}>{name}</a> by{' '}
+        <a href={`/cube/deck/${deck._id}`} title={fullName}>
+          {name}
+        </a>{' '}
+        by{' '}
         {deck.seats[0].userid ? (
           <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
         ) : (
