@@ -1,5 +1,5 @@
-import CardImage from './CardImage';
-import FoilOverlay from './FoilOverlay';
+import CardImage from 'components/CardImage';
+import FoilOverlay from 'components/FoilOverlay';
 
 const FoilCardImage = FoilOverlay(CardImage);
 
