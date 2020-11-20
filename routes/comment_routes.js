@@ -111,7 +111,7 @@ router.post(
 
     // Notify mentioned users
     getUsersMentioned(comment.content).forEach(async (user) => {
-      const mentioned = await User.find({ username: user.substring(1) })
+      const mentioned = await User.find({ username: user.substring(1) });
       if (mentioned) {
         await util.addNotification(
           mentioned,

@@ -456,7 +456,7 @@ const generateSamplepackImage = (sources = [], options = {}) =>
 
 const getUsersMentioned = (content) => {
   return content.match(/@(\w+)/g);
-}
+};
 
 const methods = {
   getUsersMentioned,
