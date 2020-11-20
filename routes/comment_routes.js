@@ -5,7 +5,7 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util.js');
-const { sanitize } = require('../serverjs/cubefn.js');
+const { sanitize, getUsersMentioned } = require('../serverjs/cubefn.js');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
@@ -98,8 +98,8 @@ router.post(
 
     const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
 
+    // Notify owner of reply.
     const owner = await User.findById(ownerid);
-
     if (owner) {
       await util.addNotification(
         owner,
@@ -108,6 +108,19 @@ router.post(
         `${poster.username} left a comment in response to your ${type}.`,
       );
     }
+
+    // Notify mentioned users
+    getUsersMentioned(comment.content).forEach(async (user) => {
+      const mentioned = await User.find({ username: user.substring(1) })
+      if (mentioned) {
+        await util.addNotification(
+          mentioned,
+          poster,
+          `/comment/${comment._id}`,
+          `${poster.username} mentioned you in a comment.`,
+        );
+      }
+    });
 
     return res.status(200).send({
       success: 'true',

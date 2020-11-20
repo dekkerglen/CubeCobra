@@ -454,7 +454,12 @@ const generateSamplepackImage = (sources = [], options = {}) =>
     );
   });
 
+const getUsersMentioned = (content) => {
+  return content.match(/@(\w+)/g);
+}
+
 const methods = {
+  getUsersMentioned,
   getBasics(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
     const set = 'unh';
