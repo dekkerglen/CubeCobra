@@ -28,7 +28,7 @@ const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) 
               <DeckPreview
                 key={deck._id}
                 deck={deck}
-                canEdit={user.id === deck.owner}
+                canEdit={user?.id === deck.owner}
                 nextURL={`/cube/decks/${cube._id}/${activePage}`}
               />
             ))}
