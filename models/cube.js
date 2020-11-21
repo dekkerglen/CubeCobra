@@ -144,6 +144,10 @@ const cubeSchema = mongoose.Schema({
     // Values: first, recent
     default: 'recent',
   },
+  disableNotifications: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 cubeSchema.index({

@@ -17,6 +17,7 @@ const CubePropType = PropTypes.shape({
   image_uri: PropTypes.string.isRequired,
   owner: PropTypes.string.isRequired,
   owner_name: PropTypes.string.isRequired,
+  disableNotifications: PropTypes.bool,
 });
 
 export default CubePropType;
