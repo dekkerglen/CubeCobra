@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 import cx from 'classnames';
-import propTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
 import CardModalContext from 'components/CardModalContext';
@@ -86,10 +86,10 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
 };
 AutocardListItem.propTypes = {
   card: CardPropType.isRequired,
-  noCardModal: propTypes.bool,
-  inModal: propTypes.bool,
-  className: propTypes.string,
-  children: propTypes.node,
+  noCardModal: PropTypes.bool,
+  inModal: PropTypes.bool,
+  className: PropTypes.string,
+  children: PropTypes.node,
 };
 AutocardListItem.defaultProps = {
   noCardModal: false,
