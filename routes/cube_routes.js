@@ -4174,4 +4174,21 @@ router.get(
   }),
 );
 
+router.get('/api/date_updated/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const { id } = req.params;
+    const cube = await Cube.findOne(buildIdQuery(id)).lean();
+    if (!cube) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'No such cube.',
+      });
+    }
+
+    return res.status(200).send({
+      date_updated: cube.date_updated,
+    });
+  }),
+);
+
 module.exports = router;
