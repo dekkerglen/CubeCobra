@@ -103,7 +103,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Color</InputGroupText>
           </InputGroupAddon>
-          <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
+          <ColorChecksAddon colorless prefix="color" values={values} onChange={onChange} />
           <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
@@ -114,7 +114,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Color Identity</InputGroupText>
           </InputGroupAddon>
-          <ColorChecksAddon prefix="identity" values={values} onChange={onChange} />
+          <ColorChecksAddon colorless prefix="identity" values={values} onChange={onChange} />
           <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
