@@ -4185,7 +4185,7 @@ router.get('/api/date_updated/:id',
       });
     }
     return res.status(200).send({
-      date_updated: cube.date_updated,
+      date_updated: cube.date_updated.valueOf(),
     });
   }),
 );
