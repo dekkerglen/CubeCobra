@@ -586,6 +586,8 @@ async function finish() {
     }
   }
 
+  delete draft.synergies;
+
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
     method: 'POST',

@@ -4130,7 +4130,12 @@ router.post(
 );
 
 router.post('/api/submitdraft/:id', async (req, res) => {
-  await Draft.updateOne({ _id: req.body._id }, req.body);
+  const draft = await Draft.findOne({ _id: req.body._id });
+
+  draft.seats = req.body.seats;
+  draft.unopenedPacks = req.body.unopenedPacks;
+
+  await draft.save();
 
   return res.status(200).send({
     success: 'true',
