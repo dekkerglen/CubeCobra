@@ -4184,7 +4184,6 @@ router.get('/api/date_updated/:id',
         message: 'No such cube.',
       });
     }
-
     return res.status(200).send({
       date_updated: cube.date_updated,
     });
