@@ -4289,7 +4289,7 @@ router.get(
   '/api/date_updated/:id',
   util.wrapAsyncApi(async (req, res) => {
     const { id } = req.params;
-    const result = await Cube.findOne(buildIdQuery(id), { date_updated: 1, _id: 0 }).lean();
+    const result = await Cube.findOne(buildIdQuery(id), 'date_updated').lean();
     if (!result) {
       return res.status(404).send({
         success: 'false',
