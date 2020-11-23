@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import { NavItem, NavLink } from 'reactstrap';
 
@@ -63,15 +64,7 @@ const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
 };
 
 CubeLayout.propTypes = {
-  cube: PropTypes.shape({
-    overrideCategory: PropTypes.bool,
-    categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-    categoryOverride: PropTypes.string,
-    card_count: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
-  }).isRequired,
+  cube: CubePropType.isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
   activeLink: PropTypes.string.isRequired,

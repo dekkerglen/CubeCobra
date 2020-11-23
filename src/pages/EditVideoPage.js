@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import VideoPropType from 'proptypes/VideoPropType';
 
 import {
   Spinner,
@@ -264,24 +266,9 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
 };
 
 EditVideoPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  video: PropTypes.shape({
-    body: PropTypes.string,
-    title: PropTypes.string,
-    image: PropTypes.string,
-    short: PropTypes.string,
-    imagename: PropTypes.string,
-    artist: PropTypes.string,
-    _id: PropTypes.string,
-    date: PropTypes.string,
-    status: PropTypes.string,
-    url: PropTypes.string,
-  }).isRequired,
+  video: VideoPropType.isRequired,
 };
 
 EditVideoPage.defaultProps = {

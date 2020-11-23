@@ -36,7 +36,9 @@ export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) 
     });
   }, []);
 
-  const hasCustomImages = cube.cards.some((card) => card.imgUrl && card.imgUrl.length > 0);
+  const hasCustomImages = cube.cards.some(
+    (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),
+  );
 
   const value = { cube, canEdit, cubeID, hasCustomImages, setCube, updateCubeCard, updateCubeCards };
 

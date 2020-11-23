@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import VideoPropType from 'proptypes/VideoPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -35,15 +36,7 @@ const Video = ({ video, userid }) => {
   );
 };
 Video.propTypes = {
-  video: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    url: PropTypes.string.isRequired,
-  }).isRequired,
+  video: VideoPropType.isRequired,
   userid: PropTypes.string,
 };
 

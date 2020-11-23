@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CommentPropType from 'proptypes/CommentPropType';
 import TimeAgo from 'react-timeago';
 
 import {
@@ -226,18 +227,7 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
 };
 
 Comment.propTypes = {
-  comment: PropTypes.shape({
-    timePosted: PropTypes.string.isRequired,
-    ownerName: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    parent: PropTypes.string.isRequired,
-    parentType: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    updated: PropTypes.bool.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  comment: CommentPropType.isRequired,
   index: PropTypes.number.isRequired,
   depth: PropTypes.number,
   userid: PropTypes.string,

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -536,6 +537,48 @@ const ContactPage = ({ user, loginCallback }) => (
           </table>
         </p>
       </Accordion>
+      <Accordion title="Layout">
+        <p>
+          You can use <code>layout:</code> to filter cards by layout.
+        </p>
+        <p>
+          <strong>Options:</strong>
+          <table className="table">
+            {[
+              ['normal', 'A standard Magic card with one face'],
+              ['split', 'A split-faced card'],
+              ['flip', 'Cards that invert vertically with the flip keyword'],
+              ['transform', 'Double-sided cards that transform'],
+              ['modal_dfc', 'Double-sided cards that can be played either-side'],
+              ['meld', 'Cards with meld parts printed on the backsc'],
+              ['leveler', 'Cards with Level Up'],
+              ['saga', 'Saga-type cards'],
+              ['adventure', 'Cards with an Adventure spell part'],
+              ['planar', 'Plane and Phenomenon-type cards'],
+              ['scheme', 'Scheme-type cards'],
+              ['vanguard', 'Vanguard-type cards'],
+              ['token', 'Token cards'],
+              ['double_faced_token', 'Tokens with another token printed on the back'],
+              ['emblem', 'Emblem cards'],
+              ['augment', 'Cards with Augment'],
+              ['host', 'Host-type cards'],
+              ['art_series', 'Art Series collectable double-faced cards'],
+              ['double_sided', 'A Magic card with two sides that are unrelated'],
+            ].map((tuple) => (
+              <tr>
+                <td>
+                  <code>{tuple[0]}</code>
+                </td>
+                <td>{tuple[1]}</td>
+              </tr>
+            ))}
+          </table>
+        </p>
+        <p>
+          Additionally, you can use <code>is:dfc</code>, <code>is:mdfc</code>, <code>is:meld</code>,{' '}
+          <code>is:transform</code>.
+        </p>
+      </Accordion>
       <Accordion title="Miscellaneous">
         <p>
           You can use <code>elo:</code> to filter cards by their ELO rating.
@@ -580,11 +623,7 @@ const ContactPage = ({ user, loginCallback }) => (
 );
 
 ContactPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

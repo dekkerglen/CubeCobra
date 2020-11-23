@@ -43,7 +43,7 @@ const generateMeta = require('../serverjs/meta.js');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Tags,Notes,MTGO ID';
+  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
 
 const router = express.Router();
 // Bring in models
@@ -151,12 +151,14 @@ router.get('/clone/:id', async (req, res) => {
 
     const sourceOwner = await User.findById(source.owner);
 
-    await util.addNotification(
-      sourceOwner,
-      req.user,
-      `/cube/view/${cube._id}`,
-      `${req.user.username} made a cube by cloning yours: ${cube.name}`,
-    );
+    if (!source.disableNotifications) {
+      await util.addNotification(
+        sourceOwner,
+        req.user,
+        `/cube/view/${cube._id}`,
+        `${req.user.username} made a cube by cloning yours: ${cube.name}`,
+      );
+    }
 
     req.flash('success', 'Cube Cloned');
     return res.redirect(`/cube/overview/${cube.shortID}`);
@@ -1345,11 +1347,16 @@ function writeCard(res, card, maybe) {
     card.type_line = carddb.cardFromId(card.cardID).type;
   }
   const { name, rarity, colorcategory } = carddb.cardFromId(card.cardID);
-  let { imgUrl } = card;
+  let { imgUrl, imgBackUrl } = card;
   if (imgUrl) {
     imgUrl = `"${imgUrl}"`;
   } else {
     imgUrl = '';
+  }
+  if (imgBackUrl) {
+    imgBackUrl = `"${imgBackUrl}"`;
+  } else {
+    imgBackUrl = '';
   }
   res.write(`"${name.replace(/"/, '""')}",`);
   res.write(`${card.cmc},`);
@@ -1362,7 +1369,8 @@ function writeCard(res, card, maybe) {
   res.write(`${card.status},`);
   res.write(`${card.finish},`);
   res.write(`${maybe},`);
-  res.write(`${imgUrl},"`);
+  res.write(`${imgUrl},`);
+  res.write(`${imgBackUrl},"`);
   card.tags.forEach((tag, tagIndex) => {
     if (tagIndex !== 0) {
       res.write(', ');
@@ -1646,7 +1654,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const cube = await Cube.findOne(
       buildIdQuery(req.params.id),
-      '_id name draft_formats card_count type cards owner numDecks',
+      '_id name draft_formats card_count type cards owner numDecks disableNotifications',
     );
 
     if (!cube) {
@@ -1725,12 +1733,14 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1, max: 16 }), body('
 
     const cubeOwner = await User.findById(cube.owner);
 
-    await util.addNotification(
-      cubeOwner,
-      user,
-      `/cube/deck/${deck._id}`,
-      `${user.username} built a sealed deck from your cube: ${cube.name}`,
-    );
+    if (!cube.disableNotifications) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} built a sealed deck from your cube: ${cube.name}`,
+      );
+    }
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
@@ -2498,6 +2508,7 @@ router.post(
   ensureAuth,
   body('isListed').toBoolean(),
   body('privatePrices').toBoolean(),
+  body('disableNotifications').toBoolean(),
   body('defaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
   body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
   jsonValidationErrors,
@@ -2518,7 +2529,7 @@ router.post(
     }
 
     const update = req.body;
-    for (const field of ['isListed', 'privatePrices', 'defaultStatus', 'defaultPrinting']) {
+    for (const field of ['isListed', 'privatePrices', 'defaultStatus', 'defaultPrinting', 'disableNotifications']) {
       if (update[field] !== undefined) {
         cube[field] = update[field];
       }
@@ -2540,6 +2551,22 @@ router.get('/api/fullnames', (_, res) => {
   res.status(200).send({
     success: 'true',
     cardnames: carddb.full_names,
+  });
+});
+
+router.get('/api/usercubes/:id', async (req, res) => {
+  const cubes = await Cube.find({
+    owner: req.params.id,
+    ...(req.user && req.user._id.equals(req.params.id)
+      ? {}
+      : {
+          isListed: true,
+        }),
+  }).lean();
+
+  res.status(200).send({
+    success: 'true',
+    cubes,
   });
 });
 
@@ -2765,7 +2792,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
-    if (user) {
+    if (user && !cube.disableNotifications) {
       await util.addNotification(
         cubeOwner,
         user,
@@ -2822,7 +2849,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
 
     const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
 
-    if (user) {
+    if (user && !cube.disableNotifications) {
       await util.addNotification(
         cubeOwner,
         user,
@@ -3042,7 +3069,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     const [user, cubeOwner, baseUser] = await Promise.all([userq, cubeOwnerq, baseuserq]);
 
-    if (!cubeOwner._id.equals(user._id)) {
+    if (!cubeOwner._id.equals(user._id) && !cube.disableNotifications) {
       await util.addNotification(
         cubeOwner,
         user,
@@ -3867,7 +3894,7 @@ router.post(
       });
     }
     const newVersion = updated.cardID && updated.cardID !== card.cardID;
-    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'colors']) {
+    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'imgBackUrl', 'colors']) {
       if (Object.prototype.hasOwnProperty.call(updated, field)) {
         card[field] = updated[field];
       }
@@ -4103,7 +4130,12 @@ router.post(
 );
 
 router.post('/api/submitdraft/:id', async (req, res) => {
-  await Draft.updateOne({ _id: req.body._id }, req.body);
+  const draft = await Draft.findOne({ _id: req.body._id });
+
+  draft.seats = req.body.seats;
+  draft.unopenedPacks = req.body.unopenedPacks;
+
+  await draft.save();
 
   return res.status(200).send({
     success: 'true',

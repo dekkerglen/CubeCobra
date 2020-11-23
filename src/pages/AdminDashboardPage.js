@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
@@ -48,11 +49,7 @@ const AdminDashboardPage = ({
 );
 
 AdminDashboardPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
   commentReportCount: PropTypes.number.isRequired,
   applicationCount: PropTypes.number.isRequired,

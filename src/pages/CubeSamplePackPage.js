@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col } from 'reactstrap';
 
@@ -54,16 +57,9 @@ const SamplePackPage = ({ user, seed, pack, cube, loginCallback }) => {
 
 SamplePackPage.propTypes = {
   seed: PropTypes.string.isRequired,
-  pack: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  pack: PropTypes.arrayOf(CardPropType).isRequired,
+  cube: CubePropType.isRequired,
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 SamplePackPage.defaultProps = {

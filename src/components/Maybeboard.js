@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 
@@ -116,15 +117,7 @@ const MaybeboardListItem = ({ card, className }) => {
 };
 
 MaybeboardListItem.propTypes = {
-  card: PropTypes.shape({
-    index: PropTypes.number.isRequired,
-    cardID: PropTypes.string.isRequired,
-    details: PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      image_normal: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  card: CardPropType.isRequired,
   className: PropTypes.string,
 };
 
@@ -163,7 +156,7 @@ const Maybeboard = ({ filter, ...props }) => {
         if (response.ok) {
           const json = await response.json();
           if (json.success === 'true') {
-            addMaybeboardCard({ _id: json.added[card._id], cardID: card._id, details: card });
+            addMaybeboardCard({ _id: json.added[card._id], cardID: card._id, details: card, tags: [] });
           } else {
             console.error(json.message);
           }

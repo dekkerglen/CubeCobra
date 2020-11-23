@@ -13,6 +13,7 @@ module.exports = {
   cardID: String,
   type_line: String,
   imgUrl: String,
+  imgBackUrl: String,
   notes: String,
   rating: Number,
   picks: {

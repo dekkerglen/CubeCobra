@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import ArticlePropType from 'proptypes/ArticlePropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -28,14 +29,7 @@ const Article = ({ article, userid }) => {
   );
 };
 Article.propTypes = {
-  article: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-  }).isRequired,
+  article: ArticlePropType.isRequired,
   userid: PropTypes.string,
 };
 

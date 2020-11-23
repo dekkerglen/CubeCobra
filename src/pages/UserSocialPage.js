@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
@@ -78,11 +80,7 @@ const UserSocialPage = ({ user, followedCubes, followedUsers, followers, loginCa
 );
 
 UserSocialPage.propTypes = {
-  followedCubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  followedCubes: PropTypes.arrayOf(CubePropType).isRequired,
   followedUsers: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
@@ -93,11 +91,7 @@ UserSocialPage.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

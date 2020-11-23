@@ -25,7 +25,7 @@ const withAutocard = (Tag) =>
     card = card || { details: {} };
     tags = tags || card.tags || [];
     front = front || (showCustomImages && card.imgUrl) || card.details.image_normal;
-    back = back || card.details.image_flip;
+    back = back || (showCustomImages && card.imgBackUrl) || card.details.image_flip;
     return (
       <Tag
         ref={ref}

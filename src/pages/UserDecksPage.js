@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -48,22 +50,14 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
 );
 
 UserDecksPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   loginCallback: PropTypes.string,

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import CardPricePropType from 'proptypes/CardPricePropType';
+import CardDataPointPropType from 'proptypes/CardDataPointPropType';
 
 import {
   Card,
@@ -140,7 +143,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
 };
 
 Graph.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  data: PropTypes.arrayOf(CardDataPointPropType).isRequired,
   yFunc: PropTypes.func.isRequired,
   unit: PropTypes.string.isRequired,
   yRange: PropTypes.arrayOf(PropTypes.number),
@@ -711,40 +714,14 @@ CardPage.propTypes = {
     oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
-    loyalty: PropTypes.string,
-    power: PropTypes.string,
-    toughness: PropTypes.string,
-    prices: PropTypes.shape({
-      usd: PropTypes.number,
-      usd_foil: PropTypes.number,
-      eur: PropTypes.number,
-      tix: PropTypes.number,
-    }).isRequired,
+    loyalty: PropTypes.string.isRequired,
+    power: PropTypes.string.isRequired,
+    toughness: PropTypes.shape({}).isRequired,
+    prices: CardPricePropType.isRequired,
   }).isRequired,
   data: PropTypes.shape({
-    history: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    current: PropTypes.shape({
-      prices: PropTypes.arrayOf(
-        PropTypes.shape({
-          usd: PropTypes.number,
-          usd_foil: PropTypes.number,
-          eur: PropTypes.number,
-          tix: PropTypes.number,
-        }),
-      ).isRequired,
-      vintage: PropTypes.arrayOf(PropTypes.number).isRequired,
-      legacy: PropTypes.arrayOf(PropTypes.number).isRequired,
-      modern: PropTypes.arrayOf(PropTypes.number).isRequired,
-      standard: PropTypes.arrayOf(PropTypes.number).isRequired,
-      pauper: PropTypes.arrayOf(PropTypes.number).isRequired,
-      peasant: PropTypes.arrayOf(PropTypes.number).isRequired,
-      size180: PropTypes.arrayOf(PropTypes.number).isRequired,
-      size360: PropTypes.arrayOf(PropTypes.number).isRequired,
-      size450: PropTypes.arrayOf(PropTypes.number).isRequired,
-      size540: PropTypes.arrayOf(PropTypes.number).isRequired,
-      size720: PropTypes.arrayOf(PropTypes.number).isRequired,
-      total: PropTypes.arrayOf(PropTypes.number).isRequired,
-    }),
+    history: PropTypes.arrayOf(CardDataPointPropType).isRequired,
+    current: CardDataPointPropType,
   }).isRequired,
   related: PropTypes.shape({
     top: PropTypes.arrayOf(
@@ -784,20 +761,11 @@ CardPage.propTypes = {
       image_normal: PropTypes.string.isRequired,
       image_flip: PropTypes.string,
       collector_number: PropTypes.string,
-      prices: PropTypes.shape({
-        eur: PropTypes.number,
-        tix: PropTypes.number,
-        usd: PropTypes.number,
-        usd_foil: PropTypes.number,
-      }).isRequired,
+      prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape([])),
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

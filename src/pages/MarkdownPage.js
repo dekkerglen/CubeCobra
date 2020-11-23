@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -271,10 +272,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
           </Col>
         </Row>
         <br />
-        <p>
-          Create hybrid symbols by including a slash. If a symbol doesn't load this way, try swapping the order of the
-          colors.
-        </p>
+        <p>Create hybrid symbols by including a slash.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
@@ -713,11 +711,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
 );
 
 MarkdownPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

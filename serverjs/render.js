@@ -4,6 +4,7 @@ require('dotenv').config();
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const serialize = require('serialize-javascript');
+const Cube = require('../models/cube');
 
 const { NODE_ENV } = process.env;
 
@@ -76,42 +77,64 @@ if (NODE_ENV === 'production') {
 
 const getPage = (page) => pages[page] || pages.Loading;
 
+const getCubes = (req, callback) => {
+  if (!req.user) {
+    callback([]);
+  } else {
+    Cube.find({ owner: req.user._id }, '_id name')
+      .sort({ date_updated: -1 })
+      .lean()
+      .exec((err, docs) => {
+        if (err) {
+          callback([]);
+        } else {
+          callback(docs);
+        }
+      });
+  }
+};
+
 const render = (req, res, page, reactProps = {}, options = {}) => {
-  reactProps.user = req.user
-    ? {
-        id: req.user._id,
-        notifications: req.user.notifications,
-        username: req.user.username,
-        email: req.user.email,
-        about: req.user.about,
-        image: req.user.image,
-        image_name: req.user.image_name,
-        artist: req.user.artist,
-        roles: req.user.roles,
-        theme: req.user.theme,
-      }
-    : null;
+  getCubes(req, (cubes) => {
+    reactProps.user = req.user
+      ? {
+          id: req.user._id,
+          notifications: req.user.notifications,
+          username: req.user.username,
+          email: req.user.email,
+          about: req.user.about,
+          image: req.user.image,
+          image_name: req.user.image_name,
+          artist: req.user.artist,
+          roles: req.user.roles,
+          theme: req.user.theme,
+          cubes,
+        }
+      : null;
 
-  reactProps.loginCallback = req.baseUrl + req.path;
+    reactProps.loginCallback = req.baseUrl + req.path;
 
-  if (!options.metadata) {
-    options.metadata = [];
-  }
-  if (!options.metadata.some((data) => data.property === 'og:image')) {
-    options.metadata.push({
-      property: 'og:image',
-      content: '/content/sticker.png',
+    if (!options.metadata) {
+      options.metadata = [];
+    }
+    if (!options.metadata.some((data) => data.property === 'og:image')) {
+      options.metadata.push({
+        property: 'og:image',
+        content: '/content/sticker.png',
+      });
+    }
+
+    res.render('main', {
+      reactHTML:
+        NODE_ENV === 'production'
+          ? ReactDOMServer.renderToString(React.createElement(getPage(page), reactProps))
+          : null,
+      reactProps: serialize(reactProps),
+      page,
+      metadata: options.metadata,
+      title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
+      colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
     });
-  }
-
-  return res.render('main', {
-    reactHTML:
-      NODE_ENV === 'production' ? ReactDOMServer.renderToString(React.createElement(getPage(page), reactProps)) : null,
-    reactProps: serialize(reactProps),
-    page,
-    metadata: options.metadata,
-    title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
-    colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
   });
 };
 
