@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import {
   Modal,
@@ -364,5 +366,11 @@ class CubeOverviewModal extends Component {
     );
   }
 }
+CubeOverviewModal.propTypes = {
+  cube: CubePropType.isRequired,
+  onError: PropTypes.func.isRequired,
+  onCubeUpdate: PropTypes.func.isRequired,
+};
+CubeOverviewModal.defaultProps = {};
 
 export default CubeOverviewModal;
