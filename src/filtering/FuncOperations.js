@@ -37,12 +37,22 @@ export const stringOperation = (op, value) => {
   }
 };
 
-const NAME_PLACEHOLDER = /~/g;
+const NAME_PLACEHOLDER = '~';
+const NAME_ALIAS = /\bthis spell\b/g;
+
+const mayContainShorthand = (details) => details.type.includes('Legendary') && details.name.includes(',');
 
 export const nameStringOperation = (op, value) => {
+  const strOp = stringOperation(op, value);
   return (fieldValue, card) => {
-    const expandedValue = value.replace(NAME_PLACEHOLDER, card.details.name);
-    return stringOperation(op, expandedValue)(fieldValue);
+    let expandedValue = fieldValue
+      .replace(new RegExp(card.details.name, 'g'), NAME_PLACEHOLDER)
+      .replace(NAME_ALIAS, NAME_PLACEHOLDER);
+    if (mayContainShorthand(card.details)) {
+      const [shortName] = card.details.name.split(',');
+      expandedValue = expandedValue.replace(new RegExp(shortName, 'g'), NAME_PLACEHOLDER);
+    }
+    return strOp(expandedValue);
   };
 };
 
