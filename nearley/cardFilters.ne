@@ -80,6 +80,7 @@ condition -> (
   | loyaltyCondition
   | artistCondition
   | isCondition
+  | notCondition
   | eloCondition
   | nameCondition
   | manaCostCondition
@@ -160,6 +161,8 @@ cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition(
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
+notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
+
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
-isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i) {% ([[category]]) => category.toLowerCase() %}
+isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i | "vanilla"i | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i | "shockland"i | "storageland"i | "creatureland"i | "triland"i | "tangoland"i | "battleland"i) {% ([[category]]) => category.toLowerCase() %}
