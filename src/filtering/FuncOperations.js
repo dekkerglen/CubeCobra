@@ -37,6 +37,15 @@ export const stringOperation = (op, value) => {
   }
 };
 
+const NAME_PLACEHOLDER = /~/g;
+
+export const nameStringOperation = (op, value) => {
+  return (fieldValue, card) => {
+    const expandedValue = value.replace(NAME_PLACEHOLDER, card.details.name);
+    return stringOperation(op, expandedValue)(fieldValue);
+  };
+};
+
 export const stringContainOperation = (op, value) => {
   value = value.toLowerCase();
   switch (op.toString()) {
