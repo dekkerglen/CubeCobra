@@ -1,10 +1,9 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
-import BlogDeleteModal from './BlogDeleteModal';
-
-import { csrfFetch } from 'utils/CSRF';
+import BlogDeleteModal from 'components/BlogDeleteModal';
 
 class BlogContextMenu extends React.Component {
   constructor(props) {
@@ -19,15 +18,15 @@ class BlogContextMenu extends React.Component {
   }
 
   toggle() {
-    this.setState({
-      dropdownOpen: !this.state.dropdownOpen,
-    });
+    this.setState((prevState) => ({
+      dropdownOpen: !prevState.dropdownOpen,
+    }));
   }
 
   toggleDeleteModal() {
-    this.setState({
-      deleteModalOpen: !this.state.deleteModalOpen,
-    });
+    this.setState((prevState) => ({
+      deleteModalOpen: !prevState.deleteModalOpen,
+    }));
   }
 
   openDeleteModal() {
@@ -36,43 +35,32 @@ class BlogContextMenu extends React.Component {
     });
   }
 
-  clickEdit(id) {
-    csrfFetch(`/cube/blogsrc/${id}`, {
-      method: 'GET',
-      headers: {},
-    })
-      .then((response) => response.json())
-      .then(function (json) {
-        $('#editor').html(json.src || json.body || '');
-
-        $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(id);
-        $('#blogEditTitle').text('Edit Blog Post');
-        $('#editBlogModal').modal('show');
-        autocard_init('autocard');
-      });
-  }
-
   render() {
+    const { dropdownOpen, deleteModalOpen } = this.state;
+    const { post, value, onEdit } = this.props;
     return (
       <>
-        <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
+        <Dropdown isOpen={dropdownOpen} toggle={this.toggle}>
           <DropdownToggle tag="a" className="nav-link clickable">
-            {this.props.value}
+            {value}
           </DropdownToggle>
           <DropdownMenu right>
-            <DropdownItem onClick={() => this.props.onEdit(this.props.post._id)}>Edit</DropdownItem>
+            <DropdownItem onClick={() => onEdit(post._id)}>Edit</DropdownItem>
             <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
           </DropdownMenu>
         </Dropdown>
-        <BlogDeleteModal
-          toggle={this.toggleDeleteModal}
-          isOpen={this.state.deleteModalOpen}
-          postID={this.props.post._id}
-        ></BlogDeleteModal>
+        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={deleteModalOpen} postID={post._id} />
       </>
     );
   }
 }
+
+BlogContextMenu.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  value: PropTypes.string.isRequired,
+  onEdit: PropTypes.func.isRequired,
+};
 
 export default BlogContextMenu;

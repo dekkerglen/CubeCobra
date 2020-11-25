@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, FormGroup, Label, Input, Button } from 'reactstrap';
 
@@ -59,12 +60,7 @@ DevBlog.propTypes = {
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   userid: PropTypes.string.isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    roles: PropTypes.arrayOf(PropTypes.string).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

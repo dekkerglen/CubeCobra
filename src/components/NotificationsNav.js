@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
 
@@ -63,11 +63,7 @@ const NotificationsNav = ({ user }) => {
 };
 
 NotificationsNav.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
 };
 
 NotificationsNav.defaultProps = {

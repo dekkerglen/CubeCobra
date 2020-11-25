@@ -62,6 +62,10 @@ export const CARD_CATEGORY_DETECTORS = {
     details.set !== 'myb' &&
     details.set !== 'mb1' &&
     details.collector_number.indexOf('★') === -1,
+  dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
+  mdfc: (details) => details.layout === 'modal_dfc',
+  meld: (details) => details.layout === 'meld',
+  transform: (details) => details.layout === 'transform',
   // Others from Scryfall:
   //   commander, reserved, reprint, new, old, hires, foil,
   //   spotlight, unique, bikeland, cycleland, bicycleland,
@@ -72,7 +76,7 @@ export const CARD_CATEGORY_DETECTORS = {
   //   spell, permanent, historic, modal, vanilla, funny,
   //   booster, datestamped, prerelease, planeswalker_deck,
   //   league, buyabox, giftbox, intro_pack, gameday, release,
-  //   foil, nonfoil, full, split, meld, transform, flip,
+  //   foil, nonfoil, full, split, flip,
   //   leveler,
 };
 
@@ -104,6 +108,7 @@ export function cardsAreEquivalent(a, b) {
     arraysEqual(a.tags, b.tags) &&
     a.finish === b.finish &&
     a.imgUrl === b.imgUrl &&
+    a.imgBackUrl === b.imgBackUrl &&
     a.notes === b.notes &&
     a.colorCategory === b.colorCategory &&
     a.rarity === b.rarity
@@ -129,6 +134,8 @@ export const cardRarity = (card) => card.rarity ?? card.details.rarity;
 export const cardAddedTime = (card) => card.addedTmsp;
 
 export const cardImageUrl = (card) => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
+
+export const cardImageBackUrl = (card) => card.imgBackUrl ?? card.details.image_flip;
 
 export const cardNotes = (card) => card.notes;
 
@@ -210,6 +217,8 @@ export const cardTokens = (card) => card.details.tokens;
 
 export const cardElo = (card) => card.details.elo;
 
+export const cardLayout = (card) => card.details.layout;
+
 export const cardDevotion = (card, color) =>
   cardCost(card)?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 
@@ -283,6 +292,7 @@ export default {
   cardImageFlip,
   cardTokens,
   cardDevotion,
+  cardLayout,
   cardIsSpecialZoneType,
   cardElo,
   COLOR_COMBINATIONS,

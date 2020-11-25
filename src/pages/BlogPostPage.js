@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import BlogPost from 'components/BlogPost';
 import Advertisement from 'components/Advertisement';
@@ -19,11 +20,7 @@ BlogPostPage.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

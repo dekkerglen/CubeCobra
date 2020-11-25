@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Button, Form, Input } from 'reactstrap';
 
@@ -47,13 +48,7 @@ const MassBuyButton = ({ cards, ...props }) => (
 );
 
 MassBuyButton.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      details: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-      }).isRequired,
-    }),
-  ).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
 export default MassBuyButton;

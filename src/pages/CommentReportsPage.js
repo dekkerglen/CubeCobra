@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -71,11 +72,7 @@ const CommentReportsPage = ({ user, loginCallback, reports, count, page }) => (
 );
 
 CommentReportsPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
   reports: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   count: PropTypes.number.isRequired,

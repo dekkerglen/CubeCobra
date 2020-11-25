@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 import ImageFallback from 'components/ImageFallback';
 import { csrfFetch } from 'utils/CSRF';
 import {
@@ -155,11 +156,7 @@ AddToCubeModal.propTypes = {
   hideAnalytics: PropTypes.bool,
   toggle: PropTypes.func.isRequired,
   cubeContext: PropTypes.string,
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
 };
 
 AddToCubeModal.defaultProps = {

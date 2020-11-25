@@ -73,6 +73,15 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               <option value="first">First</option>
             </CustomInput>
           </FormGroup>
+          <FormGroup check>
+            <Input
+              id="disableNotifications"
+              name="disableNotifications"
+              type="checkbox"
+              defaultChecked={cube.disableNotifications || false}
+            />
+            <Label for="disableNotifications">Disable Draft Notifications</Label>
+          </FormGroup>
         </CSRFForm>
       </ModalBody>
       <ModalFooter>

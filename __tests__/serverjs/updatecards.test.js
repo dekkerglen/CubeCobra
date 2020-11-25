@@ -55,6 +55,7 @@ const convertedExampleCard = {
   type: 'Creature — Human Knight',
   full_art: false,
   language: 'en',
+  layout: 'normal',
   tcgplayer_id: 198561,
   power: '2',
   toughness: '2',
@@ -113,6 +114,7 @@ const convertedExampleDoubleFacedCard = {
   parsed_cost: [''],
   power: '1',
   promo: false,
+  layout: 'transform',
   rarity: 'common',
   scryfall_uri: 'https://scryfall.com/card/dka/125/scorned-villager-moonscarred-werewolf?utm_source=api',
   set: 'dka',
@@ -169,6 +171,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   colors: [],
   type: 'Creature — Werewolf',
   tcgplayer_id: 57617,
+  layout: 'transform',
   power: '2',
   toughness: '2',
   image_normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
@@ -231,6 +234,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   language: 'en',
   tcgplayer_id: 96603,
   power: '2',
+  layout: 'transform',
   toughness: '3',
   image_small: 'https://img.scryfall.com/cards/small/front/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
   image_normal: 'https://img.scryfall.com/cards/normal/front/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
@@ -282,6 +286,7 @@ const convertedExampleAdventureCard = {
   mtgo_id: 78444,
   name: 'Flaxen Intruder',
   name_lower: 'flaxen intruder',
+  layout: 'adventure',
   oracle_id: 'bacedc99-46d9-4757-8a27-8df77d7c2f02',
   oracle_text:
     'Whenever Flaxen Intruder deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment.\nCreate three 2/2 green Bear creature tokens. (Then exile this card. You may cast the creature later from exile.)',
@@ -316,6 +321,7 @@ const convertedExampleAdventureCardAdventure = {
   image_small: 'https://img.scryfall.com/cards/small/front/0/6/06bd1ad2-fb5d-4aef-87d1-13a341c686fa.jpg?1572490543',
   isToken: false,
   language: 'en',
+  layout: 'adventure',
   // ADventure's don't have legalities
   legalities: {
     Brawl: 'not_legal',

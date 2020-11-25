@@ -1,5 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import Location from 'utils/DraftLocation';
 import { sortDeck } from 'utils/Util';
@@ -178,32 +181,13 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 
 CubeDeckbuilderPage.propTypes = {
   basics: PropTypes.objectOf(PropTypes.object).isRequired,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  initialDeck: PropTypes.shape({
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
+  initialDeck: DeckPropType.isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
   }).isRequired,
-
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

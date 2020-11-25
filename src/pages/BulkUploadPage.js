@@ -1,5 +1,6 @@
 import React, { Fragment, useCallback, useContext, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -135,11 +136,7 @@ BulkUploadPage.propTypes = {
     }),
   ).isRequired,
   ...BulkUploadPageRaw.propTypes,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

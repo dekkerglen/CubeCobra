@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
+
+import CubePropType from 'proptypes/CubePropType';
 
 import { Card } from 'reactstrap';
 
@@ -48,22 +49,7 @@ const CubePreview = ({ cube }) => {
 };
 
 CubePreview.propTypes = {
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    shortId: PropTypes.string,
-    urlAlias: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    card_count: PropTypes.number.isRequired,
-    type: PropTypes.string.isRequired,
-    overrideCategory: PropTypes.bool,
-    categoryOverride: PropTypes.string,
-    categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-    image_name: PropTypes.string.isRequired,
-    image_artist: PropTypes.string.isRequired,
-    image_uri: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    owner_name: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
 };
 
 export default CubePreview;

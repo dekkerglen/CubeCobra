@@ -86,6 +86,9 @@ const CardModalForm = ({ children, ...props }) => {
     if (updated.imgUrl === '') {
       updated.imgUrl = null;
     }
+    if (updated.imgBackUrl === '') {
+      updated.imgBackUrl = null;
+    }
     if (updated.notes === '') {
       updated.notes = null;
     }
@@ -180,6 +183,7 @@ const CardModalForm = ({ children, ...props }) => {
       type_line: typeLine,
       rarity: rarity,
       imgUrl: newCard.imgUrl || '',
+      imgBackUrl: newCard.imgBackUrl || '',
       notes: newCard.notes || '',
       tags: tags.map((tag) => ({ id: tag, text: tag })),
       tagInput: '',

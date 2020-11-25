@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import { sortDeep } from 'utils/Sort';
@@ -11,8 +12,8 @@ import CardGrid from 'components/CardGrid';
 const VisualSpoiler = ({ cards }) => {
   const [scale, setScale] = useState('medium');
 
-  const { primary, secondary, tertiary } = useContext(SortContext);
-  const sorted = sortDeep(cards, primary, secondary, tertiary);
+  const { primary, secondary } = useContext(SortContext);
+  const sorted = sortDeep(cards, primary, secondary, 'CMC-Full');
   const cardList = sorted
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);
@@ -44,6 +45,6 @@ const VisualSpoiler = ({ cards }) => {
 };
 
 VisualSpoiler.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 export default VisualSpoiler;

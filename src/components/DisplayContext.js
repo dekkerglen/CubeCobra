@@ -1,6 +1,7 @@
 /* Holds general display settings. */
 
 import React, { useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 
 const DisplayContext = React.createContext({
   showCustomImages: true,
@@ -26,7 +27,7 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     return typeof localStorage !== 'undefined' && cubeID && localStorage.getItem(`maybeboard-${cubeID}`) === 'true';
   });
   const toggleShowMaybeboard = useCallback(() => {
-    cubeID && localStorage.setItem(`maybeboard-${cubeID}`, !showMaybeboard);
+    if (cubeID) localStorage.setItem(`maybeboard-${cubeID}`, !showMaybeboard);
     setShowMaybeboard(!showMaybeboard);
   }, [cubeID, showMaybeboard]);
 
@@ -39,6 +40,10 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     toggleShowMaybeboard,
   };
   return <DisplayContext.Provider value={value} {...props} />;
+};
+
+DisplayContextProvider.propTypes = {
+  cubeID: PropTypes.string.isRequired,
 };
 
 export default DisplayContext;

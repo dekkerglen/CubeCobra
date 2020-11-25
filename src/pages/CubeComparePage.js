@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import Query from 'utils/Query';
 
@@ -81,13 +84,9 @@ const CubeComparePage = ({
 };
 
 CubeComparePage.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  cubeB: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
+  cube: CubePropType.isRequired,
+  cubeB: CubePropType.isRequired,
   defaultTagColors: PropTypes.arrayOf(
     PropTypes.shape({
       tag: PropTypes.string.isRequired,
@@ -96,11 +95,7 @@ CubeComparePage.propTypes = {
   ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

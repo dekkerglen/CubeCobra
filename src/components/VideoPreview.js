@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import VideoPropType from 'proptypes/VideoPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -54,15 +54,6 @@ const VideoPreview = ({ video }) => {
 };
 
 VideoPreview.propTypes = {
-  video: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    short: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  video: VideoPropType.isRequired,
 };
 export default VideoPreview;

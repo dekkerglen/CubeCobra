@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -104,7 +107,7 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
 );
 
 Pack.propTypes = {
-  pack: PropTypes.arrayOf(PropTypes.object).isRequired,
+  pack: PropTypes.arrayOf(CardPropType).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
   pickRow: PropTypes.func.isRequired,
@@ -403,10 +406,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 };
 
 GridDraftPage.propTypes = {
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
@@ -417,11 +417,7 @@ GridDraftPage.propTypes = {
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,
   }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

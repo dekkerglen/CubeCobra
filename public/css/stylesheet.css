@@ -89,6 +89,8 @@ body {
 .list-group-item {
 	display: block;
 	border: none;
+	background-color: var(--bg);
+	color: var(--text);
 }
 
 .list-group-item.list-group-heading {
@@ -229,6 +231,11 @@ body {
 
 .tag-color.card-list-item:after {
 	background: var(--hover-inverse);
+}
+
+.tag-color-row {
+	background-color: var(--bg);
+	color: var(--text);
 }
 
 .card-list-item:hover:after {

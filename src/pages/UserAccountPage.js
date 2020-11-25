@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -249,16 +250,7 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
 };
 
 UserAccountPage.propTypes = {
-  user: PropTypes.shape({
-    email: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    about: PropTypes.string.isRequired,
-    image_name: PropTypes.string,
-    image: PropTypes.string,
-    artist: PropTypes.string,
-    theme: PropTypes.string,
-    users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
-  }).isRequired,
+  user: UserPropType.isRequired,
   defaultNav: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
 };
