@@ -6,6 +6,7 @@ import {
   defaultOperation,
   stringOperation,
   stringContainOperation,
+  nameStringOperation,
   equalityOperation,
   setOperation,
   rarityOperation,
@@ -94,7 +95,7 @@ condition -> (
 
 @{%
 const genericCondition = (propertyName, propertyAccessor, valuePred) => {
-  const result = (card) => valuePred(propertyAccessor(card));
+  const result = (card) => valuePred(propertyAccessor(card), card);
   result.fieldsUsed = [propertyName]
   return result;
 };
@@ -109,7 +110,7 @@ colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "colo
 
 typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', cardType, valuePred) %}
 
-oracleCondition -> ("o"i | "oracle"i | "text"i) stringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
+oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
 
 setCondition -> ("s"i | "set"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
