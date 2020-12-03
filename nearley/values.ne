@@ -148,6 +148,8 @@ stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperatio
 
 stringContainOpValue -> equalityOperator stringValue {% ([op, value]) => stringContainOperation(op, value) %}
 
+stringExactOpValue -> equalityOperator stringValue {% ([op, value]) => equalityOperation(op, value) %}
+
 nameStringOpValue -> equalityOperator stringValue {% ([op, value]) => nameStringOperation(op, value) %}
 
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
