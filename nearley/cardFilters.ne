@@ -114,7 +114,7 @@ typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpV
 
 oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
 
-setCondition -> ("s"i | "set"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
+setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
 powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c), 10), valuePred) %}
 
