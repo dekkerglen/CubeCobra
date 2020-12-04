@@ -5,7 +5,6 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util.js');
-const { sanitize } = require('../serverjs/cubefn.js');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
@@ -89,7 +88,7 @@ router.post(
     comment.image = poster.image;
     comment.artist = poster.artist;
     comment.updated = false;
-    comment.content = sanitize(req.body.comment.substring(0, 5000));
+    comment.content = req.body.comment.substring(0, 5000);
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
     comment.date = Date.now() - 1000;
@@ -148,7 +147,7 @@ router.post(
       : 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
     comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
     comment.updated = true;
-    comment.content = sanitize(newComment.content.substring(0, 5000));
+    comment.content = newComment.content.substring(0, 5000);
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
 

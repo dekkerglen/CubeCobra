@@ -3,7 +3,7 @@ import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from 'components/CommentsSection';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -92,7 +92,7 @@ class BlogPost extends React.Component {
               <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
                   {post.markdown ? (
-                    <MagicMarkdown markdown={post.markdown} />
+                    <Markdown markdown={post.markdown} limited />
                   ) : (
                     <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                   )}
@@ -105,7 +105,7 @@ class BlogPost extends React.Component {
               {post.body && <CardText>{post.body}</CardText>}
               {(post.html || post.markdown) &&
                 (post.markdown ? (
-                  <MagicMarkdown markdown={post.markdown} />
+                  <Markdown markdown={post.markdown} limited />
                 ) : (
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                 ))}

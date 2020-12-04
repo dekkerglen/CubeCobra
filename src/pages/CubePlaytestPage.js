@@ -32,7 +32,7 @@ import CubeContext from 'components/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
@@ -173,7 +173,7 @@ const CustomDraftCard = ({
         <CardBody>
           {format.markdown ? (
             <div className="mb-3">
-              <MagicMarkdown markdown={format.markdown} />
+              <Markdown markdown={format.markdown} />
             </div>
           ) : (
             <div
