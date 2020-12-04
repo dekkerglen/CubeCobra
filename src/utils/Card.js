@@ -101,10 +101,11 @@ export const CARD_CATEGORY_DETECTORS = {
   historic: (details) =>
     details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
   vanilla: (details) => !details.oracle_text,
+  modal: (details) => details.oracle_text.includes('•'),
   // Others from Scryfall:
   //   reserved, reprint, new, old, hires, foil,
   //   spotlight, unique, masterpiece,
-  //   modal, funny,
+  //   funny,
   //   booster, datestamped, prerelease, planeswalker_deck,
   //   league, buyabox, giftbox, intro_pack, gameday, release,
   //   foil, nonfoil, full,
