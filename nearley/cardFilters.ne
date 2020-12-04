@@ -24,6 +24,7 @@ import {
   cardType,
   cardOracleText,
   cardSet,
+  cardCollectorNumber,
   cardPower,
   cardToughness,
   cardTags,
@@ -91,6 +92,7 @@ condition -> (
   | cubesCondition
   | legalityCondition
   | layoutCondition
+  | collectorNumberCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -159,6 +161,8 @@ devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i 
 picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
 
 cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
+
+collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
