@@ -324,14 +324,15 @@ const CubeListNavbar = ({
       event.preventDefault();
       const { target } = event;
       const collapse = target.getAttribute('data-target');
-      setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
+      // Avoid shadowing the openCollapse prop
+      setOpenCollapse((openCollapseArg) => (openCollapseArg === collapse ? null : collapse));
     },
     [setOpenCollapse],
   );
 
-  const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true), []);
-  const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false), []);
-  const handleToggleSelectEmptyModal = useCallback((event) => setSelectEmptyModalOpen(false), []);
+  const handleOpenTagColorsModal = useCallback(() => setTagColorsModalOpen(true), []);
+  const handleToggleTagColorsModal = useCallback(() => setTagColorsModalOpen(false), []);
+  const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
   return (
     <div className={`usercontrols${className ? ` ${className}` : ''}`}>
@@ -468,16 +469,20 @@ CubeListNavbar.propTypes = {
   setOpenCollapse: PropTypes.func.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
+  sorts: PropTypes.arrayOf(PropTypes.string),
   setSorts: PropTypes.func.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
   defaultFilterText: PropTypes.string.isRequired,
+  filter: PropTypes.func,
   setFilter: PropTypes.func.isRequired,
   className: PropTypes.string,
 };
 
 CubeListNavbar.defaultProps = {
   openCollapse: null,
-  className: '',
+  sorts: null,
+  filter: null,
+  className: null,
 };
 
 export default CubeListNavbar;
