@@ -94,8 +94,10 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
       <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
         <ModalBody>
           <p>
-            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the same format as
-            our .csv export (columns may be ommitted and re-arranged, default values may be used).
+            Acceptable files are:
+            <br />• .txt (plaintext) with one card name per line, or
+            <br />• .csv with the same format as our .csv export (columns may be omitted and re-arranged, default values
+            may be used).
           </p>
           <CustomInput type="file" id="uploadBulkFile" name="document" />
           <Label for="uploadBulkFile" className="sr-only">
@@ -171,9 +173,12 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
         <ModalBody>
           <p>
             Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags
-            will not be imported. Cubetutor does not recognize alternate versions of cards with the same name, in the
-            same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked
-            to ensure the desired version has been added.
+            will not be imported.
+            <br />
+            <br />
+            Cubetutor does not recognize alternate versions of cards with the same name, in the same set (e.g. Hymn to
+            Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked to ensure the desired
+            version has been added.
           </p>
           <InputGroup>
             <InputGroupAddon addonType="prepend">
