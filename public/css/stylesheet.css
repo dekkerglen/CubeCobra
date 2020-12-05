@@ -351,7 +351,6 @@ body {
 	padding: 0.75rem 1.25rem;
 }
 code {
-	background: var(--bg-darker);
 	color: var(--code-color)
 }
 #syntax-accordion .card-header {
@@ -463,13 +462,77 @@ body.busy-cursor {
 	align-items: center;
 }
 
-.centered-markdown {
+.markdown {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.markdown .centered-markdown {
 	width: 100%;
 	text-align: center;
 }
 
-.centered-markdown > div {
+.markdown .centered-markdown > .card-image,
+.markdown .centered-markdown :not(.cardRow) > .card-image {
 	margin: auto;
+}
+
+.markdown .centered-markdown .cardRow {
+	justify-content: center;
+}
+
+.markdown pre {
+	background-color: var(--code-bg) !important;
+}
+
+.markdown li > input[type="checkbox"] {
+	margin-right: 0.2em;
+}
+
+.markdown .quote {
+	background-color: var(--bg-dark);
+    margin-bottom: 1rem;
+}
+
+.markdown .quote p:last-child {
+	margin-bottom: 0;
+}
+
+.markdown hr {
+	border-color: var(--border);
+}
+
+.markdown .markdown-image {
+	max-width: 100%;
+}
+
+.markdown .heading-link {
+	float: left;
+	margin-left: -1.5rem;
+	padding-right: 0.5rem;
+	vertical-align: middle;
+	text-decoration: none;
+	color: currentColor;
+}
+
+.markdown .heading-link .link-icon {
+	vertical-align: middle !important;
+	visibility: hidden;
+}
+
+.markdown h1:hover .heading-link .link-icon,
+.markdown h2:hover .heading-link .link-icon,
+.markdown h3:hover .heading-link .link-icon,
+.markdown h4:hover .heading-link .link-icon,
+.markdown h5:hover .heading-link .link-icon,
+.markdown h6:hover .heading-link .link-icon {
+	visibility: visible;
+}
+
+@media (max-width: 1280px) {
+	.markdown .heading-link .link-icon {
+		visibility: visible;
+	}
 }
 
 .centered-max400 {

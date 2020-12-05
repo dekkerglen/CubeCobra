@@ -4,5 +4,5 @@ module.exports = {
   transform: {
     '^.+\\.jsx?$': require.resolve('babel-jest'),
   },
-  transformIgnorePatterns: ['node_modules/(?!react-dnd|dnd-core)'],
+  transformIgnorePatterns: ['node_modules/(?!react-dnd|dnd-core|react-syntax-highlighter)'],
 };

@@ -2801,7 +2801,7 @@ router.get(
       return res.status(404).send('Cube not found.');
     }
 
-    res.contentType('text/json');
+    res.contentType('application/json');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(JSON.stringify(cube));
   }),

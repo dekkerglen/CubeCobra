@@ -54,3 +54,6 @@ overrides:
   - files: ['routes/**', 'serverjs/**']
     rules:
       no-console: error
+  - files: ['src/markdown/**/micromark-*']
+    rules: 
+      no-use-before-define: ['error', 'nofunc']

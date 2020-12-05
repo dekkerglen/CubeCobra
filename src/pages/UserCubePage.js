@@ -11,7 +11,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 
 const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -39,7 +39,7 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
               </Col>
             )}
             <Col xs={owner.image ? 8 : 12} lg={owner.image ? 9 : 12}>
-              <MagicMarkdown markdown={owner.about || '_This user has not yet filled out their about section._'} />
+              <Markdown markdown={owner.about || '_This user has not yet filled out their about section._'} />
             </Col>
           </Row>
           {user && user.id === owner._id && (

@@ -1,4 +1,5 @@
 :root {
+  --mode: default;
   --border: #d4d4d4;
   --border-dark: #bbb;
   --border-darker: #999;
@@ -41,6 +42,7 @@
   --secondary-nav-link:rgba(0,0,0,.5);
   --secondary-nav-link-hover:rgba(0,0,0,.7);
   --dropdown-hover: #16181b;
-  --code-color:#e83e8c;
+  --code-color:#d71d72;
+  --code-bg: rgb(245, 245, 245);
   --read-only-disabled: #e9ecef;
 }

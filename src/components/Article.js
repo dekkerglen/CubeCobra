@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ArticlePropType from 'proptypes/ArticlePropType';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 
@@ -20,7 +20,7 @@ const Article = ({ article, userid }) => {
         </h6>
       </CardHeader>
       <CardBody>
-        <MagicMarkdown markdown={article.body} />
+        <Markdown markdown={article.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="article" parent={article._id} userid={userid} collapse={false} />

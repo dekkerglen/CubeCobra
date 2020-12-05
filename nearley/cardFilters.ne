@@ -24,6 +24,7 @@ import {
   cardType,
   cardOracleText,
   cardSet,
+  cardCollectorNumber,
   cardPower,
   cardToughness,
   cardTags,
@@ -91,6 +92,7 @@ condition -> (
   | cubesCondition
   | legalityCondition
   | layoutCondition
+  | collectorNumberCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -112,7 +114,7 @@ typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpV
 
 oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
 
-setCondition -> ("s"i | "set"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
+setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
 powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c), 10), valuePred) %}
 
@@ -160,10 +162,12 @@ picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition(
 
 cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
 
+collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
 
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
-isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i | "vanilla"i | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i | "shockland"i | "storageland"i | "creatureland"i | "triland"i | "tangoland"i | "battleland"i) {% ([[category]]) => category.toLowerCase() %}
+isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i | "vanilla"i | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i | "shockland"i | "storageland"i | "creatureland"i | "triland"i | "tangoland"i | "battleland"i | "modal"i) {% ([[category]]) => category.toLowerCase() %}
