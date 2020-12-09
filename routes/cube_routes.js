@@ -2090,8 +2090,6 @@ router.post(
       draft.cube = cube._id;
       draft.basics = getBasics(carddb);
 
-      const cards = draft.initial_state.flat(3);
-
       await draft.save();
       if (req.body.botsOnly) {
         draft = await Draft.findById(draft._id).lean();

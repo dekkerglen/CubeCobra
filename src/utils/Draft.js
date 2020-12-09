@@ -77,7 +77,6 @@ export const addSeen = (seen, cards) => {
 
 export function init(newDraft) {
   draft = newDraft;
-  const maxIndex = Math.max(...draft.initial_state.flat(3).map(({ index }) => index));
   if (draft.seats[0].packbacklog && draft.seats[0].packbacklog.length > 0) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
