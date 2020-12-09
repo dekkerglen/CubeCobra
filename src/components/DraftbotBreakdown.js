@@ -93,14 +93,14 @@ const TRAITS = [
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
     function: (_, __, picked, synergies, ___, ____, pickedInCombination) =>
-      getInternalSynergy(pickedInCombination, picked, synergies),
+      getInternalSynergy(pickedInCombination, picked),
   },
   {
     name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
     function: (_, card, picked, synergies, __, ___, pickedInCombination) =>
-      getPickSynergy(pickedInCombination, card, picked, synergies),
+      getPickSynergy(pickedInCombination, card, picked),
   },
   {
     name: 'Openness',
@@ -157,7 +157,6 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
       card,
       picked,
       seen,
-      draft.synergies,
       draft.initial_state,
       cardsInPack.length,
       pack + 1,
@@ -322,14 +321,14 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
   const picked = createSeen();
-  addSeen(picked, seat.pickorder.slice(0, index), draft.synergies);
+  addSeen(picked, seat.pickorder.slice(0, index));
 
   const seen = useMemo(() => {
     const res = createSeen();
 
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.synergies);
+      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
     }
     return res;
   }, [deck, draft, index, seatIndex]);

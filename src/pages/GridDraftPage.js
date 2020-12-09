@@ -166,7 +166,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 
   const makeBotPick = (tempPack) => {
     const cardsSeen = tempPack.filter((card) => card);
-    addSeen(seen, cardsSeen, initialDraft.synergies);
+    addSeen(seen, cardsSeen);
 
     const ratings = options.map((mask) => {
       const cards = mask.map((include, index) => (include ? tempPack[index] : null)).filter((card) => card);
@@ -178,7 +178,6 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
           card,
           picked,
           seen,
-          initialDraft.synergies,
           [initialDraft.initial_state],
           cardsSeen.length,
           packNumber,
@@ -199,7 +198,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     }
 
     setBotPickOrder(botPickOrder.concat([tempPicks]));
-    addSeen(picked, tempPicks, initialDraft.synergies);
+    addSeen(picked, tempPicks);
 
     return [tempPack, tempPicks];
   };
@@ -218,12 +217,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     const updatedDraft = JSON.parse(JSON.stringify(initialDraft));
 
     if (initialDraft.draftType === 'bot') {
-      const { deck, sideboard, colors } = await buildDeck(
-        botPicks.flat(3),
-        picked,
-        initialDraft.synergies,
-        initialDraft.basics,
-      );
+      const { deck, sideboard, colors } = await buildDeck(botPicks.flat(3), picked, initialDraft.basics);
 
       updatedDraft.seats[1].drafted = deck;
       updatedDraft.seats[1].sideboard = sideboard;

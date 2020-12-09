@@ -18,7 +18,6 @@ const draftSchema = mongoose.Schema({
   initial_state: [[[cardSchema]]],
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
-  synergies: [[Number]],
   basics: {
     Plains: cardSchema,
     Island: cardSchema,
