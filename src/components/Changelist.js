@@ -2,7 +2,7 @@
 
 import { Badge, Input } from 'reactstrap';
 
-import ChangelistContext from './ChangelistContext';
+import ChangelistContext from 'contexts/ChangelistContext';
 import withAutocard from './WithAutocard';
 
 const TextAutocard = withAutocard('span');

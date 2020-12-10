@@ -1,6 +1,6 @@
 import React, { useCallback, useContext } from 'react';
 
-import CardModalContext from 'components/CardModalContext';
+import CardModalContext from 'contexts/CardModalContext';
 import FoilCardImage from 'components/FoilCardImage';
 import CardPropType from 'proptypes/CardPropType';
 

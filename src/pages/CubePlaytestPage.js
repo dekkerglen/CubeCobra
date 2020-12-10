@@ -28,7 +28,7 @@ import {
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';

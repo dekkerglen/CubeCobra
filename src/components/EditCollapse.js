@@ -20,10 +20,10 @@ import { encodeName } from 'utils/Card';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
-import ChangelistContext from 'components/ChangelistContext';
-import CubeContext from 'components/CubeContext';
+import ChangelistContext from 'contexts/ChangelistContext';
+import CubeContext from 'contexts/CubeContext';
 import CSRFForm from 'components/CSRFForm';
-import DisplayContext from 'components/DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 import ResizeModal from 'components/ResizeModal';
 import TextEntry from 'components/TextEntry';
 

@@ -11,7 +11,6 @@ src/components/CardModal.js
 src/components/CardModalForm.js
 src/components/CardStack.js
 src/components/Changelist.js
-src/components/ChangelistContext.js
 src/components/ClientOnly.js
 src/components/ColorCheck.js
 src/components/CompareView.js
@@ -26,10 +25,8 @@ src/components/GroupModal.js
 src/components/ImageFallback.js
 src/components/Notification.js
 src/components/SortCollapse.js
-src/components/SortContext.js
 src/components/SortableTable.js
 src/components/TagColorsModal.js
-src/components/TagContext.js
 src/components/TagInput.js
 src/components/TextBadge.js
 src/components/Tooltip.js

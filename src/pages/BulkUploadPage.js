@@ -7,7 +7,7 @@ import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import Changelist from 'components/Changelist';
-import ChangelistContext, { ChangelistContextProvider } from 'components/ChangelistContext';
+import ChangelistContext, { ChangelistContextProvider } from 'contexts/ChangelistContext';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import CubeLayout from 'layouts/CubeLayout';

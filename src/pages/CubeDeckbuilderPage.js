@@ -11,7 +11,7 @@ import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';

@@ -13,6 +13,7 @@
             "pages/*": ["./src/pages/*"],
             "utils/*": ["./src/utils/*"],
             "markdown/*": ["./src/markdown/*"],
+            "contexts/*": ["./src/contexts/*"]
         }
     },
     "include": ["src/**/*", "app.js", "serverjs/*", "routes/*"]

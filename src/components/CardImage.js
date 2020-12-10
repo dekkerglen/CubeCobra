@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import DisplayContext from 'components/DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 import ImageFallback from 'components/ImageFallback';
 import withAutocard from 'components/WithAutocard';
 

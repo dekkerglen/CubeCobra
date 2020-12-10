@@ -26,7 +26,7 @@ import { makeSubtitle } from 'utils/Card';
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DraggableCard from 'components/DraggableCard';
 import DynamicFlash from 'components/DynamicFlash';

@@ -25,7 +25,7 @@ import { getCubeDescription } from 'utils/Util';
 import AutocompleteInput from 'components/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
 import TagInput from 'components/TagInput';
-import { TagContextProvider } from 'components/TagContext';
+import { TagContextProvider } from 'contexts/TagContext';
 import TextEntry from 'components/TextEntry';
 
 /**

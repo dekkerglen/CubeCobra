@@ -1,6 +1,6 @@
 import React, { useContext, forwardRef } from 'react';
 
-import DisplayContext from './DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 /* HOC to add autocard to another element */
 

@@ -24,7 +24,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';

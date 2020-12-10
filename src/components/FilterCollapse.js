@@ -27,7 +27,7 @@ import LoadingButton from 'components/LoadingButton';
 import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
 import AutocompleteInput from 'components/AutocompleteInput';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 
 const allFields = [
   'name',

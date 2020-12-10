@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import Query from 'utils/Query';
 
@@ -27,7 +28,9 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
     const storageKey = `changelist-${cubeID}`;
     try {
       storedChanges = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    } catch (e) {}
+    } catch (e) {
+      console.warn(e);
+    }
     if (storedChanges.length > 0) {
       if (
         storedChanges.some(
@@ -44,19 +47,19 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
       }
     }
     setChanges(storedChanges);
-  }, [cubeID]);
+  }, [noSave, setOpenCollapse, cubeID]);
 
   useEffect(() => {
     if (!noSave && typeof localStorage !== 'undefined' && typeof cubeID !== 'undefined') {
       const storageKey = `changelist-${cubeID}`;
       localStorage.setItem(storageKey, JSON.stringify(changes));
     }
-  }, [changes]);
+  }, [cubeID, noSave, changes]);
 
   const addChange = useCallback(
     (change) => {
-      const highestId = Math.max(changes.map((change) => change.id));
-      const newId = !isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * (1 << 20));
+      const highestId = Math.max(changes.map((changeB) => changeB.id));
+      const newId = !Number.isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * 2 ** 20);
       setChanges([
         ...changes,
         {
@@ -66,13 +69,13 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
       ]);
       setOpenCollapse('edit');
     },
-    [changes],
+    [setOpenCollapse, changes],
   );
 
   const addChanges = useCallback(
     (addedChanges) => {
       const highestId = Math.max(changes.map((change) => change.id));
-      let newId = !isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * (1 << 20));
+      let newId = !Number.isNaN(highestId) ? highestId + 1 : Math.floor(Math.random() * 2 ** 20);
       const newChanges = [...changes];
       for (const change of addedChanges) {
         newChanges.push({
@@ -84,11 +87,11 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [changes],
+    [setOpenCollapse, changes],
   );
 
   const removeChange = useCallback((changeId) => {
-    setChanges((changes) => changes.filter((change) => change.id !== changeId));
+    setChanges((changesB) => changesB.filter((change) => change.id !== changeId));
   }, []);
 
   const openEditCollapse = useCallback(() => setOpenCollapse('edit'), [setOpenCollapse]);
@@ -109,6 +112,17 @@ export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChan
   };
 
   return <ChangelistContext.Provider value={value} {...props} />;
+};
+
+ChangelistContextProvider.propTypes = {
+  cubeID: PropTypes.string.isRequired,
+  setOpenCollapse: PropTypes.func.isRequired,
+  initialChanges: PropTypes.arrayOf(PropTypes.shape({})),
+  noSave: PropTypes.bool,
+};
+ChangelistContextProvider.defaultProps = {
+  initialChanges: [],
+  noSave: false,
 };
 
 export default ChangelistContext;

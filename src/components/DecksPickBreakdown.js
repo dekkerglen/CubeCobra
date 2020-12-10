@@ -5,7 +5,7 @@ import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import { getPackAsSeen } from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
-import { getCardColorClass } from 'components/TagContext';
+import { getCardColorClass } from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
 import { encodeName } from 'utils/Card';
 import Query from 'utils/Query';
