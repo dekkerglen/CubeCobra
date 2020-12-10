@@ -16,7 +16,9 @@ settings:
     webpack:
       config: webpack.dev.js
 rules:
-  prettier/prettier: error
+  prettier/prettier:
+    - error
+    - endOfLine: lf
   no-console: 0
   global-require: 0
   no-param-reassign: 0
