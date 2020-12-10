@@ -3,8 +3,6 @@ private/
 /.vscode/
 src/generated/
 
-src/generated/
-
 .python-version
 
 # Created by https://www.gitignore.io/api/node,komodoedit,webstorm+all,visualstudio,visualstudiocode

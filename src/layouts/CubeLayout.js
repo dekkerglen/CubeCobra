@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import { NavItem, NavLink } from 'reactstrap';
 
 import CubeContext, { CubeContextProvider } from 'components/CubeContext';
 import ErrorBoundary from 'components/ErrorBoundary';
+import { getCubeDescription } from 'utils/Util';
 
 const CubeNavItem = ({ link, activeLink, children }) => {
   const { cubeID } = useContext(CubeContext);
@@ -28,11 +30,7 @@ CubeNavItem.defaultProps = {
 };
 
 const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
-  const categories =
-    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
-  const subtitle = cube.overrideCategory
-    ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
-    : `${cube.card_count} Card ${cube.type} Cube`;
+  const subtitle = getCubeDescription(cube);
   return (
     <CubeContextProvider initialCube={cube} cubeID={cubeID} canEdit={canEdit}>
       <div className="mb-3">
@@ -66,15 +64,7 @@ const CubeLayout = ({ cube, cubeID, canEdit, activeLink, children }) => {
 };
 
 CubeLayout.propTypes = {
-  cube: PropTypes.shape({
-    overrideCategory: PropTypes.bool,
-    categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-    categoryOverride: PropTypes.string,
-    card_count: PropTypes.number.isRequired,
-    name: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
-  }).isRequired,
+  cube: CubePropType.isRequired,
   cubeID: PropTypes.string.isRequired,
   canEdit: PropTypes.bool,
   activeLink: PropTypes.string.isRequired,

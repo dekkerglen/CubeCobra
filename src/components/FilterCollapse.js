@@ -96,13 +96,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="CMC"
           placeholder={'Any value, e.g. "2"'}
           value={values.cmc}
+          valueOp={values.cmcOp}
           onChange={onChange}
         />
         <InputGroup className="mb-3">
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Color</InputGroupText>
           </InputGroupAddon>
-          <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
+          <ColorChecksAddon colorless prefix="color" values={values} onChange={onChange} />
           <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
@@ -113,7 +114,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Color Identity</InputGroupText>
           </InputGroupAddon>
-          <ColorChecksAddon prefix="identity" values={values} onChange={onChange} />
+          <ColorChecksAddon colorless prefix="identity" values={values} onChange={onChange} />
           <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
@@ -141,7 +142,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           name="type"
           humanName="Type Line"
           placeholder={'Choose any card type, supertype, or subtypes to match'}
-          value={values.type_line}
+          value={values.type}
           onChange={onChange}
         />
         <TextField
@@ -208,6 +209,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
               humanName="Price USD"
               placeholder={'Any decimal number, e.g. "3.50"'}
               value={values.price}
+              valueOp={values.priceOp}
               onChange={onChange}
             />
           </Col>
@@ -217,6 +219,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
               humanName="Price USD Foil"
               placeholder={'Any decimal number, e.g. "14.00"'}
               value={values.priceFoil}
+              valueOp={values.priceFoilOp}
               onChange={onChange}
             />
           </Col>
@@ -225,7 +228,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
               name="priceEur"
               humanName="Price EUR"
               placeholder={'Any decimal number, e.g. "14.00"'}
-              value={values.priceFoil}
+              value={values.priceEur}
+              valueOp={values.priceEurOp}
               onChange={onChange}
             />
           </Col>
@@ -234,7 +238,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
               name="priceTix"
               humanName="MTGO TIX"
               placeholder={'Any decimal number, e.g. "14.00"'}
-              value={values.priceFoil}
+              value={values.priceTix}
+              valueOp={values.priceTixOp}
               onChange={onChange}
             />
           </Col>
@@ -244,6 +249,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Elo"
           placeholder={'Any integer number, e.g. "1200"'}
           value={values.elo}
+          valueOp={values.eloOp}
           onChange={onChange}
         />
         <NumericField
@@ -251,6 +257,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Power"
           placeholder={'Any value, e.g. "2"'}
           value={values.power}
+          valueOp={values.powerOp}
           onChange={onChange}
         />
         <NumericField
@@ -258,6 +265,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Toughness"
           placeholder={'Any value, e.g. "2"'}
           value={values.toughness}
+          valueOp={values.toughnessOp}
           onChange={onChange}
         />
         <NumericField
@@ -265,6 +273,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Loyalty"
           placeholder={'Any value, e.g. "3"'}
           value={values.loyalty}
+          valueOp={values.loyaltyOp}
           onChange={onChange}
         />
         <NumericField
@@ -272,6 +281,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           humanName="Rarity"
           placeholder={'Any rarity, e.g. "common"'}
           value={values.rarity}
+          valueOp={values.rarityOp}
           onChange={onChange}
         />
         <InputGroup className="mb-3" {...props}>
@@ -541,6 +551,7 @@ class FilterCollapse extends Component {
                   <InputGroupText htmlFor="cmcQuick">CMC</InputGroupText>
                 </InputGroupAddon>
                 <CustomInput
+                  id="cmcQickOp"
                   type="select"
                   name="cmcQuickOp"
                   value={this.state.cmcQuickOp}
@@ -560,7 +571,7 @@ class FilterCollapse extends Component {
                     id="cmcQuick"
                     value={this.state.cmcQuick}
                     onChange={this.handleChange}
-                    size="sm"
+                    bsSize="sm"
                     className="square-left"
                     style={{ width: '3rem' }}
                   />

@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import {
   Modal,
@@ -18,6 +20,7 @@ import {
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
+import { getCubeDescription } from 'utils/Util';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
@@ -25,13 +28,35 @@ import TagInput from 'components/TagInput';
 import { TagContextProvider } from 'components/TagContext';
 import TextEntry from 'components/TextEntry';
 
+/**
+ * A utility for safely picking the current working description from a Cube.
+ *
+ * @param { Cube } cube
+ * @returns { string }
+ */
+const pickDescriptionFromCube = (cube) => {
+  /** 2020-11-24 strusdell:
+   * @phulin believes that the check for the string literal 'undefined' here is
+   * deliberate. Presumably this would represent bad data, and should be ignored.
+   *
+   * NOTE: This may introduce weird behavior if the user enters 'undefined' as their
+   * description.
+   */
+  return Object.prototype.hasOwnProperty.call(cube, 'raw_desc') && cube.raw_desc !== 'undefined'
+    ? cube.raw_desc
+    : cube.description;
+};
+
 class CubeOverviewModal extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       isOpen: false,
-      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({ id: tag, text: tag })),
+      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({
+        id: tag,
+        text: tag,
+      })),
       cube: JSON.parse(JSON.stringify(props.cube)),
       urlChanged: false,
       image_dict: {},
@@ -234,21 +259,7 @@ class CubeOverviewModal extends Component {
 
                 <h6>Category</h6>
 
-                <input
-                  className="form-control"
-                  name="name"
-                  type="text"
-                  disabled
-                  value={
-                    cube.overrideCategory
-                      ? cube.card_count +
-                        ' Card ' +
-                        (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                        cube.categoryOverride +
-                        ' Cube'
-                      : cube.card_count + ' Card ' + cube.type + ' Cube'
-                  }
-                />
+                <input className="form-control" name="name" type="text" disabled value={getCubeDescription(cube)} />
 
                 <Row>
                   <Col>
@@ -333,11 +344,7 @@ class CubeOverviewModal extends Component {
                 <br />
 
                 <h6>Description</h6>
-                <TextEntry
-                  name="blog"
-                  value={cube.raw_desc && cube.raw_desc !== 'undefined' ? cube.raw_desc : cube.description}
-                  onChange={this.handleDescriptionChange}
-                />
+                <TextEntry name="blog" value={pickDescriptionFromCube(cube)} onChange={this.handleDescriptionChange} />
                 <FormText>
                   Having trouble formatting your posts? Check out the{' '}
                   <a href="/markdown" target="_blank">
@@ -377,5 +384,11 @@ class CubeOverviewModal extends Component {
     );
   }
 }
+CubeOverviewModal.propTypes = {
+  cube: CubePropType.isRequired,
+  onError: PropTypes.func.isRequired,
+  onCubeUpdate: PropTypes.func.isRequired,
+};
+CubeOverviewModal.defaultProps = {};
 
 export default CubeOverviewModal;

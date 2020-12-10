@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
 import HeaderCell from 'components/HeaderCell';
@@ -259,7 +260,12 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
               {weights.map((weight) => (
                 <tr key={weight.name}>
                   <th>
-                    <Tooltip text={weight.description}>{weight.name}</Tooltip>
+                    <Tooltip
+                      id={`DraftbotBreakdownWeightID_${weight.name.replace(' ', '_')}`}
+                      text={weight.description}
+                    >
+                      {weight.name}
+                    </Tooltip>
                   </th>
                   <td>{weight.value}</td>
                 </tr>
@@ -367,23 +373,7 @@ DraftbotBreakdown.propTypes = {
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
   }).isRequired,
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-        pickorder: PropTypes.array.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
   defaultIndex: PropTypes.number,
 };

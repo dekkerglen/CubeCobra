@@ -260,7 +260,7 @@ router.get('/topcards', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/404`);
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -334,7 +334,7 @@ router.get('/card/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -369,7 +369,7 @@ router.get('/cardimage/:id', async (req, res) => {
 
     return res.redirect(card.image_normal);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -404,7 +404,7 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     return res.redirect(card.image_flip);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 

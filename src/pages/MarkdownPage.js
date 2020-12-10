@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -7,7 +8,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 
 const MarkdownPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -19,9 +20,8 @@ const MarkdownPage = ({ user, loginCallback }) => (
       </CardHeader>
       <CardBody>
         <p>
-          For blog posts, only a subset of this syntax is available. Features not available for blog posts will be
-          labeled accordingly. If you need any help regarding how to use markdown, please{' '}
-          <a href="/contact">contact us</a>.
+          CubeCobra supports regular Markdown as well as some extra features specific to our site. If you need any help
+          regarding how to use markdown, please <a href="/contact">contact us</a>.
         </p>
         <h5>Contents</h5>
         <ol>
@@ -35,184 +35,34 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <a href="#symbols">Symbols</a>
           </li>
           <li>
-            <a href="#quotes">Quotes</a>
-          </li>
-          <li>
             <a href="#users">Tagging Users</a>
           </li>
           <li>
-            <a href="#lists">Lists</a>
-          </li>
-          <li>
-            <a href="#links">Links</a>
-          </li>
-          <li>
             <a href="#latex">LaTeX</a>
+          </li>
+          <li>
+            <a href="#strikethrough">Strikethrough</a>
+          </li>
+          <li>
+            <a href="#centering">Centering</a>
+          </li>
+          <li>
+            <a href="#tables">Tables</a>
+          </li>
+          <li>
+            <a href="#tasklists">Task Lists</a>
+          </li>
+          <li>
+            <a href="#syntax">Syntax Highlighting</a>
           </li>
         </ol>
       </CardBody>
       <CardBody className="border-top">
         <h5 id="formatting">Basic Formatting</h5>
-        <p>For italic text, wrap the text in single asterisks or underscores.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>*This text is italicized*</code>
-                <br />
-                <code>_This text is italicized_</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="*This text is italicized*" />
-                <br />
-                <MagicMarkdown markdown="_This text is italicized_" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>For bold text, wrap the text in double asterisks.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>**This text is bold**</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="**This text is bold**" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>For italic and bold text, wrap the text in triple asterisks.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>***This text is italicized and bold***</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="***This text is italicized and bold***" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>For underlined text, wrap the text in double underscores.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>__This text is underlined__</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="__This text is underlined__" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>For underlined and italicized text, wrap the text in triple underscores.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>___This text is underlined and italicized___</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="___This text is underlined and italicized___" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>For strikethrough text, wrap the text in double tilde.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>~~This text is strikethrough~~</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="~~This text is strikethrough~~" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>Add headings by adding 1 to 6 #'s to the begginning of a line. Make sure to put a space after the #'s.</p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code># Heading 1</code>
-                <br />
-                <code>## Heading 2</code>
-                <br />
-                <code>### Heading 3</code>
-                <br />
-                <code>#### Heading 4</code>
-                <br />
-                <code>##### Heading 5</code>
-                <br />
-                <code>###### Heading 6</code>
-                <br />
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <h1>Heading 1</h1>
-                <h2>Heading 2</h2>
-                <h3>Heading 3</h3>
-                <h4>Heading 4</h4>
-                <h5>Heading 5</h5>
-                <h6>Heading 6</h6>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
+        <p>
+          Our Markdown syntax is based on the CommonMark specification, which includes all the common Markdown
+          constructs you may already be familiar with. <a href="https://commonmark.org/help/">Learn more.</a>
+        </p>
       </CardBody>
       <CardBody className="border-top">
         <h5 id="cards">Linking Cards</h5>
@@ -225,7 +75,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[Ambush Viper]]</code>
+                <p>
+                  <code>[[Ambush Viper]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -233,7 +85,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[Ambush Viper]]" />
+                <Markdown markdown="[[Ambush Viper]]" />
               </CardBody>
             </Card>
           </Col>
@@ -253,9 +105,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]</code>
-                <br />
-                <code>[[New Border Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
+                <p>
+                  <code>[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]</code>
+                  <br />
+                  <code>[[New Border Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -263,7 +117,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown
+                <Markdown
                   markdown={
                     '[[Old Border Mystic Snake|f098a28c-5f9b-4a2c-b109-c342365eb948]]\n[[New Borer Mystic Snake|38810fe4-dc72-439e-adf7-362af772b8f8]]'
                   }
@@ -282,9 +136,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[/Delver of Secrets]]</code>
-                <br />
-                <code>[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]</code>
+                <p>
+                  <code>[[/Delver of Secrets]]</code>
+                  <br />
+                  <code>[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -292,9 +148,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[/Delver of Secrets]]" />
-                <br />
-                <MagicMarkdown markdown="[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]" />
+                <Markdown
+                  markdown={'[[/Delver of Secrets]]\n[[/Delver of Secrets|28059d09-2c7d-4c61-af55-8942107a7c1f]]'}
+                />
               </CardBody>
             </Card>
           </Col>
@@ -317,7 +173,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!Hexdrinker]]" />
+                <Markdown markdown="[[!Hexdrinker]]" />
               </CardBody>
             </Card>
           </Col>
@@ -329,7 +185,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[!/Delver of Secrets]]</code>
+                <p>
+                  <code>[[!/Delver of Secrets]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -337,7 +195,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!/Delver of Secrets]]" />
+                <Markdown markdown="[[!/Delver of Secrets]]" />
               </CardBody>
             </Card>
           </Col>
@@ -352,7 +210,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]</code>
+                <p>
+                  <code>[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -360,7 +220,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]" />
+                <Markdown markdown="[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]" />
               </CardBody>
             </Card>
           </Col>
@@ -371,7 +231,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'<<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>'}</code>
+                <p>
+                  <code>{'<<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -379,11 +241,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <Row>
-                  <MagicMarkdown markdown="[[!Hexdrinker]]" />
-                  <MagicMarkdown markdown="[[!Lotus Cobra]]" />
-                  <MagicMarkdown markdown="[[!Snake]]" />
-                </Row>
+                <Markdown markdown="<<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>" />
               </CardBody>
             </Card>
           </Col>
@@ -398,7 +256,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{W}{U}{B}{R}{G}'}</code>
+                <p>
+                  <code>{'{W}{U}{B}{R}{G}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -406,22 +266,21 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="{W}{U}{B}{R}{G}" />
+                <Markdown markdown="{W}{U}{B}{R}{G}" />
               </CardBody>
             </Card>
           </Col>
         </Row>
         <br />
-        <p>
-          Create hybrid symbols by including a slash. If a symbol doesn't load this way, try swapping the order of the
-          colors.
-        </p>
+        <p>Create hybrid symbols by including a slash.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{W/U}{G/U}{B/R}{R/W}{B/G}'}</code>
+                <p>
+                  <code>{'{W/U}{G/U}{B/R}{R/W}{B/G}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -429,7 +288,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="{W/U}{G/U}{B/R}{R/W}{B/G}" />
+                <Markdown markdown="{W/U}{G/U}{B/R}{R/W}{B/G}" />
               </CardBody>
             </Card>
           </Col>
@@ -441,9 +300,11 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{2/W}{2/U}{2/B}{2/R}{2/G}'}</code>
-                <br />
-                <code>{'{W/P}{U/P}{B/P}{R/P}{G/P}'}</code>
+                <p>
+                  <code>{'{2/W}{2/U}{2/B}{2/R}{2/G}'}</code>
+                  <br />
+                  <code>{'{W/P}{U/P}{B/P}{R/P}{G/P}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -451,7 +312,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={'{2/W}{2/U}{2/B}{2/R}{2/G}\n{W/P}{U/P}{B/P}{R/P}{G/P}\n'} />
+                <Markdown markdown={'{2/W}{2/U}{2/B}{2/R}{2/G}\n{W/P}{U/P}{B/P}{R/P}{G/P}\n'} />
               </CardBody>
             </Card>
           </Col>
@@ -463,7 +324,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{'{e}{T}{q}{s}{X}{Y}{15}'}</code>
+                <p>
+                  <code>{'{e}{T}{q}{s}{X}{Y}{15}'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -471,56 +334,12 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={'{e}{T}{q}{s}{X}{Y}{15}'} />
+                <Markdown markdown={'{e}{T}{q}{s}{X}{Y}{15}'} />
               </CardBody>
             </Card>
           </Col>
         </Row>
         <br />
-      </CardBody>
-      <CardBody className="border-top">
-        <h5 id="quotes">Quotes</h5>
-        <p>
-          {
-            'You can add a quote block by adding a ">" and a space at the beginning of a line. Consecutive lines will be grouped together in the same quote. This feature is not available for blog posts.'
-          }
-        </p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>
-                  {'> Mystic Snake - {1}{G}{U}{U}'}
-                  <br />
-                  {'> Creature - Snake'}
-                  <br />
-                  {'> Flash'}
-                  <br />
-                  {'> When Mystic Snake enters the battlefield, counter target spell.'}
-                  <br />
-                  {'> 2 / 2>'}
-                </code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <Card className="bg-light">
-                  <CardBody>
-                    <MagicMarkdown
-                      markdown={
-                        'Mystic Snake - {1}{G}{U}{U}\nCreature - Snake\nFlash\nWhen Mystic Snake enters the battlefield, counter target spell.\n2/2'
-                      }
-                    />
-                  </CardBody>
-                </Card>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
       </CardBody>
       <CardBody className="border-top">
         <h5 id="users">Linking Users</h5>
@@ -530,7 +349,9 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>This suggestion was made by @dekkaru</code>
+                <p>
+                  <code>This suggestion was made by @dekkaru</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -538,99 +359,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown="This suggestion was made by @dekkaru" />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-      </CardBody>
-      <CardBody className="border-top">
-        <h5 id="lists">Lists</h5>
-        <p>
-          Create an unordered (bulleted) list by adding a '-' followed by a space at the beginning of a line.
-          Consecutive lines with this formatting will be joined into a bullet-pointed list.
-        </p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>- item 1</code>
-                <br />
-                <code>- item 2</code>
-                <br />
-                <code>- item 3</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <ul>
-                  <li>item 1</li>
-                  <li>item 2</li>
-                  <li>item 3</li>
-                </ul>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        <p>
-          Similarly, you can add ordered lists by using '1.' and a space at the beginning of the line. Make sure to only
-          use '1.', and not any other numbers. The numbering will be added automatically.
-        </p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>1. item 1</code>
-                <br />
-                <code>1. item 2</code>
-                <br />
-                <code>1. item 3</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <ol>
-                  <li>item 1</li>
-                  <li>item 2</li>
-                  <li>item 3</li>
-                </ol>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-      </CardBody>
-      <CardBody className="border-top">
-        <h5 id="links">Links</h5>
-        <p>
-          You can add any hyperlink, with any text, by using square brackets around text followed immediately by
-          parentheses around the URL. This is the only way to provide a custom link, and will create a warning popup for
-          the user. Try out the following link to see the popup.
-        </p>
-        <Row>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Source</CardHeader>
-              <CardBody>
-                <code>[outside link](https://scryfall.com)</code>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col xs="12" sm="6">
-            <Card>
-              <CardHeader>Result</CardHeader>
-              <CardBody>
-                <MagicMarkdown markdown="[outside link](https://scryfall.com)" />
+                <Markdown markdown="This suggestion was made by @dekkaru" />
               </CardBody>
             </Card>
           </Col>
@@ -639,13 +368,18 @@ const MarkdownPage = ({ user, loginCallback }) => (
       </CardBody>
       <CardBody className="border-top">
         <h5 id="latex">LaTeX</h5>
-        <p>You can add latex expressions using double '$' for inline latex, and triple '$' for block latex.</p>
+        <p>
+          You can add LaTeX math expressions using '$' for inline LaTeX, and double '$' on a separate line for block
+          LaTeX.
+        </p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`}</code>
+                <p>
+                  <code>{'Some inline latex here $\\frac{\\sum_{i=1}^N x_i}{N}$ text after'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -653,7 +387,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`Some inline latex here $$\\frac{\\sum_{i=1}^N x_i}{N}$$ text after`} />
+                <Markdown markdown={'Some inline latex here $\\frac{\\sum_{i=1}^N x_i}{N}$ text after'} />
               </CardBody>
             </Card>
           </Col>
@@ -664,7 +398,13 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`}</code>
+                <p>
+                  <code>$$</code>
+                  <br />
+                  <code>{'frac{\\sum_{i=1}^N x_i}{N}'}</code>
+                  <br />
+                  <code>$$</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -672,21 +412,23 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`$$$\\frac{\\sum_{i=1}^N x_i}{N}$$$`} />
+                <Markdown markdown={'$$\n\\frac{\\sum_{i=1}^N x_i}{N}\n$$'} />
               </CardBody>
             </Card>
           </Col>
         </Row>
         <br />
-        <p>You can use latex in headers, and in block quotes as well.</p>
+        <p>You can use LaTeX in headers, and in block quotes as well.</p>
         <Row>
           <Col xs="12" sm="6">
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
-                <code>{`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `}</code>
-                <br />
-                <code>{`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `}</code>
+                <p>
+                  <code>{'> $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
+                  <br />
+                  <code>{'### $\\frac{\\sum_{i=1}^N x_i}{N}$'}</code>
+                </p>
               </CardBody>
             </Card>
           </Col>
@@ -694,9 +436,271 @@ const MarkdownPage = ({ user, loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <MagicMarkdown markdown={`> $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+                <Markdown markdown={'> $\\frac{\\sum_{i=1}^N x_i}{N}$'} />
                 <br />
-                <MagicMarkdown markdown={`### $$$\\frac{\\sum_{i=1}^N x_i}{N}$$$ `} />
+                <Markdown markdown={'### $\\frac{\\sum_{i=1}^N x_i}{N}$'} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="strikethrough">Strikethrough</h5>
+        <p>For strikethrough text, wrap the text in double tilde.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>~~This text is strikethrough~~</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown="~~This text is strikethrough~~" />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="centering">Centering</h5>
+        <p>You can center elements by wrapping them in triple angle brackets.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>{`>>> This text is centered <<<`}</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={`>>> This text is centered <<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>
+          You can center card images, titles and multi-line paragraphs as well. All other Markdown tags can be used in a
+          centered block.
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>{`>>> Centered Card: [[!Hexdrinker]] <<<`}</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={`>>> Centered Card: [[!Hexdrinker]] <<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>
+                    {`>>>`} <br />
+                    ### Centered heading <br />
+                    {`<<<`}
+                  </code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={`>>>\n#### Centered heading\n<<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>
+                    {`>>>`} <br />
+                    Centered paragraph <br />
+                    spanning <br />
+                    multiple <br />
+                    lines <br />
+                    {`<<<`} <br />
+                  </code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={`>>>\nCentered paragraph\nspanning\nmultiple\nlines\n<<<`} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="tables">Tables</h5>
+        <p>
+          Tables consist of a header row, a delimiter row, and one or more data rows. The separators between columns
+          don't have to be vertically aligned, but it helps readability.
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>| W | U | B | R | G |</code>
+                  <br />
+                  <code>|---|---|---|---|---|</code>
+                  <br />
+                  <code>| 15| 7 | 12| 35| 0 |</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={'| W | U | B | R | G |\n|---|---|---|---|---|\n| 15| 7 | 12| 35| 0 |'} />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        <br />
+        <p>
+          The delimiter row can optionally contain semicolons indicating right, center, or left alignment. Table cells
+          also support basic formatting.
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>| Left align | Center align | Right align |</code>
+                  <br />
+                  <code>| :--------- | :----------: | ----------: |</code>
+                  <br />
+                  <code>| Aligned left | Aligned center | Aligned right |</code>
+                  <br />
+                  <code>{`| {W}{U}{B}{R} | [[Hexdrinker]] | *emphasized* |`}</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown
+                  markdown={
+                    '| Left align | Center align | Right align |\n| :--------- | :----------: | ----------: |\n|Aligned left|Aligned center|Aligned right|\n|{W}{U}{B}{R}|[[Hexdrinker]]| *emphasized*|'
+                  }
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="tasklists">Task Lists</h5>
+        <p>Adding brackets to a list turns it into a task list.</p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>- [x] Completed item.</code>
+                  <br />
+                  <code>- [ ] Not completed item.</code>
+                  <br />
+                  <code>&nbsp;&nbsp;- [x] Task lists can be nested.</code>
+                  <br /> <br />
+                  <code>1. [x] Numbered task.</code>
+                  <br />
+                  <code>2. [ ] Unfinished numbered task.</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown
+                  markdown={
+                    '- [x] Completed item.\n- [ ] Not completed item.\n  - [x] Task lists can be nested.\n\n1. [x] Numbered task.\n2. [ ] Unfinished numbered task.'
+                  }
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </CardBody>
+      <CardBody className="border-top">
+        <h5 id="syntax">Syntax Highlighting</h5>
+        <p>
+          When writing a code block, specifying a language will enable syntax highlighting for that language. You can
+          specify{' '}
+          <a href="https://github.com/react-syntax-highlighter/react-syntax-highlighter/blob/master/AVAILABLE_LANGUAGES_HLJS.MD">
+            the following languages.
+          </a>
+        </p>
+        <Row>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Source</CardHeader>
+              <CardBody>
+                <p>
+                  <code>```javascript</code>
+                  <br />
+                  <code>{'const x = { a: b+1 };'}</code>
+                  <br />
+                  <code>console.log(this);</code>
+                  <br />
+                  <code>```</code>
+                </p>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs="12" sm="6">
+            <Card>
+              <CardHeader>Result</CardHeader>
+              <CardBody>
+                <Markdown markdown={'```js\nconst x = { a: b+1 };\nconsole.log(this);\n```'} />
               </CardBody>
             </Card>
           </Col>
@@ -707,11 +711,7 @@ const MarkdownPage = ({ user, loginCallback }) => (
 );
 
 MarkdownPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

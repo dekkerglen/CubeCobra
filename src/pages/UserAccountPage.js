@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -15,6 +16,10 @@ import {
   TabPane,
   Card,
   CardBody,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -94,6 +99,11 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
             <NavItem>
               <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>
                 Update Email
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" active={nav === 'theme'} data-nav="theme" onClick={handleClickNav}>
+                Themes
               </NavLink>
             </NavItem>
           </Nav>
@@ -212,6 +222,26 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                 </CardBody>
               </Card>
             </TabPane>
+            <TabPane tabId="theme">
+              <Card>
+                <CardBody>
+                  <CSRFForm method="POST" action="/user/changetheme">
+                    <InputGroup className="mb-3">
+                      <InputGroupAddon addonType="prepend">
+                        <InputGroupText>Theme</InputGroupText>
+                      </InputGroupAddon>
+                      <CustomInput type="select" id="theme" name="theme" defaultValue={user.theme}>
+                        <option value="default">Default</option>
+                        <option value="dark">Dark Mode</option>
+                      </CustomInput>
+                    </InputGroup>
+                    <Button block outline color="success" type="submit">
+                      Update
+                    </Button>
+                  </CSRFForm>
+                </CardBody>
+              </Card>
+            </TabPane>
           </TabContent>
         </Col>
       </Row>
@@ -220,15 +250,7 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
 };
 
 UserAccountPage.propTypes = {
-  user: PropTypes.shape({
-    email: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    about: PropTypes.string.isRequired,
-    image_name: PropTypes.string,
-    image: PropTypes.string,
-    artist: PropTypes.string,
-    users_following: PropTypes.arrayOf(PropTypes.shape({}).isRequired),
-  }).isRequired,
+  user: UserPropType.isRequired,
   defaultNav: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, FormGroup, Label, Input, Button, Col, Row, CardHeader } from 'reactstrap';
 
@@ -25,7 +26,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Email Address:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="email" id="email" type="text" />
+                <Input maxLength="1000" name="email" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -35,7 +36,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Recovery Code:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="code" id="code" type="text" />
+                <Input maxLength="1000" name="code" id="code" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -45,7 +46,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>New Password:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="password" id="password" type="password" />
+                <Input maxLength="1000" name="password" id="password" type="password" />
               </Col>
             </Row>
           </FormGroup>
@@ -55,7 +56,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Confirm New Password:</Label>
               </Col>
               <Col sm="8">
-                <Input maxlength="1000" name="password2" id="confirmPassword" type="password" />
+                <Input maxLength="1000" name="password2" id="confirmPassword" type="password" />
               </Col>
             </Row>
           </FormGroup>
@@ -69,11 +70,7 @@ const LostPassword = ({ user, loginCallback }) => (
 );
 
 LostPassword.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

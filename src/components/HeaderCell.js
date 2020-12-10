@@ -19,7 +19,7 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
     <th scope="col">
       <NavLink href="#" onClick={() => requestSort(fieldName)}>
         {tooltip ? (
-          <Tooltip text={tooltip}>
+          <Tooltip id={`HeaderCellTooltipId-${fieldName.replace(' ', '_')}`} text={tooltip}>
             {label} <img src={icon} className="sortIcon" alt="" />
           </Tooltip>
         ) : (
@@ -39,7 +39,7 @@ HeaderCell.propTypes = {
     key: PropTypes.string.isRequired,
     direction: PropTypes.string.isRequired,
   }).isRequired,
-  requestSort: PropTypes.string.isRequired,
+  requestSort: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
 };
 

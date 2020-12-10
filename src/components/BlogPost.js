@@ -3,7 +3,7 @@ import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from './BlogContextMenu';
 import CommentsSection from 'components/CommentsSection';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -62,7 +62,7 @@ class BlogPost extends React.Component {
       <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
-            {post.title}
+            <a href={`/cube/blogpost/${post._id}`}>{post.title}</a>
             <div className="float-sm-right">
               {this.props.canEdit && (
                 <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />
@@ -84,7 +84,7 @@ class BlogPost extends React.Component {
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
           {post.changelist && (post.html || post.markdown) ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-5 col-md-4 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
@@ -92,7 +92,7 @@ class BlogPost extends React.Component {
               <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
                   {post.markdown ? (
-                    <MagicMarkdown markdown={post.markdown} />
+                    <Markdown markdown={post.markdown} limited />
                   ) : (
                     <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                   )}
@@ -105,7 +105,7 @@ class BlogPost extends React.Component {
               {post.body && <CardText>{post.body}</CardText>}
               {(post.html || post.markdown) &&
                 (post.markdown ? (
-                  <MagicMarkdown markdown={post.markdown} />
+                  <Markdown markdown={post.markdown} limited />
                 ) : (
                   <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
                 ))}

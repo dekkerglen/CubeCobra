@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import VideoPropType from 'proptypes/VideoPropType';
 
 import {
   Spinner,
@@ -133,7 +135,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
                     <Label>Title:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
+                    <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
                   </Col>
                 </Row>
               </FormGroup>
@@ -143,7 +145,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
                     <Label>Video URL:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={url} onChange={(event) => setUrl(event.target.value)} />
+                    <Input maxLength="1000" value={url} onChange={(event) => setUrl(event.target.value)} />
                   </Col>
                 </Row>
               </FormGroup>
@@ -153,7 +155,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
                     <Label>Short Description:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
+                    <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
                     <p>Plaintext only. This short description will be used for the video preview.</p>
                   </Col>
                 </Row>
@@ -264,24 +266,9 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
 };
 
 EditVideoPage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  video: PropTypes.shape({
-    body: PropTypes.string,
-    title: PropTypes.string,
-    image: PropTypes.string,
-    short: PropTypes.string,
-    imagename: PropTypes.string,
-    artist: PropTypes.string,
-    _id: PropTypes.string,
-    date: PropTypes.string,
-    status: PropTypes.string,
-    url: PropTypes.string,
-  }).isRequired,
+  video: VideoPropType.isRequired,
 };
 
 EditVideoPage.defaultProps = {

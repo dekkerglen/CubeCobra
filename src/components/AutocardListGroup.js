@@ -1,5 +1,6 @@
 import React, { useCallback, useContext } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { ListGroup, ListGroupItem } from 'reactstrap';
 
@@ -46,11 +47,7 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
 };
 
 AutocardListGroup.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   heading: PropTypes.node.isRequired,

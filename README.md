@@ -31,7 +31,7 @@ VSCode (with the ESLint extension) is the recommended environment. When using th
 
 ### Initial Setup
 
-Clone the project into a folder of your choice. Copy `.env-EXAMPLE` to `.env` and fill out your personal tokens. **NOTE** `TCG_PLAYER_PUBLIC_KEY` and `TCG_PLAYER_PRIVATE_KEY` can be left blank.
+Clone the project into a folder of your choice. Copy `.env_EXAMPLE` to `.env` and fill out your personal tokens. **NOTE** `TCG_PLAYER_PUBLIC_KEY` and `TCG_PLAYER_PRIVATE_KEY` can be left blank.
 
 Once your `.env` file is filled out, run the following commands in the root of the cloned repository:
 

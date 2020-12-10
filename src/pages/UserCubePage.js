@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
@@ -9,6 +11,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import Advertisement from 'components/Advertisement';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import Markdown from 'components/Markdown';
 
 const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -36,18 +39,7 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
               </Col>
             )}
             <Col xs={owner.image ? 8 : 12} lg={owner.image ? 9 : 12}>
-              {owner.about ? (
-                owner.about
-                  .trim()
-                  .split(/[\r\n]+/)
-                  .map((para, index) => (
-                    <p key={/* eslint-disable-line react/no-array-index-key */ index} className="my-0">
-                      {para}
-                    </p>
-                  ))
-              ) : (
-                <em>This user has not yet filled out their about section.</em>
-              )}
+              <Markdown markdown={owner.about || '_This user has not yet filled out their about section._'} />
             </Col>
           </Row>
           {user && user.id === owner._id && (
@@ -76,18 +68,10 @@ UserCubePage.propTypes = {
     artist: PropTypes.string.isRequired,
     _id: PropTypes.string.isRequired,
   }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
   loginCallback: PropTypes.string,
 };
 

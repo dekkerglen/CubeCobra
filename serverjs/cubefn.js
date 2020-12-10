@@ -56,38 +56,19 @@ async function generateShortId() {
   return newId;
 }
 
+const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+
 function intToLegality(val) {
-  switch (val) {
-    case 0:
-      return 'Vintage';
-    case 1:
-      return 'Legacy';
-    case 2:
-      return 'Modern';
-    case 3:
-      return 'Pioneer';
-    case 4:
-      return 'Standard';
-    default:
-      return undefined;
-  }
+  return FORMATS[val];
 }
 
 function legalityToInt(legality) {
-  switch (legality) {
-    case 'Vintage':
-      return 0;
-    case 'Legacy':
-      return 1;
-    case 'Modern':
-      return 2;
-    case 'Pioneer':
-      return 3;
-    case 'Standard':
-      return 4;
-    default:
-      return undefined;
-  }
+  let res;
+  FORMATS.forEach((format, index) => {
+    if (legality === format) res = index;
+  });
+
+  return res;
 }
 
 function cardsAreEquivalent(card, details) {
@@ -123,9 +104,9 @@ function cardIsLegal(card, legality) {
 function setCubeType(cube, carddb) {
   let pauper = true;
   let peasant = false;
-  let type = legalityToInt('Standard');
+  let type = FORMATS.length - 1;
   for (const card of cube.cards) {
-    if (pauper && !['legal', 'banned'].includes(carddb.cardFromId(card.cardID).legalities.Pauper)) {
+    if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
       peasant = true;
     }
@@ -136,7 +117,7 @@ function setCubeType(cube, carddb) {
         peasant = false;
       }
     }
-    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type).toLowerCase())) {
+    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type))) {
       type -= 1;
     }
   }
@@ -269,6 +250,7 @@ function CSVtoCards(csvString, carddb) {
     finish,
     maybeboard,
     'image url': imageUrl,
+    'image back url': imageBackUrl,
     tags,
     notes,
     'Color Category': colorCategory,
@@ -283,11 +265,12 @@ function CSVtoCards(csvString, carddb) {
         colors: (color || null) && color.split('').filter((c) => [...'WUBRG'].includes(c)),
         addedTmsp: new Date(),
         collector_number: collectorNumber && collectorNumber.toUpperCase(),
-        status,
-        finish,
+        status: status || 'Not Owned',
+        finish: finish || 'Non-foil',
         imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
+        imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
         tags: tags && tags.length > 0 ? tags.split(',') : [],
-        notes,
+        notes: notes || '',
         rarity: rarity || null,
         colorCategory: colorCategory || null,
       };

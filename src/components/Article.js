@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import ArticlePropType from 'proptypes/ArticlePropType';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 
@@ -19,7 +20,7 @@ const Article = ({ article, userid }) => {
         </h6>
       </CardHeader>
       <CardBody>
-        <MagicMarkdown markdown={article.body} />
+        <Markdown markdown={article.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="article" parent={article._id} userid={userid} collapse={false} />
@@ -28,14 +29,7 @@ const Article = ({ article, userid }) => {
   );
 };
 Article.propTypes = {
-  article: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-  }).isRequired,
+  article: ArticlePropType.isRequired,
   userid: PropTypes.string,
 };
 

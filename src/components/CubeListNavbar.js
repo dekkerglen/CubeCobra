@@ -1,4 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import {
   Button,
@@ -28,17 +30,17 @@ import {
   UncontrolledDropdown,
 } from 'reactstrap';
 
-import CardModalContext from './CardModalContext';
-import CSRFForm from './CSRFForm';
-import CubeContext from './CubeContext';
-import DisplayContext from './DisplayContext';
-import EditCollapse from './EditCollapse';
-import FilterCollapse from './FilterCollapse';
-import GroupModalContext from './GroupModalContext';
-import SortContext from './SortContext';
-import SortCollapse from './SortCollapse';
-import TagColorsModal from './TagColorsModal';
-import withModal from './WithModal';
+import CardModalContext from 'components/CardModalContext';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'components/CubeContext';
+import DisplayContext from 'components/DisplayContext';
+import EditCollapse from 'components/EditCollapse';
+import FilterCollapse from 'components/FilterCollapse';
+import GroupModalContext from 'components/GroupModalContext';
+import SortCollapse from 'components/SortCollapse';
+import SortContext from 'components/SortContext';
+import TagColorsModal from 'components/TagColorsModal';
+import withModal from 'components/WithModal';
 
 const PasteBulkModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
@@ -50,8 +52,9 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
       <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`}>
         <ModalBody>
           <p>
-            Acceptable formats are: one card name per line, or one card name per line prepended with #x, such as "2x
-            island"
+            Acceptable formats are:
+            <br />• one card name per line, or
+            <br />• one card name per line prepended with #x, such as &quot;2x island&quot;
           </p>
           <Input
             type="textarea"
@@ -74,6 +77,11 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
   );
 };
 
+PasteBulkModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 
 const UploadBulkModal = ({ isOpen, toggle }) => {
@@ -86,10 +94,12 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
       <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
         <ModalBody>
           <p>
-            Acceptable files are either .txt (plaintext) with one card name per line, or .csv with the exact format as
-            our .csv export.
+            Acceptable files are:
+            <br />• .txt (plaintext) with one card name per line, or
+            <br />• .csv with the same format as our .csv export (columns may be omitted and re-arranged, default values
+            may be used).
           </p>
-          <CustomInput type="file" id="uploadBulkFile" type="file" name="document" />
+          <CustomInput type="file" id="uploadBulkFile" name="document" />
           <Label for="uploadBulkFile" className="sr-only">
             Choose file
           </Label>
@@ -107,6 +117,11 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
   );
 };
 
+UploadBulkModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 
 const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
@@ -122,7 +137,7 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
             Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
             .csv export.
           </p>
-          <CustomInput type="file" id="uploadReplacementFile" type="file" name="document" />
+          <CustomInput type="file" id="uploadReplacementFile" name="document" />
           <Label for="uploadReplacementFile" className="sr-only">
             Choose file
           </Label>
@@ -139,6 +154,12 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
     </Modal>
   );
 };
+
+UploadBulkReplaceModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
 
 const CubetutorImportModal = ({ isOpen, toggle }) => {
@@ -152,9 +173,12 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
         <ModalBody>
           <p>
             Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags
-            will not be imported. Cubetutor does not recognize alternate versions of cards with the same name, in the
-            same set (e.g. Hymn to Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked
-            to ensure the desired version has been added.
+            will not be imported.
+            <br />
+            <br />
+            Cubetutor does not recognize alternate versions of cards with the same name, in the same set (e.g. Hymn to
+            Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked to ensure the desired
+            version has been added.
           </p>
           <InputGroup>
             <InputGroupAddon addonType="prepend">
@@ -177,6 +201,11 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
   );
 };
 
+CubetutorImportModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
 const CubetutorImportModalItem = withModal(DropdownItem, CubetutorImportModal);
 
 const SelectEmptyModal = ({ isOpen, toggle }) => (
@@ -196,6 +225,11 @@ const SelectEmptyModal = ({ isOpen, toggle }) => (
     </ModalFooter>
   </Modal>
 );
+
+SelectEmptyModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
 
 const CompareCollapse = (props) => {
   const { cubeID } = useContext(CubeContext);
@@ -249,7 +283,7 @@ const CubeListNavbar = ({
   const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
-  const { groupModalCards, setGroupModalCards, openGroupModal } = useContext(GroupModalContext);
+  const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
   const { primary, secondary, tertiary } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
@@ -261,12 +295,12 @@ const CubeListNavbar = ({
     toggleShowMaybeboard,
   } = useContext(DisplayContext);
 
-  const toggle = useCallback(() => setIsOpen((open) => !open));
+  const toggle = useCallback(() => setIsOpen((open) => !open), []);
 
   const handleChangeCubeView = useCallback(
     (event) => {
-      const target = event.target;
-      const value = target.value;
+      const { target } = event;
+      const { value } = target;
       setCubeView(value);
     },
     [setCubeView],
@@ -275,35 +309,35 @@ const CubeListNavbar = ({
   const handleMassEdit = useCallback(
     (event) => {
       event.preventDefault();
-      const cards = groupModalCards;
       if (cubeView === 'list') {
-        if (cards.length === 0) {
+        if (groupModalCards.length === 0) {
           setSelectEmptyModalOpen(true);
-        } else if (cards.length === 1) {
-          openCardModal(cards[0]);
-        } else if (cards.length > 1) {
+        } else if (groupModalCards.length === 1) {
+          openCardModal(groupModalCards[0]);
+        } else if (groupModalCards.length > 1) {
           openGroupModal();
         }
       } else {
         setCubeView('list');
       }
     },
-    [groupModalCards, openCardModal, openGroupModal, setCubeView],
+    [groupModalCards, openCardModal, openGroupModal, cubeView, setCubeView],
   );
 
   const handleOpenCollapse = useCallback(
     (event) => {
       event.preventDefault();
-      const target = event.target;
+      const { target } = event;
       const collapse = target.getAttribute('data-target');
-      setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
+      // Avoid shadowing the openCollapse prop
+      setOpenCollapse((openCollapseArg) => (openCollapseArg === collapse ? null : collapse));
     },
     [setOpenCollapse],
   );
 
-  const handleOpenTagColorsModal = useCallback((event) => setTagColorsModalOpen(true), []);
-  const handleToggleTagColorsModal = useCallback((event) => setTagColorsModalOpen(false), []);
-  const handleToggleSelectEmptyModal = useCallback((event) => setSelectEmptyModalOpen(false), []);
+  const handleOpenTagColorsModal = useCallback(() => setTagColorsModalOpen(true), []);
+  const handleToggleTagColorsModal = useCallback(() => setTagColorsModalOpen(false), []);
+  const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
   return (
     <div className={`usercontrols${className ? ` ${className}` : ''}`}>
@@ -430,6 +464,30 @@ const CubeListNavbar = ({
       <SelectEmptyModal isOpen={selectEmptyModalOpen} toggle={handleToggleSelectEmptyModal} />
     </div>
   );
+};
+
+CubeListNavbar.propTypes = {
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
+  cubeView: PropTypes.string.isRequired,
+  setCubeView: PropTypes.func.isRequired,
+  openCollapse: PropTypes.string,
+  setOpenCollapse: PropTypes.func.isRequired,
+  defaultPrimarySort: PropTypes.string.isRequired,
+  defaultSecondarySort: PropTypes.string.isRequired,
+  sorts: PropTypes.arrayOf(PropTypes.string),
+  setSorts: PropTypes.func.isRequired,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
+  filter: PropTypes.func,
+  setFilter: PropTypes.func.isRequired,
+  className: PropTypes.string,
+};
+
+CubeListNavbar.defaultProps = {
+  openCollapse: null,
+  sorts: null,
+  filter: null,
+  className: null,
 };
 
 export default CubeListNavbar;

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { Card, Container } from 'reactstrap';
 
 class ErrorBoundary extends Component {
@@ -31,11 +31,11 @@ class ErrorBoundary extends Component {
               </p>
               <p>
                 <code>
-                  {this.state.stack.split('\n').map((text) => (
-                    <>
+                  {this.state.stack.split('\n').map((text, i) => (
+                    <Fragment key={i}>
                       {text}
                       <br />
-                    </>
+                    </Fragment>
                   ))}
                 </code>
               </p>

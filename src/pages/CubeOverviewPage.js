@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -19,7 +21,7 @@ import {
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
-import { getCubeId } from 'utils/Util';
+import { getCubeId, getCubeDescription } from 'utils/Util';
 
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
@@ -29,7 +31,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import FollowersModal from 'components/FollowersModal';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -184,7 +186,7 @@ class CubeOverview extends Component {
                     </Col>
                     <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
                       <TextBadge name="Cube ID">
-                        <Tooltip text="Click to copy to clipboard">
+                        <Tooltip id="CubeOverviewIDTooltipId" text="Click to copy to clipboard">
                           <button
                             type="button"
                             className="cube-id-btn"
@@ -207,15 +209,7 @@ class CubeOverview extends Component {
                   <em className="cube-preview-artist">Art by {cube.image_artist}</em>
                 </div>
                 <CardBody className="pt-2 px-3 pb-3">
-                  {cube.type && (
-                    <p className="mb-1">
-                      {cube.overrideCategory
-                        ? `${cube.card_count} Card ${
-                            cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : ''
-                          }${cube.categoryOverride} Cube`
-                        : `${cube.card_count} Card ${cube.type} Cube`}
-                    </p>
-                  )}
+                  {cube.type && <p className="mb-1">{getCubeDescription(cube)}</p>}
                   <h6 className="mb-2">
                     <i>
                       Designed by
@@ -227,14 +221,20 @@ class CubeOverview extends Component {
                     <Row noGutters className="mb-1">
                       {Number.isFinite(priceOwned) && (
                         <TextBadge name="Owned" className="mr-2">
-                          <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
+                          <Tooltip
+                            id="CubeOverviewOwnedTooltipId"
+                            text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)"
+                          >
                             ${Math.round(priceOwned).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
                       )}
                       {Number.isFinite(pricePurchase) && (
                         <TextBadge name="Buy">
-                          <Tooltip text="TCGPlayer Market Price for cheapest version of each card">
+                          <Tooltip
+                            id="CubeOverviewPurchaseTooltipId"
+                            text="TCGPlayer Market Price for cheapest version of each card"
+                          >
                             ${Math.round(pricePurchase).toLocaleString()}
                           </Tooltip>
                         </TextBadge>
@@ -274,7 +274,7 @@ class CubeOverview extends Component {
                   <h5 className="card-title">Description</h5>
                 </CardHeader>
                 <CardBody>
-                  <MagicMarkdown markdown={cube.description || ''} />
+                  <Markdown markdown={cube.description || ''} />
                 </CardBody>
                 {cube.tags && cube.tags.length > 0 && (
                   <CardFooter>
@@ -355,23 +355,14 @@ CubeOverview.propTypes = {
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
   admin: PropTypes.bool,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    image_uri: PropTypes.string.isRequired,
-    image_name: PropTypes.string.isRequired,
-    image_artist: PropTypes.string.isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   followed: PropTypes.bool.isRequired,
   followers: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
     }),
   ),
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

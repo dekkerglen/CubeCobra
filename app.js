@@ -9,6 +9,7 @@ const session = require('express-session');
 const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
+const compression = require('compression');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const winston = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
@@ -123,6 +124,9 @@ const store = new MongoDBStore(
   },
 );
 
+// gzip middleware
+app.use(compression());
+
 // request timeout middleware
 app.use((req, res, next) => {
   req.setTimeout(60 * 1000, () => {
@@ -204,7 +208,7 @@ const sessionOptions = {
   resave: true,
   saveUninitialized: true,
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
   },
 };
 

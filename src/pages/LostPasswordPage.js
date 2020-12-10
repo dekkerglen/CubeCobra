@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, FormGroup, Label, Input, Button, Col, Row, CardHeader } from 'reactstrap';
 
@@ -29,7 +30,7 @@ const LostPassword = ({ user, loginCallback }) => (
                 <Label>Email Address:</Label>
               </Col>
               <Col sm="9">
-                <Input maxlength="1000" name="email" id="email" type="text" />
+                <Input maxLength="1000" name="email" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -46,11 +47,7 @@ LostPassword.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }).isRequired,
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

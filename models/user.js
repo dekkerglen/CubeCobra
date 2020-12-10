@@ -88,6 +88,11 @@ const UserSchema = mongoose.Schema({
     ],
     default: [],
   },
+  theme: {
+    type: String,
+    enum: ['default', 'dark'],
+    default: 'default',
+  },
 });
 
 UserSchema.index({

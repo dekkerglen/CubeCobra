@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import CardPricePropType from 'proptypes/CardPricePropType';
+import CardDataPointPropType from 'proptypes/CardDataPointPropType';
 
 import {
   Card,
@@ -26,7 +29,7 @@ import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
@@ -140,7 +143,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
 };
 
 Graph.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  data: PropTypes.arrayOf(CardDataPointPropType).isRequired,
   yFunc: PropTypes.func.isRequired,
   unit: PropTypes.string.isRequired,
   yRange: PropTypes.arrayOf(PropTypes.number),
@@ -234,22 +237,30 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
               </AddModal>
               {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPagePriceTooltipId" text="TCGPlayer Market Price">
+                    ${cardPrice({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
                 <TextBadge name="Foil" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageFoilTooltipId" text="TCGPlayer Market Price">
+                    ${cardFoilPrice({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
                 <TextBadge name="EUR" className="mt-1" fill>
-                  <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageEurTooltipId" text="Cardmarket Price">
+                    €{cardPriceEur({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardTix({ details: card })) && (
                 <TextBadge name="TIX" className="mt-1" fill>
-                  <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageTixTooltipId" text="MTGO TIX">
+                    {cardTix({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {Number.isFinite(cardElo({ details: card })) && (
@@ -308,13 +319,13 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <hr />
                   <p className="my-0">{card.type}</p>
                   <hr />
-                  <p className="my-0">
+                  <div className="my-0">
                     {card.oracle_text.split('\n').map((text) => (
-                      <p>
-                        <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
+                      <p key={`oracle-text-${text}`}>
+                        <Markdown markdown={text} />
                       </p>
                     ))}
-                  </p>
+                  </div>
                   <Row>
                     <Col xs="6">
                       <div className="text-left">
@@ -335,12 +346,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   <Row>
                     <Col xs="12" sm="6">
                       {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                     <Col xs="12" sm="6">
                       {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                   </Row>
@@ -357,7 +368,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Price Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={priceType} onChange={(event) => setPriceType(event.target.value)}>
+                    <CustomInput
+                      id="priceType"
+                      type="select"
+                      value={priceType}
+                      onChange={(event) => setPriceType(event.target.value)}
+                    >
                       <option value="price">USD</option>
                       <option value="price_foil">USD Foil</option>
                       <option value="eur">EUR</option>
@@ -377,7 +393,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Cube Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={cubeType} onChange={(event) => setCubeType(event.target.value)}>
+                    <CustomInput
+                      id="cubeType"
+                      type="select"
+                      value={cubeType}
+                      onChange={(event) => setCubeType(event.target.value)}
+                    >
                       <option value="total">All</option>
                       <option value="vintage">Vintage</option>
                       <option value="legacy">Legacy</option>
@@ -530,7 +551,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   </table>
                 )}
                 rows={filteredVersions.slice(0).map((version) => (
-                  <tr>
+                  <tr key={version._id}>
                     <td>
                       <AutocardA
                         front={version.image_normal}
@@ -682,13 +703,13 @@ CardPage.propTypes = {
     elo: PropTypes.number.isRequired,
     image_normal: PropTypes.string.isRequired,
     scryfall_uri: PropTypes.string.isRequired,
-    tcgplayer_id: PropTypes.string.isRequired,
+    tcgplayer_id: PropTypes.number.isRequired,
     _id: PropTypes.string.isRequired,
     set: PropTypes.string.isRequired,
     set_name: PropTypes.string.isRequired,
     collector_number: PropTypes.string.isRequired,
     legalities: PropTypes.shape({}).isRequired,
-    parsed_cost: PropTypes.string.isRequired,
+    parsed_cost: PropTypes.arrayOf(PropTypes.string).isRequired,
     oracle_text: PropTypes.string.isRequired,
     oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
@@ -696,37 +717,11 @@ CardPage.propTypes = {
     loyalty: PropTypes.string.isRequired,
     power: PropTypes.string.isRequired,
     toughness: PropTypes.shape({}).isRequired,
-    prices: PropTypes.shape({
-      usd: PropTypes.number,
-      usd_foil: PropTypes.number,
-      eur: PropTypes.number,
-      tix: PropTypes.number,
-    }).isRequired,
+    prices: CardPricePropType.isRequired,
   }).isRequired,
   data: PropTypes.shape({
-    history: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    current: PropTypes.shape({
-      prices: PropTypes.arrayOf(
-        PropTypes.shape({
-          usd: PropTypes.number,
-          usd_foil: PropTypes.number,
-          eur: PropTypes.number,
-          tix: PropTypes.number,
-        }),
-      ).isRequired,
-      vintage: PropTypes.bool.isRequired,
-      legacy: PropTypes.bool.isRequired,
-      modern: PropTypes.bool.isRequired,
-      standard: PropTypes.bool.isRequired,
-      pauper: PropTypes.bool.isRequired,
-      peasant: PropTypes.bool.isRequired,
-      size180: PropTypes.number.isRequired,
-      size360: PropTypes.number.isRequired,
-      size450: PropTypes.number.isRequired,
-      size540: PropTypes.number.isRequired,
-      size720: PropTypes.number.isRequired,
-      total: PropTypes.arrayOf(PropTypes.number).isRequired,
-    }),
+    history: PropTypes.arrayOf(CardDataPointPropType).isRequired,
+    current: CardDataPointPropType,
   }).isRequired,
   related: PropTypes.shape({
     top: PropTypes.arrayOf(
@@ -766,20 +761,11 @@ CardPage.propTypes = {
       image_normal: PropTypes.string.isRequired,
       image_flip: PropTypes.string,
       collector_number: PropTypes.string,
-      prices: PropTypes.shape({
-        eur: PropTypes.number,
-        tix: PropTypes.number,
-        usd: PropTypes.number,
-        usd_foil: PropTypes.number,
-      }).isRequired,
+      prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape([])),
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 

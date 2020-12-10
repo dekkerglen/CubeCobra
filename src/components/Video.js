@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import VideoPropType from 'proptypes/VideoPropType';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 
@@ -26,7 +27,7 @@ const Video = ({ video, userid }) => {
         </div>
       </CardBody>
       <CardBody>
-        <MagicMarkdown markdown={video.body} />
+        <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="video" parent={video._id} userid={userid} collapse={false} />
@@ -35,15 +36,7 @@ const Video = ({ video, userid }) => {
   );
 };
 Video.propTypes = {
-  video: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    url: PropTypes.string.isRequired,
-  }).isRequired,
+  video: VideoPropType.isRequired,
   userid: PropTypes.string,
 };
 

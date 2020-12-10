@@ -1,29 +1,29 @@
 .tag {
-	background-color: #E9ECEF;
+	background-color: var(--header);
 	font-size: 85%;
 	padding: 0.5em .75em;
 	margin: .25em .1em;
 	display: inline-block;
-	border: 1px solid #DEE2E6;
+	border: 1px solid var(--border-light);
 	transition: all .1s linear;
 }
 
 .tag-sort-placeholder {
   height: 44px;
-	background-color: #dee2e6;
+	background-color: var(--bg-hover);
   margin-left: -15px;
   margin-right: -15px;
 }
 
 .tag-sort-helper {
-	background-color: #ffffff;
-	border: 1px solid #dee2e6;
+	background-color: var(--bg);
+	border: 1px solid var(--border-light);
 }
 
 .tag-color,
 .tag-color .tdname,
 .tag-color > a {
-  color: #ffffff !important;
+  color: var(--bg) !important;
 }
 .tag-red {
   background-color: #8e1600 !important;

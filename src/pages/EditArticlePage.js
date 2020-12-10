@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import ArticlePropType from 'proptypes/ArticlePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Spinner,
@@ -131,7 +133,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
                     <Label>Title:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
+                    <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
                   </Col>
                 </Row>
               </FormGroup>
@@ -141,7 +143,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
                     <Label>Short Description:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input maxlength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
+                    <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
                     <p>Plaintext only. This short description will be used for the article preview.</p>
                   </Col>
                 </Row>
@@ -251,23 +253,9 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
 };
 
 EditArticlePage.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }),
+  user: UserPropType,
   loginCallback: PropTypes.string,
-  article: PropTypes.shape({
-    body: PropTypes.string,
-    title: PropTypes.string,
-    short: PropTypes.string,
-    image: PropTypes.string,
-    imagename: PropTypes.string,
-    artist: PropTypes.string,
-    _id: PropTypes.string,
-    date: PropTypes.string,
-    status: PropTypes.string,
-  }).isRequired,
+  article: ArticlePropType.isRequired,
 };
 
 EditArticlePage.defaultProps = {
