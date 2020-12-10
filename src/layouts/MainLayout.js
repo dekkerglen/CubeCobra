@@ -20,6 +20,7 @@ import LoginModal from 'components/LoginModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 import withModal from 'components/WithModal';
 import NotificationsNav from 'components/NotificationsNav';
+import ThemeContext from 'contexts/ThemeContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
 
@@ -146,7 +147,9 @@ const MainLayout = ({ user, children, loginCallback }) => {
         </Container>
       </Navbar>
       <Container className="flex-grow">
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ThemeContext.Provider value={user.theme}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </ThemeContext.Provider>
       </Container>
       <Footer />
     </div>
