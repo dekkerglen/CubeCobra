@@ -5,8 +5,8 @@ import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 
 import { csrfFetch } from '../utils/CSRF';
 import { getSorts } from '../utils/Sort';
 
-import CubeContext from './CubeContext';
-import SortContext from './SortContext';
+import CubeContext from 'contexts/CubeContext';
+import SortContext from 'contexts/SortContext';
 import Query from 'utils/Query';
 
 const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, setSorts, ...props }) => {

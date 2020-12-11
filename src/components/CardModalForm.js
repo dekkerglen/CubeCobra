@@ -5,10 +5,10 @@ import { csrfFetch } from 'utils/CSRF';
 import { arrayMove } from 'utils/Util';
 
 import CardModal from 'components/CardModal';
-import CardModalContext from 'components/CardModalContext';
-import ChangelistContext from 'components/ChangelistContext';
-import CubeContext from 'components/CubeContext';
-import MaybeboardContext from 'components/MaybeboardContext';
+import CardModalContext from 'contexts/CardModalContext';
+import ChangelistContext from 'contexts/ChangelistContext';
+import CubeContext from 'contexts/CubeContext';
+import MaybeboardContext from 'contexts/MaybeboardContext';
 import { cardGetLabels } from 'utils/Sort';
 
 const CardModalForm = ({ children, ...props }) => {

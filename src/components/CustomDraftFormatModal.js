@@ -24,7 +24,7 @@ import {
 
 import PropTypes from 'prop-types';
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import TextEntry from 'components/TextEntry';
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {

@@ -24,7 +24,7 @@ import { cardType, cardIsSpecialZoneType } from 'utils/Card';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import FoilCardImage from 'components/FoilCardImage';
 import DynamicFlash from 'components/DynamicFlash';

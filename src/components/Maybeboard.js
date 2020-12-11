@@ -7,16 +7,16 @@ import { Button, Col, Form, ListGroupItem, Row, Spinner } from 'reactstrap';
 import { csrfFetch } from 'utils/CSRF';
 
 import AutocompleteInput from 'components/AutocompleteInput';
-import CardModalContext from 'components/CardModalContext';
+import CardModalContext from 'contexts/CardModalContext';
 import CardModalForm from 'components/CardModalForm';
-import ChangelistContext from 'components/ChangelistContext';
-import CubeContext from 'components/CubeContext';
-import DisplayContext from 'components/DisplayContext';
+import ChangelistContext from 'contexts/ChangelistContext';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
-import MaybeboardContext from 'components/MaybeboardContext';
+import MaybeboardContext from 'contexts/MaybeboardContext';
 import TableView from 'components/TableView';
-import { getCardColorClass } from 'components/TagContext';
+import { getCardColorClass } from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
 
 const AutocardItem = withAutocard(ListGroupItem);

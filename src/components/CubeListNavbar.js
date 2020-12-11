@@ -30,15 +30,15 @@ import {
   UncontrolledDropdown,
 } from 'reactstrap';
 
-import CardModalContext from 'components/CardModalContext';
+import CardModalContext from 'contexts/CardModalContext';
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
-import DisplayContext from 'components/DisplayContext';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
-import GroupModalContext from 'components/GroupModalContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 import SortCollapse from 'components/SortCollapse';
-import SortContext from 'components/SortContext';
+import SortContext from 'contexts/SortContext';
 import TagColorsModal from 'components/TagColorsModal';
 import withModal from 'components/WithModal';
 

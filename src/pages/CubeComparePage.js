@@ -9,11 +9,11 @@ import Query from 'utils/Query';
 import CardModalForm from 'components/CardModalForm';
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { SortContextProvider } from 'components/SortContext';
-import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
+import { SortContextProvider } from 'contexts/SortContext';
+import { TAG_COLORS, TagContextProvider } from 'contexts/TagContext';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 

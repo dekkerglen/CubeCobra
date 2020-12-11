@@ -20,7 +20,7 @@ import {
 
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
 import TextEntry from 'components/TextEntry';

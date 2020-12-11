@@ -8,11 +8,11 @@ import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { getLabels, sortDeep } from 'utils/Sort';
 
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 import PagedTable from 'components/PagedTable';
-import SortContext from 'components/SortContext';
-import TagContext from 'components/TagContext';
+import SortContext from 'contexts/SortContext';
+import TagContext from 'contexts/TagContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';

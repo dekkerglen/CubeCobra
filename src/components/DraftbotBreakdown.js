@@ -4,7 +4,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
 import HeaderCell from 'components/HeaderCell';
-import { getCardColorClass } from 'components/TagContext';
+import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useSortableData from 'hooks/UseSortableData';

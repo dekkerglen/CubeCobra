@@ -3,8 +3,8 @@ import cx from 'classnames';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import CardModalContext from 'components/CardModalContext';
-import TagContext from 'components/TagContext';
+import CardModalContext from 'contexts/CardModalContext';
+import TagContext from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
 
 const AutocardDiv = withAutocard('li');

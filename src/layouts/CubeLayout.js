@@ -4,7 +4,7 @@ import CubePropType from 'proptypes/CubePropType';
 
 import { NavItem, NavLink } from 'reactstrap';
 
-import CubeContext, { CubeContextProvider } from 'components/CubeContext';
+import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { getCubeDescription } from 'utils/Util';
 

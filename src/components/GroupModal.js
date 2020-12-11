@@ -26,10 +26,10 @@ import { fromEntries } from 'utils/Util';
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
-import ChangelistContext from 'components/ChangelistContext';
+import ChangelistContext from 'contexts/ChangelistContext';
 import { ColorChecksAddon } from 'components/ColorCheck';
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 import LoadingButton from 'components/LoadingButton';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';

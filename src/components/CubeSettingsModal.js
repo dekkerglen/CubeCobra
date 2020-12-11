@@ -7,7 +7,7 @@ import { postJson } from 'utils/CSRF';
 import { formDataObject } from 'utils/Form';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import LoadingButton from 'components/LoadingButton';
 
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {

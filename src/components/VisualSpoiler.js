@@ -5,7 +5,7 @@ import CardPropType from 'proptypes/CardPropType';
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import { sortDeep } from 'utils/Sort';
 
-import SortContext from 'components/SortContext';
+import SortContext from 'contexts/SortContext';
 import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
 

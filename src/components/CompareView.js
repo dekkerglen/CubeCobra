@@ -5,7 +5,7 @@ import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 import { getLabels, sortIntoGroups } from '../utils/Sort';
 
 import AutocardListItem from './AutocardListItem';
-import SortContext from './SortContext';
+import SortContext from 'contexts/SortContext';
 
 const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   let bothCmc = sortIntoGroups(both, 'CMC');

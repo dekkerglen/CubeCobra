@@ -8,8 +8,8 @@ import { countGroup, sortDeep } from 'utils/Sort';
 
 import AutocardListGroup from 'components/AutocardListGroup';
 import AutocardListItem from 'components/AutocardListItem';
-import DisplayContext from 'components/DisplayContext';
-import SortContext from 'components/SortContext';
+import DisplayContext from 'contexts/DisplayContext';
+import SortContext from 'contexts/SortContext';
 
 const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
   const { primary, secondary } = useContext(SortContext);

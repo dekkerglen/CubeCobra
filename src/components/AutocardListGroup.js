@@ -7,8 +7,8 @@ import { ListGroup, ListGroupItem } from 'reactstrap';
 import { sortDeep } from 'utils/Sort';
 
 import AutocardListItem from 'components/AutocardListItem';
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;

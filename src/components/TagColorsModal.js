@@ -18,7 +18,7 @@ import {
 import { arrayMove } from '../utils/Util';
 
 import LoadingButton from './LoadingButton';
-import TagContext, { getTagColorClass, TAG_COLORS } from './TagContext';
+import TagContext, { getTagColorClass, TAG_COLORS } from 'contexts/TagContext';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
