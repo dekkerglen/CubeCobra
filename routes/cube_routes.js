@@ -1070,24 +1070,7 @@ const createDraftForSingleDeck = async (deck) => {
   }
   const draft = new Draft();
   draft.initial_state = [[populatedCards]];
-  try {
-    const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cards: populatedCards.map((card) => carddb.cardFromId(card.cardID).name_lower),
-      }),
-    });
-    if (response.ok) {
-      draft.synergies = await response.json();
-    } else {
-      draft.synergies = null;
-    }
-  } catch (err) {
-    draft.synergies = null;
-  }
+
   await draft.save();
   return draft._id;
 };
@@ -1621,25 +1604,6 @@ router.post(
       const gridDraft = new GridDraft();
       gridDraft.draftType = type;
 
-      try {
-        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            cards: source.map((card) => carddb.cardFromId(card.cardID).name_lower),
-          }),
-        });
-        if (response.ok) {
-          gridDraft.synergies = await response.json();
-        } else {
-          gridDraft.synergies = null;
-        }
-      } catch (err) {
-        gridDraft.synergies = null;
-      }
-
       gridDraft.cube = cube._id;
       gridDraft.basics = getBasics(carddb);
 
@@ -2126,26 +2090,6 @@ router.post(
       draft.cube = cube._id;
       draft.basics = getBasics(carddb);
 
-      const cards = draft.initial_state.flat(3);
-
-      try {
-        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower),
-          }),
-        });
-        if (response.ok) {
-          draft.synergies = await response.json();
-        } else {
-          draft.synergies = null;
-        }
-      } catch (err) {
-        draft.synergies = null;
-      }
       await draft.save();
       if (req.body.botsOnly) {
         draft = await Draft.findById(draft._id).lean();
@@ -2287,7 +2231,7 @@ router.get('/draft/:id', async (req, res) => {
         for (const card of pack) {
           card.details = carddb.cardFromId(
             card.cardID,
-            'cmc type image_normal image_flip name color_identity parsed_cost',
+            'cmc type image_normal image_flip name color_identity parsed_cost embedding elo',
           );
         }
       }
@@ -3069,11 +3013,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       }
       deckutil.default.init(srcDraft);
       const userPicked = deckutil.default.createSeen();
-      deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder, srcDraft.synergies);
+      deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
       const { colors: userColors } = await deckutil.default.buildDeck(
         base.seats[req.params.index].pickorder,
         userPicked,
-        srcDraft.synergies,
         srcDraft.basics,
       );
 
@@ -3099,7 +3042,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
             picked,
-            srcDraft.synergies,
             srcDraft.basics,
           );
           deck.seats.push({
@@ -3197,7 +3139,6 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.synergies = srcDraft.synergies;
     draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
@@ -3253,7 +3194,6 @@ router.post('/api/redraft/:id', async (req, res) => {
     let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.synergies = srcDraft.synergies;
     draft.basics = getBasics(carddb);
 
     draft.initial_state = srcDraft.initial_state.slice();
@@ -3416,27 +3356,6 @@ router.get('/deck/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft);
-      if (draft && !draft.synergies) {
-        // put in synergies for old drafts that don't have em.
-        const cards = draft.initial_state.flat(3);
-
-        const response = await fetch(`${process.env.FLASKROOT}/embeddings/`, {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            cards: cards.map((card) => carddb.cardFromId(card.cardID).name_lower),
-          }),
-        });
-        if (response.ok) {
-          // we want to save this for later so we don't have to do this every time
-          draft.synergies = await response.json();
-          await draft.save();
-        } else {
-          draft.synergies = null;
-        }
-      }
     }
 
     let drafter = 'Anonymous';

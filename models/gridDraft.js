@@ -17,7 +17,6 @@ const gridDraftSchema = mongoose.Schema({
   initial_state: [[cardSchema]],
   seats: [Seat],
   unopenedPacks: [[cardSchema]],
-  synergies: [[Number]],
   draftType: {
     type: String,
     enum: ['bot', '2playerlocal'],

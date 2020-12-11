@@ -607,7 +607,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
-  newcard.embedding = catalog.embeddingdict[name];
+  newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;

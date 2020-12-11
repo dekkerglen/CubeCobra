@@ -35,13 +35,7 @@ const runDraft = async () => {
     const picked = Draft.default.createSeen();
     Draft.default.addSeen(picked, seat.pickorder);
     // eslint-disable-next-line no-await-in-loop
-    const { colors } = await Draft.default.buildDeck(
-      seat.pickorder,
-      picked,
-      draft.synergies,
-      draft.initial_state,
-      draft.basics,
-    );
+    const { colors } = await Draft.default.buildDeck(seat.pickorder, picked, draft.initial_state, draft.basics);
     const nonlands = seat.pickorder.filter((c) => !Card.cardType(c).toLowerCase().includes('land'));
     const lands = seat.pickorder.filter((c) => Card.cardType(c).toLowerCase().includes('land'));
     const nonlandsInColor = nonlands.filter((c) => Draft.default.considerInCombination(colors, c));
