@@ -104,30 +104,14 @@ const scaleSimilarity = (value) =>
 const SYNERGY_SCALE = 0.2;
 const MAX_SYNERGY = 10;
 
-const xorStrings = (a, b) => {
-  let s = '';
-
-  // use the longer of the two words to calculate the length of the result
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    // append the result of the char from the code-point that results from
-    // XORing the char codes (or 0 if one string is too short)
-
-    // eslint-disable-next-line no-bitwise
-    s += String.fromCharCode((a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0));
-  }
-
-  return s;
+const cardNameKeys = (a, b) => {
+  return [a + b, b + a];
 };
 
 const synergyCache = {};
 
 export const getSynergy = (card1, card2) => {
-  if (
-    !card1.details.embedding ||
-    !card2.details.embedding ||
-    card1.details.embedding.length === 0 ||
-    card2.details.embedding.length === 0
-  ) {
+  if (card1?.details?.embedding?.length && card2?.details.embedding?.length) {
     return 0;
   }
 
@@ -135,16 +119,19 @@ export const getSynergy = (card1, card2) => {
     return MAX_SYNERGY;
   }
 
-  const key = xorStrings(card1.details.name, card2.details.name);
-  if (!synergyCache[key]) {
+  const keys = cardNameKeys(card1.details.name, card2.details.name);
+  if (!synergyCache[keys[0]]) {
     const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
 
     if (Number.isFinite(similarityValue)) {
-      synergyCache[key] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+      synergyCache[keys[0]] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+      synergyCache[keys[1]] = synergyCache[keys[0]];
+    } else {
+      synergyCache[keys[0]] = similarityValue > 0 ? MAX_SYNERGY : 0;
     }
   }
 
-  return synergyCache[key];
+  return synergyCache[keys[0]];
 };
 
 const BASICS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
