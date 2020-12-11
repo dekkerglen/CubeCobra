@@ -111,7 +111,12 @@ const cardNameKeys = (a, b) => {
 const synergyCache = {};
 
 export const getSynergy = (card1, card2) => {
-  if (card1?.details?.embedding?.length && card2?.details.embedding?.length) {
+  if (
+    !card1.details.embedding ||
+    !card2.details.embedding ||
+    card1.details.embedding.length === 0 ||
+    card2.details.embedding.length === 0
+  ) {
     return 0;
   }
 
