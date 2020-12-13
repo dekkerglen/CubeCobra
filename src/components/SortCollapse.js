@@ -1,9 +1,9 @@
 import React, { useCallback, useContext, useState, useRef, useEffect } from 'react';
-
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
+import PropTypes from 'prop-types';
 
-import { csrfFetch } from '../utils/CSRF';
-import { getSorts } from '../utils/Sort';
+import { csrfFetch } from 'utils/CSRF';
+import { SORTS } from 'utils/Sort';
 
 import CubeContext from 'contexts/CubeContext';
 import SortContext from 'contexts/SortContext';
@@ -20,20 +20,19 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
 
   const prevSorts = useRef(defSorts);
   useEffect(() => {
-    const sortTypes = getSorts();
-    let currentPrimarySort = defaultPrimarySort || '';
-    let currentSecondarySort = defaultSecondarySort || '';
-    if (!sortTypes.includes(currentPrimarySort)) currentPrimarySort = '';
-    if (!sortTypes.includes(currentSecondarySort)) currentSecondarySort = '';
+    let currentPrimarySort = defaultPrimarySort ?? '';
+    let currentSecondarySort = defaultSecondarySort ?? '';
+    if (!SORTS.includes(currentPrimarySort)) currentPrimarySort = '';
+    if (!SORTS.includes(currentSecondarySort)) currentSecondarySort = '';
 
     if (prevSorts[0] !== currentPrimarySort || prevSorts[1] !== currentSecondarySort) {
       if (!currentPrimarySort || currentPrimarySort === defSorts[0]) {
         Query.del('s1');
-        currentPrimarySort = defSorts[0];
+        [currentPrimarySort] = defSorts;
       }
       if (!currentSecondarySort || currentSecondarySort === defSorts[1]) {
         Query.del('s2');
-        currentSecondarySort = defSorts[1];
+        [, currentSecondarySort] = defSorts;
       }
       prevSorts.current = [currentPrimarySort, currentSecondarySort];
       if (setSorts) {
@@ -41,31 +40,28 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
       }
       changeSort({ primary: currentPrimarySort, secondary: currentSecondarySort });
     }
-  }, [defaultPrimarySort, defaultSecondarySort, setSorts]);
+  }, [defaultPrimarySort, defaultSecondarySort, setSorts, changeSort, defSorts]);
 
-  const addAlert = useCallback((color, message) => setAlerts((alerts) => [...alerts, { color, message }]), []);
+  const addAlert = useCallback((color, message) => setAlerts((alertsB) => [...alertsB, { color, message }]), []);
 
-  const handleSave = useCallback(
-    (event) => {
-      csrfFetch(`/cube/api/savesorts/${cubeID}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sorts: [primary, secondary],
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+  const handleSave = useCallback(() => {
+    csrfFetch(`/cube/api/savesorts/${cubeID}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        sorts: [primary, secondary],
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(() => {
+        Query.del('s1');
+        Query.del('s2');
+        setDefSorts([primary, secondary]);
+        addAlert('success', 'Default sorts saved.');
       })
-        .then(() => {
-          Query.del('s1');
-          Query.del('s2');
-          setDefSorts([primary, secondary]);
-          addAlert('success', 'Default sorts saved.');
-        })
-        .catch((err) => addAlert('danger', 'Error saving default sorts.'));
-    },
-    [addAlert, cubeID, primary, secondary],
-  );
+      .catch(() => addAlert('danger', 'Error saving default sorts.'));
+  }, [addAlert, cubeID, primary, secondary]);
 
   return (
     <Collapse {...props}>
@@ -73,7 +69,11 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
         <Row>
           <Col>
             {alerts.map(({ color, message }, index) => (
-              <UncontrolledAlert key={index} className="w-100 mb-1" color={color}>
+              <UncontrolledAlert
+                key={index /* eslint-disable-line react/no-array-index-key */}
+                className="w-100 mb-1"
+                color={color}
+              >
                 {message}
               </UncontrolledAlert>
             ))}
@@ -95,7 +95,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
                 changeSort({ primary: newPrimary });
               }}
             >
-              {getSorts().map((sort) => (
+              {SORTS.map((sort) => (
                 <option key={sort}>{sort}</option>
               ))}
             </Input>
@@ -115,7 +115,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
                 changeSort({ secondary: newSecondary });
               }}
             >
-              {getSorts().map((sort) => (
+              {SORTS.map((sort) => (
                 <option key={sort}>{sort}</option>
               ))}
             </Input>
@@ -136,7 +136,7 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
             <Button
               color="success"
               className="mr-sm-2 mb-3"
-              onClick={(e) => {
+              onClick={() => {
                 Query.del('s1');
                 Query.del('s2');
                 changeSort({ primary: defSorts[0], secondary: defSorts[1] });
@@ -156,6 +156,18 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
       </Container>
     </Collapse>
   );
+};
+
+SortCollapse.propTypes = {
+  defaultPrimarySort: PropTypes.string,
+  defaultSecondarySort: PropTypes.string,
+  defaultSorts: PropTypes.arrayOf(PropTypes.string.isRequired),
+  setSorts: PropTypes.func.isRequired,
+};
+SortCollapse.defaultProps = {
+  defaultPrimarySort: '',
+  defaultSecondarySort: '',
+  defaultSorts: ['Color Category', 'Types-Multicolor'],
 };
 
 export default SortCollapse;

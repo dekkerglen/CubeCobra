@@ -1,84 +1,54 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
-import { getDraftFormat, matchingCards } from 'utils/draftutil';
-import { getSorts, sortIntoGroups } from 'utils/Sort';
 import ErrorBoundary from 'components/ErrorBoundary';
-import useSortableData from 'hooks/UseSortableData';
-import HeaderCell from 'components/HeaderCell';
+import { compareStrings, SortableTable } from 'components/SortableTable';
+import { SORTS, sortIntoGroups } from 'utils/Sort';
+import { calculateAsfans } from 'utils/draftutil';
+import { fromEntries } from 'utils/Util';
 
-const calculateAsfans = (cards, cube, sort) => {
-  return [
-    {
-      label: '',
-      data: Object.entries(sortIntoGroups(cards, sort)).map((tuple) => {
-        return {
-          label: tuple[0],
-          asfan: (tuple[1].length / cube.cards.length) * 15, // 15 cards a pack
-        };
-      }),
-    },
-  ];
-};
-
-const calculateCustomAsfans = (cards, cube, sort, draftFormat) => {
-  const matchesDict = {};
-  return draftFormat.map((pack, index) => {
-    const asfanDict = {};
-    for (const card of cards) {
-      let total = 0;
-      for (const slot of pack) {
-        let sum = 0;
-        for (const filter of slot) {
-          if (!matchesDict[JSON.stringify(filter)]) {
-            matchesDict[JSON.stringify(filter)] = matchingCards(cube.cards, filter);
-          }
-          const matches = matchesDict[JSON.stringify(filter)];
-          if (matches.includes(card)) {
-            sum += 1 / matches.length;
-          }
-        }
-        total += ((1 - total) * sum) / slot.length;
-      }
-      asfanDict[card.cardID] = total;
-    }
-
-    return {
-      label: `Pack ${index + 1}`,
-      data: Object.entries(sortIntoGroups(cards, sort)).map((tuple) => {
-        return {
-          label: tuple[0],
-          asfan: tuple[1].reduce((acc, c) => acc + asfanDict[c.cardID], 0),
-        };
-      }),
-    };
-  });
-};
-
-const Asfans = ({ cards, cube }) => {
-  const sorts = getSorts();
-
+const Asfans = ({ cards: cardsNoAsfan, cube }) => {
   const [sort, setSort] = useState('Color');
-  const [formatId, setFormatId] = useState(-1);
+  const [draftFormat, setDraftFormat] = useState(-1);
+  const [asfanLookup, setAsfanLookup] = useState(fromEntries(cardsNoAsfan.map((card) => [card.cardID, 0])));
+  const cards = useMemo(() => cardsNoAsfan.map((card) => ({ ...card, asfan: asfanLookup[card.cardID] })), [
+    cardsNoAsfan,
+    asfanLookup,
+  ]);
 
-  const asfans =
-    formatId >= 0
-      ? calculateCustomAsfans(cards, cube, sort, getDraftFormat({ id: formatId }, cube))
-      : calculateAsfans(cards, cube, sort);
+  useEffect(() => {
+    try {
+      const asfans = calculateAsfans(cube, draftFormat);
+      setAsfanLookup(asfans);
+    } catch (e) {
+      console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
+      setAsfanLookup(fromEntries(cube.cards.map((card) => [card.cardID, 0])));
+    }
+  }, [cube, draftFormat, setAsfanLookup]);
 
-  const { items, requestSort, sortConfig } = useSortableData(asfans);
+  const asfans = useMemo(
+    () =>
+      Object.entries(sortIntoGroups(cards, sort)).map(([label, cardsInGroup]) => ({
+        label,
+        asfan: cardsInGroup.reduce((acc, { asfan }) => acc + asfan, 0),
+      })),
+    [cards, sort],
+  );
 
   return (
     <>
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Asfans</h4>
-          <p>View the expected number of cards per pack, per draft format. Standard Draft assumes 15 card packs.</p>
           <p>
-            'Asfan' means expected cards per pack opened. So if red creatures have an Asfan of 2, on average I will see
-            2 red creatures in each pack I open.
+            View the expected number of cards per player, per draft format. Standard Draft assumes 3 packs of 15 cards.
+          </p>
+          <p>
+            We use 'Asfan' to mean the expected number of cards per player opened. So if red creatures have an Asfan of
+            2, on average I will see 2 red creatures in all the packs I open together. The more common meaning is per
+            pack instead of per player, but with custom formats it makes more sense to talk about per player.
           </p>
           <InputGroup className="mb-3">
             <InputGroupAddon addonType="prepend">
@@ -86,8 +56,8 @@ const Asfans = ({ cards, cube }) => {
             </InputGroupAddon>
             <CustomInput
               type="select"
-              value={formatId}
-              onChange={(event) => setFormatId(parseInt(event.target.value, 10))}
+              value={draftFormat}
+              onChange={(event) => setDraftFormat(parseInt(event.target.value, 10))}
             >
               <option value={-1}>Standard Draft</option>
               {cube.draft_formats.map((format, index) => (
@@ -102,7 +72,7 @@ const Asfans = ({ cards, cube }) => {
               <InputGroupText>Order By: </InputGroupText>
             </InputGroupAddon>
             <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
-              {sorts.map((item) => (
+              {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
@@ -112,27 +82,14 @@ const Asfans = ({ cards, cube }) => {
         </Col>
       </Row>
       <ErrorBoundary>
-        {items.map((table) => (
-          <>
-            <h5>{table.label}</h5>
-            <Table bordered responsive className="mt-lg-3">
-              <thead>
-                <tr>
-                  <th scope="col">{sort}</th>
-                  <HeaderCell label="Asfan" fieldName="mean" sortConfig={sortConfig} requestSort={requestSort} />
-                </tr>
-              </thead>
-              <tbody className="breakdown">
-                {table.data.map((row) => (
-                  <tr key={row.label}>
-                    <th scope="col">{row.label}</th>
-                    <td>{row.asfan.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </>
-        ))}
+        <SortableTable
+          columnProps={[
+            { key: 'label', title: sort, heading: true, sortable: true },
+            { key: 'asfan', title: 'Asfan', heading: false, sortable: true },
+          ]}
+          data={asfans}
+          sortFns={{ label: compareStrings }}
+        />
       </ErrorBoundary>
     </>
   );

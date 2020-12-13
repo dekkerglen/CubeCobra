@@ -7,8 +7,10 @@ import { calculateAsfans } from 'utils/draftutil';
 import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 
-const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
-  const [useAsfans, toggleUseAsfans, enableUseAsfans, disableUseAsfans] = useToggle(!!defaultFormatId);
+const AsfanDropdown = ({ cube, defaultFormatId, setAsfans, alwaysUseAsfans }) => {
+  const [useAsfans, toggleUseAsfans, enableUseAsfans, disableUseAsfans] = useToggle(
+    !!defaultFormatId || alwaysUseAsfans,
+  );
   const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
   const didMountRef = useRef(false);
 
@@ -57,12 +59,14 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
 
   return (
     <Row>
-      <Col xs="12" sm="6">
-        <Label>
-          <input type="checkbox" checked={useAsfans} onChange={toggleUseAsfans} /> Use expected count per player in a
-          draft format instead of card count.
-        </Label>
-      </Col>
+      {!alwaysUseAsfans && (
+        <Col xs="12" sm="6">
+          <Label>
+            <input type="checkbox" checked={useAsfans} onChange={toggleUseAsfans} /> Use expected count per player in a
+            draft format instead of card count.
+          </Label>
+        </Col>
+      )}
       {useAsfans && (
         <Col xs="12" sm="6">
           <Form inline>
@@ -101,9 +105,11 @@ AsfanDropdown.propTypes = {
   }).isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
+  alwaysUseAsfans: PropTypes.bool,
 };
 AsfanDropdown.defaultProps = {
   defaultFormatId: null,
+  alwaysUseAsfans: false,
 };
 
 export default AsfanDropdown;

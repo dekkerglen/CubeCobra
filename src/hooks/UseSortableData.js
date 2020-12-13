@@ -1,23 +1,26 @@
 import { useState, useMemo } from 'react';
 
-const useSortableData = (items, config = null) => {
+const useSortableData = (data, config = null, sortFns = {}) => {
   const [sortConfig, setSortConfig] = useState(config);
 
-  const sortedItems = useMemo(() => {
-    const sortableItems = [...items];
-    if (sortConfig !== null) {
+  const items = useMemo(() => {
+    const sortableItems = [...data];
+    if (sortConfig) {
+      const { key, direction } = sortConfig;
+      const sortFn = sortFns[key] ?? ((a, b) => a - b);
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] - b[sortConfig.key] < 0) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+        const ordering = sortFn(a[key], b[key]);
+        if (ordering < 0) {
+          return direction === 'ascending' ? -1 : 1;
         }
-        if (a[sortConfig.key] - b[sortConfig.key] > 0) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+        if (ordering > 0) {
+          return direction === 'ascending' ? 1 : -1;
         }
         return 0;
       });
     }
     return sortableItems;
-  }, [items, sortConfig]);
+  }, [data, sortConfig, sortFns]);
 
   const requestSort = (key) => {
     let direction = 'descending';
@@ -27,7 +30,7 @@ const useSortableData = (items, config = null) => {
     setSortConfig({ key, direction });
   };
 
-  return { items: sortedItems, requestSort, sortConfig };
+  return { items, requestSort, sortConfig };
 };
 
 export default useSortableData;

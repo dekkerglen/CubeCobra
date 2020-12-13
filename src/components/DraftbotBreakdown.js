@@ -3,11 +3,9 @@ import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
-import HeaderCell from 'components/HeaderCell';
 import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
-import useSortableData from 'hooks/UseSortableData';
 import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
 import {
@@ -29,6 +27,7 @@ import {
 import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 import useToggle from 'hooks/UseToggle';
+import { SortableTable } from 'components/SortableTable';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -137,6 +136,14 @@ const TRAITS = [
   },
 ];
 
+const renderCardLink = (card) => (
+  <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
+    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
+      {card.details.name}
+    </a>
+  </AutocardItem>
+);
+
 export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
   const weights = useMemo(() => {
     const res = [];
@@ -212,45 +219,24 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
     return res;
   }, [cardsInPack]);
 
-  const { items, requestSort, sortConfig } = useSortableData(counts, { key: 'Total', direction: 'descending' });
-
   return (
     <>
       <Label check className="pl-2">
         <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
       </Label>
-      <Table bordered responsive className="small-table mt-lg-3">
-        <thead>
-          <tr>
-            <td />
-            {TRAITS.map((trait) => (
-              <HeaderCell
-                label={trait.name}
-                fieldName={trait.name}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-                tooltip={trait.description}
-              />
-            ))}
-          </tr>
-        </thead>
-        <tbody className="breakdown">
-          {items.map((item) => (
-            <tr key={item.card.details.cardID}>
-              <th scope="col">
-                <AutocardItem key={item.card.index} card={item.card} data-in-modal index={item.card.index}>
-                  <a href={`/tool/card/${encodeName(item.card.cardID)}`} target="_blank" rel="noopener noreferrer">
-                    {item.card.details.name}
-                  </a>
-                </AutocardItem>
-              </th>
-              {TRAITS.map((trait) => (
-                <td key={trait.name}>{item[trait.name]}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <SortableTable
+        columnProps={TRAITS.map(({ name, description }) => ({
+          key: name,
+          title: name,
+          tooltip: description,
+          heading: false,
+          sortable: true,
+          renderFn: name === 'Lands' ? renderCardLink : null,
+        }))}
+        data={counts}
+        defaultSortConfig={{ key: 'Total', direction: 'descending' }}
+        sortFns={{ Lands: (a, b) => a.localeCompare(b) }}
+      />
       <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
       <Row>
         <Col xs={6}>

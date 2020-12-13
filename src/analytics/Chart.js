@@ -4,11 +4,9 @@ import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
-import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
+import { sortIntoGroups, SORTS, getLabels, cardIsLabel } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
-  const sorts = getSorts();
-
   const [sort, setSort] = useState('Color Identity');
   const [characteristic, setcharacteristic] = useState('CMC');
 
@@ -86,7 +84,7 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
               <InputGroupText>Group by: </InputGroupText>
             </InputGroupAddon>
             <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
-              {sorts.map((item) => (
+              {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>

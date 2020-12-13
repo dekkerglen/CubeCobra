@@ -1,18 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
-import HeaderCell from 'components/HeaderCell';
-import useSortableData from 'hooks/UseSortableData';
 import { cardType } from 'utils/Card';
 import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
-import { sortIntoGroups, getSorts } from 'utils/Sort';
+import { sortIntoGroups, SORTS } from 'utils/Sort';
+import { compareStrings, SortableTable } from 'components/SortableTable';
 
 const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
-  const sorts = getSorts();
   const [sort, setSort] = useState('Color');
   const [characteristic, setCharacteristic] = useState('CMC');
 
@@ -53,8 +51,6 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
     [characteristic, characteristics, groups],
   );
 
-  const { items, requestSort, sortConfig } = useSortableData(counts);
-
   return (
     <>
       <Row>
@@ -66,7 +62,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
               <InputGroupText>Order By: </InputGroupText>
             </InputGroupAddon>
             <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
-              {sorts.map((item) => (
+              {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
@@ -93,35 +89,18 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
       </Row>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
-        <Table bordered responsive className="mt-lg-3">
-          <thead>
-            <tr>
-              <th scope="col">{sort}</th>
-              <HeaderCell label="Average" fieldName="mean" sortConfig={sortConfig} requestSort={requestSort} />
-              <HeaderCell label="Median" fieldName="median" sortConfig={sortConfig} requestSort={requestSort} />
-              <HeaderCell
-                label="Standard Deviation"
-                fieldName="stddev"
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-              />
-              <HeaderCell label="Count" fieldName="count" sortConfig={sortConfig} requestSort={requestSort} />
-              <HeaderCell label="Sum" fieldName="sum" sortConfig={sortConfig} requestSort={requestSort} />
-            </tr>
-          </thead>
-          <tbody className="breakdown">
-            {items.map((row) => (
-              <tr key={row.label}>
-                <th scope="col">{row.label}</th>
-                <td>{row.mean}</td>
-                <td>{row.median}</td>
-                <td>{row.stddev}</td>
-                <td>{row.count}</td>
-                <td>{row.sum}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        <SortableTable
+          columnProps={[
+            { key: 'label', title: sort, heading: true, sortable: true },
+            { key: 'mean', title: 'Average (Mean)', sortable: true, heading: false },
+            { key: 'median', title: 'Median', sortable: true, heading: false },
+            { key: 'stddev', title: 'Standard Deviation', sortable: true, heading: false },
+            { key: 'count', title: 'Count', sortable: true, heading: false },
+            { key: 'sum', title: 'Sum', sortable: true, heading: false },
+          ]}
+          data={counts}
+          sortFns={{ label: compareStrings }}
+        />
       </ErrorBoundary>
     </>
   );

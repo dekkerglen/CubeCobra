@@ -13,7 +13,7 @@ import Averages from 'analytics/Averages';
 import Chart from 'analytics/Chart';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
-import Table from 'analytics/Table';
+import AnalyticTable from 'analytics/AnalyticTable';
 import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
@@ -104,12 +104,14 @@ const CubeAnalysisPage = ({
     {
       name: 'Table',
       component: (collection) => (
-        <Table cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+        <AnalyticTable cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
       ),
     },
     {
       name: 'Asfans',
-      component: (collection) => <Asfans cards={collection} cube={cube} />,
+      component: (collection) => (
+        <Asfans cards={collection} cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      ),
     },
     {
       name: 'Chart',
