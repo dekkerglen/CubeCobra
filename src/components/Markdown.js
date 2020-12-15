@@ -150,19 +150,6 @@ const renderCardrow = (node) => {
 
 const VALID_SYMBOLS = 'wubrgcmtsqepxyz/-0123456789';
 
-const BASE_PLUGINS = [
-  cardrow,
-  centering,
-  breaks,
-  math,
-  userlink,
-  cardlink,
-  [gfm, { singleTilde: false }],
-  [symbols, { allowed: VALID_SYMBOLS }],
-];
-
-const ALL_PLUGINS = [...BASE_PLUGINS, slug, headings];
-
 const RENDERERS = {
   // overridden defaults
   link: renderLink,
@@ -184,8 +171,20 @@ const RENDERERS = {
   cardrow: renderCardrow,
 };
 
-const Markdown = ({ markdown, limited }) => {
+const Markdown = ({ markdown, limited, mentions }) => {
   const markdownStr = markdown?.toString() ?? '';
+  const BASE_PLUGINS = [
+    cardrow,
+    centering,
+    breaks,
+    math,
+    [userlink, { users: mentions }],
+    cardlink,
+    [gfm, { singleTilde: false }],
+    [symbols, { allowed: VALID_SYMBOLS }],
+  ];
+
+  const ALL_PLUGINS = [...BASE_PLUGINS, slug, headings];
 
   return (
     <ReactMarkdown className="markdown" plugins={limited ? BASE_PLUGINS : ALL_PLUGINS} renderers={RENDERERS}>
@@ -207,10 +206,12 @@ renderCardlink.defaultProps = {
 Markdown.propTypes = {
   markdown: PropTypes.string.isRequired,
   limited: PropTypes.bool,
+  mentions: PropTypes.arrayOf(PropTypes.string),
 };
 
 Markdown.defaultProps = {
   limited: false,
+  mentions: [],
 };
 
 export default Markdown;
