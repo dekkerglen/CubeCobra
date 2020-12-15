@@ -147,7 +147,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
         </Container>
       </Navbar>
       <Container className="flex-grow">
-        <ThemeContext.Provider value={user.theme}>
+        <ThemeContext.Provider value={user?.theme ?? 'default'}>
           <ErrorBoundary>{children}</ErrorBoundary>
         </ThemeContext.Provider>
       </Container>
