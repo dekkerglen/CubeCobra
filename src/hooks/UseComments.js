@@ -19,6 +19,7 @@ const useToggle = (type, parent) => {
       },
       body: JSON.stringify({
         comment,
+        mentions,
       }),
     });
     const val = await response.json();

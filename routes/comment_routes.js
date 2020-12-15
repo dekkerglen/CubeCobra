@@ -108,6 +108,17 @@ router.post(
       );
     }
 
+    if (req.body.mentions) {
+      const mentions = req.body.mentions.map((name) => name.toLowerCase());
+      const users = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        users,
+        poster,
+        `/comment/${comment._id}`,
+        `${poster.username} mentioned you in their comment.`,
+      );
+    }
+
     return res.status(200).send({
       success: 'true',
       comment,
