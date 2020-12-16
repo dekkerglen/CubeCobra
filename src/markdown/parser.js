@@ -2,6 +2,8 @@ import unified from 'unified';
 import remark from 'remark-parse';
 import gfm from 'remark-gfm';
 import math from 'remark-math';
+import slug from 'remark-slug';
+import headings from 'remark-autolink-headings';
 import cardlink from 'markdown/cardlink';
 import cardrow from 'markdown/cardrow';
 import centering from 'markdown/centering';
@@ -21,7 +23,11 @@ const BASE_PLUGINS = [
   [symbols, { allowed: VALID_SYMBOLS }],
 ];
 
-export function parseUserlinks(text) {
+export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink];
+
+export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
+
+export function findUserlinks(text) {
   const mentions = [];
   const processor = unified().use(remark).use(BASE_PLUGINS).use(userlink, { users: mentions });
   processor.runSync(processor.parse(text));
@@ -29,5 +35,9 @@ export function parseUserlinks(text) {
 }
 
 export default {
-  parseUserlinks,
+  findUserlinks,
+  VALID_SYMBOLS,
+  BASE_PLUGINS,
+  LIMITED_PLUGINS,
+  ALL_PLUGINS,
 };
