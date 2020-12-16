@@ -16,14 +16,13 @@ const VALID_SYMBOLS = 'wubrgcmtsqepxyz/-0123456789';
 const BASE_PLUGINS = [
   cardrow,
   centering,
-  breaks,
   math,
   cardlink,
   [gfm, { singleTilde: false }],
   [symbols, { allowed: VALID_SYMBOLS }],
 ];
 
-export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink];
+export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
 export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
 
