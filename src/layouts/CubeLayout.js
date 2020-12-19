@@ -37,31 +37,32 @@ const CubeLayout = ({ cube, canEdit, activeLink, children }) => {
     : `${cube.card_count} Card ${cube.type} Cube`;
   return (
     <CubeContextProvider initialCube={cube} canEdit={canEdit}>
-      <link rel="stylesheet" href="/css/autocomplete.css" />
-      <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
-        <div className="nav-item px-lg-4 px-3 text-sm-left text-center font-weight-boldish mt-auto mb-2">
-          {cube.name}
-          {cube.type && <span className="d-sm-inline"> ({subtitle})</span>}
-        </div>
-        <div className="d-flex flex-row flex-wrap">
-          <CubeNavItem link="overview" activeLink={activeLink}>
-            Overview
-          </CubeNavItem>
-          <CubeNavItem link="list" activeLink={activeLink}>
-            List
-          </CubeNavItem>
-          <CubeNavItem link="playtest" activeLink={activeLink}>
-            Playtest
-          </CubeNavItem>
-          <CubeNavItem link="analysis" activeLink={activeLink}>
-            Analysis
-          </CubeNavItem>
-          <CubeNavItem link="blog" activeLink={activeLink}>
-            Blog
-          </CubeNavItem>
-        </div>
-      </ul>
-      <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
+      <div className="mb-3">
+        <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
+          <div className="nav-item px-lg-4 px-3 text-sm-left text-center font-weight-boldish mt-auto mb-2">
+            {cube.name}
+            {cube.type && <span className="d-sm-inline"> ({subtitle})</span>}
+          </div>
+          <div className="d-flex flex-row flex-wrap">
+            <CubeNavItem link="overview" activeLink={activeLink}>
+              Overview
+            </CubeNavItem>
+            <CubeNavItem link="list" activeLink={activeLink}>
+              List
+            </CubeNavItem>
+            <CubeNavItem link="playtest" activeLink={activeLink}>
+              Playtest
+            </CubeNavItem>
+            <CubeNavItem link="analysis" activeLink={activeLink}>
+              Analysis
+            </CubeNavItem>
+            <CubeNavItem link="blog" activeLink={activeLink}>
+              Blog
+            </CubeNavItem>
+          </div>
+        </ul>
+        <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
+      </div>
     </CubeContextProvider>
   );
 };
