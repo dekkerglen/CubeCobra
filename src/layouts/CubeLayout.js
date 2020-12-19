@@ -30,11 +30,7 @@ CubeNavItem.defaultProps = {
 };
 
 const CubeLayout = ({ cube, canEdit, activeLink, children }) => {
-  const categories =
-    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
-  const subtitle = cube.overrideCategory
-    ? `${cube.card_count} Card ${categories}${cube.categoryOverride} Cube`
-    : `${cube.card_count} Card ${cube.type} Cube`;
+  const subtitle = getCubeDescription(cube);
   return (
     <CubeContextProvider initialCube={cube} canEdit={canEdit}>
       <div className="mb-3">
