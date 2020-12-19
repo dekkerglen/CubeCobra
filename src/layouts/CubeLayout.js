@@ -1,18 +1,16 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-
 import { NavItem, NavLink } from 'reactstrap';
-
 import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { getCubeDescription } from 'utils/Util';
+import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const CubeNavItem = ({ link, activeLink, children }) => {
-  const { cubeAlias } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <NavItem>
-      <NavLink href={`/cube/${link}/${cubeAlias}`} active={link === activeLink}>
+      <NavLink href={`/cube/${link}/${getCubeId(cube)}`} active={link === activeLink}>
         {children}
       </NavLink>
     </NavItem>

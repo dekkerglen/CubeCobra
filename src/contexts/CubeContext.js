@@ -41,11 +41,7 @@ export const CubeContextProvider = ({ initialCube, canEdit, ...props }) => {
     (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),
   );
 
-  const cubeID = cube._id;
-
-  const cubeAlias = cube.urlAlias || cube.shortId || cube._id;
-
-  const value = { cube, canEdit, cubeAlias, hasCustomImages, setCube, updateCubeCard, updateCubeCards };
+  const value = { cube, canEdit, hasCustomImages, setCube, updateCubeCard, updateCubeCards };
 
   return <CubeContext.Provider value={value} {...props} />;
 };
