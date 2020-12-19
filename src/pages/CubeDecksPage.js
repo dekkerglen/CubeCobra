@@ -16,7 +16,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <DynamicFlash />
-    <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+    <CubeLayout cube={cube} activeLink="playtest">
       <div className="my-3">
         {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/decks/${cube._id}/${i}`} />}
         <Card>
