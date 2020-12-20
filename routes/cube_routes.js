@@ -2393,6 +2393,19 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 
     await Promise.all([blogpost.save(), cube.save()]);
 
+    if (req.body.mentions) {
+      let { mentions } = req.body;
+      // mentions is either a string (if just one is found) or an array (if multiple are found)
+      mentions = Array.isArray(mentions) ? mentions.map((x) => x.toLowerCase()) : mentions.toLowerCase();
+      const query = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        query,
+        cube.owner,
+        `/cube/blog/${req.params.id}`, // there's no way to link to a specific post, so the blog page is the best we can do
+        `${cube.owner_name} mentioned you in their blog post.`,
+      );
+    }
+
     req.flash('success', 'Cube Updated');
     return res.redirect(`/cube/list/${req.params.id}?updated=true`);
   } catch (err) {
