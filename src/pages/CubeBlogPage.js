@@ -27,16 +27,15 @@ import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import { findUserlinks } from 'markdown/parser';
+import { findUserLinks } from 'markdown/parser';
 
 const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
   const { cubeID } = useContext(CubeContext);
   const [mentions, setMentions] = useState([]);
   const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
-  const handleMentions = (event) => {
-    setMentions(findUserlinks(markdown));
-    // event.preventDefault();
-  };
+  const handleMentions = useCallback(() => {
+    setMentions(findUserLinks(markdown));
+  }, [markdown]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">

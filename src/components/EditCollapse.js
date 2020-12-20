@@ -17,7 +17,7 @@ import {
 } from 'reactstrap';
 
 import { encodeName } from 'utils/Card';
-import { findUserlinks } from 'markdown/parser';
+import { findUserLinks } from 'markdown/parser';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
@@ -158,8 +158,8 @@ const EditCollapse = ({ ...props }) => {
   }, [setChanges]);
 
   const handleMentions = useCallback(() => {
-    setMentions(findUserlinks(postContent));
-  }, [setMentions, postContent]);
+    setMentions(findUserLinks(postContent));
+  }, [postContent]);
 
   return (
     <Collapse className="px-3" {...props}>

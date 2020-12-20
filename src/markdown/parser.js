@@ -26,7 +26,7 @@ export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
 export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
 
-export function findUserlinks(text) {
+export function findUserLinks(text) {
   const mentions = [];
   const processor = unified().use(remark).use(BASE_PLUGINS).use(userlink, { users: mentions });
   processor.runSync(processor.parse(text));
@@ -34,7 +34,7 @@ export function findUserlinks(text) {
 }
 
 export default {
-  findUserlinks,
+  findUserLinks,
   VALID_SYMBOLS,
   BASE_PLUGINS,
   LIMITED_PLUGINS,

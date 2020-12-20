@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
-import { findUserlinks } from 'markdown/parser';
+import { findUserLinks } from 'markdown/parser';
 
 const useToggle = (type, parent) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const addComment = async (comment) => {
-    console.log('adding comment');
-    console.log(comment);
-    const mentions = findUserlinks(comment);
-    console.log('mentions after parse');
-    console.log(mentions);
+    const mentions = findUserLinks(comment);
     const response = await csrfFetch(`/comment/${type}/${parent}`, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       headers: {
