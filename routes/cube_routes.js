@@ -273,7 +273,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
       await util.addMultipleNotifications(
         query,
         owner,
-        `/cube/blog/${req.params.id}`, // there's no way to link to a specific post, so the blog page is the best we can do
+        `/cube/blogpost/${blogpost._id}`,
         `${user.username} mentioned you in their blog post.`,
       );
     }
@@ -2400,7 +2400,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
       await util.addMultipleNotifications(
         query,
         owner,
-        `/cube/blog/${req.params.id}`, // there's no way to link to a specific post, so the blog page is the best we can do
+        `/cube/blogpost/${blogpost._id}`,
         `${cube.owner_name} mentioned you in their blog post.`,
       );
     }
