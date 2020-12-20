@@ -109,7 +109,7 @@ router.post(
     }
 
     if (req.body.mentions) {
-      const mentions = req.body.mentions.map((name) => name.toLowerCase());
+      const mentions = req.body.mentions.split(';');
       const users = User.find({ username_lower: mentions });
       await util.addMultipleNotifications(
         users,

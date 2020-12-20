@@ -60,7 +60,7 @@ export const getCard = async (cubeID, name, setAlerts) => {
 const EditCollapse = ({ ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
-  const [mentions, setMentions] = useState([]);
+  const [mentions, setMentions] = useState('');
 
   const {
     changes,
@@ -158,7 +158,7 @@ const EditCollapse = ({ ...props }) => {
   }, [setChanges]);
 
   const handleMentions = useCallback(() => {
-    setMentions(findUserLinks(postContent));
+    setMentions(findUserLinks(postContent).join(';'));
   }, [postContent]);
 
   return (
@@ -242,9 +242,7 @@ const EditCollapse = ({ ...props }) => {
                 <Card>
                   <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
                 </Card>
-                {mentions.map((name) => (
-                  <Input type="hidden" name="mentions" value={name} />
-                ))}
+                <Input type="hidden" name="mentions" value={mentions} />
                 <FormText>
                   Having trouble formatting your posts? Check out the{' '}
                   <a href="/markdown" target="_blank">

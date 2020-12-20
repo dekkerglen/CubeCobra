@@ -31,10 +31,10 @@ import { findUserLinks } from 'markdown/parser';
 
 const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
   const { cubeID } = useContext(CubeContext);
-  const [mentions, setMentions] = useState([]);
+  const [mentions, setMentions] = useState('');
   const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
   const handleMentions = useCallback(() => {
-    setMentions(findUserLinks(markdown));
+    setMentions(findUserLinks(markdown).join(';'));
   }, [markdown]);
 
   return (
@@ -49,9 +49,7 @@ const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
           <Label>Body:</Label>
           {post && <Input type="hidden" name="id" value={post._id} />}
           <TextEntry name="markdown" value={markdown} onChange={handleChangeMarkdown} maxLength={10000} />
-          {mentions.map((name) => (
-            <Input maxLength="100" name="mentions" type="hidden" value={name} />
-          ))}
+          <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>
         <ModalFooter>
           <Button color="success" type="submit">

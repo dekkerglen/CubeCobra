@@ -267,9 +267,8 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
     // mentions are only added for new posts and ignored on edits
     if (req.body.mentions) {
       const owner = await User.findById(user._id);
-      let { mentions } = req.body;
+      const mentions = req.body.mentions.split(';');
       // mentions is either a string (if just one is found) or an array (if multiple are found)
-      mentions = Array.isArray(mentions) ? mentions.map((x) => x.toLowerCase()) : mentions.toLowerCase();
       const query = User.find({ username_lower: mentions });
       await util.addMultipleNotifications(
         query,
@@ -2396,9 +2395,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 
     if (req.body.mentions) {
       const owner = await User.findById(req.user._id);
-      let { mentions } = req.body;
-      // mentions is either a string (if just one is found) or an array (if multiple are found)
-      mentions = Array.isArray(mentions) ? mentions.map((x) => x.toLowerCase()) : mentions.toLowerCase();
+      const mentions = req.body.mentions.toLowerCase().split(';');
       const query = User.find({ username_lower: mentions });
       await util.addMultipleNotifications(
         query,

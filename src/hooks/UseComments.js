@@ -7,7 +7,7 @@ const useToggle = (type, parent) => {
   const [loading, setLoading] = useState(true);
 
   const addComment = async (comment) => {
-    const mentions = findUserLinks(comment);
+    const mentions = findUserLinks(comment).join(';');
     const response = await csrfFetch(`/comment/${type}/${parent}`, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       headers: {
