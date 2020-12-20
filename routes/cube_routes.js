@@ -264,6 +264,20 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
 
     await blogpost.save();
 
+    // mentions are only added for new posts and ignored on edits
+    if (req.body.mentions) {
+      let { mentions } = req.body;
+      // mentions is either a string (if just one is found) or an array (if multiple are found)
+      mentions = Array.isArray(mentions) ? mentions.map((x) => x.toLowerCase()) : mentions.toLowerCase();
+      const query = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        query,
+        cube.owner,
+        `/cube/blog/${req.params.id}`, // there's no way to link to a specific post, so the blog page is the best we can do
+        `${user.username} mentioned you in their blog post.`,
+      );
+    }
+
     req.flash('success', 'Blog post successful');
     return res.redirect(`/cube/blog/${req.params.id}`);
   } catch (err) {

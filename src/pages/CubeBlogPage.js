@@ -27,14 +27,20 @@ import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import { findUserlinks } from 'markdown/parser';
 
 const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
   const { cubeID } = useContext(CubeContext);
+  const [mentions, setMentions] = useState([]);
   const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
+  const handleMentions = (event) => {
+    setMentions(findUserlinks(markdown));
+    // event.preventDefault();
+  };
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
-      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} onSubmit={handleMentions}>
         <ModalHeader toggle={toggle} id="blogEditTitle">
           Edit Blog Post
         </ModalHeader>
@@ -44,6 +50,9 @@ const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
           <Label>Body:</Label>
           {post && <Input type="hidden" name="id" value={post._id} />}
           <TextEntry name="markdown" value={markdown} onChange={handleChangeMarkdown} maxLength={10000} />
+          {mentions.map((name) => (
+            <Input maxLength="100" name="mentions" type="hidden" value={name} />
+          ))}
         </ModalBody>
         <ModalFooter>
           <Button color="success" type="submit">
