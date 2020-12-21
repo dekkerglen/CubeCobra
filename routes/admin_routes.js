@@ -162,7 +162,7 @@ router.get('/publisharticle/:id', ensureAdmin, async (req, res) => {
         query,
         owner,
         `/content/article/${article._id}`,
-        `${owner.username} mentioned you in their article`,
+        `@${owner.username} mentioned you in their article`,
       );
     }
   }
@@ -233,7 +233,7 @@ router.get('/publishvideo/:id', ensureAdmin, async (req, res) => {
         query,
         owner,
         `/content/video/${video._id}`,
-        `${owner.username} mentioned you in their video`,
+        `@${owner.username} mentioned you in their video`,
       );
     }
   }

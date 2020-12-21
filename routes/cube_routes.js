@@ -274,7 +274,7 @@ router.post('/blog/post/:id', ensureAuth, async (req, res) => {
         query,
         owner,
         `/cube/blogpost/${blogpost._id}`,
-        `${user.username} mentioned you in their blog post.`,
+        `@${user.username} mentioned you in their blog post`,
       );
     }
 
@@ -2401,7 +2401,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         query,
         owner,
         `/cube/blogpost/${blogpost._id}`,
-        `${cube.owner_name} mentioned you in their blog post.`,
+        `@${cube.owner_name} mentioned you in their blog post`,
       );
     }
 
