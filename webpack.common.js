@@ -176,6 +176,7 @@ const serverConfig = merge(config, {
     'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',
     'utils/deckutils': './src/utils/deckutils.js',
+    'markdown/parser': './src/markdown/parser.js',
   },
   output: {
     filename: '[name].js',

@@ -5,6 +5,7 @@ const express = require('express');
 const mailer = require('nodemailer');
 const path = require('path');
 const Email = require('email-templates');
+const parser = require('../dist/markdown/parser');
 const { ensureRole, csrfProtection } = require('./middleware');
 
 const User = require('../models/user');
@@ -153,6 +154,17 @@ router.get('/publisharticle/:id', ensureAdmin, async (req, res) => {
       `/content/article/${article._id}`,
       `${req.user.username} has approved and published your article: ${article.title}`,
     );
+
+    const mentions = parser.findUserLinks(article.body).map((x) => x.toLowerCase());
+    if (mentions.length) {
+      const query = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        query,
+        owner,
+        `/content/article/${article._id}`,
+        `${owner.username} mentioned you in their article`,
+      );
+    }
   }
 
   const smtpTransport = mailer.createTransport({
@@ -213,6 +225,17 @@ router.get('/publishvideo/:id', ensureAdmin, async (req, res) => {
       `/content/video/${video._id}`,
       `${req.user.username} has approved and published your video: ${video.title}`,
     );
+
+    const mentions = parser.findUserLinks(video.body).map((x) => x.toLowerCase());
+    if (mentions.length) {
+      const query = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        query,
+        owner,
+        `/content/video/${video._id}`,
+        `${owner.username} mentioned you in their video`,
+      );
+    }
   }
 
   const smtpTransport = mailer.createTransport({
