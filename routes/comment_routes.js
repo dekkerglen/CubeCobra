@@ -115,7 +115,7 @@ router.post(
         users,
         poster,
         `/comment/${comment._id}`,
-        `@${poster.username} mentioned you in their comment`,
+        `${poster.username} mentioned you in their comment`,
       );
     }
 
