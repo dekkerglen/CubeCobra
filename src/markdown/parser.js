@@ -28,7 +28,10 @@ export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
 
 export function findUserLinks(text) {
   const mentions = [];
-  const processor = unified().use(remark).use(BASE_PLUGINS).use(userlink, { users: mentions });
+  const processor = unified()
+    .use(remark)
+    .use(BASE_PLUGINS)
+    .use(userlink, { callback: (name) => mentions.push(name) });
   processor.runSync(processor.parse(text));
   return mentions;
 }

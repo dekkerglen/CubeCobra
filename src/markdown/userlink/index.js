@@ -9,10 +9,10 @@ function userlink(options = {}) {
   add(data, 'fromMarkdownExtensions', fromMarkdown);
 
   function visitor(node) {
-    options.users.push(node.value);
+    options.callback(node.value);
   }
 
-  if (options.users) {
+  if (typeof options.callback === 'function') {
     return (tree) => visit(tree, 'userlink', visitor);
   }
   return false;
