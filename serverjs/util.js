@@ -139,6 +139,12 @@ async function addNotification(user, from, url, text) {
   await user.save();
 }
 
+async function addMultipleNotifications(users, from, url, text) {
+  for await (const user of users) {
+    await addNotification(user, from, url, text);
+  }
+}
+
 function wrapAsyncApi(route) {
   return (req, res, next) => {
     try {
@@ -195,6 +201,7 @@ module.exports = {
     return user && user.roles.includes('Admin');
   },
   addNotification,
+  addMultipleNotifications,
   wrapAsyncApi,
   handleRouteError,
 };

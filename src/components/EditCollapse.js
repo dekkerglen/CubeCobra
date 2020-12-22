@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import {
   Button,
@@ -17,6 +17,7 @@ import {
 } from 'reactstrap';
 
 import { encodeName } from 'utils/Card';
+import { findUserLinks } from 'markdown/parser';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
@@ -59,6 +60,7 @@ export const getCard = async (cubeID, name, setAlerts) => {
 const EditCollapse = ({ ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
+  const [mentions, setMentions] = useState('');
 
   const {
     changes,
@@ -73,8 +75,6 @@ const EditCollapse = ({ ...props }) => {
   } = useContext(ChangelistContext);
   const { cube, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
-
-  const changelistForm = useRef();
 
   const handleChange = useCallback(
     (event) => {
@@ -157,11 +157,9 @@ const EditCollapse = ({ ...props }) => {
     setChanges([]);
   }, [setChanges]);
 
-  const handleSaveChanges = useCallback(() => {
-    if (changelistForm.current) {
-      changelistForm.current.submit();
-    }
-  }, [changelistForm]);
+  const handleMentions = useCallback(() => {
+    setMentions(findUserLinks(postContent).join(';'));
+  }, [postContent]);
 
   return (
     <Collapse className="px-3" {...props}>
@@ -225,7 +223,7 @@ const EditCollapse = ({ ...props }) => {
         </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm innerRef={changelistForm} method="POST" action={`/cube/edit/${cubeID}`}>
+        <CSRFForm method="POST" action={`/cube/edit/${cubeID}`} onSubmit={handleMentions}>
           <Row>
             <Col>
               <h6>Changelist</h6>
@@ -244,6 +242,7 @@ const EditCollapse = ({ ...props }) => {
                 <Card>
                   <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
                 </Card>
+                <Input type="hidden" name="mentions" value={mentions} />
                 <FormText>
                   Having trouble formatting your posts? Check out the{' '}
                   <a href="/markdown" target="_blank">
@@ -256,7 +255,7 @@ const EditCollapse = ({ ...props }) => {
           </Row>
           <Row className="mb-2">
             <Col>
-              <Button color="success" className="mr-2" onClick={handleSaveChanges}>
+              <Button color="success" className="mr-2" type="submit">
                 Save Changes
               </Button>
               <Button color="danger" onClick={handleDiscardAll}>

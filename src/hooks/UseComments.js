@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
+import { findUserLinks } from 'markdown/parser';
 
 const useToggle = (type, parent) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const addComment = async (comment) => {
+    const mentions = findUserLinks(comment).join(';');
     const response = await csrfFetch(`/comment/${type}/${parent}`, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       headers: {
@@ -13,6 +15,7 @@ const useToggle = (type, parent) => {
       },
       body: JSON.stringify({
         comment,
+        mentions,
       }),
     });
     const val = await response.json();
