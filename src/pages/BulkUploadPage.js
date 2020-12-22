@@ -49,7 +49,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube, canEdit }) => {
   );
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
+    <CubeLayout cube={cube} canEdit={canEdit} activeLink="list">
       <Card className="mt-3">
         <CardHeader>
           <h5>Confirm Upload</h5>

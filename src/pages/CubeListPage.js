@@ -151,7 +151,7 @@ const CubeListPage = ({
   loginCallback,
 }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="list">
+    <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="list">
       <CubeListPageRaw
         defaultShowTagColors={defaultShowTagColors}
         defaultFilterText={defaultFilterText}

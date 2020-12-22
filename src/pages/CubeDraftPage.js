@@ -190,7 +190,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   const seen = getSeen(0);
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+      <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           <Navbar expand="xs" light className="usercontrols">
             <Collapse navbar>
