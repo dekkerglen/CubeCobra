@@ -1,5 +1,13 @@
-import { alphaCompare, fromEntries } from 'utils/Util';
-import { cardColorIdentity, cardDevotion, cardPriceEur, cardTix, cardType, cardCmc } from 'utils/Card';
+import { alphaCompare, arrayIsSubset, COLORS, fromEntries } from 'utils/Util';
+import {
+  cardColorIdentity,
+  cardDevotion,
+  cardPriceEur,
+  cardTix,
+  cardType,
+  cardCmc,
+  COLOR_COMBINATIONS,
+} from 'utils/Card';
 
 const COLOR_MAP = {
   W: 'White',
@@ -47,7 +55,7 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
-const SINGLE_COLOR_AND_COLORLESS = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
+const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
 const SHARDS_AND_WEDGES = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Mardu', 'Temur', 'Abzan', 'Jeskai', 'Sultai'];
 const FOUR_AND_FIVE_COLOR = ['Not-White', 'Not-Blue', 'Not-Black', 'Not-Red', 'Not-Green', 'Five Color'];
@@ -126,6 +134,8 @@ export function getSorts() {
     'Color Count',
     'Color Identity',
     'Color Identity Full',
+    'Color Combination Includes',
+    'Includes Color Combination',
     'Color',
     'Creature/Non-Creature',
     'Date Added',
@@ -209,7 +219,8 @@ function getLabelsRaw(cube, sort) {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort === 'Color Category Full') {
-    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS)
+    return SINGLE_COLOR.concat(['Colorless'])
+      .concat(GUILDS)
       .concat(SHARDS_AND_WEDGES)
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Lands']);
@@ -218,7 +229,10 @@ function getLabelsRaw(cube, sort) {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
   }
   if (sort === 'Color Identity Full') {
-    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
+    return SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
+  }
+  if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
+    return ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
   }
   if (sort === 'CMC') {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
@@ -497,6 +511,12 @@ export function cardGetLabels(card, sort) {
   }
   if (sort === 'Color Identity Full') {
     return [getColorCombination(cardColorIdentity(card))];
+  }
+  if (sort === 'Color Combination Includes') {
+    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
+  }
+  if (sort === 'Includes Color Combination') {
+    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
   }
   if (sort === 'Color') {
     if (card.details.colors.length === 0) {
