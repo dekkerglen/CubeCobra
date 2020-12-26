@@ -27,14 +27,19 @@ import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import { findUserLinks } from 'markdown/parser';
 
 const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
   const { cubeID } = useContext(CubeContext);
+  const [mentions, setMentions] = useState('');
   const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
+  const handleMentions = useCallback(() => {
+    setMentions(findUserLinks(markdown).join(';'));
+  }, [markdown]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
-      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} onSubmit={handleMentions}>
         <ModalHeader toggle={toggle} id="blogEditTitle">
           Edit Blog Post
         </ModalHeader>
@@ -44,6 +49,7 @@ const EditBlogModal = ({ isOpen, toggle, markdown, setMarkdown, post }) => {
           <Label>Body:</Label>
           {post && <Input type="hidden" name="id" value={post._id} />}
           <TextEntry name="markdown" value={markdown} onChange={handleChangeMarkdown} maxLength={10000} />
+          <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>
         <ModalFooter>
           <Button color="success" type="submit">
@@ -95,7 +101,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} canEdit={user && cube.owner === user.id} activeLink="blog">
+      <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="blog">
         <Navbar expand light className="usercontrols mb-3">
           <Collapse navbar>
             <Nav navbar>

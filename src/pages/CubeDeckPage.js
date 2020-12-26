@@ -103,7 +103,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={deck.cube} activeLink="playtest">
+      <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           <CSRFForm
             key="submitdeck"

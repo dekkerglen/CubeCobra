@@ -788,7 +788,7 @@ export function sortDeep(cards, ...sorts) {
     return [...cards].sort(alphaCompare);
   }
   const [first, ...rest] = sorts;
-  const result = sortGroupsOrdered(cards, first);
+  const result = sortGroupsOrdered(cards, first ?? 'Unsorted');
   for (const labelGroup of result) {
     if (rest.length > 0) {
       labelGroup[1] = sortDeep(labelGroup[1], ...rest);

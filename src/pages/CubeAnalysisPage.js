@@ -182,7 +182,7 @@ const CubeAnalysisPage = ({
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cubeID} canEdit={false} activeLink="analysis">
+      <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
         <DynamicFlash />
         {cube.cards.length === 0 ? (
           <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>

@@ -7,16 +7,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
-import math from 'remark-math';
-import breaks from 'remark-breaks';
-import gfm from 'remark-gfm';
-import slug from 'remark-slug';
-import headings from 'remark-autolink-headings';
-import userlink from 'markdown/userlink';
-import symbols from 'markdown/symbols';
-import cardlink from 'markdown/cardlink';
-import centering from 'markdown/centering';
-import cardrow from 'markdown/cardrow';
+import { LIMITED_PLUGINS, ALL_PLUGINS } from 'markdown/parser';
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -148,21 +139,6 @@ const renderCardrow = (node) => {
   return <Row className="cardRow">{node.children}</Row>;
 };
 
-const VALID_SYMBOLS = 'wubrgcmtsqepxyz/-0123456789';
-
-const BASE_PLUGINS = [
-  cardrow,
-  centering,
-  breaks,
-  math,
-  userlink,
-  cardlink,
-  [gfm, { singleTilde: false }],
-  [symbols, { allowed: VALID_SYMBOLS }],
-];
-
-const ALL_PLUGINS = [...BASE_PLUGINS, slug, headings];
-
 const RENDERERS = {
   // overridden defaults
   link: renderLink,
@@ -186,9 +162,8 @@ const RENDERERS = {
 
 const Markdown = ({ markdown, limited }) => {
   const markdownStr = markdown?.toString() ?? '';
-
   return (
-    <ReactMarkdown className="markdown" plugins={limited ? BASE_PLUGINS : ALL_PLUGINS} renderers={RENDERERS}>
+    <ReactMarkdown className="markdown" plugins={limited ? LIMITED_PLUGINS : ALL_PLUGINS} renderers={RENDERERS}>
       {markdownStr}
     </ReactMarkdown>
   );

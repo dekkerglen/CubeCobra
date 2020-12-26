@@ -10,7 +10,7 @@ const CubeContext = React.createContext({
   updateCubeCards: () => {},
 });
 
-export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) => {
+export const CubeContextProvider = ({ initialCube, canEdit, ...props }) => {
   const [cube, setCube] = useState({
     ...initialCube,
     cards: initialCube.cards ? initialCube.cards.map((card, index) => ({ ...card, index })) : [],
@@ -35,6 +35,8 @@ export const CubeContextProvider = ({ initialCube, canEdit, cubeID, ...props }) 
       return newCube;
     });
   }, []);
+
+  const cubeID = cube._id;
 
   const hasCustomImages = cube.cards.some(
     (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),

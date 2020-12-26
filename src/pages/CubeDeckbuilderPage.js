@@ -113,7 +113,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
+      <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           <DeckbuilderNavbar
             deck={currentDeck}
