@@ -111,7 +111,7 @@ const convertedExampleDoubleFacedCard = {
   oracle_id: '52855f90-19c1-46c9-8eed-88b3c1722bb0',
   oracle_text:
     '{T}: Add {G}.\nAt the beginning of each upkeep, if no spells were cast last turn, transform Scorned Villager.\nVigilance\n{T}: Add {G}{G}.\nAt the beginning of each upkeep, if a player cast two or more spells last turn, transform Moonscarred Werewolf.',
-  parsed_cost: [''],
+  parsed_cost: ['g', '1'],
   power: '1',
   promo: false,
   layout: 'transform',
@@ -227,7 +227,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
     tix: 1.78,
   },
   mtgo_id: 57940,
-  parsed_cost: [''],
+  parsed_cost: ['b', 'b', '1'],
   colors: ['B'],
   type: 'Legendary Creature — Human Cleric',
   full_art: false,
