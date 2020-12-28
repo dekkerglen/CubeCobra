@@ -8,16 +8,17 @@ const Seat = {
   userid: String,
   drafted: [[cardSchema]], // organized draft picks
   sideboard: [[cardSchema]], // organized draft picks
-  pickorder: [cardSchema],
-  packbacklog: [[cardSchema]],
+  pickorder: [Number],
+  packbacklog: [[Number]],
 };
 
 // Cube schema
 const draftSchema = mongoose.Schema({
   cube: String,
-  initial_state: [[[cardSchema]]],
+  cardList: [cardSchema],
+  initial_state: [[[Number]]],
   seats: [Seat],
-  unopenedPacks: [[[cardSchema]]],
+  unopenedPacks: [[[Number]]],
   basics: {
     Plains: cardSchema,
     Island: cardSchema,

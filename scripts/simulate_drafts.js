@@ -32,8 +32,6 @@ const runDraft = async () => {
   const nonlandCounts = [];
   const totalCounts = [];
   for (const seat of draft.seats) {
-    const picked = Draft.default.createSeen();
-    Draft.default.addSeen(picked, seat.pickorder);
     // eslint-disable-next-line no-await-in-loop
     const { colors } = await Draft.default.buildDeck(seat.pickorder, picked, draft.initial_state, draft.basics);
     const nonlands = seat.pickorder.filter((c) => !Card.cardType(c).toLowerCase().includes('land'));

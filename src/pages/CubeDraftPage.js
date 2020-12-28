@@ -18,7 +18,7 @@ import {
   Spinner,
 } from 'reactstrap';
 
-import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
+import Draft, { init } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 import { makeSubtitle } from 'utils/Card';
@@ -33,7 +33,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
 import useToggle from 'hooks/UseToggle';
-import { Internal } from 'components/DraftbotBreakdown';
+import DraftbotTable from 'components/DraftbotTable';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -185,13 +185,10 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     [pack, picks, update],
   );
 
-  const picked = createSeen();
-  addSeen(picked, getPicked(0));
-  const seen = getSeen(0);
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} cubeID={cube._id} activeLink="playtest">
-        <DisplayContextProvider>
+        <DisplayContextProvider cubeID={cube._id}>
           <Navbar expand="xs" light className="usercontrols">
             <Collapse navbar>
               <Nav navbar>
@@ -233,14 +230,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
                         <h4 className="mb-0">Draftbot Breakdown</h4>
                       </CardHeader>
                       <CardBody>
-                        <Internal
-                          cardsInPack={pack}
-                          pack={packNumber - 1}
-                          picks={pickNumber - 1}
-                          draft={initialDraft}
-                          seen={seen}
-                          picked={picked}
-                        />
+                        <DraftbotTable draft={initialDraft} seatIndex={0} pickIndex={-1} />
                       </CardBody>
                     </Card>
                   </ErrorBoundary>

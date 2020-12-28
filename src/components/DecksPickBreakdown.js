@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
-import { getPackAsSeen } from 'components/DraftbotBreakdown';
+import { getPickState } from 'utils/draftbots';
 import FoilCardImage from 'components/FoilCardImage';
 import { getCardColorClass } from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
@@ -39,7 +39,8 @@ const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
     return <h4>This deck does not have a related draft log.</h4>;
   }
 
-  const [cardsInPack, picks, pack, picksList] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
+  // TODO: fix this
+  const [cardsInPack, picks, pack, picksList] = getPickState(draft.initial_state, index, deck, seatIndex);
 
   return (
     <Row>

@@ -1069,7 +1069,8 @@ const createDraftForSingleDeck = async (deck) => {
     }
   }
   const draft = new Draft();
-  draft.initial_state = [[populatedCards]];
+  draft.cardList = populatedCards;
+  draft.initial_state = [[[...Array(populatedCards.length).keys()]]];
 
   await draft.save();
   return draft._id;
@@ -2086,6 +2087,7 @@ router.post(
 
       draft.initial_state = populated.initial_state;
       draft.unopenedPacks = populated.unopenedPacks;
+      draft.cardList = populated.cardList;
       draft.seats = populated.seats;
       draft.cube = cube._id;
       draft.basics = getBasics(carddb);
@@ -2093,29 +2095,8 @@ router.post(
       await draft.save();
       if (req.body.botsOnly) {
         draft = await Draft.findById(draft._id).lean();
-        // insert card details everywhere that needs them
-        for (const seat of draft.unopenedPacks) {
-          for (const pack of seat) {
-            for (const card of pack) {
-              card.details = carddb.cardFromId(
-                card.cardID,
-                'cmc type image_normal parsed_cost image_flip name color_identity',
-              );
-            }
-          }
-        }
-
-        for (const seat of draft.seats) {
-          for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-            for (const pack of collection) {
-              for (const card of pack) {
-                card.details = carddb.cardFromId(card.cardID);
-              }
-            }
-          }
-          for (const card of seat.pickorder) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
+        for (const card of draft.cardList) {
+          card.details = carddb.cardFromId(card.cardID);
         }
         for (const key of Object.keys(draft.basics)) {
           draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
@@ -2125,6 +2106,7 @@ router.post(
           draft,
         });
       }
+
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
@@ -2226,29 +2208,13 @@ router.get('/draft/:id', async (req, res) => {
     }
 
     // insert card details everywhere that needs them
-    for (const seat of draft.unopenedPacks) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(
-            card.cardID,
-            'cmc type image_normal image_flip name color_identity parsed_cost embedding elo',
-          );
-        }
-      }
+    for (const card of draft.cardList) {
+      card.details = carddb.cardFromId(
+        card.cardID,
+        'cmc type image_normal image_flip name color_identity parsed_cost embedding elo produced_mana cmc colors',
+      );
     }
 
-    for (const seat of draft.seats) {
-      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
-    }
     if (draft.basics) {
       for (const key of Object.keys(draft.basics)) {
         draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
@@ -2801,7 +2767,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         bot: seat.bot,
         userid: seat.userid,
         username: seat.name,
-        pickorder: seat.pickorder,
+        pickorder: seat.pickorder.map((c) => draft.cardList[c]),
         name: `Draft of ${cube.name}`,
         description: '',
         cols: 16,
@@ -3012,8 +2978,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
       deckutil.default.init(srcDraft);
-      const userPicked = deckutil.default.createSeen();
-      deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
       const { colors: userColors } = await deckutil.default.buildDeck(
         base.seats[req.params.index].pickorder,
         userPicked,
@@ -3036,8 +3000,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           for (const card of base.seats[i].pickorder) {
             card.details = carddb.cardFromId(card.cardID);
           }
-          const picked = deckutil.default.createSeen();
-          deckutil.default.addSeen(picked, base.seats[i].pickorder);
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,

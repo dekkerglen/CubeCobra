@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
 
 const DraftSeatPropType = PropTypes.shape({
-  description: PropTypes.string.isRequired,
-  deck: PropTypes.array.isRequired,
-  sideboard: PropTypes.array.isRequired,
-  username: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  deck: PropTypes.array,
+  sideboard: PropTypes.array,
+  username: PropTypes.string,
   userid: PropTypes.string,
   bot: PropTypes.array,
-  name: PropTypes.string.isRequired,
+  name: PropTypes.string,
 });
 
 export default DraftSeatPropType;

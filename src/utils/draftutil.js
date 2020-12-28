@@ -216,6 +216,7 @@ export function getDraftFormat(params, cube) {
 function createPacks(draft, format, seats, nextCardFn) {
   let ok = true;
   let messages = [];
+  draft.cardList = [];
   draft.initial_state = [];
 
   for (let seat = 0; seat < seats; seat++) {
@@ -230,7 +231,8 @@ function createPacks(draft, format, seats, nextCardFn) {
           messages = messages.concat(result.messages);
         }
         if (result.card) {
-          pack.push(result.card);
+          draft.cardList.push(result.card);
+          pack.push(draft.cardList.length - 1);
         } else {
           ok = false;
         }
@@ -282,7 +284,6 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
       draft.unopenedPacks[i].push([]);
       for (let k = 0; k < draft.initial_state[i][j].length; k++) {
         draft.unopenedPacks[i][j].push(draft.initial_state[i][j][k]);
-        draft.initial_state[i][j][k].index = index;
         index += 1;
       }
     }

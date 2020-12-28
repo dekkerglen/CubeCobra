@@ -154,6 +154,10 @@ export const cardStatus = (card) => card.status;
 
 export const cardColorIdentity = (card) => card.colors ?? card.details.color_identity;
 
+export const cardColors = (card) => card.details.colors ?? [];
+
+export const producedMana = (card) => card.details.produced_mana ?? [];
+
 export const cardCmc = (card) => card.cmc ?? card.details.cmc;
 
 export const cardId = (card) => card.cardID ?? card.details._id;
@@ -221,8 +225,6 @@ export const cardLegalIn = (card) => {
   const legalities = cardLegalities(card);
   return Object.keys(legalities).filter((format) => legalities[format] === 'legal');
 };
-
-export const cardColors = (card) => card.details.colors;
 
 export const cardLanguage = (card) => card.details.language;
 

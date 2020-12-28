@@ -608,6 +608,7 @@ function convertCard(card, isExtra) {
   };
   newcard.elo = catalog.elodict[name] || 1200;
   newcard.embedding = catalog.embeddingdict[name] || [];
+  newcard.produced_mana = card.produced_mana;
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;

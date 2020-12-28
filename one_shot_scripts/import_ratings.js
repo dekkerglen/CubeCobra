@@ -25,7 +25,7 @@ async function saveRatings(defaultPath) {
 
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    await saveRatings(process.argv[2]);
+    await saveRatings('./private/ratings/3.json');
     mongoose.disconnect();
     console.log('done');
     process.exit();

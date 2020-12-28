@@ -35,8 +35,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 import { csrfFetch } from 'utils/CSRF';
-import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
-import { botRatingAndCombination } from 'utils/draftbots';
+import { init } from 'utils/Draft';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -119,9 +118,6 @@ Pack.defaultProps = {
   turn: null,
 };
 
-const seen = createSeen();
-const picked = createSeen();
-
 const options = [];
 
 for (let index = 0; index < 3; index++) {
@@ -166,7 +162,6 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 
   const makeBotPick = (tempPack) => {
     const cardsSeen = tempPack.filter((card) => card);
-    addSeen(seen, cardsSeen);
 
     const ratings = options.map((mask) => {
       const cards = mask.map((include, index) => (include ? tempPack[index] : null)).filter((card) => card);
@@ -174,14 +169,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
       let rating = 0;
 
       for (const card of cards) {
-        rating += botRatingAndCombination(
-          card,
-          picked,
-          seen,
-          [initialDraft.initial_state],
-          cardsSeen.length,
-          packNumber,
-        ).rating;
+        rating += 1;
       }
 
       return rating;
@@ -198,7 +186,6 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     }
 
     setBotPickOrder(botPickOrder.concat([tempPicks]));
-    addSeen(picked, tempPicks);
 
     return [tempPack, tempPicks];
   };

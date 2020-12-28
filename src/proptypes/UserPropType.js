@@ -10,7 +10,7 @@ const UserPropType = PropTypes.shape({
   image: PropTypes.string.isRequired,
   artist: PropTypes.string.isRequired,
   theme: PropTypes.string.isRequired,
-  users_following: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
   roles: PropTypes.arrayOf(PropTypes.string).isRequired,
 });
 
