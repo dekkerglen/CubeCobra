@@ -105,7 +105,7 @@ const renderSymbol = (node) => {
 };
 
 const renderCardlink = ({ name, id, dfc }) => {
-  const idURL = encodeURIComponent(id ?? name);
+  const idURL = encodeURIComponent(id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
 
@@ -117,14 +117,13 @@ const renderCardlink = ({ name, id, dfc }) => {
 };
 
 const renderCardImage = (node) => {
-  const name = node.value;
-  const nameURL = encodeURIComponent(name);
-  const details = { image_normal: `/tool/cardimage/${nameURL}` };
-  if (node.dfc) details.image_flip = `/tool/cardimageflip/${nameURL}`;
+  const idURL = encodeURIComponent(node.id);
+  const details = { image_normal: `/tool/cardimage/${idURL}` };
+  if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
 
   return (
     <Col className="card-image" xs="6" md="4" lg="3">
-      <a href={`/tool/card/${nameURL}`} target="_blank" rel="noopener noreferrer">
+      <a href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
         <FoilCardImage autocard card={{ details }} className="clickable" />
       </a>
     </Col>

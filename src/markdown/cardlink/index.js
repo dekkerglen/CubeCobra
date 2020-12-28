@@ -14,20 +14,15 @@ function oncard(node) {
     node.dfc = true;
   }
 
-  if (node.type === 'cardlink') {
-    [node.name, node.id] = node.value.split('|');
-  }
-}
-
-function transform(tree) {
-  visit(tree, 'cardlink', oncard);
+  [node.name, node.id] = node.value.split('|');
+  if (typeof node.id === 'undefined') node.id = node.name;
 }
 
 function cardlinks() {
   const data = this.data();
   add(data, 'micromarkExtensions', syntax);
   add(data, 'fromMarkdownExtensions', fromMarkdown);
-  return transform;
+  return (tree) => visit(tree, 'cardlink', oncard);
 }
 
 export default cardlinks;
