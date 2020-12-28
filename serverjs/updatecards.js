@@ -466,10 +466,6 @@ function convertParsedCost(card, isExtra = false) {
     return [];
   }
 
-  if (!card.mana_cost) {
-    return [''];
-  }
-
   let parsedCost = [];
   if (typeof card.card_faces === 'undefined' || card.layout === 'flip') {
     parsedCost = card.mana_cost
@@ -484,7 +480,7 @@ function convertParsedCost(card, isExtra = false) {
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (card.card_faces[0].colors) {
+  } else if (Array.isArray(card.card_faces) && card.card_faces[0].colors) {
     parsedCost = card.card_faces[0].mana_cost
       .substr(1, card.card_faces[0].mana_cost.length - 2)
       .toLowerCase()
