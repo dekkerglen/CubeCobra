@@ -14,6 +14,11 @@ function oncard(node) {
     node.dfc = true;
   }
 
+  if (node.value[0] === '!' && node.type !== 'cardimage') {
+    node.value = node.value.substring(1);
+    node.type = 'cardimage';
+  }
+
   [node.name, node.id] = node.value.split('|');
   if (typeof node.id === 'undefined') node.id = node.name;
 }
