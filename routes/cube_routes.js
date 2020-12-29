@@ -2941,7 +2941,6 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Deck Deleted');
     return res.send('Success');
   } catch (err) {
-    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting deck.',
