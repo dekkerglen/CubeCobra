@@ -2929,9 +2929,9 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     };
 
     const deck = await Deck.findById(req.params.id);
-    const deckOwner = await User.findById(deck.seats[0].userid);
+    const deckOwner = (await User.findById(deck.seats[0].userid)) || {};
 
-    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+    if (!deckOwner._id.equals(req.user._id) && !deck.cubeOwner == req.user._id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -2941,6 +2941,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     req.flash('success', 'Deck Deleted');
     return res.send('Success');
   } catch (err) {
+    console.error(err);
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting deck.',
