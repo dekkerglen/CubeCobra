@@ -3,6 +3,7 @@ private/
 /.vscode/
 src/generated/
 jobs/export/
+.direnv/
 
 .python-version
 
