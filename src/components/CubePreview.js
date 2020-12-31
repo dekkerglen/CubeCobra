@@ -15,7 +15,7 @@ const CubePreview = ({ cube }) => {
   const handleClick = useCallback(
     (event) => {
       if (!event.target.getAttribute('data-sublink')) {
-        window.location.href = `/cube/overview/${getCubeId(cube)}`;
+        window.location.href = `/cube/overview/${encodeURIComponent(getCubeId(cube))}`;
       }
     },
     [cube],
