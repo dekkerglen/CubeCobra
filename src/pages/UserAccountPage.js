@@ -30,11 +30,13 @@ import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import TextEntry from 'components/TextEntry';
 
 const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
   const [nav, setNav] = useState(defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
+  const [markdown, setMarkdown] = useState(user?.about ?? '');
 
   useEffect(() => {
     fetch('/cube/api/imagedict')
@@ -54,6 +56,8 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
   const handleSubmitImage = useCallback((event) => {
     event.preventDefault();
   }, []);
+
+  const handleChangeMarkdown = useCallback((event) => setMarkdown(event.target.value), [setMarkdown]);
 
   const result = imageDict[imageValue.toLowerCase()];
   let image;
@@ -122,16 +126,6 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                         </dd>
                         <dt className="col-sm-3">Email</dt>
                         <dd className="col-sm-9">{user.email}</dd>
-                        <dt className="col-sm-3">About</dt>
-                        <dd className="col-sm-9">
-                          <Input
-                            type="textarea"
-                            maxLength="2500"
-                            placeholder="Describe yourself here... (max length 2500)"
-                            name="body"
-                            defaultValue={user.about}
-                          />
-                        </dd>
                         <dt className="col-sm-3">Profile Pic</dt>
                         <dd className="col-sm-9">
                           <Row>
@@ -158,6 +152,10 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                               {result && <Input type="hidden" name="image" value={imageValue.toLowerCase()} />}
                             </Col>
                           </Row>
+                        </dd>
+                        <dt className="col-sm-3">About</dt>
+                        <dd className="col-sm-9">
+                          <TextEntry maxLength={2500} onChange={handleChangeMarkdown} name="body" value={markdown} />
                         </dd>
                       </dl>
                       <Row noGutters>
