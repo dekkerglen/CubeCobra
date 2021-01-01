@@ -1,4 +1,4 @@
-import { alphaCompare, arrayIsSubset, COLORS, fromEntries } from 'utils/Util';
+import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
 import {
   cardColorIdentity,
   cardDevotion,
