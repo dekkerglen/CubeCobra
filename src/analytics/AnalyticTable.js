@@ -6,6 +6,8 @@ import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } fr
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortableTable, compareStrings, valueRenderer } from 'components/SortableTable';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
 import { sortIntoGroups, SORTS, getLabels, cardCanBeSorted } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
@@ -129,17 +131,8 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
 };
 
 AnalyticTable.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
+  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
+  cube: CubePropType.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
 };

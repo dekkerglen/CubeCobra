@@ -44,24 +44,26 @@ const SortCollapse = ({ defaultPrimarySort, defaultSecondarySort, defaultSorts, 
 
   const addAlert = useCallback((color, message) => setAlerts((alertsB) => [...alertsB, { color, message }]), []);
 
-  const handleSave = useCallback(() => {
-    csrfFetch(`/cube/api/savesorts/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        sorts: [primary, secondary],
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(() => {
-        Query.del('s1');
-        Query.del('s2');
-        setDefSorts([primary, secondary]);
-        addAlert('success', 'Default sorts saved.');
-      })
-      .catch(() => addAlert('danger', 'Error saving default sorts.'));
-  }, [addAlert, cubeID, primary, secondary]);
+  const handleSave = useCallback(async () => {
+    try {
+      await csrfFetch(`/cube/api/savesorts/${cubeID}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          sorts: [primary, secondary],
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (e) {
+      addAlert('danger', 'Error saving default sorts.');
+      return;
+    }
+    Query.del('s1');
+    Query.del('s2');
+    setDefSorts([primary, secondary]);
+    addAlert('success', 'Default sorts saved.');
+  }, [addAlert, cubeID, primary, secondary, setDefSorts]);
 
   return (
     <Collapse {...props}>
