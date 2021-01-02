@@ -1,5 +1,13 @@
-import { alphaCompare, fromEntries } from 'utils/Util';
-import { cardDevotion, cardPriceEur, cardTix, cardCmc } from 'utils/Card';
+import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
+import {
+  cardColorIdentity,
+  cardDevotion,
+  cardPriceEur,
+  cardTix,
+  cardType,
+  cardCmc,
+  COLOR_COMBINATIONS,
+} from 'utils/Card';
 
 const COLOR_MAP = {
   W: 'White',
@@ -22,7 +30,7 @@ const GUILD_MAP = {
   UG: 'Simic',
 };
 
-const WEDGE_MAP = {
+const SHARD_AND_WEDGE_MAP = {
   WUG: 'Bant',
   WUB: 'Esper',
   UBR: 'Grixis',
@@ -35,14 +43,22 @@ const WEDGE_MAP = {
   URG: 'Temur',
 };
 
+const FOUR_COLOR_MAP = {
+  UBRG: 'Not-White',
+  WBRG: 'Not-Blue',
+  WURG: 'Not-Black',
+  WUBG: 'Not-Red',
+  WUBR: 'Not-Green',
+};
+
 const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
-const SINGLE_COLOR_AND_COLORLESS = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Lands'];
+const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
-const SHARDS = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Abzan', 'Jeskai', 'Sultai', 'Mardu', 'Temur'];
-const FOUR_AND_FIVE_COLOR = ['4c', '5c'];
+const SHARDS_AND_WEDGES = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Mardu', 'Temur', 'Abzan', 'Jeskai', 'Sultai'];
+const FOUR_AND_FIVE_COLOR = ['Not-White', 'Not-Blue', 'Not-Black', 'Not-Red', 'Not-Green', 'Five Color'];
 
 const ELO_DEFAULT = 1200;
 
@@ -85,41 +101,28 @@ export function GetColorIdentity(colors) {
   }
 }
 
-export function GetColorCategory(type, colors, full) {
+export function getColorCombination(colors) {
+  if (colors.length < 2) {
+    return GetColorIdentity(colors);
+  }
+  const ordered = [...'WUBRG'].filter((c) => colors.includes(c)).join('');
+  if (colors.length === 2) {
+    return GUILD_MAP[ordered];
+  }
+  if (colors.length === 3) {
+    return SHARD_AND_WEDGE_MAP[ordered];
+  }
+  if (colors.length === 4) {
+    return FOUR_COLOR_MAP[ordered];
+  }
+  return 'Five Color';
+}
+
+export function GetColorCategory(type, colors) {
   if (type.toLowerCase().includes('land')) {
     return 'Lands';
   }
-  if (colors.length === 0) {
-    return 'Colorless';
-  }
-  if (colors.length === 1) {
-    if (Object.keys(COLOR_MAP).includes(colors[0])) {
-      return COLOR_MAP[colors[0]];
-    }
-    if (colors[0] === 'C') {
-      return 'Colorless';
-    }
-    return 'None';
-  }
-  if (colors.length > 1) {
-    if (full) {
-      const ordered = [...'WUBRG'].filter((c) => colors.includes(c)).join('');
-      if (colors.length === 2) {
-        return [GUILD_MAP[ordered]];
-      }
-      if (colors.length === 3) {
-        return [WEDGE_MAP[ordered]];
-      }
-      if (colors.length === 4) {
-        return '4c';
-      }
-      if (colors.length === 5) {
-        return '5c';
-      }
-    } else {
-      return 'Multicolored';
-    }
-  }
+  return GetColorIdentity(colors);
 }
 
 export function getSorts() {
@@ -130,6 +133,9 @@ export function getSorts() {
     'Color Category Full',
     'Color Count',
     'Color Identity',
+    'Color Identity Full',
+    'Color Combination Includes',
+    'Includes Color Combination',
     'Color',
     'Creature/Non-Creature',
     'Date Added',
@@ -213,10 +219,20 @@ function getLabelsRaw(cube, sort) {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
   if (sort === 'Color Category Full') {
-    return SINGLE_COLOR_AND_COLORLESS.concat(GUILDS).concat(SHARDS).concat(FOUR_AND_FIVE_COLOR);
+    return SINGLE_COLOR.concat(['Colorless'])
+      .concat(GUILDS)
+      .concat(SHARDS_AND_WEDGES)
+      .concat(FOUR_AND_FIVE_COLOR)
+      .concat(['Lands']);
   }
   if (sort === 'Color Identity') {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
+  }
+  if (sort === 'Color Identity Full') {
+    return SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
+  }
+  if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
+    return ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
   }
   if (sort === 'CMC') {
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
@@ -278,7 +294,7 @@ function getLabelsRaw(cube, sort) {
     return GUILDS;
   }
   if (sort === 'Shards / Wedges') {
-    return SHARDS;
+    return SHARDS_AND_WEDGES;
   }
   if (sort === 'Color Count') {
     return ['0', '1', '2', '3', '4', '5'];
@@ -479,25 +495,28 @@ function cmcToNumber(card) {
   return cmc;
 }
 
-function colorIdentity(card) {
-  return card.colors || card.details.color_identity;
-}
-
-function typeLine(card) {
-  return card.type_line || card.details.type;
-}
-
 export function cardGetLabels(card, sort) {
   if (sort === 'Color Category') {
-    if (card.colorCategory) return [card.colorCategory];
-    return [GetColorCategory(typeLine(card), colorIdentity(card), false)];
+    return [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
   }
   if (sort === 'Color Category Full') {
-    if (card.colorCategory) return [card.colorCategory];
-    return [GetColorCategory(typeLine(card), colorIdentity(card), true)];
+    const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
+    if (colorCategory === 'Multicolored') {
+      return [getColorCombination(cardColorIdentity(card))];
+    }
+    return [colorCategory];
   }
   if (sort === 'Color Identity') {
-    return [GetColorIdentity(colorIdentity(card))];
+    return [GetColorIdentity(cardColorIdentity(card))];
+  }
+  if (sort === 'Color Identity Full') {
+    return [getColorCombination(cardColorIdentity(card))];
+  }
+  if (sort === 'Color Combination Includes') {
+    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
+  }
+  if (sort === 'Includes Color Combination') {
+    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
   }
   if (sort === 'Color') {
     if (card.details.colors.length === 0) {
@@ -506,13 +525,13 @@ export function cardGetLabels(card, sort) {
     return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
   }
   if (sort === '4+ Color') {
-    if (colorIdentity(card).length < 4) {
+    if (cardColorIdentity(card).length < 4) {
       return [];
     }
-    if (colorIdentity(card).length === 5) {
+    if (cardColorIdentity(card).length === 5) {
       return ['Five Color'];
     }
-    return [...'WUBRG'].filter((c) => !colorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
+    return [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
   }
   if (sort === 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
@@ -537,8 +556,8 @@ export function cardGetLabels(card, sort) {
     return [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
   }
   if (sort === 'Supertype' || sort === 'Type') {
-    const split = typeLine(card).split(/[-–—]/);
-    let types = null;
+    const split = cardType(card).split(/[-–—]/);
+    let types;
     if (split.length > 1) {
       types = split[0]
         .trim()
@@ -546,7 +565,7 @@ export function cardGetLabels(card, sort) {
         .map((x) => x.trim())
         .filter((x) => x);
     } else {
-      types = typeLine(card)
+      types = cardType(card)
         .trim()
         .split(' ')
         .map((x) => x.trim())
@@ -574,21 +593,21 @@ export function cardGetLabels(card, sort) {
     return [ISODateToYYYYMMDD(card.addedTmsp)];
   }
   if (sort === 'Guilds') {
-    if (colorIdentity(card).length !== 2) {
+    if (cardColorIdentity(card).length !== 2) {
       return [];
     }
-    const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
+    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
     return [GUILD_MAP[ordered]];
   }
   if (sort === 'Shards / Wedges') {
-    if (colorIdentity(card).length !== 3) {
+    if (cardColorIdentity(card).length !== 3) {
       return [];
     }
-    const ordered = [...'WUBRG'].filter((c) => colorIdentity(card).includes(c)).join('');
-    return [WEDGE_MAP[ordered]];
+    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+    return [SHARD_AND_WEDGE_MAP[ordered]];
   }
   if (sort === 'Color Count') {
-    return [colorIdentity(card).length];
+    return [cardColorIdentity(card).length];
   }
   if (sort === 'Set') {
     return [card.details.set.toUpperCase()];
@@ -599,7 +618,7 @@ export function cardGetLabels(card, sort) {
     return [rarity[0].toUpperCase() + rarity.slice(1)];
   }
   if (sort === 'Subtype') {
-    const split = typeLine(card).split(/[-–—]/);
+    const split = cardType(card).split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
       return subtypes.map((subtype) => subtype.trim()).filter((x) => x);
@@ -607,8 +626,8 @@ export function cardGetLabels(card, sort) {
     return [];
   }
   if (sort === 'Types-Multicolor') {
-    if (colorIdentity(card).length <= 1) {
-      const split = typeLine(card).split('—');
+    if (cardColorIdentity(card).length <= 1) {
+      const split = cardType(card).split('—');
       const types = split[0].trim().split(' ');
       const type = types[types.length - 1];
       // check last type
@@ -633,7 +652,7 @@ export function cardGetLabels(card, sort) {
       }
       return [type];
     }
-    if (colorIdentity(card).length === 5) {
+    if (cardColorIdentity(card).length === 5) {
       return ['Five Color'];
     }
     return [
@@ -647,8 +666,8 @@ export function cardGetLabels(card, sort) {
   }
   if (sort === 'Legality') {
     return Object.entries(card.details.legalities)
-      .filter(([k, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
-      .map(([k, v]) => k); // eslint-disable-line no-unused-vars
+      .filter(([, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
+      .map(([k]) => k); // eslint-disable-line no-unused-vars
   }
   if (sort === 'Power') {
     if (card.details.power) {
@@ -684,7 +703,7 @@ export function cardGetLabels(card, sort) {
     return [];
   }
   if (sort === 'Creature/Non-Creature') {
-    return typeLine(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
+    return cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
   }
   if (sort === 'Price USD' || sort === 'Price') {
     const price = card.details.prices.usd ?? card.details.prices.usd_foil;
@@ -803,7 +822,7 @@ export function sortDeep(cards, ...sorts) {
 
 export function countGroup(group) {
   if (Array.isArray(group[0])) {
-    const counts = group.map(([label, group2]) => countGroup(group2)); // eslint-disable-line no-unused-vars
+    const counts = group.map(([, group2]) => countGroup(group2)); // eslint-disable-line no-unused-vars
     return counts.reduce((a, b) => a + b, 0);
   }
   return group.length;
