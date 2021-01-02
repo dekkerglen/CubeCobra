@@ -14,8 +14,12 @@ import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import withModal from 'components/WithModal';
+import CreateCubeModal from 'components/CreateCubeModal';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+
+const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
 const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) => {
   const filteredDecks = cubes.length > 2 ? decks : decks.slice(0, 6);
@@ -41,9 +45,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
                 ) : (
                   <p className="m-2">
                     You don't have any cubes.{' '}
-                    <Button data-toggle="modal" data-target="#cubeModal" color="success">
-                      Add a new cube?
-                    </Button>
+                    <CreateCubeModalButton color="success">Add a new cube?</CreateCubeModalButton>
                   </p>
                 )}
               </Row>
