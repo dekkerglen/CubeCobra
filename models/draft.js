@@ -9,7 +9,7 @@ const Pack = {
       min: 0,
     },
   ],
-  pickAtTime: {
+  picksPerPass: {
     type: Number,
     default: 1,
     min: 1,

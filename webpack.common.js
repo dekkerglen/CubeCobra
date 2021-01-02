@@ -7,7 +7,7 @@ const config = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules[\/\\](?!react-dnd|dnd-core)/,
+        exclude: /node_modules[/\\](?!react-dnd|dnd-core)/,
         use: {
           loader: 'babel-loader',
           options: {

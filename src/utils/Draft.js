@@ -475,7 +475,7 @@ const passPackInternal = () => {
     }
   } else {
     const [, pickNum] = packPickNumber();
-    if ((pickNum - 1) % draft.seats[0].packbacklog[0].pickAtTime !== 0) {
+    if ((pickNum - 1) % draft.seats[0].packbacklog[0].picksPerPass !== 0) {
       return;
     }
     if (draft.unopenedPacks[0].length % 2 === 0) {

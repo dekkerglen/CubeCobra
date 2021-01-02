@@ -10,7 +10,7 @@
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
-    "lint": "npm run prettier-base -- --check && eslint app.js jobs one_shot_scripts models public/js routes serverjs src",
+    "lint": "npm run prettier-base -- --check && eslint __tests__ fixtures jobs models one_shot_scripts public routes serverjs src *.js",
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
     "webpack": "webpack --mode development --config webpack.server.js",
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
