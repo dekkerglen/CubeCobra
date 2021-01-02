@@ -1,23 +1,66 @@
-import React from 'react';
+import React, { useContext, useRef } from 'react';
 import { TagCloud } from 'react-tagcloud';
+import { UncontrolledTooltip } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
+import ThemeContext from 'contexts/ThemeContext';
+import { isTouchDevice } from 'utils/Util';
+
+const trigger = isTouchDevice() ? 'click' : 'hover';
+
+const TagCloudTag = ({ tag, size, color }) => {
+  const spanRef = useRef();
+  console.log(tag);
+  return (
+    <div className="tag-cloud-tag mr-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+      <span style={{ color, fontSize: `${size}px` }} className="tag-cloud-tag" ref={spanRef}>
+        {tag.value}
+      </span>
+      <UncontrolledTooltip trigger={trigger} placement="auto" target={spanRef}>
+        {Number.isInteger(tag.count) ? tag.count : tag.count.toFixed(2)}
+      </UncontrolledTooltip>
+    </div>
+  );
+};
+
+TagCloudTag.propTypes = {
+  tag: PropTypes.shape({
+    value: PropTypes.string.isRequired,
+    count: PropTypes.number.isRequired,
+  }).isRequired,
+  size: PropTypes.number.isRequired,
+  color: PropTypes.string.isRequired,
+};
+
+const COLOR_OPTIONS = {
+  dark: 'light',
+  default: 'dark',
+  light: 'dark',
+};
 
 const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
+  const theme = useContext(ThemeContext);
+
   const tags = {};
   cards.forEach((card) =>
     card.tags.forEach((tag) => {
-      if (tags[tag]) {
-        tags[tag] += card.asfan;
-      } else {
-        tags[tag] = card.asfan;
+      if (card.asfan) {
+        tag = tag.trim();
+        if (tags[tag]) {
+          tags[tag] += card.asfan;
+        } else {
+          tags[tag] = card.asfan;
+        }
       }
     }),
   );
-  const words = Object.keys(tags).map((key) => ({ value: key, count: tags[key] }));
+  const words = Object.entries(tags).map(([value, count]) => ({ value, count }));
 
-  const colorOptions = { luminosity: 'dark' };
+  const tagRenderer = (tag, size, color) => (
+    <TagCloudTag tag={tag} size={size} color={color} key={tag.key || tag.value} />
+  );
+
   return (
     <>
       <h4>Tag Cloud</h4>
@@ -26,10 +69,11 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
         on average.
       </p>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
-      <TagCloud minSize={10} maxSize={80} colorOptions={colorOptions} tags={words} />
+      <TagCloud minSize={10} maxSize={80} colorOptions={COLOR_OPTIONS[theme]} tags={words} renderer={tagRenderer} />
     </>
   );
 };
+
 Cloud.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   cube: PropTypes.shape({

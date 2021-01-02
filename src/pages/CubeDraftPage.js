@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -20,12 +22,12 @@ import {
 import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
-import { cardType, cardIsSpecialZoneType } from 'utils/Card';
+import { makeSubtitle } from 'utils/Card';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DraggableCard from 'components/DraggableCard';
 import DynamicFlash from 'components/DynamicFlash';
@@ -33,23 +35,8 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
 import useToggle from 'hooks/UseToggle';
 import { Internal } from 'components/DraftbotBreakdown';
-
-export const subtitle = (cards) => {
-  const numCards = cards.length;
-  const numLands = cards.filter((card) => /land/i.test(cardType(card))).length;
-  const numNonlands = cards.filter((card) => !/land/i.test(cardType(card)) && !cardIsSpecialZoneType(card)).length;
-  const numCreatures = cards.filter((card) => /creature/i.test(cardType(card))).length;
-  const numNonCreatures = numNonlands - numCreatures;
-  const numSpecial = cards.filter(cardIsSpecialZoneType).length;
-  return (
-    `${numCards} card${numCards === 1 ? '' : 's'}: ` +
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numNonlands} nonland: ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}` +
-    `${numSpecial > 0 ? ` ${numSpecial} special${numSpecial === 1 ? '' : 's'}` : ''}`
-  );
-};
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = (_, target) => {
   return target.type === Location.PICKS;
@@ -106,7 +93,7 @@ Pack.defaultProps = {
   picking: null,
 };
 
-const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
+const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState([...Draft.pack()]);
@@ -218,96 +205,103 @@ const CubeDraftPage = ({ cube, cubeID, initialDraft }) => {
     update(newPicks);
   }, [pack, picks, update]);
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <Navbar expand="xs" light className="usercontrols">
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-            <Nav>
-              <NavLink href="#" onClick={toggleShowBotBreakdown}>
-                Toggle Bot Breakdown
-              </NavLink>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <CSRFForm
-          className="d-none"
-          innerRef={submitDeckForm}
-          method="POST"
-          action={`/cube/submitdeck/${Draft.cube()}`}
-        >
-          <Input type="hidden" name="body" value={Draft.id()} />
-        </CSRFForm>
-        <DndProvider>
-          {showPack(initialDraft, packNumber) && (
-            <>
-              <ErrorBoundary>
-                <Pack
-                  pack={pack}
-                  packNumber={packNumber}
-                  pickNumber={pickNumber}
-                  picking={picking}
-                  onMoveCard={sealed ? () => {} : handleMoveCard}
-                  onClickCard={sealed ? () => {} : handleClickCard}
-                />
-              </ErrorBoundary>
-              {sealed && (
-                <Button color="primary" onClick={nextPack}>
-                  Next Pack
-                </Button>
-              )}
-              {showBotBreakdown && (
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <DisplayContextProvider>
+          <Navbar expand="xs" light className="usercontrols">
+            <Collapse navbar>
+              <Nav navbar>
+                <CustomImageToggler />
+              </Nav>
+              <Nav>
+                <NavLink href="#" onClick={toggleShowBotBreakdown}>
+                  Toggle Bot Breakdown
+                </NavLink>
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <DynamicFlash />
+          <CSRFForm
+            className="d-none"
+            innerRef={submitDeckForm}
+            method="POST"
+            action={`/cube/submitdeck/${Draft.cube()}`}
+          >
+            <Input type="hidden" name="body" value={Draft.id()} />
+          </CSRFForm>
+          <DndProvider>
+            {showPack(initialDraft, packNumber) && (
+              <>
                 <ErrorBoundary>
-                  <Card className="mt-3">
-                    <CardHeader className="mb-0">
-                      <h4 className="mb-0">Draftbot Breakdown</h4>
-                    </CardHeader>
-                    <CardBody>
-                      <Internal
-                        cardsInPack={pack}
-                        pack={packNumber - 1}
-                        picks={pickNumber - 1}
-                        draft={initialDraft}
-                        seen={seen}
-                        picked={picked}
-                      />
-                    </CardBody>
-                  </Card>
+                  <Pack
+                    pack={pack}
+                    packNumber={packNumber}
+                    pickNumber={pickNumber}
+                    picking={picking}
+                    onMoveCard={sealed ? () => {} : handleMoveCard}
+                    onClickCard={sealed ? () => {} : handleClickCard}
+                  />
                 </ErrorBoundary>
-              )}
-            </>
-          )}
-          <ErrorBoundary className="mt-3">
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picks}
-                title="Picks"
-                subtitle={subtitle(picks.flat(2))}
-                locationType={Location.PICKS}
-                canDrop={canDrop}
-                onMoveCard={handleMoveCard}
-              />
-            </Card>
-          </ErrorBoundary>
-        </DndProvider>
-      </DisplayContextProvider>
-    </CubeLayout>
+                {sealed && (
+                  <Button color="primary" onClick={nextPack}>
+                    Next Pack
+                  </Button>
+                )}
+                {showBotBreakdown && (
+                  <ErrorBoundary>
+                    <Card className="mt-3">
+                      <CardHeader className="mb-0">
+                        <h4 className="mb-0">Draftbot Breakdown</h4>
+                      </CardHeader>
+                      <CardBody>
+                        <Internal
+                          cardsInPack={pack}
+                          pack={packNumber - 1}
+                          picks={pickNumber - 1}
+                          draft={initialDraft}
+                          seen={seen}
+                          picked={picked}
+                        />
+                      </CardBody>
+                    </Card>
+                  </ErrorBoundary>
+                )}
+              </>
+            )}
+            <ErrorBoundary className="mt-3">
+              <Card className="my-3">
+                <DeckStacks
+                  cards={picks}
+                  title="Picks"
+                  subtitle={makeSubtitle(picks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={canDrop}
+                  onMoveCard={handleMoveCard}
+                />
+              </Card>
+            </ErrorBoundary>
+          </DndProvider>
+        </DisplayContextProvider>
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 CubeDraftPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
     bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-    packs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
     ratings: PropTypes.objectOf(PropTypes.number),
   }).isRequired,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
-export default CubeDraftPage;
+CubeDraftPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(CubeDraftPage);

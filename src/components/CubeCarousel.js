@@ -2,6 +2,7 @@ import React from 'react';
 import CubePreview from 'components/CubePreview';
 import InfiniteCarousel from 'react-leaf-carousel';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 const CubeCarousel = ({ cubes }) => {
   return (
@@ -37,24 +38,7 @@ const CubeCarousel = ({ cubes }) => {
 };
 
 CubeCarousel.propTypes = {
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      shortId: PropTypes.string,
-      urlAlias: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      card_count: PropTypes.number.isRequired,
-      type: PropTypes.string.isRequired,
-      overrideCategory: PropTypes.bool,
-      categoryOverride: PropTypes.string,
-      categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-      image_name: PropTypes.string.isRequired,
-      image_artist: PropTypes.string.isRequired,
-      image_uri: PropTypes.string.isRequired,
-      owner: PropTypes.string.isRequired,
-      owner_name: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
 };
 
 export default CubeCarousel;

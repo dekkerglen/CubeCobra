@@ -9,6 +9,7 @@ const session = require('express-session');
 const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
+const compression = require('compression');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const winston = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
@@ -20,6 +21,7 @@ const rateLimit = require('express-rate-limit');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 const CardRating = require('./models/cardrating');
+const { render } = require('./serverjs/render');
 
 const formatInfo = ({ message }) => {
   try {
@@ -122,6 +124,9 @@ const store = new MongoDBStore(
   },
 );
 
+// gzip middleware
+app.use(compression());
+
 // request timeout middleware
 app.use((req, res, next) => {
   req.setTimeout(60 * 1000, () => {
@@ -203,7 +208,7 @@ const sessionOptions = {
   resave: true,
   saveUninitialized: true,
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
   },
 };
 
@@ -225,16 +230,6 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use((req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
-app.post('*', (req, res, next) => {
-  res.locals.user = req.user || null;
-  next();
-});
-
 // apply a rate limiter to the cube json endpoint
 const apiLimiter = rateLimit({
   windowMs: 60000,
@@ -244,21 +239,21 @@ const apiLimiter = rateLimit({
 app.use('/cube/api/cubeJSON', apiLimiter);
 
 // Route files; they manage their own CSRF protection
-const cubes = require('./routes/cube_routes');
-const users = require('./routes/users_routes');
-const devs = require('./routes/dev_routes');
-const tools = require('./routes/tools_routes');
-const comments = require('./routes/comment_routes');
 app.use('', require('./routes/root'));
 
-app.use('/cube', cubes);
-app.use('/user', users);
-app.use('/dev', devs);
-app.use('/tool', tools);
-app.use('/comment', comments);
+app.use('/cube', require('./routes/cube_routes'));
+app.use('/user', require('./routes/users_routes'));
+app.use('/dev', require('./routes/dev_routes'));
+app.use('/tool', require('./routes/tools_routes'));
+app.use('/comment', require('./routes/comment_routes'));
+app.use('/admin', require('./routes/admin_routes'));
+app.use('/content', require('./routes/content_routes'));
 
 app.use((req, res) => {
-  res.status(404).render('misc/404', {});
+  return render(req, res, 'ErrorPage', {
+    requestId: req.uuid,
+    title: '404: Page not found',
+  });
 });
 
 // eslint-disable-next-line no-unused-vars
@@ -267,8 +262,10 @@ app.use((err, req, res, next) => {
   if (!res.statusCode) {
     res.status(500);
   }
-  res.render('misc/500', {
+  return render(req, res, 'ErrorPage', {
     error: err.message,
+    requestId: req.uuid,
+    title: 'Oops! Something went wrong.',
   });
 });
 

@@ -56,38 +56,19 @@ async function generateShortId() {
   return newId;
 }
 
+const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+
 function intToLegality(val) {
-  switch (val) {
-    case 0:
-      return 'Vintage';
-    case 1:
-      return 'Legacy';
-    case 2:
-      return 'Modern';
-    case 3:
-      return 'Pioneer';
-    case 4:
-      return 'Standard';
-    default:
-      return undefined;
-  }
+  return FORMATS[val];
 }
 
 function legalityToInt(legality) {
-  switch (legality) {
-    case 'Vintage':
-      return 0;
-    case 'Legacy':
-      return 1;
-    case 'Modern':
-      return 2;
-    case 'Pioneer':
-      return 3;
-    case 'Standard':
-      return 4;
-    default:
-      return undefined;
-  }
+  let res;
+  FORMATS.forEach((format, index) => {
+    if (legality === format) res = index;
+  });
+
+  return res;
 }
 
 function cardsAreEquivalent(card, details) {
@@ -122,12 +103,21 @@ function cardIsLegal(card, legality) {
 
 function setCubeType(cube, carddb) {
   let pauper = true;
-  let type = legalityToInt('Standard');
+  let peasant = false;
+  let type = FORMATS.length - 1;
   for (const card of cube.cards) {
-    if (pauper && !['legal', 'banned'].includes(carddb.cardFromId(card.cardID).legalities.Pauper)) {
+    if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
+      peasant = true;
     }
-    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type).toLowerCase())) {
+    if (!pauper && peasant) {
+      // check rarities of all card versions
+      const rarities = carddb.allVersions(carddb.cardFromId(card.cardID)).map((id) => carddb.cardFromId(id).rarity);
+      if (!rarities.includes('common') && !rarities.includes('uncommon')) {
+        peasant = false;
+      }
+    }
+    while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type))) {
       type -= 1;
     }
   }
@@ -136,8 +126,69 @@ function setCubeType(cube, carddb) {
   if (pauper) {
     cube.type += ' Pauper';
   }
+  if (peasant) {
+    cube.type += ' Peasant';
+  }
   cube.card_count = cube.cards.length;
   return cube;
+}
+function getBasics(carddb) {
+  const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
+  const set = 'unh';
+  const res = {};
+  for (const name of names) {
+    let found = false;
+    const options = carddb.getIdsFromName(name);
+    for (const option of options) {
+      const card = carddb.cardFromId(option);
+      if (!found && card.set.toLowerCase() === set) {
+        found = true;
+        res[name] = {
+          cardID: option,
+          type_line: card.type,
+          cmc: 0,
+          details: card,
+        };
+      }
+    }
+  }
+  let found = false;
+  const options = carddb.getIdsFromName('Wastes');
+  for (const option of options) {
+    const card = carddb.cardFromId(option);
+    if (!found && card.set.toLowerCase() === 'ogw') {
+      found = true;
+      res.Wastes = {
+        cardID: option,
+        type_line: card.type,
+        cmc: 0,
+        details: card,
+      };
+    }
+  }
+  return res;
+}
+
+function addBasicsToDeck(deck, cardsArray, carddb, saveToDeck) {
+  const basics = getBasics(carddb);
+  for (const basic of Object.values(basics)) {
+    delete basic.details;
+  }
+  deck.cards = cardsArray.concat([
+    basics.Plains,
+    basics.Island,
+    basics.Swamp,
+    basics.Mountain,
+    basics.Forest,
+    basics.Wastes,
+  ]);
+  basics.Plains.index = deck.cards.length - 6;
+  basics.Island.index = deck.cards.length - 5;
+  basics.Swamp.index = deck.cards.length - 4;
+  basics.Mountain.index = deck.cards.length - 3;
+  basics.Forest.index = deck.cards.length - 2;
+  basics.Wastes.index = deck.cards.length - 1;
+  if (saveToDeck) deck.basics = basics;
 }
 
 function cardHtml(card) {
@@ -197,6 +248,19 @@ function buildTagColors(cube) {
   return tagColor;
 }
 
+function cubeCardTags(cube) {
+  const tags = [];
+  for (const card of cube.cards) {
+    for (let tag of card.tags) {
+      tag = tag.trim();
+      if (!tags.includes(tag)) {
+        tags.push(tag);
+      }
+    }
+  }
+  return tags;
+}
+
 function maybeCards(cube, carddb) {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
@@ -244,6 +308,7 @@ function CSVtoCards(csvString, carddb) {
     finish,
     maybeboard,
     'image url': imageUrl,
+    'image back url': imageBackUrl,
     tags,
     notes,
     'Color Category': colorCategory,
@@ -258,11 +323,12 @@ function CSVtoCards(csvString, carddb) {
         colors: (color || null) && color.split('').filter((c) => [...'WUBRG'].includes(c)),
         addedTmsp: new Date(),
         collector_number: collectorNumber && collectorNumber.toUpperCase(),
-        status,
-        finish,
+        status: status || 'Not Owned',
+        finish: finish || 'Non-foil',
         imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
+        imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
         tags: tags && tags.length > 0 ? tags.split(',') : [],
-        notes,
+        notes: notes || '',
         rarity: rarity || null,
         colorCategory: colorCategory || null,
       };
@@ -447,42 +513,8 @@ const generateSamplepackImage = (sources = [], options = {}) =>
   });
 
 const methods = {
-  getBasics(carddb) {
-    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    const set = 'unh';
-    const res = {};
-    for (const name of names) {
-      let found = false;
-      const options = carddb.getIdsFromName(name);
-      for (const option of options) {
-        const card = carddb.cardFromId(option);
-        if (!found && card.set.toLowerCase() === set) {
-          found = true;
-          res[name] = {
-            cardID: option,
-            type_line: card.type,
-            cmc: 0,
-            details: card,
-          };
-        }
-      }
-    }
-    let found = false;
-    const options = carddb.getIdsFromName('Wastes');
-    for (const option of options) {
-      const card = carddb.cardFromId(option);
-      if (!found && card.set.toLowerCase() === 'ogw') {
-        found = true;
-        res.Wastes = {
-          cardID: option,
-          type_line: card.type,
-          cmc: 0,
-          details: card,
-        };
-      }
-    }
-    return res;
-  },
+  addBasicsToDeck,
+  getBasics,
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {
@@ -507,33 +539,6 @@ const methods = {
       ],
       selfClosing: ['br'],
     });
-  },
-  addAutocard(src, carddb, cube) {
-    while (src.includes('[[') && src.includes(']]') && src.indexOf('[[') < src.indexOf(']]')) {
-      const cardname = src.substring(src.indexOf('[[') + 2, src.indexOf(']]'));
-      let mid = cardname;
-      if (carddb.nameToId[cardname.toLowerCase()]) {
-        const possible = carddb.nameToId[cardname.toLowerCase()];
-        let cardID = null;
-        if (cube && cube.cards) {
-          const allVersions = cube.cards.map((card) => card.cardID);
-          const matchingNameIds = allVersions.filter((id) => possible.includes(id));
-          [cardID] = matchingNameIds;
-        }
-        if (!cardID) {
-          [cardID] = possible;
-        }
-        const card = carddb.cardFromId(cardID);
-        if (card.image_flip) {
-          mid = `<a class="autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
-        } else {
-          mid = `<a class="autocard" card="${card.image_normal}">${card.name}</a>`;
-        }
-      }
-      // front + autocard + back
-      src = src.substring(0, src.indexOf('[[')) + mid + src.substring(src.indexOf(']]') + 2);
-    }
-    return src;
   },
   generatePack: async (cubeId, carddb, seed) => {
     const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
@@ -562,6 +567,7 @@ const methods = {
   replaceCardHtml,
   abbreviate,
   buildTagColors,
+  cubeCardTags,
   maybeCards,
   getCardElo,
   getElo,

@@ -3,12 +3,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
-const serialize = require('serialize-javascript');
 const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util.js');
 const carddb = require('../serverjs/cards.js');
+const { render } = require('../serverjs/render');
 
 // Bring in models
 const User = require('../models/user');
@@ -19,7 +19,6 @@ const Blog = require('../models/blog');
 
 const router = express.Router();
 
-const { addAutocard } = require('../serverjs/cubefn');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
@@ -53,7 +52,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     if (req.params.index > user.notifications.length) {
       req.flash('danger', 'Not Found');
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     const notification = user.notifications.splice(req.params.index, 1)[0];
@@ -61,7 +60,7 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
     if (!notification) {
       req.flash('danger', 'Not Found');
-      return res.status(401).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     return res.redirect(notification.url);
@@ -94,7 +93,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
 
 // Lost password form
 router.get('/lostpassword', (req, res) => {
-  res.render('user/lostpassword');
+  return render(req, res, 'LostPasswordPage');
 });
 
 router.get('/follow/:id', ensureAuth, async (req, res) => {
@@ -104,7 +103,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.status(404).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     if (!other.users_following.includes(user.id)) {
@@ -134,7 +133,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     if (!other) {
       req.flash('danger', 'User not found');
-      return res.status(404).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
@@ -152,75 +151,76 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 });
 
 // Lost password submit
-router.post('/lostpassword', [body('email', 'Email is required').isEmail()], flashValidationErrors, (req, res) => {
-  if (!req.validated) {
-    res.render('user/lostpassword');
-  } else {
-    const recoveryEmail = req.body.email.toLowerCase();
-    PasswordReset.deleteOne(
-      {
+router.post(
+  '/lostpassword',
+  [body('email', 'Email is required').isEmail()],
+  flashValidationErrors,
+  async (req, res) => {
+    try {
+      if (!req.validated) {
+        return render(req, res, 'LostPasswordPage');
+      }
+      const recoveryEmail = req.body.email.toLowerCase();
+      await PasswordReset.deleteOne({
         email: recoveryEmail,
-      },
-      () => {
-        const passwordReset = new PasswordReset();
-        passwordReset.expires = addMinutes(Date.now(), 15);
-        passwordReset.email = recoveryEmail;
-        passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
-        passwordReset.save((err2) => {
-          if (err2) {
-            req.logger.error(err2);
-          } else {
-            const smtpTransport = mailer.createTransport({
-              name: 'CubeCobra.com',
-              secure: true,
-              service: 'Gmail',
-              auth: {
-                user: process.env.EMAIL_CONFIG_USERNAME,
-                pass: process.env.EMAIL_CONFIG_PASSWORD,
-              },
-            });
+      });
 
-            const email = new Email({
-              message: {
-                from: 'Cube Cobra Team <support@cubecobra.com>',
-                to: passwordReset.email,
-                subject: 'Password Reset',
-              },
-              juiceResources: {
-                webResources: {
-                  relativeTo: path.join(__dirname, '..', 'public'),
-                  images: true,
-                },
-              },
-              transport: smtpTransport,
-            });
+      const passwordReset = new PasswordReset();
+      passwordReset.expires = addMinutes(Date.now(), 15);
+      passwordReset.email = recoveryEmail;
+      passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
+      await passwordReset.save();
 
-            email.send({
-              template: 'password_reset',
-              locals: {
-                id: passwordReset.id,
-                code: passwordReset.code,
-              },
-            });
+      const smtpTransport = mailer.createTransport({
+        name: 'CubeCobra.com',
+        secure: true,
+        service: 'Gmail',
+        auth: {
+          user: process.env.EMAIL_CONFIG_USERNAME,
+          pass: process.env.EMAIL_CONFIG_PASSWORD,
+        },
+      });
 
-            req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
-            res.redirect('/user/lostpassword');
-          }
-        });
-      },
-    );
-  }
-});
+      const email = new Email({
+        message: {
+          from: 'Cube Cobra Team <support@cubecobra.com>',
+          to: passwordReset.email,
+          subject: 'Password Reset',
+        },
+        send: true,
+        juiceResources: {
+          webResources: {
+            relativeTo: path.join(__dirname, '..', 'public'),
+            images: true,
+          },
+        },
+        transport: smtpTransport,
+      });
+
+      await email.send({
+        template: 'password_reset',
+        locals: {
+          id: passwordReset.id,
+          code: passwordReset.code,
+        },
+      });
+
+      req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
+      return res.redirect('/user/lostpassword');
+    } catch (err) {
+      return util.handleRouteError(req, res, err, `/user/lostpassword`);
+    }
+  },
+);
 
 router.get('/passwordreset/:id', (req, res) => {
   // create a password reset page and return it here
   PasswordReset.findById(req.params.id, (err, passwordreset) => {
     if (!passwordreset || Date.now() > passwordreset.expires) {
       req.flash('danger', 'Password recovery link expired');
-      res.redirect('/');
-    } else {
-      res.render('user/passwordreset');
+      return res.redirect('/');
     }
+    return render(req, res, 'PasswordResetPage');
   });
 });
 
@@ -231,77 +231,62 @@ router.post(
     body('password', 'New passwords must match.').custom(checkPasswordsMatch),
   ],
   flashValidationErrors,
-  (req, res) => {
-    if (!req.validated) {
-      res.render('user/passwordreset');
-    } else {
+  async (req, res) => {
+    try {
+      if (!req.validated) {
+        return render(req, res, 'PasswordResetPage');
+      }
       const recoveryEmail = req.body.email.toLowerCase();
-      PasswordReset.findOne(
-        {
-          code: req.body.code,
-          email: recoveryEmail,
-        },
-        (err2, passwordreset) => {
-          if (!passwordreset) {
-            req.flash('danger', 'Incorrect email and recovery code combination.');
-            res.render('user/passwordreset');
-          } else {
-            User.findOne(
-              {
-                email: recoveryEmail,
-              },
-              (err3, user) => {
-                if (err3) {
-                  req.logger.error(err3);
-                  res.sendStatus(500);
-                  return;
-                }
-                if (!user) {
-                  req.flash('danger', 'No user with that email found! Are you sure you created an account?');
-                  res.render('user/passwordreset');
-                  return;
-                }
-                if (req.body.password2 !== req.body.password) {
-                  req.flash('danger', "New passwords don't match");
-                  res.render('user/passwordreset');
-                  return;
-                }
-                bcrypt.genSalt(10, (err4, salt) => {
-                  if (err4) {
-                    req.logger.error(err4);
-                    res.sendStatus(500);
-                    return;
-                  }
-                  bcrypt.hash(req.body.password2, salt, (err5, hash) => {
-                    if (err5) {
-                      req.logger.error(err5);
-                      res.sendStatus(500);
-                    } else {
-                      user.password = hash;
-                      user.save((err6) => {
-                        if (err6) {
-                          req.logger.error(err6);
-                          return res.sendStatus(500);
-                        }
+      const passwordreset = await PasswordReset.findOne({
+        code: req.body.code,
+        email: recoveryEmail,
+      });
 
-                        req.flash('success', 'Password updated successfully');
-                        return res.redirect('/user/login');
-                      });
-                    }
-                  });
-                });
-              },
-            );
+      if (!passwordreset) {
+        req.flash('danger', 'Incorrect email and recovery code combination.');
+        return render(req, res, 'PasswordResetPage');
+      }
+      const user = await User.findOne({
+        email: recoveryEmail,
+      });
+
+      if (!user) {
+        req.flash('danger', 'No user with that email found! Are you sure you created an account?');
+        return render(req, res, 'PasswordResetPage');
+      }
+
+      if (req.body.password2 !== req.body.password) {
+        req.flash('danger', "New passwords don't match");
+        return render(req, res, 'PasswordResetPage');
+      }
+
+      return bcrypt.genSalt(10, (err4, salt) => {
+        if (err4) {
+          return util.handleRouteError(req, res, err4, `/`);
+        }
+        return bcrypt.hash(req.body.password2, salt, async (err5, hash) => {
+          if (err5) {
+            return util.handleRouteError(req, res, err5, `/`);
           }
-        },
-      );
+          user.password = hash;
+          try {
+            await user.save();
+            req.flash('success', 'Password updated successfully');
+            return res.redirect('/user/login');
+          } catch (err6) {
+            return util.handleRouteError(req, res, err6, `/`);
+          }
+        });
+      });
+    } catch (err) {
+      return util.handleRouteError(req, res, err, `/`);
     }
   },
 );
 
 // Register form
 router.get('/register', (req, res) => {
-  res.render('user/register');
+  return render(req, res, 'RegisterPage');
 });
 
 // Register process
@@ -322,106 +307,94 @@ router.post(
     ...usernameValid,
   ],
   flashValidationErrors,
-  (req, res) => {
+  async (req, res) => {
     const email = req.body.email.toLowerCase();
     const { username, password } = req.body;
 
     const attempt = { email, username };
 
     if (!req.validated) {
-      res.render('user/register', {
-        attempt,
-        user: null,
-      });
-    } else {
-      User.findOne(
-        {
-          username_lower: req.body.username.toLowerCase(),
-        },
-        (err, user) => {
-          if (user) {
-            req.flash('danger', 'Username already taken.');
-            res.render('user/register', {
-              attempt,
-            });
-          } else {
-            // check if user exists
-            User.findOne(
-              {
-                email: req.body.email.toLowerCase(),
-              },
-              (err2, user2) => {
-                if (user2) {
-                  req.flash('danger', 'Email already associated with an existing account.');
-                  res.render('user/register', {
-                    attempt,
-                  });
-                } else {
-                  const newUser = new User({
-                    email,
-                    username,
-                    username_lower: username.toLowerCase(),
-                    password,
-                    confirm: 'false',
-                  });
-
-                  bcrypt.genSalt(10, (err3, salt) => {
-                    bcrypt.hash(newUser.password, salt, (err4, hash) => {
-                      if (err4) {
-                        req.logger.error(err4);
-                      } else {
-                        newUser.password = hash;
-                        newUser.confirmed = 'false';
-                        newUser.save((err5) => {
-                          if (err5) {
-                            req.logger.error(err5);
-                          } else {
-                            const smtpTransport = mailer.createTransport({
-                              name: 'CubeCobra.com',
-                              secure: true,
-                              service: 'Gmail',
-                              auth: {
-                                user: process.env.EMAIL_CONFIG_USERNAME,
-                                pass: process.env.EMAIL_CONFIG_PASSWORD,
-                              },
-                            });
-                            const confirmEmail = new Email({
-                              message: {
-                                from: 'Cube Cobra Team <support@cubecobra.com>',
-                                to: email,
-                                subject: 'Confirm Account',
-                              },
-                              juiceResources: {
-                                webResources: {
-                                  relativeTo: path.join(__dirname, '..', 'public'),
-                                  images: true,
-                                },
-                              },
-                              transport: smtpTransport,
-                            });
-
-                            confirmEmail.send({
-                              template: 'confirm_email',
-                              locals: {
-                                id: newUser._id,
-                              },
-                            });
-
-                            // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                            req.flash('success', 'Account successfully created. You are now able to login.');
-                            res.redirect('/user/login');
-                          }
-                        });
-                      }
-                    });
-                  });
-                }
-              },
-            );
-          }
-        },
-      );
+      return render(req, res, 'RegisterPage', attempt);
     }
+    const user = await User.findOne({
+      username_lower: req.body.username.toLowerCase(),
+    });
+
+    if (user) {
+      req.flash('danger', 'Username already taken.');
+      return render(req, res, 'RegisterPage', attempt);
+    }
+
+    // check if user exists
+    const user2 = await User.findOne({
+      email: req.body.email.toLowerCase(),
+    });
+
+    if (user2) {
+      req.flash('danger', 'Email already associated with an existing account.');
+      return render(req, res, 'RegisterPage', attempt);
+    }
+    const newUser = new User({
+      email,
+      username,
+      username_lower: username.toLowerCase(),
+      password,
+      confirm: 'false',
+    });
+
+    return bcrypt.genSalt(10, (err3, salt) => {
+      bcrypt.hash(newUser.password, salt, (err4, hash) => {
+        if (err4) {
+          req.logger.error(err4);
+        } else {
+          newUser.password = hash;
+          newUser.confirmed = 'false';
+          newUser.save((err5) => {
+            if (err5) {
+              req.logger.error(err5);
+            } else {
+              const smtpTransport = mailer.createTransport({
+                name: 'CubeCobra.com',
+                secure: true,
+                service: 'Gmail',
+                auth: {
+                  user: process.env.EMAIL_CONFIG_USERNAME,
+                  pass: process.env.EMAIL_CONFIG_PASSWORD,
+                },
+              });
+              const confirmEmail = new Email({
+                message: {
+                  from: 'Cube Cobra Team <support@cubecobra.com>',
+                  to: email,
+                  subject: 'Confirm Account',
+                },
+                send: true,
+                juiceResources: {
+                  webResources: {
+                    relativeTo: path.join(__dirname, '..', 'public'),
+                    images: true,
+                  },
+                },
+                transport: smtpTransport,
+              });
+
+              confirmEmail
+                .send({
+                  template: 'confirm_email',
+                  locals: {
+                    id: newUser._id,
+                  },
+                })
+                .then(() => {
+                  // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
+                  req.flash('success', 'Account successfully created. You are now able to login.');
+                  res.redirect('/user/login');
+                });
+            }
+          });
+        }
+      });
+    });
   },
 );
 
@@ -451,7 +424,7 @@ router.get('/register/confirm/:id', (req, res) => {
 
 // Login route
 router.get('/login', (req, res) => {
-  res.render('user/login');
+  return render(req, res, 'LoginPage');
 });
 
 // Login post
@@ -504,7 +477,7 @@ router.get('/view/:id', async (req, res) => {
       ).lean();
       if (!user) {
         req.flash('danger', 'User not found');
-        return res.status(404).render('misc/404', {});
+        return res.redirect('/404');
       }
     }
 
@@ -525,16 +498,12 @@ router.get('/view/:id', async (req, res) => {
 
     const following = req.user && user.users_following ? user.users_following.includes(req.user.id) : false;
     delete user.users_following;
-    return res.render('user/user_view', {
-      reactProps: serialize({
-        user,
-        canEdit: req.user && req.user._id.equals(user._id),
-        cubes,
-        followers,
-        following,
-      }),
-      title: user.username,
-      loginCallback: `/user/view/${req.params.id}`,
+
+    return render(req, res, 'UserCubePage', {
+      owner: user,
+      cubes,
+      followers,
+      following,
     });
   } catch (err) {
     req.logger.error(err);
@@ -547,14 +516,9 @@ router.get('/decks/:userid', (req, res) => {
 });
 
 router.get('/notifications', ensureAuth, async (req, res) => {
-  try {
-    return res.render('user/notifications', {
-      notifications: req.user.old_notifications,
-    });
-  } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send(err);
-  }
+  return render(req, res, 'NotificationsPage', {
+    notifications: req.user.old_notifications,
+  });
 });
 
 router.get('/decks/:userid/:page', async (req, res) => {
@@ -586,7 +550,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return res.status(404).render('misc/404', {});
+      return res.redirect('/404');
     }
 
     const followers = await User.find(
@@ -596,66 +560,69 @@ router.get('/decks/:userid/:page', async (req, res) => {
 
     delete user.users_following;
 
-    const reactProps = {
-      user,
-      canEdit: req.user && user._id.equals(req.user._id),
+    return render(req, res, 'UserDecksPage', {
+      owner: user,
       followers,
       following: req.user && req.user.followed_users.includes(user.id),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: page,
-    };
-
-    return res.render('user/user_decks', {
-      reactProps: serialize(reactProps),
-      title: user.username,
-      loginCallback: `/user/decks/${userid}`,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
 });
 
-router.get('/blog/:userid', async (req, res) => {
+router.get('/blog/:userid', (req, res) => {
+  res.redirect(`/user/blog/${req.params.userid}/0`);
+});
+
+router.get('/blog/:userid/:page', async (req, res) => {
   try {
+    const pagesize = 30;
+
     const user = await User.findById(req.params.userid, '_id username users_following').lean();
 
-    const posts = await Blog.find({
+    const postsq = Blog.find({
       owner: user._id,
-    }).sort({
-      date: -1,
+    })
+      .sort({
+        date: -1,
+      })
+      .skip(req.params.page * pagesize)
+      .limit(pagesize)
+      .lean();
+
+    const numBlogsq = Blog.countDocuments({
+      owner: user._id,
     });
 
-    // autocard the posts
-    if (posts) {
-      for (const post of posts) {
-        if (post.html) {
-          post.html = addAutocard(post.html, carddb);
-        }
-      }
-    }
-
-    const followers = await User.find(
+    const followersq = User.find(
       { _id: { $in: user.users_following } },
       '_id username image_name image artist users_following',
     );
 
+    const [posts, numBlogs, followers] = await Promise.all([postsq, numBlogsq, followersq]);
+
     delete user.users_following;
 
-    const reactProps = {
-      user,
-      posts,
-      canEdit: req.user && req.user._id.equals(user._id),
-      followers,
-      following: req.user && req.user.followed_users.includes(user.id),
-      userId: req.user ? req.user._id : '',
-    };
-
-    return res.render('user/user_blog', {
-      reactProps: serialize(reactProps),
-      title: user.username,
-      loginCallback: `/user/blog/${req.params.userid}`,
-    });
+    return render(
+      req,
+      res,
+      'UserBlogPage',
+      {
+        owner: user,
+        posts,
+        canEdit: req.user && req.user._id.equals(user._id),
+        followers,
+        following: req.user && req.user.followed_users.includes(user.id),
+        pages: Math.ceil(numBlogs / pagesize),
+        activePage: req.params.page,
+      },
+      {
+        title: user.username,
+      },
+    );
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -663,23 +630,17 @@ router.get('/blog/:userid', async (req, res) => {
 
 // account page
 router.get('/account', ensureAuth, (req, res) => {
-  const userLimited = {
-    _id: req.user._id,
-    username: req.user.username,
-    email: req.user.email,
-    about: req.user.about,
-    image: req.user.image,
-    image_name: req.user.image_name,
-    artist: req.user.artist,
-  };
-  res.render('user/user_account', {
-    reactProps: serialize({
-      user: userLimited,
+  return render(
+    req,
+    res,
+    'UserAccountPage',
+    {
       defaultNav: req.query.nav || 'profile',
-    }),
-    title: 'Account',
-    loginCallback: '/user/account',
-  });
+    },
+    {
+      title: 'Account',
+    },
+  );
 });
 
 router.post(
@@ -694,17 +655,8 @@ router.post(
   flashValidationErrors,
   (req, res) => {
     if (!req.validated) {
-      User.findById(req.user._id, (err, user) => {
-        const userLimited = {
-          username: user.username,
-          email: user.email,
-          about: user.about,
-        };
-        res.render('user/user_account', {
-          selected: 'changepw',
-          user: userLimited,
-          loginCallback: '/user/account?nav=password',
-        });
+      User.findById(req.user._id, () => {
+        res.redirect('/user/account');
       });
     } else {
       User.findById(req.user._id, (err, user) => {
@@ -820,6 +772,22 @@ router.post('/updateemail', ensureAuth, (req, res) => {
   );
 });
 
+router.post('/changetheme', ensureAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    user.theme = req.body.theme;
+
+    await user.save();
+
+    req.flash('success', 'Your theme has been updated.');
+    res.redirect('/user/account');
+  } catch (err) {
+    req.flash('danger', `Could not save theme: ${err.message}`);
+    res.redirect('/user/account?nav=theme');
+  }
+});
+
 router.get('/social', ensureAuth, async (req, res) => {
   try {
     const followedCubesQ = Cube.find({ _id: { $in: req.user.followed_cubes } }, Cube.PREVIEW_FIELDS).lean();
@@ -834,19 +802,21 @@ router.get('/social', ensureAuth, async (req, res) => {
 
     const [followedCubes, followedUsers, followers] = await Promise.all([followedCubesQ, followedUsersQ, followersQ]);
 
-    const reactProps = {
-      followedCubes,
-      followedUsers,
-      followers,
-    };
-
-    res.render('user/user_social', {
-      reactProps: serialize(reactProps),
-      title: 'Social',
-      loginCallback: '/user/social',
-    });
+    return render(
+      req,
+      res,
+      'UserSocialPage',
+      {
+        followedCubes,
+        followedUsers,
+        followers,
+      },
+      {
+        title: 'Social',
+      },
+    );
   } catch (err) {
-    util.handleRouteError(req, res, err, '/');
+    return util.handleRouteError(req, res, err, '/');
   }
 });
 

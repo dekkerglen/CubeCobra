@@ -466,10 +466,6 @@ function convertParsedCost(card, isExtra = false) {
     return [];
   }
 
-  if (!card.mana_cost) {
-    return [''];
-  }
-
   let parsedCost = [];
   if (typeof card.card_faces === 'undefined' || card.layout === 'flip') {
     parsedCost = card.mana_cost
@@ -484,7 +480,7 @@ function convertParsedCost(card, isExtra = false) {
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (card.card_faces[0].colors) {
+  } else if (Array.isArray(card.card_faces) && card.card_faces[0].colors) {
     parsedCost = card.card_faces[0].mana_cost
       .substr(1, card.card_faces[0].mana_cost.length - 2)
       .toLowerCase()
@@ -606,8 +602,8 @@ function convertCard(card, isExtra) {
     eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
     tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
   };
-  newcard.elo = catalog.elodict[name];
-  newcard.embedding = catalog.embeddingdict[name];
+  newcard.elo = catalog.elodict[name] || 1200;
+  newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -633,6 +629,7 @@ function convertCard(card, isExtra) {
   newcard.full_art = card.full_art;
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
+  newcard.layout = card.layout;
 
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;

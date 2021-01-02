@@ -1,13 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Row, CardText } from 'reactstrap';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
-import FoilCardImage from 'components/FoilCardImage';
+import CommentsSection from 'components/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
-import CommentsSection from 'components/CommentsSection';
-import { subtitle as makeSubtitle } from 'pages/CubeDraftPage';
+import FoilCardImage from 'components/FoilCardImage';
+import Markdown from 'components/Markdown';
+import CardPropType from 'proptypes/CardPropType';
+import DraftSeatPropType from 'proptypes/DraftSeatPropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import { makeSubtitle } from 'utils/Card';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
@@ -139,46 +143,21 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
         </CardBody>
       )}
       <CardBody>
-        <CardText dangerouslySetInnerHTML={{ __html: seat.description }} />
+        <Markdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="deck" parent={deck._id} userid={userid} />
+        <CommentsSection parentType="deck" parent={deck._id} userid={userid} collapse={false} />
       </div>
     </Card>
   );
 };
 
 DeckCard.propTypes = {
-  seat: PropTypes.shape({
-    description: PropTypes.string.isRequired,
-    deck: PropTypes.array.isRequired,
-    sideboard: PropTypes.array.isRequired,
-    username: PropTypes.string.isRequired,
-    userid: PropTypes.string,
-    bot: PropTypes.array,
-    name: PropTypes.string.isRequired,
-  }).isRequired,
+  seat: DraftSeatPropType.isRequired,
   userid: PropTypes.string,
   view: PropTypes.string,
-  draft: PropTypes.shape({ cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired })
-    .isRequired,
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-  }).isRequired,
+  draft: PropTypes.shape({ cards: PropTypes.arrayOf(CardPropType).isRequired }).isRequired,
+  deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
 };
 

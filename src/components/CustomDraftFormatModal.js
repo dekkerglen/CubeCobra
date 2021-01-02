@@ -23,51 +23,72 @@ import {
   Row,
 } from 'reactstrap';
 
-import CSRFForm from './CSRFForm';
-import CubeContext from './CubeContext';
-import TextEntry from './TextEntry';
+import PropTypes from 'prop-types';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'contexts/CubeContext';
+import TextEntry from 'components/TextEntry';
+
+const defaultPack = { filters: [''], trash: 0, sealed: false, pickAtTime: 1 };
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
   const { cubeID } = useContext(CubeContext);
 
   const formRef = useRef();
-  const defaultPack = { filters: [''], trash: 0, sealed: false, pickAtTime: 1 };
 
-  const handleChangeDescription = useCallback((event) => {
-    setFormat((format) => ({
-      ...format,
-      html: event.target.value,
-    }));
-  });
+  const handleChangeDescription = useCallback(
+    (event) => {
+      const { target } = event;
+      if (target) {
+        // eslint-disable-next-line no-shadow
+        setFormat((format) => ({
+          ...format,
+          markdown: target.value,
+        }));
+      }
+    },
+    [setFormat],
+  );
 
-  const handleAddCard = useCallback((event) => {
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs ?? [{ ...defaultPack }])];
-      newFormat.packs[index] = { ...newFormat.packs[index] };
-      newFormat.packs[index].filters = [...newFormat.packs[index].filters, ''];
-      return newFormat;
-    });
-  }, []);
-  const handleRemoveCard = useCallback((event) => {
-    const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'));
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      // don't remove the last card from a pack
-      if (format.packs[packIndex].length <= 1) return format;
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
-      newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
-      newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
-      newFormat.packs[packIndex].filters.splice(index, 1);
-      return newFormat;
-    });
-  }, []);
+  const handleAddCard = useCallback(
+    (event) => {
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs ?? [{ ...defaultPack }])];
+        newFormat.packs[index] = { ...newFormat.packs[index] };
+        newFormat.packs[index].filters = [...newFormat.packs[index].filters, ''];
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
+  const handleRemoveCard = useCallback(
+    (event) => {
+      const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'), 10);
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        // don't remove the last card from a pack
+        if (format.packs[packIndex].length <= 1) return format;
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
+        newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
+        newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
+        newFormat.packs[packIndex].filters.splice(index, 1);
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
   const handleChangeCard = useCallback(() => {
-    const packIndex = parseInt(event.target.getAttribute('data-pack'));
-    const index = parseInt(event.target.getAttribute('data-index'));
-    const value = event.target.value;
+    // eslint-disable-next-line no-restricted-globals
+    const packIndex = parseInt(event.target.getAttribute('data-pack'), 10);
+    // eslint-disable-next-line no-restricted-globals
+    const index = parseInt(event.target.getAttribute('data-index'), 10);
+    // eslint-disable-next-line no-restricted-globals
+    const { value } = event.target;
+    // eslint-disable-next-line no-shadow
     setFormat((format) => {
       const newFormat = { ...format };
       newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
@@ -76,58 +97,82 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       newFormat.packs[packIndex].filters[index] = value;
       return newFormat;
     });
-  }, []);
+  }, [setFormat]);
   const handleAddPack = useCallback(() => {
+    // eslint-disable-next-line no-shadow
     setFormat(({ packs, ...format }) => ({
       ...format,
       packs: [...(packs || [{ ...defaultPack }]), { ...defaultPack }],
     }));
-  }, []);
-  const handleDuplicatePack = useCallback((event) => {
-    const index = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat((format) => {
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [['']])];
-      newFormat.packs.splice(index, 0, newFormat.packs[index]);
-      return newFormat;
-    });
-  }, []);
-  const handleRemovePack = useCallback((event) => {
-    const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'));
-    setFormat(({ packs, ...format }) => ({
-      ...format,
-      packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
-    }));
-  }, []);
-  const handleChangeTrash = useCallback((event) => {
-    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-    const value = parseInt(event.target.value, 10);
-    setFormat(({ ...format }) => {
-      format.packs = [...(format.packs || [{ ...defaultPack }])];
-      format.packs[packIndex].trash = Number.isInteger(value) ? value : null;
-      return format;
-    });
-  });
-  const handleChangePickAtTime = useCallback((event) => {
-    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-    const value = parseInt(event.target.value, 10);
-    setFormat(({ ...format }) => {
-      format.packs = [...(format.packs || [{ ...defaultPack }])];
-      format.packs[packIndex].pickAtTime = Number.isInteger(value) ? value : null;
-      return format;
-    });
-  });
-  const handleChangeSealed = useCallback((event) => {
-    const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-    setFormat(({ ...format }) => {
-      format.packs = [...(format.packs || [{ ...defaultPack }])];
-      format.packs[packIndex].sealed = !format.packs[packIndex].sealed;
-      return format;
-    });
-  });
+  }, [setFormat]);
+  const handleDuplicatePack = useCallback(
+    (event) => {
+      // eslint-disable-next-line no-restricted-globals
+      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat((format) => {
+        const newFormat = { ...format };
+        newFormat.packs = [...(newFormat.packs || [['']])];
+        newFormat.packs.splice(index, 0, newFormat.packs[index]);
+        return newFormat;
+      });
+    },
+    [setFormat],
+  );
+  const handleRemovePack = useCallback(
+    (event) => {
+      // eslint-disable-next-line no-restricted-globals
+      const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat(({ packs, ...format }) => ({
+        ...format,
+        packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
+      }));
+    },
+    [setFormat],
+  );
+  const handleChangeTrash = useCallback(
+    (event) => {
+      // eslint-disable-next-line no-restricted-globals
+      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+      const value = parseInt(event.target.value, 10);
+      // eslint-disable-next-line no-shadow
+      setFormat(({ ...format }) => {
+        format.packs = [...(format.packs || [{ ...defaultPack }])];
+        format.packs[packIndex].trash = Number.isInteger(value) ? value : null;
+        return format;
+      });
+    },
+    [setFormat],
+  );
+  const handleChangePickAtTime = useCallback(
+    (event) => {
+      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+      const value = parseInt(event.target.value, 10);
+      // eslint-disable-next-line no-shadow
+      setFormat(({ ...format }) => {
+        format.packs = [...(format.packs || [{ ...defaultPack }])];
+        format.packs[packIndex].pickAtTime = Number.isInteger(value) ? value : null;
+        return format;
+      });
+    },
+    [setFormat],
+  );
+  const handleChangeSealed = useCallback(
+    (event) => {
+      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
+      // eslint-disable-next-line no-shadow
+      setFormat(({ ...format }) => {
+        format.packs = [...(format.packs || [{ ...defaultPack }])];
+        format.packs[packIndex].sealed = !format.packs[packIndex].sealed;
+        return format;
+      });
+    },
+    [setFormat],
+  );
 
   const packs = format.packs || [{ ...defaultPack }];
-  const description = format.html || '';
+  const description = format.markdown || format.html || '';
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
@@ -158,7 +203,14 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             </Col>
           </Row>
           <h6>Description</h6>
-          <TextEntry name="html" value={description} onChange={handleChangeDescription} />
+          <TextEntry name="markdown" value={description || ''} onChange={handleChangeDescription} maxLength={5000} />
+          <FormText>
+            Having trouble formatting your posts? Check out the{' '}
+            <a href="/markdown" target="_blank">
+              markdown guide
+            </a>
+            .
+          </FormText>
           <FormText className="mt-3 mb-1">
             Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.
             3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags can be
@@ -166,6 +218,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             match any card.
           </FormText>
           {packs.map((pack, index) => (
+            // eslint-disable-next-line react/no-array-index-key
             <Card key={index} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
@@ -207,10 +260,11 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                       onChange={handleChangePickAtTime}
                       data-index={index}
                     />
-                    cards at a time.
+                    cards between each pass.
                   </Label>
                 </Form>
                 {pack.filters.map((card, cardIndex) => (
+                  // eslint-disable-next-line react/no-array-index-key
                   <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>{cardIndex + 1}</InputGroupText>
@@ -263,6 +317,15 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       </CSRFForm>
     </Modal>
   );
+};
+
+CustomDraftFormatModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  formatIndex: PropTypes.number.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  format: PropTypes.object.isRequired,
+  setFormat: PropTypes.func.isRequired,
 };
 
 export default CustomDraftFormatModal;

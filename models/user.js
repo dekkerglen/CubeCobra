@@ -79,6 +79,20 @@ const UserSchema = mongoose.Schema({
     type: String,
     default: 'Allan Pollack',
   },
+  roles: {
+    type: [
+      {
+        type: String,
+        enum: ['Admin', 'ContentCreator'],
+      },
+    ],
+    default: [],
+  },
+  theme: {
+    type: String,
+    enum: ['default', 'dark'],
+    default: 'default',
+  },
 });
 
 UserSchema.index({

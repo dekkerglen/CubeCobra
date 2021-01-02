@@ -2,6 +2,7 @@
 # const defaultOperation = (op, value) => ...
 # const stringOperation = (op, value) => ...
 # const stringContainOperation = (op, value) => ...
+# const nameStringOperation = (op, value) => ...
 # const equalityOperation = (op, value) => ...
 # const setOperation = (op, value) => ...
 # const rarityOperation = (op, value) => ...
@@ -147,16 +148,22 @@ stringOpValue -> equalityOperator stringValue {% ([op, value]) => stringOperatio
 
 stringContainOpValue -> equalityOperator stringValue {% ([op, value]) => stringContainOperation(op, value) %}
 
+stringExactOpValue -> equalityOperator stringValue {% ([op, value]) => equalityOperation(op, value) %}
+
+nameStringOpValue -> equalityOperator stringValue {% ([op, value]) => nameStringOperation(op, value) %}
+
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
 # anything that isn't a special character and isn't "and" or "or"
-noQuoteStringValue -> ([^aAoO\- \t\n"'\\=<>:] 
-  | "a"i [^nN \t\n"'\\=<>:] 
-  | "an"i:+ [^dD \t\n"'\\=<>:] 
-  | "and"i:+ [^ \t\n"'\\=<>:] 
-  | "o"i:+ [^rR \t\n"'\\=<>:]
-  | "or"i:+ [^ \t\n"'\\=<>:]
-) [^ \t\n"'\\=<>:]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
+noQuoteStringValue -> 
+  ("a"i | "an"i | "o"i) {% ([[value]]) => value.toLowerCase() %}
+  | ([^aAoO\- \t\n"'\\=<>:] 
+    | "a"i [^nN \t\n"'\\=<>:] 
+    | "an"i [^dD \t\n"'\\=<>:] 
+    | "and"i [^ \t\n"'\\=<>:] 
+    | "o"i [^rR \t\n"'\\=<>:]
+    | "or"i [^ \t\n"'\\=<>:]
+    ) [^ \t\n"'\\=<>:]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
 # "
 
 manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}

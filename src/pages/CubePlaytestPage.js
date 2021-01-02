@@ -1,5 +1,7 @@
 import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -26,16 +28,19 @@ import {
 } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
+import Markdown from 'components/Markdown';
 import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import { csrfFetch } from 'utils/CSRF';
 import Draft, { allBotsDraft, init } from 'utils/Draft';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
@@ -166,10 +171,17 @@ const CustomDraftCard = ({
           </CardTitleH5>
         </CardHeader>
         <CardBody>
-          <div
-            className="description-area"
-            dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
-          />
+          {format.markdown ? (
+            <div className="mb-3">
+              <Markdown markdown={format.markdown} />
+            </div>
+          ) : (
+            <div
+              className="description-area"
+              dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
+            />
+          )}
+
           <LabelRow htmlFor={`seats-${index}`} label="Total Seats">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue="8">
               {rangeOptions(2, 17)}
@@ -220,7 +232,8 @@ CustomDraftCard.propTypes = {
   format: PropTypes.shape({
     index: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
-    html: PropTypes.string.isRequired,
+    html: PropTypes.string,
+    markdown: PropTypes.string,
   }).isRequired,
   onEditFormat: PropTypes.func.isRequired,
   onDeleteFormat: PropTypes.func.isRequired,
@@ -354,7 +367,7 @@ const GridCard = () => {
   );
 };
 
-const DecksCard = ({ decks, canEdit, userID, ...props }) => {
+const DecksCard = ({ decks, userID, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card {...props}>
@@ -363,7 +376,7 @@ const DecksCard = ({ decks, canEdit, userID, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} canEdit={canEdit || userID === deck.seats[0].userid} />
+          <DeckPreview key={deck._id} deck={deck} canEdit={userID === deck.seats[0].userid} />
         ))}
       </CardBody>
       <CardFooter>
@@ -374,13 +387,8 @@ const DecksCard = ({ decks, canEdit, userID, ...props }) => {
 };
 
 DecksCard.propTypes = {
-  decks: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   userID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool.isRequired,
 };
 
 const SamplePackCard = (props) => {
@@ -412,7 +420,7 @@ const SamplePackCard = (props) => {
 const DEFAULT_FORMAT = {
   packs: [{ filters: ['rarity:Mythic', 'tag:new', 'identity>1'], trash: 0, sealed: false, pickAtTime: 1 }],
 };
-const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }) => {
+const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(draftFormats);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -442,7 +450,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/format/remove/${cubeID}/${formatIndex}`, {
+        const response = await csrfFetch(`/cube/format/remove/${cube._id}/${formatIndex}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw Error();
@@ -457,14 +465,14 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
         addAlert('danger', 'Failed to delete format.');
       }
     },
-    [addAlert, cubeID, formats],
+    [addAlert, cube._id, formats],
   );
 
   const handleSetDefaultFormat = useCallback(
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/${cubeID}/defaultdraftformat/${formatIndex}`, {
+        const response = await csrfFetch(`/cube/${cube._id}/defaultdraftformat/${formatIndex}`, {
           method: 'POST',
         });
 
@@ -479,7 +487,7 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
         addAlert('danger', 'Failed to set format as default.');
       }
     },
-    [addAlert, cubeID],
+    [addAlert, cube._id],
   );
 
   // Sort formats alphabetically.
@@ -507,56 +515,58 @@ const CubePlaytestPage = ({ cube, cubeID, canEdit, userID, decks, draftFormats }
     />
   );
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="playtest">
-      {canEdit ? (
-        <Navbar light expand className="usercontrols mb-3">
-          <Nav navbar>
-            <NavItem>
-              <NavLink onClick={handleCreateFormat} className="clickable">
-                Create Custom Draft
-              </NavLink>
-            </NavItem>
-            <NavItem>
-              <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
-            </NavItem>
-          </Nav>
-        </Navbar>
-      ) : (
-        <Row className="mb-3" />
-      )}
-      <DynamicFlash />
-      <Alerts alerts={alerts} />
-      <Row className="justify-content-center">
-        <Col xs="12" md="6" xl="6">
-          {defaultDraftFormat === -1 && <StandardDraftFormatCard />}
-          {formatsSorted.map((format) => (
-            <CustomDraftCard
-              key={format._id}
-              format={format}
-              onDeleteFormat={handleDeleteFormat}
-              onSetDefaultFormat={handleSetDefaultFormat}
-              onEditFormat={handleEditFormat}
-              defaultDraftFormat={defaultDraftFormat}
-              className="mb-3"
-            />
-          ))}
-          {defaultDraftFormat !== -1 && <StandardDraftFormatCard />}
-          <SealedCard className="mb-3" />
-          <GridCard className="mb-3" />
-        </Col>
-        <Col xs="12" md="6" xl="6">
-          {decks.length !== 0 && <DecksCard decks={decks} canEdit={canEdit} userID={userID} className="mb-3" />}
-          <SamplePackCard className="mb-3" />
-        </Col>
-      </Row>
-      <CustomDraftFormatModal
-        isOpen={editModalOpen}
-        toggle={toggleEditModal}
-        formatIndex={editFormatIndex}
-        format={editFormat}
-        setFormat={setEditFormat}
-      />
-    </CubeLayout>
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="playtest">
+        {user && cube.owner === user.id ? (
+          <Navbar light expand className="usercontrols mb-3">
+            <Nav navbar>
+              <NavItem>
+                <NavLink onClick={handleCreateFormat} className="clickable">
+                  Create Custom Draft
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
+              </NavItem>
+            </Nav>
+          </Navbar>
+        ) : (
+          <Row className="mb-3" />
+        )}
+        <DynamicFlash />
+        <Alerts alerts={alerts} />
+        <Row className="justify-content-center">
+          <Col xs="12" md="6" xl="6">
+            {defaultDraftFormat === -1 && <StandardDraftFormatCard />}
+            {formatsSorted.map((format) => (
+              <CustomDraftCard
+                key={format._id}
+                format={format}
+                onDeleteFormat={handleDeleteFormat}
+                onSetDefaultFormat={handleSetDefaultFormat}
+                onEditFormat={handleEditFormat}
+                defaultDraftFormat={defaultDraftFormat}
+                className="mb-3"
+              />
+            ))}
+            {defaultDraftFormat !== -1 && <StandardDraftFormatCard />}
+            <SealedCard className="mb-3" />
+            <GridCard className="mb-3" />
+          </Col>
+          <Col xs="12" md="6" xl="6">
+            {decks.length !== 0 && <DecksCard decks={decks} userid={user && user.id} className="mb-3" />}
+            <SamplePackCard className="mb-3" />
+          </Col>
+        </Row>
+        <CustomDraftFormatModal
+          isOpen={editModalOpen}
+          toggle={toggleEditModal}
+          formatIndex={editFormatIndex}
+          format={editFormat}
+          setFormat={setEditFormat}
+        />
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
@@ -564,16 +574,23 @@ CubePlaytestPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object),
     defaultDraftFormat: PropTypes.number,
+    _id: PropTypes.string.isRequired,
+    owner: PropTypes.string.isRequired,
   }).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  userID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool.isRequired,
-  decks: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  decks: PropTypes.arrayOf(DeckPropType).isRequired,
   draftFormats: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
+      markdown: PropTypes.string,
     }),
   ).isRequired,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
-export default CubePlaytestPage;
+CubePlaytestPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(CubePlaytestPage);

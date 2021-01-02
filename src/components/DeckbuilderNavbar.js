@@ -188,7 +188,7 @@ const DeckbuilderNavbar = ({
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
     init(draft);
     const picked = createSeen();
-    addSeen(picked, main, draft.synergies, draft.cards);
+    addSeen(picked, main, draft.cards);
     const { sideboard: side, deck: newDeck } = await buildDeck(draft.cards, main, picked, draft.basics);
     setSideboard([side]);
     setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
 
-import TagContext from './TagContext';
+import TagContext from 'contexts/TagContext';
 
 const TagInput = ({ tags, addTag, deleteTag, reorderTag, ...props }) => (
   <TagContext.Consumer>

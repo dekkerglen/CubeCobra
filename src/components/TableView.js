@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Row, Col } from 'reactstrap';
 
@@ -7,8 +8,8 @@ import { countGroup, sortDeep } from 'utils/Sort';
 
 import AutocardListGroup from 'components/AutocardListGroup';
 import AutocardListItem from 'components/AutocardListItem';
-import DisplayContext from 'components/DisplayContext';
-import SortContext from 'components/SortContext';
+import DisplayContext from 'contexts/DisplayContext';
+import SortContext from 'contexts/SortContext';
 
 const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
   const { primary, secondary } = useContext(SortContext);
@@ -50,11 +51,7 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
 };
 
 TableView.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   className: PropTypes.string,

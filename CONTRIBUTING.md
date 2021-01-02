@@ -171,7 +171,7 @@ Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and JSX. Befor
 
 ### Development Server
 
-The development server can be accessed at: http://codecobradev.com/
+The development server can be accessed at: http://cubecobradev.com/
 This server usually runs on a more up to date, experimental branch than the production server. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
 
 # Release Schedule

@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -21,15 +24,17 @@ import { cardCmc, cardType, cardIsSpecialZoneType } from 'utils/Card';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import FoilCardImage from 'components/FoilCardImage';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeLayout from 'layouts/CubeLayout';
 import CSRFForm from 'components/CSRFForm';
-import { csrfFetch } from 'utils/CSRF';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
+import { csrfFetch } from 'utils/CSRF';
 import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
 import { botRatingAndCombination } from 'utils/draftbots';
 
@@ -102,7 +107,7 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
 );
 
 Pack.propTypes = {
-  pack: PropTypes.arrayOf(PropTypes.object).isRequired,
+  pack: PropTypes.arrayOf(CardPropType).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
   pickRow: PropTypes.func.isRequired,
@@ -145,7 +150,7 @@ for (let index = 0; index < 3; index++) {
   options.push(mask);
 }
 
-const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
+const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0].map((c) => initialDraft.cards[c]));
@@ -339,80 +344,71 @@ const GridDraftPage = ({ cube, cubeID, initialDraft }) => {
   };
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <Navbar expand="xs" light className="usercontrols">
-          <Collapse navbar>
-            <Nav navbar>
-              <CustomImageToggler />
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <CSRFForm
-          className="d-none"
-          innerRef={submitDeckForm}
-          method="POST"
-          action={`/cube/submitgriddeck/${initialDraft.cube}`}
-        >
-          <Input type="hidden" name="body" value={initialDraft._id} />
-        </CSRFForm>
-        <DndProvider>
-          <ErrorBoundary>
-            {initialDraft.draftType === 'bot' ? (
-              <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
-            ) : (
-              <Pack
-                pack={pack}
-                packNumber={packNumber}
-                pickNumber={pickNumber}
-                pickRow={pickRow}
-                pickCol={pickCol}
-                turn={turn + 1}
-              />
-            )}
-          </ErrorBoundary>
-          <ErrorBoundary className="mt-3">
-            <Card className="mt-3">
-              <DeckStacks
-                cards={picks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
-                title="Picks"
-                subtitle={subtitle(
-                  picks
-                    .flat()
-                    .flat()
-                    .map((c) => initialDraft.cards[c]),
-                )}
-                locationType={Location.PICKS}
-                canDrop={() => false}
-                onMoveCard={() => {}}
-              />
-            </Card>
-            <Card className="mt-3">
-              <DeckStacks
-                cards={botPicks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
-                title="Bot Picks"
-                subtitle={subtitle(
-                  botPicks
-                    .flat()
-                    .flat()
-                    .map((c) => initialDraft.cards[c]),
-                )}
-                locationType={Location.PICKS}
-                canDrop={() => false}
-                onMoveCard={() => {}}
-              />
-            </Card>
-          </ErrorBoundary>
-        </DndProvider>
-      </DisplayContextProvider>
-    </CubeLayout>
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <DisplayContextProvider>
+          <Navbar expand="xs" light className="usercontrols">
+            <Collapse navbar>
+              <Nav navbar>
+                <CustomImageToggler />
+              </Nav>
+            </Collapse>
+          </Navbar>
+          <DynamicFlash />
+          <CSRFForm
+            className="d-none"
+            innerRef={submitDeckForm}
+            method="POST"
+            action={`/cube/submitgriddeck/${initialDraft.cube}`}
+          >
+            <Input type="hidden" name="body" value={initialDraft._id} />
+          </CSRFForm>
+          <DndProvider>
+            <ErrorBoundary>
+              {initialDraft.draftType === 'bot' ? (
+                <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
+              ) : (
+                <Pack
+                  pack={pack}
+                  packNumber={packNumber}
+                  pickNumber={pickNumber}
+                  pickRow={pickRow}
+                  pickCol={pickCol}
+                  turn={turn + 1}
+                />
+              )}
+            </ErrorBoundary>
+            <ErrorBoundary className="mt-3">
+              <Card className="mt-3">
+                <DeckStacks
+                  cards={picks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
+                  title="Picks"
+                  subtitle={subtitle(picks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={() => false}
+                  onMoveCard={() => {}}
+                />
+              </Card>
+              <Card className="my-3">
+                <DeckStacks
+                  cards={botPicks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
+                  title="Bot Picks"
+                  subtitle={subtitle(botPicks.flat().flat())}
+                  locationType={Location.PICKS}
+                  canDrop={() => false}
+                  onMoveCard={() => {}}
+                />
+              </Card>
+            </ErrorBoundary>
+          </DndProvider>
+        </DisplayContextProvider>
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 GridDraftPage.propTypes = {
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
@@ -423,6 +419,13 @@ GridDraftPage.propTypes = {
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,
   }).isRequired,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
-export default GridDraftPage;
+GridDraftPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(GridDraftPage);

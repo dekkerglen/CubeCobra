@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { getTCGLink } from 'utils/Affiliate';
 
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import MassBuyButton from 'components/MassBuyButton';
 
 const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);
@@ -18,8 +18,8 @@ const dedupeCards = (cards) => {
   return [...map.values()];
 };
 
-const Tokens = ({ cards, cube }) => {
-  const positioned = cards.map((card, index) => ({ ...card, position: index }));
+const Tokens = ({ cube }) => {
+  const positioned = cube.cards.map((card, index) => ({ ...card, position: index }));
   const byOracleId = {};
   for (const card of positioned) {
     for (const token of card.details.tokens || []) {
@@ -40,7 +40,7 @@ const Tokens = ({ cards, cube }) => {
   const data = sorted.map(([, tokenData]) => ({
     card: tokenData.token,
     cardDescription: sortCards(dedupeCards(tokenData.cards))
-      .map(({ position }) => `[[${position}]]`)
+      .map(({ position }) => `[[${cube.cards[position].details.name}|${cube.cards[position].details._id}]]`)
       .join('\n\n'),
   }));
 
@@ -64,7 +64,7 @@ const Tokens = ({ cards, cube }) => {
               </a>
               <CardBody>
                 <p className="card-text">
-                  <MagicMarkdown markdown={cardDescription} cube={cube} />
+                  <Markdown markdown={cardDescription} cube={cube} />
                 </p>
               </CardBody>
             </Card>
@@ -77,9 +77,15 @@ const Tokens = ({ cards, cube }) => {
 
 Tokens.propTypes = {
   cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
+    cards: PropTypes.arrayOf(
+      PropTypes.shape({
+        details: PropTypes.shape({
+          _id: PropTypes.string.isRequired,
+          name: PropTypes.string.isRequired,
+        }).isRequired,
+      }),
+    ),
     draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
   }).isRequired,
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 export default Tokens;

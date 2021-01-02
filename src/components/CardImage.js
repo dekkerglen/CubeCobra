@@ -1,7 +1,8 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
-import DisplayContext from 'components/DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 import ImageFallback from 'components/ImageFallback';
 import withAutocard from 'components/WithAutocard';
 
@@ -27,13 +28,7 @@ const CardImage = ({ card, autocard, className, width, height, ...props }) => {
 };
 
 CardImage.propTypes = {
-  card: PropTypes.shape({
-    imgUrl: PropTypes.string,
-    details: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      image_normal: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  card: CardPropType.isRequired,
   autocard: PropTypes.bool,
   className: PropTypes.string,
   width: PropTypes.string,

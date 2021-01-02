@@ -122,27 +122,6 @@ test('addCardToCube allows custom tags', () => {
   expect(result.tags[0]).toBe('Tag');
 });
 
-test('getCardImageURL returns imgUrl when defined', () => {
-  const testCard = {
-    details: {
-      image_normal: 'normal ol image',
-    },
-    imgUrl: 'an image url',
-  };
-  const result = util.getCardImageURL(testCard);
-  expect(result).toBe(testCard.imgUrl);
-});
-
-test('getCardImageURL falls back to image_normal', () => {
-  const testCard = {
-    details: {
-      image_normal: 'normal ol image',
-    },
-  };
-  const result = util.getCardImageURL(testCard);
-  expect(result).toBe(testCard.details.image_normal);
-});
-
 test('arraysEqual returns true for equal arrays', () => {
   const testArrayA = [1, 2, 3, 4];
   const testArrayB = [1, 2, 3, 4];

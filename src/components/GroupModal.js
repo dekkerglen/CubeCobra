@@ -26,10 +26,10 @@ import { fromEntries } from 'utils/Util';
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
-import ChangelistContext from 'components/ChangelistContext';
+import ChangelistContext from 'contexts/ChangelistContext';
 import { ColorChecksAddon } from 'components/ColorCheck';
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 import LoadingButton from 'components/LoadingButton';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
@@ -243,24 +243,30 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
               <Row noGutters>
                 {Number.isFinite(totalPriceUsd) && (
                   <TextBadge name="Price USD" className="mt-2 mr-2">
-                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
+                    <Tooltip id="GroupModalPriceTooltipId" text="TCGPlayer Market Price">
+                      ${Math.round(totalPriceUsd).toLocaleString()}
+                    </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
                   <TextBadge name="Foil USD" className="mt-2 mr-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">
+                    <Tooltip id="GroupModalFoilTooltipId" text="TCGPlayer Market Foil Price">
                       ${Math.round(totalPriceUsdFoil).toLocaleString()}
                     </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (
                   <TextBadge name="EUR" className="mt-2 mr-2">
-                    <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
+                    <Tooltip id="GroupModalEurTooltipId" text="Cardmarket Price">
+                      ${Math.round(totalPriceEur).toLocaleString()}
+                    </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceTix) && (
                   <TextBadge name="TIX" className="mt-2 mr-2">
-                    <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
+                    <Tooltip id="GroupModalTixTooltipId" text="MTGO TIX">
+                      ${Math.round(totalPriceTix).toLocaleString()}
+                    </Tooltip>
                   </TextBadge>
                 )}
               </Row>

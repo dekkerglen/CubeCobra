@@ -20,6 +20,7 @@ const Datapoint = {
   size540: [Number],
   size720: [Number],
   pauper: [Number],
+  peasant: [Number],
   legacy: [Number],
   modern: [Number],
   standard: [Number],

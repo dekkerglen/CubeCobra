@@ -2,14 +2,18 @@ import React from 'react';
 
 const FoilOverlay = (Tag) => (props) => {
   let finish = 'Non-foil';
-  if (props.hasOwnProperty('finish')) {
+  if (Object.hasOwnProperty.call(props, 'finish')) {
     finish = props.finish;
-  } else if (props.hasOwnProperty('card') && props.card.hasOwnProperty('finish')) {
+  } else if (Object.hasOwnProperty.call(props, 'card') && Object.hasOwnProperty.call(props.card, 'finish')) {
     finish = props.card.finish;
   }
   return (
     <div className="position-relative">
-      {finish !== 'Foil' ? '' : <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" />}
+      {finish !== 'Foil' ? (
+        ''
+      ) : (
+        <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" alt="Foil overlay" />
+      )}
       <Tag {...props} />
     </div>
   );

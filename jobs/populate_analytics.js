@@ -208,8 +208,8 @@ async function processCube(cube) {
     }
   }
 
-  cube.cards.forEach((card) => {
-    const { oracle_id } = carddb.cardFromId(card.cardID);
+  const uniqueOracleIds = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  uniqueOracleIds.forEach((oracle_id) => {
     if (correlationIndex[oracle_id]) {
       cubesWithCard[correlationIndex[oracle_id]].push(cube._id);
     }

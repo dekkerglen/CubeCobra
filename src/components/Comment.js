@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import CommentPropType from 'proptypes/CommentPropType';
 import TimeAgo from 'react-timeago';
 
 import {
@@ -22,6 +23,7 @@ import CSRFForm from 'components/CSRFForm';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
+import Markdown from 'components/Markdown';
 
 const maxDepth = 4;
 
@@ -142,7 +144,9 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
               )}
             </div>
             <Collapse isOpen={!isEdit}>
-              <p className="mb-0">{comment.content}</p>
+              <p className="mb-0">
+                <Markdown markdown={comment.content} limited />
+              </p>
             </Collapse>
             <CommentEntry
               submit={(res) => {
@@ -223,18 +227,7 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
 };
 
 Comment.propTypes = {
-  comment: PropTypes.shape({
-    timePosted: PropTypes.instanceOf(Date).isRequired,
-    ownerName: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    parent: PropTypes.string.isRequired,
-    parentType: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    updated: PropTypes.bool.isRequired,
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  comment: CommentPropType.isRequired,
   index: PropTypes.number.isRequired,
   depth: PropTypes.number,
   userid: PropTypes.string,

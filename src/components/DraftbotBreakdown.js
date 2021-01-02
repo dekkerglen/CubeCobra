@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
 import HeaderCell from 'components/HeaderCell';
-import { getCardColorClass } from 'components/TagContext';
+import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useSortableData from 'hooks/UseSortableData';
@@ -87,20 +88,20 @@ const TRAITS = [
     name: 'Rating',
     description: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    function: (_, card, __, cards) => getRating(card, cards),
+    function: (_0, card, _1, cards) => getRating(card, cards),
   },
   {
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (_, __, picked, cards, ___, ____, pickedInCombination) =>
+    function: (_0, _1, picked, cards, _2, _3, pickedInCombination) =>
       getInternalSynergy(pickedInCombination, picked, cards),
   },
   {
     name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (_, card, picked, cards, __, ___, pickedInCombination) =>
+    function: (_0, card, picked, cards, _1, _2, pickedInCombination) =>
       getPickSynergy(pickedInCombination, card, picked, cards),
   },
   {
@@ -261,7 +262,12 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
               {weights.map((weight) => (
                 <tr key={weight.name}>
                   <th>
-                    <Tooltip text={weight.description}>{weight.name}</Tooltip>
+                    <Tooltip
+                      id={`DraftbotBreakdownWeightID_${weight.name.replace(' ', '_')}`}
+                      text={weight.description}
+                    >
+                      {weight.name}
+                    </Tooltip>
                   </th>
                   <td>{weight.value}</td>
                 </tr>
@@ -369,24 +375,7 @@ DraftbotBreakdown.propTypes = {
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-        pickorder: PropTypes.array.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    comments: PropTypes.arrayOf(PropTypes.object).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
   defaultIndex: PropTypes.number,
 };

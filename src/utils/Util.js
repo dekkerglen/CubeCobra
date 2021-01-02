@@ -167,6 +167,29 @@ export function isTouchDevice() {
   return mq(query);
 }
 
+export function getCubeId(cube) {
+  return cube.urlAlias || cube.shortID || cube._id;
+}
+
+export function getCubeDescription(cube) {
+  if (cube.overrideCategory) {
+    const overridePrefixes =
+      cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
+    return `${cube.card_count} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
+  }
+
+  return `${cube.card_count} Card ${cube.type} Cube`;
+}
+
+export function isInternalURL(to) {
+  try {
+    const url = new URL(to, window.location.origin);
+    return url.hostname === window.location.hostname;
+  } catch {
+    return false;
+  }
+}
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -181,4 +204,7 @@ export default {
   cmcColumn,
   sortDeck,
   COLORS,
+  getCubeId,
+  getCubeDescription,
+  isInternalURL,
 };

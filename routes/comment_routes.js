@@ -2,16 +2,19 @@
 require('dotenv').config();
 
 const express = require('express');
-const serialize = require('serialize-javascript');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util.js');
-const { sanitize } = require('../serverjs/cubefn.js');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');
 const Deck = require('../models/deck');
+const Article = require('../models/article');
+const Video = require('../models/video');
+const Podcast = require('../models/podcast');
+const PodcastEpisode = require('../models/podcastEpisode');
 const Blog = require('../models/blog');
+const { render } = require('../serverjs/render');
 
 const router = express.Router();
 
@@ -44,6 +47,22 @@ const getReplyContext = {
     const deck = await Deck.findById(id);
     return [deck.owner, 'deck'];
   },
+  article: async (id) => {
+    const article = await Article.findById(id);
+    return [article.owner, 'article'];
+  },
+  podcast: async (id) => {
+    const podcast = await Podcast.findById(id);
+    return [podcast.owner, 'podcast'];
+  },
+  video: async (id) => {
+    const video = await Video.findById(id);
+    return [video.owner, 'video'];
+  },
+  episode: async (id) => {
+    const episode = await PodcastEpisode.findById(id);
+    return [episode.owner, 'podcast episode'];
+  },
   default: async () => null, // nobody gets a notification for this
 };
 
@@ -53,7 +72,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const poster = await User.findById(req.user.id);
 
-    if (!['comment', 'blog', 'deck', 'card'].includes(req.params.type)) {
+    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode'].includes(req.params.type)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',
@@ -69,7 +88,7 @@ router.post(
     comment.image = poster.image;
     comment.artist = poster.artist;
     comment.updated = false;
-    comment.content = sanitize(req.body.comment.substring(0, 500));
+    comment.content = req.body.comment.substring(0, 5000);
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
     comment.date = Date.now() - 1000;
@@ -86,6 +105,17 @@ router.post(
         poster,
         `/comment/${comment._id}`,
         `${poster.username} left a comment in response to your ${type}.`,
+      );
+    }
+
+    if (req.body.mentions) {
+      const mentions = req.body.mentions.split(';');
+      const users = User.find({ username_lower: mentions });
+      await util.addMultipleNotifications(
+        users,
+        poster,
+        `/comment/${comment._id}`,
+        `${poster.username} mentioned you in their comment`,
       );
     }
 
@@ -124,11 +154,11 @@ router.post(
     comment.owner = newComment.owner;
     comment.ownerName = newComment.ownerName;
     comment.image = newComment.owner
-      ? 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021'
-      : req.user.image;
+      ? req.user.image
+      : 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
     comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
     comment.updated = true;
-    comment.content = sanitize(newComment.content.substring(0, 500));
+    comment.content = newComment.content.substring(0, 5000);
     // the -1000 is to prevent weird time display error
     comment.timePosted = Date.now() - 1000;
 
@@ -146,7 +176,7 @@ router.post(
     const { commentid, info, reason } = req.body;
 
     const report = new Report();
-    report.commentid = info;
+    report.commentid = commentid;
     report.info = info;
     report.reason = reason;
     report.reportee = req.user ? req.user.id : null;
@@ -167,13 +197,17 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const comment = await Comment.findById(req.params.id).lean();
 
-    return res.render('tool/comment', {
-      reactProps: serialize({
+    return render(
+      req,
+      res,
+      'CommentPage',
+      {
         comment,
-        userid: req.user ? req.user.id : null,
-      }),
-      title: 'Comment',
-    });
+      },
+      {
+        title: 'Comment',
+      },
+    );
   }),
 );
 

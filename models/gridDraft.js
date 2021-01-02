@@ -13,15 +13,6 @@ const Seat = {
 
 // Cube schema
 const gridDraftSchema = mongoose.Schema({
-  cube: String,
-  initial_state: [[Number]],
-  seats: [Seat],
-  unopenedPacks: [[Number]],
-  draftType: {
-    type: String,
-    enum: ['bot', '2playerlocal'],
-  },
-  cards: [cardSchema],
   basics: {
     Plains: cardSchema,
     Island: cardSchema,
@@ -30,6 +21,15 @@ const gridDraftSchema = mongoose.Schema({
     Forest: cardSchema,
     Wastes: cardSchema,
   },
+  cards: [cardSchema],
+  cube: String,
+  draftType: {
+    type: String,
+    enum: ['bot', '2playerlocal'],
+  },
+  initial_state: [[Number]],
+  seats: [Seat],
+  unopenedPacks: [[Number]],
 });
 
 module.exports = mongoose.model('GridDraft', gridDraftSchema);

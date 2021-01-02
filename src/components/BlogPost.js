@@ -1,8 +1,9 @@
 import React from 'react';
 import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
-import BlogContextMenu from './BlogContextMenu';
+import BlogContextMenu from 'components/BlogContextMenu';
 import CommentsSection from 'components/CommentsSection';
+import Markdown from 'components/Markdown';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -58,10 +59,10 @@ class BlogPost extends React.Component {
       post.html = null;
     }
     return (
-      <Card className="shadowed rounded-0 mt-3">
+      <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
-            {post.title}
+            <a href={`/cube/blogpost/${post._id}`}>{post.title}</a>
             <div className="float-sm-right">
               {this.props.canEdit && (
                 <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />
@@ -81,16 +82,20 @@ class BlogPost extends React.Component {
           </h6>
         </CardHeader>
         <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
-          {post.changelist && post.html ? (
+          {post.changelist && (post.html || post.markdown) ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-5 col-md-4 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
               </Col>
               <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
-                  <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                  {post.markdown ? (
+                    <Markdown markdown={post.markdown} limited />
+                  ) : (
+                    <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                  )}
                 </CardBody>
               </Col>
             </Row>
@@ -98,12 +103,17 @@ class BlogPost extends React.Component {
             <CardBody className="py-2">
               {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
               {post.body && <CardText>{post.body}</CardText>}
-              {post.html && <CardText dangerouslySetInnerHTML={{ __html: post.html }} />}
+              {(post.html || post.markdown) &&
+                (post.markdown ? (
+                  <Markdown markdown={post.markdown} limited />
+                ) : (
+                  <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                ))}
             </CardBody>
           )}
         </div>
         <div className="border-top">
-          <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} />
+          <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} collapse={false} />
         </div>
       </Card>
     );

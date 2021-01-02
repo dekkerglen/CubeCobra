@@ -1,12 +1,12 @@
 .clickx
 {
-	color:black;
+	color:var(--text);
 	font-weight: bold;
 	text-decoration:none;
 }
 .clickx:hover
 {
-	color:red;
+	color:var(--danger);
 	font-weight: bold;
 	text-decoration:none;
 }
@@ -34,8 +34,8 @@
 	position: absolute;
 	z-index: 100;
 	padding: 0;
-	border: 1px solid #d4d4d4;
-	background-color: white;
+	border: 1px solid var(--border);
+	background-color: var(--bg);
 }
 
 .autocomplete-list li {
@@ -44,24 +44,24 @@
 }
 
 .autocomplete-list li:not(:first-child) {
-	border-top: 1px solid #d4d4d4;
+	border-top: 1px solid var(--border);
 }
 
 .autocomplete-list li:hover {
-	background-color: #e9e9e9;
+	background-color: var(--bg-hover);
 }
 
 .autocomplete-list li.active {
-	background-color: #28a745 !important;
-	color: #ffffff;
+	background-color: var(--success) !important;
+	color: var(--bg);
 }
 
 .compare-header
 {
 	margin-top:40px;
     margin-bottom: 10px;
-	background:#F4F4F4;
-	border:1px solid #bbb;
+	background:var(--header);
+	border:1px solid var(--border-dark);
 	border-radius:5px;
 }
 
@@ -72,7 +72,7 @@
 
 .tag-color-container {
   padding-bottom: 1px;
-  background-color: #dee2e6;
+  background-color: var(--header);
 }
 
 .tag-color-row {
@@ -83,5 +83,5 @@
 #showTagColors {
   padding: 20px;
   padding-left: 45px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-light);
 }

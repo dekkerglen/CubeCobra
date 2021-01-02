@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 
 import { NavItem, NavLink } from 'reactstrap';
 
-import DisplayContext from './DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 const CustomImageToggler = () => {
   const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);

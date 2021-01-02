@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Form, Input } from 'reactstrap';
 
@@ -7,11 +8,11 @@ import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { getLabels, sortDeep } from 'utils/Sort';
 
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 import PagedTable from 'components/PagedTable';
-import SortContext from 'components/SortContext';
-import TagContext from 'components/TagContext';
+import SortContext from 'contexts/SortContext';
+import TagContext from 'contexts/TagContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';
@@ -318,15 +319,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
 };
 
 ListViewRow.propTypes = {
-  card: PropTypes.shape({
-    index: PropTypes.number.isRequired,
-    cardID: PropTypes.string.isRequired,
-    colors: PropTypes.arrayOf(PropTypes.oneOf([...'WUBRG'])).isRequired,
-    tags: PropTypes.arrayOf(PropTypes.string).isRequired,
-    details: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  card: CardPropType.isRequired,
   versions: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string.isRequired,

@@ -1,39 +1,39 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
 
 import CardModalForm from 'components/CardModalForm';
-import { ChangelistContextProvider } from 'components/ChangelistContext';
+import { ChangelistContextProvider } from 'contexts/ChangelistContext';
 import ClientOnly from 'components/ClientOnly';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import CubeListNavbar from 'components/CubeListNavbar';
 import CurveView from 'components/CurveView';
-import DisplayContext, { DisplayContextProvider } from 'components/DisplayContext';
+import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import GroupModal from 'components/GroupModal';
 import ListView from 'components/ListView';
 import Maybeboard from 'components/Maybeboard';
-import { MaybeboardContextProvider } from 'components/MaybeboardContext';
-import { SortContextProvider } from 'components/SortContext';
+import { MaybeboardContextProvider } from 'contexts/MaybeboardContext';
+import { SortContextProvider } from 'contexts/SortContext';
 import TableView from 'components/TableView';
-import { TAG_COLORS, TagContextProvider } from 'components/TagContext';
+import { TAG_COLORS, TagContextProvider } from 'contexts/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeListPageRaw = ({
-  maybe,
-  defaultPrimarySort,
-  defaultSecondarySort,
   defaultFilterText,
   defaultView,
-  defaultTagColors,
   defaultShowTagColors,
-  defaultSorts,
+  defaultPrimarySort,
+  defaultSecondarySort,
 }) => {
-  const { cube, cubeID, canEdit } = useContext(CubeContext);
+  const { cube, canEdit } = useContext(CubeContext);
 
   const [cubeView, setCubeView] = useState(defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
@@ -41,7 +41,7 @@ const CubeListPageRaw = ({
   const [sorts, setSorts] = useState(null);
 
   useEffect(() => {
-    const savedChanges = cubeID && LocalStorage.get(`changelist-${cubeID}`);
+    const savedChanges = cube._id && LocalStorage.get(`changelist-${cube._id}`);
     if (savedChanges && savedChanges.length > 2 && Query.get('updated', false) !== 'true') {
       setOpenCollapse('edit');
     } else if (defaultFilterText && defaultFilterText.length > 0) {
@@ -52,7 +52,7 @@ const CubeListPageRaw = ({
     ) {
       setOpenCollapse('sort');
     }
-  }, [cubeID, defaultFilterText, defaultPrimarySort, defaultSecondarySort]);
+  }, [cube._id, defaultFilterText, defaultPrimarySort, defaultSecondarySort]);
 
   useEffect(() => {
     if (cubeView === 'table') {
@@ -73,17 +73,17 @@ const CubeListPageRaw = ({
   }, [filter, cube]);
 
   return (
-    <SortContextProvider defaultSorts={defaultSorts}>
-      <DisplayContextProvider cubeID={cubeID}>
+    <SortContextProvider defaultSorts={cube.default_sorts}>
+      <DisplayContextProvider cubeID={cube._id}>
         <TagContextProvider
-          cubeID={cubeID}
-          defaultTagColors={defaultTagColors}
+          cubeID={cube._id}
+          defaultTagColors={cube.tag_colors}
           defaultShowTagColors={defaultShowTagColors}
           defaultTags={defaultTags}
         >
-          <ChangelistContextProvider cubeID={cubeID} setOpenCollapse={setOpenCollapse}>
+          <ChangelistContextProvider cubeID={cube._id} setOpenCollapse={setOpenCollapse}>
             <CardModalForm>
-              <GroupModal cubeID={cubeID} canEdit={canEdit}>
+              <GroupModal cubeID={cube._id} canEdit={canEdit}>
                 <CubeListNavbar
                   cubeView={cubeView}
                   setCubeView={setCubeView}
@@ -93,7 +93,7 @@ const CubeListPageRaw = ({
                   defaultSecondarySort={defaultSecondarySort}
                   sorts={sorts}
                   setSorts={setSorts}
-                  defaultSorts={defaultSorts}
+                  defaultSorts={cube.default_sorts}
                   defaultFilterText={defaultFilterText}
                   filter={filter}
                   setFilter={setFilter}
@@ -105,7 +105,7 @@ const CubeListPageRaw = ({
                   <ClientOnly>
                     <DisplayContext.Consumer>
                       {({ showMaybeboard }) => (
-                        <MaybeboardContextProvider initialCards={maybe}>
+                        <MaybeboardContextProvider initialCards={cube.maybe}>
                           {showMaybeboard && <Maybeboard filter={filter} />}
                         </MaybeboardContextProvider>
                       )}
@@ -133,36 +133,60 @@ const CubeListPageRaw = ({
 };
 
 CubeListPageRaw.propTypes = {
-  maybe: PropTypes.arrayOf(PropTypes.object).isRequired,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
-    }),
-  ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
   defaultFilterText: PropTypes.string.isRequired,
   defaultView: PropTypes.string.isRequired,
+  defaultPrimarySort: PropTypes.string.isRequired,
+  defaultSecondarySort: PropTypes.string.isRequired,
 };
 
-const CubeListPage = ({ cube, cubeID, canEdit, ...props }) => (
-  <CubeLayout cube={cube} cubeID={cubeID} canEdit={canEdit} activeLink="list">
-    <CubeListPageRaw {...props} />
-  </CubeLayout>
+const CubeListPage = ({
+  user,
+  cube,
+  defaultShowTagColors,
+  defaultFilterText,
+  defaultView,
+  defaultPrimarySort,
+  defaultSecondarySort,
+  loginCallback,
+}) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
+    <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="list">
+      <CubeListPageRaw
+        defaultShowTagColors={defaultShowTagColors}
+        defaultFilterText={defaultFilterText}
+        defaultView={defaultView}
+        defaultPrimarySort={defaultPrimarySort}
+        defaultSecondarySort={defaultSecondarySort}
+      />
+    </CubeLayout>
+  </MainLayout>
 );
 
 CubeListPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object).isRequired,
+    tag_colors: PropTypes.shape({
+      tag: PropTypes.string.isRequired,
+      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+    }),
+    default_sorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+    maybe: PropTypes.object.isRequired,
+    _id: PropTypes.string.isRequired,
+    owner: PropTypes.string.isRequired,
   }).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  canEdit: PropTypes.bool,
-  ...CubeListPageRaw.propTypes,
+  defaultShowTagColors: PropTypes.bool.isRequired,
+  defaultFilterText: PropTypes.string.isRequired,
+  defaultView: PropTypes.string.isRequired,
+  defaultPrimarySort: PropTypes.string.isRequired,
+  defaultSecondarySort: PropTypes.string.isRequired,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
 CubeListPage.defaultProps = {
-  canEdit: false,
+  user: null,
+  loginCallback: '/',
 };
 
-export default CubeListPage;
+export default RenderToRoot(CubeListPage);

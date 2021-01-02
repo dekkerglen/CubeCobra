@@ -1,8 +1,6 @@
 const shuffleSeed = require('shuffle-seed');
 const winston = require('winston');
 
-const adminname = 'Dekkaru';
-
 function hasProfanity(text) {
   if (!text) return false;
 
@@ -108,10 +106,6 @@ function addCardToCube(cube, cardDetails, tags) {
   cube.cards.push(card);
 }
 
-function getCardImageURL(card) {
-  return card.imgUrl || card.details.image_normal;
-}
-
 function fromEntries(entries) {
   const obj = {};
   for (const [k, v] of entries) {
@@ -145,6 +139,12 @@ async function addNotification(user, from, url, text) {
   await user.save();
 }
 
+async function addMultipleNotifications(users, from, url, text) {
+  for await (const user of users) {
+    await addNotification(user, from, url, text);
+  }
+}
+
 function wrapAsyncApi(route) {
   return (req, res, next) => {
     try {
@@ -165,7 +165,7 @@ function handleRouteError(req, res, err, reroute) {
   res.redirect(reroute);
 }
 
-const toExport = {
+module.exports = {
   shuffle(array, seed) {
     if (!seed) {
       seed = Date.now();
@@ -182,7 +182,6 @@ const toExport = {
   binaryInsert,
   newCard,
   addCardToCube,
-  getCardImageURL,
   arraysEqual(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -199,11 +198,10 @@ const toExport = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.username === adminname;
+    return user && user.roles.includes('Admin');
   },
   addNotification,
+  addMultipleNotifications,
   wrapAsyncApi,
   handleRouteError,
 };
-
-module.exports = toExport;

@@ -1,5 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -7,12 +9,14 @@ import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
 import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
+const SearchPage = ({ user, cubes, query, count, perPage, page, order, loginCallback }) => {
   const pages = Math.ceil(count / perPage);
 
   return (
-    <>
+    <MainLayout loginCallback={loginCallback} user={user}>
       <CubeSearchNavBar query={query} order={order} title="Cube Search" />
       <br />
       <DynamicFlash />
@@ -46,34 +50,19 @@ const SearchPage = ({ cubes, query, count, perPage, page, order }) => {
       ) : (
         <h4>No Results</h4>
       )}
-    </>
+    </MainLayout>
   );
 };
 
 SearchPage.propTypes = {
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      shortId: PropTypes.string,
-      urlAlias: PropTypes.string,
-      name: PropTypes.string.isRequired,
-      card_count: PropTypes.number.isRequired,
-      type: PropTypes.string.isRequired,
-      overrideCategory: PropTypes.bool,
-      categoryOverride: PropTypes.string,
-      categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-      image_name: PropTypes.string.isRequired,
-      image_artist: PropTypes.string.isRequired,
-      image_uri: PropTypes.string.isRequired,
-      owner: PropTypes.string.isRequired,
-      owner_name: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cubes: PropTypes.arrayOf(CubePropType).isRequired,
   query: PropTypes.string,
   count: PropTypes.number,
   perPage: PropTypes.number,
   page: PropTypes.number,
   order: PropTypes.string,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
 SearchPage.defaultProps = {
@@ -82,6 +71,8 @@ SearchPage.defaultProps = {
   perPage: 0,
   page: 0,
   order: 'date',
+  user: null,
+  loginCallback: '/',
 };
 
-export default SearchPage;
+export default RenderToRoot(SearchPage);

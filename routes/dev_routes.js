@@ -2,6 +2,7 @@ const express = require('express');
 const util = require('../serverjs/util.js');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
+const { render } = require('../serverjs/render');
 
 // Bring in models
 const User = require('../models/user');
@@ -15,80 +16,29 @@ router.get('/blog', (req, res) => {
   res.redirect('/dev/blog/0');
 });
 
-router.get('/blog/:id', (req, res) => {
-  if (!req.user) {
-    req.user = {
-      _id: '',
-    };
+const PAGESIZE = 10;
+
+router.get('/blog/:id', async (req, res) => {
+  const blogs = await Blog.find({
+    dev: 'true',
+  })
+    .sort({ date: -1 })
+    .skip(PAGESIZE * req.params.id)
+    .limit(PAGESIZE);
+
+  const count = await Blog.countDocuments({ dev: 'true' });
+
+  for (const item of blogs) {
+    if (!item.date_formatted) {
+      item.date_formatted = item.date.toLocaleString('en-US');
+    }
   }
-  User.findById(req.user._id, (err2, user) => {
-    const admin = util.isAdmin(user);
 
-    Blog.find({
-      dev: 'true',
-    })
-      .sort('date')
-      .exec((err3, blogs) => {
-        for (const item of blogs) {
-          if (!item.date_formatted) {
-            item.date_formatted = item.date.toLocaleString('en-US');
-          }
-        }
-        const pages = [];
-        blogs.reverse();
-        if (blogs.length > 10) {
-          let page = parseInt(req.params.id, 10);
-          if (!page) {
-            page = 0;
-          }
-          for (let i = 0; i < blogs.length / 10; i++) {
-            if (page === i) {
-              pages.push({
-                url: `/dev/blog/${i}`,
-                content: i + 1,
-                active: true,
-              });
-            } else {
-              pages.push({
-                url: `/dev/blog/${i}`,
-                content: i + 1,
-              });
-            }
-          }
-          const blogPage = [];
-          for (let i = 0; i < 10; i++) {
-            if (blogs[i + page * 10]) {
-              blogPage.push(blogs[i + page * 10]);
-            }
-          }
-
-          if (admin) {
-            res.render('blog/devblog', {
-              blogs: blogPage,
-              pages,
-              admin: 'true',
-              loginCallback: `/dev/blog/${req.params.id}`,
-            });
-          } else {
-            res.render('blog/devblog', {
-              blogs: blogPage,
-              pages,
-              loginCallback: `/dev/blog/${req.params.id}`,
-            });
-          }
-        } else if (admin) {
-          res.render('blog/devblog', {
-            blogs,
-            admin: 'true',
-            loginCallback: `/dev/blog/${req.params.id}`,
-          });
-        } else {
-          res.render('blog/devblog', {
-            blogs,
-            loginCallback: `/dev/blog/${req.params.id}`,
-          });
-        }
-      });
+  return render(req, res, 'DevBlog', {
+    blogs,
+    pages: Math.ceil(count / PAGESIZE),
+    activePage: req.params.id,
+    userid: req.user ? req.user._id : null,
   });
 });
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { Row, Col } from 'reactstrap';
 
@@ -22,15 +23,7 @@ const CardGrid = ({ cardList, Tag, colProps, cardProps, linkDetails, ...props })
 };
 
 CardGrid.propTypes = {
-  cardList: PropTypes.arrayOf(
-    PropTypes.shape({
-      imgUrl: PropTypes.string,
-      details: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        image_normal: PropTypes.string.isRequired,
-      }),
-    }),
-  ).isRequired,
+  cardList: PropTypes.arrayOf(CardPropType).isRequired,
   Tag: PropTypes.func.isRequired,
   colProps: PropTypes.shape({}),
   cardProps: PropTypes.shape({}),

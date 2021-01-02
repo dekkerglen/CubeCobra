@@ -1,13 +1,14 @@
 import React, { useCallback, useContext } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import { ListGroup, ListGroupItem } from 'reactstrap';
 
 import { sortDeep } from 'utils/Sort';
 
 import AutocardListItem from 'components/AutocardListItem';
-import CubeContext from 'components/CubeContext';
-import GroupModalContext from 'components/GroupModalContext';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
 
 const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
@@ -46,11 +47,7 @@ const AutocardListGroup = ({ cards, heading, sort, rowTag, noGroupModal }) => {
 };
 
 AutocardListGroup.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   heading: PropTypes.node.isRequired,

@@ -36,6 +36,7 @@ const Card = {
   },
   addedTmsp: Date,
   imgUrl: String,
+  imgBackUrl: String,
   notes: String,
   colorCategory: {
     type: String,
@@ -109,7 +110,6 @@ const cubeSchema = mongoose.Schema({
     default: 0,
   },
   description: String,
-  descriptionhtml: String,
   image_uri: String,
   image_artist: String,
   image_name: String,
@@ -125,6 +125,7 @@ const cubeSchema = mongoose.Schema({
         title: String,
         multiples: Boolean,
         html: String,
+        markdown: String,
         packs: String,
       },
     ],
@@ -142,6 +143,10 @@ const cubeSchema = mongoose.Schema({
     type: String,
     // Values: first, recent
     default: 'recent',
+  },
+  disableNotifications: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -187,8 +192,9 @@ cubeSchema.index({
 
 const Cube = mongoose.model('Cube', cubeSchema);
 
-Cube.LAYOUT_FIELDS = '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes';
+Cube.LAYOUT_FIELDS =
+  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
 Cube.PREVIEW_FIELDS =
-  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name';
+  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
 
 module.exports = Cube;

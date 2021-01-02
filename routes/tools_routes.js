@@ -2,13 +2,14 @@
 require('dotenv').config();
 
 const express = require('express');
-const serialize = require('serialize-javascript');
 
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
+const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
 const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
+const { render } = require('../serverjs/render');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
@@ -245,13 +246,27 @@ router.get('/topcards', async (req, res) => {
   try {
     const { filter } = makeFilter(req.query.f);
     const { data, numResults } = await topCards(filter, req.query.s, req.query.p, req.query.d);
-    return res.render('tool/topcards', {
-      reactProps: serialize({ data, numResults }),
-      title: 'Top Cards',
-    });
+
+    return render(
+      req,
+      res,
+      'TopCardsPage',
+      {
+        data,
+        numResults,
+      },
+      {
+        title: 'Top Cards',
+      },
+    );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/404`);
+    return util.handleRouteError(req, res, err, '/404');
   }
+});
+
+router.get('/randomcard', async (req, res) => {
+  const card = carddb.allCards()[Math.floor(Math.random() * carddb.allCards().length)];
+  res.redirect(`/tool/card/${card.oracle_id}`);
 });
 
 router.get('/card/:id', async (req, res) => {
@@ -284,15 +299,11 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const data = await CardHistory.findOne({ oracleId: card.oracle_id });
+    let data = await CardHistory.findOne({ oracleId: card.oracle_id });
+    // id is valid but has no matching history
     if (!data) {
-      req.flash(
-        'danger',
-        `Card with identifier ${req.params.id} not found. Acceptable identifiers are card name (english only), scryfall ID, or oracle ID.`,
-      );
-      return res.status(404).render('misc/404', {});
+      data = getBlankCardHistory(id);
     }
-
     const related = {};
 
     for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
@@ -301,26 +312,99 @@ router.get('/card/:id', async (req, res) => {
       );
     }
 
-    const reactProps = {
-      card,
-      data,
-      versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
-      related,
-      cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
-      userid: req.user ? req.user._id : null,
-    };
-    return res.render('tool/cardpage', {
-      reactProps: serialize(reactProps),
-      title: `${card.name}`,
-      metadata: generateMeta(
-        `${card.name} - Cube Cobra`,
-        `Analytics for ${card.name} on CubeCobra`,
-        card.image_normal,
-        `https://cubecobra.com/card/${req.params.id}`,
-      ),
-    });
+    return render(
+      req,
+      res,
+      'CardPage',
+      {
+        card,
+        data,
+        versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+        related,
+        cubes: req.user ? await Cube.find({ owner: req.user._id }, 'name _id') : [],
+      },
+      {
+        title: `${card.name}`,
+        metadata: generateMeta(
+          `${card.name} - Cube Cobra`,
+          `Analytics for ${card.name} on CubeCobra`,
+          card.image_normal,
+          `https://cubecobra.com/card/${req.params.id}`,
+        ),
+      },
+    );
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404/');
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimage/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_normal);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimageflip/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_flip);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
   }
 });
 
@@ -445,10 +529,15 @@ router.get('/api/downloaddecks/:page/:key', async (req, res) => {
 });
 
 router.get('/searchcards', async (req, res) => {
-  return res.render('tool/searchcards', {
-    reactProps: serialize({}),
-    title: 'Search Cards',
-  });
+  return render(
+    req,
+    res,
+    'CardSearchPage',
+    {},
+    {
+      title: 'Search Cards',
+    },
+  );
 });
 
 module.exports = router;

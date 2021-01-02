@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import {
   Modal,
@@ -14,15 +16,36 @@ import {
   Input,
   CardBody,
   Button,
+  FormText,
 } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
+import { getCubeDescription } from 'utils/Util';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
 import TagInput from 'components/TagInput';
-import { TagContextProvider } from 'components/TagContext';
+import { TagContextProvider } from 'contexts/TagContext';
 import TextEntry from 'components/TextEntry';
+
+/**
+ * A utility for safely picking the current working description from a Cube.
+ *
+ * @param { Cube } cube
+ * @returns { string }
+ */
+const pickDescriptionFromCube = (cube) => {
+  /** 2020-11-24 strusdell:
+   * @phulin believes that the check for the string literal 'undefined' here is
+   * deliberate. Presumably this would represent bad data, and should be ignored.
+   *
+   * NOTE: This may introduce weird behavior if the user enters 'undefined' as their
+   * description.
+   */
+  return Object.prototype.hasOwnProperty.call(cube, 'raw_desc') && cube.raw_desc !== 'undefined'
+    ? cube.raw_desc
+    : cube.description;
+};
 
 class CubeOverviewModal extends Component {
   constructor(props) {
@@ -30,7 +53,10 @@ class CubeOverviewModal extends Component {
 
     this.state = {
       isOpen: false,
-      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({ id: tag, text: tag })),
+      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({
+        id: tag,
+        text: tag,
+      })),
       cube: JSON.parse(JSON.stringify(props.cube)),
       urlChanged: false,
       image_dict: {},
@@ -157,7 +183,7 @@ class CubeOverviewModal extends Component {
 
     const cube = { ...this.state.cube };
     cube.tags = this.state.tags.map((tag) => tag.text);
-    cube.descriptionhtml = cube.raw_desc;
+    cube.description = cube.raw_desc;
     const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -173,10 +199,7 @@ class CubeOverviewModal extends Component {
         if (this.state.cube.urlAlias) cubeID = this.state.cube.urlAlias;
         window.location.href = `/cube/overview/${cubeID}`;
       }
-      this.props.onCubeUpdate({
-        ...this.state.cube,
-        descriptionhtml: json.descriptionhtml,
-      });
+      this.props.onCubeUpdate(cube);
     } else {
       if (json.message) {
         this.error(json.message);
@@ -236,21 +259,7 @@ class CubeOverviewModal extends Component {
 
                 <h6>Category</h6>
 
-                <input
-                  className="form-control"
-                  name="name"
-                  type="text"
-                  disabled
-                  value={
-                    cube.overrideCategory
-                      ? cube.card_count +
-                        ' Card ' +
-                        (cube.categoryPrefixes.length > 0 ? cube.categoryPrefixes.join(' ') + ' ' : '') +
-                        cube.categoryOverride +
-                        ' Cube'
-                      : cube.card_count + ' Card ' + cube.type + ' Cube'
-                  }
-                />
+                <input className="form-control" name="name" type="text" disabled value={getCubeDescription(cube)} />
 
                 <Row>
                   <Col>
@@ -335,11 +344,14 @@ class CubeOverviewModal extends Component {
                 <br />
 
                 <h6>Description</h6>
-                <TextEntry
-                  name="blog"
-                  value={cube.raw_desc && cube.raw_desc !== 'undefined' ? cube.raw_desc : cube.description}
-                  onChange={this.handleDescriptionChange}
-                />
+                <TextEntry name="blog" value={pickDescriptionFromCube(cube)} onChange={this.handleDescriptionChange} />
+                <FormText>
+                  Having trouble formatting your posts? Check out the{' '}
+                  <a href="/markdown" target="_blank">
+                    markdown guide
+                  </a>
+                  .
+                </FormText>
                 <br />
 
                 <h6>Tags</h6>
@@ -372,5 +384,11 @@ class CubeOverviewModal extends Component {
     );
   }
 }
+CubeOverviewModal.propTypes = {
+  cube: CubePropType.isRequired,
+  onError: PropTypes.func.isRequired,
+  onCubeUpdate: PropTypes.func.isRequired,
+};
+CubeOverviewModal.defaultProps = {};
 
 export default CubeOverviewModal;

@@ -7,7 +7,7 @@ import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
 import AutocardListGroup from 'components/AutocardListGroup';
-import SortContext from 'components/SortContext';
+import SortContext from 'contexts/SortContext';
 
 const cmc2Labels = getLabels(null, 'CMC2');
 

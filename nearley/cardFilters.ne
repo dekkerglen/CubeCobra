@@ -6,6 +6,7 @@ import {
   defaultOperation,
   stringOperation,
   stringContainOperation,
+  nameStringOperation,
   equalityOperation,
   setOperation,
   rarityOperation,
@@ -23,6 +24,7 @@ import {
   cardType,
   cardOracleText,
   cardSet,
+  cardCollectorNumber,
   cardPower,
   cardToughness,
   cardTags,
@@ -39,6 +41,7 @@ import {
   cardRarity,
   cardStatus,
   cardCost,
+  cardLayout,
   cardDevotion,
   cardLegalIn
 } from 'utils/Card';
@@ -79,6 +82,7 @@ condition -> (
   | loyaltyCondition
   | artistCondition
   | isCondition
+  | notCondition
   | eloCondition
   | nameCondition
   | manaCostCondition
@@ -87,11 +91,13 @@ condition -> (
   | picksCondition
   | cubesCondition
   | legalityCondition
+  | layoutCondition
+  | collectorNumberCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
 const genericCondition = (propertyName, propertyAccessor, valuePred) => {
-  const result = (card) => valuePred(propertyAccessor(card));
+  const result = (card) => valuePred(propertyAccessor(card), card);
   result.fieldsUsed = [propertyName]
   return result;
 };
@@ -106,9 +112,9 @@ colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity" | "colo
 
 typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', cardType, valuePred) %}
 
-oracleCondition -> ("o"i | "oracle"i | "text"i) stringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
+oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
 
-setCondition -> ("s"i | "set"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
+setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
 powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c), 10), valuePred) %}
 
@@ -138,12 +144,14 @@ loyaltyCondition -> ("l"i | "loy"i | "loyal"i | "loyalty"i) integerOpValue {% ([
 
 artistCondition -> ("a"i | "art"i | "artist"i) stringOpValue {% ([, valuePred]) => genericCondition('artist', cardArtist, valuePred) %}
 
+layoutCondition -> "layout"i  stringOpValue {% ([, valuePred]) => genericCondition('layout', cardLayout, valuePred) %}
+
 eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('elo', cardElo, valuePred) %}
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
   | stringValue {% ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
 
-manaCostCondition -> ("mana"i | "cost"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
+manaCostCondition -> ("mana"i | "cost"i | "m"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
 castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
@@ -154,8 +162,12 @@ picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition(
 
 cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
 
+collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
+
+notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
 
 isOpValue -> ":" isValue {% ([, category]) => (fieldValue) => CARD_CATEGORY_DETECTORS[category](fieldValue) %}
 
-isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i) {% ([[category]]) => category.toLowerCase() %}
+isValue -> ("gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i | "vanilla"i | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i | "shockland"i | "storageland"i | "creatureland"i | "triland"i | "tangoland"i | "battleland"i | "modal"i) {% ([[category]]) => category.toLowerCase() %}

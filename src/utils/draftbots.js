@@ -101,30 +101,43 @@ const scaleSimilarity = (value) =>
 
 // Scale to get similarity range to approximately [0, 10]
 const SYNERGY_SCALE = 0.2;
-const MAX_SYNERGY = 10;
+export const MAX_SYNERGY = 10;
 
-let synergyMatrix;
-
-export const setSynergyMatrix = (size) => {
-  synergyMatrix = [];
-  for (let i = 0; i <= size; i++) {
-    synergyMatrix.push(new Array(size + 1).fill(null));
-  }
+const cardNameKeys = (a, b) => {
+  return [a + b, b + a];
 };
 
+const synergyCache = {};
+
 export const getSynergy = (index1, index2, cards) => {
-  if (synergyMatrix[index1][index2] === null) {
-    const similarityValue = similarity(cards[index1].details.embedding, cards[index2].details.embedding);
-    if (Number.isFinite(similarityValue)) {
-      synergyMatrix[index1][index2] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
-    }
-    // This happens when similarityValue is 1, usually because a card is a duplicate or one is 0s.
-    if (!Number.isFinite(synergyMatrix[index1][index2])) {
-      synergyMatrix[index1][index2] = synergyMatrix[index1][index2] > 0 ? MAX_SYNERGY : 0;
-    }
-    synergyMatrix[index2][index1] = synergyMatrix[index1][index2];
+  const card1 = cards[index1];
+  const card2 = cards[index2];
+  if (
+    !card1.details.embedding ||
+    !card2.details.embedding ||
+    card1.details.embedding.length === 0 ||
+    card2.details.embedding.length === 0
+  ) {
+    return 0;
   }
-  return synergyMatrix[index1][index2];
+
+  if (card1.details.name === card2.details.name) {
+    return MAX_SYNERGY;
+  }
+
+  const [key1, key2] = cardNameKeys(card1.details.name, card2.details.name);
+  if (!synergyCache[key1]) {
+    const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
+
+    if (Number.isFinite(similarityValue)) {
+      synergyCache[key1] = -Math.log(1 - scaleSimilarity(similarityValue)) / SYNERGY_SCALE;
+    } else {
+      synergyCache[key1] = similarityValue > 0 ? MAX_SYNERGY : 0;
+    }
+    synergyCache[key2] = synergyCache[key1];
+  }
+
+  return synergyCache[key1];
 };
 
 const BASICS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
@@ -220,21 +233,13 @@ export const getRating = (card, cards) => {
 // How much does the card we're considering synergize with the cards we've picked?
 // Scale is roughly 0-10. Used to select a card within a combination.
 export const getPickSynergy = (pickedInCombination, card, picked, cards) => {
-  if (picked.cards.WUBRG.length === 0) {
+  if (picked.cards.WUBRG.length === 0 || !card) {
     return 0;
   }
 
-  let synergy = 0;
-  if (card) {
-    for (const { index } of pickedInCombination) {
-      // Don't count synergy for duplicate cards.
-      // Maximum synergy is generally around .997 which corresponds to 10.
-      if (index !== card) {
-        synergy += getSynergy(index, card, cards);
-      }
-    }
-  }
-  return synergy / picked.cards.WUBRG.length;
+  return (
+    pickedInCombination.reduce((acc, { index }) => acc + getSynergy(index, card, cards), 0) / picked.cards.WUBRG.length
+  );
 };
 
 // Does this help us fix for this combination of colors?
@@ -265,23 +270,22 @@ export const getFixing = (combination, card, cards) => {
 // Scale is roughly 0-10. Used to select a color combination.
 // Tends to recommend what we've already picked before.
 export const getInternalSynergy = (pickedInCombination, picked, cards) => {
-  if (pickedInCombination.length < 2) {
+  if (picked.cards.WUBRG.length === 0) {
     return 0;
   }
 
-  const numPairs = (picked.cards.WUBRG.length * (picked.cards.WUBRG.length + 1)) / 2;
-
-  let synergy = 0;
-  for (const { index: index1 } of pickedInCombination) {
-    for (const { index: index2 } of pickedInCombination) {
-      if (index1 !== index2) {
-        synergy += getSynergy(index1, index2, cards);
-      }
-    }
-  }
-
-  // Need to multiply it here as well since it is quadratic in cards in color
-  return synergy / numPairs;
+  return (
+    pickedInCombination.reduce(
+      (acc, { index: index1 }, pi1) =>
+        pickedInCombination.reduce(
+          (acc2, { index: index2 }, pi2) => acc2 + (pi1 !== pi2 ? getSynergy(index1, index2, cards) : 0),
+          acc,
+        ),
+      0,
+    ) /
+    (picked.cards.WUBRG.length * (picked.cards.WUBRG.length + 1)) /
+    2
+  );
 };
 
 // The cost factor of playing more colors
@@ -387,20 +391,15 @@ const calculateRating = (
   // We can't filter on castable because that leads to returning
   // -Infinity for changes so we see a flat hill and stop climbing.
   const nonlands = picked.cards.WUBRG.filter((c) => !cardType(c).toLowerCase().includes('land'));
-  const count = nonlands.length;
   const totalProbability = nonlands.reduce((acc, c) => acc + probabilities[c.cardID], 0);
-  if (count >= 23) {
-    return (
-      // We can't just do pickedInCombination since that'll be empty
-      // sometimes and more than 1 step from being non-empty
-      (getColor(nonlands, picked, probabilities, cards) + getInternalSynergy(pickedInCombination, picked, cards)) *
-      totalProbability
-    );
-  }
-  return -Infinity;
+  return (
+    // We can't just do pickedInCombination since that'll be empty
+    // sometimes and more than 1 step from being non-empty
+    (getColor(nonlands, picked, probabilities, cards) + getInternalSynergy(pickedInCombination, picked, cards)) *
+    totalProbability
+  );
 };
 
-// inPack is the number of cards in this pack
 export const botRatingAndCombination = (cards, card, picked, seen, initialState, inPack = 1, packNum = 1) => {
   const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
   const weightedRatingScore = card ? getRating(card, cards) * getRatingWeight(packNum, pickNum, initialState) : 0;

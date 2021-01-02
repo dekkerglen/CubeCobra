@@ -1,40 +1,70 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import UserLayout from 'layouts/UserLayout';
 import BlogPost from 'components/BlogPost';
-import PagedList from 'components/PagedList';
+import Paginate from 'components/Paginate';
+import DynamicFlash from 'components/DynamicFlash';
+import Advertisement from 'components/Advertisement';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ user, followers, following, canEdit, posts, userId }) => (
-  <UserLayout user={user} followers={followers} following={following} canEdit={canEdit} activeLink="blog">
-    {posts.length > 0 ? (
-      <PagedList
-        pageSize={10}
-        showBottom
-        rows={posts.slice(0).map((post) => (
-          <BlogPost key={post._id} post={post} canEdit={canEdit} userid={userId} loggedIn />
-        ))}
-      />
-    ) : (
-      <p>This user has no blog posts!</p>
-    )}
-  </UserLayout>
+const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback, pages, activePage }) => (
+  <MainLayout loginCallback={loginCallback} user={user}>
+    <UserLayout
+      user={owner}
+      followers={followers}
+      following={following}
+      canEdit={user && user.id === owner._id}
+      activeLink="blog"
+    >
+      <Advertisement />
+      <DynamicFlash />
+
+      {pages > 1 && (
+        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
+      )}
+      {posts.length > 0 ? (
+        posts
+          .slice(0)
+          .map((post) => (
+            <BlogPost
+              key={post._id}
+              post={post}
+              canEdit={user && user.id === owner._id}
+              userid={user && user.id}
+              loggedIn
+            />
+          ))
+      ) : (
+        <p>This user has no blog posts!</p>
+      )}
+
+      {pages > 1 && (
+        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
+      )}
+    </UserLayout>
+  </MainLayout>
 );
 
-UserDecksPage.propTypes = {
-  user: PropTypes.shape({
+UserBlogPage.propTypes = {
+  user: UserPropType,
+  owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  canEdit: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  userId: PropTypes.string,
+  pages: PropTypes.number.isRequired,
+  activePage: PropTypes.number.isRequired,
+  loginCallback: PropTypes.string,
 };
 
-UserDecksPage.defaultProps = {
-  userId: '',
+UserBlogPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
 };
 
-export default UserDecksPage;
+export default RenderToRoot(UserBlogPage);

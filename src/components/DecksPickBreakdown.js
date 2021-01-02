@@ -4,8 +4,9 @@ import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import { getPackAsSeen } from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
-import { getCardColorClass } from 'components/TagContext';
+import { getCardColorClass } from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
+import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
 import Query from 'utils/Query';
 
@@ -96,23 +97,7 @@ DecksPickBreakdown.propTypes = {
     ).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   }).isRequired,
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-        pickorder: PropTypes.array.isRequired,
-      }),
-    ).isRequired,
-    cube: PropTypes.string.isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   seatIndex: PropTypes.number.isRequired,
   defaultIndex: PropTypes.number,
 };

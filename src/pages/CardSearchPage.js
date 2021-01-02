@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -21,8 +23,10 @@ import ButtonLink from 'components/ButtonLink';
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
 import FilterCollapse from 'components/FilterCollapse';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
-const CardSearchPage = () => {
+const CardSearchPage = ({ user, loginCallback }) => {
   const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,8 +57,6 @@ const CardSearchPage = () => {
       Query.set('di', distinct);
 
       const json = await response.json();
-
-      console.log(json);
 
       setCards(json.data);
       setCount(json.numResults);
@@ -93,8 +95,8 @@ const CardSearchPage = () => {
   };
 
   return (
-    <>
-      <div className="usercontrols pt-3 mb-3">
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <div className="usercontrols pt-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
             <h3 className="mx-3">Search Cards</h3>
@@ -155,8 +157,8 @@ const CardSearchPage = () => {
       <br />
       <DynamicFlash />
       {(cards && cards.length) > 0 ? (
-        <Card>
-          {count / 100 > 1 && (
+        <Card className="mb-3">
+          {count / 96 > 1 && (
             <CardHeader>
               <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
             </CardHeader>
@@ -187,8 +189,18 @@ const CardSearchPage = () => {
       ) : (
         <h4>No Results</h4>
       )}
-    </>
+    </MainLayout>
   );
 };
 
-export default CardSearchPage;
+CardSearchPage.propTypes = {
+  user: UserPropType,
+  loginCallback: PropTypes.string,
+};
+
+CardSearchPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(CardSearchPage);

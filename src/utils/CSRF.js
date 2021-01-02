@@ -6,7 +6,7 @@ export const getCsrfToken = () => {
   return meta ? meta.getAttribute('content') : null;
 };
 
-export const csrfFetch = (resource, init) => {
+export const csrfFetch = (resource, init = { method: 'GET' }) => {
   init.credentials = init.credentials || 'same-origin';
   init.headers = {
     ...init.headers,

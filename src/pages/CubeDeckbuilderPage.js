@@ -1,5 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 
 import Location from 'utils/DraftLocation';
 import { sortDeck } from 'utils/Util';
@@ -8,13 +11,15 @@ import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'components/DisplayContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextEntry from 'components/TextEntry';
 import CubeLayout from 'layouts/CubeLayout';
-import { subtitle } from 'pages/CubeDraftPage';
+import { makeSubtitle } from 'utils/Card';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = () => true;
 
@@ -35,7 +40,7 @@ const makeInitialStacks = (playerDeck) => {
   return sortDeck(playerDeck);
 };
 
-const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
+const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
   const [deck, setDeck] = useState(
     makeInitialStacks(initialDeck.seats[0].deck.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
@@ -109,94 +114,88 @@ const CubeDeckbuilderPage = ({ cube, cubeID, initialDeck, basics, draft }) => {
   const [description, setDescription] = useState(initialDeck.seats[0].description);
 
   return (
-    <CubeLayout cube={cube} cubeID={cubeID} activeLink="playtest">
-      <DisplayContextProvider>
-        <DeckbuilderNavbar
-          deck={currentDeck}
-          addBasics={addBasics}
-          name={name}
-          description={description}
-          className="mb-3"
-          draft={draft}
-          setDeck={setDeck}
-          setSideboard={setSideboard}
-          cards={initialDeck.cards}
-        />
-        <DynamicFlash />
-        <Row>
-          <Col>
-            <Card>
-              <ErrorBoundary>
-                <DndProvider>
-                  <DeckStacks
-                    cards={deck}
-                    title="Deck"
-                    subtitle={subtitle(deck.flat(2))}
-                    locationType={Location.DECK}
-                    canDrop={canDrop}
-                    onMoveCard={handleMoveCard}
-                    onClickCard={handleClickCard}
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <DisplayContextProvider>
+          <DeckbuilderNavbar
+            deck={currentDeck}
+            addBasics={addBasics}
+            name={name}
+            description={description}
+            className="mb-3"
+            draft={draft}
+            setDeck={setDeck}
+            setSideboard={setSideboard}
+            cards={initialDeck.cards}
+          />
+          <DynamicFlash />
+          <Row className="mb-3">
+            <Col>
+              <Card>
+                <ErrorBoundary>
+                  <DndProvider>
+                    <DeckStacks
+                      cards={deck}
+                      title="Deck"
+                      subtitle={makeSubtitle(deck.flat().flat())}
+                      locationType={Location.DECK}
+                      canDrop={canDrop}
+                      onMoveCard={handleMoveCard}
+                      onClickCard={handleClickCard}
+                    />
+                    <DeckStacks
+                      className="border-top"
+                      cards={sideboard}
+                      title="Sideboard"
+                      locationType={Location.SIDEBOARD}
+                      canDrop={canDrop}
+                      onMoveCard={handleMoveCard}
+                      onClickCard={handleClickCard}
+                    />
+                  </DndProvider>
+                </ErrorBoundary>
+                <CardHeader className="border-top">
+                  <CardTitle className="mb-0 d-flex flex-row align-items-end">
+                    <h4 className="mb-0 mr-auto">About</h4>
+                  </CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <h6>Deck Name</h6>
+                  <input
+                    className="form-control"
+                    name="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                   />
-                  <DeckStacks
-                    className="border-top"
-                    cards={sideboard}
-                    title="Sideboard"
-                    locationType={Location.SIDEBOARD}
-                    canDrop={canDrop}
-                    onMoveCard={handleMoveCard}
-                    onClickCard={handleClickCard}
-                  />
-                </DndProvider>
-              </ErrorBoundary>
-              <CardHeader className="border-top">
-                <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                  <h4 className="mb-0 mr-auto">About</h4>
-                </CardTitle>
-              </CardHeader>
-              <CardBody>
-                <h6>Deck Name</h6>
-                <input
-                  className="form-control"
-                  name="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <br />
+                  <br />
 
-                <h6>Description</h6>
-                <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-      </DisplayContextProvider>
-    </CubeLayout>
+                  <h6>Description</h6>
+                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </DisplayContextProvider>
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
 CubeDeckbuilderPage.propTypes = {
   basics: PropTypes.objectOf(PropTypes.object).isRequired,
-  cube: PropTypes.shape({}).isRequired,
-  cubeID: PropTypes.string.isRequired,
-  initialDeck: PropTypes.shape({
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        description: PropTypes.string.isRequired,
-        deck: PropTypes.array.isRequired,
-        sideboard: PropTypes.array.isRequired,
-        username: PropTypes.string.isRequired,
-        userid: PropTypes.string,
-        bot: PropTypes.array,
-        name: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-  }).isRequired,
+  cube: CubePropType.isRequired,
+  initialDeck: DeckPropType.isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
   }).isRequired,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
-export default CubeDeckbuilderPage;
+CubeDeckbuilderPage.defaultProps = {
+  user: null,
+  loginCallback: '/',
+};
+
+export default RenderToRoot(CubeDeckbuilderPage);

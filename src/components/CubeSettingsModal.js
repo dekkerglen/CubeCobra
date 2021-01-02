@@ -7,7 +7,7 @@ import { postJson } from 'utils/CSRF';
 import { formDataObject } from 'utils/Form';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'components/CubeContext';
+import CubeContext from 'contexts/CubeContext';
 import LoadingButton from 'components/LoadingButton';
 
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
@@ -72,6 +72,15 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               <option value="recent">Most Recent</option>
               <option value="first">First</option>
             </CustomInput>
+          </FormGroup>
+          <FormGroup check>
+            <Input
+              id="disableNotifications"
+              name="disableNotifications"
+              type="checkbox"
+              defaultChecked={cube.disableNotifications || false}
+            />
+            <Label for="disableNotifications">Disable Draft Notifications</Label>
           </FormGroup>
         </CSRFForm>
       </ModalBody>

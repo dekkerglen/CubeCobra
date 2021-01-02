@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import UserPropType from 'proptypes/UserPropType';
+import CardPricePropType from 'proptypes/CardPricePropType';
+import CardDataPointPropType from 'proptypes/CardDataPointPropType';
 
 import {
   Card,
@@ -8,8 +11,6 @@ import {
   Col,
   CardBody,
   Nav,
-  NavItem,
-  NavLink,
   TabContent,
   TabPane,
   InputGroup,
@@ -21,12 +22,14 @@ import {
   Button,
 } from 'reactstrap';
 
+import ChartComponent from 'react-chartjs-2';
+
 import CardImage from 'components/CardImage';
 import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
 import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
-import MagicMarkdown from 'components/MagicMarkdown';
+import Markdown from 'components/Markdown';
 import ButtonLink from 'components/ButtonLink';
 import CountTableRow from 'components/CountTableRow';
 import Tooltip from 'components/Tooltip';
@@ -34,8 +37,10 @@ import TextBadge from 'components/TextBadge';
 import AddToCubeModal from 'components/AddToCubeModal';
 import CommentsSection from 'components/CommentsSection';
 import withModal from 'components/WithModal';
-
-import ChartComponent from 'react-chartjs-2';
+import DynamicFlash from 'components/DynamicFlash';
+import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'utils/RenderToRoot';
+import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
@@ -138,7 +143,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
 };
 
 Graph.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  data: PropTypes.arrayOf(CardDataPointPropType).isRequired,
   yFunc: PropTypes.func.isRequired,
   unit: PropTypes.string.isRequired,
   yRange: PropTypes.arrayOf(PropTypes.number),
@@ -171,28 +176,6 @@ LegalityBadge.propTypes = {
   status: PropTypes.string.isRequired,
 };
 
-const Tab = ({ tab, setTab, index, children }) => {
-  return (
-    <NavItem className="ml-2 clickable">
-      <NavLink
-        active={tab === index}
-        onClick={() => {
-          setTab(index);
-        }}
-      >
-        {children}
-      </NavLink>
-    </NavItem>
-  );
-};
-
-Tab.propTypes = {
-  tab: PropTypes.string.isRequired,
-  setTab: PropTypes.func.isRequired,
-  index: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
-
 const getPriceTypeUnit = {
   price: 'USD',
   price_foil: 'USD',
@@ -200,7 +183,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, versions, related, cubes, userid }) => {
+const CardPage = ({ user, card, data, versions, related, cubes, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useState('0');
   const [priceType, setPriceType] = useState('price');
   const [cubeType, setCubeType] = useState('total');
@@ -218,8 +201,13 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
     return 0;
   });
 
+  const filteredVersions = sortedVersions.filter((version) => {
+    return version._id !== card._id;
+  });
+
   return (
-    <>
+    <MainLayout loginCallback={loginCallback} user={user}>
+      <DynamicFlash />
       <Card className="mt-2">
         <CardHeader>
           <h4>{card.name}</h4>
@@ -249,22 +237,30 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
               </AddModal>
               {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPagePriceTooltipId" text="TCGPlayer Market Price">
+                    ${cardPrice({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
                 <TextBadge name="Foil" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageFoilTooltipId" text="TCGPlayer Market Price">
+                    ${cardFoilPrice({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
                 <TextBadge name="EUR" className="mt-1" fill>
-                  <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageEurTooltipId" text="Cardmarket Price">
+                    €{cardPriceEur({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardTix({ details: card })) && (
                 <TextBadge name="TIX" className="mt-1" fill>
-                  <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip id="CardPageTixTooltipId" text="MTGO TIX">
+                    {cardTix({ details: card }).toFixed(2)}
+                  </Tooltip>
                 </TextBadge>
               )}
               {Number.isFinite(cardElo({ details: card })) && (
@@ -323,13 +319,13 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
                   <hr />
                   <p className="my-0">{card.type}</p>
                   <hr />
-                  <p className="my-0">
+                  <div className="my-0">
                     {card.oracle_text.split('\n').map((text) => (
-                      <p>
-                        <MagicMarkdown key={`oracle-text-${text}`} markdown={text} />
+                      <p key={`oracle-text-${text}`}>
+                        <Markdown markdown={text} />
                       </p>
                     ))}
-                  </p>
+                  </div>
                   <Row>
                     <Col xs="6">
                       <div className="text-left">
@@ -350,12 +346,12 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
                   <Row>
                     <Col xs="12" sm="6">
                       {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                     <Col xs="12" sm="6">
                       {['Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'].map((key) => (
-                        <LegalityBadge legality={key} status={card.legalities[key]} />
+                        <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
                       ))}
                     </Col>
                   </Row>
@@ -372,7 +368,12 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Price Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={priceType} onChange={(event) => setPriceType(event.target.value)}>
+                    <CustomInput
+                      id="priceType"
+                      type="select"
+                      value={priceType}
+                      onChange={(event) => setPriceType(event.target.value)}
+                    >
                       <option value="price">USD</option>
                       <option value="price_foil">USD Foil</option>
                       <option value="eur">EUR</option>
@@ -392,7 +393,12 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Cube Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput type="select" value={cubeType} onChange={(event) => setCubeType(event.target.value)}>
+                    <CustomInput
+                      id="cubeType"
+                      type="select"
+                      value={cubeType}
+                      onChange={(event) => setCubeType(event.target.value)}
+                    >
                       <option value="total">All</option>
                       <option value="vintage">Vintage</option>
                       <option value="legacy">Legacy</option>
@@ -509,7 +515,12 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
               </TabPane>
               <TabPane tabId="5">
                 <div className="border-left border-bottom">
-                  <CommentsSection parentType="card" parent={card.oracle_id} userid={userid} collapse={false} />
+                  <CommentsSection
+                    parentType="card"
+                    parent={card.oracle_id}
+                    userid={user && user.id}
+                    collapse={false}
+                  />
                 </div>
               </TabPane>
             </TabContent>
@@ -522,40 +533,46 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
             <CardHeader>
               <h4>Versions</h4>
             </CardHeader>
-            <PagedList
-              pageSize={10}
-              pageWrap={(element) => (
-                <table className="table table-striped mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col">Version</th>
-                      <th scope="col">USD</th>
-                      <th scope="col">USD Foil</th>
-                      <th scope="col">EUR</th>
-                      <th scope="col">TIX</th>
-                    </tr>
-                  </thead>
-                  <tbody>{element}</tbody>
-                </table>
-              )}
-              rows={sortedVersions.slice(0).map((version) => (
-                <tr>
-                  <td>
-                    <AutocardA
-                      front={version.image_normal}
-                      back={version.image_flip || undefined}
-                      href={`/tool/card/${version._id}`}
-                    >
-                      {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
-                    </AutocardA>
-                  </td>
-                  <td>{version.prices.usd ? `$${version.prices.usd}` : ''}</td>
-                  <td>{version.prices.usd_foil ? `$${version.prices.usd_foil}` : ''}</td>
-                  <td>{version.prices.eur ? `€${version.prices.eur}` : ''}</td>
-                  <td>{version.prices.tix ? `${version.prices.tix}` : ''}</td>
-                </tr>
-              ))}
-            />
+            {filteredVersions.length > 0 ? (
+              <PagedList
+                pageSize={10}
+                pageWrap={(element) => (
+                  <table className="table table-striped mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col">Version</th>
+                        <th scope="col">USD</th>
+                        <th scope="col">USD Foil</th>
+                        <th scope="col">EUR</th>
+                        <th scope="col">TIX</th>
+                      </tr>
+                    </thead>
+                    <tbody>{element}</tbody>
+                  </table>
+                )}
+                rows={filteredVersions.slice(0).map((version) => (
+                  <tr key={version._id}>
+                    <td>
+                      <AutocardA
+                        front={version.image_normal}
+                        back={version.image_flip || undefined}
+                        href={`/tool/card/${version._id}`}
+                      >
+                        {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
+                      </AutocardA>
+                    </td>
+                    <td>{version.prices.usd ? `$${version.prices.usd}` : ''}</td>
+                    <td>{version.prices.usd_foil ? `$${version.prices.usd_foil}` : ''}</td>
+                    <td>{version.prices.eur ? `€${version.prices.eur}` : ''}</td>
+                    <td>{version.prices.tix ? `${version.prices.tix}` : ''}</td>
+                  </tr>
+                ))}
+              />
+            ) : (
+              <CardBody>
+                <p>No other versions</p>
+              </CardBody>
+            )}
           </Card>
         </Col>
         <Col xs="12" sm="6">
@@ -625,7 +642,7 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
           </Card>
         </Col>
       </Row>
-      <Card className="mt-4">
+      <Card className="my-3">
         <CardHeader>
           <h4>Often Drafted With</h4>
         </CardHeader>
@@ -676,7 +693,7 @@ const CardPage = ({ card, data, versions, related, cubes, userid }) => {
           />
         </CardBody>
       </Card>
-    </>
+    </MainLayout>
   );
 };
 
@@ -686,13 +703,13 @@ CardPage.propTypes = {
     elo: PropTypes.number.isRequired,
     image_normal: PropTypes.string.isRequired,
     scryfall_uri: PropTypes.string.isRequired,
-    tcgplayer_id: PropTypes.string.isRequired,
+    tcgplayer_id: PropTypes.number.isRequired,
     _id: PropTypes.string.isRequired,
     set: PropTypes.string.isRequired,
     set_name: PropTypes.string.isRequired,
     collector_number: PropTypes.string.isRequired,
     legalities: PropTypes.shape({}).isRequired,
-    parsed_cost: PropTypes.string.isRequired,
+    parsed_cost: PropTypes.arrayOf(PropTypes.string).isRequired,
     oracle_text: PropTypes.string.isRequired,
     oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
@@ -700,37 +717,11 @@ CardPage.propTypes = {
     loyalty: PropTypes.string.isRequired,
     power: PropTypes.string.isRequired,
     toughness: PropTypes.shape({}).isRequired,
-    prices: PropTypes.shape({
-      usd: PropTypes.number,
-      usd_foil: PropTypes.number,
-      eur: PropTypes.number,
-      tix: PropTypes.number,
-    }).isRequired,
+    prices: CardPricePropType.isRequired,
   }).isRequired,
   data: PropTypes.shape({
-    history: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    current: PropTypes.shape({
-      prices: PropTypes.arrayOf(
-        PropTypes.shape({
-          usd: PropTypes.number,
-          usd_foil: PropTypes.number,
-          eur: PropTypes.number,
-          tix: PropTypes.number,
-        }),
-      ).isRequired,
-      vintage: PropTypes.bool.isRequired,
-      legacy: PropTypes.bool.isRequired,
-      modern: PropTypes.bool.isRequired,
-      standard: PropTypes.bool.isRequired,
-      pauper: PropTypes.bool.isRequired,
-      peasant: PropTypes.bool.isRequired,
-      size180: PropTypes.number.isRequired,
-      size360: PropTypes.number.isRequired,
-      size450: PropTypes.number.isRequired,
-      size540: PropTypes.number.isRequired,
-      size720: PropTypes.number.isRequired,
-      total: PropTypes.arrayOf(PropTypes.number).isRequired,
-    }),
+    history: PropTypes.arrayOf(CardDataPointPropType).isRequired,
+    current: CardDataPointPropType,
   }).isRequired,
   related: PropTypes.shape({
     top: PropTypes.arrayOf(
@@ -770,21 +761,18 @@ CardPage.propTypes = {
       image_normal: PropTypes.string.isRequired,
       image_flip: PropTypes.string,
       collector_number: PropTypes.string,
-      prices: PropTypes.shape({
-        eur: PropTypes.number,
-        tix: PropTypes.number,
-        usd: PropTypes.number,
-        usd_foil: PropTypes.number,
-      }).isRequired,
+      prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
   cubes: PropTypes.arrayOf(PropTypes.shape([])),
-  userid: PropTypes.string,
+  user: UserPropType,
+  loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
   cubes: [],
-  userid: null,
+  user: null,
+  loginCallback: '/',
 };
 
-export default CardPage;
+export default RenderToRoot(CardPage);

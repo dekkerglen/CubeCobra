@@ -37,6 +37,46 @@ export const stringOperation = (op, value) => {
   }
 };
 
+const NAME_PLACEHOLDER = '~';
+const NAME_ALIAS = /\b[Tt]his spell\b/g;
+
+const SHORTHAND_OVERRIDES = [
+  'Crovax the Cursed',
+  'Darigaaz Reincarnated',
+  'Gorm the Great',
+  'Haktos the Unscarred',
+  'Hazoret the Fervent',
+  'Phage the Untouchable',
+  'Rakdos the Defiler',
+  'Rashka the Slayer',
+  'Rasputin Dreamweaver',
+  'Rubinia Soulsinger',
+];
+
+const getShorthand = (details) => {
+  if (SHORTHAND_OVERRIDES.includes(details.name)) {
+    return details.name.split(' ')[0];
+  }
+  if (details.type.includes('Legendary') && details.name.includes(',')) {
+    return details.name.split(',')[0];
+  }
+  return undefined;
+};
+
+export const nameStringOperation = (op, value) => {
+  const strOp = stringOperation(op, value);
+  return (fieldValue, card) => {
+    let expandedValue = fieldValue
+      .replace(new RegExp(card.details.name, 'g'), NAME_PLACEHOLDER)
+      .replace(NAME_ALIAS, NAME_PLACEHOLDER);
+    const shorthand = getShorthand(card.details);
+    if (shorthand) {
+      expandedValue = expandedValue.replace(new RegExp(shorthand, 'g'), NAME_PLACEHOLDER);
+    }
+    return strOp(expandedValue);
+  };
+};
+
 export const stringContainOperation = (op, value) => {
   value = value.toLowerCase();
   switch (op.toString()) {
@@ -160,12 +200,10 @@ const canCastWith = (mana, cost) => {
       return symbol;
     })
     .sort((a, b) => b.length < a.length);
-  console.log(cost.map((c) => c.join('/')).join('|'), mana.join('|'));
   for (const symbol of mana) {
     let intValue = parseInt(symbol, 10);
     if (!Number.isInteger(intValue)) {
       const index = cost.findIndex((costSymbol) => costSymbol.indexOf(symbol) >= 0);
-      console.log(index, symbol);
       if (index >= 0) {
         cost.splice(index, 1);
       } else {
@@ -195,7 +233,6 @@ const canCastWith = (mana, cost) => {
       }
     }
   }
-  console.log(cost);
   return cost.length === 0;
 };
 const canCastWithInfinite = (mana, cost) => {
@@ -209,7 +246,6 @@ const canCastWithInfinite = (mana, cost) => {
       symbol[1] === '2'
     );
   });
-  console.log(cost.join('|'));
   for (const symbol of mana) {
     cost = cost.filter((costSymbol) => costSymbol.indexOf(symbol) < 0);
   }
