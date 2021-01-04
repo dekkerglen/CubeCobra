@@ -23,7 +23,10 @@ const config = {
   },
   devtool: 'source-map',
   resolve: {
-    modules: ['src', 'node_modules'],
+    modules: ['src', 'node_modules', process.env.NODE_PATH],
+  },
+  resolveLoader: {
+    modules: [process.env.NODE_PATH],
   },
 };
 

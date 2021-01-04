@@ -3,15 +3,18 @@ module.exports = (api) => {
   return {
     presets: [
       [
-        '@babel/preset-env',
+        require.resolve('@babel/preset-env'),
         {
           useBuiltIns: 'usage',
           corejs: 3,
           exclude: ['es.promise'],
         },
       ],
-      '@babel/preset-react',
+      require.resolve('@babel/preset-react'),
     ],
-    plugins: ['@babel/plugin-proposal-nullish-coalescing-operator', '@babel/plugin-proposal-optional-chaining'],
+    plugins: [
+      require.resolve('@babel/plugin-proposal-nullish-coalescing-operator'),
+      require.resolve('@babel/plugin-proposal-optional-chaining'),
+    ],
   };
 };
