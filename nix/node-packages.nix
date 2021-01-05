@@ -15292,7 +15292,7 @@ let
     name = "cubecobra";
     packageName = "cubecobra";
     version = "1.0.0";
-    src = ./.;
+    src = ./..;
     dependencies = [
       sources."@babel/code-frame-7.8.3"
       sources."@babel/compat-data-7.9.6"

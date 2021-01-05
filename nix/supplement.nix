@@ -652,13 +652,13 @@ let
         sha512 = "a1+kOYLR8wMGustcgAjdydMsQ2A/2ipRPwRKUmfYaSxc9ZPcrku080Ctl6zrZzZNs/U82MjSv+qKREkoq3bJaw==";
       };
     };
-    "eslint-plugin-prettier-3.3.0" = {
+    "eslint-plugin-prettier-3.3.1" = {
       name = "eslint-plugin-prettier";
       packageName = "eslint-plugin-prettier";
-      version = "3.3.0";
+      version = "3.3.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/eslint-plugin-prettier/-/eslint-plugin-prettier-3.3.0.tgz";
-        sha512 = "tMTwO8iUWlSRZIwS9k7/E4vrTsfvsrcM5p1eftyuqWH25nKsz/o6/54I7jwQ/3zobISyC7wMy9ZsFwgTxOcOpQ==";
+        url = "https://registry.npmjs.org/eslint-plugin-prettier/-/eslint-plugin-prettier-3.3.1.tgz";
+        sha512 = "Rq3jkcFY8RYeQLgk2cCwuc0P7SEFwDravPhsJZOQ5N4YI4DSg50NyqJ/9gdZHzQlHf8MvafSesbNJCcP/FF6pQ==";
       };
     };
     "eslint-scope-5.1.1" = {
@@ -1489,22 +1489,22 @@ let
         sha512 = "Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==";
       };
     };
-    "mime-db-1.44.0" = {
+    "mime-db-1.45.0" = {
       name = "mime-db";
       packageName = "mime-db";
-      version = "1.44.0";
+      version = "1.45.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/mime-db/-/mime-db-1.44.0.tgz";
-        sha512 = "/NOTfLrsPBVeH7YtFPgsVWveuL+4SjjYxaQ1xtM1KMFj7HdxlBlxeyNLzhyJVx7r4rZGJAZ/6lkKCitSc/Nmpg==";
+        url = "https://registry.npmjs.org/mime-db/-/mime-db-1.45.0.tgz";
+        sha512 = "CkqLUxUk15hofLoLyljJSrukZi8mAtgd+yE5uO4tqRZsdsAJKv0O+rFMhVDRJgozy+yG6md5KwuXhD4ocIoP+w==";
       };
     };
-    "mime-types-2.1.27" = {
+    "mime-types-2.1.28" = {
       name = "mime-types";
       packageName = "mime-types";
-      version = "2.1.27";
+      version = "2.1.28";
       src = fetchurl {
-        url = "https://registry.npmjs.org/mime-types/-/mime-types-2.1.27.tgz";
-        sha512 = "JIhqnCasI9yD+SsmkquHBxTSEuZdQX5BuQnS2Vc7puQQQ+8yiP5AY5uWhpdv4YL4VM5c6iliiYWPgJ/nJQLp7w==";
+        url = "https://registry.npmjs.org/mime-types/-/mime-types-2.1.28.tgz";
+        sha512 = "0TO2yJ5YHYr7M2zzT7gDU1tbwHxEUWBCLt0lscSNpcdAfFyJOVEpRYNS7EXVcTLNj/25QO8gulHC5JtTzSE2UQ==";
       };
     };
     "mimic-fn-2.1.0" = {
@@ -2344,13 +2344,13 @@ let
         sha512 = "wmEc8m4fjnob4gt5riFRtTu/6+4rSe12TpAELNSqHMfF3IqnA+CH37USM6/YR3qRZv7e56kAEAtd6nKZaxe0Ug==";
       };
     };
-    "tape-5.1.0" = {
+    "tape-5.1.1" = {
       name = "tape";
       packageName = "tape";
-      version = "5.1.0";
+      version = "5.1.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/tape/-/tape-5.1.0.tgz";
-        sha512 = "3+/QreLoHRe2QhjkIQ6vSjwTRnC3iMQSg943K9EP3rHhY6MWlLxNw/0h46B6DYz5/SSI4GmU1Dr5HNDAlFLhtQ==";
+        url = "https://registry.npmjs.org/tape/-/tape-5.1.1.tgz";
+        sha512 = "ujhT+ZJPqSGY9Le02mIGBnyWo7Ks05FEGS9PnlqECr3sM3KyV4CSCXAvSBJKMN+t+aZYLKEFUEo0l4wFJMhppQ==";
       };
     };
     "tar-4.4.13" = {
@@ -2704,7 +2704,7 @@ in
       })
       sources."eslint-config-aqua-7.3.0"
       sources."eslint-config-prettier-6.15.0"
-      sources."eslint-plugin-prettier-3.3.0"
+      sources."eslint-plugin-prettier-3.3.1"
       sources."eslint-scope-5.1.1"
       sources."eslint-utils-1.4.3"
       sources."eslint-visitor-keys-1.3.0"
@@ -2820,8 +2820,8 @@ in
       sources."levn-0.3.0"
       sources."lodash-4.17.20"
       sources."lru-cache-6.0.0"
-      sources."mime-db-1.44.0"
-      sources."mime-types-2.1.27"
+      sources."mime-db-1.45.0"
+      sources."mime-types-2.1.28"
       sources."mimic-fn-2.1.0"
       sources."minimatch-3.0.4"
       sources."minimist-1.2.5"
@@ -2933,7 +2933,7 @@ in
           sources."strip-ansi-5.2.0"
         ];
       })
-      sources."tape-5.1.0"
+      sources."tape-5.1.1"
       (sources."tar-6.0.5" // {
         dependencies = [
           sources."mkdirp-1.0.4"
