@@ -10,7 +10,7 @@ const CubeNavItem = ({ link, activeLink, children }) => {
   const { cube } = useContext(CubeContext);
   return (
     <NavItem>
-      <NavLink href={`/cube/${link}/${getCubeId(cube)}`} active={link === activeLink}>
+      <NavLink href={`/cube/${link}/${encodeURIComponent(getCubeId(cube))}`} active={link === activeLink}>
         {children}
       </NavLink>
     </NavItem>

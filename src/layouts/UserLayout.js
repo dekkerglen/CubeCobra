@@ -6,8 +6,10 @@ import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
+import CreateCubeModal from 'components/CreateCubeModal';
 
 const FollowersModalLink = withModal('a', FollowersModal);
+const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
 const UserLayout = ({ user, followers, following, canEdit, activeLink, children }) => {
   const numFollowers = followers.length;
@@ -61,9 +63,7 @@ const UserLayout = ({ user, followers, following, canEdit, activeLink, children 
         <Navbar light className="usercontrols">
           <Nav navbar>
             <NavItem>
-              <NavLink href="#" data-toggle="modal" data-target="#cubeModal">
-                Create New Cube
-              </NavLink>
+              <CreateCubeModalLink>Create New Cube</CreateCubeModalLink>
             </NavItem>
           </Nav>
         </Navbar>

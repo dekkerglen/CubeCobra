@@ -1,8 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Col,
@@ -24,46 +21,23 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
-import DynamicFlash from 'components/DynamicFlash';
-import CubeLayout from 'layouts/CubeLayout';
 import DeckCard from 'components/DeckCard';
+import DynamicFlash from 'components/DynamicFlash';
 import SampleHandModal from 'components/SampleHandModal';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
+import useQueryParam from 'hooks/useQueryParam';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
 import Draft, { init } from 'utils/Draft';
 import { csrfFetch } from 'utils/CSRF';
-import Query from 'utils/Query';
-import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
-  const [seatIndex, setSeatIndex] = useState(0);
-  const [view, setView] = useState('deck');
-  const didMountRef1 = useRef(false);
-  const didMountRef2 = useRef(false);
-
-  useEffect(() => {
-    if (didMountRef1.current) {
-      Query.set('seat', seatIndex);
-    } else {
-      const querySeat = Query.get('seat');
-      if (querySeat || querySeat === 0) {
-        setSeatIndex(querySeat);
-      }
-      didMountRef1.current = true;
-    }
-  }, [seatIndex, setSeatIndex]);
-
-  useEffect(() => {
-    if (didMountRef2.current) {
-      Query.set('view', view);
-    } else {
-      const queryView = Query.get('view');
-      if (queryView) {
-        setView(queryView);
-      }
-      didMountRef2.current = true;
-    }
-  }, [view, setView]);
+  const [seatIndex, setSeatIndex] = useQueryParam('seat', 0);
+  const [view, setView] = useQueryParam('view', 'deck');
 
   const handleChangeSeat = (event) => {
     setSeatIndex(event.target.value);
