@@ -23,12 +23,13 @@ const config = {
   },
   devtool: 'source-map',
   resolve: {
-    modules: ['src', 'node_modules', process.env.NODE_PATH],
-  },
-  resolveLoader: {
-    modules: [process.env.NODE_PATH],
+    modules: ['src', 'node_modules'],
   },
 };
+if (process.env.NODE_PATH) {
+  config.resolve.modules.push(process.env.NODE_PATH);
+  config.resolveLoader = { modules: [process.env.NODE_PATH] };
+}
 
 const clientConfig = merge(config, {
   entry: {
