@@ -4,12 +4,6 @@ private/
 src/generated/
 jobs/export/
 
-nix/
-flake.nix
-flake.lock
-.envrc
-.direnv/
-
 .python-version
 
 # Created by https://www.gitignore.io/api/node,komodoedit,webstorm+all,visualstudio,visualstudiocode
