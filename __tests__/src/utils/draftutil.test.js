@@ -234,8 +234,17 @@ describe('createDraft', () => {
       bots = ['mockbot'];
       seats = 6;
       // cube only contains 65 cards, so 6 * 5 = 30 > 13 blue cards, should run out if multiples = false
-      exampleCube.draft_formats[0].packs =
-        '[{ "sealed": 0, "trash": 0, "filters": ["c>=u","c>=u","c:u","c:u","c:u"] },{ "trash": 0, "filters": ["*"] }]';
+      exampleCube.draft_formats[0].packs =[
+        {
+          sealed: 0,
+          trash: 0,
+          filters: ["c>=u","c>=u","c:u","c:u","c:u"],
+        },
+        { 
+          trash: 0,
+          filters: ["*"],
+        },
+      ];
       format = getDraftFormat({ id: 0 }, exampleCube);
       format.multiples = true;
       expect(() => {

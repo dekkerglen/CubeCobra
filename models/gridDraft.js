@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const { withMigrations } = require('@baethon/mongoose-lazy-migration');
+
 const cardSchema = require('./cardSchema');
+const gridDraftMigrations = require('./migrations/gridDraftMigrations');
 
 // data for each seat, human or bot
 const Seat = {
@@ -32,4 +35,4 @@ const gridDraftSchema = mongoose.Schema({
   unopenedPacks: [[Number]],
 });
 
-module.exports = mongoose.model('GridDraft', gridDraftSchema);
+module.exports = mongoose.model('GridDraft', withMigrations(gridDraftSchema, gridDraftMigrations));

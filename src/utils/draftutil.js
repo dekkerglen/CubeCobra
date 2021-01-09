@@ -39,8 +39,7 @@ function compileFilter(filterText) {
 
       [pack][card in pack][token,token...]
 */
-export function parseDraftFormat(packsJSON, splitter = ',') {
-  const format = JSON.parse(packsJSON);
+export function parseDraftFormat(format, splitter = ',') {
   for (let j = 0; j < format.length; j++) {
     for (let k = 0; k < format[j].filters.length; k++) {
       format[j].filters[k] = format[j].filters[k].split(splitter);

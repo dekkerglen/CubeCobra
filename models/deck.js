@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const { withMigrations } = require('@baethon/mongoose-lazy-migration');
+
 const cardSchema = require('./cardSchema');
+const deckMigrations = require('./migrations/deckMigrations');
 
 // data for each seat, human or bot
 const SeatDeck = {
@@ -57,4 +60,4 @@ deckSchema.index({
   date: -1,
 });
 
-module.exports = mongoose.model('Deck', deckSchema);
+module.exports = mongoose.model('Deck', withMigrations(deckSchema, deckMigrations));

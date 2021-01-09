@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const { withMigrations } = require('@baethon/mongoose-lazy-migration');
+
+const cubeMigrations = require('./migrations/cubeMigrations');
 
 const Card = {
   tags: [
@@ -126,7 +129,14 @@ const cubeSchema = mongoose.Schema({
         multiples: Boolean,
         html: String,
         markdown: String,
-        packs: String,
+        packs: [
+          {
+            filters: [String],
+            trash: { type: Number, min: 0 },
+            sealed: Boolean,
+            picksPerPass: { type: Number, min: 1 },
+          },
+        ],
       },
     ],
     default: [],
@@ -190,7 +200,7 @@ cubeSchema.index({
   numDecks: -1,
 });
 
-const Cube = mongoose.model('Cube', cubeSchema);
+const Cube = mongoose.model('Cube', withMigrations(cubeSchema, cubeMigrations));
 
 Cube.LAYOUT_FIELDS =
   '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';

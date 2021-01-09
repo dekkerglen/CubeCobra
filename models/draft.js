@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const { withMigrations } = require('@baethon/mongoose-lazy-migration');
+
 const cardSchema = require('./cardSchema');
+const draftMigrations = require('./migrations/draftMigrations.js');
 
 // Details on each pack, how to draft and what's in it.
 const Pack = {
@@ -52,4 +55,4 @@ const draftSchema = mongoose.Schema({
   unopenedPacks: [[Pack]],
 });
 
-module.exports = mongoose.model('Draft', draftSchema);
+module.exports = mongoose.model('Draft', withMigrations(draftSchema, draftMigrations));

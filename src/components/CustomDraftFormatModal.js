@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useRef } from 'react';
+import React, { useContext, useCallback } from 'react';
 
 import {
   Button,
@@ -32,8 +32,6 @@ const defaultPack = { filters: [''], trash: 0, sealed: false, picksPerPass: 1 };
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
   const { cubeID } = useContext(CubeContext);
-
-  const formRef = useRef();
 
   const handleChangeDescription = useCallback(
     (event) => {
@@ -175,7 +173,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">
-      <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`} innerRef={formRef}>
+      <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
         <ModalHeader id="customDraftFormatTitle" toggle={toggle}>
           Create Custom Draft Format
         </ModalHeader>
