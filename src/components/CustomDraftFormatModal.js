@@ -226,7 +226,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               <CardBody>
                 <Form inline className="mb-3">
                   <Label>
-                    Discard last
+                    Discard the last
                     <Input
                       type="number"
                       size="sm"
@@ -237,11 +237,11 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
                       onChange={handleChangeTrash}
                       data-index={index}
                     />
-                    cards left in the pack during drafting.
+                    cards left in each pack.
                   </Label>
                   <Label className="ml-4">
                     <Input type="checkbox" checked={pack.sealed} onClick={handleChangeSealed} data-index={index} />
-                    This pack is a sealed pack.
+                    Is a sealed pack.
                   </Label>
                 </Form>
                 <Form inline className="mb-3">
