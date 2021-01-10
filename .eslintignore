@@ -27,7 +27,6 @@ src/components/Notification.js
 src/components/SortCollapse.js
 src/components/SortableTable.js
 src/components/TagColorsModal.js
-src/components/TagInput.js
 src/components/TextBadge.js
 src/components/Tooltip.js
 src/components/WithAutocard.js

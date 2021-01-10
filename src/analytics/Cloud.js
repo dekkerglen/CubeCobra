@@ -1,12 +1,14 @@
-import React, { useContext, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { TagCloud } from 'react-tagcloud';
-import { Input, InputGroup, InputGroupAddon, InputGroupText, UncontrolledTooltip } from 'reactstrap';
+import { InputGroup, InputGroupAddon, InputGroupText, UncontrolledTooltip } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ThemeContext from 'contexts/ThemeContext';
-import { isTouchDevice } from 'utils/Util';
 import useQueryParam from 'hooks/useQueryParam';
+import CubePropTypes from 'proptypes/CubePropType';
+import TagInput from 'components/TagInput';
+import { arrayMove, isTouchDevice } from 'utils/Util';
 
 const trigger = isTouchDevice() ? 'click' : 'hover';
 
@@ -43,7 +45,15 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
   const theme = useContext(ThemeContext);
 
   const [exclude, setExclude] = useQueryParam('exclude', '');
-  const excludeList = useMemo(() => (exclude ?? '').split(',').map((ex) => ex.trim()), [exclude]);
+  const [tagInput, setTagInput] = useState('');
+  const excludeList = useMemo(
+    () =>
+      (exclude ?? '')
+        .split(',')
+        .map((ex) => ex.trim())
+        .filter((t) => t),
+    [exclude],
+  );
 
   const tags = {};
   cards.forEach((card) =>
@@ -66,6 +76,28 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
     <TagCloudTag tag={tag} size={size} color={color} key={tag.key || tag.value} />
   );
 
+  const addTag = useCallback(
+    ({ text }) => {
+      text = text.trim();
+      if (text && !excludeList.includes(text)) {
+        setExclude([...excludeList, text].join(','));
+      }
+      setTagInput('');
+    },
+    [excludeList, setExclude],
+  );
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag }), [addTag]);
+  const deleteTag = useCallback((tagIndex) => setExclude(excludeList.filter((_, i) => i !== tagIndex).join(',')), [
+    excludeList,
+    setExclude,
+  ]);
+  const reorderTag = useCallback(
+    (_, currIndex, newIndex) => {
+      setExclude(arrayMove(excludeList, currIndex, newIndex));
+    },
+    [excludeList, setExclude],
+  );
+
   return (
     <>
       <h4>Tag Cloud</h4>
@@ -73,13 +105,22 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
         Tags in your cube with random colors weighted by the expected number of cards with that tag a player will open
         on average.
       </p>
+      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <InputGroup>
         <InputGroupAddon addonType="prepend">
-          <InputGroupText>Comma separated Tags to exclude</InputGroupText>
+          <InputGroupText>Tags to exclude</InputGroupText>
         </InputGroupAddon>
-        <Input placeholder="Excluded Tags" onChange={(e) => setExclude(e.target.value)} value={exclude} />
+        <TagInput
+          tags={excludeList.map((t) => ({ text: t, id: t }))}
+          inputValue={tagInput}
+          handleInputChange={setTagInput}
+          handleInputBlur={addTagText}
+          addTag={addTag}
+          deleteTag={deleteTag}
+          reorderTag={reorderTag}
+          dontAddSuggestions
+        />
       </InputGroup>
-      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <TagCloud minSize={10} maxSize={80} colorOptions={COLOR_OPTIONS[theme]} tags={words} renderer={tagRenderer} />
     </>
   );
@@ -87,16 +128,7 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
 
 Cloud.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
+  cube: CubePropTypes.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
 };
