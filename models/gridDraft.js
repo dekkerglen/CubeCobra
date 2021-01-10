@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-const { withMigrations } = require('@baethon/mongoose-lazy-migration');
 
 const cardSchema = require('./cardSchema');
 const gridDraftMigrations = require('./migrations/gridDraftMigrations');
+const { withMigrations } = require('./migrations/migrationMiddleware');
 
 // data for each seat, human or bot
 const Seat = {

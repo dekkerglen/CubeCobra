@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const { withMigrations } = require('@baethon/mongoose-lazy-migration');
 
 const cubeMigrations = require('./migrations/cubeMigrations');
+const { withMigrations } = require('./migrations/migrationMiddleware');
 
 const Card = {
   tags: [

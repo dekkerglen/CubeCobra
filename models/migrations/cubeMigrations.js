@@ -1,5 +1,3 @@
-const { migration } = require('@baethon/mongoose-lazy-migration');
-
 const updateCubeDraftFormats = (cube) => {
   if (!cube) return null;
 
@@ -20,6 +18,8 @@ const updateCubeDraftFormats = (cube) => {
   return cube;
 };
 
-const migrations = [migration(1, updateCubeDraftFormats)];
+const migrations = [
+  {version: 1, migration: updateCubeDraftFormats},
+];
 
 module.exports = migrations;

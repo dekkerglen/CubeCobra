@@ -1,14 +1,17 @@
-const { migration } = require('@baethon/mongoose-lazy-migration');
-
 const dedupeCardObjects = (draft) => {
   if (!draft) return null;
+  console.log('Object.keys(draft)', Object.keys(draft));
   if (draft.cards && draft.cards.length > 0) return draft;
 
   const defaultPack = { filters: [], trash: 0, sealed: false, picksPerPass: 1 };
 
   const replaceWithIndex = (card) => draft.cards.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
-  const mapPacks = (packs) =>
-    (packs || []).map((pack) => ({ ...defaultPack, cards: (pack || []).map(replaceWithIndex) }));
+  const mapPack = (pack) => {
+    pack = pack || [];
+    if (!pack.length && pack.length !== 0) pack = Object.values(pack);
+    return { ...defaultPack, cards: pack.map(replaceWithIndex) };
+  };
+  const mapPacks = (packs) => (packs || []).map(mapPack);
   const mapSeats = (seats) => (seats || []).map(mapPacks);
   const replace1d = (arr) => (arr || []).map(replaceWithIndex);
   const replace2d = (arr) => (arr || []).map(replace1d);
@@ -29,6 +32,8 @@ const dedupeCardObjects = (draft) => {
   return draft;
 };
 
-const migrations = [migration(1, dedupeCardObjects)];
+const migrations = [
+  { version: 1, migration: dedupeCardObjects },
+];
 
 module.exports = migrations;

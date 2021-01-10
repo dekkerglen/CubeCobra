@@ -3339,7 +3339,7 @@ router.get('/deck/:id', async (req, res) => {
 
     let draft = null;
     if (deck.draft) {
-      draft = await Draft.findById(deck.draft);
+      draft = await Draft.findById(deck.draft).lean();
       if (draft) {
         for (const card of draft.cards) {
           card.details = carddb.cardFromId(card.cardID);
@@ -3354,7 +3354,7 @@ router.get('/deck/:id', async (req, res) => {
     if (deckUser) {
       drafter = deckUser.username;
     }
-
+    console.warn('Object.keys(deck) migrated', JSON.stringify(Object.keys(deck), null, 2));
     for (const card of deck.cards) {
       card.details = carddb.cardFromId(card.cardID);
     }

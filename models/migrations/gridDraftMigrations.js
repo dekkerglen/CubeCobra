@@ -1,5 +1,3 @@
-const { migration } = require('@baethon/mongoose-lazy-migration');
-
 const dedupeCardObjects = (gridDraft) => {
   if (!gridDraft) return null;
   if (gridDraft.cards && gridDraft.cards.length > 0) return gridDraft;
@@ -24,6 +22,8 @@ const dedupeCardObjects = (gridDraft) => {
   return gridDraft;
 };
 
-const migrations = [migration(1, dedupeCardObjects)];
+const migrations = [
+  { version: 1, migration: dedupeCardObjects},
+];
 
 module.exports = migrations;

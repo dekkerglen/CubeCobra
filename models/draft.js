@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-const { withMigrations } = require('@baethon/mongoose-lazy-migration');
 
 const cardSchema = require('./cardSchema');
-const draftMigrations = require('./migrations/draftMigrations.js');
+const draftMigrations = require('./migrations/draftMigrations');
+const { withMigrations } = require('./migrations/migrationMiddleware');
 
 // Details on each pack, how to draft and what's in it.
 const Pack = {
