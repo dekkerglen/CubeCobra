@@ -81,18 +81,15 @@ const _RankleMasterofFixtures = {
   cmc: 4,
   legalities: {
     Standard: 'legal',
-    Future: 'legal',
     Historic: 'legal',
     Pioneer: 'legal',
     Modern: 'legal',
     Legacy: 'legal',
     Pauper: 'not_legal',
     Vintage: 'legal',
-    Penny: 'legal',
+    Penny: 'not_legal',
     Commander: 'legal',
     Brawl: 'legal',
-    Duel: 'legal',
-    Oldschool: 'not_legal',
   },
   parsed_cost: ['b', 'b', '2'],
   colors: ['B'],
@@ -102,10 +99,24 @@ const _RankleMasterofFixtures = {
   tcgplayer_id: 198584,
   power: '3',
   toughness: '3',
-  image_small: 'https://img.scryfall.com/cards/small/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
-  image_normal: 'https://img.scryfall.com/cards/normal/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
-  art_crop: 'https://img.scryfall.com/cards/art_crop/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  image_small:
+    'https://c1.scryfall.com/file/scryfall-cards/small/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  image_normal:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
+  art_crop:
+    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/9/3/93c2c11d-dfc3-4ba9-8c0f-a98114090396.jpg?1572490217',
   colorcategory: 'b',
+  elo: 1200,
+  embedding: [],
+  layout: 'normal',
+  set_name: 'Throne of Eldraine',
+  released_at: '2019-10-04',
+  prices: {
+    eur: 9.45,
+    tix: 2.74,
+    usd: 10.3,
+    usd_foil: 13.92,
+  },
 };
 
 test('cardFromId returns a well-formed card object', () => {

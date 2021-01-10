@@ -1,11 +1,14 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
+import { SortableTable } from 'components/SortableTable';
 import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
+import useQueryParam from 'hooks/useQueryParam';
+import useToggle from 'hooks/UseToggle';
+import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
 import {
@@ -24,10 +27,7 @@ import {
   getCastingProbability,
   PROB_TO_INCLUDE,
 } from 'utils/draftbots';
-import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
-import useToggle from 'hooks/UseToggle';
-import { SortableTable } from 'components/SortableTable';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -91,15 +91,13 @@ const TRAITS = [
     name: 'Internal Synergy',
     description: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (_, __, picked, synergies, ___, ____, pickedInCombination) =>
-      getInternalSynergy(pickedInCombination, picked),
+    function: (_, __, picked, _3, ___, ____, pickedInCombination) => getInternalSynergy(pickedInCombination, picked),
   },
   {
     name: 'Pick Synergy',
     description: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (_, card, picked, synergies, __, ___, pickedInCombination) =>
-      getPickSynergy(pickedInCombination, card, picked),
+    function: (_, card, picked, _2, __, ___, pickedInCombination) => getPickSynergy(pickedInCombination, card, picked),
   },
   {
     name: 'Openness',
@@ -279,30 +277,19 @@ Internal.propTypes = {
 };
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useState(defaultIndex ?? 0);
-  const didMountRef1 = useRef(false);
+  const [index, setIndex] = useQueryParam(defaultIndex ?? 0);
 
   // Have to do useMemo so it happens immediately
   useMemo(() => init(draft), [draft]);
 
-  useEffect(() => {
-    if (didMountRef1.current) {
-      Query.set('pick', index);
-    } else {
-      const queryIndex = Query.get('pick');
-      if (queryIndex || queryIndex === 0) {
-        setIndex(queryIndex);
+  const click = useCallback(
+    (event) => {
+      if (index !== event.target.getAttribute('index')) {
+        setIndex(event.target.getAttribute('index'));
       }
-      didMountRef1.current = true;
-    }
-    return () => Query.del('pick');
-  }, [index]);
-
-  const click = (event) => {
-    if (index !== event.target.getAttribute('index')) {
-      setIndex(event.target.getAttribute('index'));
-    }
-  };
+    },
+    [index, setIndex],
+  );
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);

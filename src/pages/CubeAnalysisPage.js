@@ -1,16 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
-import CubeLayout from 'layouts/CubeLayout';
-
-import DynamicFlash from 'components/DynamicFlash';
-import ErrorBoundary from 'components/ErrorBoundary';
-
 import Averages from 'analytics/Averages';
 import Chart from 'analytics/Chart';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
 import AnalyticTable from 'analytics/AnalyticTable';
@@ -18,6 +15,11 @@ import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
 import Asfans from 'analytics/Asfans';
+import FilterCollapse from 'components/FilterCollapse';
+import useQueryParam from 'hooks/useQueryParam';
+import useToggle from 'hooks/UseToggle';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
 import {
   cardCmc,
   cardDevotion,
@@ -30,10 +32,6 @@ import {
   cardTix,
 } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import FilterCollapse from 'components/FilterCollapse';
-import useToggle from 'hooks/UseToggle';
-import Query from 'utils/Query';
-import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeAnalysisPage = ({
@@ -47,25 +45,12 @@ const CubeAnalysisPage = ({
   loginCallback,
 }) => {
   const [filter, setFilter] = useState(null);
-  const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
+  const [activeTab, setActiveTab] = useQueryParam('tab', defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
   const [asfans, setAsfans] = useState({});
-  const didMountRef = useRef(false);
-
-  useEffect(() => {
-    if (didMountRef.current) {
-      Query.set('tab', activeTab);
-    } else {
-      const queryTab = Query.get('tab');
-      if (queryTab || queryTab === 0) {
-        setActiveTab(queryTab);
-      }
-      didMountRef.current = true;
-    }
-  }, [activeTab]);
 
   const cards = useMemo(() => {
     return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
@@ -141,7 +126,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Tokens',
-      component: (collection, cubeObj) => <Tokens cube={cubeObj} />,
+      component: (_, cubeObj) => <Tokens cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',

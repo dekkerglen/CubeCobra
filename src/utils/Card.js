@@ -250,8 +250,11 @@ export const cardElo = (card) => card.details.elo;
 
 export const cardLayout = (card) => card.details.layout;
 
-export const cardDevotion = (card, color) =>
-  cardCost(card)?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
+export const cardDevotion = (card, color) => {
+  let cost = cardCost(card);
+  if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
+  return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
+};
 
 export const cardIsSpecialZoneType = (card) => {
   return (

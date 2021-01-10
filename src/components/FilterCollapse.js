@@ -445,7 +445,7 @@ class FilterCollapse extends Component {
   }
 
   async updateFilters(overrideFilter) {
-    if (Query.get('f') === this.state.filterInput) {
+    if (this.props.filter && Query.get('f') === this.state.filterInput) {
       return;
     }
 

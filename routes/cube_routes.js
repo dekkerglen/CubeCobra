@@ -10,7 +10,6 @@ Canvas.Image = Image;
 
 const {
   generatePack,
-  sanitize,
   setCubeType,
   cardsAreEquivalent,
   getBasics,
@@ -2789,7 +2788,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     const newdeck = JSON.parse(req.body.draftraw);
     const name = JSON.parse(req.body.name);
-    const description = sanitize(JSON.parse(req.body.description));
+    const description = JSON.parse(req.body.description);
 
     deck.seats[0].deck = newdeck.playerdeck;
     deck.seats[0].sideboard = newdeck.playersideboard;
@@ -2929,9 +2928,9 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     };
 
     const deck = await Deck.findById(req.params.id);
-    const deckOwner = await User.findById(deck.seats[0].userid);
+    const deckOwner = (await User.findById(deck.seats[0].userid)) || {};
 
-    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+    if (!deckOwner._id.equals(req.user._id) && !deck.cubeOwner === req.user._id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
