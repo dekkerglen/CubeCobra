@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import DeckPropType from 'proptypes/DeckPropType';
 import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
 
 import HeaderCell from 'components/HeaderCell';
-import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
+import { getCardColorClass } from 'contexts/TagContext';
+import useQueryParam from 'hooks/useQueryParam';
 import useSortableData from 'hooks/UseSortableData';
+import useToggle from 'hooks/UseToggle';
+import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
 import {
@@ -26,9 +28,7 @@ import {
   getCastingProbability,
   PROB_TO_INCLUDE,
 } from 'utils/draftbots';
-import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
-import useToggle from 'hooks/UseToggle';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -108,13 +108,13 @@ const TRAITS = [
     name: 'Openness',
     description: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, _, __, ___, seen) => getOpenness(combination, seen),
+    function: (combination, _0, _1, _2, seen) => getOpenness(combination, seen),
   },
   {
     name: 'Color',
     description: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (_, _____, picked, cards, ___, ____, pickedInCombination, probabilities) =>
+    function: (_0, _1, picked, cards, _2, _3, pickedInCombination, probabilities) =>
       getColor(pickedInCombination, picked, probabilities, cards),
   },
   {
@@ -127,7 +127,7 @@ const TRAITS = [
     name: 'Casting Probability',
     description:
       'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    function: (_, card, __, cards, ____, lands) => getCastingProbability(cards[card], lands),
+    function: (_0, card, _1, cards, _2, lands) => getCastingProbability(cards[card], lands),
   },
   {
     name: 'Lands',
@@ -296,30 +296,19 @@ Internal.propTypes = {
 };
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useState(defaultIndex ?? 0);
-  const didMountRef1 = useRef(false);
+  const [index, setIndex] = useQueryParam(defaultIndex ?? 0);
 
   // Have to do useMemo so it happens immediately
   useMemo(() => init(draft), [draft]);
 
-  useEffect(() => {
-    if (didMountRef1.current) {
-      Query.set('pick', index);
-    } else {
-      const queryIndex = Query.get('pick');
-      if (queryIndex || queryIndex === 0) {
-        setIndex(queryIndex);
+  const click = useCallback(
+    (event) => {
+      if (index !== event.target.getAttribute('index')) {
+        setIndex(event.target.getAttribute('index'));
       }
-      didMountRef1.current = true;
-    }
-    return () => Query.del('pick');
-  }, [index]);
-
-  const click = (event) => {
-    if (index !== event.target.getAttribute('index')) {
-      setIndex(event.target.getAttribute('index'));
-    }
-  };
+    },
+    [index, setIndex],
+  );
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);

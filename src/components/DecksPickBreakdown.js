@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
@@ -7,33 +7,22 @@ import FoilCardImage from 'components/FoilCardImage';
 import { getCardColorClass } from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
 import DeckPropType from 'proptypes/DeckPropType';
+import useQueryParam from 'hooks/useQueryParam';
 import { encodeName } from 'utils/Card';
-import Query from 'utils/Query';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
 const DecksPickBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useState(defaultIndex ?? 0);
-  const didMountRef1 = useRef(false);
+  const [index, setIndex] = useQueryParam('pick', defaultIndex ?? 0);
 
-  useEffect(() => {
-    if (didMountRef1.current) {
-      Query.set('pick', index);
-    } else {
-      const queryIndex = Query.get('pick');
-      if (queryIndex || queryIndex === 0) {
-        setIndex(queryIndex);
+  const click = useCallback(
+    (event) => {
+      if (index !== event.target.getAttribute('index')) {
+        setIndex(event.target.getAttribute('index'));
       }
-      didMountRef1.current = true;
-    }
-    return () => Query.del('pick');
-  }, [index]);
-
-  const click = (event) => {
-    if (index !== event.target.getAttribute('index')) {
-      setIndex(event.target.getAttribute('index'));
-    }
-  };
+    },
+    [index, setIndex],
+  );
 
   if (!draft) {
     return <h4>This deck does not have a related draft log.</h4>;

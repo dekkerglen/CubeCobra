@@ -1,16 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
-import CubeLayout from 'layouts/CubeLayout';
-
-import DynamicFlash from 'components/DynamicFlash';
-import ErrorBoundary from 'components/ErrorBoundary';
-
 import Averages from 'analytics/Averages';
 import Chart from 'analytics/Chart';
+import DynamicFlash from 'components/DynamicFlash';
+import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
 import PivotTable from 'analytics/PivotTable';
 import Table from 'analytics/Table';
@@ -18,6 +14,14 @@ import Cloud from 'analytics/Cloud';
 import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
 import Asfans from 'analytics/Asfans';
+import FilterCollapse from 'components/FilterCollapse';
+import { TagContextProvider } from 'contexts/TagContext';
+import useQueryParam from 'hooks/useQueryParam';
+import useToggle from 'hooks/UseToggle';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 import {
   cardCmc,
   cardDevotion,
@@ -30,10 +34,6 @@ import {
   cardTix,
 } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import FilterCollapse from 'components/FilterCollapse';
-import useToggle from 'hooks/UseToggle';
-import Query from 'utils/Query';
-import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeAnalysisPage = ({
@@ -43,29 +43,18 @@ const CubeAnalysisPage = ({
   defaultFilterText,
   defaultTab,
   defaultFormatId,
+  defaultShowTagColors,
   cubes,
   loginCallback,
 }) => {
+  defaultFormatId = cube.defaultDraftFormat ?? -1;
   const [filter, setFilter] = useState(null);
-  const [activeTab, setActiveTab] = useState(defaultTab ?? 0);
+  const [activeTab, setActiveTab] = useQueryParam('tab', defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
   const [asfans, setAsfans] = useState({});
-  const didMountRef = useRef(false);
-
-  useEffect(() => {
-    if (didMountRef.current) {
-      Query.set('tab', activeTab);
-    } else {
-      const queryTab = Query.get('tab');
-      if (queryTab || queryTab === 0) {
-        setActiveTab(queryTab);
-      }
-      didMountRef.current = true;
-    }
-  }, [activeTab]);
 
   const cards = useMemo(() => {
     return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
@@ -109,7 +98,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Asfans',
-      component: (collection) => <Asfans cards={collection} cube={cube} />,
+      component: (collection) => <Asfans cards={collection} cube={cube} defaultFormatId={defaultFormatId} />,
     },
     {
       name: 'Chart',
@@ -139,7 +128,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Tokens',
-      component: (collection, cubeObj) => <Tokens cube={cubeObj} />,
+      component: (_, cubeObj) => <Tokens cube={cubeObj} />,
     },
     {
       name: 'Tag Cloud',
@@ -178,66 +167,76 @@ const CubeAnalysisPage = ({
     });
   }, [cubeID]);
 
+  const defaultTagSet = new Set([].concat(...cube.cards.map((card) => card.tags)));
+  const defaultTags = [...defaultTagSet].map((tag) => ({
+    id: tag,
+    text: tag,
+  }));
+
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
-        <DynamicFlash />
-        {cube.cards.length === 0 ? (
-          <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
-        ) : (
-          <Row className="mt-3">
-            <Col xs="12" lg="2">
-              <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
-                {analytics.map((analytic, index) => (
-                  <NavLink
-                    key={analytic.name}
-                    active={activeTab === index}
-                    onClick={() => setActiveTab(index)}
-                    href="#"
-                  >
-                    {analytic.name}
-                  </NavLink>
-                ))}
-              </Nav>
-            </Col>
-            <Col xs="12" lg="10" className="overflow-x">
-              <Card className="mb-3">
-                <CardBody>
-                  <NavLink href="#" onClick={toggleFilterCollapse}>
-                    <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
-                  </NavLink>
-                  <FilterCollapse
-                    defaultFilterText={defaultFilterText}
-                    filter={filter}
-                    setFilter={setFilter}
-                    numCards={cards.length}
-                    isOpen={filterCollapseOpen}
-                  />
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        )}
+        <TagContextProvider
+          cubeID={cube._id}
+          defaultTagColors={cube.tag_colors}
+          defaultShowTagColors={defaultShowTagColors}
+          defaultTags={defaultTags}
+        >
+          <DynamicFlash />
+          {cube.cards.length === 0 ? (
+            <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
+          ) : (
+            <Row className="mt-3">
+              <Col xs="12" lg="2">
+                <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
+                  {analytics.map((analytic, index) => (
+                    <NavLink
+                      key={analytic.name}
+                      active={activeTab === index}
+                      onClick={() => setActiveTab(index)}
+                      href="#"
+                    >
+                      {analytic.name}
+                    </NavLink>
+                  ))}
+                </Nav>
+              </Col>
+              <Col xs="12" lg="10" className="overflow-x">
+                <Card className="mb-3">
+                  <CardBody>
+                    <NavLink href="#" onClick={toggleFilterCollapse}>
+                      <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
+                    </NavLink>
+                    <FilterCollapse
+                      defaultFilterText={defaultFilterText}
+                      filter={filter}
+                      setFilter={setFilter}
+                      numCards={cards.length}
+                      isOpen={filterCollapseOpen}
+                    />
+                  </CardBody>
+                </Card>
+                <Card>
+                  <CardBody>
+                    <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+                  </CardBody>
+                </Card>
+              </Col>
+            </Row>
+          )}
+        </TagContextProvider>
       </CubeLayout>
     </MainLayout>
   );
 };
 
 CubeAnalysisPage.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({ _id: PropTypes.string, title: PropTypes.string })),
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   cubeID: PropTypes.string.isRequired,
   defaultFilterText: PropTypes.string,
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
+  defaultShowTagColors: PropTypes.bool,
   cubes: PropTypes.arrayOf(PropTypes.shape({})),
   user: UserPropType,
   loginCallback: PropTypes.string,
@@ -247,6 +246,7 @@ CubeAnalysisPage.defaultProps = {
   defaultFilterText: '',
   defaultTab: 0,
   defaultFormatId: null,
+  defaultShowTagColors: true,
   cubes: [],
   user: null,
   loginCallback: '/',

@@ -1,29 +1,30 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
 
-import useToggle from 'hooks/UseToggle';
+import useQueryParam from 'hooks/useQueryParam';
 import { calculateAsfans } from 'utils/draftutil';
-import Query from 'utils/Query';
 import { fromEntries } from 'utils/Util';
 
 const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
-  const [useAsfans, toggleUseAsfans, enableUseAsfans, disableUseAsfans] = useToggle(!!defaultFormatId);
-  const [draftFormat, setDraftFormat] = useState(defaultFormatId ?? cube.defaultDraftFormat ?? -1);
-  const didMountRef = useRef(false);
+  const [draftFormat, setDraftFormat] = useQueryParam('formatId', null);
 
-  const labelText = () => {
-    if (useAsfans) {
+  const labelText = useMemo(() => {
+    if (draftFormat !== null) {
       if (draftFormat < 0) {
         return 'Standard Draft Format';
       }
       return cube.draft_formats[draftFormat].title;
     }
-    return 'Count';
-  };
+    return '';
+  }, [draftFormat, cube]);
+  const toggleUseAsfans = useCallback(({ target }) => setDraftFormat(target.checked ? defaultFormatId : null), [
+    setDraftFormat,
+    defaultFormatId,
+  ]);
 
   useEffect(() => {
-    if (useAsfans) {
+    if (draftFormat !== null) {
       try {
         const asfans = calculateAsfans(cube, draftFormat);
         setAsfans(asfans);
@@ -34,42 +35,23 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
     } else {
       setAsfans(fromEntries(cube.cards.map((card) => [card.cardID, 1])));
     }
-  }, [useAsfans, cube, draftFormat, setAsfans]);
-
-  useEffect(() => {
-    if (didMountRef.current) {
-      if (useAsfans) {
-        Query.set('formatId', draftFormat);
-      } else {
-        Query.del('formatId');
-      }
-    } else {
-      const queryFormat = Query.get('formatId');
-      if (queryFormat || queryFormat === 0) {
-        enableUseAsfans();
-        setDraftFormat(queryFormat);
-      } else {
-        disableUseAsfans();
-      }
-      didMountRef.current = true;
-    }
-  }, [draftFormat, useAsfans, enableUseAsfans, disableUseAsfans, setDraftFormat]);
+  }, [cube, draftFormat, setAsfans]);
 
   return (
     <Row>
       <Col xs="12" sm="6">
         <Label>
-          <input type="checkbox" checked={useAsfans} onChange={toggleUseAsfans} /> Use expected count per player in a
-          draft format instead of card count.
+          <input type="checkbox" checked={draftFormat !== null} onChange={toggleUseAsfans} /> Use expected count per
+          player in a draft format instead of card count.
         </Label>
       </Col>
-      {useAsfans && (
+      {draftFormat !== null && (
         <Col xs="12" sm="6">
           <Form inline>
             Draft Format:
-            <UncontrolledDropdown disabled={!useAsfans} className="ml-2">
-              <DropdownToggle caret={useAsfans} color={useAsfans ? 'success' : 'disabled'}>
-                {labelText(useAsfans)}
+            <UncontrolledDropdown disabled={draftFormat === null} className="ml-2">
+              <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'success' : 'disabled'}>
+                {labelText}
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
@@ -103,7 +85,7 @@ AsfanDropdown.propTypes = {
   setAsfans: PropTypes.func.isRequired,
 };
 AsfanDropdown.defaultProps = {
-  defaultFormatId: null,
+  defaultFormatId: -1,
 };
 
 export default AsfanDropdown;

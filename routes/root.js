@@ -14,6 +14,7 @@ const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
 const { csrfProtection } = require('./middleware');
+const { getCubeId } = require('../serverjs/cubefn');
 
 const router = express.Router();
 
@@ -104,7 +105,7 @@ router.get('/random', async (req, res) => {
   const count = await Cube.estimatedDocumentCount();
   const random = Math.floor(Math.random() * count);
   const cube = await Cube.findOne().skip(random).lean();
-  res.redirect(`/cube/overview/${cube.urlAlias ? cube.urlAlias : cube.shortID}`);
+  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(cube))}`);
 });
 
 router.get('/dashboard', async (req, res) => {

@@ -5,13 +5,14 @@ import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 import Loading from 'pages/Loading';
 import VideoPreview from 'components/VideoPreview';
 import Paginate from 'components/Paginate';
+import useQueryParam from 'hooks/useQueryParam';
 import { csrfFetch } from 'utils/CSRF';
 
 const PAGE_SIZE = 24;
 
 const CreatorVideos = ({ user }) => {
   const [videos, setVideos] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useQueryParam('page', 0);
   const [pages, setPages] = useState(0);
   const [loading, setLoading] = useState(true);
 

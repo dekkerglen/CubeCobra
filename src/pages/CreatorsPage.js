@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 
@@ -9,11 +9,12 @@ import Tab from 'components/Tab';
 import CreatorArticles from 'components/CreatorArticles';
 import CreatorVideos from 'components/CreatorVideos';
 import CreatorPodcasts from 'components/CreatorPodcasts';
+import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CreatorsPage = ({ user, loginCallback }) => {
-  const [tab, setTab] = useState('0');
+  const [tab, setTab] = useQueryParam('tab', '0');
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
