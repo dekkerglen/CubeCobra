@@ -1,17 +1,17 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useMemo, useRef } from 'react';
 import { TagCloud } from 'react-tagcloud';
-import { UncontrolledTooltip } from 'reactstrap';
+import { Input, InputGroup, InputGroupAddon, InputGroupText, UncontrolledTooltip } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ThemeContext from 'contexts/ThemeContext';
 import { isTouchDevice } from 'utils/Util';
+import useQueryParam from 'hooks/useQueryParam';
 
 const trigger = isTouchDevice() ? 'click' : 'hover';
 
 const TagCloudTag = ({ tag, size, color }) => {
   const spanRef = useRef();
-  console.log(tag);
   return (
     <div className="tag-cloud-tag mr-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
       <span style={{ color, fontSize: `${size}px` }} className="tag-cloud-tag" ref={spanRef}>
@@ -42,6 +42,9 @@ const COLOR_OPTIONS = {
 const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
   const theme = useContext(ThemeContext);
 
+  const [exclude, setExclude] = useQueryParam('exclude', '');
+  const excludeList = useMemo(() => (exclude ?? '').split(',').map((ex) => ex.trim()), [exclude]);
+
   const tags = {};
   cards.forEach((card) =>
     card.tags.forEach((tag) => {
@@ -55,7 +58,9 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
       }
     }),
   );
-  const words = Object.entries(tags).map(([value, count]) => ({ value, count }));
+  const words = Object.entries(tags)
+    .filter(([tag]) => !excludeList.includes(tag))
+    .map(([value, count]) => ({ value, count }));
 
   const tagRenderer = (tag, size, color) => (
     <TagCloudTag tag={tag} size={size} color={color} key={tag.key || tag.value} />
@@ -68,6 +73,12 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
         Tags in your cube with random colors weighted by the expected number of cards with that tag a player will open
         on average.
       </p>
+      <InputGroup>
+        <InputGroupAddon addonType="prepend">
+          <InputGroupText>Comma separated Tags to exclude</InputGroupText>
+        </InputGroupAddon>
+        <Input placeholder="Excluded Tags" onChange={(e) => setExclude(e.target.value)} value={exclude} />
+      </InputGroup>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <TagCloud minSize={10} maxSize={80} colorOptions={COLOR_OPTIONS[theme]} tags={words} renderer={tagRenderer} />
     </>
