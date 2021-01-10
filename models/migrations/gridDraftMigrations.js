@@ -22,8 +22,6 @@ const dedupeCardObjects = (gridDraft) => {
   return gridDraft;
 };
 
-const migrations = [
-  { version: 1, migration: dedupeCardObjects},
-];
+const migrations = [{ version: 1, migration: dedupeCardObjects }];
 
 module.exports = migrations;

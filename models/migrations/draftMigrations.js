@@ -1,6 +1,5 @@
 const dedupeCardObjects = (draft) => {
   if (!draft) return null;
-  console.log('Object.keys(draft)', Object.keys(draft));
   if (draft.cards && draft.cards.length > 0) return draft;
 
   const defaultPack = { filters: [], trash: 0, sealed: false, picksPerPass: 1 };
@@ -32,8 +31,6 @@ const dedupeCardObjects = (draft) => {
   return draft;
 };
 
-const migrations = [
-  { version: 1, migration: dedupeCardObjects },
-];
+const migrations = [{ version: 1, migration: dedupeCardObjects }];
 
 module.exports = migrations;

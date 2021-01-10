@@ -18,8 +18,6 @@ const updateCubeDraftFormats = (cube) => {
   return cube;
 };
 
-const migrations = [
-  {version: 1, migration: updateCubeDraftFormats},
-];
+const migrations = [{ version: 1, migration: updateCubeDraftFormats }];
 
 module.exports = migrations;

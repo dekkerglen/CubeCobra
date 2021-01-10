@@ -3,7 +3,6 @@ const { addBasicsToDeck } = require('../../serverjs/cubefn');
 
 const dedupeCardObjects = (deck) => {
   if (!deck) return null;
-  console.log('Object.keys(deck)', Object.keys(deck));
   if (deck.cards && deck.cards.length > 0) return deck;
 
   const cards = [];
@@ -12,14 +11,14 @@ const dedupeCardObjects = (deck) => {
       (pack || []).map((card) => {
         const index = cards.length;
         cards.push({ ...card, index });
-        return index
+        return index;
       }),
     );
     seat.sideboard = (seat.sideboard || []).map((pack) =>
       (pack || []).map((card) => {
         const index = cards.length;
         cards.push({ ...card, index });
-        return index
+        return index;
       }),
     );
     seat.pickorder = (seat.pickorder || []).map((card) => cards.findIndex((card2) => card.cardID === card2.cardID));
@@ -28,8 +27,6 @@ const dedupeCardObjects = (deck) => {
   return deck;
 };
 
-const migrations = [
-  { version: 1, migration: dedupeCardObjects },
-];
+const migrations = [{ version: 1, migration: dedupeCardObjects }];
 
 module.exports = migrations;

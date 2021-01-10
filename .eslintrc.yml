@@ -53,9 +53,14 @@ overrides:
       no-restricted-imports:
         - error
         - patterns: ['./*', '../*']
-  - files: ['routes/**', 'serverjs/**']
+  - files: ['routes/**', 'serverjs/**', 'models/**']
     rules:
       no-console: error
   - files: ['src/markdown/**/micromark-*']
     rules: 
       no-use-before-define: ['error', 'nofunc']
+  - files: ['models/**']
+    rules:
+      no-underscore-dangle:
+        - error
+        - allowAfterThis: true

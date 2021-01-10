@@ -60,5 +60,4 @@ deckSchema.index({
   date: -1,
 });
 
-console.warn('deckMigrations', deckMigrations);
 module.exports = mongoose.model('Deck', withMigrations(deckSchema, deckMigrations));
