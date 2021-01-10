@@ -25,6 +25,7 @@ import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import useQueryParam from 'hooks/useQueryParam';
 
 const CubeListPageRaw = ({
   defaultFilterText,
@@ -35,7 +36,7 @@ const CubeListPageRaw = ({
 }) => {
   const { cube, canEdit } = useContext(CubeContext);
 
-  const [cubeView, setCubeView] = useState(defaultView);
+  const [cubeView, setCubeView] = useQueryParam('view', defaultView);
   const [openCollapse, setOpenCollapse] = useState(null);
   const [filter, setFilter] = useState(null);
   const [sorts, setSorts] = useState(null);
@@ -53,14 +54,6 @@ const CubeListPageRaw = ({
       setOpenCollapse('sort');
     }
   }, [cube._id, defaultFilterText, defaultPrimarySort, defaultSecondarySort]);
-
-  useEffect(() => {
-    if (cubeView === 'table') {
-      Query.del('view');
-    } else {
-      Query.set('view', cubeView);
-    }
-  }, [cubeView]);
 
   const defaultTagSet = new Set([].concat(...cube.cards.map((card) => card.tags)));
   const defaultTags = [...defaultTagSet].map((tag) => ({

@@ -4,11 +4,11 @@ import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
 import CubeListPage from 'pages/CubeListPage';
-import { treeCache } from 'components/AutocompleteInput';
-import { act } from 'react-dom/test-utils';
 import { fromEntries } from 'utils/Util';
 import exampleCube from '../../../fixtures/examplecube';
 import exampleCardsFull from '../../../fixtures/examplecardsdetails';
+
+jest.spyOn(URLSearchParams.prototype, 'get').mockImplementation(() => undefined);
 
 process.env.DEBUG_PRINT_LIMIT = 100000;
 
@@ -65,16 +65,9 @@ const element = () => (
 );
 
 test('CubeListPage has major functionality', async () => {
-  const {
-    findByAltText,
-    findByPlaceholderText,
-    findByDisplayValue,
-    findByText,
-    getAllByText,
-    getByDisplayValue,
-    getByPlaceholderText,
-    getByText,
-  } = render(element());
+  const { findByAltText, findByDisplayValue, findByText, getAllByText, getByDisplayValue, getByText } = render(
+    element(),
+  );
 
   expect(getByText(exampleCardsFull[0].details.name));
 
@@ -83,6 +76,7 @@ test('CubeListPage has major functionality', async () => {
   const viewSelect = await findByDisplayValue('Table View');
   for (const view of ['table', 'curve']) {
     fireEvent.change(viewSelect, { target: { value: view } });
+    // eslint-disable-next-line no-await-in-loop
     expect(await findByText(exampleCardsFull[0].details.name));
   }
 

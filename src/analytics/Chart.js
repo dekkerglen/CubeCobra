@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
+import useQueryParam from 'hooks/useQueryParam';
 import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
   const sorts = getSorts();
 
-  const [sort, setSort] = useState('Color Identity');
-  const [characteristic, setcharacteristic] = useState('CMC');
+  const [sort, setSort] = useQueryParam('sort', 'Color Identity');
+  const [characteristic, setcharacteristic] = useQueryParam('field', 'CMC');
 
   const groups = sortIntoGroups(cards, sort);
 

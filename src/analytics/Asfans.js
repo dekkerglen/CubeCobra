@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
@@ -6,6 +6,7 @@ import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInp
 import { getDraftFormat, matchingCards } from 'utils/draftutil';
 import { getSorts, sortIntoGroups } from 'utils/Sort';
 import ErrorBoundary from 'components/ErrorBoundary';
+import useQueryParam from 'hooks/useQueryParam';
 import useSortableData from 'hooks/UseSortableData';
 import HeaderCell from 'components/HeaderCell';
 
@@ -60,8 +61,8 @@ const calculateCustomAsfans = (cards, cube, sort, draftFormat) => {
 const Asfans = ({ cards, cube }) => {
   const sorts = getSorts();
 
-  const [sort, setSort] = useState('Color');
-  const [formatId, setFormatId] = useState(-1);
+  const [sort, setSort] = useQueryParam('sort', 'Color');
+  const [formatId, setFormatId] = useQueryParam('formatId', -1);
 
   const asfans =
     formatId >= 0
