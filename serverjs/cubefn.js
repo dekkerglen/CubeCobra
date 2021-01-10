@@ -174,20 +174,12 @@ function addBasicsToDeck(deck, cardsArray, carddb, saveToDeck) {
   for (const basic of Object.values(basics)) {
     delete basic.details;
   }
-  deck.cards = cardsArray.concat([
-    basics.Plains,
-    basics.Island,
-    basics.Swamp,
-    basics.Mountain,
-    basics.Forest,
-    basics.Wastes,
-  ]);
-  basics.Plains.index = deck.cards.length - 6;
-  basics.Island.index = deck.cards.length - 5;
-  basics.Swamp.index = deck.cards.length - 4;
-  basics.Mountain.index = deck.cards.length - 3;
-  basics.Forest.index = deck.cards.length - 2;
-  basics.Wastes.index = deck.cards.length - 1;
+  deck.cards = cardsArray.concat(
+    [basics.Plains, basics.Island, basics.Swamp, basics.Mountain, basics.Forest, basics.Wastes].map((card, idx) => ({
+      ...card,
+      index: cardsArray.length + idx,
+    })),
+  );
   if (saveToDeck) deck.basics = basics;
 }
 

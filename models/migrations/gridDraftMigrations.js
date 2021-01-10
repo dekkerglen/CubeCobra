@@ -1,19 +1,21 @@
+const carddb = require('../../serverjs/cards');
+const { addBasicsToDeck } = require('../../serverjs/cubefn');
+const { flatten, mapNonNull } = require('../../serverjs/util');
+
 const dedupeCardObjects = (gridDraft) => {
   if (!gridDraft) return null;
-  if (gridDraft.cards && gridDraft.cards.length > 0) return gridDraft;
+  if (gridDraft.cards && Array.isArray(gridDraft.cards) && gridDraft.cards.length > 0) return gridDraft;
 
   const replaceWithIndex = (card) =>
     gridDraft.cards.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
-  const mapPack = (pack) => (pack || []).map(replaceWithIndex);
-  const mapPacks = (packs) => (packs || []).map(mapPack);
+  const mapPack = (pack) => mapNonNull(pack, replaceWithIndex);
+  const mapPacks = (packs) => mapNonNull(packs, mapPack);
 
-  gridDraft.cards = (gridDraft.initial_state || [])
-    .flat(2)
-    .concat(Object.values(gridDraft.basics || {}))
-    .map((card, index) => ({ ...card, index }));
+  const cardsArray = flatten(gridDraft.initial_state, 2).map((card, index) => ({ ...card, index }));
+  addBasicsToDeck(gridDraft, cardsArray, carddb, true);
   gridDraft.initial_state = mapPacks(gridDraft.initial_state);
   gridDraft.unopenedPacks = mapPacks(gridDraft.unopenedPacks);
-  gridDraft.seats = (gridDraft.seats || []).map((seat) => {
+  gridDraft.seats = mapNonNull(gridDraft.seats, (seat) => {
     seat.drafted = mapPacks(seat.drafted);
     seat.sideboard = mapPacks(seat.sideboard);
     seat.pickorder = mapPack(seat.pickorder);
