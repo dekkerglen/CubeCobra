@@ -9,11 +9,10 @@ import { Row, Col } from 'reactstrap';
 import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-
-import Query from 'utils/Query';
+import useQueryParam from 'hooks/useQueryParam';
 
 const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
-  const [filter, setFilter] = useState(Query.get('f') || '');
+  const [filter, setFilter] = useQueryParam('f', '');
   const [count, setCount] = useState(numResults);
 
   const updateFilter = (_, filterInput) => {

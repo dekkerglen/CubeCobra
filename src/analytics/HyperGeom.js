@@ -15,6 +15,7 @@ import {
   Form,
 } from 'reactstrap';
 
+import useQueryParam from 'hooks/useQueryParam';
 import calculate from 'utils/CalculateHyperGeom';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
@@ -56,10 +57,10 @@ const inputs = [
 ];
 
 const HyperGeom = () => {
-  const [populationSize, setPopulationSize] = useState('');
-  const [popSuccesses, setPopSuccesses] = useState('');
-  const [sampleSize, setSampleSize] = useState('');
-  const [sampleSuccesses, setSampleSuccesses] = useState('');
+  const [populationSize, setPopulationSize] = useQueryParam('popSize', '');
+  const [popSuccesses, setPopSuccesses] = useQueryParam('popSuccesses', '');
+  const [sampleSize, setSampleSize] = useQueryParam('sampleSize', '');
+  const [sampleSuccesses, setSampleSuccesses] = useQueryParam('sampleSuccesses', '');
   const [data, setData] = useState([]);
   const [xAxis, setXAxis] = useState('Number of successes in population');
 

@@ -9,12 +9,13 @@ import DynamicFlash from 'components/DynamicFlash';
 import PodcastPreview from 'components/PodcastPreview';
 import Tab from 'components/Tab';
 import Podcast from 'components/Podcast';
+import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import CSRFForm from 'components/CSRFForm';
 
 const EditPodcastPage = ({ user, loginCallback, podcast }) => {
-  const [tab, setTab] = useState('0');
+  const [tab, setTab] = useQueryParam('tab', '0');
   const [rss, setRss] = useState(podcast.rss);
 
   const hasChanges = podcast.rss !== rss;

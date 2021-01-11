@@ -8,17 +8,17 @@ const useQueryParam = (name, defaultValue) => {
 
   useEffect(() => {
     if (didMountRef.current) {
-      if (value !== null) {
+      if ((value ?? null) !== null && value !== defaultValue) {
         Query.set(name, value);
       } else {
-        Query.del(value);
+        Query.del(name);
       }
     } else {
-      const queryFormat = Query.get(name);
-      if (queryFormat !== null || queryFormat !== undefined) {
-        setValue(queryFormat);
-      } else if ((defaultValue ?? null) === null) {
-        setValue(null);
+      const query = Query.get(name);
+      if ((query ?? null) !== null) {
+        setValue(query);
+      } else {
+        setValue(defaultValue ?? null);
       }
       didMountRef.current = true;
     }

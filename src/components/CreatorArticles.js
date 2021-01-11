@@ -7,12 +7,13 @@ import Loading from 'pages/Loading';
 import ArticlePreview from 'components/ArticlePreview';
 import Paginate from 'components/Paginate';
 import { csrfFetch } from 'utils/CSRF';
+import useQueryParam from 'hooks/useQueryParam';
 
 const PAGE_SIZE = 24;
 
 const CreatorArticles = ({ user }) => {
   const [articles, setArticles] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useQueryParam('page', '0');
   const [pages, setPages] = useState(0);
   const [loading, setLoading] = useState(true);
 

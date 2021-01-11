@@ -31,9 +31,10 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import TextEntry from 'components/TextEntry';
+import useQueryParam from 'hooks/useQueryParam';
 
 const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
-  const [nav, setNav] = useState(defaultNav);
+  const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
   const [markdown, setMarkdown] = useState(user?.about ?? '');
@@ -44,10 +45,13 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
       .then((json) => setImageDict(json.dict));
   }, []);
 
-  const handleClickNav = useCallback((event) => {
-    event.preventDefault();
-    setNav(event.target.getAttribute('data-nav'));
-  }, []);
+  const handleClickNav = useCallback(
+    (event) => {
+      event.preventDefault();
+      setNav(event.target.getAttribute('data-nav'));
+    },
+    [setNav],
+  );
 
   const handleChangeImage = useCallback((event) => {
     setImageValue(event.target.value);

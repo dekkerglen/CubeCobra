@@ -74,6 +74,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
       submitDeckForm.current.submit();
     }
   }, [draft, loading]);
+  console.log('seatIndex', seatIndex);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -116,7 +117,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
-                  <SampleHandModal deck={deck.seats[seatIndex].deck} />
+                  <SampleHandModal deck={deck.seats[seatIndex].main} />
                 </NavItem>
                 {user && deck.owner === user.id && (
                   <NavItem>

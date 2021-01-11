@@ -850,6 +850,7 @@ router.get('/analysis/:id', async (req, res) => {
         cube,
         cubeID: req.params.id,
         defaultNav: req.query.nav,
+        defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
         defaultFormatId: Number(req.query.formatId),
         defaultFilterText: req.query.f,
         defaultTab: req.query.tab ? Number(req.query.tab) : 0,

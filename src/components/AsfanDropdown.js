@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
 
@@ -7,21 +7,21 @@ import { calculateAsfans } from 'utils/draftutil';
 import { fromEntries } from 'utils/Util';
 
 const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
-  const [draftFormat, setDraftFormat] = useQueryParam('formatId', defaultFormatId);
+  const [draftFormat, setDraftFormat] = useQueryParam('formatId', null);
 
-  const labelText = useCallback(() => {
+  const labelText = useMemo(() => {
     if (draftFormat !== null) {
       if (draftFormat < 0) {
         return 'Standard Draft Format';
       }
       return cube.draft_formats[draftFormat].title;
     }
-    return 'Count';
+    return '';
   }, [draftFormat, cube]);
-  const toggleUseAsfans = useCallback(() => {
-    if (draftFormat === null) setDraftFormat(defaultFormatId);
-    else setDraftFormat(null);
-  }, [draftFormat, setDraftFormat, defaultFormatId]);
+  const toggleUseAsfans = useCallback(({ target }) => setDraftFormat(target.checked ? defaultFormatId : null), [
+    setDraftFormat,
+    defaultFormatId,
+  ]);
 
   useEffect(() => {
     if (draftFormat !== null) {

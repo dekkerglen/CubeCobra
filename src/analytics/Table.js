@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
+import useQueryParam from 'hooks/useQueryParam';
 import { sortIntoGroups, getSorts, getLabels, cardCanBeSorted } from 'utils/Sort';
 
 const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) => {
   const sorts = getSorts();
 
-  const [primary, setPrimary] = useState('Color Identity');
-  const [secondary, setSecondary] = useState('Type');
+  const [primary, setPrimary] = useQueryParam('primary', 'Color Identity');
+  const [secondary, setSecondary] = useQueryParam('secondary', 'Type');
 
   // some criteria cannot be applied to some cards
   const cards = allCards.filter((card) => cardCanBeSorted(card, primary) && cardCanBeSorted(card, secondary));

@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import withAutocard from 'components/WithAutocard';
-import { encodeName } from 'utils/Card';
-import PagedList from 'components/PagedList';
-import withModal from 'components/WithModal';
-import AddToCubeModal from 'components/AddToCubeModal';
 
+import AddToCubeModal from 'components/AddToCubeModal';
+import PagedList from 'components/PagedList';
+import withAutocard from 'components/WithAutocard';
+import withModal from 'components/WithModal';
+import CubePropType from 'proptypes/CubePropType';
+import { encodeName } from 'utils/Card';
 import {
   Card,
   CardBody,
@@ -31,7 +32,7 @@ const Suggestion = ({ card, index, cubes, cube }) => {
         {'. '}
         <AddModal
           front={card.details.image_normal}
-          back={card.details.image_flip || undefined}
+          back={card.details.image_flip ?? undefined}
           href={`/tool/card/${encodeName(card.cardID)}`}
           modalProps={{ card: card.details, cubes, hideAnalytics: true, cubeContext: cube._id }}
         >
@@ -51,12 +52,7 @@ Suggestion.propTypes = {
       name: PropTypes.string.isRequired,
     }).isRequired,
   }).isRequired,
-  cube: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    maybe: PropTypes.arrayOf(
-      PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
-    ),
-  }).isRequired,
+  cube: CubePropType.isRequired,
   index: PropTypes.number.isRequired,
   cubes: PropTypes.arrayOf(
     PropTypes.shape({
