@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-
-import Paginate from 'components/Paginate';
 
 import { Table } from 'reactstrap';
 
+import Paginate from 'components/Paginate';
+import useQueryParam from 'hooks/useQueryParam';
+
 const PagedTable = ({ pageSize, rows, children, ...props }) => {
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useQueryParam('page', '0');
 
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
-  const current = Math.min(page, validPages.length - 1);
+  const current = Math.min(parseInt(page, 10), validPages.length - 1);
   const displayRows = rows.slice(current * pageSize, (current + 1) * pageSize);
 
   return (

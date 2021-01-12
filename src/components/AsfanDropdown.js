@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
 
@@ -6,22 +6,22 @@ import useQueryParam from 'hooks/useQueryParam';
 import { calculateAsfans } from 'utils/draftutil';
 import { fromEntries } from 'utils/Util';
 
-const AsfanDropdown = ({ cube, defaultFormatId, setAsfans, alwaysUseAsfans }) => {
-  const [draftFormat, setDraftFormat] = useQueryParam('formatId', defaultFormatId);
+const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
+  const [draftFormat, setDraftFormat] = useQueryParam('formatId', null);
 
-  const labelText = useCallback(() => {
+  const labelText = useMemo(() => {
     if (draftFormat !== null) {
       if (draftFormat < 0) {
         return 'Standard Draft Format';
       }
       return cube.draft_formats[draftFormat].title;
     }
-    return 'Count';
+    return '';
   }, [draftFormat, cube]);
-  const toggleUseAsfans = useCallback(() => {
-    if (draftFormat === null) setDraftFormat(defaultFormatId);
-    else setDraftFormat(null);
-  }, [draftFormat, setDraftFormat, defaultFormatId]);
+  const toggleUseAsfans = useCallback(({ target }) => setDraftFormat(target.checked ? defaultFormatId : null), [
+    setDraftFormat,
+    defaultFormatId,
+  ]);
 
   useEffect(() => {
     if (draftFormat !== null) {
@@ -39,14 +39,12 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans, alwaysUseAsfans }) =>
 
   return (
     <Row>
-      {!alwaysUseAsfans && (
-        <Col xs="12" sm="6">
-          <Label>
-            <input type="checkbox" checked={draftFormat !== null} onChange={toggleUseAsfans} /> Use expected count per
-            player in a draft format instead of card count.
-          </Label>
-        </Col>
-      )}
+      <Col xs="12" sm="6">
+        <Label>
+          <input type="checkbox" checked={draftFormat !== null} onChange={toggleUseAsfans} /> Use expected count per
+          player in a draft format instead of card count.
+        </Label>
+      </Col>
       {draftFormat !== null && (
         <Col xs="12" sm="6">
           <Form inline>
@@ -85,10 +83,8 @@ AsfanDropdown.propTypes = {
   }).isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
-  alwaysUseAsfans: PropTypes.bool,
 };
 AsfanDropdown.defaultProps = {
-  alwaysUseAsfans: false,
   defaultFormatId: -1,
 };
 

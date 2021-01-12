@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 import CardPricePropType from 'proptypes/CardPricePropType';
@@ -38,6 +38,7 @@ import AddToCubeModal from 'components/AddToCubeModal';
 import CommentsSection from 'components/CommentsSection';
 import withModal from 'components/WithModal';
 import DynamicFlash from 'components/DynamicFlash';
+import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Tab from 'components/Tab';
@@ -184,9 +185,9 @@ const getPriceTypeUnit = {
 };
 
 const CardPage = ({ user, card, data, versions, related, cubes, loginCallback }) => {
-  const [selectedTab, setSelectedTab] = useState('0');
-  const [priceType, setPriceType] = useState('price');
-  const [cubeType, setCubeType] = useState('total');
+  const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
+  const [priceType, setPriceType] = useQueryParam('priceType', 'price');
+  const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
 
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);

@@ -26,9 +26,10 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
+import useQueryParam from 'hooks/useQueryParam';
 
 const EditVideoPage = ({ user, loginCallback, video }) => {
-  const [tab, setTab] = useState('0');
+  const [tab, setTab] = useQueryParam('tab', '0');
   const [body, setBody] = useState(video.body);
   const [short, setShort] = useState(video.short);
   const [url, setUrl] = useState(video.url);

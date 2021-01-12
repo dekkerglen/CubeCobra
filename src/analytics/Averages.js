@@ -1,18 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
+import { compareStrings, SortableTable } from 'components/SortableTable';
+import useQueryParam from 'hooks/useQueryParam';
 import { cardType } from 'utils/Card';
 import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
-import { compareStrings, SortableTable } from 'components/SortableTable';
 
 const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
-  const [sort, setSort] = useState('Color');
-  const [characteristic, setCharacteristic] = useState('CMC');
+  const [sort, setSort] = useQueryParam('sort', 'Color');
+  const [characteristic, setCharacteristic] = useQueryParam('field', 'CMC');
 
   const groups = useMemo(() => sortIntoGroups(cards, sort), [cards, sort]);
 

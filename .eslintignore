@@ -25,7 +25,6 @@ src/components/GroupModal.js
 src/components/ImageFallback.js
 src/components/Notification.js
 src/components/TagColorsModal.js
-src/components/TagInput.js
 src/components/TextBadge.js
 src/components/Tooltip.js
 src/components/WithAutocard.js

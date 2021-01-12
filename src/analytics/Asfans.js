@@ -1,32 +1,30 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
-import { SORTS, sortIntoGroups } from 'utils/Sort';
+import useQueryParam from 'hooks/useQueryParam';
 import { calculateAsfans } from 'utils/draftutil';
+import { SORTS, sortIntoGroups } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
 const Asfans = ({ cards: cardsNoAsfan, cube }) => {
-  const [sort, setSort] = useState('Color');
-  const [draftFormat, setDraftFormat] = useState(-1);
-  const [asfanLookup, setAsfanLookup] = useState(fromEntries(cardsNoAsfan.map((card) => [card.cardID, 0])));
-  const cards = useMemo(() => cardsNoAsfan.map((card) => ({ ...card, asfan: asfanLookup[card.cardID] })), [
-    cardsNoAsfan,
-    asfanLookup,
-  ]);
+  const [sort, setSort] = useQueryParam('sort', 'Color');
+  const [draftFormat, setDraftFormat] = useQueryParam('formatId', -1);
 
-  useEffect(() => {
-    try {
-      const asfans = calculateAsfans(cube, draftFormat);
-      setAsfanLookup(asfans);
-    } catch (e) {
-      console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
-      setAsfanLookup(fromEntries(cube.cards.map((card) => [card.cardID, 0])));
+  const cards = useMemo(() => {
+    if (draftFormat !== null) {
+      try {
+        const asfans = calculateAsfans(cube, draftFormat);
+        return cardsNoAsfan.map((card) => ({ ...card, asfan: asfans[card.cardID] }));
+      } catch (e) {
+        console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
+      }
     }
-  }, [cube, draftFormat, setAsfanLookup]);
+    return fromEntries(cube.cards.map((card) => [card.cardID, 0]));
+  }, [cube, draftFormat, cardsNoAsfan]);
 
   const asfans = useMemo(
     () =>

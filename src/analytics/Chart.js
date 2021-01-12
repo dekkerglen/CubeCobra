@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
+import useQueryParam from 'hooks/useQueryParam';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
 import { sortIntoGroups, SORTS, getLabels, cardIsLabel } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
-  const [sort, setSort] = useState('Color Identity');
-  const [characteristic, setcharacteristic] = useState('CMC');
+  const [sort, setSort] = useQueryParam('sort', 'Color Identity');
+  const [characteristic, setcharacteristic] = useQueryParam('field', 'CMC');
 
   const groups = sortIntoGroups(cards, sort);
 
@@ -115,18 +118,9 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
   );
 };
 Chart.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
 };

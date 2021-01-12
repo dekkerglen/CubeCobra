@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
@@ -6,6 +6,7 @@ import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } fr
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortableTable, compareStrings, valueRenderer } from 'components/SortableTable';
+import useQueryParam from 'hooks/useQueryParam';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import { sortIntoGroups, SORTS, getLabels, cardCanBeSorted } from 'utils/Sort';
@@ -24,8 +25,8 @@ const sortWithTotal = (pool, sort) => {
 };
 
 const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) => {
-  const [primary, setPrimary] = useState('Color Identity');
-  const [secondary, setSecondary] = useState('Type');
+  const [primary, setPrimary] = useQueryParam('primary', 'Color Identity');
+  const [secondary, setSecondary] = useQueryParam('secondary', 'Type');
 
   // some criteria cannot be applied to some cards
   const cards = useMemo(
