@@ -8,7 +8,7 @@ import MainLayout from 'layouts/MainLayout';
 import ButtonLink from 'components/ButtonLink';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const back = () => window.history.back();
+const back = () => (window.history.length > 1 ? window.history.back() : window.close());
 
 const LeaveWarningPage = ({ user, url, loginCallback }) => (
   <MainLayout user={user} loginCallback={loginCallback}>
@@ -24,10 +24,10 @@ const LeaveWarningPage = ({ user, url, loginCallback }) => (
         <p>Are you sure you want to proceed?</p>
       </CardBody>
       <CardFooter>
-        <ButtonLink href={url} color="danger" outline>
+        <ButtonLink href={url} color="danger">
           Yes, continue
         </ButtonLink>
-        <Button className="ml-1" color="secondary" onClick={back}>
+        <Button className="ml-2" color="secondary" onClick={back}>
           Go back
         </Button>
       </CardFooter>

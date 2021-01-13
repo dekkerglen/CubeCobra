@@ -45,15 +45,17 @@ const renderLink = (node) => {
         </a>
       );
     }
+
     return (
       <a target="_blank" rel="noopener noreferrer" href={ref}>
         {node.children}
       </a>
     );
   }
+
   return (
     /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
-    <Link href="#" modalProps={{ link: ref }}>
+    <Link href={`/leave?url=${encodeURIComponent(ref)}`} modalProps={{ link: ref }}>
       {node.children}
     </Link>
   );
