@@ -8,6 +8,8 @@ import MainLayout from 'layouts/MainLayout';
 import ButtonLink from 'components/ButtonLink';
 import RenderToRoot from 'utils/RenderToRoot';
 
+const back = () => window.history.back();
+
 const LeaveWarningPage = ({ user, url, loginCallback }) => (
   <MainLayout user={user} loginCallback={loginCallback}>
     <DynamicFlash />
@@ -24,7 +26,7 @@ const LeaveWarningPage = ({ user, url, loginCallback }) => (
           <ButtonLink href={url} color="danger" outline>
             Yes, continue
           </ButtonLink>
-          <Button color="secondary" onClick={window.history.back}>
+          <Button className="btn" color="secondary" onClick={back}>
             Go back
           </Button>
         </p>
