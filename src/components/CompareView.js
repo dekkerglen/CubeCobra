@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import { getLabels, sortIntoGroups } from '../utils/Sort';

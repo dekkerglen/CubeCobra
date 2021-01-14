@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 

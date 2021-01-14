@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback } from 'react';
+import { useContext, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import UserPropType from 'proptypes/UserPropType';

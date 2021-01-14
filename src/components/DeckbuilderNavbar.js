@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useMemo } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import DeckDeleteModal from 'components/DeckDeleteModal';

@@ -1,7 +1,7 @@
-import React from 'react';
+import { Component } from 'react';
 import TimeAgo from 'react-timeago';
 
-class Notification extends React.Component {
+class Notification extends Component {
   constructor(props) {
     super(props);
   }

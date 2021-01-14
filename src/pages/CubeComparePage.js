@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';

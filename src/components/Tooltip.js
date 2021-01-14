@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Tooltip } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';

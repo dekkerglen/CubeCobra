@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import { Card } from 'reactstrap';

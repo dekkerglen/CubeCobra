@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState, useRef, useEffect } from 'react';
+import { useCallback, useContext, useState, useRef, useEffect } from 'react';
 
 import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
 

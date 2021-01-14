@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import { createContext, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-const MaybeboardContext = React.createContext({
+const MaybeboardContext = createContext({
   maybeboard: [],
   addCard: () => {},
   removeCard: () => {},

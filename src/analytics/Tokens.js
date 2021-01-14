@@ -1,4 +1,3 @@
-import React from 'react';
 import { Row, Col, Card, CardBody } from 'reactstrap';
 import PropTypes from 'prop-types';
 

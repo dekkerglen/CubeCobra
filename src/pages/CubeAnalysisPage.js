@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';

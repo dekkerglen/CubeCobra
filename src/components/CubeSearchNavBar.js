@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader, Navbar, Input, CardBody } from 'reactstrap';

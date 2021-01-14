@@ -1,4 +1,3 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Modal, ModalBody, ModalHeader, Row, FormGroup, Label, Input, Button, ModalFooter } from 'reactstrap';

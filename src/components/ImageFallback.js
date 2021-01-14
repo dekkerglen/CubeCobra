@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const ImageFallback = ({ src, fallbackSrc, innerRef, ...props }) => {
   const [fallback, setFallback] = useState(false);

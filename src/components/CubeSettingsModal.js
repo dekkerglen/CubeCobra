@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef } from 'react';
+import { useCallback, useContext, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button, CustomInput, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';

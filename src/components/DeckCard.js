@@ -1,4 +1,3 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import DraftSeatPropType from 'proptypes/DraftSeatPropType';
 import DeckPropType from 'proptypes/DeckPropType';

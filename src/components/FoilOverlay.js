@@ -1,5 +1,3 @@
-import React from 'react';
-
 const FoilOverlay = (Tag) => (props) => {
   let finish = 'Non-foil';
   if (Object.hasOwnProperty.call(props, 'finish')) {

@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types';
 
-import React from 'react';
+import { Component } from 'react';
 
 import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-class BlogDeleteModal extends React.Component {
+class BlogDeleteModal extends Component {
   constructor(props) {
     super(props);
     this.postID = props.postID;

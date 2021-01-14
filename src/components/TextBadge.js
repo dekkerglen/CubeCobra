@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
 
 const TextBadge = ({ name, className, children, fill }) => (

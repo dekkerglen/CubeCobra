@@ -1,11 +1,11 @@
-import React from 'react';
+import { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 import BlogDeleteModal from 'components/BlogDeleteModal';
 
-class BlogContextMenu extends React.Component {
+class BlogContextMenu extends Component {
   constructor(props) {
     super(props);
     this.toggle = this.toggle.bind(this);

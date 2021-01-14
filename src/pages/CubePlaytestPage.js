@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
+import { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';

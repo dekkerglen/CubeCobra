@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';

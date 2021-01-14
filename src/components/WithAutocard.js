@@ -1,4 +1,4 @@
-import React, { useContext, forwardRef } from 'react';
+import { useContext, forwardRef } from 'react';
 
 import DisplayContext from 'contexts/DisplayContext';
 

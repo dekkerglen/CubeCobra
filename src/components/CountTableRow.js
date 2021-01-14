@@ -1,5 +1,3 @@
-import React from 'react';
-
 const CountTableRow = ({ label, value, ...props }) => (
   <tr>
     <td>{label}:</td>

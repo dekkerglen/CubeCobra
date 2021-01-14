@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import { createContext, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-const CubeContext = React.createContext({
+const CubeContext = createContext({
   cube: {},
   canEdit: false,
   cubeID: null,

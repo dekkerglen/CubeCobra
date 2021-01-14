@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 const withModal = (Tag, ModalTag) => ({ children, className, modalProps, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);

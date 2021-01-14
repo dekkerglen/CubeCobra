@@ -1,9 +1,9 @@
 /* Holds general display settings. */
 
-import React, { useCallback, useState } from 'react';
+import { createContext, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
-const DisplayContext = React.createContext({
+const DisplayContext = createContext({
   showCustomImages: true,
   compressedView: false,
   showMaybeboard: false,

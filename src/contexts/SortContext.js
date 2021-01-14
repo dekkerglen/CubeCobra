@@ -1,13 +1,13 @@
-import React from 'react';
+import { createContext, Component } from 'react';
 import PropTypes from 'prop-types';
 
-const SortContext = React.createContext({
+const SortContext = createContext({
   primary: 'Color Category',
   secondary: 'Types-Multicolor',
   tertiary: 'CMC2',
 });
 
-export class SortContextProvider extends React.Component {
+export class SortContextProvider extends Component {
   constructor(props) {
     super(props);
     const {

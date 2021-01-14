@@ -1,5 +1,5 @@
-import React from 'react';
+import { createContext } from 'react';
 
-const GroupModalContext = React.createContext();
+const GroupModalContext = createContext();
 
 export default GroupModalContext;

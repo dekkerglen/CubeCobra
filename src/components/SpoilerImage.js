@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import { useCallback, useContext } from 'react';
 
 import CardModalContext from 'contexts/CardModalContext';
 import FoilCardImage from 'components/FoilCardImage';

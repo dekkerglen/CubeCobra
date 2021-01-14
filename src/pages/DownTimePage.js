@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
 
 import DynamicFlash from 'components/DynamicFlash';

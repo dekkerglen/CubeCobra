@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import PodcastPropType from 'proptypes/PodcastPropType';
 
 import { Card } from 'reactstrap';

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 
 import FoilCardImage from 'components/FoilCardImage';
 import CardGrid from 'components/CardGrid';

@@ -1,11 +1,11 @@
-import React from 'react';
+import { Component } from 'react';
 import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 import BlogContextMenu from 'components/BlogContextMenu';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 
-class BlogPost extends React.Component {
+class BlogPost extends Component {
   constructor(props) {
     super(props);
 

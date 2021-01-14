@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
 import TimeAgo from 'react-timeago';

@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import Query from 'utils/Query';
 
-const ChangelistContext = React.createContext({});
+const ChangelistContext = createContext({});
 
 export const ChangelistContextProvider = ({ cubeID, setOpenCollapse, initialChanges, noSave, ...props }) => {
   const [changes, setChanges] = useState(initialChanges || []);

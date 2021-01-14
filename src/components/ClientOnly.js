@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ClientOnly = ({ children }) => {
   const [isClient, setIsClient] = useState(false);

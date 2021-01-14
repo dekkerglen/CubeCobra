@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { cardsAreEquivalent, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';

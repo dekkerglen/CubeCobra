@@ -1,16 +1,16 @@
 import PropTypes from 'prop-types';
 
-import React from 'react';
+import { createRef, Component } from 'react';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
 
-class ConfirmDeleteModal extends React.Component {
+class ConfirmDeleteModal extends Component {
   constructor(props) {
     super(props);
     this.toggle = props.toggle;
     this.delete = props.delete;
     this.text = props.text;
-    this.acceptButton = React.createRef();
+    this.acceptButton = createRef();
     this.focusAcceptButton = this.focusAcceptButton.bind(this);
   }
 

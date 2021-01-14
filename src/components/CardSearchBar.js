@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Input, InputGroup, InputGroupAddon, Button } from 'reactstrap';
 
 const CardSearchBar = () => {

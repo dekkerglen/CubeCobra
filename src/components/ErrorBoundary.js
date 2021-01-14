@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import { Component, Fragment } from 'react';
 import { Card, Container } from 'reactstrap';
 
 class ErrorBoundary extends Component {

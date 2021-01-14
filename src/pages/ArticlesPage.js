@@ -1,4 +1,3 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 import ArticlePropType from 'proptypes/ArticlePropType';

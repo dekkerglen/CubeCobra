@@ -1,5 +1,5 @@
-import React from 'react';
+import { createContext } from 'react';
 
-const CardModalContext = React.createContext(() => null);
+const CardModalContext = createContext(() => null);
 
 export default CardModalContext;

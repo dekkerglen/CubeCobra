@@ -1,4 +1,3 @@
-import React from 'react';
 import CubePreview from 'components/CubePreview';
 import InfiniteCarousel from 'react-leaf-carousel';
 import PropTypes from 'prop-types';

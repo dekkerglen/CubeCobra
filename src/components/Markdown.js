@@ -1,4 +1,4 @@
-import React from 'react';
+import { createElement } from 'react';
 import PropTypes from 'prop-types';
 
 import ReactMarkdown from 'react-markdown';
@@ -60,7 +60,7 @@ const renderLink = (node) => {
 };
 
 const renderHeading = (node) => {
-  return React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
+  return createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 };
 
 const renderCode = (node) => {

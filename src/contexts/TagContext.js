@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { createContext, Component } from 'react';
 import PropTypes from 'prop-types';
 
 import { csrfFetch } from 'utils/CSRF';
@@ -58,7 +58,7 @@ export const TAG_COLORS = [
   ['Pink', 'pink'],
 ];
 
-const TagContext = React.createContext({
+const TagContext = createContext({
   addSuggestion: () => {
     console.error('Error: No TagContext!');
   },
