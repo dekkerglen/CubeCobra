@@ -2448,7 +2448,7 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/[A-Za-z0-9]*/),
+  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/^[A-Za-z0-9]*$/),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
     max: 100,
   }),
@@ -3492,7 +3492,7 @@ router.get(
 router.post(
   '/api/getversions',
   body([], 'Body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').matches(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/),
+  body('*', 'Each ID must be a valid UUID.').matches(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
