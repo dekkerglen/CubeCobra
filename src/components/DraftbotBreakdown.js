@@ -277,7 +277,7 @@ Internal.propTypes = {
 };
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useQueryParam(defaultIndex ?? 0);
+  const [index, setIndex] = useQueryParam('pick', defaultIndex ?? 0);
 
   // Have to do useMemo so it happens immediately
   useMemo(() => init(draft), [draft]);
