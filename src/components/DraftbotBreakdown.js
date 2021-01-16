@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
+import { Row, Col, Input, Label, ListGroup, ListGroupItem } from 'reactstrap';
 
-import { SortableTable } from 'components/SortableTable';
+import { SortableTable, compareStrings } from 'components/SortableTable';
 import { getCardColorClass } from 'contexts/TagContext';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
+import CardPropType from 'proptypes/CardPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
@@ -79,61 +80,6 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   return [cardsInPack, picks, pack, picksList, seat];
 };
 
-// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities)
-const TRAITS = [
-  {
-    name: 'Rating',
-    description: 'The rating based on the Elo and current color commitments.',
-    weight: getRatingWeight,
-    function: (_, card) => getRating(card),
-  },
-  {
-    name: 'Internal Synergy',
-    description: 'A score of how well current picks in these colors synergize with each other.',
-    weight: getSynergyWeight,
-    function: (_, __, picked, _3, ___, ____, pickedInCombination) => getInternalSynergy(pickedInCombination, picked),
-  },
-  {
-    name: 'Pick Synergy',
-    description: 'A score of how well this card synergizes with the current picks.',
-    weight: getSynergyWeight,
-    function: (_, card, picked, _2, __, ___, pickedInCombination) => getPickSynergy(pickedInCombination, card, picked),
-  },
-  {
-    name: 'Openness',
-    description: 'A score of how open these colors appear to be.',
-    weight: getOpennessWeight,
-    function: (combination, _, __, ___, seen) => getOpenness(combination, seen),
-  },
-  {
-    name: 'Color',
-    description: 'A score of how well these colors fit in with the current picks.',
-    weight: getColorWeight,
-    function: (_, _____, picked, __, ___, ____, pickedInCombination, probabilities) =>
-      getColor(pickedInCombination, picked, probabilities),
-  },
-  {
-    name: 'Fixing',
-    description: 'The value of how well this card solves mana issues.',
-    weight: getFixingWeight,
-    function: (combination, card) => getFixing(combination, card),
-  },
-  {
-    name: 'Casting Probability',
-    description:
-      'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    function: (_, card, __, ___, ____, lands) => getCastingProbability(card, lands),
-  },
-  {
-    name: 'Lands',
-    description: 'This is the color combination the bot is assuming that will maximize the total score.',
-  },
-  {
-    name: 'Total',
-    description: 'The total calculated score.',
-  },
-];
-
 const renderCardLink = (card) => (
   <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
     <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
@@ -142,128 +88,150 @@ const renderCardLink = (card) => (
   </AutocardItem>
 );
 
+// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating)
+const TRAITS = Object.freeze([
+  {
+    title: 'Card',
+    tooltip: 'The card the bot is considering',
+    compute: (_, card) => card,
+    heading: true,
+    renderFn: renderCardLink,
+  },
+  {
+    title: 'Rating',
+    tooltip: 'The rating based on the Elo and current color commitments.',
+    weight: getRatingWeight,
+    compute: (_, card) => getRating(card),
+  },
+  {
+    title: 'Internal Synergy',
+    tooltip: 'A score of how well current picks in these colors synergize with each other.',
+    weight: getSynergyWeight,
+    compute: (_, __, picked, _3, ___, ____, pickedInCombination) => getInternalSynergy(pickedInCombination, picked),
+  },
+  {
+    title: 'Pick Synergy',
+    tooltip: 'A score of how well this card synergizes with the current picks.',
+    weight: getSynergyWeight,
+    compute: (_, card, picked, _2, __, ___, pickedInCombination) => getPickSynergy(pickedInCombination, card, picked),
+  },
+  {
+    title: 'Openness',
+    tooltip: 'A score of how open these colors appear to be.',
+    weight: getOpennessWeight,
+    compute: (combination, _, __, ___, seen) => getOpenness(combination, seen),
+  },
+  {
+    title: 'Color',
+    tooltip: 'A score of how well these colors fit in with the current picks.',
+    weight: getColorWeight,
+    compute: (_, _____, picked, __, ___, ____, pickedInCombination, probabilities) =>
+      getColor(pickedInCombination, picked, probabilities),
+  },
+  {
+    title: 'Fixing',
+    tooltip: 'The value of how well this card solves mana issues.',
+    weight: getFixingWeight,
+    compute: (combination, card) => getFixing(combination, card),
+  },
+  {
+    title: 'Casting Probability',
+    tooltip:
+      'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
+    compute: (_, card, __, ___, ____, lands) => getCastingProbability(card, lands),
+  },
+  {
+    title: 'Lands',
+    tooltip: 'This is the color combination the bot is assuming that will maximize the total score.',
+    compute: (_1, _2, _3, _4, _5, lands) => JSON.stringify(lands),
+  },
+  {
+    title: 'Total',
+    tooltip: 'The total calculated score.',
+    compute: (_1, _2, _3, _4, _5, _6, _7, _8, rating) => rating,
+  },
+]);
+
+const renderWithTooltip = (title) => (
+  <Tooltip text={TRAITS.filter((trait) => trait.title === title)[0]?.tooltip}>{title}</Tooltip>
+);
+
+const WEIGHT_COLUMNS = Object.freeze([
+  { title: 'Oracle', sortable: true, key: 'title', heading: true, renderFn: renderWithTooltip },
+  { title: 'Weight', sortable: true, key: 'weight' },
+]);
+
 export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
-  const weights = useMemo(() => {
-    const res = [];
-    for (let i = 0; i < TRAITS.length - 3; i++) {
-      res.push({
-        name: TRAITS[i].name,
-        description: TRAITS[i].description,
-        value: TRAITS[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
-      });
-    }
-    return res;
-  }, [draft, pack, picks]);
   const [normalized, toggleNormalized] = useToggle(false);
-
-  for (const card of cardsInPack) {
-    card.scores = [];
-    const { rating, colors, lands } = botRatingAndCombination(
-      card,
-      picked,
-      seen,
-      draft.initial_state,
-      cardsInPack.length,
-      pack + 1,
-    );
-    const probabilities = {};
-    for (const c of picked.cards.WUBRG) {
-      probabilities[c.cardID] = getCastingProbability(c, lands);
-    }
-    const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
-
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      card.scores.push(
-        TRAITS[i].function(colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities),
+  const weights = useMemo(
+    () =>
+      TRAITS.filter((t) => t.weight).map(({ title, tooltip, weight }) => ({
+        title,
+        tooltip,
+        weight: weight(pack + 1, picks + 1, draft.initial_state),
+      })),
+    [draft, pack, picks],
+  );
+  const rows = useMemo(() => {
+    const res = cardsInPack.map((card) => {
+      const { rating, colors, lands } = botRatingAndCombination(
+        card,
+        picked,
+        seen,
+        draft.initial_state,
+        cardsInPack.length,
+        pack + 1,
       );
-    }
-    card.scores.push(JSON.stringify(fromEntries(Object.entries(lands).filter(([, c]) => c))));
-    card.scores.push(rating.toFixed(2));
-  }
-  if (normalized) {
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      let minScore = cardsInPack[0].scores[i];
-      let maxScore = cardsInPack[0].scores[i];
-      for (const card of cardsInPack) {
-        if (card.scores[i] < minScore) {
-          minScore = card.scores[i];
+      const probabilities = {};
+      for (const c of picked.cards.WUBRG) {
+        probabilities[c.cardID] = getCastingProbability(c, lands);
+      }
+      const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
+      return fromEntries(
+        TRAITS.map(({ title, compute }) => [
+          title,
+          compute(colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating),
+        ]),
+      );
+    });
+    if (normalized) {
+      for (const { title } of TRAITS) {
+        if (title !== 'Lands') {
+          const minScore = Math.min(...res.map((cardScores) => cardScores[title]));
+          for (const cardScores of res) {
+            cardScores[title] -= minScore;
+          }
         }
-        if (card.scores[i] > maxScore) {
-          maxScore = card.scores[i];
-        }
       }
-      for (const card of cardsInPack) {
-        card.scores[i] = `+${(card.scores[i] - minScore).toFixed(2)}`;
-      }
-    }
-  } else {
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      for (const card of cardsInPack) {
-        card.scores[i] = card.scores[i].toFixed(2);
-      }
-    }
-  }
-
-  const counts = useMemo(() => {
-    const res = [];
-
-    for (const card of cardsInPack) {
-      const row = { card };
-      for (let i = 0; i < card.scores.length; i++) {
-        row[TRAITS[i].name] = card.scores[i];
-      }
-      res.push(row);
     }
     return res;
-  }, [cardsInPack]);
+  }, [cardsInPack, normalized, draft, pack, picked, seen]);
 
   return (
     <>
-      <Label check className="pl-2">
-        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
+      <Label check className="pl-4 mb-2">
+        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the columns so the lowest value is 0.00
       </Label>
       <SortableTable
-        columnProps={TRAITS.map(({ name, description }) => ({
-          key: name,
-          title: name,
-          tooltip: description,
-          heading: false,
-          sortable: true,
-          renderFn: name === 'Lands' ? renderCardLink : null,
-        }))}
-        data={counts}
+        className="small-table"
+        columnProps={TRAITS.map((trait) => ({ ...trait, key: trait.title, sortable: true }))}
+        data={rows}
         defaultSortConfig={{ key: 'Total', direction: 'descending' }}
-        sortFns={{ Lands: (a, b) => a.localeCompare(b) }}
+        sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.name, b.name) }}
       />
-      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
-      <Row>
-        <Col xs={6}>
-          <Table bordered className="small-table">
-            <tbody className="breakdown">
-              {weights.map((weight) => (
-                <tr key={weight.name}>
-                  <th>
-                    <Tooltip
-                      id={`DraftbotBreakdownWeightID_${weight.name.replace(' ', '_')}`}
-                      text={weight.description}
-                    >
-                      {weight.name}
-                    </Tooltip>
-                  </th>
-                  <td>{weight.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
+      <h4 className="mt-4 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
+      <SortableTable
+        className="small-table"
+        columnProps={WEIGHT_COLUMNS}
+        data={weights}
+        sortFns={{ title: compareStrings }}
+      />
     </>
   );
 };
 
 Internal.propTypes = {
-  cardsInPack: PropTypes.arrayOf(PropTypes.shape({ scores: PropTypes.arrayOf(PropTypes.number).isRequired }))
-    .isRequired,
+  cardsInPack: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
@@ -334,7 +302,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
           </Col>
         ))}
       </Row>
-      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
+      <h4 className="mt-5 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
       <Internal cardsInPack={cardsInPack} draft={draft} pack={pack} picks={picks} picked={picked} seen={seen} />
     </>
   );

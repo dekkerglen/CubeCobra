@@ -80,10 +80,10 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
   }, [cards, secondary, primaryLabels, primaryGroups]);
   const columnProps = useMemo(
     () => [
-      { key: 'secondaryLabel', title: '', heading: true, sortable: true },
+      { key: 'secondaryLabel', title: secondary, heading: true, sortable: true },
       ...primaryLabels.map((title) => ({ key: title, title, heading: false, sortable: true, renderFn: entryRenderer })),
     ],
-    [entryRenderer, primaryLabels],
+    [entryRenderer, primaryLabels, secondary],
   );
 
   return (
@@ -96,7 +96,12 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Columns: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput type="select" value={primary} onChange={(event) => setPrimary(event.target.value)}>
+            <CustomInput
+              id="primarySort"
+              type="select"
+              value={primary}
+              onChange={(event) => setPrimary(event.target.value)}
+            >
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -108,7 +113,12 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Rows: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput type="select" value={secondary} onChange={(event) => setSecondary(event.target.value)}>
+            <CustomInput
+              id="secondarySort"
+              type="select"
+              value={secondary}
+              onChange={(event) => setSecondary(event.target.value)}
+            >
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -120,12 +130,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
       </Row>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
-        <SortableTable
-          columnProps={columnProps}
-          data={rows}
-          defaultSortConfig={{ key: 'secondaryLabel', direction: 'ascending' }}
-          sortFns={{ secondaryLabel: compareStrings }}
-        />
+        <SortableTable columnProps={columnProps} data={rows} sortFns={{ secondaryLabel: compareStrings }} />
       </ErrorBoundary>
     </>
   );

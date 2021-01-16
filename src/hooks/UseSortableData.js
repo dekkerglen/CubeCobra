@@ -22,13 +22,18 @@ const useSortableData = (data, config = null, sortFns = {}) => {
     return sortableItems;
   }, [data, sortConfig, sortFns]);
 
-  const requestSort = (key) => {
-    let direction = 'descending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'descending') {
-      direction = 'ascending';
-    }
-    setSortConfig({ key, direction });
-  };
+  const requestSort = (key) =>
+    setSortConfig((current) => {
+      if (current && current.key === key) {
+        if (current.direction === 'descending') {
+          return { key, direction: 'ascending' };
+        }
+        if (current.direction === 'ascending') {
+          return null;
+        }
+      }
+      return { key, direction: 'descending' };
+    });
 
   return { items, requestSort, sortConfig };
 };
