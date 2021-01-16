@@ -64,3 +64,6 @@ overrides:
       no-underscore-dangle:
         - error
         - allowAfterThis: true
+  - files: ['one_shot_scripts/**']
+    rules:
+      no-await-in-loop: 0

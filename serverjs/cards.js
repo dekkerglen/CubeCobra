@@ -127,8 +127,11 @@ function initializeCardDb(dataRoot, skipWatchers) {
 }
 
 function unloadCardDb() {
-  for (const attribute of Object.values(fileToAttribute)) {
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
     delete data[attribute];
+    if (skipWatchers !== true) {
+      fs.unwatchFile(filename);
+    }
   }
 }
 

@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
 const cardSchema = require('./cardSchema');
-const deckMigrations = require('./migrations/deckMigrations');
-const { withMigrations } = require('./migrations/migrationMiddleware');
+const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
 const SeatDeck = {
@@ -39,6 +38,9 @@ const deckSchema = mongoose.Schema({
     default: [],
   },
   cards: [cardSchema],
+  schemaVersion: {
+    type: Number,
+  },
 });
 
 deckSchema.index({
@@ -59,5 +61,10 @@ deckSchema.index({
   owner: 1,
   date: -1,
 });
+deckSchema.pre('save', () => {
+  this.schemaVersion = CURRENT_SCHEMA_VERSION;
+});
+const Deck = mongoose.model('Deck', deckSchema);
+Deck.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 
-module.exports = mongoose.model('Deck', withMigrations(deckSchema, deckMigrations));
+module.exports = Deck;

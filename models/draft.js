@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
 const cardSchema = require('./cardSchema');
-const draftMigrations = require('./migrations/draftMigrations');
-const { withMigrations } = require('./migrations/migrationMiddleware');
+const CURRENT_SCHEMA_VERSION = require('./migrations/draftMigrations').slice(-1)[0].version;
 
 // Details on each pack, how to draft and what's in it.
 const Pack = {
@@ -53,6 +52,15 @@ const draftSchema = mongoose.Schema({
   initial_state: [[Pack]],
   seats: [Seat],
   unopenedPacks: [[Pack]],
+  schemaVersion: {
+    type: Number,
+  },
 });
 
-module.exports = mongoose.model('Draft', withMigrations(draftSchema, draftMigrations));
+draftSchema.pre('save', () => {
+  this.schemaVersion = CURRENT_SCHEMA_VERSION;
+});
+const Draft = mongoose.model('Draft', draftSchema);
+Draft.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
+
+module.exports = Draft;

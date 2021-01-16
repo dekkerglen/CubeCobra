@@ -1,3 +1,3 @@
 {
-    "ignore": ["*.json", "README","clientjs/*.js","public/js/*.js"]
+    "ignore": ["*.json",  "README", "public/js/*.js"]
 }

@@ -4,24 +4,33 @@ const { mapNonNull } = require('../../serverjs/util');
 
 const dedupeCardObjects = (deck) => {
   if (!deck) return null;
-  if (deck.cards && Array.isArray(deck.cards) && deck.cards.length > 0) return deck;
+  const deckObject = deck.toObject();
 
-  const cards = [];
+  const cardsArray = [];
   const replaceWithIndex2d = (piles) =>
     mapNonNull(piles, (pile) =>
       mapNonNull(pile, (card) => {
-        const index = cards.length;
-        cards.push({ ...card, index });
+        const index = cardsArray.length;
+        cardsArray.push({ ...card, index });
         return index;
       }),
     );
-  deck.seats = mapNonNull(deck.seats, (seat) => {
+  const replaceWithIndex = (card) => {
+    const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
+    if (idx === -1) {
+      throw new Error(
+        `card ${JSON.stringify(card)} could not be found in the cardsArray.\n${JSON.stringify(cardsArray)}`,
+      );
+    }
+    return idx;
+  };
+  deck.seats = mapNonNull(deckObject.seats, (seat) => {
     seat.deck = replaceWithIndex2d(seat.deck);
     seat.sideboard = replaceWithIndex2d(seat.sideboard);
-    seat.pickorder = mapNonNull(seat.pickorder, (card) => cards.findIndex((card2) => card.cardID === card2.cardID));
+    seat.pickorder = mapNonNull(seat.pickorder, replaceWithIndex);
     return seat;
   });
-  addBasicsToDeck(deck, cards, carddb);
+  addBasicsToDeck(deck, cardsArray, carddb);
   return deck;
 };
 

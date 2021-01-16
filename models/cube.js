@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-const cubeMigrations = require('./migrations/cubeMigrations');
-const { withMigrations } = require('./migrations/migrationMiddleware');
+const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 const Card = {
   tags: [
@@ -158,6 +157,9 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  schemaVersion: {
+    type: Number,
+  },
 });
 
 cubeSchema.index({
@@ -200,8 +202,11 @@ cubeSchema.index({
   numDecks: -1,
 });
 
-const Cube = mongoose.model('Cube', withMigrations(cubeSchema, cubeMigrations));
-
+cubeSchema.pre('save', () => {
+  this.schemaVersion = CURRENT_SCHEMA_VERSION;
+});
+const Cube = mongoose.model('Cube', cubeSchema);
+Cube.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 Cube.LAYOUT_FIELDS =
   '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
 Cube.PREVIEW_FIELDS =

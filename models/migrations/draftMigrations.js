@@ -4,22 +4,32 @@ const { flatten, mapNonNull } = require('../../serverjs/util');
 
 const dedupeCardObjects = (draft) => {
   if (!draft) return null;
-  if (draft.cards && Array.isArray(draft.cards) && draft.cards.length > 0) return draft;
+  const draftObject = draft.toObject();
+  const defaultPack = { trash: 0, sealed: false, picksPerPass: 1 };
 
-  const defaultPack = { filters: [], trash: 0, sealed: false, picksPerPass: 1 };
-
-  const replaceWithIndex = (card) => draft.cards.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
+  const cardsArray = flatten(draftObject.initial_state, 3).map((card, index) => ({ ...card, index }));
+  if (cardsArray.includes(-1) || !cardsArray[0] || !cardsArray[0].cardID) {
+    return null;
+  }
+  const replaceWithIndex = (card) => {
+    const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
+    if (idx === -1) {
+      throw new Error(
+        `card ${JSON.stringify(card)} could not be found in the cardsArray.\n${JSON.stringify(cardsArray)}`,
+      );
+    }
+    return idx;
+  };
   const mapPack = (pack) => ({ ...defaultPack, cards: mapNonNull(pack, replaceWithIndex) });
   const mapPacks = (packs) => mapNonNull(packs, mapPack);
   const mapSeats = (seats) => mapNonNull(seats, mapPacks);
   const replace1d = (arr) => mapNonNull(arr, replaceWithIndex);
   const replace2d = (arr) => mapNonNull(arr, replace1d);
 
-  const cardsArray = flatten(draft.initial_state, 3).map((card, index) => ({ ...card, index }));
   addBasicsToDeck(draft, cardsArray, carddb, true);
-  draft.initial_state = mapSeats(draft.initial_state);
-  draft.unopenedPacks = mapSeats(draft.unopenedPacks);
-  draft.seats = mapNonNull(draft.seats, (seat) => {
+  draft.initial_state = mapSeats(draftObject.initial_state);
+  draft.unopenedPacks = mapSeats(draftObject.unopenedPacks);
+  draft.seats = mapNonNull(draftObject.seats, (seat) => {
     seat.drafted = replace2d(seat.drafted);
     seat.sideboard = replace2d(seat.sideboard);
     seat.packbacklog = mapPacks(seat.packbacklog);

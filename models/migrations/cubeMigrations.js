@@ -2,18 +2,34 @@ const { mapNonNull } = require('../../serverjs/util');
 
 const updateCubeDraftFormats = (cube) => {
   if (!cube) return null;
+  const cubeObject = cube.toObject();
 
-  const defaultPack = { filters: [], trash: 0, sealed: false, picksPerPass: 1 };
+  const defaultPack = Object.freeze({ filters: [], trash: 0, sealed: false, picksPerPass: 1 });
 
-  cube.draft_formats = mapNonNull(cube.draft_formats, (draftFormat) => {
-    if (!draftFormat) return null;
+  const newFormats = mapNonNull(cubeObject.draft_formats, (oldDraftFormat) => {
+    if (!oldDraftFormat) return null;
+    const draftFormat = {
+      title: oldDraftFormat.title,
+      multiples: oldDraftFormat.multiples,
+      html: oldDraftFormat.html,
+      markdown: oldDraftFormat.markdown,
+      packs: oldDraftFormat.packs,
+    };
     if (!draftFormat.packs) {
       draftFormat.packs = [];
-    } else if (typeof draftFormat.packs === 'string' || draftFormat.packs instanceof String) {
-      draftFormat.packs = { ...defaultPack, filters: JSON.parse(draftFormat.packs) };
+    } else {
+      let { packs } = draftFormat;
+      packs = packs.map((pack) => {
+        if (typeof pack === 'string' || pack instanceof String) {
+          return pack;
+        }
+        return Object.values(pack).join('');
+      });
+      draftFormat.packs = packs.map((packStr) => ({ ...defaultPack, filters: JSON.parse(packStr) }));
     }
     return draftFormat;
   }).filter((x) => x);
+  cube.draft_formats = newFormats;
   return cube;
 };
 

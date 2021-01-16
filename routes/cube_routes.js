@@ -765,14 +765,7 @@ router.get('/playtest/:id', async (req, res) => {
       .limit(10)
       .lean();
 
-    let draftFormats = [];
-    // NOTE: older cubes do not have custom drafts
-    if (cube.draft_formats) {
-      draftFormats = cube.draft_formats.map(({ packs, ...format }) => ({
-        ...format,
-        packs: JSON.parse(packs),
-      }));
-    }
+    const draftFormats = cube.draft_formats || [];
 
     return render(
       req,
