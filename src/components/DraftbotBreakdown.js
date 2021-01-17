@@ -196,7 +196,7 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
     });
     if (normalized) {
       for (const { title } of TRAITS) {
-        if (title !== 'Lands') {
+        if (title !== 'Lands' && title !== 'Card') {
           const minScore = Math.min(...res.map((cardScores) => cardScores[title]));
           for (const cardScores of res) {
             cardScores[title] -= minScore;
