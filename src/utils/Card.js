@@ -74,6 +74,16 @@ export const CARD_CATEGORY_DETECTORS = {
     details.legalities.Commander === 'legal' &&
     ((details.type.includes('Legendary') && details.type.includes('Creature')) ||
       details.oracle_text.includes('can be your commander')),
+  spell: (details) => !details.type.includes('Land') && !details.type.includes('Conspiracy'),
+  permanent: (details) =>
+    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !details.type.includes('Conspiracy'),
+  historic: (details) =>
+    details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
+  vanilla: (details) => !details.oracle_text,
+  modal: (details) => details.oracle_text.includes('•'),
+  creatureland: (details) => details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/),
+  manland: (details) => details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/),
+
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
   cycleland: (details) => LandCategories.CYCLE.includes(details.name),
   bicycleland: (details) => LandCategories.CYCLE.includes(details.name),
@@ -91,17 +101,10 @@ export const CARD_CATEGORY_DETECTORS = {
   shadowland: (details) => LandCategories.SHADOW.includes(details.name),
   shockland: (details) => LandCategories.SHOCK.includes(details.name),
   storageland: (details) => LandCategories.STORAGE.includes(details.name),
-  creatureland: (details) => LandCategories.CREATURE.includes(details.name),
   triland: (details) => LandCategories.TRI.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
-  spell: (details) => !details.type.includes('Land') && !details.type.includes('Conspiracy'),
-  permanent: (details) =>
-    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !details.type.includes('Conspiracy'),
-  historic: (details) =>
-    details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
-  vanilla: (details) => !details.oracle_text,
-  modal: (details) => details.oracle_text.includes('•'),
+
   // Others from Scryfall:
   //   reserved, reprint, new, old, hires, foil,
   //   spotlight, unique, masterpiece,
