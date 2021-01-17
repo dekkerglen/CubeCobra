@@ -153,7 +153,7 @@ const TRAITS = Object.freeze([
 ]);
 
 const renderWithTooltip = (title) => (
-  <Tooltip text={TRAITS.filter((trait) => trait.title === title)[0]?.tooltip}>{title}</Tooltip>
+  <Tooltip text={TRAITS.find((trait) => trait.title === title)?.tooltip}>{title}</Tooltip>
 );
 
 const WEIGHT_COLUMNS = Object.freeze([
