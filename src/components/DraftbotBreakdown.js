@@ -217,7 +217,7 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
         columnProps={TRAITS.map((trait) => ({ ...trait, key: trait.title, sortable: true }))}
         data={rows}
         defaultSortConfig={{ key: 'Total', direction: 'descending' }}
-        sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.name, b.name) }}
+        sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.details.name, b.details.name) }}
       />
       <h4 className="mt-4 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
       <SortableTable
