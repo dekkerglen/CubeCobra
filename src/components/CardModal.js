@@ -58,30 +58,22 @@ const CardModal = ({
             <Row noGutters className="mb-2">
               {card.details.prices && Number.isFinite(cardPrice(card)) && (
                 <TextBadge name="Price" className="mt-2 mr-2">
-                  <Tooltip id="CardModalPriceTooltipId" text="TCGPlayer Market Price">
-                    ${cardPrice(card).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardFoilPrice(card)) && (
                 <TextBadge name="Foil" className="mt-2 mr-2">
-                  <Tooltip id="CardModalFoilTooltipId" text="TCGPlayer Market Price">
-                    ${cardFoilPrice(card).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardPriceEur(card)) && (
                 <TextBadge name="EUR" className="mt-2 mr-2">
-                  <Tooltip id="CardModalEURTooltipId" text="Cardmarket Price">
-                    €{cardPriceEur(card).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="Cardmarket Price">€{cardPriceEur(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardTix(card)) && (
                 <TextBadge name="TIX" className="mt-2 mr-2">
-                  <Tooltip id="CardModalTIXTooltipId" text="MTGO TIX">
-                    {cardTix(card).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="MTGO TIX">{cardTix(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {Number.isFinite(cardElo(card)) && (

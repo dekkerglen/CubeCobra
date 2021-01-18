@@ -1,28 +1,23 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
 
-import { Tooltip } from 'reactstrap';
+import { UncontrolledTooltip } from 'reactstrap';
 
-import useToggle from 'hooks/UseToggle';
-
-const OurTooltip = ({ text, id, children, ...props }) => {
-  const [isOpen, toggle] = useToggle(false);
-
+const Tooltip = ({ text, children, ...props }) => {
+  const divRef = useRef();
   return (
     <>
-      <div id={id}>{children}</div>
-      <Tooltip
-        placement="top"
-        boundariesElement="window"
-        trigger="hover"
-        isOpen={isOpen}
-        toggle={toggle}
-        target={id}
-        {...props}
-      >
+      <div ref={divRef}>{children}</div>
+      <UncontrolledTooltip placement="top" boundariesElement="window" trigger="hover" target={divRef} {...props}>
         {text}
-      </Tooltip>
+      </UncontrolledTooltip>
     </>
   );
 };
 
-export default OurTooltip;
+Tooltip.propTypes = {
+  text: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
+export default Tooltip;
