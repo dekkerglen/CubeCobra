@@ -1,14 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Row, Col, Input, Label, ListGroup, ListGroupItem, Table } from 'reactstrap';
+import { Row, Col, Input, Label, ListGroup, ListGroupItem } from 'reactstrap';
 
-import HeaderCell from 'components/HeaderCell';
+import { SortableTable, compareStrings } from 'components/SortableTable';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
-import useSortableData from 'hooks/UseSortableData';
 import useToggle from 'hooks/UseToggle';
+import CardPropType from 'proptypes/CardPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
@@ -82,210 +82,163 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   return [cardsInPack, picks, pack, picksList, seat];
 };
 
-// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities)
-const TRAITS = [
+const renderCardLink = (card) => (
+  <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
+    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
+      {card.details.name}
+    </a>
+  </AutocardItem>
+);
+
+// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating)
+const TRAITS = Object.freeze([
   {
-    name: 'Rating',
-    description: 'The rating based on the Elo and current color commitments.',
-    weight: getRatingWeight,
-    function: (_0, card, _1, cards) => getRating(card, cards),
+    title: 'Card',
+    tooltip: 'The card the bot is considering',
+    compute: (_0, card) => card,
+    heading: true,
+    renderFn: renderCardLink,
   },
   {
-    name: 'Internal Synergy',
-    description: 'A score of how well current picks in these colors synergize with each other.',
+    title: 'Rating',
+    tooltip: 'The rating based on the Elo and current color commitments.',
+    weight: getRatingWeight,
+    compute: (_0, card, _2, cards) => getRating(card, cards),
+  },
+  {
+    title: 'Internal Synergy',
+    tooltip: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    function: (_0, _1, picked, cards, _2, _3, pickedInCombination) =>
+    compute: (_0, _1, picked, cards, _4, _5, pickedInCombination) =>
       getInternalSynergy(pickedInCombination, picked, cards),
   },
   {
-    name: 'Pick Synergy',
-    description: 'A score of how well this card synergizes with the current picks.',
+    title: 'Pick Synergy',
+    tooltip: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    function: (_0, card, picked, cards, _1, _2, pickedInCombination) =>
+    compute: (_0, card, picked, cards, _4, _5, pickedInCombination) =>
       getPickSynergy(pickedInCombination, card, picked, cards),
   },
   {
-    name: 'Openness',
-    description: 'A score of how open these colors appear to be.',
+    title: 'Openness',
+    tooltip: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    function: (combination, _0, _1, _2, seen) => getOpenness(combination, seen),
+    compute: (combination, _1, _2, _3, seen) => getOpenness(combination, seen),
   },
   {
-    name: 'Color',
-    description: 'A score of how well these colors fit in with the current picks.',
+    title: 'Color',
+    tooltip: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    function: (_0, _1, picked, cards, _2, _3, pickedInCombination, probabilities) =>
+    compute: (_0, _1, picked, cards, _4, _5, pickedInCombination, probabilities) =>
       getColor(pickedInCombination, picked, probabilities, cards),
   },
   {
-    name: 'Fixing',
-    description: 'The value of how well this card solves mana issues.',
+    title: 'Fixing',
+    tooltip: 'The value of how well this card solves mana issues.',
     weight: getFixingWeight,
-    function: (combination, card, _, cards) => getFixing(combination, card, cards),
+    compute: (combination, card, _2, cards) => getFixing(combination, card, cards),
   },
   {
-    name: 'Casting Probability',
-    description:
+    title: 'Casting Probability',
+    tooltip:
       'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    function: (_0, card, _1, cards, _2, lands) => getCastingProbability(cards[card], lands),
+    compute: (_0, card, _2, cards, _4, lands) => getCastingProbability(cards[card], lands),
   },
   {
-    name: 'Lands',
-    description: 'This is the color combination the bot is assuming that will maximize the total score.',
+    title: 'Lands',
+    tooltip: 'This is the color combination the bot is assuming that will maximize the total score.',
+    compute: (_0, _1, _2, _3, _4, lands) => JSON.stringify(lands),
   },
   {
-    name: 'Total',
-    description: 'The total calculated score.',
+    title: 'Total',
+    tooltip: 'The total calculated score.',
+    compute: (_0, _1, _2, _3, _4, _5, _6, _7, rating) => rating,
   },
-];
+]);
 
+const renderWithTooltip = (title) => (
+  <Tooltip text={TRAITS.filter((trait) => trait.title === title)[0]?.tooltip}>{title}</Tooltip>
+);
+
+const WEIGHT_COLUMNS = Object.freeze([
+  { title: 'Oracle', sortable: true, key: 'title', heading: true, renderFn: renderWithTooltip },
+  { title: 'Weight', sortable: true, key: 'weight' },
+]);
 export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
-  const weights = useMemo(() => {
-    const res = [];
-    for (let i = 0; i < TRAITS.length - 3; i++) {
-      res.push({
-        name: TRAITS[i].name,
-        description: TRAITS[i].description,
-        value: TRAITS[i].weight(pack + 1, picks + 1, draft.initial_state).toFixed(2),
-      });
-    }
-    return res;
-  }, [draft, pack, picks]);
   const [normalized, toggleNormalized] = useToggle(false);
-
-  for (const card of cardsInPack) {
-    card.scores = [];
-    const { rating, colors, lands } = botRatingAndCombination(
-      draft.cards,
-      card.index,
-      picked,
-      seen,
-      draft.initial_state,
-      cardsInPack.length,
-      pack + 1,
-    );
-    const probabilities = {};
-    for (const c of picked.cards.WUBRG) {
-      probabilities[c.cardID] = getCastingProbability(c, lands);
-    }
-    const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
-
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      card.scores.push(
-        TRAITS[i].function(colors, card.index, picked, draft.cards, seen, lands, pickedInCombination, probabilities),
+  const weights = useMemo(
+    () =>
+      TRAITS.filter((t) => t.weight).map(({ title, tooltip, weight }) => ({
+        title,
+        tooltip,
+        weight: weight(pack + 1, picks + 1, draft.initial_state),
+      })),
+    [draft, pack, picks],
+  );
+  const rows = useMemo(() => {
+    const res = cardsInPack.map((card) => {
+      const { rating, colors, lands } = botRatingAndCombination(
+        draft.cards,
+        card.index,
+        picked,
+        seen,
+        draft.initial_state,
+        cardsInPack.length,
+        pack + 1,
       );
-    }
-    card.scores.push(JSON.stringify(fromEntries(Object.entries(lands).filter(([, c]) => c))));
-    card.scores.push(rating.toFixed(2));
-  }
-  if (normalized) {
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      let minScore = cardsInPack[0].scores[i];
-      let maxScore = cardsInPack[0].scores[i];
-      for (const card of cardsInPack) {
-        if (card.scores[i] < minScore) {
-          minScore = card.scores[i];
+      const probabilities = {};
+      for (const c of picked.cards.WUBRG) {
+        probabilities[c.cardID] = getCastingProbability(c, lands);
+      }
+      const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
+      return fromEntries(
+        TRAITS.map(({ title, compute }) => [
+          title,
+          compute(colors, card, picked, draft.cards, seen, lands, pickedInCombination, probabilities, rating),
+        ]),
+      );
+    });
+    if (normalized) {
+      for (const { title } of TRAITS) {
+        if (title !== 'Lands') {
+          const minScore = Math.min(...res.map((cardScores) => cardScores[title]));
+          for (const cardScores of res) {
+            cardScores[title] -= minScore;
+          }
         }
-        if (card.scores[i] > maxScore) {
-          maxScore = card.scores[i];
-        }
       }
-      for (const card of cardsInPack) {
-        card.scores[i] = `+${(card.scores[i] - minScore).toFixed(2)}`;
-      }
-    }
-  } else {
-    for (let i = 0; i < TRAITS.length - 2; i++) {
-      for (const card of cardsInPack) {
-        card.scores[i] = card.scores[i].toFixed(2);
-      }
-    }
-  }
-
-  const counts = useMemo(() => {
-    const res = [];
-
-    for (const card of cardsInPack) {
-      const row = { card };
-      for (let i = 0; i < card.scores.length; i++) {
-        row[TRAITS[i].name] = card.scores[i];
-      }
-      res.push(row);
     }
     return res;
-  }, [cardsInPack]);
-
-  const { items, requestSort, sortConfig } = useSortableData(counts, { key: 'Total', direction: 'descending' });
+  }, [cardsInPack, normalized, draft, pack, picked, seen]);
 
   return (
     <>
-      <Label check className="pl-2">
-        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the Columns
+      <Label check className="pl-4 mb-2">
+        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the columns so the lowest value is 0.00
       </Label>
-      <Table bordered responsive className="small-table mt-lg-3">
-        <thead>
-          <tr>
-            <td />
-            {TRAITS.map((trait) => (
-              <HeaderCell
-                label={trait.name}
-                fieldName={trait.name}
-                sortConfig={sortConfig}
-                requestSort={requestSort}
-                tooltip={trait.description}
-              />
-            ))}
-          </tr>
-        </thead>
-        <tbody className="breakdown">
-          {items.map((item) => (
-            <tr key={item.card.details.cardID}>
-              <th scope="col">
-                <AutocardItem key={item.card.index} card={item.card} data-in-modal index={item.card.index}>
-                  <a href={`/tool/card/${encodeName(item.card.cardID)}`} target="_blank" rel="noopener noreferrer">
-                    {item.card.details.name}
-                  </a>
-                </AutocardItem>
-              </th>
-              {TRAITS.map((trait) => (
-                <td key={trait.name}>{item[trait.name]}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
-      <Row>
-        <Col xs={6}>
-          <Table bordered className="small-table">
-            <tbody className="breakdown">
-              {weights.map((weight) => (
-                <tr key={weight.name}>
-                  <th>
-                    <Tooltip
-                      id={`DraftbotBreakdownWeightID_${weight.name.replace(' ', '_')}`}
-                      text={weight.description}
-                    >
-                      {weight.name}
-                    </Tooltip>
-                  </th>
-                  <td>{weight.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
+      <SortableTable
+        className="small-table"
+        columnProps={TRAITS.map((trait) => ({ ...trait, key: trait.title, sortable: true }))}
+        data={rows}
+        defaultSortConfig={{ key: 'Total', direction: 'descending' }}
+        sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.name, b.name) }}
+      />
+      <h4 className="mt-4 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
+      <SortableTable
+        className="small-table"
+        columnProps={WEIGHT_COLUMNS}
+        data={weights}
+        sortFns={{ title: compareStrings }}
+      />
     </>
   );
 };
 
 Internal.propTypes = {
-  cardsInPack: PropTypes.arrayOf(PropTypes.shape({ scores: PropTypes.arrayOf(PropTypes.number).isRequired }))
-    .isRequired,
+  cardsInPack: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
+    cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   }).isRequired,
   pack: PropTypes.number.isRequired,
   picks: PropTypes.number.isRequired,
@@ -353,7 +306,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
           </Col>
         ))}
       </Row>
-      <h4>{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
+      <h4 className="mt-5 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
       <Internal cardsInPack={cardsInPack} draft={draft} pack={pack} picks={picks} picked={picked} seen={seen} />
     </>
   );
