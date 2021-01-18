@@ -11,18 +11,20 @@ const Pack = {
       min: 0,
     },
   ],
-  picksPerPass: {
-    type: Number,
-    default: 1,
-    min: 1,
-  },
-  sealed: {
-    type: Boolean,
-    default: false,
-  },
-  trash: {
-    type: Number,
-    default: 0,
+  steps: {
+    type: [
+      {
+        action: {
+          type: String,
+          enum: ['pass', 'pick', 'trash'],
+        },
+        amount: {
+          type: Number,
+          default: null,
+        },
+      },
+    ],
+    default: null,
   },
 };
 
