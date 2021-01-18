@@ -16,6 +16,10 @@ const Pack = {
     default: 1,
     min: 1,
   },
+  justFirstPass: {
+    type: Boolean,
+    default: false,
+  },
   sealed: {
     type: Boolean,
     default: false,

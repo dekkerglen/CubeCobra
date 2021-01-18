@@ -1,5 +1,4 @@
 import React, { useContext, useCallback } from 'react';
-
 import {
   Button,
   Card,
@@ -8,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
   Col,
-  Form,
   FormGroup,
   FormText,
   Input,
@@ -22,151 +20,105 @@ import {
   ModalHeader,
   Row,
 } from 'reactstrap';
-
 import PropTypes from 'prop-types';
+
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
 import TextEntry from 'components/TextEntry';
+import { toNullableInt } from 'utils/Util';
 
-const defaultPack = { filters: [''], trash: 0, sealed: false, picksPerPass: 1 };
+const defaultPack = { filters: [''], trash: 0, sealed: false, picksPerPass: 1, justFirstPass: false };
+
+const changeDescriptionMutation = ({ newFormat, value }) => {
+  newFormat.markdown = value;
+};
+
+const removePackMutation = ({ newFormat, packIndex }) => {
+  if (newFormat.packs.length > 1) newFormat.packs.splice(packIndex, 1);
+};
+
+const changeTrashMutation = ({ newFormat, packIndex, value }) => {
+  newFormat.packs[packIndex].trash = toNullableInt(value);
+};
+
+const changeSealedMutation = ({ newFormat, packIndex, checked }) => {
+  newFormat.packs[packIndex].sealed = checked;
+};
+
+const changePicksPerPassMutation = ({ newFormat, packIndex, value }) => {
+  newFormat.packs[packIndex].picksPerPass = toNullableInt(value);
+};
+
+const changeJustFirstPassMutation = ({ newFormat, packIndex, checked }) => {
+  newFormat.packs[packIndex].justFirstPass = checked;
+};
+
+const changeSlotMutation = ({ newFormat, packIndex, slotIndex, value }) => {
+  newFormat.packs[packIndex].filters[slotIndex] = value;
+};
+
+const removeSlotMutation = ({ newFormat, packIndex, slotIndex }) => {
+  if (newFormat.packs[packIndex].length > 1) newFormat.packs[packIndex].filters.splice(slotIndex, 1);
+};
+
+const addSlotMutation = ({ newFormat, packIndex }) => newFormat.packs[packIndex].filters.push('');
+
+const duplicatePackMutation = ({ newFormat, packIndex }) => {
+  newFormat.packs.splice(packIndex, 0, newFormat.packs[packIndex]);
+};
+
+const addPackMutation = ({ newFormat }) => newFormat.push({ ...defaultPack });
+
+const normalizePackValues = (packs) =>
+  packs.map(({ picksPerPass, trash, ...pack }) => ({ ...pack, picksPerPass: picksPerPass ?? 1, trash: trash ?? 0 }));
 
 const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
+  const useMutateFormat = (mutation) =>
+    useCallback(
+      (event) => {
+        const { target } = event;
+        if (target) {
+          const { checked, value } = target;
+          const packIndex = toNullableInt(target.getAttribute('data-pack-index'));
+          const slotIndex = toNullableInt(target.getAttribute('data-slot-index'));
+          const intValue = toNullableInt(value);
+
+          setFormat((oldFormat) => {
+            const newFormat = { ...oldFormat, packs: [...(oldFormat.packs ?? [{ ...defaultPack }])] };
+            if (packIndex || packIndex === 0) {
+              if (
+                oldFormat.packs.length <= packIndex ||
+                ((slotIndex || slotIndex === 0) && oldFormat.packs[packIndex].filters.length <= slotIndex)
+              ) {
+                return oldFormat;
+              }
+              newFormat.packs[packIndex] = {
+                ...newFormat.packs[packIndex],
+                filters: [...(newFormat.packs[packIndex].filters ?? [''])],
+              };
+            }
+            mutation({ newFormat, value, packIndex, slotIndex, checked, intValue });
+            console.log(newFormat);
+            return newFormat;
+          });
+        }
+      },
+      // eslint-disable-next-line
+      [setFormat, mutation],
+    );
   const { cubeID } = useContext(CubeContext);
 
-  const handleChangeDescription = useCallback(
-    (event) => {
-      const { target } = event;
-      if (target) {
-        // eslint-disable-next-line no-shadow
-        setFormat((format) => ({
-          ...format,
-          markdown: target.value,
-        }));
-      }
-    },
-    [setFormat],
-  );
-
-  const handleAddCard = useCallback(
-    (event) => {
-      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
-      // eslint-disable-next-line no-shadow
-      setFormat((format) => {
-        const newFormat = { ...format };
-        newFormat.packs = [...(newFormat.packs ?? [{ ...defaultPack }])];
-        newFormat.packs[index] = { ...newFormat.packs[index] };
-        newFormat.packs[index].filters = [...newFormat.packs[index].filters, ''];
-        return newFormat;
-      });
-    },
-    [setFormat],
-  );
-  const handleRemoveCard = useCallback(
-    (event) => {
-      const packIndex = parseInt(event.currentTarget.getAttribute('data-pack'), 10);
-      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
-      // eslint-disable-next-line no-shadow
-      setFormat((format) => {
-        // don't remove the last card from a pack
-        if (format.packs[packIndex].length <= 1) return format;
-        const newFormat = { ...format };
-        newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
-        newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
-        newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
-        newFormat.packs[packIndex].filters.splice(index, 1);
-        return newFormat;
-      });
-    },
-    [setFormat],
-  );
-  const handleChangeCard = useCallback(() => {
-    // eslint-disable-next-line no-restricted-globals
-    const packIndex = parseInt(event.target.getAttribute('data-pack'), 10);
-    // eslint-disable-next-line no-restricted-globals
-    const index = parseInt(event.target.getAttribute('data-index'), 10);
-    // eslint-disable-next-line no-restricted-globals
-    const { value } = event.target;
-    // eslint-disable-next-line no-shadow
-    setFormat((format) => {
-      const newFormat = { ...format };
-      newFormat.packs = [...(newFormat.packs || [{ ...defaultPack }])];
-      newFormat.packs[packIndex] = { ...newFormat.packs[packIndex] };
-      newFormat.packs[packIndex].filters = [...newFormat.packs[packIndex].filters];
-      newFormat.packs[packIndex].filters[index] = value;
-      return newFormat;
-    });
-  }, [setFormat]);
-  const handleAddPack = useCallback(() => {
-    // eslint-disable-next-line no-shadow
-    setFormat(({ packs, ...format }) => ({
-      ...format,
-      packs: [...(packs || [{ ...defaultPack }]), { ...defaultPack }],
-    }));
-  }, [setFormat]);
-  const handleDuplicatePack = useCallback(
-    (event) => {
-      // eslint-disable-next-line no-restricted-globals
-      const index = parseInt(event.currentTarget.getAttribute('data-index'), 10);
-      // eslint-disable-next-line no-shadow
-      setFormat((format) => {
-        const newFormat = { ...format };
-        newFormat.packs = [...(newFormat.packs || [['']])];
-        newFormat.packs.splice(index, 0, newFormat.packs[index]);
-        return newFormat;
-      });
-    },
-    [setFormat],
-  );
-  const handleRemovePack = useCallback(
-    (event) => {
-      // eslint-disable-next-line no-restricted-globals
-      const removeIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
-      // eslint-disable-next-line no-shadow
-      setFormat(({ packs, ...format }) => ({
-        ...format,
-        packs: (packs || [['']]).filter((_, index) => index !== removeIndex),
-      }));
-    },
-    [setFormat],
-  );
-  const handleChangeTrash = useCallback(
-    (event) => {
-      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-      const value = parseInt(event.target.value, 10);
-      // eslint-disable-next-line no-shadow
-      setFormat(({ ...format }) => {
-        format.packs = [...(format.packs || [{ ...defaultPack }])];
-        format.packs[packIndex].trash = Number.isInteger(value) ? value : null;
-        return format;
-      });
-    },
-    [setFormat],
-  );
-  const handleChangePickAtTime = useCallback(
-    (event) => {
-      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-      const value = parseInt(event.target.value, 10);
-      // eslint-disable-next-line no-shadow
-      setFormat(({ ...format }) => {
-        format.packs = [...(format.packs || [{ ...defaultPack }])];
-        format.packs[packIndex].picksPerPass = Number.isInteger(value) ? value : null;
-        return format;
-      });
-    },
-    [setFormat],
-  );
-  const handleChangeSealed = useCallback(
-    (event) => {
-      const packIndex = parseInt(event.target.getAttribute('data-index'), 10);
-      // eslint-disable-next-line no-shadow
-      setFormat(({ ...format }) => {
-        format.packs = [...(format.packs || [{ ...defaultPack }])];
-        format.packs[packIndex].sealed = !format.packs[packIndex].sealed;
-        return format;
-      });
-    },
-    [setFormat],
-  );
+  const changeDescription = useMutateFormat(changeDescriptionMutation);
+  const removePack = useMutateFormat(removePackMutation);
+  const changeTrash = useMutateFormat(changeTrashMutation);
+  const changeSealed = useMutateFormat(changeSealedMutation);
+  const changePicksPerPass = useMutateFormat(changePicksPerPassMutation);
+  const changeJustFirstPass = useMutateFormat(changeJustFirstPassMutation);
+  const changeSlot = useMutateFormat(changeSlotMutation);
+  const removeSlot = useMutateFormat(removeSlotMutation);
+  const addSlot = useMutateFormat(addSlotMutation);
+  const duplicatePack = useMutateFormat(duplicatePackMutation);
+  const addPack = useMutateFormat(addPackMutation);
 
   const packs = format.packs || [{ ...defaultPack }];
   const description = format.markdown || format.html || '';
@@ -200,7 +152,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             </Col>
           </Row>
           <h6>Description</h6>
-          <TextEntry name="markdown" value={description || ''} onChange={handleChangeDescription} maxLength={5000} />
+          <TextEntry name="markdown" value={description || ''} onChange={changeDescription} maxLength={5000} />
           <FormText>
             Having trouble formatting your posts? Check out the{' '}
             <a href="/markdown" target="_blank">
@@ -214,95 +166,105 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be used to
             match any card.
           </FormText>
-          {packs.map((pack, index) => (
+          {packs.map((pack, packIndex) => (
             // eslint-disable-next-line react/no-array-index-key
-            <Card key={index} className="mb-3">
+            <Card key={packIndex} className="mb-3">
               <CardHeader>
                 <CardTitle className="mb-0">
-                  Pack {index + 1} - {pack.length} Cards
-                  <Button close onClick={handleRemovePack} data-index={index} />
+                  Pack {packIndex + 1} - {pack.length} Cards
+                  <Button close onClick={removePack} data-pack-index={packIndex} />
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <Form inline className="mb-3">
+                <FormGroup inline check className="mb-3">
                   <Label>
                     Discard the last
                     <Input
                       type="number"
-                      size="sm"
+                      bsSize="sm"
                       className="mr-2 ml-2"
-                      value={pack.trash}
+                      value={pack.trash ?? ''}
                       min={0}
                       max={pack.filters.length - 1}
-                      onChange={handleChangeTrash}
-                      data-index={index}
+                      onChange={changeTrash}
+                      data-pack-index={packIndex}
                     />
                     cards left in each pack.
                   </Label>
                   <Label className="ml-4">
-                    <Input type="checkbox" checked={pack.sealed} onClick={handleChangeSealed} data-index={index} />
+                    <Input type="checkbox" checked={pack.sealed} onChange={changeSealed} data-pack-index={packIndex} />
                     Is a sealed pack.
                   </Label>
-                </Form>
-                <Form inline className="mb-3">
+                </FormGroup>
+                <FormGroup check inline className="mb-3">
                   <Label>
                     Pick
                     <Input
                       type="number"
-                      size="sm"
+                      bsSize="sm"
                       className="mr-2 ml-2"
-                      value={pack.picksPerPass}
+                      value={pack.picksPerPass ?? ''}
                       min={1}
                       max={pack.filters.length}
-                      onChange={handleChangePickAtTime}
-                      data-index={index}
+                      onChange={changePicksPerPass}
+                      data-pack-index={packIndex}
                     />
                     cards at a time.
+                    <Input
+                      className="ml-2"
+                      type="checkbox"
+                      checked={pack.justFirstPass}
+                      onChange={changeJustFirstPass}
+                      data-pack-index={packIndex}
+                    />
+                    Just for the first pass after opening the pack.
                   </Label>
-                </Form>
-                {pack.filters.map((card, cardIndex) => (
+                </FormGroup>
+                {pack.filters.map((filter, slotIndex) => (
                   // eslint-disable-next-line react/no-array-index-key
-                  <InputGroup key={cardIndex} className={cardIndex !== 0 ? 'mt-3' : undefined}>
+                  <InputGroup key={slotIndex} className={slotIndex !== 0 ? 'mt-3' : undefined}>
                     <InputGroupAddon addonType="prepend">
-                      <InputGroupText>{cardIndex + 1}</InputGroupText>
+                      <InputGroupText>{slotIndex + 1}</InputGroupText>
                     </InputGroupAddon>
                     <Input
                       type="text"
-                      value={card}
-                      onChange={handleChangeCard}
-                      data-pack={index}
-                      data-index={cardIndex}
+                      value={filter}
+                      onChange={changeSlot}
+                      data-pack-index={packIndex}
+                      data-slot-index={slotIndex}
                     />
-                    <InputGroupAddon addonType="append">
-                      <Button
-                        color="secondary"
-                        outline
-                        onClick={handleRemoveCard}
-                        data-pack={index}
-                        data-index={cardIndex}
-                      >
-                        Remove
-                      </Button>
-                    </InputGroupAddon>
+                    {pack.filters.length > 0 && (
+                      <InputGroupAddon addonType="append">
+                        <Button
+                          color="secondary"
+                          outline
+                          onClick={removeSlot}
+                          data-pack-index={packIndex}
+                          data-slot-index={slotIndex}
+                        >
+                          Remove
+                        </Button>
+                      </InputGroupAddon>
+                    )}
                   </InputGroup>
                 ))}
               </CardBody>
               <CardFooter>
-                <Button className="mr-2" color="success" onClick={handleAddCard} data-index={index}>
+                <Button className="mr-2" color="success" onClick={addSlot} data-pack-index={packIndex}>
                   Add Card Slot
                 </Button>
-                <Button color="success" onClick={handleDuplicatePack} data-index={index}>
+                <Button color="success" onClick={duplicatePack} data-pack-index={packIndex}>
                   Duplicate Pack
                 </Button>
               </CardFooter>
             </Card>
           ))}
-          <Button color="success" onClick={handleAddPack}>
+          <Button color="success" onClick={addPack}>
             Add Pack
           </Button>
         </ModalBody>
         <ModalFooter>
-          <Input type="hidden" name="format" value={JSON.stringify(packs)} />
+          <Input type="hidden" name="format" value={JSON.stringify(normalizePackValues(packs))} />
           <Input type="hidden" name="id" value={formatIndex} />
           <Button color="success" type="submit">
             Save
