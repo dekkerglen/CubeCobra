@@ -21,7 +21,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { addSeen, buildDeck, calculateBasicCounts, createSeen, init } from 'utils/Draft';
+import { buildDeck, calculateBasicCounts } from 'utils/Draft';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -51,7 +51,6 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
 
   const calculateBasics = useCallback(async () => {
     const main = deck.flat(2);
-    init(draft);
     const { lands: basics } = calculateBasicCounts(main, draft.cards);
     for (const [basic, count] of Object.entries(basics)) {
       const opts = refs[basic].current.options;
@@ -186,10 +185,7 @@ const DeckbuilderNavbar = ({
 
   const autoBuildDeck = useCallback(async () => {
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
-    init(draft);
-    const picked = createSeen();
-    addSeen(picked, main, draft.cards);
-    const { sideboard: side, deck: newDeck } = await buildDeck(draft.cards, main, picked, draft.basics);
+    const { sideboard: side, deck: newDeck } = await buildDeck(draft.cards, main, draft.basics);
     setSideboard([side]);
     setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
   }, [deck, draft, setDeck, setSideboard]);

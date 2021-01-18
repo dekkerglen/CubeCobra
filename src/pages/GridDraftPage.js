@@ -35,8 +35,8 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 import { csrfFetch } from 'utils/CSRF';
-import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
-import { botRatingAndCombination } from 'utils/draftbots';
+import { init, buildDeck } from 'utils/Draft';
+import { evaluateCardOrPool } from 'utils/draftbots';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -119,8 +119,8 @@ Pack.defaultProps = {
   turn: null,
 };
 
-const seen = createSeen();
-const picked = createSeen();
+const seen = [];
+const picked = [];
 
 const options = [];
 
@@ -166,27 +166,27 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 
   const makeBotPick = (tempPack) => {
     const cardsSeen = tempPack.filter((card) => card).map((c) => c.index);
-    addSeen(seen, cardsSeen, initialDraft.cards);
+    seen.push(...cardsSeen);
 
-    const ratings = options.map((mask) => {
-      const cards = mask.map((include, index) => (include ? tempPack[index] : null)).filter((card) => card);
-
-      let rating = 0;
-
-      for (const card of cards) {
-        rating += botRatingAndCombination(
-          initialDraft.cards,
-          card.index,
-          picked,
-          seen,
-          [initialDraft.initial_state],
-          cardsSeen.length,
-          packNumber,
-        ).rating;
-      }
-
-      return rating;
-    });
+    const ratings = options.map((mask) =>
+      mask
+        .map((include, index) => (include ? tempPack[index] : null))
+        .filter((card) => card)
+        .reduce(
+          (acc, card) =>
+            acc +
+            evaluateCardOrPool(card.index, {
+              cards: initialDraft.cards,
+              picked,
+              seen,
+              numPacks: initialDraft.initial_state.length,
+              pickNum: 9 - cardsSeen.length,
+              packNum: packNumber,
+              packSize: 9,
+            }).score,
+          0,
+        ),
+    );
 
     const mask = options[ratings.indexOf(Math.max(...ratings))];
     const tempPicks = [];
@@ -199,7 +199,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     }
 
     setBotPickOrder(botPickOrder.concat([tempPicks]));
-    addSeen(picked, tempPicks, initialDraft.cards);
+    seen.push(...tempPicks);
 
     return [tempPack, tempPicks];
   };

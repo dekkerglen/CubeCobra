@@ -3022,15 +3022,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       for (const card of Object.values(srcDraft.basics)) {
         card.details = carddb.cardFromId(card.cardID);
       }
-      deckutil.default.init(srcDraft);
-      const userPicked = deckutil.default.createSeen();
-      deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder, deck.cards);
-      const { colors: userColors } = await deckutil.default.buildDeck(
-        deck.cards,
-        base.seats[req.params.index].pickorder,
-        userPicked,
-        srcDraft.basics,
-      );
+      const userPicked = base.seats[req.params.index].pickorder.slice();
+      const { colors: userColors } = await deckutil.default.buildDeck(deck.cards, userPicked, srcDraft.basics);
 
       deck.seats.push({
         userid: req.user._id,
@@ -3045,12 +3038,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       let botNumber = 1;
       for (let i = 0; i < base.seats.length; i++) {
         if (i !== parseInt(req.params.index, 10)) {
-          const picked = deckutil.default.createSeen();
-          deckutil.default.addSeen(picked, base.seats[i].pickorder, deck.cards);
+          const picked = base.seats[i].pickorder;
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             deck.cards,
-            base.seats[i].pickorder,
             picked,
             srcDraft.basics,
           );

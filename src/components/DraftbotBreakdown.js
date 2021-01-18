@@ -1,33 +1,16 @@
 import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Row, Col, Input, Label, ListGroup, ListGroupItem } from 'reactstrap';
+import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import { SortableTable, compareStrings } from 'components/SortableTable';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
-import useToggle from 'hooks/UseToggle';
 import CardPropType from 'proptypes/CardPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
-import { addSeen, createSeen, init } from 'utils/Draft';
-import {
-  botRatingAndCombination,
-  getColor,
-  getColorWeight,
-  getFixing,
-  getFixingWeight,
-  getInternalSynergy,
-  getOpenness,
-  getOpennessWeight,
-  getPickSynergy,
-  getRating,
-  getRatingWeight,
-  getSynergyWeight,
-  getCastingProbability,
-  PROB_TO_INCLUDE,
-} from 'utils/draftbots';
+import { evaluateCardOrPool } from 'utils/draftbots';
 import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -82,77 +65,35 @@ export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
   return [cardsInPack, picks, pack, picksList, seat];
 };
 
-const renderCardLink = (card) => (
-  <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
-    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
-      {card.details.name}
-    </a>
-  </AutocardItem>
-);
-
-// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating)
+const CARD_TRAIT = Object.freeze({
+  title: 'Card',
+  tooltip: 'The card the bot is considering',
+  compute: ({ card }) => card,
+  heading: true,
+  renderFn: (card) => (
+    <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
+      <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
+        {card.details.name}
+      </a>
+    </AutocardItem>
+  ),
+});
 const TRAITS = Object.freeze([
-  {
-    title: 'Card',
-    tooltip: 'The card the bot is considering',
-    compute: (_0, card) => card,
-    heading: true,
-    renderFn: renderCardLink,
-  },
-  {
-    title: 'Rating',
-    tooltip: 'The rating based on the Elo and current color commitments.',
-    weight: getRatingWeight,
-    compute: (_0, card, _2, cards) => getRating(card, cards),
-  },
-  {
-    title: 'Internal Synergy',
-    tooltip: 'A score of how well current picks in these colors synergize with each other.',
-    weight: getSynergyWeight,
-    compute: (_0, _1, picked, cards, _4, _5, pickedInCombination) =>
-      getInternalSynergy(pickedInCombination, picked, cards),
-  },
-  {
-    title: 'Pick Synergy',
-    tooltip: 'A score of how well this card synergizes with the current picks.',
-    weight: getSynergyWeight,
-    compute: (_0, card, picked, cards, _4, _5, pickedInCombination) =>
-      getPickSynergy(pickedInCombination, card, picked, cards),
-  },
-  {
-    title: 'Openness',
-    tooltip: 'A score of how open these colors appear to be.',
-    weight: getOpennessWeight,
-    compute: (combination, _1, _2, _3, seen) => getOpenness(combination, seen),
-  },
-  {
-    title: 'Color',
-    tooltip: 'A score of how well these colors fit in with the current picks.',
-    weight: getColorWeight,
-    compute: (_0, _1, picked, cards, _4, _5, pickedInCombination, probabilities) =>
-      getColor(pickedInCombination, picked, probabilities, cards),
-  },
-  {
-    title: 'Fixing',
-    tooltip: 'The value of how well this card solves mana issues.',
-    weight: getFixingWeight,
-    compute: (combination, card, _2, cards) => getFixing(combination, card, cards),
-  },
   {
     title: 'Casting Probability',
     tooltip:
       'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    compute: (_0, card, _2, cards, _4, lands) => getCastingProbability(cards[card], lands),
+    compute: ({ probability }) => probability,
   },
   {
     title: 'Lands',
     tooltip: 'This is the color combination the bot is assuming that will maximize the total score.',
-    compute: (_0, _1, _2, _3, _4, lands) => JSON.stringify(lands),
+    compute: ({ lands }) => JSON.stringify(lands),
   },
   {
-    title: 'Total',
+    title: 'Total Score',
     tooltip: 'The total calculated score.',
-    compute: (_0, _1, _2, _3, _4, _5, _6, _7, rating) => rating,
+    compute: ({ score }) => score,
   },
 ]);
 
@@ -165,60 +106,54 @@ const WEIGHT_COLUMNS = Object.freeze([
   { title: 'Weight', sortable: true, key: 'weight' },
 ]);
 export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
-  const [normalized, toggleNormalized] = useToggle(false);
-  const weights = useMemo(
+  // const [normalized, toggleNormalized] = useToggle(false);
+  const botEvaluations = useMemo(
     () =>
-      TRAITS.filter((t) => t.weight).map(({ title, tooltip, weight }) => ({
-        title,
-        tooltip,
-        weight: weight(pack + 1, picks + 1, draft.initial_state),
+      cardsInPack.map((card) => ({
+        ...evaluateCardOrPool(card.index, {
+          cards: draft.cards,
+          picked,
+          seen,
+          pickNum: picks + 1,
+          packNum: pack + 1,
+          numPacks: draft.initial_state[0].length,
+          packSize: draft.initial_state[0][pack].length,
+        }),
+        card,
       })),
-    [draft, pack, picks],
+    [cardsInPack, draft, picked, seen, picks, pack],
   );
-  const rows = useMemo(() => {
-    const res = cardsInPack.map((card) => {
-      const { rating, colors, lands } = botRatingAndCombination(
-        draft.cards,
-        card.index,
-        picked,
-        seen,
-        draft.initial_state,
-        cardsInPack.length,
-        pack + 1,
-      );
-      const probabilities = {};
-      for (const c of picked.cards.WUBRG) {
-        probabilities[c.cardID] = getCastingProbability(c, lands);
-      }
-      const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
-      return fromEntries(
-        TRAITS.map(({ title, compute }) => [
-          title,
-          compute(colors, card, picked, draft.cards, seen, lands, pickedInCombination, probabilities, rating),
+  const oracles = useMemo(() => botEvaluations[0].oracleResults.map(({ title, tooltip }) => ({ title, tooltip })), [
+    botEvaluations,
+  ]);
+  const weights = useMemo(() => botEvaluations[0].oracleResults.map(({ title, weight }) => ({ title, weight })), [
+    botEvaluations,
+  ]);
+  const rows = useMemo(
+    () =>
+      botEvaluations.map((botEvaluation) =>
+        fromEntries([
+          [CARD_TRAIT.title, CARD_TRAIT.compute(botEvaluation)],
+          ...botEvaluation.oracleResults.map(({ title, value }) => [title, value]),
+          ...TRAITS.map(({ title, compute }) => [title, compute(botEvaluation)]),
         ]),
-      );
-    });
-    if (normalized) {
-      for (const { title } of TRAITS) {
-        if (title !== 'Lands') {
-          const minScore = Math.min(...res.map((cardScores) => cardScores[title]));
-          for (const cardScores of res) {
-            cardScores[title] -= minScore;
-          }
-        }
-      }
-    }
-    return res;
-  }, [cardsInPack, normalized, draft, pack, picked, seen]);
+      ),
+    [botEvaluations],
+  );
 
   return (
     <>
-      <Label check className="pl-4 mb-2">
-        <Input type="checkbox" onClick={toggleNormalized} /> Normalize the columns so the lowest value is 0.00
-      </Label>
+      {/* <Label check className="pl-4 mb-2">
+            <Input type="checkbox" onClick={toggleNormalized} /> Normalize the columns so the lowest value is 0.00
+           </Label>
+      */}
       <SortableTable
         className="small-table"
-        columnProps={TRAITS.map((trait) => ({ ...trait, key: trait.title, sortable: true }))}
+        columnProps={[CARD_TRAIT, ...oracles, ...TRAITS].map((trait) => ({
+          ...trait,
+          key: trait.title,
+          sortable: true,
+        }))}
         data={rows}
         defaultSortConfig={{ key: 'Total', direction: 'descending' }}
         sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.name, b.name) }}
@@ -251,9 +186,6 @@ Internal.propTypes = {
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
   const [index, setIndex] = useQueryParam('pick', defaultIndex ?? 0);
 
-  // Have to do useMemo so it happens immediately
-  useMemo(() => init(draft), [draft]);
-
   const click = useCallback(
     (event) => {
       if (index !== event.target.getAttribute('index')) {
@@ -265,15 +197,13 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = createSeen();
-  addSeen(picked, seat.pickorder.slice(0, index), draft.cards);
+  const picked = seat.pickorder.slice(0, index);
 
   const seen = useMemo(() => {
-    const res = createSeen();
-
+    const res = [];
     // this is an O(n^3) operation, but it should be ok
     for (let i = 0; i <= parseInt(index, 10); i++) {
-      addSeen(res, getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0], draft.cards);
+      res.push(getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
     }
     return res;
   }, [deck, draft, index, seatIndex]);

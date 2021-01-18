@@ -19,7 +19,7 @@ import {
   Spinner,
 } from 'reactstrap';
 
-import Draft, { init, createSeen, addSeen, getPicked, getSeen } from 'utils/Draft';
+import Draft, { init, getPicked, getSeen } from 'utils/Draft';
 import Location from 'utils/DraftLocation';
 import { cmcColumn } from 'utils/Util';
 import { makeSubtitle } from 'utils/Card';
@@ -188,9 +188,8 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     [pack, picks, update],
   );
 
-  const picked = createSeen();
-  addSeen(picked, getPicked(0), initialDraft.cards);
-  const seen = getSeen(0);
+  const picked = getPicked(0).slice();
+  const seen = getSeen(0).slice();
 
   const nextPack = useCallback(() => {
     let newPicks = picks;
