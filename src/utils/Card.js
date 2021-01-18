@@ -46,6 +46,9 @@ for (const colorsIncluded of Object.values(COLOR_INCLUSION_MAP)) {
   colorsIncluded.includes = Object.keys(colorsIncluded).filter((c) => colorsIncluded[c]);
 }
 
+const isCreatureLand = (details) =>
+  details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
+
 export const CARD_CATEGORY_DETECTORS = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
@@ -81,8 +84,8 @@ export const CARD_CATEGORY_DETECTORS = {
     details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
   vanilla: (details) => !details.oracle_text,
   modal: (details) => details.oracle_text.includes('•'),
-  creatureland: (details) => details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/),
-  manland: (details) => details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/),
+  creatureland: isCreatureLand,
+  manland: isCreatureLand,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
   cycleland: (details) => LandCategories.CYCLE.includes(details.name),
