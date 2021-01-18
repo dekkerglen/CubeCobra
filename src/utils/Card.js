@@ -1,5 +1,5 @@
 import { arraysEqual, fromEntries, arrayIsSubset } from 'utils/Util';
-import LandCategories from 'utils/LandCategories';
+import LandCategories from 'res/LandCategories.json';
 
 export const COLOR_COMBINATIONS = [
   [],
@@ -45,73 +45,6 @@ export const COLOR_INCLUSION_MAP = fromEntries(
 for (const colorsIncluded of Object.values(COLOR_INCLUSION_MAP)) {
   colorsIncluded.includes = Object.keys(colorsIncluded).filter((c) => colorsIncluded[c]);
 }
-
-export const CARD_CATEGORY_DETECTORS = {
-  gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
-  twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
-  hybrid: (details) =>
-    details.colors.length > 1 && details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
-  phyrexian: (details) => details.parsed_cost.some((symbol) => symbol.includes('-p')),
-  promo: (details) => details.promo,
-  digital: (details) => details.digital,
-  reasonable: (details) =>
-    !details.promo &&
-    !details.digital &&
-    details.border_color !== 'gold' &&
-    details.language === 'en' &&
-    details.tcgplayer_id &&
-    details.set !== 'myb' &&
-    details.set !== 'mb1' &&
-    details.collector_number.indexOf('★') === -1,
-  dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
-  mdfc: (details) => details.layout === 'modal_dfc',
-  meld: (details) => details.layout === 'meld',
-  transform: (details) => details.layout === 'transform',
-  flip: (details) => details.layout === 'flip',
-  split: (details) => details.layout === 'split',
-  leveler: (details) => details.layout === 'leveler',
-  commander: (details) =>
-    details.legalities.Commander === 'legal' &&
-    ((details.type.includes('Legendary') && details.type.includes('Creature')) ||
-      details.oracle_text.includes('can be your commander')),
-  bikeland: (details) => LandCategories.CYCLE.includes(details.name),
-  cycleland: (details) => LandCategories.CYCLE.includes(details.name),
-  bicycleland: (details) => LandCategories.CYCLE.includes(details.name),
-  bounceland: (details) => LandCategories.BOUNCE.includes(details.name),
-  karoo: (details) => LandCategories.BOUNCE.includes(details.name),
-  canopyland: (details) => LandCategories.CANOPY.includes(details.name),
-  canland: (details) => LandCategories.CANOPY.includes(details.name),
-  checkland: (details) => LandCategories.CHECK.includes(details.name),
-  dual: (details) => LandCategories.DUAL.includes(details.name),
-  fastland: (details) => LandCategories.FAST.includes(details.name),
-  filterland: (details) => LandCategories.FILTER.includes(details.name),
-  gainland: (details) => LandCategories.GAIN.includes(details.name),
-  painland: (details) => LandCategories.PAIN.includes(details.name),
-  scryland: (details) => LandCategories.SCRY.includes(details.name),
-  shadowland: (details) => LandCategories.SHADOW.includes(details.name),
-  shockland: (details) => LandCategories.SHOCK.includes(details.name),
-  storageland: (details) => LandCategories.STORAGE.includes(details.name),
-  creatureland: (details) => LandCategories.CREATURE.includes(details.name),
-  triland: (details) => LandCategories.TRI.includes(details.name),
-  tangoland: (details) => LandCategories.TANGO.includes(details.name),
-  battleland: (details) => LandCategories.TANGO.includes(details.name),
-  spell: (details) => !details.type.includes('Land') && !details.type.includes('Conspiracy'),
-  permanent: (details) =>
-    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !details.type.includes('Conspiracy'),
-  historic: (details) =>
-    details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
-  vanilla: (details) => !details.oracle_text,
-  modal: (details) => details.oracle_text.includes('•'),
-  // Others from Scryfall:
-  //   reserved, reprint, new, old, hires, foil,
-  //   spotlight, unique, masterpiece,
-  //   funny,
-  //   booster, datestamped, prerelease, planeswalker_deck,
-  //   league, buyabox, giftbox, intro_pack, gameday, release,
-  //   foil, nonfoil, full,
-};
-
-export const CARD_CATEGORIES = Object.keys(CARD_CATEGORY_DETECTORS);
 
 export function normalizeName(name) {
   return name
@@ -256,12 +189,81 @@ export const cardDevotion = (card, color) => {
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
-export const cardIsSpecialZoneType = (card) => {
-  return (
-    /(plane|phenomenon|vanguard|scheme|conspiracy|contraption)/i.test(cardType(card)) &&
-    !/planeswalker/i.test(cardType(card))
-  );
+export const cardIsSpecialZoneType = (card) =>
+  /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(cardType(card));
+
+const isCreatureLand = (details) =>
+  details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
+
+export const CARD_CATEGORY_DETECTORS = {
+  gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
+  twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
+  hybrid: (details) =>
+    details.colors.length > 1 && details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
+  phyrexian: (details) => details.parsed_cost.some((symbol) => symbol.includes('-p')),
+  promo: (details) => details.promo,
+  digital: (details) => details.digital,
+  reasonable: (details) =>
+    !details.promo &&
+    !details.digital &&
+    details.border_color !== 'gold' &&
+    details.language === 'en' &&
+    details.tcgplayer_id &&
+    details.set !== 'myb' &&
+    details.set !== 'mb1' &&
+    details.collector_number.indexOf('★') === -1,
+  dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
+  mdfc: (details) => details.layout === 'modal_dfc',
+  meld: (details) => details.layout === 'meld',
+  transform: (details) => details.layout === 'transform',
+  flip: (details) => details.layout === 'flip',
+  split: (details) => details.layout === 'split',
+  leveler: (details) => details.layout === 'leveler',
+  commander: (details) =>
+    details.legalities.Commander === 'legal' &&
+    ((details.type.includes('Legendary') && details.type.includes('Creature')) ||
+      details.oracle_text.includes('can be your commander')),
+  spell: (details) => !details.type.includes('Land') && !cardIsSpecialZoneType({ details }),
+  permanent: (details) =>
+    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !cardIsSpecialZoneType({ details }),
+  historic: (details) =>
+    details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
+  vanilla: (details) => !details.oracle_text,
+  modal: (details) => details.oracle_text.includes('•'),
+  creatureland: isCreatureLand,
+  manland: isCreatureLand,
+
+  bikeland: (details) => LandCategories.CYCLE.includes(details.name),
+  cycleland: (details) => LandCategories.CYCLE.includes(details.name),
+  bicycleland: (details) => LandCategories.CYCLE.includes(details.name),
+  bounceland: (details) => LandCategories.BOUNCE.includes(details.name),
+  karoo: (details) => LandCategories.BOUNCE.includes(details.name),
+  canopyland: (details) => LandCategories.CANOPY.includes(details.name),
+  canland: (details) => LandCategories.CANOPY.includes(details.name),
+  checkland: (details) => LandCategories.CHECK.includes(details.name),
+  dual: (details) => LandCategories.DUAL.includes(details.name),
+  fastland: (details) => LandCategories.FAST.includes(details.name),
+  filterland: (details) => LandCategories.FILTER.includes(details.name),
+  gainland: (details) => LandCategories.GAIN.includes(details.name),
+  painland: (details) => LandCategories.PAIN.includes(details.name),
+  scryland: (details) => LandCategories.SCRY.includes(details.name),
+  shadowland: (details) => LandCategories.SHADOW.includes(details.name),
+  shockland: (details) => LandCategories.SHOCK.includes(details.name),
+  storageland: (details) => LandCategories.STORAGE.includes(details.name),
+  triland: (details) => LandCategories.TRI.includes(details.name),
+  tangoland: (details) => LandCategories.TANGO.includes(details.name),
+  battleland: (details) => LandCategories.TANGO.includes(details.name),
+
+  // Others from Scryfall:
+  //   reserved, reprint, new, old, hires, foil,
+  //   spotlight, unique, masterpiece,
+  //   funny,
+  //   booster, datestamped, prerelease, planeswalker_deck,
+  //   league, buyabox, giftbox, intro_pack, gameday, release,
+  //   foil, nonfoil, full,
 };
+
+export const CARD_CATEGORIES = Object.keys(CARD_CATEGORY_DETECTORS);
 
 export const makeSubtitle = (cards) => {
   const numCards = cards.length;
