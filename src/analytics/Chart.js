@@ -5,11 +5,11 @@ import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } fr
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import useQueryParam from 'hooks/useQueryParam';
-import { sortIntoGroups, getSorts, getLabels, cardIsLabel } from 'utils/Sort';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import { sortIntoGroups, SORTS, getLabels, cardIsLabel } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
-  const sorts = getSorts();
-
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setcharacteristic] = useQueryParam('field', 'CMC');
 
@@ -87,7 +87,7 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
               <InputGroupText>Group by: </InputGroupText>
             </InputGroupAddon>
             <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
-              {sorts.map((item) => (
+              {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
@@ -118,18 +118,9 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
   );
 };
 Chart.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
+  cube: CubePropType.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
 };

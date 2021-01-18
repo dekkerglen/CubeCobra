@@ -1,84 +1,94 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Table } from 'reactstrap';
 
-import { Tooltip } from 'reactstrap';
+import HeaderCell from 'components/HeaderCell';
+import useSortableData from 'hooks/UseSortableData';
 
-import PagedTable from './PagedTable';
-
-const Header = ({ header, headerProps, active, sorts, setSort }) => {
-  const [tooltipOpen, setTooltipOpen] = useState(false);
-
-  const toggleTooltip = () => setTooltipOpen((open) => !open);
-
-  const { tooltip, ...rest } = headerProps;
-  const sortable = !!sorts[header];
-  const tooltipElement = tooltip && (
-    <Tooltip
-      placement="top"
-      boundariesElement="window"
-      trigger="hover"
-      target={header.replace(' ', '')}
-      isOpen={tooltipOpen}
-      toggle={toggleTooltip}
-    >
-      {tooltip}
-    </Tooltip>
-  );
-  if (sortable) {
-    return (
-      <th onClick={() => setSort(header)} scope="col" {...rest} style={{ cursor: 'pointer', ...rest.style }}>
-        <span id={header.replace(' ', '')}>
-          {header}
-          {active ? ' ▼' : ''}
-        </span>
-        {tooltipElement}
-      </th>
-    );
-  } else {
-    return (
-      <th scope="col" {...rest}>
-        <span id={header.replace(' ', '')}>{header}</span>
-        {tooltipElement}
-      </th>
-    );
+export const valueRenderer = (value) => {
+  if (!Number.isFinite(value) || Number.isInteger(value)) {
+    return value;
   }
+  return value.toFixed(2);
 };
 
-const SortableTable = ({ sorts, defaultSort, headers, data, rowF, ...props }) => {
-  const [sort, setSort] = useState(defaultSort);
-  const sortKeyF = sorts[sort];
-  let sortedData;
-  if (Array.isArray(data)) {
-    sortedData = data;
-    if (sortKeyF) {
-      sortedData = useMemo(() => {
-        const result = [...data];
-        result.sort((x, y) => sortKeyF(x) - sortKeyF(y));
-        return result;
-      }, [data, sortKeyF]);
-    }
-  } else {
-    sortedData = data[sort];
-  }
+export const compareStrings = (a, b) => a?.toString?.()?.localeCompare?.(b?.toString?.());
 
-  const rows = sortedData.map(rowF);
+export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, totalRow, totalCol, ...props }) => {
+  const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
+
   return (
-    <PagedTable rows={rows} {...props}>
+    <Table bordered responsive className="mt-lg-3" {...props}>
       <thead>
         <tr>
-          {[...Object.entries(headers)].map(([header, props]) => (
-            <Header
-              key={header}
-              header={header}
-              headerProps={props}
-              active={sort === header}
-              sorts={sorts}
-              setSort={setSort}
-            />
-          ))}
+          {columnProps.map(({ title, key, sortable, heading, tooltip }) => {
+            if (sortable) {
+              return (
+                <HeaderCell
+                  key={key}
+                  fieldName={key}
+                  label={title}
+                  sortConfig={sortConfig}
+                  requestSort={requestSort}
+                  tooltip={tooltip}
+                />
+              );
+            }
+            if (heading) {
+              return (
+                <th key={key} scope="col">
+                  {title}
+                </th>
+              );
+            }
+            return <td key={key}>{title}</td>;
+          })}
         </tr>
       </thead>
-    </PagedTable>
+      <tbody className="breakdown">
+        {items.map((row, idx) => (
+          <tr key={`row-${idx}` /* eslint-disable-line react/no-array-index-key */}>
+            {columnProps.map(({ key, heading, renderFn }) =>
+              heading ? (
+                <th scope="col" key={key}>
+                  {(renderFn ?? valueRenderer)(row[key])}
+                </th>
+              ) : (
+                <td key={key}>{(renderFn ?? valueRenderer)(row[key])}</td>
+              ),
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </Table>
   );
+};
+
+SortableTable.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.shape({}).isRequired).isRequired,
+  defaultSortConfig: PropTypes.shape({
+    key: PropTypes.string.isRequired,
+    direction: PropTypes.oneOf(['ascending', 'descending']).isRequired,
+  }),
+  sortFns: PropTypes.shape({}),
+  columnProps: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string.isRequired,
+      key: PropTypes.string.isRequired,
+      sortable: PropTypes.bool,
+      heading: PropTypes.bool,
+      tooltip: PropTypes.string,
+      renderFunc: PropTypes.func,
+    }).isRequired,
+  ).isRequired,
+  totalRow: PropTypes.bool,
+  totalCol: PropTypes.bool,
+};
+SortableTable.defaultProps = {
+  defaultSortConfig: null,
+  sortFns: {},
+  totalRow: false,
+  totalCol: false,
 };
 
 export default SortableTable;

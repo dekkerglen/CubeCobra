@@ -74,7 +74,6 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
       submitDeckForm.current.submit();
     }
   }, [draft, loading]);
-  console.log('seatIndex', seatIndex);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>

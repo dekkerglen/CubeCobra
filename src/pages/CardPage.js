@@ -238,30 +238,22 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
               </AddModal>
               {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
-                  <Tooltip id="CardPagePriceTooltipId" text="TCGPlayer Market Price">
-                    ${cardPrice({ details: card }).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
                 <TextBadge name="Foil" className="mt-1" fill>
-                  <Tooltip id="CardPageFoilTooltipId" text="TCGPlayer Market Price">
-                    ${cardFoilPrice({ details: card }).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
                 <TextBadge name="EUR" className="mt-1" fill>
-                  <Tooltip id="CardPageEurTooltipId" text="Cardmarket Price">
-                    €{cardPriceEur({ details: card }).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="Cardmarket Price">€{cardPriceEur({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardTix({ details: card })) && (
                 <TextBadge name="TIX" className="mt-1" fill>
-                  <Tooltip id="CardPageTixTooltipId" text="MTGO TIX">
-                    {cardTix({ details: card }).toFixed(2)}
-                  </Tooltip>
+                  <Tooltip text="MTGO TIX">{cardTix({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {Number.isFinite(cardElo({ details: card })) && (

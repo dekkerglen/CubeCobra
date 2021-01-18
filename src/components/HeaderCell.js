@@ -1,32 +1,36 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { NavLink } from 'reactstrap';
 import Tooltip from 'components/Tooltip';
 
 const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
-  let icon = '/content/nosort.png';
+  const active = sortConfig && sortConfig.key === fieldName;
+  const direction = active ? sortConfig.direction : 'nosort';
+  const icon = `/content/${direction}.png`;
 
-  if (sortConfig && sortConfig.key === fieldName) {
-    if (sortConfig.direction === 'ascending') {
-      icon = '/content/ascending.png';
-    } else {
-      icon = '/content/descending.png';
-    }
-  }
+  const Wrapper = useCallback(
+    ({ children }) =>
+      tooltip ? (
+        <Tooltip text={tooltip}>
+          <div style={{ width: 'min-content' }}>{children}</div>
+        </Tooltip>
+      ) : (
+        <div style={{ width: 'min-content' }}>{children}</div>
+      ),
+    [tooltip],
+  );
 
   return (
-    <th scope="col">
-      <NavLink href="#" onClick={() => requestSort(fieldName)}>
-        {tooltip ? (
-          <Tooltip id={`HeaderCellTooltipId-${fieldName.replace(' ', '_')}`} text={tooltip}>
-            {label} <img src={icon} className="sortIcon" alt="" />
-          </Tooltip>
-        ) : (
-          <>
-            {label} <img src={icon} className="sortIcon" alt="" />
-          </>
-        )}
+    <th scope="col" className="align-middle">
+      <NavLink
+        className="p-0 d-flex align-items-center justify-content-start"
+        href="#"
+        onClick={() => requestSort(fieldName)}
+        active
+      >
+        <Wrapper>{label}</Wrapper>
+        <img src={icon} className="sortIcon mr-auto" alt="Toggle sort direction" />
       </NavLink>
     </th>
   );
@@ -38,13 +42,14 @@ HeaderCell.propTypes = {
   sortConfig: PropTypes.shape({
     key: PropTypes.string.isRequired,
     direction: PropTypes.string.isRequired,
-  }).isRequired,
+  }),
   requestSort: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
 };
 
 HeaderCell.defaultProps = {
   tooltip: null,
+  sortConfig: null,
 };
 
 export default HeaderCell;

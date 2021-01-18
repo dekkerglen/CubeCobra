@@ -8,12 +8,16 @@
             "routes/*": ["./routes/*"],
             "analytics/*": ["./src/analytics/*"],
             "components/*": ["./src/components/*"],
+            "contexts/*": ["./src/contexts/*"],
+            "filtering/*": ["./src/filtering/*"],
+            "generated/*": ["./src/generated/*"],
             "hooks/*": ["./src/hooks/*"],
             "layouts/*": ["./src/layouts/*"],
-            "pages/*": ["./src/pages/*"],
-            "utils/*": ["./src/utils/*"],
             "markdown/*": ["./src/markdown/*"],
-            "contexts/*": ["./src/contexts/*"]
+            "pages/*": ["./src/pages/*"],
+            "proptypes/*": ["./src/proptypes/*"],
+            "res/*": ["./src/res/*"],
+            "utils/*": ["./src/utils/*"]
         }
     },
     "include": ["src/**/*", "app.js", "serverjs/*", "routes/*"]
