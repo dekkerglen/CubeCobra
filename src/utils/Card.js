@@ -189,12 +189,8 @@ export const cardDevotion = (card, color) => {
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
-export const cardIsSpecialZoneType = (card) => {
-  return (
-    /(plane|phenomenon|vanguard|scheme|conspiracy|contraption)/i.test(cardType(card)) &&
-    !/planeswalker/i.test(cardType(card))
-  );
-};
+export const cardIsSpecialZoneType = (card) =>
+  /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(cardType(card));
 
 const isCreatureLand = (details) =>
   details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
