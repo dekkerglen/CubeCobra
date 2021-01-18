@@ -10,7 +10,7 @@ import useQueryParam from 'hooks/useQueryParam';
 import CardPropType from 'proptypes/CardPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { encodeName } from 'utils/Card';
-import { evaluateCardOrPool } from 'utils/draftbots';
+import { evaluateCardOrPool, ORACLES_BY_NAME } from 'utils/draftbots';
 import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -97,9 +97,7 @@ const TRAITS = Object.freeze([
   },
 ]);
 
-const renderWithTooltip = (title) => (
-  <Tooltip text={TRAITS.filter((trait) => trait.title === title)[0]?.tooltip}>{title}</Tooltip>
-);
+const renderWithTooltip = (title) => <Tooltip text={ORACLES_BY_NAME[title].tooltip}>{title}</Tooltip>;
 
 const WEIGHT_COLUMNS = Object.freeze([
   { title: 'Oracle', sortable: true, key: 'title', heading: true, renderFn: renderWithTooltip },
