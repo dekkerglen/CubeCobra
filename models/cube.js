@@ -130,10 +130,22 @@ const cubeSchema = mongoose.Schema({
         markdown: String,
         packs: [
           {
-            filters: [String],
-            trash: { type: Number, min: 0 },
-            sealed: Boolean,
-            picksPerPass: { type: Number, min: 1 },
+            slots: [String],
+            steps: {
+              type: [
+                {
+                  action: {
+                    type: String,
+                    enum: ['pass', 'pick', 'trash'],
+                  },
+                  amount: {
+                    type: Number,
+                    default: null,
+                  },
+                },
+              ],
+              default: null,
+            },
           },
         ],
       },

@@ -129,8 +129,10 @@ function initializeCardDb(dataRoot, skipWatchers) {
 function unloadCardDb() {
   for (const [filename, attribute] of Object.entries(fileToAttribute)) {
     delete data[attribute];
-    if (skipWatchers !== true) {
+    try {
       fs.unwatchFile(filename);
+    } catch (e) {
+      // This is likely just because we didn't register them.
     }
   }
 }

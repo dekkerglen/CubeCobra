@@ -180,27 +180,18 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
 
-    const { id, title, multiples, markdown, format } = req.body;
+    const { id, serializedFormat } = req.body;
+    const format = JSON.parse(serializedFormat);
 
     let message;
     if (id === '-1') {
       if (!cube.draft_formats) {
         cube.draft_formats = [];
       }
-      cube.draft_formats.push({
-        title,
-        multiples: multiples === 'true',
-        markdown: markdown.substring(0, 5000),
-        packs: JSON.parse(format),
-      });
+      cube.draft_formats.push(format);
       message = 'Custom format successfully added.';
     } else {
-      cube.draft_formats[id] = {
-        title,
-        multiples: multiples === 'true',
-        markdown: markdown.substring(0, 5000),
-        packs: JSON.parse(format),
-      };
+      cube.draft_formats[id] = format;
       message = 'Custom format successfully edited.';
     }
 
