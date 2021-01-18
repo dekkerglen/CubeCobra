@@ -1,5 +1,5 @@
 import { arraysEqual, fromEntries, arrayIsSubset } from 'utils/Util';
-import LandCategories from 'utils/LandCategories';
+import LandCategories from 'res/LandCategories.json';
 
 export const COLOR_COMBINATIONS = [
   [],
