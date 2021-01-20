@@ -182,7 +182,6 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     const { id, serializedFormat } = req.body;
     const format = JSON.parse(serializedFormat);
-
     let message;
     if (id === '-1') {
       if (!cube.draft_formats) {
@@ -1678,126 +1677,118 @@ router.post(
   },
 );
 
-router.post(
-  '/startsealed/:id',
-  body('packs').toInt({
-    min: 1,
-    max: 16,
-  }),
-  body('cards').toInt(),
-  async (req, res) => {
-    try {
-      const user = await User.findById(req.user);
+router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').toInt({ min: 1 }), async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
 
-      if (!user) {
-        req.flash('danger', 'Please Login to build a sealed deck.');
-        return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
-      }
-
-      const packs = parseInt(req.body.packs, 10);
-      const cards = parseInt(req.body.cards, 10);
-
-      const numCards = packs * cards;
-
-      const cube = await Cube.findOne(
-        buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards owner numDecks disableNotifications',
-      );
-
-      if (!cube) {
-        req.flash('danger', 'Cube not found');
-        return res.redirect('/404');
-      }
-
-      if (cube.cards.length < numCards) {
-        req.flash('danger', `Not enough cards, need ${numCards} cards for sealed with ${packs} packs of ${cards}.`);
-        return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
-      }
-
-      const source = shuffle(cube.cards).slice(0, numCards);
-      const pool = [];
-      for (let i = 0; i < 16; i += 1) {
-        pool.push([]);
-      }
-      const cardsArray = [];
-      for (const card of source) {
-        let index = 0;
-
-        // sort by color
-        const details = carddb.cardFromId(card.cardID);
-        const type = card.type_line || details.type;
-        const colors = card.colors || details.colors;
-
-        if (type.toLowerCase().includes('land')) {
-          index = 7;
-        } else if (colors.length === 1) {
-          index = ['W', 'U', 'B', 'R', 'G'].indexOf(colors[0].toUpperCase());
-        } else if (colors.length === 0) {
-          index = 6;
-        } else {
-          index = 5;
-        }
-
-        if (!type.toLowerCase().includes('creature')) {
-          index += 8;
-        }
-
-        if (pool[index]) {
-          pool[index].push(card);
-        } else {
-          pool[0].push(card);
-        }
-        cardsArray.push(card);
-      }
-
-      const deck = new Deck();
-      deck.cube = cube._id;
-      deck.cubeOwner = cube.owner;
-      deck.date = Date.now();
-      deck.cubename = cube.name;
-      deck.seats = [];
-      deck.owner = user._id;
-      deck.cards = pool;
-      addBasicsToDeck(deck, cardsArray, carddb);
-
-      deck.seats.push({
-        userid: user._id,
-        username: user.username,
-        pickorder: [],
-        name: `Sealed from ${cube.name}`,
-        description: '',
-        cols: 16,
-        deck: pool,
-        sideboard: [],
-      });
-      deck.draft = await createDraftForSingleDeck(deck);
-
-      await deck.save();
-
-      if (!cube.numDecks) {
-        cube.numDecks = 0;
-      }
-      cube.numDecks += 1;
-
-      await cube.save();
-
-      const cubeOwner = await User.findById(cube.owner);
-
-      if (!cube.disableNotifications) {
-        await util.addNotification(
-          cubeOwner,
-          user,
-          `/cube/deck/${deck._id}`,
-          `${user.username} built a sealed deck from your cube: ${cube.name}`,
-        );
-      }
-
-      return res.redirect(`/cube/deckbuilder/${deck._id}`);
-    } catch (err) {
-      return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    if (!user) {
+      req.flash('danger', 'Please Login to build a sealed deck.');
+      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
-  },
-);
+
+    const packs = parseInt(req.body.packs, 10);
+    const cards = parseInt(req.body.cards, 10);
+
+    const numCards = packs * cards;
+
+    const cube = await Cube.findOne(
+      buildIdQuery(req.params.id),
+      '_id name draft_formats card_count type cards owner numDecks disableNotifications',
+    );
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/404');
+    }
+
+    if (cube.cards.length < numCards) {
+      req.flash('danger', `Not enough cards, need ${numCards} cards for sealed with ${packs} packs of ${cards}.`);
+      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    }
+
+    const source = shuffle(cube.cards).slice(0, numCards);
+    const pool = [];
+    for (let i = 0; i < 16; i += 1) {
+      pool.push([]);
+    }
+    const cardsArray = [];
+    for (const card of source) {
+      let index = 0;
+
+      // sort by color
+      const details = carddb.cardFromId(card.cardID);
+      const type = card.type_line || details.type;
+      const colors = card.colors || details.colors;
+
+      if (type.toLowerCase().includes('land')) {
+        index = 7;
+      } else if (colors.length === 1) {
+        index = ['W', 'U', 'B', 'R', 'G'].indexOf(colors[0].toUpperCase());
+      } else if (colors.length === 0) {
+        index = 6;
+      } else {
+        index = 5;
+      }
+
+      if (!type.toLowerCase().includes('creature')) {
+        index += 8;
+      }
+
+      if (pool[index]) {
+        pool[index].push(card);
+      } else {
+        pool[0].push(card);
+      }
+      cardsArray.push(card);
+    }
+
+    const deck = new Deck();
+    deck.cube = cube._id;
+    deck.cubeOwner = cube.owner;
+    deck.date = Date.now();
+    deck.cubename = cube.name;
+    deck.seats = [];
+    deck.owner = user._id;
+    deck.cards = pool;
+    addBasicsToDeck(deck, cardsArray, carddb);
+
+    deck.seats.push({
+      userid: user._id,
+      username: user.username,
+      pickorder: [],
+      name: `Sealed from ${cube.name}`,
+      description: '',
+      cols: 16,
+      deck: pool,
+      sideboard: [],
+    });
+    deck.draft = await createDraftForSingleDeck(deck);
+
+    await deck.save();
+
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
+    cube.numDecks += 1;
+
+    await cube.save();
+
+    const cubeOwner = await User.findById(cube.owner);
+
+    if (!cube.disableNotifications) {
+      await util.addNotification(
+        cubeOwner,
+        user,
+        `/cube/deck/${deck._id}`,
+        `${user.username} built a sealed deck from your cube: ${cube.name}`,
+      );
+    }
+
+    return res.redirect(`/cube/deckbuilder/${deck._id}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+  }
+});
 
 router.get('/deck/download/xmage/:id/:seat', async (req, res) => {
   try {
@@ -2064,18 +2055,9 @@ router.post(
   '/startdraft/:id',
   body('id').toInt(),
   body('botsOnly').toBoolean(),
-  body('seats').toInt({
-    min: 2,
-    max: 16,
-  }),
-  body('packs').toInt({
-    min: 1,
-    max: 36,
-  }),
-  body('cards').toInt({
-    min: 1,
-    max: 90,
-  }),
+  body('seats').toInt({ min: 2 }),
+  body('packs').toInt({ min: 1 }),
+  body('cards').toInt({ min: 1 }),
   async (req, res) => {
     try {
       const cube = await Cube.findOne(
@@ -2100,13 +2082,8 @@ router.post(
       for (const card of cube.cards) {
         card.details = carddb.cardFromId(card.cardID);
       }
-      const elo = await getElo(cube.cards.map((card) => card.details.name));
-      for (const card of cube.cards) {
-        card.rating = elo[card.details.name];
-      }
 
       // setup draft
-      const bots = draftutil.getDraftBots(params);
       const format = draftutil.getDraftFormat(params, cube);
 
       let draft = new Draft();
@@ -2115,7 +2092,6 @@ router.post(
         populated = draftutil.createDraft(
           format,
           cube.cards,
-          bots,
           params.seats,
           req.user
             ? req.user
@@ -2240,8 +2216,8 @@ router.get('/draft/:id', async (req, res) => {
       card.details = carddb.cardFromId(card.cardID);
     }
     if (draft.basics) {
-      for (const key of Object.keys(draft.basics)) {
-        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+      for (const card of Object.values(draft.basics)) {
+        card.details = carddb.cardFromId(card.cardID);
       }
     }
 

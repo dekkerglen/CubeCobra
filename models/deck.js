@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./cardSchema');
+const cardSchema = require('./shared/cardSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
@@ -15,8 +15,8 @@ const SeatDeck = {
     default: 'No description available.',
   },
   cols: Number,
-  deck: [[Number]],
-  sideboard: [[Number]],
+  deck: [[[Number]]],
+  sideboard: [[[Number]]],
 };
 
 // Deck schema

@@ -26,14 +26,26 @@ const DEFAULT_STEP = Object.freeze([
   { action: 'pass', amount: null },
 ]);
 
-const ACTION_LABELS = Object.freeze({ pick: 'Pick', pass: 'Pass', trash: 'Trash' });
+const ACTION_LABELS = Object.freeze({
+  pick: 'Pick',
+  pass: 'Pass',
+  trash: 'Trash',
+  pickrandom: 'Randomly Pick',
+  trashrandom: 'Randomly Trash',
+});
 
 const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
-  const steps = useMemo(() => pack.steps ?? new Array(pack.slots.length).fill(DEFAULT_STEP).flat(), [pack]);
-  console.log('pack', pack);
-  console.log('steps', steps);
+  const steps = useMemo(
+    () =>
+      pack.steps ??
+      new Array(pack.slots.length)
+        .fill(DEFAULT_STEP)
+        .flat()
+        .slice(0, pack.slots.length * 2 - 1),
+    [pack],
+  );
   return (
     <Card key={packIndex} className="mb-3">
       <CardHeader>
@@ -62,7 +74,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
                     data-pack-index={packIndex}
                     data-slot-index={slotIndex}
                   />
-                  {pack.slots.length > 0 && (
+                  {pack.slots.length > 1 && (
                     <InputGroupAddon addonType="append">
                       <Button
                         color="secondary"
@@ -93,7 +105,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
             <CardBody>
               {steps.map((step, stepIndex) => (
                 // eslint-disable-next-line react/no-array-index-key
-                <InputGroup>
+                <InputGroup key={stepIndex}>
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>{stepIndex + 1}</InputGroupText>
                   </InputGroupAddon>
@@ -116,7 +128,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
                   {step.action !== 'pass' && (
                     <>
                       <Input
-                        sm
                         type="number"
                         value={step.amount ?? ''}
                         onChange={mutations.changeStepAmount}

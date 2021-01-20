@@ -1,12 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
-
-import Location from 'utils/DraftLocation';
 
 import CardStack from 'components/CardStack';
 import DraggableCard from 'components/DraggableCard';
+import CardPropType from 'proptypes/CardPropType';
+import Location from 'utils/DraftLocation';
 
 const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
   <>
@@ -44,7 +43,8 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
 );
 
 DeckStacks.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(CardPropType.isRequired).isRequired).isRequired)
+    .isRequired,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.node,
   locationType: PropTypes.string.isRequired,

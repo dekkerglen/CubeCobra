@@ -249,8 +249,8 @@ async function build({ lands, colors, probabilities }, picked, cards, basics) {
   const landCards = picked.filter((card) => cardType(cards[card]).toLowerCase().includes('land'));
   const specialZoneCards = picked.filter((card) => cardIsSpecialZoneType(cards[card]));
   const sortFn = getSortFn(cards);
-  const inColor = nonlands.filter((item) => getProbability(item, cards, probabilities) >= PROB_TO_INCLUDE);
-  const outOfColor = nonlands.filter((item) => getProbability(item, cards, probabilities) < PROB_TO_INCLUDE);
+  const inColor = nonlands.filter((item) => probabilities[item] >= PROB_TO_INCLUDE);
+  const outOfColor = nonlands.filter((item) => probabilities[item] < PROB_TO_INCLUDE);
   const playableLands = landCards.filter((land) => isPlayableLand(colors, cards[land]));
   const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, cards[land]));
 

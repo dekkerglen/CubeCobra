@@ -264,12 +264,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         <CardBody>
           <LabelRow htmlFor="packs" label="Number of Packs">
             <Input type="select" name="packs" id="packs" defaultValue="3">
-              {rangeOptions(1, 11)}
+              {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="cards" label="Cards per Pack">
             <Input type="select" name="cards" id="cards" defaultValue="15">
-              {rangeOptions(1, 21)}
+              {rangeOptions(1, 25)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="seats" label="Total Seats">
@@ -318,12 +318,12 @@ const SealedCard = () => {
         <CardBody>
           <LabelRow htmlFor="packs-sealed" label="Number of Packs">
             <Input type="select" name="packs" id="packs-sealed" defaultValue="6">
-              {rangeOptions(1, 11)}
+              {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="cards-sealed" label="Cards per Pack">
             <Input type="select" name="cards" id="cards-sealed" defaultValue="15">
-              {rangeOptions(5, 21)}
+              {rangeOptions(5, 25)}
             </Input>
           </LabelRow>
         </CardBody>

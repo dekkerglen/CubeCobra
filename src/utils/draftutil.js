@@ -41,13 +41,14 @@ function compileFilter(filterText) {
 */
 export function parseDraftFormat(format, splitter = ',') {
   for (let j = 0; j < format.length; j++) {
-    for (let k = 0; k < format[j].filters.length; k++) {
-      format[j].filters[k] = format[j].filters[k].split(splitter);
-      for (let m = 0; m < format[j].filters[k].length; m++) {
-        format[j].filters[k][m] = compileFilter(format[j].filters[k][m].trim());
+    for (let k = 0; k < format[j].slots.length; k++) {
+      format[j].slots[k] = format[j].slots[k].split(splitter);
+      for (let m = 0; m < format[j].slots[k].length; m++) {
+        format[j].slots[k][m] = compileFilter(format[j].slots[k][m].trim());
       }
     }
   }
+  console.log(format[0]);
   return format;
 }
 
@@ -171,26 +172,6 @@ function customDraftAsfan(cards, duplicates = false) {
   };
 }
 
-export function getDraftBots(params) {
-  const botcolors = Math.ceil(((params.seats - 1) * 2) / 5);
-  const draftbots = [];
-  let colors = [];
-  for (let i = 0; i < botcolors; i++) {
-    colors.push('W');
-    colors.push('U');
-    colors.push('B');
-    colors.push('R');
-    colors.push('G');
-  }
-  colors = Util.arrayShuffle(colors);
-  for (let i = 0; i < params.seats - 1; i++) {
-    const colorcombo = [colors.pop(), colors.pop()];
-    draftbots.push(colorcombo);
-  }
-  // TODO: order the bots to avoid same colors next to each other
-  return draftbots;
-}
-
 export function getDraftFormat(params, cube) {
   let format;
   if (params.id >= 0) {
@@ -203,9 +184,9 @@ export function getDraftFormat(params, cube) {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = { sealed: false, trash: 0, filters: [], picksPerPass: 1 };
+      format[pack] = { steps: null };
       for (let card = 0; card < params.cards; card++) {
-        format[pack].filters.push('*'); // any card
+        format[pack].slots.push('*'); // any card
       }
     }
   }
@@ -216,15 +197,14 @@ function createPacks(draft, format, seats, nextCardFn) {
   let ok = true;
   let messages = [];
   draft.initial_state = [];
-
+  console.log(format);
   for (let seat = 0; seat < seats; seat++) {
     draft.initial_state.push([]);
-
     for (let packNum = 0; packNum < format.length; packNum++) {
       draft.initial_state[seat].push([]);
       const pack = [];
-      for (let cardNum = 0; cardNum < format[packNum].filters.length; cardNum++) {
-        const result = nextCardFn(format[packNum].filters[cardNum]);
+      for (let cardNum = 0; cardNum < format[packNum].slots.length; cardNum++) {
+        const result = nextCardFn(format[packNum].slots[cardNum]);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
@@ -234,17 +214,17 @@ function createPacks(draft, format, seats, nextCardFn) {
           ok = false;
         }
       }
-      draft.initial_state[seat][packNum].trash = format[packNum].trash;
-      draft.initial_state[seat][packNum].picksPerPass = format[packNum].picksPerPass;
-      draft.initial_state[seat][packNum].sealed = format[packNum].sealed;
-      draft.initial_state[seat][packNum].cards = pack;
+      draft.initial_state[seat][packNum] = {
+        steps: format[packNum].steps,
+        cards: pack,
+      };
     }
   }
   return { ok, messages };
 }
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function createDraft(format, cards, bots, seats, user, seed = false) {
+export function createDraft(format, cards, seats, user, seed = false) {
   if (!seed) {
     seed = Date.now().toString();
   }
@@ -252,7 +232,6 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
   const draft = {};
 
   let nextCardFn = null;
-
   if (cards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
@@ -299,11 +278,13 @@ export function createDraft(format, cards, bots, seats, user, seed = false) {
 
   for (let i = 0; i < draft.initial_state.length; i += 1) {
     const seat = {
-      bot: i === 0 ? null : bots[i - 1],
-      name: i === 0 ? user.username : `Bot ${i}: ${bots[i - 1][0]}, ${bots[i - 1][1]}`,
+      bot: i !== 0,
+      name: i === 0 ? user.username : `Bot ${i}`,
       userid: i === 0 ? user._id : null,
-      drafted: [], // organized draft picks
+      drafted: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
+      sideboard: [new Array(8).fill([]), new Array(8).fill([])],
       pickorder: [],
+      trashorder: [],
       packbacklog: [],
     };
 

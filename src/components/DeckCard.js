@@ -51,8 +51,8 @@ DeckStacksStatic.propTypes = {
 };
 
 const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
-  const stackedDeck = [seat.deck.slice(0, 8), seat.deck.slice(8, 16)];
-  const stackedSideboard = [seat.sideboard.slice(0, 16)];
+  const stackedDeck = seat.deck.slice();
+  const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
   for (const col of stackedSideboard[0]) {
     sbCount += col.length;

@@ -1,10 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
-
+import seedrandom from 'seedrandom';
 import {
-  Button,
   Card,
   CardBody,
   CardHeader,
@@ -19,39 +16,37 @@ import {
   Spinner,
 } from 'reactstrap';
 
-import Draft, { init, getPicked, getSeen } from 'utils/Draft';
-import Location from 'utils/DraftLocation';
-import { cmcColumn } from 'utils/Util';
-import { makeSubtitle } from 'utils/Card';
-
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
+import { DraftbotBreakdownTable } from 'components/DraftbotBreakdown';
 import DraggableCard from 'components/DraggableCard';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import CubeLayout from 'layouts/CubeLayout';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import useToggle from 'hooks/UseToggle';
-import { Internal } from 'components/DraftbotBreakdown';
+import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import CubePropType from 'proptypes/CubePropType';
+import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import UserPropType from 'proptypes/UserPropType';
+import { cardType, makeSubtitle } from 'utils/Card';
+import { evaluateCardOrPool, getDrafterState } from 'utils/draftbots';
+import Location from 'utils/DraftLocation';
 import RenderToRoot from 'utils/RenderToRoot';
+import { cmcColumn, fromEntries, toNullableInt } from 'utils/Util';
 
 const canDrop = (_, target) => {
   return target.type === Location.PICKS;
 };
 
-const showPack = (draft, packNum) => {
-  return packNum <= draft.initial_state[0].length;
-};
-
-const Pack = ({ pack, packNumber, pickNumber, picking, onMoveCard, onClickCard }) => (
+const Pack = ({ pack, packNumber, pickNumber, instructions, picking, onMoveCard, onClickCard }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
-        <h4 className="mb-0">
-          Pack {packNumber}, Pick {pickNumber}
+        <h4 className="mb-1">
+  Pack {packNumber}, Pick {pickNumber}{instructions ? `: ${instructions}` : ''}
         </h4>
       </CardTitle>
     </CardHeader>
@@ -84,6 +79,7 @@ Pack.propTypes = {
   pack: PropTypes.arrayOf(PropTypes.object).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
+  instructions: PropTypes.string,
   picking: PropTypes.number,
   onMoveCard: PropTypes.func.isRequired,
   onClickCard: PropTypes.func.isRequired,
@@ -91,195 +87,257 @@ Pack.propTypes = {
 
 Pack.defaultProps = {
   picking: null,
+  instructions: null,
 };
 
-const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
-  useMemo(() => init(initialDraft), [initialDraft]);
+const getDefaultPosition = (card, picks) => {
+  const row = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
+  const col = cmcColumn(card);
+  const colIndex = picks[row][col].length;
+  return [row, col, colIndex];
+};
 
-  const [pack, setPack] = useState([...Draft.pack()]);
-  const [initialPackNumber, initialPickNumber] = Draft.packPickNumber();
-  const [packNumber, setPackNumber] = useState(initialPackNumber);
-  const [pickNumber, setPickNumber] = useState(initialPickNumber);
+const MUTATIONS = Object.freeze({
+  pickCards: ({ newDraft, cardIndices, seatIndex: seatNum, target, cards }) => {
+    for (let seatIndex = 0; seatIndex < newDraft.initial_state.length; seatIndex++) {
+      const cardIndex = cardIndices[seatIndex];
+      newDraft.seats[seatIndex].pickorder = [...newDraft.seats[seatIndex].pickorder, cardIndex];
+      const pos = (target && seatIndex === seatIndex) ? target : getDefaultPosition(cards[cardIndex], newDraft.seats[seatIndex].drafted);
+      newDraft.seats[seatIndex].drafted = DeckStacks.moveOrAddCard(newDraft.seats[seatIndex].drafted, pos, cardIndex);
+    }
+  },
+  trashCards: ({ newDraft, cardIndices }) => {
+    for (let seatIndex = 0; seatIndex < newDraft.initial_state.length; seatIndex++) {
+      newDraft.seats[seatIndex].trashorder = [...newDraft.seats[seatIndex].trashorder, cardIndices[seatIndex]];
+    }
+  },
+  moveCard: ({ newDraft, seatIndex, target, source }) => {
+    newDraft.seats[seatIndex].drafted = DeckStacks.moveOrAddCard(newDraft.seats[seatIndex].drafted, target, source);
+  },
+});
+
+const useDraftMutation = (mutation, setDraft, cards) =>
+  useCallback(
+    ({ cardIndices, seatIndex, source, target }) =>
+      setDraft((oldDraft) => {
+        const newDraft = { ...oldDraft };
+        if ((seatIndex || seatIndex === 0) && !cardIndices) {
+          newDraft.seats = [...newDraft.seats];
+          newDraft.seats[seatIndex] = { ...newDraft.seats[seatIndex] };
+        } else {
+          newDraft.seats = newDraft.seats.map((seat) => ({ ...seat }));
+        }
+        mutation({ newDraft, cardIndices, seatIndex, source, target, cards });
+        return newDraft;
+      }),
+    [mutation, setDraft, cards],
+  );
+
+const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
+  const { cards, cardsInPack, completedAmount, step: { action, amount: totalAmount }, packNum, pickNum, numPacks } = drafterState;
+  const remainingAmount = totalAmount - completedAmount;
+
   const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
-  const [sealed, setSealed] = useState(Draft.sealed());
-
-  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
-  const [picks, setPicks] = useState([new Array(8).fill([]), new Array(8).fill([])]);
-
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
-
-  const [finished, setFinished] = useState(false);
-
-  const submitDeckForm = useRef();
-
-  const update = useCallback(async (newPicks) => {
-    // This is very bad architecture. The React component should manage the state.
-    // TODO: Move state inside React.
-    const [currentPackNumber, currentPickNumber] = Draft.packPickNumber();
-    setPackNumber(currentPackNumber);
-    setPickNumber(currentPickNumber);
-    setPicks(newPicks);
-    Draft.arrangePicks([].concat(newPicks[0], newPicks[1]));
-
-    setSealed(Draft.sealed());
-    let newPack = Draft.pack();
-    if (!Array.isArray(newPack) || newPack.length === 0) {
-      // should only happen when draft is over.
-      setFinished(true);
-      newPack = [];
+  const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
+  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
+  const picks = useMemo(() => seat.drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))), [
+    seat.drafted,
+    cards,
+  ]);
+  const instructions = useMemo(() => {
+    if (action === 'pick') {
+      return `Pick ${remainingAmount} More Card${remainingAmount > 1 ? 's' : ''}.`;
     }
-    setPack([...newPack]);
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      if (finished) {
-        await Draft.finish();
-        if (submitDeckForm.current) {
-          submitDeckForm.current.submit();
-        }
-      }
-    })();
-  }, [finished]);
-
+    if (action === 'trash') {
+      return `Trash ${remainingAmount} More Card${remainingAmount > 1 ? 's' : ''}.`;
+    }
+    return null;
+  }, [action, remainingAmount]);
+  
   const handleMoveCard = useCallback(
     async (source, target) => {
-      if (source.equals(target)) {
-        return;
-      }
+      if (source.equals(target)) return;
       if (source.type === Location.PACK) {
         if (target.type === Location.PICKS) {
-          await Draft.pick(source.data);
-          const newPicks = DeckStacks.moveOrAddCard(picks, target.data, pack[source.data]);
-          update(newPicks);
+          setPicking(source.data);
+          takeCard(cardsInPack[source.data], target.data);
+          setPicking(null);
         } else {
           console.error("Can't move cards inside pack.");
         }
       } else if (source.type === Location.PICKS) {
         if (target.type === Location.PICKS) {
-          const newPicks = DeckStacks.moveOrAddCard(picks, target.data, source.data);
-          update(newPicks);
+          moveCard({ target: target.data, source: source.data });
         } else {
           console.error("Can't move cards from picks back to pack.");
         }
       }
     },
-    [pack, picks, update],
+    [setPicking, takeCard, cardsInPack, moveCard],
   );
 
   const handleClickCard = useCallback(
     async (event) => {
       event.preventDefault();
       /* eslint-disable-line no-undef */ autocard_hide_card();
-      const target = event.currentTarget;
-      const cardIndex = parseInt(target.getAttribute('data-index'), 10);
-      const card = pack[cardIndex];
-      const typeLine = (card.type_line || card.details.type).toLowerCase();
-      const row = typeLine.includes('creature') ? 0 : 1;
-      const col = cmcColumn(card);
-      const colIndex = picks[row][col].length;
-      setPicking(cardIndex);
-      await Draft.pick(cardIndex);
+      const cardPackIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
+      const cardIndex = cardsInPack[cardPackIndex];
+      setPicking(cardPackIndex);
+      takeCard(cardIndex);
       setPicking(null);
-      const newPicks = DeckStacks.moveOrAddCard(picks, [row, col, colIndex], card);
-      update(newPicks);
     },
-    [pack, picks, update],
+    [cardsInPack,setPicking, takeCard],
   );
+  return (
+    <>
+      <Navbar expand="xs" light className="usercontrols">
+        <Collapse navbar>
+          <Nav navbar>
+            <CustomImageToggler />
+          </Nav>
+          <Nav>
+            <NavLink href="#" onClick={toggleShowBotBreakdown}>
+              Toggle Bot Breakdown
+            </NavLink>
+          </Nav>
+        </Collapse>
+      </Navbar>
+      <DynamicFlash />
+      <DndProvider>
+        {packNum < numPacks && (
+          <>
+            <ErrorBoundary>
+              <Pack
+                pack={pack}
+                packNumber={drafterState.packNum + 1}
+                pickNumber={drafterState.pickNum + 1}
+                instructions={instructions}
+                picking={picking}
+                onMoveCard={handleMoveCard}
+                onClickCard={handleClickCard}
+              />
+            </ErrorBoundary>
+            {showBotBreakdown && (
+              <ErrorBoundary>
+                <Card className="mt-3">
+                  <CardHeader className="mb-0">
+                    <h4 className="mb-0">Draftbot Breakdown</h4>
+                  </CardHeader>
+                  <CardBody>
+                    <DraftbotBreakdownTable drafterState={ourDrafterState} />
+                  </CardBody>
+                </Card>
+              </ErrorBoundary>
+            )}
+          </>
+        )}
+        <ErrorBoundary className="mt-3">
+          <Card className="my-3">
+            <DeckStacks
+              cards={picks}
+              title="Picks"
+              subtitle={makeSubtitle(picks.flat(3))}
+              locationType={Location.PICKS}
+              canDrop={canDrop}
+              onMoveCard={handleMoveCard}
+            />
+          </Card>
+        </ErrorBoundary>
+      </DndProvider>
+    </>
+  );
+};
 
-  const picked = getPicked(0).slice();
-  const seen = getSeen(0).slice();
-
-  const nextPack = useCallback(() => {
-    let newPicks = picks;
-    for (const card of pack) {
-      const typeLine = (card.type_line || card.details.type).toLowerCase();
-      const row = typeLine.includes('creature') ? 0 : 1;
-      const col = cmcColumn(card);
-      const colIndex = picks[row][col].length;
-      newPicks = DeckStacks.moveOrAddCard(newPicks, [row, col, colIndex], card);
+const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, seed, loginCallback }) => {
+  const { cards } = initialDraft;
+  const seatNum = toNullableInt(seatNumber) ?? 0;
+  const [draft, setDraft] = useState(initialDraft);
+  const ourSeat = draft.seats[seatNum];
+  const submitDeckForm = useRef();
+  const rng = useMemo(() => seedrandom(seed ?? Date.now.toString()), [seed]);
+  const drafterStates = useMemo(
+    () => draft.seats.map((_, seatIndex) => getDrafterState({ draft, seatNumber: seatIndex })),
+    [draft],
+  );
+  const { step: { action }, numPacks, packNum } = drafterStates[seatNum];
+  const doneDrafting = packNum >= numPacks;
+  const mutations = fromEntries(
+    // eslint-disable-next-line
+    Object.entries(MUTATIONS).map(([name, mutation]) => [name, useDraftMutation(mutation, setDraft, cards)]),
+  );
+  const makeBotPicks = useCallback(
+    (cardIndex) =>
+      drafterStates.map((state, seatIndex) =>
+        seatIndex === seatNum
+          ? cardIndex
+          : state.cardsInPack
+              .map((cardIndex) => [evaluateCardOrPool(cardIndex, state).score, cardIndex])
+              .sort(([a], [b]) => b - a)[0][1],
+      ),
+    [drafterStates, seatNum],
+  );
+  const makeBotTrashPicks = useCallback(
+    (cardIndex) =>
+      drafterStates.map((state, seatIndex) =>
+        seatIndex === seatNum
+          ? cardIndex
+          : state.cardsInPack
+              .map((cardIndex) => [evaluateCardOrPool(cardIndex, state).score, cardIndex])
+              .sort(([a], [b]) => a - b)[0][1],
+      ),
+    [drafterStates, seatNum],
+  );
+  
+  useEffect(() => {
+    (async () => {
+      const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
+      await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+        method: 'POST',
+        body: JSON.stringify(submitableDraft),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (doneDrafting) {
+        submitDeckForm.current?.submit?.();
+      }
+    })();
+  }, [doneDrafting, draft]);
+  useEffect(() => {
+    if (action.match(/random/)) {
+      const cardIndices = drafterStates.map((state) => state.cardsInPack[Math.floor(rng() * state.cardsInPack.length)]);
+      if (action.match(/pick/)) {
+        mutations.pickCards({ cardIndices });
+      } else if (action.match(/trash/)) {
+        mutations.trashCards({ cardIndices });
+      }
     }
-    Draft.nextPack();
-    update(newPicks);
-  }, [pack, picks, update]);
+  }, [action, drafterStates, mutations, rng]);
+  
+  const takeCard = useCallback((cardIndex, target) => {
+    if (action.match(/pick/)) {
+      const cardIndices = makeBotPicks(cardIndex);
+      mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });
+    } else {
+      const cardIndices = makeBotTrashPicks(cardIndex);
+      mutations.trashCards({ cardIndices });
+    }
+  }, [action, makeBotPicks, seatNum, makeBotTrashPicks, mutations]);
+
+  const moveCard = useCallback((args) => mutations.moveCard({ ...args, seatIndex: seatNum }), [mutations, seatNum]);
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
-          <Navbar expand="xs" light className="usercontrols">
-            <Collapse navbar>
-              <Nav navbar>
-                <CustomImageToggler />
-              </Nav>
-              <Nav>
-                <NavLink href="#" onClick={toggleShowBotBreakdown}>
-                  Toggle Bot Breakdown
-                </NavLink>
-              </Nav>
-            </Collapse>
-          </Navbar>
-          <DynamicFlash />
+          <CubeDraftPlayerUI drafterState={drafterStates[seatNum]} seat={draft.seats[seatNum]} takeCard={takeCard} moveCard={moveCard} />
           <CSRFForm
             className="d-none"
             innerRef={submitDeckForm}
             method="POST"
-            action={`/cube/submitdeck/${Draft.cube()}`}
+            action={`/cube/submitdeck/${initialDraft.cube}`}
           >
-            <Input type="hidden" name="body" value={Draft.id()} />
+            <Input type="hidden" name="body" value={initialDraft._id} />
           </CSRFForm>
-          <DndProvider>
-            {showPack(initialDraft, packNumber) && (
-              <>
-                <ErrorBoundary>
-                  <Pack
-                    pack={pack}
-                    packNumber={packNumber}
-                    pickNumber={pickNumber}
-                    picking={picking}
-                    onMoveCard={sealed ? () => {} : handleMoveCard}
-                    onClickCard={sealed ? () => {} : handleClickCard}
-                  />
-                </ErrorBoundary>
-                {sealed && (
-                  <Button color="primary" onClick={nextPack}>
-                    Next Pack
-                  </Button>
-                )}
-                {showBotBreakdown && (
-                  <ErrorBoundary>
-                    <Card className="mt-3">
-                      <CardHeader className="mb-0">
-                        <h4 className="mb-0">Draftbot Breakdown</h4>
-                      </CardHeader>
-                      <CardBody>
-                        <Internal
-                          cardsInPack={pack}
-                          pack={packNumber - 1}
-                          picks={pickNumber - 1}
-                          draft={initialDraft}
-                          seen={seen}
-                          picked={picked}
-                        />
-                      </CardBody>
-                    </Card>
-                  </ErrorBoundary>
-                )}
-              </>
-            )}
-            <ErrorBoundary className="mt-3">
-              <Card className="my-3">
-                <DeckStacks
-                  cards={picks}
-                  title="Picks"
-                  subtitle={makeSubtitle(picks.flat().flat())}
-                  locationType={Location.PICKS}
-                  canDrop={canDrop}
-                  onMoveCard={handleMoveCard}
-                />
-              </Card>
-            </ErrorBoundary>
-          </DndProvider>
         </DisplayContextProvider>
       </CubeLayout>
     </MainLayout>
@@ -288,17 +346,18 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 
 CubeDraftPage.propTypes = {
   cube: CubePropType.isRequired,
-  initialDraft: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-    _id: PropTypes.string,
-    bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
-    ratings: PropTypes.objectOf(PropTypes.number),
-  }).isRequired,
+  initialDraft: DraftPropType.isRequired,
+  seatNumber: PropTypes.number,
+  initialPickNumber: PropTypes.number,
+  seed: PropTypes.string,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeDraftPage.defaultProps = {
+  seatNumber: 0,
+  initialPickNumber: null,
+  seed: null,
   user: null,
   loginCallback: '/',
 };

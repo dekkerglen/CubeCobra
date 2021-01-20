@@ -32,6 +32,7 @@ const cloneSteps = ({ packIndex, newFormat }) => [
     new Array(newFormat.packs[packIndex].slots.length)
       .fill(DEFAULT_STEP)
       .flat()
+      .slice(0, newFormat.packs[packIndex].slots.length * 2 - 1)
       .map((action) => ({ ...action }))),
 ];
 const MUTATIONS = Object.freeze({
@@ -56,7 +57,9 @@ const MUTATIONS = Object.freeze({
   },
 
   removeSlot: ({ newFormat, packIndex, slotIndex }) => {
-    if (newFormat.packs[packIndex].length > 1) newFormat.packs[packIndex].slots.splice(slotIndex, 1);
+    if (newFormat.packs[packIndex].slots.length > 1) {
+      newFormat.packs[packIndex].slots.splice(slotIndex, 1);
+    }
   },
 
   addSlot: ({ newFormat, packIndex }) => newFormat.packs[packIndex].slots.push(''),
@@ -65,7 +68,7 @@ const MUTATIONS = Object.freeze({
     newFormat.packs.splice(packIndex, 0, newFormat.packs[packIndex]);
   },
 
-  addPack: ({ newFormat }) => newFormat.push({ ...DEFAULT_PACK }),
+  addPack: ({ newFormat }) => newFormat.packs.push({ ...DEFAULT_PACK }),
 
   addStep: ({ newFormat, packIndex }) => {
     newFormat.packs[packIndex].steps = cloneSteps({ newFormat, packIndex });
@@ -74,12 +77,12 @@ const MUTATIONS = Object.freeze({
 
   changeStepAction: ({ newFormat, packIndex, stepIndex, value }) => {
     newFormat.packs[packIndex].steps = cloneSteps({ newFormat, packIndex });
-    newFormat.packs[packIndex].steps[stepIndex].action = value;
+    newFormat.packs[packIndex].steps[stepIndex] = { ...newFormat.packs[packIndex].steps[stepIndex], action: value };
   },
 
   changeStepAmount: ({ newFormat, packIndex, stepIndex, value }) => {
     newFormat.packs[packIndex].steps = cloneSteps({ newFormat, packIndex });
-    newFormat.packs[packIndex].steps[stepIndex].amount = toNullableInt(value);
+    newFormat.packs[packIndex].steps[stepIndex] = { ...newFormat.packs[packIndex].steps[stepIndex], amount: toNullableInt(value) };
   },
 
   removeStep: ({ newFormat, packIndex, stepIndex }) => {
@@ -89,13 +92,11 @@ const MUTATIONS = Object.freeze({
   },
 });
 
-const normalizeFormat = (rawFormat) => {
+const serializeFormat = (rawFormat) => {
   const format = { ...rawFormat };
   format.title = format.title.trim();
-  format.packs = format.packs.map(({ ...pack }) => {
-    return pack;
-  });
-  return format;
+  console.log(format);
+  return JSON.stringify(format);
 };
 
 const getErrorsInFormat = (format) => {
@@ -107,7 +108,7 @@ const getErrorsInFormat = (format) => {
     const pack = format.packs[i];
     if (
       pack.steps &&
-      pack.slots.length !== pack.steps.reduce((acc, { action, amount }) => (acc + action !== 'pass' ? amount : 0), 0)
+      pack.slots.length !== pack.steps.reduce((acc, { action, amount }) => acc + (action !== 'pass' ? amount : 0), 0)
     ) {
       errors.push(
         `The number of cards picked and trashed in the steps of Pack ${
@@ -144,7 +145,6 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               };
             }
             mutation({ newFormat, value, packIndex, slotIndex, stepIndex });
-            console.log(newFormat);
             return newFormat;
           });
         }
@@ -157,7 +157,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const { cubeID } = useContext(CubeContext);
 
   const errorsInFormat = useMemo(() => getErrorsInFormat(format), [format]);
-  const packsJson = useMemo(() => !errorsInFormat && JSON.stringify(normalizeFormat(format)), [errorsInFormat, format]);
+  const packsJson = useMemo(() => !errorsInFormat && serializeFormat(format), [errorsInFormat, format]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="customDraftFormatTitle" size="lg">

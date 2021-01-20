@@ -1,26 +1,3 @@
-// Types
-// Color : 'W'|'U'|'B'|'R'|'G'
-// DrafterState : {
-//   cards : [Card],
-//   picked : [int],
-//   seen : [int],
-//   packNum : int,
-//   pickNum : int,
-//   numPacks : int,
-//   packSize : int
-// }
-// BotState : DrafterState && { cardIndex : int, probabilities : { [string]: number } }
-// Oracle : {
-//   title : string,
-//   tooltip : string,
-//   draftingOnly : bool,
-//   weights : [[number]],
-//   computeWeight : DrafterState -> number,
-//   computeValue: BotState -> number,
-// }
-// OracleResult : { title : str, tooltip : str, weight : number, value : number }
-// BotScore : { score : number, oracleResults : [OracleResult], totalProbability?: number }
-//
 // Exports
 // MAX_SCORE : number
 // FETCH_LANDS : { [str]: [Color] }
@@ -39,6 +16,7 @@
 //   probability : number,
 //   probabilities : { [str]: number },
 // }
+// getDrafterState : (Draft, int, int?) -> DrafterState
 import similarity from 'compute-cosine-similarity';
 
 import {
@@ -52,7 +30,7 @@ import {
   cardName,
   cardType,
 } from 'utils/Card';
-import { arraysAreEqualSets, fromEntries } from 'utils/Util';
+import { arraysAreEqualSets, fromEntries, toNullableInt } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -212,13 +190,11 @@ export const getCastingProbability = (card, lands) => {
   return prob * (probTable[cardCmc(card)]?.[totalDevotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0);
 };
 
-export const getProbability = (cardIndex, cards, probabilities) => probabilities[cardName(cards[cardIndex])] ?? 0;
-
 // What is the raw power level of this card? Used to choose a card within a combination.
 const getRating = ({ cardIndex, cards, probabilities }) =>
   Math.min(
     MAX_SCORE,
-    getProbability(cardIndex, cards, probabilities) * Math.sqrt(10 ** ((cardElo(cards[cardIndex]) ?? 1200) / 400 - 4)),
+    probabilities[cardIndex] * Math.sqrt(10 ** ((cardElo(cards[cardIndex]) ?? 1200) / 400 - 4)),
   );
 
 const sumRatings = (cardIdxArr, cards, probabilities) => {
@@ -257,9 +233,9 @@ export const ORACLES = Object.freeze(
       // Scale is roughly 0-10. Used to select a card within a combination.
       computeValue: ({ picked, cardIndex, cards, probabilities }) =>
         picked.length > 0
-          ? (getProbability(cardIndex, cards, probabilities) *
+          ? (probabilities[cardIndex] *
               picked.reduce(
-                (acc, index) => acc + getProbability(index, cards, probabilities) * getSynergy(index, cardIndex, cards),
+                (acc, index) => acc + probabilities[index] * getSynergy(index, cardIndex, cards),
                 0,
               )) /
             picked.length
@@ -283,12 +259,12 @@ export const ORACLES = Object.freeze(
               picked.reduce(
                 (acc1, index1, pi1) =>
                   acc1 +
-                  getProbability(index1, cards, probabilities) *
+                  probabilities[index1] *
                     picked.reduce(
                       (acc2, index2, pi2) =>
                         acc2 +
                         (pi1 !== pi2
-                          ? getProbability(index2, cards, probabilities) * getSynergy(index1, index2, cards)
+                          ? probabilities[index2] * getSynergy(index1, index2, cards)
                           : 0),
                       0,
                     ),
@@ -344,9 +320,9 @@ const getCombinationForLands = (lands) => {
   return COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(combination, comb));
 };
 
-const getLandsForPicked = ({ picked, cards }) => {
+const getInitialLandsForPool = (pool, cards) => {
   const lands = { W: 4, U: 4, B: 3, R: 3, G: 3 };
-  for (const cardIndex of picked) {
+  for (const cardIndex of pool) {
     const card = cards[cardIndex];
     if (cardType(card).toLowerCase().includes('land')) {
       const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
@@ -368,45 +344,38 @@ const getLandsForPicked = ({ picked, cards }) => {
   return lands;
 };
 
-const calculateProbabilities = ({ cards, cardIndex, picked, seen }, lands) => {
-  const probabilities = { [cardName(cards[cardIndex])]: getCastingProbability(cards[cardIndex], lands) };
-  for (const cIdx of picked.concat(seen)) {
-    if ((probabilities[cardName(cards[cIdx])] ?? 0) !== 0) {
-      probabilities[cardName(cards[cIdx])] = getCastingProbability(cards[cIdx], lands);
-    }
-  }
-};
+const calculateProbabilities = ({ cards, seen, lands }) => cards.map((card, cardIndex) => seen.includes(cardIndex) ? getCastingProbability(card, lands) : 0);
 
-const calculateScore = (extendedBotState) => {
-  const { cardIndex, picked, cards, probabilities } = extendedBotState;
+const calculateScore = (botState) => {
+  const { cardIndex, picked, cards, probabilities } = botState;
   const drafting = !!cardIndex || cardIndex === 0;
   const oracleResults = ORACLES.filter(({ draftingOnly }) => !draftingOnly || drafting).map(
     ({ title, tooltip, computeWeight, computeValue }) => ({
       title,
       tooltip,
-      weight: computeWeight(extendedBotState),
-      value: computeValue(extendedBotState),
+      weight: computeWeight(botState),
+      value: computeValue(botState),
     }),
   );
   const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
-  if (drafting) return { score, oracleResults };
+  if (drafting) return { score, oracleResults, botState };
   const totalProbability = picked
     .map((cIdx) => cards[cIdx])
     .filter((c) => !cardType(c).toLowerCase().includes('land'))
     .reduce((acc, c) => acc + probabilities[cardName(c)], 0);
-  return { score: totalProbability * score, oracleResults, totalProbability };
+  return { score: totalProbability * score, oracleResults, totalProbability, botState, probability: botState.probabilities[botState.cardIndex], colors: getCombinationForLands(botState.lands) };
 };
 
 export const evaluateCardOrPool = (cardIndex, drafterState) => {
   const { cards } = drafterState;
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let currentLands = getLandsForPicked(drafterState);
-  let currentProbabilities = calculateProbabilities(drafterState, currentLands);
-  let currentScore = calculateScore({ ...drafterState, cardIndex, probabilities: currentProbabilities });
+  let currentLands = getInitialLandsForPool((cardIndex || cardIndex === 0) ? [...drafterState.picked, cardIndex] : drafterState.picked, drafterState.cards);
+  const initialBotState = { ...drafterState, cardIndex, lands: currentLands };
+  initialBotState.probabilities = calculateProbabilities(initialBotState);
+  let currentScore = calculateScore(initialBotState);
   while (!landCountsAreEqual(prevLands, currentLands)) {
     prevLands = currentLands;
     let nextLands = currentLands;
-    let nextProbabilities = currentProbabilities;
     let nextScore = currentScore;
     for (const decreaseColor of COLORS) {
       if (currentLands[decreaseColor] > 0) {
@@ -416,11 +385,11 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
             lands[increaseColor] += 1;
             lands[decreaseColor] -= 1;
             if (!landCountsAreEqual(lands, prevLands)) {
-              const probabilities = calculateProbabilities(drafterState, lands);
-              const newScore = calculateScore({ ...drafterState, cardIndex, probabilities });
+              const botState = { ...drafterState, cardIndex, lands }
+              botState.probabilities = calculateProbabilities(botState);
+              const newScore = calculateScore(botState);
               if (newScore.score > nextScore.score) {
                 nextLands = lands;
-                nextProbabilities = probabilities;
                 nextScore = newScore;
                 // We assume we won't get caught in a local maxima so it's safe to take first ascent.
                 break;
@@ -431,17 +400,139 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
       }
       if (!landCountsAreEqual(currentLands, nextLands)) {
         currentLands = nextLands;
-        currentProbabilities = nextProbabilities;
         currentScore = nextScore;
         break;
       }
     }
   }
+  return currentScore;
+};
+
+const defaultStepsForLength = (length) => 
+  new Array(length)
+    .fill([
+      { action: 'pick', amount: 1 },
+      { action: 'pass', amount: 1 },
+    ])
+    .flat()
+    .slice(0, length * 2 - 1) // Remove the final pass.
+    .map((action) => ({ ...action }));
+
+export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber = null }) => {
+  const { cards } = draft;
+  const numSeats = draft.initial_state.length;
+  const seatNum = parseInt(seatNumber, 10);
+  const ourPacks = draft.initial_state[seatNum];
+  const numPacks = ourPacks.length;
+  const ourSeat = draft.seats[seatNum];
+  const stepEnd = toNullableInt(stepNumber);
+  const useSteps = !!(stepEnd || stepEnd === 0);
+  const pickEnd = !useSteps && (pickNumber === -1 ? ourSeat.pickorder.length + ourSeat.trashorder.length : parseInt(pickNumber, 10));
+  const seen = [];
+  let pickStart = 0;
+  let trashStart = 0;
+  let curStepNumber = 0;
+  for (let packNum = 0; packNum < numPacks; packNum++) {
+    const packsWithCards = draft.initial_state.map((packsForSeat) => [...packsForSeat[packNum].cards]);
+    const packSize = packsWithCards[seatNum].length;
+    const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
+    let offset = 0;
+    let pickNum = 0;
+    seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
+    for (const { action, amount } of steps) {
+      const negativeAmount = (amount ?? 1) < 0;
+      for (let completedAmount = 0; completedAmount < Math.abs(amount ?? 1); completedAmount++) {
+        if (useSteps && curStep >= stepEnd) {
+          return {
+            cards: cards.map((card, cardIndex) => seen.includes(cardIndex) ? card : null),
+            picked: ourSeat.pickorder.slice(0, pickStart),
+            trashed: ourSeat.trashorder.slice(0, trashStart),
+            seen,
+            cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
+            packNum,
+            pickNum,
+            numPacks,
+            packSize,
+            stepNumber: curStepNumber,
+            pickNumber: pickStart + trashStart,
+            step: { action, amount },
+            completedAmount,
+          };
+        }
+        if (action === 'pass') {
+          // We have to build our own xor here
+          const passLeft = (packNum % 2 === 0) ? !negativeAmount : negativeAmount;
+          // We have to add numSeats - 1 because javascript does not handle negative modulo correctly.
+          offset = (offset + (passLeft ? 1 : numSeats - 1)) % numSeats;
+          seen.push(...packsWithCards[(seatNum + offset) % numSeats]);
+        } else if (action.match(/pick|trash/)) {
+          if(!useSteps && pickStart + trashStart >= pickEnd) {
+            return {
+              cards: cards.map((card, cardIndex) => seen.includes(cardIndex) ? card : null),
+              picked: ourSeat.pickorder.slice(0, pickStart),
+              trashed: ourSeat.trashorder.slice(0, trashStart),
+              seen,
+              cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
+              packNum,
+              pickNum,
+              numPacks,
+              packSize,
+              stepNumber: curStepNumber,
+              pickNumber: pickStart + trashStart,
+              step: { action, amount },
+              completedAmount,
+            };
+          }
+
+          for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
+            const offsetSeatIndex = (seatIndex + offset) % numSeats;
+            const takenCardIndex =
+              action.match(/pick/)
+                ? draft.seats[seatIndex].pickorder[pickStart]
+                : draft.seats[seatIndex].trashorder[trashStart];
+            if (action.match(/pick/)) {
+              console.log('seatIndex', seatIndex, 'pickorder', draft.seats[seatIndex].pickorder, 'pickStart', pickStart);
+            } else {
+              console.log('seatIndex', seatIndex, 'trashorder', draft.seats[seatIndex].trashorder, 'trashStart', trashStart);
+            }
+            console.log('takenCardIndex', takenCardIndex);
+            const cardsInPackForSeat = packsWithCards[offsetSeatIndex];
+            console.log('offsetSeatIndex', offsetSeatIndex, 'cardsInPackForSeat', cardsInPackForSeat);
+            const indexToRemove = cardsInPackForSeat.indexOf(takenCardIndex);
+            if (indexToRemove < 0) {
+              console.error(
+                `Seat ${seatIndex} should have picked/trashed ${takenCardIndex} at pickNumber ${
+                  pickStart + trashStart
+                }, but the pack contains only [${packsWithCards[offsetSeatIndex].join(', ')}].`,
+              );
+            } else {
+              packsWithCards[offsetSeatIndex].splice(indexToRemove, 1);
+            }
+          }
+          if (action.match(/pick/)) {
+            pickStart += 1;
+          } else {
+            trashStart += 1;
+          }
+          pickNum += 1;
+        }
+        curStepNumber += 1;
+      }
+    }
+  }
   return {
-    ...currentScore,
-    colors: getCombinationForLands(currentLands),
-    lands: currentLands,
-    probability: getProbability(cardIndex, cards, currentProbabilities),
-    probabilities: currentProbabilities,
+    cards: cards.map((card, cardIndex) => seen.includes(cardIndex) ? card : null),
+    picked: ourSeat.pickorder.slice(),
+    trashed: ourSeat.trashorder.slice(),
+    seen,
+    cardsInPack: [],
+    packNum: numPacks,
+    pickNum: 15,
+    numPacks,
+    packSize: 15,
+    stepNumber: curStepNumber,
+    pickNumber: pickStart + trashStart,
+    step: { action: 'pass', amount: 1 },
+    completedAmount: 0,
   };
 };

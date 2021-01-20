@@ -7,63 +7,13 @@ import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
-import CardPropType from 'proptypes/CardPropType';
 import DeckPropType from 'proptypes/DeckPropType';
+import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
 import { encodeName } from 'utils/Card';
 import { evaluateCardOrPool, ORACLES_BY_NAME } from 'utils/draftbots';
 import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
-
-export const getPackAsSeen = (initialState, index, deck, seatIndex) => {
-  const cardsInPack = [];
-
-  let start = 0;
-  let end = initialState[0][0].cards.length;
-  let pack = 0;
-  let current = parseInt(seatIndex, 10);
-  let picks = parseInt(index, 10);
-
-  while (picks >= initialState[0][pack].cards.length - initialState[0][pack].trash) {
-    start = end;
-    end += initialState[0][pack].cards.length - initialState[0][pack].trash;
-    picks -= initialState[0][pack].cards.length - initialState[0][pack].trash;
-    pack += 1;
-  }
-  for (let i = start + picks; i < end; i += 1) {
-    cardsInPack.push(deck.cards[deck.seats[current].pickorder[i]]);
-    if (!initialState[0][pack].sealed && (i + 1) % initialState[0][pack].pickAtTime === 0) {
-      if (pack % 2 !== initialState[0].length % 2) {
-        current += 1;
-        current %= initialState.length;
-      } else {
-        current -= 1;
-        if (current < 0) {
-          current = initialState.length - 1;
-        }
-      }
-    }
-  }
-
-  // establish list of picks sepearted by packs
-  const seat = deck.seats[seatIndex];
-  const picksList = [];
-  let ind = 0;
-  let added = 0;
-  for (const list of initialState[0]) {
-    const newAdded = added + list.cards.length;
-    picksList.push(seat.pickorder.slice(added, newAdded).map((ci) => ({ ...deck.cards[ci] })));
-    added = newAdded;
-  }
-  for (const list of picksList) {
-    for (const card of list) {
-      card.index = ind;
-      ind += 1;
-    }
-  }
-
-  return [cardsInPack, picks, pack, picksList, seat];
-};
 
 const CARD_TRAIT = Object.freeze({
   title: 'Card',
@@ -104,23 +54,15 @@ const WEIGHT_COLUMNS = Object.freeze([
   { title: 'Weight', sortable: true, key: 'weight' },
 ]);
 
-export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
+export const DraftbotBreakdownTable = ({ drafterState }) => {
   // const [normalized, toggleNormalized] = useToggle(false);
   const botEvaluations = useMemo(
     () =>
-      cardsInPack.map((card) => ({
-        ...evaluateCardOrPool(card.index, {
-          cards: draft.cards,
-          picked,
-          seen,
-          pickNum: picks + 1,
-          packNum: pack + 1,
-          numPacks: draft.initial_state[0].length,
-          packSize: draft.initial_state[0][pack].length,
-        }),
-        card,
+      drafterState.cardsInPack.map((card) => ({
+        ...evaluateCardOrPool(card, drafterState),
+        card: drafterState.cards[card],
       })),
-    [cardsInPack, draft, picked, seen, picks, pack],
+    [drafterState],
   );
   const oracles = useMemo(() => botEvaluations[0].oracleResults.map(({ title, tooltip }) => ({ title, tooltip })), [
     botEvaluations,
@@ -157,7 +99,7 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
         defaultSortConfig={{ key: 'Total', direction: 'descending' }}
         sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.details.name, b.details.name) }}
       />
-      <h4 className="mt-4 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Weights`}</h4>
+      <h4 className="mt-4 mb-2">{`Pack ${drafterState.packNum + 1}: Pick ${drafterState.pickNum + 1} Weights`}</h4>
       <SortableTable
         className="small-table"
         columnProps={WEIGHT_COLUMNS}
@@ -168,18 +110,8 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
   );
 };
 
-Internal.propTypes = {
-  cardsInPack: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  }).isRequired,
-  pack: PropTypes.number.isRequired,
-  picks: PropTypes.number.isRequired,
-  picked: PropTypes.shape({
-    cards: PropTypes.shape({ WUBRG: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })) }).isRequired,
-  }).isRequired,
-  seen: PropTypes.shape({}).isRequired,
+DraftbotBreakdownTable.propTypes = {
+  drafterState: DrafterStatePropType.isRequired,
 };
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
@@ -236,7 +168,14 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
         ))}
       </Row>
       <h4 className="mt-5 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
-      <Internal cardsInPack={cardsInPack} draft={draft} pack={pack} picks={picks} picked={picked} seen={seen} />
+      <DraftbotBreakdownTable
+        cardsInPack={cardsInPack}
+        draft={draft}
+        pack={pack}
+        picks={picks}
+        picked={picked}
+        seen={seen}
+      />
     </>
   );
 };

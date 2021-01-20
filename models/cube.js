@@ -1,50 +1,8 @@
 const mongoose = require('mongoose');
 
+const cardSchema = require('./shared/cardSchema');
+const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
-
-const Card = {
-  tags: [
-    {
-      type: String,
-      minlength: 1,
-    },
-  ],
-  finish: {
-    type: String,
-    default: 'Non-foil',
-  },
-  status: {
-    type: String,
-    default: 'Not Owned',
-  },
-  colors: {
-    type: [
-      {
-        type: String,
-      },
-    ],
-    default: null,
-  },
-  cmc: {
-    type: Number,
-    min: 0,
-    default: null,
-  },
-  cardID: String,
-  type_line: String,
-  rarity: {
-    type: String,
-    default: null,
-  },
-  addedTmsp: Date,
-  imgUrl: String,
-  imgBackUrl: String,
-  notes: String,
-  colorCategory: {
-    type: String,
-    default: null,
-  },
-};
 
 // Cube schema
 const cubeSchema = mongoose.Schema({
@@ -90,11 +48,11 @@ const cubeSchema = mongoose.Schema({
     default: [],
   },
   cards: {
-    type: [Card],
+    type: [cardSchema],
     default: [],
   },
   maybe: {
-    type: [Card],
+    type: [cardSchema],
     default: [],
   },
   tag_colors: [
@@ -131,21 +89,7 @@ const cubeSchema = mongoose.Schema({
         packs: [
           {
             slots: [String],
-            steps: {
-              type: [
-                {
-                  action: {
-                    type: String,
-                    enum: ['pass', 'pick', 'trash'],
-                  },
-                  amount: {
-                    type: Number,
-                    default: null,
-                  },
-                },
-              ],
-              default: null,
-            },
+            steps: stepsSchema,
           },
         ],
       },

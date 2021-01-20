@@ -42,15 +42,9 @@ const makeInitialStacks = (playerDeck) => {
 
 const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
   const [deck, setDeck] = useState(
-    makeInitialStacks(initialDeck.seats[0].deck.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
-  const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.seats[0].sideboard.map((pile) => pile.map((cardIndex) => initialDeck.cards[cardIndex]));
-    if (!initial || !Array.isArray(initial) || initial.length === 0) {
-      return [new Array(8).fill([])];
-    }
-    return [initial.slice(0, 8)];
-  });
+  const [sideboard, setSideboard] = useState(initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))));
 
   const locationMap = {
     [Location.DECK]: [deck, setDeck],
