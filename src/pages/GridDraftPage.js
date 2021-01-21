@@ -1,9 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
-
 import {
   Card,
   CardBody,
@@ -19,24 +15,24 @@ import {
   Badge,
 } from 'reactstrap';
 
-import Location from 'utils/DraftLocation';
-import { cardCmc, cardType, cardIsSpecialZoneType } from 'utils/Card';
-
+import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
-import FoilCardImage from 'components/FoilCardImage';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import FoilCardImage from 'components/FoilCardImage';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
-import CSRFForm from 'components/CSRFForm';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
+import { cardCmc, cardType, cardIsSpecialZoneType } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import { init, buildDeck } from 'utils/Draft';
 import { evaluateCardOrPool } from 'utils/draftbots';
+import Location from 'utils/DraftLocation';
+import RenderToRoot from 'utils/RenderToRoot';
 
 export const subtitle = (cards) => {
   const numCards = cards.length;
@@ -151,8 +147,6 @@ for (let index = 0; index < 3; index++) {
 }
 
 const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
-  useMemo(() => init(initialDraft), [initialDraft]);
-
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0].map((c) => initialDraft.cards[c]));
   const [packNumber, setPackNumber] = useState(1);
   const [pickNumber, setPickNumber] = useState(1);
@@ -383,7 +377,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
                 <DeckStacks
                   cards={picks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
                   title="Picks"
-                  subtitle={subtitle(picks.flat().flat())}
+                  subtitle={subtitle(picks.flat(2))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
                   onMoveCard={() => {}}
@@ -393,7 +387,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
                 <DeckStacks
                   cards={botPicks.map((r) => r.map((col) => col.map((c) => initialDraft.cards[c])))}
                   title="Bot Picks"
-                  subtitle={subtitle(botPicks.flat().flat())}
+                  subtitle={subtitle(botPicks.flat(2))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
                   onMoveCard={() => {}}

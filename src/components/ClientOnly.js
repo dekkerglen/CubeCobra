@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
-const ClientOnly = ({ children }) => {
+const ClientOnly = (props) => {
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  return isClient && <>{children}</>;
+  return isClient && <Fragment {...props} />;
 };
 
 export default ClientOnly;

@@ -57,7 +57,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
       <CardBody className="p-1">
         <Card key="slots" className="mb-2 mx-1">
           <CardHeader onClick={toggleSlotsOpen}>
-            <CardTitle className="mb-0">Slots</CardTitle>
+            <CardTitle className="mb-0">Card Slots</CardTitle>
           </CardHeader>
           <Collapse isOpen={slotsOpen}>
             <CardBody>
@@ -99,7 +99,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
         </Card>
         <Card key="steps" className="mb-2 mx-1">
           <CardHeader onClick={toggleStepsOpen}>
-            <CardTitle className="mb-0">Steps</CardTitle>
+            <CardTitle className="mb-0">Steps for Drafting</CardTitle>
           </CardHeader>
           <Collapse isOpen={stepsOpen}>
             <CardBody>

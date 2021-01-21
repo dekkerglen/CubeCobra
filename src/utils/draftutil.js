@@ -1,18 +1,17 @@
-const seedrandom = require('seedrandom');
-const shuffleSeed = require('shuffle-seed');
+import seedrandom from 'seedrandom';
+import shuffleSeed from 'shuffle-seed';
 
-const Util = require('utils/Util.js');
-require('./Card.js');
-const { filterToString, makeFilter, operatorsRegex } = require('filtering/FilterCards.js');
+import { filterToString, makeFilter, operatorsRegex } from 'filtering/FilterCards';
+import { fromEntries } from 'utils/Util';
 
-export function matchingCards(cards, filter) {
+export const matchingCards = (cards, filter) => {
   if (filter) {
     return cards.filter(filter);
   }
   return cards;
-}
+};
 
-function compileFilter(filterText) {
+const compileFilter = (filterText) => {
   if (!filterText || filterText === '' || filterText === '*') {
     return null;
   }
@@ -32,14 +31,14 @@ function compileFilter(filterText) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
   return filter;
-}
+};
 
 /* Takes the raw data for custom format, converts to JSON and creates
    a data structure: 
 
       [pack][card in pack][token,token...]
 */
-export function parseDraftFormat(format, splitter = ',') {
+export const parseDraftFormat = (format, splitter = ',') => {
   for (let j = 0; j < format.length; j++) {
     for (let k = 0; k < format[j].slots.length; k++) {
       format[j].slots[k] = format[j].slots[k].split(splitter);
@@ -48,16 +47,15 @@ export function parseDraftFormat(format, splitter = ',') {
       }
     }
   }
-  console.log(format[0]);
   return format;
-}
+};
 
 // standard draft has no duplicates
-function standardDraft(cards, seed = false) {
+const standardDraft = (cards, rng) => {
   if (cards.length === 0) {
     throw new Error('Unable to create draft: not enough cards.');
   }
-  cards = shuffleSeed.shuffle(cards, seed);
+  cards = shuffleSeed.shuffle(cards, rng());
   return () => {
     // ignore cardFilters, just take any card in cube
     if (cards.length === 0) {
@@ -66,9 +64,9 @@ function standardDraft(cards, seed = false) {
     // remove a random card
     return { card: cards.pop(), messages: [] };
   };
-}
+};
 
-function standardDraftAsfan(cards) {
+const standardDraftAsfan = (cards) => {
   if (cards.length === 0) {
     throw new Error('Unable to create draft asfan: not enough cards.');
   }
@@ -80,13 +78,9 @@ function standardDraftAsfan(cards) {
     }
     return { card: true, messages: [] };
   };
-}
+};
 
-function customDraft(cards, duplicates = false, seed = false) {
-  if (!seed) {
-    seed = Date.now().toString();
-  }
-  const rng = seedrandom(seed);
+const customDraft = (cards, duplicates = false, rng) => {
   return (cardFilters) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
@@ -126,9 +120,9 @@ function customDraft(cards, duplicates = false, seed = false) {
 
     return { card, messages };
   };
-}
+};
 
-function customDraftAsfan(cards, duplicates = false) {
+const customDraftAsfan = (cards, duplicates = false) => {
   return (cardFilters) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft asfan: not enough cards.');
@@ -170,9 +164,9 @@ function customDraftAsfan(cards, duplicates = false) {
     }
     return { card: true, messages: [] };
   };
-}
+};
 
-export function getDraftFormat(params, cube) {
+export const getDraftFormat = (params, cube) => {
   let format;
   if (params.id >= 0) {
     format = parseDraftFormat(cube.draft_formats[params.id].packs);
@@ -191,55 +185,59 @@ export function getDraftFormat(params, cube) {
     }
   }
   return format;
-}
+};
 
-function createPacks(draft, format, seats, nextCardFn) {
+const createPacks = (draft, format, seats, nextCardFn) => {
   let ok = true;
   let messages = [];
   draft.initial_state = [];
-  console.log(format);
   for (let seat = 0; seat < seats; seat++) {
     draft.initial_state.push([]);
     for (let packNum = 0; packNum < format.length; packNum++) {
       draft.initial_state[seat].push([]);
-      const pack = [];
+      const cards = [];
       for (let cardNum = 0; cardNum < format[packNum].slots.length; cardNum++) {
         const result = nextCardFn(format[packNum].slots[cardNum]);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
         if (result.card) {
-          pack.push(result.card);
+          cards.push(result.card);
         } else {
           ok = false;
         }
       }
       draft.initial_state[seat][packNum] = {
         steps: format[packNum].steps,
-        cards: pack,
+        cards,
       };
     }
   }
   return { ok, messages };
-}
+};
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export function createDraft(format, cards, seats, user, seed = false) {
+export const createDraft = (format, cubeCards, seats, user, seed = false) => {
   if (!seed) {
     seed = Date.now().toString();
   }
+  const rng = seedrandom(seed);
 
-  const draft = {};
+  const draft = {
+    seats: [],
+    cards: [],
+    seed,
+  };
 
   let nextCardFn = null;
-  if (cards.length === 0) {
+  if (cubeCards.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
 
   if (format.custom === true) {
-    nextCardFn = customDraft(cards, format.multiples, seed);
+    nextCardFn = customDraft(cubeCards, format.multiples, rng);
   } else {
-    nextCardFn = standardDraft(cards, seed);
+    nextCardFn = standardDraft(cubeCards, rng);
   }
 
   const result = createPacks(draft, format, seats, nextCardFn);
@@ -253,53 +251,48 @@ export function createDraft(format, cards, seats, user, seed = false) {
   }
 
   draft.seats = [];
-  draft.unopenedPacks = [];
   draft.cards = [];
-
-  // deep clone packs
-  for (let i = 0; i < draft.initial_state.length; i++) {
-    draft.unopenedPacks.push([]);
-    for (let j = 0; j < draft.initial_state[i].length; j++) {
-      draft.unopenedPacks[i].push({
-        cards: [],
-        trash: draft.initial_state[i][j].trash,
-        sealed: draft.initial_state[i][j].sealed,
-        picksPerPass: draft.initial_state[i][j].picksPerPass,
-      });
-      for (let k = 0; k < draft.initial_state[i][j].cards.length; k++) {
-        const card = { ...draft.initial_state[i][j].cards[k], index: draft.cards.length };
-        delete card.details;
+  draft.initial_state = draft.initial_state.map((packs) =>
+    packs.map(({ cards, ...pack }) => ({
+      ...pack,
+      cards: cards.map(({ details: _, ...card }) => {
+        card.index = draft.cards.length;
         draft.cards.push(card);
-        draft.unopenedPacks[i][j].cards.push(card.index);
-        draft.initial_state[i][j].cards[k] = card.index;
-      }
-    }
-  }
+        return card.index;
+      }),
+    })),
+  );
+  // No we randomize the order of the cards array to prevent leaking information.
+  const shuffledIndices = shuffleSeed
+    .shuffle(
+      draft.cards.map((card, idx) => [card, idx]),
+      rng(),
+    )
+    .map(([card, oldIdx], newIdx) => [card, oldIdx, newIdx])
+    .sort(([, a], [, b]) => a - b);
+  draft.initial_state = draft.initial_state.map((packs) =>
+    packs.map(({ cards, ...pack }) => ({
+      ...pack,
+      cards: cards.map((oldIndex) => shuffledIndices[oldIndex][2]),
+    })),
+  );
+  draft.cards = shuffledIndices.sort(([, , a], [, , b]) => a - b).map(([card]) => card);
 
-  for (let i = 0; i < draft.initial_state.length; i += 1) {
-    const seat = {
-      bot: i !== 0,
-      name: i === 0 ? user.username : `Bot ${i}`,
-      userid: i === 0 ? user._id : null,
-      drafted: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
-      sideboard: [new Array(8).fill([]), new Array(8).fill([])],
-      pickorder: [],
-      trashorder: [],
-      packbacklog: [],
-    };
-
-    for (let j = 0; j < 16; j++) {
-      seat.drafted.push([]);
-    }
-
-    seat.packbacklog.push(draft.unopenedPacks[i].shift());
-    draft.seats.push(seat);
-  }
+  // Need a better way to assign this for when there's more than one player, or the player isn't index 0
+  draft.seats = draft.initial_state.map((_, seatIndex) => ({
+    bot: seatIndex !== 0,
+    name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
+    userid: seatIndex === 0 ? user._id : null,
+    drafted: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
+    sideboard: [new Array(8).fill([]), new Array(8).fill([])],
+    pickorder: [],
+    trashorder: [],
+  }));
 
   return draft;
-}
+};
 
-export function checkFormat(format, cards) {
+export const checkFormat = (format, cards) => {
   // check that all filters are sane and match at least one card
   const checkFn = (cardFilters) => {
     const messages = [];
@@ -316,14 +309,14 @@ export function checkFormat(format, cards) {
     return { ok: messages.length === 0, messages };
   };
   return createPacks({}, format, 1, checkFn);
-}
+};
 
-export function weightedAverage(arr) {
+export const weightedAverage = (arr) => {
   const [count, total] = arr.reduce(([c, t], [weight, value]) => [c + weight, t + weight * value], [0, 0]);
   return total / (count || 1);
-}
+};
 
-export function weightedMedian(arr) {
+export const weightedMedian = (arr) => {
   const count = arr.reduce((acc, [weight]) => acc + weight, 0);
   const nums = [...arr].sort(([, a], [, b]) => a - b);
   const mid = count / 2;
@@ -340,7 +333,7 @@ export function weightedMedian(arr) {
     total = newTotal;
   }
   return 0;
-}
+};
 
 // Returns num+1 elements that are min, 1/num, 2/num, ..., max
 export const weightedPercentiles = (arr, num) => {
@@ -363,7 +356,7 @@ export const weightedPercentiles = (arr, num) => {
   return percentiles;
 };
 
-export function weightedStdDev(arr, avg = null) {
+export const weightedStdDev = (arr, avg = null) => {
   if (avg === null) {
     avg = weightedAverage(arr);
   }
@@ -376,7 +369,7 @@ export function weightedStdDev(arr, avg = null) {
 
   const stdDev = Math.sqrt(avgSquareDiff);
   return stdDev;
-}
+};
 
 export const calculateAsfans = (cube, draftFormat) => {
   const draft = {};
@@ -406,5 +399,5 @@ export const calculateAsfans = (cube, draftFormat) => {
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
-  return Util.fromEntries(cards.map((card) => [card.cardID, card.asfan]));
+  return fromEntries(cards.map((card) => [card.cardID, card.asfan]));
 };

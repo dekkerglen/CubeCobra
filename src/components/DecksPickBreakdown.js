@@ -25,6 +25,7 @@ export const usePickListAndDrafterState = ({ draft, seatIndex, defaultIndex }) =
   // This could be done a lot nicer with the proposed rewind function for recovering earlier states
   // from later ones.
   const [drafterStateByPickNumber, picksList] = useMemo(() => {
+    const { cards } = draft;
     const { pickorder, trashorder } = draft.seats[seatIndex];
     const numToTake = pickorder.length + trashorder.length;
     const takenCards = [];
@@ -37,10 +38,13 @@ export const usePickListAndDrafterState = ({ draft, seatIndex, defaultIndex }) =
       const { packNum, pickedNum, trashedNum } = drafterState;
       // This handles the case of empty packs which we'll hopefully never have to deal with.
       while (packNum >= takenCards.length) takenCards.push([]);
-      if (trashedNum > prevTrashedNum)
-        takenCards[packNum].push({ action, card: draft.cards[trashorder[prevTrashedNum]], pickNumber: pickNumber2 });
-      else if (pickedNum > prevPickedNum)
-        takenCards[packNum].push({ action, card: draft.cards[pickorder[prevPickedNum]], pickNumber: pickNumber2 });
+      // It should not be possible for both to increase across 1 pick number
+      // If it did we'd have a problem since multiple cards would be marked as part of the same pick.
+      if (trashedNum > prevTrashedNum) {
+        takenCards[packNum].push({ action, card: cards[trashorder[prevTrashedNum]], pickNumber: pickNumber2 - 1 });
+      } else if (pickedNum > prevPickedNum) {
+        takenCards[packNum].push({ action, card: cards[pickorder[prevPickedNum]], pickNumber: pickNumber2 - 1 });
+      }
       action = drafterState.step.action;
       prevTrashedNum = trashedNum;
       prevPickedNum = pickedNum;

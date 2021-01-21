@@ -170,17 +170,14 @@ function getBasics(carddb) {
 }
 
 function addBasicsToDeck(deck, cardsArray, carddb, saveToDeck) {
-  const basics = getBasics(carddb);
-  for (const basic of Object.values(basics)) {
-    delete basic.details;
-  }
-  deck.cards = cardsArray.concat(
-    [basics.Plains, basics.Island, basics.Swamp, basics.Mountain, basics.Forest, basics.Wastes].map((card, idx) => ({
-      ...card,
-      index: cardsArray.length + idx,
-    })),
+  const basics = Object.fromEntries(
+    Object.entries(getBasics(carddb)).map(([name, { details: _, ...card }], idx) => [
+      name,
+      { ...card, index: cardsArray.length + idx },
+    ]),
   );
-  if (saveToDeck) deck.basics = basics;
+  deck.cards = cardsArray.concat(Object.values(basics));
+  if (saveToDeck) deck.basics = Object.fromEntries(Object.entries(basics).map(([name, { index }]) => [name, index]));
 }
 
 function cardHtml(card) {
