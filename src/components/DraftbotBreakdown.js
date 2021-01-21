@@ -1,15 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
+import { usePickListAndDrafterState, ACTION_LABELS } from 'components/DecksPickBreakdown';
 import { SortableTable, compareStrings } from 'components/SortableTable';
 import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
-import useQueryParam from 'hooks/useQueryParam';
-import DeckPropType from 'proptypes/DeckPropType';
-import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
-import { encodeName } from 'utils/Card';
+import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
+import { cardName, encodeName } from 'utils/Card';
 import { evaluateCardOrPool, ORACLES_BY_NAME } from 'utils/draftbots';
 import { fromEntries } from 'utils/Util';
 
@@ -23,7 +22,7 @@ const CARD_TRAIT = Object.freeze({
   renderFn: (card) => (
     <AutocardItem key={card.index} card={card} data-in-modal index={card.index}>
       <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
-        {card.details.name}
+        {cardName(card)}
       </a>
     </AutocardItem>
   ),
@@ -55,7 +54,6 @@ const WEIGHT_COLUMNS = Object.freeze([
 ]);
 
 export const DraftbotBreakdownTable = ({ drafterState }) => {
-  // const [normalized, toggleNormalized] = useToggle(false);
   const botEvaluations = useMemo(
     () =>
       drafterState.cardsInPack.map((card) => ({
@@ -84,10 +82,6 @@ export const DraftbotBreakdownTable = ({ drafterState }) => {
 
   return (
     <>
-      {/* <Label check className="pl-4 mb-2">
-            <Input type="checkbox" onClick={toggleNormalized} /> Normalize the columns so the lowest value is 0.00
-           </Label>
-      */}
       <SortableTable
         className="small-table"
         columnProps={[CARD_TRAIT, ...oracles, ...TRAITS].map((trait) => ({
@@ -114,30 +108,8 @@ DraftbotBreakdownTable.propTypes = {
   drafterState: DrafterStatePropType.isRequired,
 };
 
-const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
-  const [index, setIndex] = useQueryParam('pick', defaultIndex ?? 0);
-
-  const click = useCallback(
-    (event) => {
-      if (index !== event.target.getAttribute('index')) {
-        setIndex(event.target.getAttribute('index'));
-      }
-    },
-    [index, setIndex],
-  );
-
-  // find the information for the selected pack
-  const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = seat.pickorder.slice(0, index);
-
-  const seen = useMemo(() => {
-    const res = [];
-    // this is an O(n^3) operation, but it should be ok
-    for (let i = 0; i <= parseInt(index, 10); i++) {
-      res.push(getPackAsSeen(draft.initial_state, i, deck, seatIndex)[0]);
-    }
-    return res;
-  }, [deck, draft, index, seatIndex]);
+const DraftbotBreakdown = (props) => {
+  const { picksList, drafterState, setPickNumberFromEvent } = usePickListAndDrafterState(props);
 
   return (
     <>
@@ -147,19 +119,19 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
           <Col xs={6} sm={3} key={/* eslint-disable-line react/no-array-index-key */ listindex}>
             <ListGroup className="list-outline">
               <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
-              {list.map((card) => (
+              {list.map(({ card, action, pickNumber }) => (
                 <AutocardItem
                   key={card.index}
                   card={card}
                   className={`card-list-item d-flex flex-row ${getCardColorClass(card)}`}
                   data-in-modal
-                  onClick={click}
-                  index={card.index}
+                  onClick={setPickNumberFromEvent}
+                  data-pick-number={pickNumber}
                 >
-                  {parseInt(card.index, 10) === parseInt(index, 10) ? (
-                    <strong>{card.details.name}</strong>
+                  {drafterState.pickNumber === pickNumber ? (
+                    <strong>{`${ACTION_LABELS[action]} ${cardName(card)}`}</strong>
                   ) : (
-                    <>{card.details.name}</>
+                    <>{`${ACTION_LABELS[action]} ${cardName(card)}`}</>
                   )}
                 </AutocardItem>
               ))}
@@ -167,26 +139,18 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
           </Col>
         ))}
       </Row>
-      <h4 className="mt-5 mb-2">{`Pack ${pack + 1}: Pick ${picks + 1} Cards`}</h4>
-      <DraftbotBreakdownTable
-        cardsInPack={cardsInPack}
-        draft={draft}
-        pack={pack}
-        picks={picks}
-        picked={picked}
-        seen={seen}
-      />
+      <h4 className="mt-5 mb-2">{`Pack ${drafterState.packNum + 1}: Pick ${drafterState.pickNum + 1} Cards`}</h4>
+      <DraftbotBreakdownTable drafterState={drafterState} />
     </>
   );
 };
 
 DraftbotBreakdown.propTypes = {
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-  }).isRequired,
-  deck: DeckPropType.isRequired,
-  seatIndex: PropTypes.string.isRequired,
+  // eslint-disable-next-line
+  draft: DraftPropType.isRequired,
+  // eslint-disable-next-line
+  seatIndex: PropTypes.number.isRequired,
+  // eslint-disable-next-line
   defaultIndex: PropTypes.number,
 };
 

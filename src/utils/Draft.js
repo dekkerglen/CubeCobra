@@ -7,7 +7,6 @@ import {
   isPlayableLand,
   MAX_SCORE,
   ORACLES_BY_NAME,
-  getProbability,
 } from 'utils/draftbots';
 
 // Ignore cards below this value.

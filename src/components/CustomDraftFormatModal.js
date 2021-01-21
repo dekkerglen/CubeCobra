@@ -82,7 +82,10 @@ const MUTATIONS = Object.freeze({
 
   changeStepAmount: ({ newFormat, packIndex, stepIndex, value }) => {
     newFormat.packs[packIndex].steps = cloneSteps({ newFormat, packIndex });
-    newFormat.packs[packIndex].steps[stepIndex] = { ...newFormat.packs[packIndex].steps[stepIndex], amount: toNullableInt(value) };
+    newFormat.packs[packIndex].steps[stepIndex] = {
+      ...newFormat.packs[packIndex].steps[stepIndex],
+      amount: toNullableInt(value),
+    };
   },
 
   removeStep: ({ newFormat, packIndex, stepIndex }) => {

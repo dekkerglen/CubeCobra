@@ -5,7 +5,6 @@ import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
 
 import Location from 'utils/DraftLocation';
-import { sortDeck } from 'utils/Util';
 
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
@@ -28,23 +27,13 @@ const oppositeLocation = {
   [Location.SIDEBOARD]: Location.DECK,
 };
 
-const makeInitialStacks = (playerDeck) => {
-  if (playerDeck.length === 2 && Array.isArray(playerDeck[0]) && Array.isArray(playerDeck[0][0])) {
-    // Already good.
-    return playerDeck;
-  }
-  if (playerDeck.length === 16) {
-    // Already in stacks. Split into rows.
-    return [playerDeck.slice(0, 8), playerDeck.slice(8, 16)];
-  }
-  return sortDeck(playerDeck);
-};
-
 const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
   const [deck, setDeck] = useState(
     initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
-  const [sideboard, setSideboard] = useState(initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))));
+  const [sideboard, setSideboard] = useState(
+    initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+  );
 
   const locationMap = {
     [Location.DECK]: [deck, setDeck],

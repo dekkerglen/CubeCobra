@@ -29,9 +29,10 @@ import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
-import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
 import UserPropType from 'proptypes/UserPropType';
 import { cardType, makeSubtitle } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
 import { evaluateCardOrPool, getDrafterState } from 'utils/draftbots';
 import Location from 'utils/DraftLocation';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -46,7 +47,8 @@ const Pack = ({ pack, packNumber, pickNumber, instructions, picking, onMoveCard,
     <CardHeader>
       <CardTitle className="mb-0">
         <h4 className="mb-1">
-  Pack {packNumber}, Pick {pickNumber}{instructions ? `: ${instructions}` : ''}
+          Pack {packNumber}, Pick {pickNumber}
+          {instructions ? `: ${instructions}` : ''}
         </h4>
       </CardTitle>
     </CardHeader>
@@ -102,7 +104,10 @@ const MUTATIONS = Object.freeze({
     for (let seatIndex = 0; seatIndex < newDraft.initial_state.length; seatIndex++) {
       const cardIndex = cardIndices[seatIndex];
       newDraft.seats[seatIndex].pickorder = [...newDraft.seats[seatIndex].pickorder, cardIndex];
-      const pos = (target && seatIndex === seatIndex) ? target : getDefaultPosition(cards[cardIndex], newDraft.seats[seatIndex].drafted);
+      const pos =
+        target && seatIndex === seatNum
+          ? target
+          : getDefaultPosition(cards[cardIndex], newDraft.seats[seatIndex].drafted);
       newDraft.seats[seatIndex].drafted = DeckStacks.moveOrAddCard(newDraft.seats[seatIndex].drafted, pos, cardIndex);
     }
   },
@@ -133,8 +138,16 @@ const useDraftMutation = (mutation, setDraft, cards) =>
     [mutation, setDraft, cards],
   );
 
-const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
-  const { cards, cardsInPack, completedAmount, step: { action, amount: totalAmount }, packNum, pickNum, numPacks } = drafterState;
+const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
+  const {
+    cards,
+    cardsInPack,
+    completedAmount,
+    step: { action, amount: totalAmount },
+    packNum,
+    pickNum,
+    numPacks,
+  } = drafterState;
   const remainingAmount = totalAmount - completedAmount;
 
   const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
@@ -142,8 +155,8 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
   const [picking, setPicking] = useState(null);
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
-  const picks = useMemo(() => seat.drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))), [
-    seat.drafted,
+  const picks = useMemo(() => drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))), [
+    drafted,
     cards,
   ]);
   const instructions = useMemo(() => {
@@ -155,7 +168,7 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
     }
     return null;
   }, [action, remainingAmount]);
-  
+
   const handleMoveCard = useCallback(
     async (source, target) => {
       if (source.equals(target)) return;
@@ -188,7 +201,7 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
       takeCard(cardIndex);
       setPicking(null);
     },
-    [cardsInPack,setPicking, takeCard],
+    [cardsInPack, setPicking, takeCard],
   );
   return (
     <>
@@ -211,8 +224,8 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
             <ErrorBoundary>
               <Pack
                 pack={pack}
-                packNumber={drafterState.packNum + 1}
-                pickNumber={drafterState.pickNum + 1}
+                packNumber={packNum + 1}
+                pickNumber={pickNum + 1}
                 instructions={instructions}
                 picking={picking}
                 onMoveCard={handleMoveCard}
@@ -226,7 +239,7 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
                     <h4 className="mb-0">Draftbot Breakdown</h4>
                   </CardHeader>
                   <CardBody>
-                    <DraftbotBreakdownTable drafterState={ourDrafterState} />
+                    <DraftbotBreakdownTable drafterState={drafterState} />
                   </CardBody>
                 </Card>
               </ErrorBoundary>
@@ -249,47 +262,56 @@ const CubeDraftPlayerUI = ({ drafterState, seat, takeCard, moveCard }) => {
     </>
   );
 };
-
-const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, seed, loginCallback }) => {
-  const { cards } = initialDraft;
+CubeDraftPlayerUI.propTypes = {
+  drafterState: DrafterStatePropType.isRequired,
+  drafted: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
+    .isRequired,
+  takeCard: PropTypes.func.isRequired,
+  moveCard: PropTypes.func.isRequired,
+};
+const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
+  const { cards, seed } = initialDraft;
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const [draft, setDraft] = useState(initialDraft);
-  const ourSeat = draft.seats[seatNum];
   const submitDeckForm = useRef();
-  const rng = useMemo(() => seedrandom(seed ?? Date.now.toString()), [seed]);
+  const rng = useMemo(() => seedrandom(seed), [seed]);
   const drafterStates = useMemo(
     () => draft.seats.map((_, seatIndex) => getDrafterState({ draft, seatNumber: seatIndex })),
     [draft],
   );
-  const { step: { action }, numPacks, packNum } = drafterStates[seatNum];
+  const {
+    step: { action },
+    numPacks,
+    packNum,
+  } = drafterStates[seatNum];
   const doneDrafting = packNum >= numPacks;
   const mutations = fromEntries(
     // eslint-disable-next-line
     Object.entries(MUTATIONS).map(([name, mutation]) => [name, useDraftMutation(mutation, setDraft, cards)]),
   );
   const makeBotPicks = useCallback(
-    (cardIndex) =>
+    (playerChose) =>
       drafterStates.map((state, seatIndex) =>
         seatIndex === seatNum
-          ? cardIndex
+          ? playerChose
           : state.cardsInPack
-              .map((cardIndex) => [evaluateCardOrPool(cardIndex, state).score, cardIndex])
-              .sort(([a], [b]) => b - a)[0][1],
+              .map((cardIndex) => evaluateCardOrPool(cardIndex, state))
+              .sort(({ score: a }, { score: b }) => b - a)[0].botState.cardIndex,
       ),
     [drafterStates, seatNum],
   );
   const makeBotTrashPicks = useCallback(
-    (cardIndex) =>
+    (playerChose) =>
       drafterStates.map((state, seatIndex) =>
         seatIndex === seatNum
-          ? cardIndex
+          ? playerChose
           : state.cardsInPack
               .map((cardIndex) => [evaluateCardOrPool(cardIndex, state).score, cardIndex])
               .sort(([a], [b]) => a - b)[0][1],
       ),
     [drafterStates, seatNum],
   );
-  
+
   useEffect(() => {
     (async () => {
       const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
@@ -299,6 +321,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, seed, loginCallba
         headers: { 'Content-Type': 'application/json' },
       });
       if (doneDrafting) {
+        // eslint-disable-next-line
         submitDeckForm.current?.submit?.();
       }
     })();
@@ -313,23 +336,31 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, seed, loginCallba
       }
     }
   }, [action, drafterStates, mutations, rng]);
-  
-  const takeCard = useCallback((cardIndex, target) => {
-    if (action.match(/pick/)) {
-      const cardIndices = makeBotPicks(cardIndex);
-      mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });
-    } else {
-      const cardIndices = makeBotTrashPicks(cardIndex);
-      mutations.trashCards({ cardIndices });
-    }
-  }, [action, makeBotPicks, seatNum, makeBotTrashPicks, mutations]);
+
+  const takeCard = useCallback(
+    (cardIndex, target) => {
+      if (action.match(/pick/)) {
+        const cardIndices = makeBotPicks(cardIndex);
+        mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });
+      } else {
+        const cardIndices = makeBotTrashPicks(cardIndex);
+        mutations.trashCards({ cardIndices });
+      }
+    },
+    [action, makeBotPicks, seatNum, makeBotTrashPicks, mutations],
+  );
 
   const moveCard = useCallback((args) => mutations.moveCard({ ...args, seatIndex: seatNum }), [mutations, seatNum]);
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
-          <CubeDraftPlayerUI drafterState={drafterStates[seatNum]} seat={draft.seats[seatNum]} takeCard={takeCard} moveCard={moveCard} />
+          <CubeDraftPlayerUI
+            drafterState={drafterStates[seatNum]}
+            seat={draft.seats[seatNum]}
+            takeCard={takeCard}
+            moveCard={moveCard}
+          />
           <CSRFForm
             className="d-none"
             innerRef={submitDeckForm}
@@ -348,16 +379,12 @@ CubeDraftPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDraft: DraftPropType.isRequired,
   seatNumber: PropTypes.number,
-  initialPickNumber: PropTypes.number,
-  seed: PropTypes.string,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeDraftPage.defaultProps = {
   seatNumber: 0,
-  initialPickNumber: null,
-  seed: null,
   user: null,
   loginCallback: '/',
 };

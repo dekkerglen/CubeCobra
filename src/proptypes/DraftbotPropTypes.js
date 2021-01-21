@@ -9,16 +9,20 @@ export const StepPropType = PropTypes.shape({
 });
 
 const drafterStateSchema = {
-  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
   picked: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+  trashed: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   seen: PropTypes.arrayOf(PropTypes.number.isRequired),
   cardsInPack: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   packNum: PropTypes.number.isRequired,
   pickNum: PropTypes.number.isRequired,
   numPacks: PropTypes.number.isRequired,
   packSize: PropTypes.number.isRequired,
+  pickedNum: PropTypes.number.isRequired,
+  trashedNum: PropTypes.number.isRequired,
+  stepNumber: PropTypes.number.isRequired,
+  pickNumber: PropTypes.number.isRequired,
   step: StepPropType,
-  stepNum: PropTypes.number.isRequired,
   completedAmount: PropTypes.number.isRequired,
 };
 
