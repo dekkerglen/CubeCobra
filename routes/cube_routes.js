@@ -2448,7 +2448,7 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/^[A-Za-z0-9]*$/),
+  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/^[A-Za-z0-9_]*$/),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
     max: 100,
   }),
