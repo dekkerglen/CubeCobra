@@ -161,7 +161,7 @@ const Footer = () => (
         </a>
         .
         <br />
-        All other content Copyright © 2019 Cube Cobra
+        All other content Copyright © 2019 <script>new Date().getFullYear()>2019&&document.write("- "+new Date().getFullYear());</script> Cube Cobra
       </p>
     </Container>
   </footer>
