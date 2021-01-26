@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Row, Col, Container } from 'reactstrap';
 
-import Copyright from '../components/Copyright';
+import Copyright from 'components/Copyright';
 
 const Footer = () => (
   <footer>
