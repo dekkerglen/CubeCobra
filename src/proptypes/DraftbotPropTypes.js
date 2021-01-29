@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 import CardPropType from 'proptypes/CardPropType';
-import { COLORS } from 'utils/draftbots';
+import { COLORS } from 'drafting/draftbots';
 
 export const StepPropType = PropTypes.shape({
   action: PropTypes.oneOf(['pass', 'pick', 'pickrandom', 'trash', 'trashrandom']).isRequired,

@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
 
 import useQueryParam from 'hooks/useQueryParam';
-import { calculateAsfans } from 'utils/draftutil';
+import { calculateAsfans } from 'drafting/createdraft';
 import { fromEntries } from 'utils/Util';
 
 const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {

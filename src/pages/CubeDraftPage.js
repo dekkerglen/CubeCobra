@@ -31,15 +31,16 @@ import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
 import UserPropType from 'proptypes/UserPropType';
-import { cardType, makeSubtitle } from 'utils/Card';
+import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import { evaluateCardOrPool, getDrafterState } from 'utils/draftbots';
-import Location from 'utils/DraftLocation';
+import { calculateBotPick } from 'drafting/draftbots';
+import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
+import { getDefaultPosition, getDrafterState } from 'drafting/draftutil';
 import RenderToRoot from 'utils/RenderToRoot';
-import { cmcColumn, fromEntries, toNullableInt } from 'utils/Util';
+import { fromEntries, toNullableInt } from 'utils/Util';
 
 const canDrop = (_, target) => {
-  return target.type === Location.PICKS;
+  return target.type === DraftLocation.PICKS;
 };
 
 const Pack = ({ pack, packNumber, pickNumber, instructions, picking, onMoveCard, onClickCard }) => (
@@ -62,7 +63,7 @@ const Pack = ({ pack, packNumber, pickNumber, instructions, picking, onMoveCard,
           >
             {picking !== index ? false : <Spinner className="position-absolute" />}
             <DraggableCard
-              location={Location.pack(index)}
+              location={DraftLocation.pack(index)}
               data-index={index}
               card={card}
               canDrop={canDrop}
@@ -92,13 +93,6 @@ Pack.defaultProps = {
   instructions: null,
 };
 
-const getDefaultPosition = (card, picks) => {
-  const row = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
-  const col = cmcColumn(card);
-  const colIndex = picks[row][col].length;
-  return [row, col, colIndex];
-};
-
 const MUTATIONS = Object.freeze({
   pickCards: ({ newDraft, cardIndices, seatIndex: seatNum, target, cards }) => {
     for (let seatIndex = 0; seatIndex < newDraft.initial_state.length; seatIndex++) {
@@ -108,7 +102,7 @@ const MUTATIONS = Object.freeze({
         target && seatIndex === seatNum
           ? target
           : getDefaultPosition(cards[cardIndex], newDraft.seats[seatIndex].drafted);
-      newDraft.seats[seatIndex].drafted = DeckStacks.moveOrAddCard(newDraft.seats[seatIndex].drafted, pos, cardIndex);
+      newDraft.seats[seatIndex].drafted = moveOrAddCard(newDraft.seats[seatIndex].drafted, pos, cardIndex);
     }
   },
   trashCards: ({ newDraft, cardIndices }) => {
@@ -117,26 +111,37 @@ const MUTATIONS = Object.freeze({
     }
   },
   moveCard: ({ newDraft, seatIndex, target, source }) => {
-    newDraft.seats[seatIndex].drafted = DeckStacks.moveOrAddCard(newDraft.seats[seatIndex].drafted, target, source);
+    newDraft.seats[seatIndex].drafted = moveOrAddCard(newDraft.seats[seatIndex].drafted, target, source);
   },
 });
 
-const useDraftMutation = (mutation, setDraft, cards) =>
-  useCallback(
-    ({ cardIndices, seatIndex, source, target }) =>
-      setDraft((oldDraft) => {
-        const newDraft = { ...oldDraft };
-        if ((seatIndex || seatIndex === 0) && !cardIndices) {
-          newDraft.seats = [...newDraft.seats];
-          newDraft.seats[seatIndex] = { ...newDraft.seats[seatIndex] };
-        } else {
-          newDraft.seats = newDraft.seats.map((seat) => ({ ...seat }));
-        }
-        mutation({ newDraft, cardIndices, seatIndex, source, target, cards });
-        return newDraft;
-      }),
-    [mutation, setDraft, cards],
+const useMutatableDraft = (initialDraft) => {
+  const { cards } = initialDraft;
+  const [draft, setDraft] = useState(initialDraft);
+  const mutations = fromEntries(
+    Object.entries(MUTATIONS).map(([name, mutation]) => [
+      name,
+      // eslint-disable-next-line
+      useCallback(
+        ({ cardIndices, seatIndex, source, target }) =>
+          setDraft((oldDraft) => {
+            const newDraft = { ...oldDraft };
+            if ((seatIndex || seatIndex === 0) && !cardIndices) {
+              newDraft.seats = [...newDraft.seats];
+              newDraft.seats[seatIndex] = { ...newDraft.seats[seatIndex] };
+            } else {
+              newDraft.seats = newDraft.seats.map((seat) => ({ ...seat }));
+            }
+            mutation({ newDraft, cardIndices, seatIndex, source, target, cards });
+            return newDraft;
+          }),
+        // eslint-disable-next-line
+        [mutation, setDraft, cards],
+      ),
+    ]),
   );
+  return { draft, mutations };
+};
 
 const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   const {
@@ -172,16 +177,16 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   const handleMoveCard = useCallback(
     async (source, target) => {
       if (source.equals(target)) return;
-      if (source.type === Location.PACK) {
-        if (target.type === Location.PICKS) {
+      if (source.type === DraftLocation.PACK) {
+        if (target.type === DraftLocation.PICKS) {
           setPicking(source.data);
           takeCard(cardsInPack[source.data], target.data);
           setPicking(null);
         } else {
           console.error("Can't move cards inside pack.");
         }
-      } else if (source.type === Location.PICKS) {
-        if (target.type === Location.PICKS) {
+      } else if (source.type === DraftLocation.PICKS) {
+        if (target.type === DraftLocation.PICKS) {
           moveCard({ target: target.data, source: source.data });
         } else {
           console.error("Can't move cards from picks back to pack.");
@@ -252,7 +257,7 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
               cards={picks}
               title="Picks"
               subtitle={makeSubtitle(picks.flat(3))}
-              locationType={Location.PICKS}
+              locationType={DraftLocation.PICKS}
               canDrop={canDrop}
               onMoveCard={handleMoveCard}
             />
@@ -270,9 +275,9 @@ CubeDraftPlayerUI.propTypes = {
   moveCard: PropTypes.func.isRequired,
 };
 const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
-  const { cards, seed } = initialDraft;
+  const { seed } = initialDraft;
   const seatNum = toNullableInt(seatNumber) ?? 0;
-  const [draft, setDraft] = useState(initialDraft);
+  const { draft, mutations } = useMutatableDraft(initialDraft);
   const submitDeckForm = useRef();
   const rng = useMemo(() => seedrandom(seed), [seed]);
   const drafterStates = useMemo(
@@ -285,29 +290,17 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
     packNum,
   } = drafterStates[seatNum];
   const doneDrafting = packNum >= numPacks;
-  const mutations = fromEntries(
-    // eslint-disable-next-line
-    Object.entries(MUTATIONS).map(([name, mutation]) => [name, useDraftMutation(mutation, setDraft, cards)]),
-  );
   const makeBotPicks = useCallback(
     (playerChose) =>
-      drafterStates.map((state, seatIndex) =>
-        seatIndex === seatNum
-          ? playerChose
-          : state.cardsInPack
-              .map((cardIndex) => evaluateCardOrPool(cardIndex, state))
-              .sort(({ score: a }, { score: b }) => b - a)[0].botState.cardIndex,
+      drafterStates.map((drafterState, seatIndex) =>
+        seatIndex === seatNum ? playerChose : calculateBotPick(drafterState, false),
       ),
     [drafterStates, seatNum],
   );
   const makeBotTrashPicks = useCallback(
     (playerChose) =>
-      drafterStates.map((state, seatIndex) =>
-        seatIndex === seatNum
-          ? playerChose
-          : state.cardsInPack
-              .map((cardIndex) => [evaluateCardOrPool(cardIndex, state).score, cardIndex])
-              .sort(([a], [b]) => a - b)[0][1],
+      drafterStates.map((drafterState, seatIndex) =>
+        seatIndex === seatNum ? playerChose : calculateBotPick(drafterState, true),
       ),
     [drafterStates, seatNum],
   );
@@ -326,6 +319,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
       }
     })();
   }, [doneDrafting, draft]);
+
   useEffect(() => {
     if (action.match(/random/)) {
       const cardIndices = drafterStates.map((state) => state.cardsInPack[Math.floor(rng() * state.cardsInPack.length)]);

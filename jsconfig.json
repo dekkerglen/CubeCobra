@@ -4,11 +4,10 @@
         "target": "es6",
         "baseUrl": "./",
         "paths": {
-            "serverjs/*": ["./serverjs/*"],
-            "routes/*": ["./routes/*"],
             "analytics/*": ["./src/analytics/*"],
             "components/*": ["./src/components/*"],
             "contexts/*": ["./src/contexts/*"],
+            "drafting/*": ["./src/drafting/*"],
             "filtering/*": ["./src/filtering/*"],
             "generated/*": ["./src/generated/*"],
             "hooks/*": ["./src/hooks/*"],

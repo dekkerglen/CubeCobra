@@ -21,7 +21,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { buildDeck, calculateBasicCounts } from 'utils/Draft';
+import { buildDeck, calculateBasicCounts } from 'drafting/deckutil';
 
 const COLORS = [
   ['White', 'W', 'Plains'],

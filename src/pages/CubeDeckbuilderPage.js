@@ -1,11 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
-
-import Location from 'utils/DraftLocation';
-
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
@@ -15,16 +9,20 @@ import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextEntry from 'components/TextEntry';
+import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
-import { makeSubtitle } from 'utils/Card';
 import MainLayout from 'layouts/MainLayout';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
+import { makeSubtitle } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = () => true;
 
 const oppositeLocation = {
-  [Location.DECK]: Location.SIDEBOARD,
-  [Location.SIDEBOARD]: Location.DECK,
+  [DraftLocation.DECK]: DraftLocation.SIDEBOARD,
+  [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
 };
 
 const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
@@ -36,8 +34,8 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
   );
 
   const locationMap = {
-    [Location.DECK]: [deck, setDeck],
-    [Location.SIDEBOARD]: [sideboard, setSideboard],
+    [DraftLocation.DECK]: [deck, setDeck],
+    [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
   };
 
   const handleMoveCard = useCallback(
@@ -49,9 +47,9 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       const [sourceCards, setSource] = locationMap[source.type];
       const [targetCards, setTarget] = locationMap[target.type];
 
-      const [card, newSourceCards] = DeckStacks.removeCard(sourceCards, source.data);
+      const [card, newSourceCards] = removeCard(sourceCards, source.data);
       setSource(newSourceCards);
-      setTarget(DeckStacks.moveOrAddCard(targetCards, target.data, card));
+      setTarget(moveOrAddCard(targetCards, target.data, card));
     },
     [locationMap],
   );
@@ -63,10 +61,10 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       const eventTarget = event.currentTarget;
       const locationType = eventTarget.getAttribute('data-location-type');
       const locationData = JSON.parse(eventTarget.getAttribute('data-location-data'));
-      const source = new Location(locationType, locationData);
-      const target = new Location(oppositeLocation[source.type], [...source.data]);
+      const source = new DraftLocation(locationType, locationData);
+      const target = new DraftLocation(oppositeLocation[source.type], [...source.data]);
       target.data[2] = 0;
-      if (target.type === Location.SIDEBOARD) {
+      if (target.type === DraftLocation.SIDEBOARD) {
         // Only one row for the sideboard.
         target.data[0] = 0;
       } else {
@@ -121,7 +119,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
                       cards={deck}
                       title="Deck"
                       subtitle={makeSubtitle(deck.flat().flat())}
-                      locationType={Location.DECK}
+                      locationType={DraftLocation.DECK}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
                       onClickCard={handleClickCard}
@@ -130,7 +128,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
                       className="border-top"
                       cards={sideboard}
                       title="Sideboard"
-                      locationType={Location.SIDEBOARD}
+                      locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
                       onClickCard={handleClickCard}

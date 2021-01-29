@@ -8,7 +8,7 @@ import { getCardColorClass } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
 import { DraftPropType } from 'proptypes/DraftbotPropTypes';
 import { cardName, encodeName } from 'utils/Card';
-import { getDrafterState } from 'utils/draftbots';
+import { getDrafterState } from 'drafting/draftutil';
 import { toNullableInt } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);

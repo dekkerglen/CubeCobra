@@ -29,8 +29,8 @@ const {
   generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
-const deckutil = require('../dist/utils/Draft.js');
-const draftutil = require('../dist/utils/draftutil.js');
+const { buildDeck } = require('../dist/drafting/deckutil').default;
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft').default;
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
@@ -2065,12 +2065,12 @@ router.post(
       }
 
       // setup draft
-      const format = draftutil.getDraftFormat(params, cube);
+      const format = getDraftFormat(params, cube);
 
       let draft = new Draft();
       let populated = {};
       try {
-        populated = draftutil.createDraft(
+        populated = createDraft(
           format,
           cube.cards,
           params.seats,
@@ -2952,7 +2952,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     if (srcDraft) {
       const userPicked = base.seats[req.params.index].pickorder.slice();
-      const { colors: userColors } = await deckutil.default.buildDeck(deck.cards, userPicked, srcDraft.basics);
+      const { colors: userColors } = await buildDeck(deck.cards, userPicked, srcDraft.basics);
 
       deck.seats.push({
         userid: req.user._id,
@@ -2969,11 +2969,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         if (i !== parseInt(req.params.index, 10)) {
           const picked = base.seats[i].pickorder;
           // eslint-disable-next-line no-await-in-loop
-          const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
-            deck.cards,
-            picked,
-            srcDraft.basics,
-          );
+          const { deck: builtDeck, sideboard, colors } = await buildDeck(deck.cards, picked, srcDraft.basics);
           deck.seats.push({
             userid: null,
             username: `Bot ${botNumber}: ${colors.join(', ')}`,

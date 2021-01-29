@@ -1,5 +1,6 @@
 __tests__/helpers.js
 __tests__/src/components/CubeListPage.test.js
+config/passport.js
 jobs/download_cubes.js
 jobs/populate_analytics.js
 jobs/populate_embeddings.js
@@ -38,5 +39,8 @@ src/components/TextBadge.js
 src/components/WithAutocard.js
 src/components/WithLoading.js
 
+.git
+dist
+node_modules
 public/bower_components
 src/generated

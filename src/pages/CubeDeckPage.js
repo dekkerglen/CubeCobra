@@ -32,7 +32,7 @@ import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
 import { csrfFetch } from 'utils/CSRF';
-import Draft, { init, allBotsDraft } from 'utils/Draft';
+import { allBotsDraft } from 'drafting/draftutil';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
@@ -68,9 +68,8 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
         method: 'POST',
       });
       const json = await response.json();
-      init(json.draft);
-      setDraftId(Draft.id());
-      await allBotsDraft();
+      setDraftId(json.draft._id);
+      await allBotsDraft(draft);
       submitDeckForm.current.submit();
     }
   }, [draft, loading]);

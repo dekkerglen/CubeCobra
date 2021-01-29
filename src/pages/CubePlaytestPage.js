@@ -38,7 +38,7 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import { csrfFetch } from 'utils/CSRF';
-import Draft, { allBotsDraft, init } from 'utils/Draft';
+import { allBotsDraft } from 'drafting/draftutil';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -121,9 +121,8 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
           body,
         });
         const json = await response.json();
-        init(json.draft);
-        setDraftId(Draft.id());
-        await allBotsDraft();
+        setDraftId(json.draft._id);
+        await allBotsDraft(json.draft);
         submitDeckForm.current.submit();
       }
     },
