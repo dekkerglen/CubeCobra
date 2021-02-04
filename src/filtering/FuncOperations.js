@@ -73,7 +73,7 @@ export const nameStringOperation = (op, value) => {
     if (shorthand) {
       expandedValue = expandedValue.replace(new RegExp(shorthand, 'g'), NAME_PLACEHOLDER);
     }
-    return strOp(expandedValue);
+    return strOp(fieldValue) || strOp(expandedValue);
   };
 };
 
