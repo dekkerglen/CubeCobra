@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 import CardPricePropType from 'proptypes/CardPricePropType';
@@ -20,6 +20,7 @@ import {
   Table,
   Badge,
   Button,
+  Input,
 } from 'reactstrap';
 
 import ChartComponent from 'react-chartjs-2';
@@ -45,6 +46,7 @@ import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
+import { CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
@@ -177,6 +179,33 @@ LegalityBadge.propTypes = {
   status: PropTypes.string.isRequired,
 };
 
+const CardIdBadge = ({ id }) => {
+  const [copied, setCopied] = useState(false);
+
+  const onCopyClick = async () => {
+    await navigator.clipboard.writeText(id);
+    setCopied(true);
+  };
+
+  return (
+    <InputGroup className="flex-nowrap mb-3" size="sm">
+      <InputGroupAddon addonType="prepend">
+        <InputGroupText>Card ID</InputGroupText>
+      </InputGroupAddon>
+      <Input id="card-id" className="bg-white" value={id} disabled />
+      <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
+        <Button className="btn-sm" onClick={onCopyClick}>
+          {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
+        </Button>
+      </InputGroupAddon>
+    </InputGroup>
+  );
+};
+
+CardIdBadge.propTypes = {
+  id: PropTypes.string.isRequired,
+};
+
 const getPriceTypeUnit = {
   price: 'USD',
   price_foil: 'USD',
@@ -231,11 +260,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                 color="success"
                 block
                 outline
-                className="mb-2 mr-2"
+                className="mb-1 mr-2"
                 modalProps={{ card, cubes, hideAnalytics: true }}
               >
                 Add to Cube...
               </AddModal>
+              <CardIdBadge id={card._id} />
               {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
                   <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
