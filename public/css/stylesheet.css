@@ -1128,7 +1128,7 @@ audio {
 	border-color: var(--border) !important;
 }
 
-.input-group-text {
+.input-group-text, .input-group-button {
 	background-color: var(--bg-dark);
 	color:var(--text);
 	border-color: var(--border);

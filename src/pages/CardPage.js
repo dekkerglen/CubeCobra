@@ -194,7 +194,7 @@ const CardIdBadge = ({ id }) => {
       </InputGroupAddon>
       <Input className="bg-white" value={id} disabled />
       <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
-        <Button className="btn-sm" onClick={onCopyClick}>
+        <Button className="btn-sm input-group-button" onClick={onCopyClick}>
           {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
         </Button>
       </InputGroupAddon>
