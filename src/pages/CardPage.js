@@ -192,7 +192,7 @@ const CardIdBadge = ({ id }) => {
       <InputGroupAddon addonType="prepend">
         <InputGroupText>Card ID</InputGroupText>
       </InputGroupAddon>
-      <Input id="card-id" className="bg-white" value={id} disabled />
+      <Input className="bg-white" value={id} disabled />
       <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
         <Button className="btn-sm" onClick={onCopyClick}>
           {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
