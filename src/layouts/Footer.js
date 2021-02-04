@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Row, Col, Container } from 'reactstrap';
 
+import Copyright from 'components/Copyright';
+
 const Footer = () => (
   <footer>
     <Container className="pt-3">
@@ -161,7 +163,7 @@ const Footer = () => (
         </a>
         .
         <br />
-        All other content Copyright © 2019 Cube Cobra
+        <Copyright />
       </p>
     </Container>
   </footer>
