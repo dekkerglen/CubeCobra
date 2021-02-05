@@ -106,17 +106,17 @@ export const cardNotes = (card) => card.notes;
 export const cardColorCategory = (card) => card.colorCategory ?? card.details.color_category;
 
 export const cardPrice = (card) =>
-  cardFinish(card) === 'Foil'
+  (cardFinish(card) === 'Foil'
     ? card.details.prices.usd_foil ?? card.details.prices.usd
-    : card.details.prices.usd ?? card.details.prices.usd_foil;
+    : card.details.prices.usd ?? card.details.prices.usd_foil) ?? undefined;
 
-export const cardNormalPrice = (card) => card.details.prices.usd;
+export const cardNormalPrice = (card) => card.details.prices.usd ?? undefined;
 
-export const cardFoilPrice = (card) => card.details.prices.usd_foil;
+export const cardFoilPrice = (card) => card.details.prices.usd_foil ?? undefined;
 
-export const cardPriceEur = (card) => card.details.prices.eur;
+export const cardPriceEur = (card) => card.details.prices.eur ?? undefined;
 
-export const cardTix = (card) => card.details.prices.tix;
+export const cardTix = (card) => card.details.prices.tix ?? undefined;
 
 export const cardIsFullArt = (card) => card.details.full_art;
 

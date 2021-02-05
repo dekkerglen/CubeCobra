@@ -25,33 +25,21 @@ const PAGE_SIZE = 96;
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
   if (filter) {
-    // In the first pass, cards don't have prices/picks/elo, and so match all those filters.
+    // In the first pass, cards don't have rating or picks, and so match all those filters.
     // In the seoncd pass, we add that information.
-    if (
-      filterUses(filter, 'rating') ||
-      filterUses(filter, 'elo') ||
-      filterUses(filter, 'picks') ||
-      filterUses(filter, 'cubes') ||
-      filterUses(filter, 'price') ||
-      filterUses(filter, 'price_foil')
-    ) {
+    if (filterUses(filter, 'rating') || filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
       const historyObjects = await CardHistory.find(
         { oracleId: { $in: oracleIds } },
-        'oracleId current.rating current.elo current.picks current.cubes current.prices',
+        'oracleId current.rating current.picks current.cubes',
       ).lean();
       const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
       cards = cards.map((card) => {
         const history = historyDict.get(card.oracle_id);
-        const priceData = history ? history.current.prices.find(({ version }) => version === card._id) : null;
         return {
           ...card,
           rating: history ? history.current.rating : null,
-          elo: history ? history.current.elo : null,
           picks: history ? history.current.picks : null,
-          cubes: history ? history.current.cubes : null,
-          price: priceData ? priceData.price : null,
-          price_foil: priceData ? priceData.price_foil : null,
         };
       });
     }
