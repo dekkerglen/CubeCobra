@@ -40,6 +40,7 @@ async function matchingCards(filter) {
           ...card,
           rating: history ? history.current.rating : null,
           picks: history ? history.current.picks : null,
+          cubes: history ? history.current.cubes : null,
         };
       });
     }
