@@ -105,6 +105,8 @@ export const cardNotes = (card) => card.notes;
 
 export const cardColorCategory = (card) => card.colorCategory ?? card.details.color_category;
 
+// prices being null causes unwanted coercing behaviour in price filters,
+// so nullish price values are transformed to undefined instead
 export const cardPrice = (card) =>
   (cardFinish(card) === 'Foil'
     ? card.details.prices.usd_foil ?? card.details.prices.usd
