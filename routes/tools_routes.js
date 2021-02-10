@@ -26,7 +26,7 @@ async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
   if (filter) {
     // In the first pass, cards don't have rating or picks, and so match all those filters.
-    // In the seoncd pass, we add that information.
+    // In the second pass, we add that information.
     if (filterUses(filter, 'rating') || filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
       const historyObjects = await CardHistory.find(
