@@ -9,6 +9,7 @@
 # const manaCostOperation = (op, value) => ...
 # const castableCostOperation = (op, value) => ...
 # const setElementOperation = (value) => ...
+# const fetchedOperation = (op, value) => ...
 
 positiveHalfIntOpValue -> anyOperator positiveHalfIntValue {% ([op, value]) => defaultOperation(op, value) %}
 
@@ -23,6 +24,9 @@ halfIntValue ->
   | "." ("0" | "5") {% ([, digit]) => digit === '5' ? 0.5 : 0 %}
 
 integerOpValue -> anyOperator integerValue {% ([op, value]) => defaultOperation(op, value) %}
+
+# used for fields that are fetched from the database
+fetchedIntegerOpValue -> anyOperator integerValue {% ([op, value]) => fetchedOperation(op, value) %}
 
 integerValue -> [0-9]:+ {% ([digits]) => parseInt(digits.join(''), 10) %}
 

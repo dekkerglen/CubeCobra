@@ -24,6 +24,7 @@ const PAGE_SIZE = 96;
 
 async function matchingCards(filter) {
   let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
+  cards = filterCardsDetails(cards, filter);
   // In the first pass, cards don't have rating or picks, and so match all those filters.
   // In the second pass, we add that information.
   if (filterUses(filter, 'rating') || filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
@@ -42,8 +43,11 @@ async function matchingCards(filter) {
         cubes: history ? history.current.cubes : null,
       };
     });
+
+    cards = filterCardsDetails(cards, filter);
   }
-  return filterCardsDetails(cards, filter);
+
+  return cards;
 }
 
 async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
