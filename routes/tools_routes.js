@@ -25,20 +25,19 @@ const PAGE_SIZE = 96;
 async function matchingCards(filter) {
   let cards = carddb.printedCardList;
   cards = filterCardsDetails(cards, filter);
-  // In the first pass, cards don't have rating or picks, and so match all those filters.
+  // In the first pass, cards don't have picks or cube information, and so match all those filters.
   // In the second pass, we add that information.
-  if (filterUses(filter, 'rating') || filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
+  if (filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
     const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
     const historyObjects = await CardHistory.find(
       { oracleId: { $in: oracleIds } },
-      'oracleId current.rating current.picks current.cubes',
+      'oracleId current.picks current.cubes',
     ).lean();
     const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
     cards = cards.map((card) => {
       const history = historyDict.get(card.oracle_id);
       return {
         ...card,
-        rating: history ? history.current.rating : null,
         picks: history ? history.current.picks : null,
         cubes: history ? history.current.cubes : null,
       };
