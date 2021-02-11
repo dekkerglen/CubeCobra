@@ -31,13 +31,11 @@ async function matchingCards(filter) {
   // In the first pass, cards don't have picks or cube information, and so match all those filters.
   // In the second pass, we add that information if needed.
   if (DB_FIELDS.some((field) => filterUses(filter, field))) {
-    let dbFilter;
+    let dbFilter = {};
     // if the filter uses *only* database fields, simply fetch the whole database without creating an ID query
     if (usesNonDbField) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
       dbFilter = { oracleId: { $in: oracleIds } };
-    } else {
-      dbFilter = {};
     }
 
     const historyObjects = await CardHistory.find(dbFilter, 'oracleId current.picks current.cubes').lean();
