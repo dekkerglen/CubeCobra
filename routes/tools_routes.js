@@ -26,7 +26,7 @@ async function matchingCards(filter) {
   let cards = carddb.printedCardList;
   cards = filterCardsDetails(cards, filter);
   // In the first pass, cards don't have picks or cube information, and so match all those filters.
-  // In the second pass, we add that information.
+  // In the second pass, we add that information if needed.
   if (filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
     const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
     const historyObjects = await CardHistory.find(
@@ -34,6 +34,7 @@ async function matchingCards(filter) {
       'oracleId current.picks current.cubes',
     ).lean();
     const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
+
     cards = cards.map((card) => {
       const history = historyDict.get(card.oracle_id);
       return {
@@ -42,8 +43,7 @@ async function matchingCards(filter) {
         cubes: history ? history.current.cubes : null,
       };
     });
-
-    cards = filterCardsDetails(cards, filter);
+    return filterCardsDetails(cards, filter);
   }
 
   return cards;
