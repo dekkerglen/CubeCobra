@@ -26,7 +26,7 @@ export const defaultOperation = (op, value) => {
 // those fields always have to match in the first filter pass, before the actual values are set for them
 export const fetchedOperation = (op, value) => {
   const defOp = defaultOperation(op, value);
-  return (fieldValue) => typeof fieldValue === 'undefined' || defOp(fieldValue);
+  return (fieldValue, card) => !card.details.secondPass || defOp(fieldValue);
 };
 
 export const stringOperation = (op, value) => {

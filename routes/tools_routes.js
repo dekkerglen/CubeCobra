@@ -39,8 +39,9 @@ async function matchingCards(filter) {
       const history = historyDict.get(card.oracle_id);
       return {
         ...card,
-        picks: history ? history.current.picks : null,
-        cubes: history ? history.current.cubes : null,
+        picks: history ? history.current.picks : undefined,
+        cubes: history ? history.current.cubes : undefined,
+        secondPass: true,
       };
     });
     return filterCardsDetails(cards, filter);
