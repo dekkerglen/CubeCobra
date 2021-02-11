@@ -23,7 +23,7 @@ const MIN_PICKS = 100;
 const PAGE_SIZE = 96;
 
 async function matchingCards(filter) {
-  let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
+  let cards = carddb.printedCardList;
   cards = filterCardsDetails(cards, filter);
   // In the first pass, cards don't have rating or picks, and so match all those filters.
   // In the second pass, we add that information.
