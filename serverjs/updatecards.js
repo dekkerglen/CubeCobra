@@ -134,7 +134,9 @@ function addCardToCatalog(card, isExtra) {
   if (!catalog.nameToId[normalizedName]) {
     catalog.nameToId[normalizedName] = [];
   }
-  catalog.nameToId[normalizedName].push(card._id);
+  if (!catalog.nameToId[normalizedName].includes(card._id)) {
+    catalog.nameToId[normalizedName].push(card._id);
+  }
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
