@@ -10,6 +10,8 @@ export const operatorsRegex = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
 
 export const filterUses = (filter, name) => (filter?.fieldsUsed?.indexOf?.(name) ?? -1) >= 0;
 
+export const filterUsedFields = (filter) => filter?.fieldsUsed ?? [];
+
 export const filterToString = (filter) => filter?.stringify ?? 'empty filter';
 
 export function makeFilter(filterText) {
@@ -48,6 +50,7 @@ export default {
   operators: ALL_OPERATORS,
   operatorsRegex,
   filterUses,
+  filterUsedFields,
   filterToString,
   makeFilter,
   filterCardsDetails,

@@ -6,7 +6,7 @@ const express = require('express');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
 const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
-const { filterUses, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
+const { filterUses, filterUsedFields, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
@@ -21,31 +21,39 @@ const router = express.Router();
 const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
+/* Filter fields that need to be fetched from the database */
+const DB_FIELDS = ['picks', 'cubes'];
 
 async function matchingCards(filter) {
-  let cards = carddb.allCards().filter((card) => !card.digital && !card.isToken);
-  if (filter) {
-    // In the first pass, cards don't have rating or picks, and so match all those filters.
-    // In the second pass, we add that information.
-    if (filterUses(filter, 'rating') || filterUses(filter, 'picks') || filterUses(filter, 'cubes')) {
+  let cards = carddb.printedCardList; // all non-token, non-digital cards
+  const usesNonDbField = filterUsedFields(filter).some((field) => !DB_FIELDS.includes(field));
+  if (usesNonDbField) cards = filterCardsDetails(cards, filter);
+  // In the first pass, cards don't have picks or cube information, and so match all those filters.
+  // In the second pass, we add that information if needed.
+  if (DB_FIELDS.some((field) => filterUses(filter, field))) {
+    let dbFilter = {};
+    // if the filter uses *only* database fields, simply fetch the whole database without creating an ID query
+    if (usesNonDbField) {
       const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
-      const historyObjects = await CardHistory.find(
-        { oracleId: { $in: oracleIds } },
-        'oracleId current.rating current.picks current.cubes',
-      ).lean();
-      const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
-      cards = cards.map((card) => {
-        const history = historyDict.get(card.oracle_id);
-        return {
-          ...card,
-          rating: history ? history.current.rating : null,
-          picks: history ? history.current.picks : null,
-          cubes: history ? history.current.cubes : null,
-        };
-      });
+      dbFilter = { oracleId: { $in: oracleIds } };
     }
+
+    const historyObjects = await CardHistory.find(dbFilter, 'oracleId current.picks current.cubes').lean();
+    const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
+
+    cards = cards.map((card) => {
+      const history = historyDict.get(card.oracle_id);
+      return {
+        ...card,
+        picks: history?.current.picks,
+        cubes: history?.current.cubes,
+        secondPass: true,
+      };
+    });
+    return filterCardsDetails(cards, filter);
   }
-  return filterCardsDetails(cards, filter);
+
+  return cards;
 }
 
 async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {

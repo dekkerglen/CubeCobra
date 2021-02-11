@@ -12,6 +12,7 @@ let data = {
   oracleToId: {},
   english: {},
   _carddict: {},
+  printedCardList: [], // for card filters
 };
 
 const fileToAttribute = {
@@ -123,13 +124,19 @@ function initializeCardDb(dataRoot, skipWatchers) {
       registerFileWatcher(filepath, attribute);
     }
   }
-  return Promise.all(promises).then(() => winston.info('Finished loading carddb.'));
+  return Promise.all(promises)
+    .then(() => {
+      // cache cards used in card filters
+      data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
+    })
+    .then(() => winston.info('Finished loading carddb.'));
 }
 
 function unloadCardDb() {
   for (const attribute of Object.values(fileToAttribute)) {
     delete data[attribute];
   }
+  delete data.printedCardList;
 }
 
 function reasonableCard(card) {

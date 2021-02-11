@@ -16,6 +16,7 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
+  fetchedOperation,
 } from 'filtering/FuncOperations';
 import {
   cardCmc,
@@ -158,9 +159,9 @@ castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castabl
 devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) anyOperator integerValue {% ([, [color], op, value]) => genericCondition('parsed_cost', (c) => c, devotionOperation(op, color, value)) %}
   | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
 
-picksCondition -> "picks" integerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
+picksCondition -> "picks" fetchedIntegerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
 
-cubesCondition -> "cubes" integerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
+cubesCondition -> "cubes" fetchedIntegerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
 
