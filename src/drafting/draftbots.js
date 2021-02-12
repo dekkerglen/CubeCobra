@@ -198,6 +198,9 @@ const eloToValue = (elo) => Math.sqrt(10 ** ((elo ?? 1200) / 400 - 4));
 const sumWeightedRatings = (idxs, cards, p) =>
   idxs.length > 0 ? sum(idxs.map((c) => Math.min(MAX_SCORE, p[c] * eloToValue(cardElo(cards[c]))))) / idxs.length : 0;
 
+const sumSynergy = (cardIndex, idxs, cards, probabilities) =>
+  probabilities[cardIndex] * sum(idxs.map((ci) => probabilities[ci] * getSynergy(cardIndex, ci, cards)));
+
 const calculateWeight = (weights, { packNum, pickNum, numPacks, packSize }) =>
   interpolateWeight(weights, [packNum, numPacks], [pickNum, packSize]);
 
@@ -227,7 +230,7 @@ export const ORACLES = Object.freeze(
       // How much does the card we're considering synergize with the cards we've picked?
       // Helps us assess how much we want to play this card.
       computeValue: ({ picked, cardIndex: ci, cards, probabilities: p }) =>
-        picked.length > 0 ? (p[ci] * sum(picked.map((c) => p[c] * getSynergy(c, ci, cards)))) / picked.length : 0,
+        picked.length > 0 ? sumSynergy(ci, picked, cards, p) / picked.length : 0,
     },
     {
       title: 'Internal Synergy',
@@ -241,29 +244,13 @@ export const ORACLES = Object.freeze(
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked, cards, probabilities: p }) => {
-        if (picked.length < 2) return 0;
-        const pairs = picked.map((c1, i) => fst(picked, i).map((c2) => [c1, c2])).flat(1);
-        const pairProbs = pairs.map(([c1, c2]) => p[c1] * p[c2]);
-        const pairSynergies = pairs.map(([c1, c2]) => getSynergy(c1, c2, cards));
-        const totalPairProb = sum(pairProbs);
-        // Here we linearize the result. If we use the weighted sum of each pair's synergy divided
-        // by the total number of pairs the result would be quadratic in the number of cards that
-        // are playable. That would make the number of cards they were able to play a much more
-        // important factor than the actual synergy values which undermines this oracle's goal.
-        // If we think of totalPairProb as telling us how many pairs of cards the bot is
-        // considering playable then it is equal to c*(c-1)/2 where c is the effective number of
-        // cards being considered. effectiveCardCount is this c in terms of totalPairProb which will
-        // always be in the range [0, picked.length].
-        const effectiveCardCount = (1 + Math.sqrt(1 + 8 * totalPairProb)) / 2;
-        // Then we can also consider the average synergy of the pairs weighted by the probability
-        // assigned to that pair as a. weightedAverageSynergy is that a which will always be in the
-        // range [0, 10].
-        const weightedAverageSynergy = sum(pairSynergies.map((s, i) => s * pairProbs[i])) / totalPairProb;
-        // This gives us a final score linear in the number of considered cards as well as the
-        // average synergy. Given the ranges we know for the values we can show it will be in [0, 10].
-        return (effectiveCardCount * weightedAverageSynergy) / picked.length;
-      },
+      computeValue: ({ picked: arr, cards: cs, probabilities: ps, totalProbability: tp }) =>
+        // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
+        // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
+        // the synergy values, which undermines our goal. Instead we can treat it as the weighted
+        // average over the Pick Synergy of each picked card with the rest. There are two ordered
+        // pairs for every distinct unordered pair so we multiply by 2.
+        tp > 1 ? (2 * sum(arr.map((ci, i) => sumSynergy(ci, fst(arr, i), cs, ps)))) / (arr.length - 1) / tp : 0,
     },
     {
       title: 'Color',
@@ -360,17 +347,17 @@ const calculateScore = (botState) => {
       colors: getCombinationForLands(botState.lands),
     };
   }
-  const totalProbability = picked.reduce(
+  const nonlandProbability = picked.reduce(
     (acc, c) => (acc + cardType(cards[c]).toLowerCase().includes('land') ? 0 : probabilities[c]),
     0,
   );
   return {
-    score: totalProbability * score,
+    score: nonlandProbability * score,
     oracleResults,
     botState,
     probability: botState.probabilities[botState.cardIndex],
     colors: getCombinationForLands(botState.lands),
-    totalProbability,
+    nonlandProbability,
   };
 };
 
@@ -382,6 +369,7 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
   );
   const initialBotState = { ...drafterState, cardIndex, lands: currentLands };
   initialBotState.probabilities = calculateProbabilities(initialBotState);
+  initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
   while (!landCountsAreEqual(prevLands, currentLands)) {
     prevLands = currentLands;
@@ -397,6 +385,7 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
             if (!landCountsAreEqual(lands, prevLands)) {
               const botState = { ...drafterState, cardIndex, lands };
               botState.probabilities = calculateProbabilities(botState);
+              botState.totalProbability = sum(botState.probabilities);
               const newScore = calculateScore(botState);
               if (newScore.score > nextScore.score) {
                 nextLands = lands;
