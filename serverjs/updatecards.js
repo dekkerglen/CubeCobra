@@ -583,6 +583,8 @@ function convertCard(card, isExtra) {
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
+  newcard.foil = card.foil;
+  newcard.nonfoil = card.nonfoil;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
 
@@ -669,7 +671,6 @@ function convertCard(card, isExtra) {
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }
-
   return newcard;
 }
 

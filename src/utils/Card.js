@@ -232,6 +232,9 @@ export const CARD_CATEGORY_DETECTORS = {
   modal: (details) => details.oracle_text.includes('•'),
   creatureland: isCreatureLand,
   manland: isCreatureLand,
+  foil: (details) => details.foil,
+  nonfoil: (details) => details.nonfoil,
+  fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
   cycleland: (details) => LandCategories.CYCLE.includes(details.name),
@@ -255,12 +258,11 @@ export const CARD_CATEGORY_DETECTORS = {
   battleland: (details) => LandCategories.TANGO.includes(details.name),
 
   // Others from Scryfall:
-  //   reserved, reprint, new, old, hires, foil,
+  //   reserved, reprint, new, old, hires,
   //   spotlight, unique, masterpiece,
   //   funny,
   //   booster, datestamped, prerelease, planeswalker_deck,
   //   league, buyabox, giftbox, intro_pack, gameday, release,
-  //   foil, nonfoil, full,
 };
 
 export const CARD_CATEGORIES = Object.keys(CARD_CATEGORY_DETECTORS);

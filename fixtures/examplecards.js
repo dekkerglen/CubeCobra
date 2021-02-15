@@ -646,10 +646,124 @@ const exampleForeignCard = {
   },
 };
 
+const exampleNonFoilCard = {
+  object: 'card',
+  id: 'cdf7ea34-2cde-4ec5-9b12-99b0002da986',
+  oracle_id: '8e42ed82-8b56-46ad-a1ca-e29689a9d030',
+  multiverse_ids: [4721],
+  mtgo_id: 9609,
+  mtgo_foil_id: 9610,
+  tcgplayer_id: 5698,
+  cardmarket_id: 8817,
+  name: 'Rootwater Hunter',
+  lang: 'en',
+  released_at: '1997-10-14',
+  uri: 'https://api.scryfall.com/cards/cdf7ea34-2cde-4ec5-9b12-99b0002da986',
+  scryfall_uri: 'https://scryfall.com/card/tmp/82/rootwater-hunter?utm_source=api',
+  layout: 'normal',
+  highres_image: true,
+  image_uris: {
+    small:
+      'https://c1.scryfall.com/file/scryfall-cards/small/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+    normal:
+      'https://c1.scryfall.com/file/scryfall-cards/normal/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+    large:
+      'https://c1.scryfall.com/file/scryfall-cards/large/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+    png:
+      'https://c1.scryfall.com/file/scryfall-cards/png/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.png?1562056856',
+    art_crop:
+      'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+    border_crop:
+      'https://c1.scryfall.com/file/scryfall-cards/border_crop/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+  },
+  mana_cost: '{2}{U}',
+  cmc: 3.0,
+  type_line: 'Creature — Merfolk',
+  oracle_text: '{T}: Rootwater Hunter deals 1 damage to any target.',
+  power: '1',
+  toughness: '1',
+  colors: ['U'],
+  color_identity: ['U'],
+  keywords: [],
+  legalities: {
+    standard: 'not_legal',
+    future: 'not_legal',
+    historic: 'not_legal',
+    gladiator: 'not_legal',
+    pioneer: 'not_legal',
+    modern: 'not_legal',
+    legacy: 'legal',
+    pauper: 'legal',
+    vintage: 'legal',
+    penny: 'legal',
+    commander: 'legal',
+    brawl: 'not_legal',
+    duel: 'legal',
+    oldschool: 'not_legal',
+    premodern: 'legal',
+  },
+  games: ['paper', 'mtgo'],
+  reserved: false,
+  foil: false,
+  nonfoil: true,
+  oversized: false,
+  promo: false,
+  reprint: false,
+  variation: false,
+  set: 'tmp',
+  set_name: 'Tempest',
+  set_type: 'expansion',
+  set_uri: 'https://api.scryfall.com/sets/10df3a67-178e-4363-8668-34f0e6edf2a7',
+  set_search_uri: 'https://api.scryfall.com/cards/search?order=set&q=e%3Atmp&unique=prints',
+  scryfall_set_uri: 'https://scryfall.com/sets/tmp?utm_source=api',
+  rulings_uri: 'https://api.scryfall.com/cards/cdf7ea34-2cde-4ec5-9b12-99b0002da986/rulings',
+  prints_search_uri:
+    'https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8e42ed82-8b56-46ad-a1ca-e29689a9d030&unique=prints',
+  collector_number: '82',
+  digital: false,
+  rarity: 'common',
+  flavor_text:
+    "'Bitter water vicious wave\nShadow-cold shallows root-made maze\nHome's angry embrace.'\n—*Rootwater Saga*",
+  card_back_id: '0aeebaf5-8c7d-4636-9e82-8c27447861f7',
+  artist: 'Brom',
+  artist_ids: ['bd79c951-2552-45dd-aae7-a333c2b7c1ef'],
+  illustration_id: 'fcc88053-37d1-4ee0-8a0d-d6f34f1f86b0',
+  border_color: 'black',
+  frame: '1997',
+  full_art: false,
+  textless: false,
+  booster: true,
+  story_spotlight: false,
+  edhrec_rank: 9983,
+  prices: {
+    usd: '0.17',
+    usd_foil: null,
+    eur: '0.07',
+    eur_foil: null,
+    tix: '0.09',
+  },
+  related_uris: {
+    gatherer: 'https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=4721',
+    tcgplayer_decks:
+      'https://decks.tcgplayer.com/magic/deck/search?contains=Rootwater+Hunter&page=1&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall',
+    edhrec: 'https://edhrec.com/route/?cc=Rootwater+Hunter',
+    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Rootwater+Hunter',
+  },
+  purchase_uris: {
+    tcgplayer:
+      'https://shop.tcgplayer.com/product/productsearch?id=5698&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall',
+    cardmarket:
+      'https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Rootwater+Hunter&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall',
+    cardhoarder:
+      'https://www.cardhoarder.com/cards/9609?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall',
+  },
+};
+
 module.exports = {
   exampleCard,
   exampleDoubleFacedCard,
   exampleDoubleFacedPlaneswalkerCard,
   exampleAdventureCard,
   exampleForeignCard,
+  exampleNonFoilCard,
 };

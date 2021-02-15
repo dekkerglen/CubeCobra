@@ -177,4 +177,5 @@ isValue -> (
   | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i
   | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i
   | "shockland"i | "storageland"i | "creatureland"i | "manland"i | "triland"i | "tangoland"i | "battleland"i
+  | "foil"i | "nonfoil"i | "fullart"i
 ) {% ([[category]]) => category.toLowerCase() %}
