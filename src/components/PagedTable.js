@@ -7,7 +7,7 @@ import Paginate from 'components/Paginate';
 import useQueryParam from 'hooks/useQueryParam';
 
 const PagedTable = ({ pageSize, rows, children, ...props }) => {
-  const [page, setPage] = useQueryParam('page', '0');
+  const [page, setPage] = useQueryParam('page', 0);
 
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
   const current = Math.min(parseInt(page, 10), validPages.length - 1);
