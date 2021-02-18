@@ -30,7 +30,7 @@ RealPage.defaultProps = {
 
 const FakePage = ({ text }) => (
   <PaginationItem disabled>
-    <PaginationLink tag="a">{text}</PaginationLink>
+    <PaginationLink>{text}</PaginationLink>
   </PaginationItem>
 );
 
