@@ -5,7 +5,12 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 const RealPage = ({ index, active, urlF, onClick }) => (
   <PaginationItem active={active === index}>
-    <PaginationLink tag="a" href={urlF(index)} data-index={onClick ? index : undefined} onClick={() => onClick(index)}>
+    <PaginationLink
+      data-index={onClick ? index : undefined}
+      onClick={() => onClick(index)}
+      // the button tag needs to have a set type to not accidentally submit forms
+      {...(urlF ? { tag: 'a', href: urlF(index) } : { tag: 'button', type: 'button' })}
+    >
       {index + 1}
     </PaginationLink>
   </PaginationItem>
@@ -19,13 +24,13 @@ RealPage.propTypes = {
 };
 
 RealPage.defaultProps = {
-  urlF: () => '#',
+  urlF: undefined,
   onClick: () => {},
 };
 
 const FakePage = ({ text }) => (
   <PaginationItem disabled>
-    <PaginationLink tag="a">{text}</PaginationLink>
+    <PaginationLink>{text}</PaginationLink>
   </PaginationItem>
 );
 
@@ -83,21 +88,19 @@ const Paginate = ({ count, active, urlF, onClick }) => {
     <Pagination aria-label="Table page" className="mt-3">
       <PaginationItem disabled={active === 0}>
         <PaginationLink
-          tag="a"
           previous
-          href={urlF(active - 1)}
           data-index={onClick ? active - 1 : undefined}
           onClick={() => onClick(active - 1)}
+          {...(urlF ? { tag: 'a', href: urlF(active - 1) } : { tag: 'button', type: 'button' })}
         />
       </PaginationItem>
       {count < 8 ? smallPagination : bigPagination}
       <PaginationItem disabled={active === count - 1}>
         <PaginationLink
-          tag="a"
           next
-          href={urlF(active + 1)}
           data-index={onClick ? active + 1 : undefined}
           onClick={() => onClick(active + 1)}
+          {...(urlF ? { tag: 'a', href: urlF(active + 1) } : { tag: 'button', type: 'button' })}
         />
       </PaginationItem>
     </Pagination>
@@ -112,7 +115,7 @@ Paginate.propTypes = {
 };
 
 Paginate.defaultProps = {
-  urlF: () => '#',
+  urlF: undefined,
   onClick: () => {},
 };
 
