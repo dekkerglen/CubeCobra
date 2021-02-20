@@ -17,8 +17,9 @@ const BATCH_SIZE = 1000;
 
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    const ratings = await CardRating.find({}, 'name elo embedding').lean();
-    await updatedb.updateCardbase(ratings);
+    // TODO: remove when scryfall fixes it
+    // const ratings = await CardRating.find({}, 'name elo embedding').lean();
+    // await updatedb.updateCardbase(ratings);
     process.exit();
   });
 })();
