@@ -273,9 +273,8 @@ app.use((err, req, res, next) => {
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
 
-  // TODO: remove when scryfall fixes it
-  // const ratings = await CardRating.find({}, 'name elo').lean();
-  // updatedb.updateCardbase(ratings);
+  const ratings = await CardRating.find({}, 'name elo').lean();
+  updatedb.updateCardbase(ratings);
 });
 
 // Start server after carddb is initialized.
