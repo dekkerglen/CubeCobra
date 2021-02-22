@@ -13,7 +13,7 @@ import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import LinkModal from 'components/LinkModal';
 import FoilCardImage from 'components/FoilCardImage';
-import { isInternalURL } from 'utils/Util';
+import { isInternalURL, isSamePageURL } from 'utils/Util';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
 
@@ -41,8 +41,9 @@ const renderLink = (node) => {
       );
     }
 
+    const props = isSamePageURL(ref) ? {} : { target: '_blank', rel: 'noopener noreferrer' };
     return (
-      <a target="_blank" rel="noopener noreferrer" href={ref}>
+      <a href={ref} {...props}>
         {node.children}
       </a>
     );
