@@ -6,7 +6,6 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const schedule = require('node-schedule');
 const similarity = require('compute-cosine-similarity');
 const carddb = require('../serverjs/cards.js');
 const updatedb = require('../serverjs/updatecards.js');
@@ -461,5 +460,3 @@ mongoose
   .then(() => {
     run();
   });
-
-schedule.scheduleJob('0 12 * * *', run);
