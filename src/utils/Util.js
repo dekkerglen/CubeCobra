@@ -190,6 +190,15 @@ export function isInternalURL(to) {
   }
 }
 
+export function isSamePageURL(to) {
+  try {
+    const url = new URL(to, window.location.origin);
+    return url.hostname === window.location.hostname && url.pathname === window.location.pathname;
+  } catch {
+    return false;
+  }
+}
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -207,4 +216,5 @@ export default {
   getCubeId,
   getCubeDescription,
   isInternalURL,
+  isSamePageURL,
 };
