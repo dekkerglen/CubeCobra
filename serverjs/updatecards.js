@@ -770,6 +770,7 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
       .on('close', resolve),
   );
 
+  winston.info('Saving cardbase files...');
   await writeCatalog(basePath);
 }
 
@@ -791,7 +792,13 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   }
 
   winston.info('Creating objects...');
-  await saveAllCards(ratings, basePath, defaultPath, allPath);
+  try {
+    await saveAllCards(ratings, basePath, defaultPath, allPath);
+  } catch (error) {
+    winston.error('Updating cardbase objects failed:');
+    winston.error(error.message);
+    winston.error('Cardbase update may not have fully completed');
+  }
 
   winston.info('Finished cardbase update...');
 }
