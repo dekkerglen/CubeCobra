@@ -92,7 +92,12 @@ function downloadFile(url, filePath) {
         }
 
         const stream = response.pipe(file);
-        stream.on('error', (err) => reject(new Error(`Error downloading file from '${url}':\n${err.message}`)));
+        response.on('error', (err) => {
+          reject(new Error(`Response error downloading file from '${url}':\n${err.message}`));
+          response.unpipe(stream);
+          stream.destroy();
+        });
+        stream.on('error', (err) => reject(new Error(`Pipe error downloading file from '${url}':\n${err.message}`)));
         stream.on('finish', resolve);
       })
       .on('error', (err) => reject(new Error(`Download error for '${url}':\n${err.message}`)));
@@ -781,7 +786,7 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   } catch (error) {
     winston.error('Downloading card data failed:');
     winston.error(error.message);
-    winston.error('\nCardbase was not updated');
+    winston.error('Cardbase was not updated');
     return;
   }
 
