@@ -120,6 +120,9 @@ async function downloadDefaultCards(basePath = 'private', defaultSourcePath = nu
     }
   }
 
+  if (!defaultUrl) throw new Error('URL for Default Cards not found in /bulk-data response');
+  if (!allUrl) throw new Error('URL for All Cards not found in /bulk-data response');
+
   return Promise.all([
     downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
     downloadFile(allUrl, allSourcePath || path.resolve(basePath, 'all-cards.json')),
