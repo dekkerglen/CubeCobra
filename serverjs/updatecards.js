@@ -82,11 +82,20 @@ initializeCatalog();
 
 function downloadFile(url, filePath) {
   const file = fs.createWriteStream(filePath);
-  return new Promise((resolve) => {
-    https.get(url, (response) => {
-      const stream = response.pipe(file);
-      stream.on('finish', resolve);
-    });
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          response.resume();
+          reject(new Error(`Request to '${url}' failed with status code ${response.statusCode}`));
+          return;
+        }
+
+        const stream = response.pipe(file);
+        stream.on('error', (err) => reject(new Error(`Error downloading file from '${url}':\n${err.message}`)));
+        stream.on('finish', resolve);
+      })
+      .on('error', (err) => reject(new Error(`Download error for '${url}':\n${err.message}`)));
   });
 }
 
@@ -95,6 +104,7 @@ async function downloadDefaultCards(basePath = 'private', defaultSourcePath = nu
   let allUrl;
 
   const res = await fetch('https://api.scryfall.com/bulk-data');
+  if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
   const json = await res.json();
 
   for (const data of json.data) {
@@ -765,8 +775,15 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   winston.info('Updating cardbase, this might take a little while...');
 
   winston.info('Downloading files...');
-  // the module.exports line is necessary to correctly mock this function in unit tests
-  await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+  try {
+    // the module.exports line is necessary to correctly mock this function in unit tests
+    await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+  } catch (error) {
+    winston.error('Downloading card data failed:');
+    winston.error(error.message);
+    winston.error('\nCardbase was not updated');
+    return;
+  }
 
   winston.info('Creating objects...');
   await saveAllCards(ratings, basePath, defaultPath, allPath);
