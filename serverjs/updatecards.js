@@ -786,7 +786,7 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
     await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
   } catch (error) {
     winston.error('Downloading card data failed:');
-    winston.error(error.message);
+    winston.error(error.message, error);
     winston.error('Cardbase was not updated');
     return;
   }
@@ -796,7 +796,7 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
     await saveAllCards(ratings, basePath, defaultPath, allPath);
   } catch (error) {
     winston.error('Updating cardbase objects failed:');
-    winston.error(error.message);
+    winston.error(error.message, error);
     winston.error('Cardbase update may not have fully completed');
   }
 
