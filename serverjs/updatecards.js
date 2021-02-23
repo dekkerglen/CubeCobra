@@ -91,16 +91,16 @@ function downloadFile(url, filePath) {
 }
 
 async function downloadDefaultCards(basePath = 'private', defaultSourcePath = null, allSourcePath = null) {
-  let defaultUrl = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
-  let allUrl = 'https://archive.scryfall.com/json/scryfall-all-cards.json';
+  let defaultUrl;
+  let allUrl;
 
-  const res = await fetch(`https://api.scryfall.com/bulk-data`);
+  const res = await fetch('https://api.scryfall.com/bulk-data');
   const json = await res.json();
 
   for (const data of json.data) {
-    if (data.name === 'Default Cards') {
+    if (data.type === 'default_cards') {
       defaultUrl = data.download_uri;
-    } else if (data.name === 'All Cards') {
+    } else if (data.type === 'all_cards') {
       allUrl = data.download_uri;
     }
   }
