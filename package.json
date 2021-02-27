@@ -22,7 +22,7 @@
     "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
     "cards": "node --max-old-space-size=4096 force_update.js",
     "start": "npm install && node force_update.js && nodemon -x 'node app.js || touch app.js'",
-    "populate-analytics": "node force_update.js && node --max-old-space-size=14192 jobs/populate_analytics.js"
+    "populate-analytics": "node force_update.js && node --max-old-space-size=16000 jobs/populate_analytics.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
