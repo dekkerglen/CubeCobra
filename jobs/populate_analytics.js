@@ -391,7 +391,6 @@ const run = async () => {
   await carddb.initializeCardDb();
 
   const ratings = await CardRating.find({}).lean();
-  await updatedb.updateCardbase(ratings);
 
   console.log('Started: oracles');
 
