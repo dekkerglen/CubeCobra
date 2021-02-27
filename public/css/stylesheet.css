@@ -1136,7 +1136,8 @@ audio {
 
 .close,
 .table {
-	color:var(--text)
+	color:var(--text);
+	background-color: var(--bg);
 }
 
 .btn-success {
@@ -1194,6 +1195,40 @@ a{
 
 .border-left{
     border-left: 1px solid var(--border-light) !important;
+}
+
+th[scope=row] {
+	position: -webkit-sticky;
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	background: linear-gradient(90deg, var(--border) 0%, var(--border) calc(0% + .05em), transparent calc(0% + .05em), transparent calc(100% - .05em), var(--border) calc(100% - .05em), var(--border) 100%);
+	background-color: var(--bg);
+	border-left: 0px;
+	border-right: 0px;
+}
+thead th[scope=col] {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0px;
+	z-index: 2;
+	background: linear-gradient(0deg, var(--border) 0%, var(--border) calc(0% + .05em), transparent calc(0% + .05em), transparent calc(100% - .05em), var(--border) calc(100% - .05em), var(--border) 100%);
+	background-color: var(--bg);
+}
+thead th.corner[scope=col] {
+	left: 0;
+	z-index: 3;
+	background: linear-gradient(90deg, var(--border) 0%, var(--border) calc(0% + .05em), transparent calc(0% + .05em), transparent calc(100% - .05em), var(--border) calc(100% - .05em), var(--border) 100%);
+	background-color: var(--bg);
+	border-left: 0px;
+	border-right: 0px;
+}
+.table-responsive {
+	overflow-y: auto;
+	overflow-x: auto;
+	width: 100%;
+	display: block;
+	max-height: calc(100vh - 4em);
 }
 
 .table thead th,
