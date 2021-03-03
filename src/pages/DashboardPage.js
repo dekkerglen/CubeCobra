@@ -51,17 +51,30 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
                 )}
               </Row>
             </CardBody>
-            <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
+            {cubes.length > 2 ? (
+              <CardFooter>
+                <a href={`/user/view/${cubes[0].owner}`}>View All</a>
+              </CardFooter>
+            ) : (
+              <CubesCard
+                title="Featured Cubes"
+                cubes={featured}
+                lean
+                header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+              />
+            )}
           </Card>
         </Col>
         <Col xs="12" md="6">
-          <CubesCard
-            className="mb-4"
-            title="Featured Cubes"
-            cubes={featured}
-            lean
-            header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
-          />
+          {cubes.length > 2 && (
+            <CubesCard
+              className="mb-4"
+              title="Featured Cubes"
+              cubes={featured}
+              lean
+              header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+            />
+          )}
           <Card>
             <CardHeader>
               <h5>Recent Drafts of Your Cubes</h5>
