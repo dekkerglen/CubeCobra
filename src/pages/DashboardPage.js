@@ -18,11 +18,12 @@ import withModal from 'components/WithModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) => {
-  const filteredDecks = cubes.length > 2 ? decks : decks.slice(0, 6);
+const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, featured }) => {
+  const filteredDecks = cubes.length > 2 ? decks.slice(0, 4) : decks;
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -54,6 +55,13 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
           </Card>
         </Col>
         <Col xs="12" md="6">
+          <CubesCard
+            className="mb-4"
+            title="Featured Cubes"
+            cubes={featured}
+            lean
+            header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+          />
           <Card>
             <CardHeader>
               <h5>Recent Drafts of Your Cubes</h5>
@@ -76,7 +84,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
       </Row>
       <Row>
         <Col xs="12" md="8">
-          <h5 className="mt-3">Feed</h5>
+          <h4 className="mt-4">Feed</h4>
           {posts.length > 0 ? (
             posts.map((post) => (
               <BlogPost key={post._id} post={post} canEdit={false} userid={user ? user.id : null} loggedIn />
@@ -122,11 +130,13 @@ DashboardPage.propTypes = {
   user: UserPropType,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,
+  featured: PropTypes.arrayOf(CubePropType),
 };
 
 DashboardPage.defaultProps = {
   user: null,
   loginCallback: '/',
+  featured: [],
 };
 
 export default RenderToRoot(DashboardPage);
