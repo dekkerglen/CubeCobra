@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Col, Card, CardBody } from 'reactstrap';
 
-const Advertisment = () => {
+const Advertisement = () => {
   const [option] = useState(Math.floor(Math.random() * 6));
 
   switch (option) {
@@ -62,4 +62,4 @@ const Advertisment = () => {
   }
 };
 
-export default Advertisment;
+export default Advertisement;
