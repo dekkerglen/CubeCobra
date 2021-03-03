@@ -12,7 +12,7 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
 
   return (
     <Card {...props}>
-      <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <CardHeader className="cubes-card-header">
         <Heading>{title} </Heading>
         {header && <a href={header.sideLink}>{header.sideText}</a>}
       </CardHeader>
