@@ -1433,6 +1433,22 @@ router.get('/download/csv/:id', async (req, res) => {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
+
+    if (req.query.filter) {
+      const { filter, err } = filterutil.makeFilter(req.query.filter);
+      if (err) {
+        return util.handleRouteError(
+          req,
+          res,
+          'Error parsing filter.',
+          `/cube/list/${encodeURIComponent(req.params.id)}`,
+        );
+      }
+      if (filter) {
+        cube.cards = cube.cards.filter(filter);
+      }
+    }
+
     cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
