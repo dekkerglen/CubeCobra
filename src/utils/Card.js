@@ -246,6 +246,7 @@ export const CARD_CATEGORY_DETECTORS = {
   dual: (details) => LandCategories.DUAL.includes(details.name),
   fastland: (details) => LandCategories.FAST.includes(details.name),
   filterland: (details) => LandCategories.FILTER.includes(details.name),
+  fetchland: (details) => LandCategories.FETCH.includes(details.name),
   gainland: (details) => LandCategories.GAIN.includes(details.name),
   painland: (details) => LandCategories.PAIN.includes(details.name),
   scryland: (details) => LandCategories.SCRY.includes(details.name),
