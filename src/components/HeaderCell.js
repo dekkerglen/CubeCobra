@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { NavLink } from 'reactstrap';
 import Tooltip from 'components/Tooltip';
 
-const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
+const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip, ...props }) => {
   const active = sortConfig && sortConfig.key === fieldName;
   const direction = active ? sortConfig.direction : 'nosort';
   const icon = `/content/${direction}.png`;
@@ -22,7 +22,7 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip }) => {
   );
 
   return (
-    <th scope="col" className="align-middle">
+    <th scope="col" className="align-middle" {...props}>
       <NavLink
         className="p-0 d-flex align-items-center justify-content-start"
         href="#"
