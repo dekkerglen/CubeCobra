@@ -29,7 +29,7 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
               type="textarea"
               name="textarea"
               maxLength={maxLength}
-              className="w-100 text-input"
+              className="w-100 text-input markdown-input"
               value={value}
               onChange={onChange}
             />
