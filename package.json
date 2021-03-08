@@ -89,7 +89,7 @@
     "path": "^0.12.7",
     "performance-now": "^2.1.0",
     "prop-types": "^15.7.2",
-    "pug": "^2.0.3",
+    "pug": "^3.0.1",
     "quickselect": "^2.0.0",
     "react": "^16.13.1",
     "react-audio-player": "^0.13.0",
