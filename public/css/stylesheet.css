@@ -1078,12 +1078,9 @@ audio {
 	width: 100%;
 }
 
-.text-input {
-	min-height: 20rem;
-}
-
 .markdown-input {
 	font-family: "Fira Mono", monospace;
+	min-height: 20rem;
 }
 
 .card-header {
