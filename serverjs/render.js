@@ -109,6 +109,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
           artist: req.user.artist,
           roles: req.user.roles,
           theme: req.user.theme,
+          hide_featured: req.user.hide_featured,
           cubes,
         }
       : null;

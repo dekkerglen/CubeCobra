@@ -772,19 +772,20 @@ router.post('/updateemail', ensureAuth, (req, res) => {
   );
 });
 
-router.post('/changetheme', ensureAuth, async (req, res) => {
+router.post('/changedisplay', ensureAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
     user.theme = req.body.theme;
+    user.hide_featured = req.body.hideFeatured === 'on';
 
     await user.save();
 
-    req.flash('success', 'Your theme has been updated.');
+    req.flash('success', 'Your display preferences have been updated.');
     res.redirect('/user/account');
   } catch (err) {
-    req.flash('danger', `Could not save theme: ${err.message}`);
-    res.redirect('/user/account?nav=theme');
+    req.flash('danger', `Could not save preferences: ${err.message}`);
+    res.redirect('/user/account?nav=display');
   }
 });
 

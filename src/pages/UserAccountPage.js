@@ -110,8 +110,8 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
               </NavLink>
             </NavItem>
             <NavItem>
-              <NavLink href="#" active={nav === 'theme'} data-nav="theme" onClick={handleClickNav}>
-                Themes
+              <NavLink href="#" active={nav === 'display'} data-nav="display" onClick={handleClickNav}>
+                Display Preferences
               </NavLink>
             </NavItem>
           </Nav>
@@ -224,10 +224,10 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                 </CardBody>
               </Card>
             </TabPane>
-            <TabPane tabId="theme">
+            <TabPane tabId="display">
               <Card>
                 <CardBody>
-                  <CSRFForm method="POST" action="/user/changetheme">
+                  <CSRFForm method="POST" action="/user/changedisplay">
                     <InputGroup className="mb-3">
                       <InputGroupAddon addonType="prepend">
                         <InputGroupText>Theme</InputGroupText>
@@ -237,6 +237,15 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                         <option value="dark">Dark Mode</option>
                       </CustomInput>
                     </InputGroup>
+                    <FormGroup check className="mb-3">
+                      <Input
+                        id="hideFeatured"
+                        name="hideFeatured"
+                        type="checkbox"
+                        defaultChecked={user.hide_featured || false}
+                      />
+                      <Label for="hideFeatured">Hide Featured Cubes</Label>
+                    </FormGroup>
                     <Button block outline color="success" type="submit">
                       Update
                     </Button>
