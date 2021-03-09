@@ -168,7 +168,7 @@ isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details',
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
 
-isOpValue -> ":" isValue {% ([, category]) => (fieldValue, card) => CARD_CATEGORY_DETECTORS[category](fieldValue, card) %}
+isOpValue -> ":" isValue {% ([, category]) => CARD_CATEGORY_DETECTORS[category] %}
 
 isValue -> (
     "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i
