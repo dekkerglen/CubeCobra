@@ -23,7 +23,20 @@ import CubesCard from 'components/CubesCard';
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
 const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, featured }) => {
-  const filteredDecks = cubes.length > 2 ? decks.slice(0, 4) : decks;
+  // where featured cubes are positioned on the screen
+  let featuredPosition;
+  if (!user.hide_featured) {
+    featuredPosition = cubes.length > 2 ? 'right' : 'left';
+  }
+
+  // the number of drafted decks shown, based on where cubes are located
+  let filteredDecks = decks;
+  if (featuredPosition === 'right') {
+    filteredDecks = decks.slice(0, 4);
+  }
+  if (!featuredPosition && cubes.length <= 2) {
+    filteredDecks = decks.slice(0, 6);
+  }
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -51,22 +64,21 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
                 )}
               </Row>
             </CardBody>
-            {cubes.length > 2 ? (
-              <CardFooter>
-                <a href={`/user/view/${cubes[0].owner}`}>View All</a>
-              </CardFooter>
-            ) : (
-              <CubesCard
-                title="Featured Cubes"
-                cubes={featured}
-                lean
-                header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
-              />
+            {featuredPosition !== 'left' && (
+              <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
             )}
           </Card>
+          {featuredPosition === 'left' && (
+            <CubesCard
+              title="Featured Cubes"
+              cubes={featured}
+              lean
+              header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+            />
+          )}
         </Col>
         <Col xs="12" md="6">
-          {cubes.length > 2 && (
+          {featuredPosition === 'right' && (
             <CubesCard
               className="mb-4"
               title="Featured Cubes"
