@@ -262,22 +262,7 @@ function getLabelsRaw(cube, sort) {
     return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   }
   if (sort === 'Type') {
-    return [
-      'Creature',
-      'Planeswalker',
-      'Instant',
-      'Sorcery',
-      'Artifact',
-      'Enchantment',
-      'Conspiracy',
-      'Contraption',
-      'Phenomenon',
-      'Plane',
-      'Scheme',
-      'Vanguard',
-      'Land',
-      'Other',
-    ];
+    return CARD_TYPES.concat(['Other']);
   }
   if (sort === 'Supertype') {
     return ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
@@ -352,48 +337,11 @@ function getLabelsRaw(cube, sort) {
     return [...types];
   }
   if (sort === 'Types-Multicolor') {
-    return [
-      'Creature',
-      'Planeswalker',
-      'Instant',
-      'Sorcery',
-      'Artifact',
-      'Enchantment',
-      'Conspiracy',
-      'Contraption',
-      'Phenomenon',
-      'Plane',
-      'Scheme',
-      'Vanguard',
-      'Azorius',
-      'Dimir',
-      'Rakdos',
-      'Gruul',
-      'Selesnya',
-      'Orzhov',
-      'Golgari',
-      'Simic',
-      'Izzet',
-      'Boros',
-      'Bant',
-      'Esper',
-      'Grixis',
-      'Jund',
-      'Naya',
-      'Abzan',
-      'Jeskai',
-      'Sultai',
-      'Mardu',
-      'Temur',
-      'Non-White',
-      'Non-Blue',
-      'Non-Black',
-      'Non-Red',
-      'Non-Green',
-      'Five Color',
-      'Land',
-      'Other',
-    ];
+    return CARD_TYPES.slice(0, -1)
+      .concat(GUILDS)
+      .concat(SHARDS_AND_WEDGES)
+      .concat(FOUR_AND_FIVE_COLOR)
+      .concat(['Land', 'Other']);
   }
   if (sort === 'Legality') {
     return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
