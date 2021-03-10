@@ -55,6 +55,22 @@ const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
+const CARD_TYPES = [
+  'Creature',
+  'Planeswalker',
+  'Instant',
+  'Sorcery',
+  'Artifact',
+  'Enchantment',
+  'Conspiracy',
+  'Contraption',
+  'Phenomenon',
+  'Plane',
+  'Scheme',
+  'Vanguard',
+  'Land',
+];
+
 const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
 const SHARDS_AND_WEDGES = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Mardu', 'Temur', 'Abzan', 'Jeskai', 'Sultai'];
