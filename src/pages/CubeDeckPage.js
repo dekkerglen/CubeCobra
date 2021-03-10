@@ -116,7 +116,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
-                  <SampleHandModal deck={deck.seats[seatIndex].main} />
+                  <SampleHandModal deck={deck.seats[seatIndex].deck} />
                 </NavItem>
                 {user && deck.owner === user.id && (
                   <NavItem>

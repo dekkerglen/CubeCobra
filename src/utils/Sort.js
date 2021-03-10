@@ -779,7 +779,7 @@ export function getLabels(cube, sort) {
   return getLabelsRaw(cube, sort).map(formatLabel);
 }
 
-function sortGroupsOrdered(cards, sort) {
+export function sortGroupsOrdered(cards, sort) {
   const labels = getLabelsRaw(cards, sort);
   const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);

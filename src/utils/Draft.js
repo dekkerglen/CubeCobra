@@ -403,7 +403,7 @@ async function build(cards, lands, colors, basics) {
   deck[0].sort((a, b) => a.details.name.localeCompare(b.details.name));
 
   for (const card of side) {
-    sideboard[Math.min(card.cmc ?? 0, 7)].push(card);
+    sideboard[Math.min(Math.round(card.cmc) ?? 0, 7)].push(card);
   }
 
   return {

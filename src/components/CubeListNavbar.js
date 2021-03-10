@@ -339,6 +339,11 @@ const CubeListNavbar = ({
   const handleToggleTagColorsModal = useCallback(() => setTagColorsModalOpen(false), []);
   const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
+  const enc = encodeURIComponent;
+  const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(tertiary)}`;
+  const filterString = filter?.stringify ?? '';
+  const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
+
   return (
     <div className={`usercontrols${className ? ` ${className}` : ''}`}>
       <Navbar expand="md" className="navbar-light">
@@ -430,9 +435,7 @@ const CubeListNavbar = ({
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem
-                  href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}
-                >
+                <DropdownItem href={`/cube/download/csv/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
                   Comma-Separated (.csv)
                 </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>

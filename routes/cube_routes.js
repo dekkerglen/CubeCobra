@@ -1433,6 +1433,22 @@ router.get('/download/csv/:id', async (req, res) => {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
+
+    if (req.query.filter) {
+      const { filter, err } = filterutil.makeFilter(req.query.filter);
+      if (err) {
+        return util.handleRouteError(
+          req,
+          res,
+          'Error parsing filter.',
+          `/cube/list/${encodeURIComponent(req.params.id)}`,
+        );
+      }
+      if (filter) {
+        cube.cards = cube.cards.filter(filter);
+      }
+    }
+
     cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
@@ -2448,7 +2464,9 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/^[A-Za-z0-9_]*$/),
+  body('urlAlias', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+    /^[A-Za-z0-9_-]*$/,
+  ),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
     max: 100,
   }),
@@ -3492,7 +3510,9 @@ router.get(
 router.post(
   '/api/getversions',
   body([], 'Body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').matches(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+  body('*', 'Each ID must be a valid UUID.').matches(
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}2?$/,
+  ),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));

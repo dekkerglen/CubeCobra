@@ -105,18 +105,20 @@ export const cardNotes = (card) => card.notes;
 
 export const cardColorCategory = (card) => card.colorCategory ?? card.details.color_category;
 
+// prices being null causes unwanted coercing behaviour in price filters,
+// so nullish price values are transformed to undefined instead
 export const cardPrice = (card) =>
-  cardFinish(card) === 'Foil'
+  (cardFinish(card) === 'Foil'
     ? card.details.prices.usd_foil ?? card.details.prices.usd
-    : card.details.prices.usd ?? card.details.prices.usd_foil;
+    : card.details.prices.usd ?? card.details.prices.usd_foil) ?? undefined;
 
-export const cardNormalPrice = (card) => card.details.prices.usd;
+export const cardNormalPrice = (card) => card.details.prices.usd ?? undefined;
 
-export const cardFoilPrice = (card) => card.details.prices.usd_foil;
+export const cardFoilPrice = (card) => card.details.prices.usd_foil ?? undefined;
 
-export const cardPriceEur = (card) => card.details.prices.eur;
+export const cardPriceEur = (card) => card.details.prices.eur ?? undefined;
 
-export const cardTix = (card) => card.details.prices.tix;
+export const cardTix = (card) => card.details.prices.tix ?? undefined;
 
 export const cardIsFullArt = (card) => card.details.full_art;
 
@@ -247,6 +249,7 @@ export const CARD_CATEGORY_DETECTORS = {
   dual: (details) => LandCategories.DUAL.includes(details.name),
   fastland: (details) => LandCategories.FAST.includes(details.name),
   filterland: (details) => LandCategories.FILTER.includes(details.name),
+  fetchland: (details) => LandCategories.FETCH.includes(details.name),
   gainland: (details) => LandCategories.GAIN.includes(details.name),
   painland: (details) => LandCategories.PAIN.includes(details.name),
   scryland: (details) => LandCategories.SCRY.includes(details.name),

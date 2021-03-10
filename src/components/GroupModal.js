@@ -215,10 +215,10 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
     return contextChildren;
   }
 
-  const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + cardPrice(card), 0) : 0;
-  const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + cardFoilPrice(card), 0) : 0;
-  const totalPriceEur = cards.length ? cards.reduce((total, card) => total + cardPriceEur(card), 0) : 0;
-  const totalPriceTix = cards.length ? cards.reduce((total, card) => total + cardTix(card), 0) : 0;
+  const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
+  const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
+  const totalPriceEur = cards.length ? cards.reduce((total, card) => total + (cardPriceEur(card) ?? 0), 0) : 0;
+  const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
   return (
     <>

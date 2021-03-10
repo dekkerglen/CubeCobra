@@ -1,6 +1,5 @@
 webpack.*.js
 
-jobs/*.js
 public/js/autocard.js
 public/js/index.js
 src/components/AutocompleteInput.js

@@ -77,7 +77,8 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
     labels: [unit],
     datasets: [
       {
-        lineTension: 0.2,
+        lineTension: 0,
+        pointRadius: 0,
         fill: false,
         borderColor: '#28A745',
         backgroundColor: '#28A745',
