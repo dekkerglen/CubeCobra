@@ -4,15 +4,17 @@ import CubePropType from 'proptypes/CubePropType';
 import CubePreview from 'components/CubePreview';
 import { Col, Row, Card, CardHeader, CardBody, Button, Collapse } from 'reactstrap';
 
-const CubesCard = ({ cubes, title }) => {
+const CubesCard = ({ cubes, title, header, lean, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
+  const Heading = `h${header?.hLevel ?? 4}`;
 
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <h4>{title}</h4>
+    <Card {...props}>
+      <CardHeader className="cubes-card-header">
+        <Heading>{title} </Heading>
+        {header && <a href={header.sideLink}>{header.sideText}</a>}
       </CardHeader>
       <Row noGutters>
         {cubes.slice(0, 2).map((cube) => (
@@ -21,7 +23,6 @@ const CubesCard = ({ cubes, title }) => {
           </Col>
         ))}
       </Row>
-
       <Collapse isOpen={isOpen}>
         <Row noGutters>
           {cubes.slice(2).map((cube) => (
@@ -31,11 +32,13 @@ const CubesCard = ({ cubes, title }) => {
           ))}
         </Row>
       </Collapse>
-      <CardBody>
-        <Button color="success" block onClick={toggle}>
-          {isOpen ? 'View Fewer...' : 'View More...'}
-        </Button>
-      </CardBody>
+      {(!lean || cubes.length > 2) && (
+        <CardBody>
+          <Button color="success" block onClick={toggle}>
+            {isOpen ? 'View Fewer...' : 'View More...'}
+          </Button>
+        </CardBody>
+      )}
     </Card>
   );
 };
@@ -43,6 +46,17 @@ const CubesCard = ({ cubes, title }) => {
 CubesCard.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
   title: PropTypes.string.isRequired,
+  header: PropTypes.shape({
+    sideLink: PropTypes.string,
+    sideText: PropTypes.string,
+    hLevel: PropTypes.number,
+  }),
+  lean: PropTypes.bool,
+};
+
+CubesCard.defaultProps = {
+  header: undefined,
+  lean: false,
 };
 
 export default CubesCard;

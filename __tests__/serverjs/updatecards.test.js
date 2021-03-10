@@ -63,6 +63,8 @@ const convertedExampleCard = {
   image_normal: 'https://img.scryfall.com/cards/normal/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
   colorcategory: 'm',
+  foil: true,
+  nonfoil: true,
 };
 
 const convertedExampleDoubleFacedCard = {
@@ -121,6 +123,8 @@ const convertedExampleDoubleFacedCard = {
   tcgplayer_id: 57617,
   toughness: '1',
   type: 'Creature — Human Werewolf',
+  foil: true,
+  nonfoil: true,
 };
 
 const convertedExampleDoubleFacedCardFlipFace = {
@@ -179,6 +183,8 @@ const convertedExampleDoubleFacedCardFlipFace = {
   art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
 
   colorcategory: 'g',
+  foil: true,
+  nonfoil: true,
 };
 
 const convertedExampleDoubleFacedPlaneswalkerCard = {
@@ -242,6 +248,8 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   image_flip: 'https://img.scryfall.com/cards/normal/back/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
   colorcategory: 'b',
   tokens: ['e5ccae95-95c2-4d11-aa68-5c80ecf90fd2', 'd75f984f-2e11-4f52-b3b0-dd9d94a2dd74'],
+  foil: true,
+  nonfoil: true,
 };
 
 const convertedExampleAdventureCard = {
@@ -300,6 +308,8 @@ const convertedExampleAdventureCard = {
   tokens: ['b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e'],
   toughness: '2',
   type: 'Creature — Human Berserker',
+  foil: true,
+  nonfoil: true,
 };
 
 const convertedExampleAdventureCardAdventure = {
@@ -354,6 +364,69 @@ const convertedExampleAdventureCardAdventure = {
   set: 'eld',
   tcgplayer_id: 198574,
   type: 'Sorcery — Adventure',
+  foil: true,
+  nonfoil: true,
+};
+
+const convertedExampleNonFoilCard = {
+  color_identity: ['U'],
+  set: 'tmp',
+  collector_number: '82',
+  promo: false,
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  mtgo_id: 9609,
+  name: 'Rootwater Hunter',
+  name_lower: 'rootwater hunter',
+  full_name: 'Rootwater Hunter [tmp-82]',
+  artist: 'Brom',
+  scryfall_uri: 'https://scryfall.com/card/tmp/82/rootwater-hunter?utm_source=api',
+  rarity: 'common',
+  released_at: '1997-10-14',
+  set_name: 'Tempest',
+  oracle_text: '{T}: Rootwater Hunter deals 1 damage to any target.',
+  _id: 'cdf7ea34-2cde-4ec5-9b12-99b0002da986',
+  oracle_id: '8e42ed82-8b56-46ad-a1ca-e29689a9d030',
+  cmc: 3,
+  legalities: {
+    Brawl: 'not_legal',
+    Commander: 'legal',
+    Historic: 'not_legal',
+    Legacy: 'legal',
+    Modern: 'not_legal',
+    Pauper: 'legal',
+    Penny: 'legal',
+    Pioneer: 'not_legal',
+    Standard: 'not_legal',
+    Vintage: 'legal',
+  },
+  elo: 1200,
+  embedding: [0, 0],
+  prices: {
+    usd: 0.17,
+    usd_foil: null,
+    eur: 0.07,
+    tix: 0.09,
+  },
+  parsed_cost: ['u', '2'],
+  colors: ['U'],
+  type: 'Creature — Merfolk',
+  full_art: false,
+  language: 'en',
+  layout: 'normal',
+  tcgplayer_id: 5698,
+  power: '1',
+  toughness: '1',
+  image_small:
+    'https://c1.scryfall.com/file/scryfall-cards/small/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+  image_normal:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+  art_crop:
+    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
+  colorcategory: 'u',
+  foil: false,
+  nonfoil: true,
 };
 
 const mockRatings = [
@@ -380,6 +453,11 @@ const mockRatings = [
   {
     name: 'Flaxen Intruder',
     elo: 1600,
+    embedding: [0, 0],
+  },
+  {
+    name: 'Rootwater Hunter',
+    elo: 1200,
     embedding: [0, 0],
   },
 ];
@@ -523,6 +601,11 @@ test('saveAllCards creates the expected files', () => {
 test('convertCard returns a correctly converted card object', () => {
   const result = updatecards.convertCard(examplecards.exampleCard);
   expect(result).toEqual(convertedExampleCard);
+});
+
+test('convertCard returns a correctly converted non-foil card object', () => {
+  const result = updatecards.convertCard(examplecards.exampleNonFoilCard);
+  expect(result).toEqual(convertedExampleNonFoilCard);
 });
 
 test('convertCard returns a correctly converted double-faced card', () => {

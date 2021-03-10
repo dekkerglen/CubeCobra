@@ -93,6 +93,10 @@ const UserSchema = mongoose.Schema({
     enum: ['default', 'dark'],
     default: 'default',
   },
+  hide_featured: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 UserSchema.index({

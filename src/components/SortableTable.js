@@ -31,6 +31,7 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
                   sortConfig={sortConfig}
                   requestSort={requestSort}
                   tooltip={tooltip}
+                  className={heading ? 'corner' : ''}
                 />
               );
             }
@@ -50,11 +51,11 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
           <tr key={`row-${idx}` /* eslint-disable-line react/no-array-index-key */}>
             {columnProps.map(({ key, heading, renderFn }) =>
               heading ? (
-                <th scope="col" key={key}>
-                  {(renderFn ?? valueRenderer)(row[key])}
+                <th scope="row" key={key}>
+                  {(renderFn ?? valueRenderer)(row[key], row, key)}
                 </th>
               ) : (
-                <td key={key}>{(renderFn ?? valueRenderer)(row[key])}</td>
+                <td key={key}>{(renderFn ?? valueRenderer)(row[key], row, key)}</td>
               ),
             )}
           </tr>
