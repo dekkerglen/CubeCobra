@@ -102,10 +102,16 @@ router.get('/explore', async (req, res) => {
 });
 
 router.get('/random', async (req, res) => {
-  const count = await Cube.estimatedDocumentCount();
-  const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne().skip(random).lean();
-  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(cube))}`);
+  const lastMonth = () => {
+    const ret = new Date();
+    ret.setMonth(ret.getMonth() - 1);
+    return ret;
+  };
+
+  const [randCube] = await Cube.aggregate()
+    .match({ isListed: true, card_count: { $gte: 360 }, date_updated: { $gte: lastMonth() } })
+    .sample(1);
+  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(randCube))}`);
 });
 
 router.get('/dashboard', async (req, res) => {
