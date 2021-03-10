@@ -71,7 +71,7 @@ function createCorrelations() {
     for (let j = 0; j < totalCards; j += 1) {
       correlations[i].push(0);
     }
-    if ((i + 1) % 100 === 0) {
+    if ((i + 1) % 1000 === 0) {
       console.log(`Finished: ${i + 1} of ${totalCards} correlations.`);
     }
   }
@@ -445,7 +445,7 @@ const run = async () => {
     const card = cardFromOracle(oracleId);
     await processCard(card); // eslint-disable-line no-await-in-loop
     processed += 1;
-    console.log(`Finished: ${processed} of ${totalCards} cards.`);
+    console.log(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 };
 
