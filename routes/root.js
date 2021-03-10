@@ -153,17 +153,25 @@ router.get('/dashboard', async (req, res) => {
       })
       .limit(10);
 
+    const featuredq = Cube.find(
+      {
+        isFeatured: true,
+      },
+      CUBE_PREVIEW_FIELDS,
+    ).lean();
+
     const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(10);
     const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(10);
     const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(10);
 
     // We can do these queries in parallel
-    const [cubes, posts, articles, videos, episodes] = await Promise.all([
+    const [cubes, posts, articles, videos, episodes, featured] = await Promise.all([
       cubesq,
       postsq,
       articlesq,
       videosq,
       episodesq,
+      featuredq,
     ]);
 
     const content = [];
@@ -207,7 +215,7 @@ router.get('/dashboard', async (req, res) => {
       .lean()
       .limit(12);
 
-    return render(req, res, 'DashboardPage', { posts, cubes, decks, content });
+    return render(req, res, 'DashboardPage', { posts, cubes, decks, content, featured });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }

@@ -17,12 +17,12 @@ const ExplorePage = ({ user, recents, featured, drafted, recentlyDrafted, loginC
       <DynamicFlash />
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Featured Cubes" cubes={featured} />
-          <CubesCard title="Recently Updated Cubes" cubes={recents} />
+          <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} />
+          <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Most Drafted Cubes" cubes={drafted} />
-          <CubesCard title="Recently Drafted Cubes" cubes={recentlyDrafted} />
+          <CubesCard title="Most Drafted Cubes" className="mt-4" cubes={drafted} />
+          <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={recentlyDrafted} />
         </Col>
       </Row>
     </MainLayout>

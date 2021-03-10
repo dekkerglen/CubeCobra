@@ -1249,3 +1249,9 @@ thead th.corner[scope=col] {
 .pvtTable {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important
 }
+
+.cubes-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
