@@ -232,8 +232,8 @@ export const CARD_CATEGORY_DETECTORS = {
   modal: (details) => details.oracle_text.includes('•'),
   creatureland: isCreatureLand,
   manland: isCreatureLand,
-  foil: (details) => details.foil,
-  nonfoil: (details) => details.nonfoil,
+  foil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Foil' : details.foil),
+  nonfoil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.nonfoil),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
