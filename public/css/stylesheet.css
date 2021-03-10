@@ -1078,7 +1078,8 @@ audio {
 	width: 100%;
 }
 
-.text-input {
+.markdown-input {
+	font-family: "Fira Mono", monospace;
 	min-height: 20rem;
 }
 
