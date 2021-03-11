@@ -161,6 +161,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   const [pickOrder, setPickOrder] = useState([]);
   const [botPickOrder, setBotPickOrder] = useState([]);
   const [turn, setTurn] = useState(0);
+  const [finished, setFinished] = useState(false);
 
   const submitDeckForm = useRef();
 
@@ -303,7 +304,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     if (tempPack.length > 0) {
       setPack(tempPack);
     } else {
-      finish(tempPicks);
+      setFinished(true);
     }
   };
 
@@ -334,6 +335,10 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     }
     makePick(mask);
   };
+
+  if (finished) {
+    finish();
+  }
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
