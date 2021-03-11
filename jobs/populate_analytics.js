@@ -447,6 +447,9 @@ const run = async () => {
     processed += 1;
     console.log(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
+
+  console.log('Done');
+  process.exit();
 };
 
 // Connect db
