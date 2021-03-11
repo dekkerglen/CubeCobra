@@ -89,7 +89,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
                 <DropdownMenu right>
                   <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
                   <DropdownItem href="/contact">Contact</DropdownItem>
-                  <DropdownItem href="https://www.inkedgaming.com/collections/artists/gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
+                  <DropdownItem href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
                     Merchandise
                   </DropdownItem>
                   <DropdownItem href="/ourstory">Our Story</DropdownItem>
