@@ -218,6 +218,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
+  const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
@@ -246,12 +247,23 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
         </CardHeader>
         <Row className="mt-2" noGutters>
           <Col className="pl-2 pb-2" xs="12" sm="3">
-            <ImageFallback
-              className="w-100"
-              src={card.image_normal}
-              fallbackSrc="/content/default_card.png"
-              alt={card.name}
-            />
+            <ImageFallback className="w-100" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
+            {card.image_flip && (
+              <Button
+                color="success"
+                outline
+                block
+                onClick={() => {
+                  if (imageUsed === card.image_normal) {
+                    setImageUsed(card.image_flip);
+                  } else {
+                    setImageUsed(card.image_normal);
+                  }
+                }}
+              >
+                Flip
+              </Button>
+            )}
             <CardBody className="breakdown p-1">
               <p>
                 Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
@@ -726,6 +738,7 @@ CardPage.propTypes = {
     name: PropTypes.string.isRequired,
     elo: PropTypes.number.isRequired,
     image_normal: PropTypes.string.isRequired,
+    image_flip: PropTypes.string,
     scryfall_uri: PropTypes.string.isRequired,
     tcgplayer_id: PropTypes.number.isRequired,
     _id: PropTypes.string.isRequired,
