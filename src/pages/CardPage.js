@@ -46,7 +46,7 @@ import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
-import { CheckIcon, ClippyIcon } from '@primer/octicons-react';
+import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
@@ -250,6 +250,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
             <ImageFallback className="w-100" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
             {card.image_flip && (
               <Button
+                className="mt-1"
                 color="success"
                 outline
                 block
@@ -261,7 +262,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                   }
                 }}
               >
-                Flip
+                <ArrowSwitchIcon size={16} /> Transform
               </Button>
             )}
             <CardBody className="breakdown p-1">
