@@ -15,8 +15,20 @@ const catalog = {};
 /* cardDetailsSchema = {
  *   color_identity: [Char],
  *   set: String,
+ *   set_name: String,
+ *   foil: Boolean,
+ *   nonfoil: Boolean,
  *   collector_number: String,
+ *   released_at: Date,
  *   promo: Boolean,
+ *   prices: {
+ *     usd: Number,
+ *     usd_foil: Number,
+ *     eur: Number,
+ *     tix: Number,
+ *   },
+ *   elo: Number,
+ *   embedding: [Number],
  *   digital: Boolean,
  *   isToken: Boolean,
  *   border_color: String,
@@ -34,12 +46,18 @@ const catalog = {};
  *   _id: UUID,
  *   oracle_id: String,
  *   cmc: Number
+ *   // one of "legal", "not_legal", "restricted", "banned"
  *   legalities: {
- *     Legacy: Boolean,
- *     Modern: Boolean,
- *     Standard: Boolean,
- *     Pauper: Boolean,
- *     Pioneer: Boolean,
+ *     Legacy: String,
+ *     Modern: String,
+ *     Standard: String,
+ *     Pauper: String,
+ *     Pioneer: String,
+ *     Brawl: String,
+ *     Historic: String,
+ *     Commander: String,
+ *     Penny: String,
+ *     Vintage: String,
  *   },
  *   // Hybrid looks like w-u
  *   parsed_cost: [String],
@@ -48,6 +66,7 @@ const catalog = {};
  *   full_art: Boolean,
  *   language: String,
  *   mtgo_id: String,
+ *   layout: String,
  *   tcgplayer_id: String,
  *   loyalty: UnsignedInteger
  *   power: Number
