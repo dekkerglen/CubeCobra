@@ -634,10 +634,10 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'exp' || // expeditions
     card.set.toLowerCase() === 'amh1'; // mh1 art cards
   newcard.prices = {
-    usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
-    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
-    eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
-    tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
+    usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+    eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
+    tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
   newcard.embedding = catalog.embeddingdict[name] || [];
