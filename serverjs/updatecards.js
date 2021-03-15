@@ -12,7 +12,8 @@ const carddb = require('./cards.js');
 
 const catalog = {};
 
-/* cardDetailsSchema = {
+/* // '?' denotes a value may be null or missing
+ * cardDetailsSchema = {
  *   color_identity: [Char],
  *   set: String,
  *   set_name: String,
@@ -22,13 +23,13 @@ const catalog = {};
  *   released_at: Date,
  *   promo: Boolean,
  *   prices: {
- *     usd: Number,
- *     usd_foil: Number,
- *     eur: Number,
- *     tix: Number,
+ *     usd: Float?,
+ *     usd_foil: Float?,
+ *     eur: Float?,
+ *     tix: Float?,
  *   },
- *   elo: Number,
- *   embedding: [Number],
+ *   elo: Integer,
+ *   embedding: [Float],
  *   digital: Boolean,
  *   isToken: Boolean,
  *   border_color: String,
@@ -37,15 +38,14 @@ const catalog = {};
  *   name_lower: String,
  *   // name [set-collector_number]
  *   full_name: String,
- *   artist: String,
- *   // Url
- *   scryfall_uri: String,
+ *   artist: String?,
+ *   scryfall_uri: URI,
  *   rarity: String,
- *   oracle_text: String,
+ *   oracle_text: String?,
  *   // Scryfall ID
  *   _id: UUID,
- *   oracle_id: String,
- *   cmc: Number
+ *   oracle_id: UUID,
+ *   cmc: Float
  *   // one of "legal", "not_legal", "restricted", "banned"
  *   legalities: {
  *     Legacy: String,
@@ -61,28 +61,24 @@ const catalog = {};
  *   },
  *   // Hybrid looks like w-u
  *   parsed_cost: [String],
- *   colors: [Char],
+ *   colors: [Char]?,
  *   type: String,
  *   full_art: Boolean,
  *   language: String,
- *   mtgo_id: String,
+ *   mtgo_id: Integer?,
  *   layout: String,
- *   tcgplayer_id: String,
- *   loyalty: UnsignedInteger
- *   power: Number
- *   toughness: Number
- *   // URL
- *   image_small: String
- *   // URL
- *   image_normal: String
- *   // URL
- *   art_crop: String
- *   // URL
- *   image_flip: String
+ *   tcgplayer_id: String?,
+ *   loyalty: String?
+ *   power: String?
+ *   toughness: String?
+ *   image_small: URI?
+ *   image_normal: URI?
+ *   art_crop: URI?
+ *   image_flip: URI?
  *   // Lowercase
  *   color_category: Char
  *   // Card ID's
- *   tokens: [UUID]
+ *   tokens: [UUID]?
  */
 function initializeCatalog() {
   catalog.dict = {};
