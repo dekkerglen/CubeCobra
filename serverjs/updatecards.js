@@ -12,11 +12,24 @@ const carddb = require('./cards.js');
 
 const catalog = {};
 
-/* cardDetailsSchema = {
+/* // '?' denotes a value may be null or missing
+ * cardDetailsSchema = {
  *   color_identity: [Char],
  *   set: String,
+ *   set_name: String,
+ *   foil: Boolean,
+ *   nonfoil: Boolean,
  *   collector_number: String,
+ *   released_at: Date,
  *   promo: Boolean,
+ *   prices: {
+ *     usd: Float?,
+ *     usd_foil: Float?,
+ *     eur: Float?,
+ *     tix: Float?,
+ *   },
+ *   elo: Integer,
+ *   embedding: [Float],
  *   digital: Boolean,
  *   isToken: Boolean,
  *   border_color: String,
@@ -25,45 +38,47 @@ const catalog = {};
  *   name_lower: String,
  *   // name [set-collector_number]
  *   full_name: String,
- *   artist: String,
- *   // Url
- *   scryfall_uri: String,
+ *   artist: String?,
+ *   scryfall_uri: URI,
  *   rarity: String,
- *   oracle_text: String,
+ *   oracle_text: String?,
  *   // Scryfall ID
  *   _id: UUID,
- *   oracle_id: String,
- *   cmc: Number
+ *   oracle_id: UUID,
+ *   cmc: Float
+ *   // one of "legal", "not_legal", "restricted", "banned"
  *   legalities: {
- *     Legacy: Boolean,
- *     Modern: Boolean,
- *     Standard: Boolean,
- *     Pauper: Boolean,
- *     Pioneer: Boolean,
+ *     Legacy: String,
+ *     Modern: String,
+ *     Standard: String,
+ *     Pauper: String,
+ *     Pioneer: String,
+ *     Brawl: String,
+ *     Historic: String,
+ *     Commander: String,
+ *     Penny: String,
+ *     Vintage: String,
  *   },
  *   // Hybrid looks like w-u
  *   parsed_cost: [String],
- *   colors: [Char],
+ *   colors: [Char]?,
  *   type: String,
  *   full_art: Boolean,
  *   language: String,
- *   mtgo_id: String,
- *   tcgplayer_id: String,
- *   loyalty: UnsignedInteger
- *   power: Number
- *   toughness: Number
- *   // URL
- *   image_small: String
- *   // URL
- *   image_normal: String
- *   // URL
- *   art_crop: String
- *   // URL
- *   image_flip: String
+ *   mtgo_id: Integer?,
+ *   layout: String,
+ *   tcgplayer_id: String?,
+ *   loyalty: String?
+ *   power: String?
+ *   toughness: String?
+ *   image_small: URI?
+ *   image_normal: URI?
+ *   art_crop: URI?
+ *   image_flip: URI?
  *   // Lowercase
  *   color_category: Char
  *   // Card ID's
- *   tokens: [UUID]
+ *   tokens: [UUID]?
  */
 function initializeCatalog() {
   catalog.dict = {};
@@ -619,10 +634,10 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'exp' || // expeditions
     card.set.toLowerCase() === 'amh1'; // mh1 art cards
   newcard.prices = {
-    usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
-    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
-    eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
-    tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
+    usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+    eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
+    tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
   newcard.embedding = catalog.embeddingdict[name] || [];
