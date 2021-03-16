@@ -60,6 +60,7 @@ export const moveOrAddCard = (cards, target, source) => {
   if (newCards[targetRow].length < 1 + targetCol) {
     newCards[targetRow] = newCards[targetRow].concat(new Array(1 + targetCol - newCards[targetRow].length).fill([]));
   }
+  newCards[targetRow] = [...newCards[targetRow]];
   newCards[targetRow][targetCol] = [...newCards[targetRow][targetCol]];
   newCards[targetRow][targetCol].splice(targetIndex, 0, card);
   return newCards;
@@ -68,6 +69,7 @@ export const moveOrAddCard = (cards, target, source) => {
 export const removeCard = (cards, source) => {
   const newCards = [...cards];
   const [sourceRow, sourceCol, sourceIndex] = source;
+  newCards[sourceRow] = [...newCards[sourceRow]];
   newCards[sourceRow][sourceCol] = [...newCards[sourceRow][sourceCol]];
   const [card] = newCards[sourceRow][sourceCol].splice(sourceIndex - 1, 1);
   return [card, newCards];

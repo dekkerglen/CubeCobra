@@ -101,7 +101,6 @@ export const getSynergy = (index1, index2, cards) => {
   const name1 = cardName(card1);
   const name2 = cardName(card2);
   const key1 = `${name1}@@${name2}`;
-  const key2 = `${name2}@@${name1}`;
   const synergy = synergyCache[key1];
   if (!synergy && synergy !== 0) {
     const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
@@ -111,6 +110,7 @@ export const getSynergy = (index1, index2, cards) => {
     } else {
       synergyCache[key1] = similarityValue > 0 ? MAX_SCORE : 0;
     }
+    const key2 = `${name2}@@${name1}`;
     synergyCache[key2] = synergyCache[key1];
     return synergyCache[key1];
   }
@@ -125,21 +125,27 @@ export const isPlayableLand = (colors, card) =>
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
   (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c)));
 
+const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
-  const cost = cardCost(card);
-  if (cardType(card).toLowerCase().includes('land') || cardIsSpecialZoneType(card) || !cost?.length) return 1;
-  const colorSymbols = {};
-  for (const symbol of cost) {
-    const symbolLower = symbol.toLowerCase();
-    const symbolColors = COLORS.filter(
-      (color) => symbolLower.includes(color.toLowerCase()) && !symbolLower.includes('p') && !symbolLower.includes('2'),
-    );
-    if (symbolColors.length > 0) {
-      colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+  const name = cardName(card);
+  let colors = devotionsCache[name];
+  if ((colors ?? null) === null) {
+    const cost = cardCost(card);
+    if (cardType(card).toLowerCase().includes('land') || cardIsSpecialZoneType(card) || !cost?.length) return 1;
+    const colorSymbols = {};
+    for (const symbol of cost) {
+      const symbolLower = symbol.toLowerCase();
+      if (!symbolLower.includes('p') && !symbolLower.includes('2')) {
+        const symbolColors = [...symbolLower].filter((char) => COLORS.includes(char));
+        if (symbolColors.length > 0) {
+          colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
+        }
+      }
     }
+    // It woudl be nice if we could cache this value.
+    colors = Object.entries(colorSymbols);
+    devotionsCache[name] = colors;
   }
-  // It woudl be nice if we could cache this value.
-  const colors = Object.entries(colorSymbols);
   if (colors.length === 0) return 1;
   if (colors.length === 1) {
     const [[color, devotion]] = colors;
@@ -159,12 +165,12 @@ export const getCastingProbability = (card, lands) => {
     for (const [key, amount] of Object.entries(lands)) {
       const isA = [...colorA].some((c) => key.includes(c));
       const isB = [...colorB].some((c) => key.includes(c));
-      if (isA && !isB) {
-        landCountA += amount;
-      } else if (!isA && isB) {
-        landCountB += amount;
-      } else if (isA && isB) {
+      if (isA && isB) {
         landCountAB += amount;
+      } else if (isA) {
+        landCountA += amount;
+      } else if (isB) {
+        landCountB += amount;
       }
     }
     return probTable[cardCmc(card)]?.[devotionA]?.[devotionB]?.[landCountA]?.[landCountB]?.[landCountAB] ?? 0;
@@ -209,7 +215,7 @@ export const ORACLES = Object.freeze(
     {
       title: 'Rating',
       tooltip: 'The rating based on the Elo and current color commitments.',
-      draftingOnly: true,
+      perConsideredCard: true,
       weights: [
         [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
         [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
@@ -221,7 +227,7 @@ export const ORACLES = Object.freeze(
     {
       title: 'Pick Synergy',
       tooltip: 'A score of how well this card synergizes with the current picks.',
-      draftingOnly: true,
+      perConsideredCard: true,
       weights: [
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
         [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
@@ -235,7 +241,7 @@ export const ORACLES = Object.freeze(
     {
       title: 'Internal Synergy',
       tooltip: 'A score of how well current picks in these colors synergize with each other.',
-      draftingOnly: false,
+      perConsideredCard: false,
       weights: [
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
         [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
@@ -250,12 +256,12 @@ export const ORACLES = Object.freeze(
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
         // average over the Pick Synergy of each picked card with the rest. There are two ordered
         // pairs for every distinct unordered pair so we multiply by 2.
-        tp > 1 ? (2 * sum(arr.map((ci, i) => sumSynergy(ci, fst(arr, i), cs, ps)))) / (arr.length - 1) / tp : 0,
+        tp > 1 ? (2 * sum(arr.map((ci, i) => sumSynergy(ci, fst(arr, i), cs, ps)))) / arr.length / (tp - 1) : 0,
     },
     {
       title: 'Color',
       tooltip: 'A score of how well these colors fit in with the current picks.',
-      draftingOnly: false,
+      perConsideredCard: false,
       weights: [
         [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
         [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40],
@@ -269,7 +275,7 @@ export const ORACLES = Object.freeze(
     {
       title: 'Openness',
       tooltip: 'A score of how open these colors appear to be.',
-      draftingOnly: true,
+      perConsideredCard: true,
       weights: [
         [4, 12, 12.3, 12.6, 13, 13.4, 13.7, 14, 15, 14.6, 14.2, 13.8, 13.4, 13, 12.6],
         [13, 12.6, 12.2, 11.8, 11.4, 11, 10.6, 10.2, 9.8, 9.4, 9, 8.6, 8.2, 7.8, 7],
@@ -323,13 +329,19 @@ const getInitialLandsForPool = (pool, cards) => {
   return lands;
 };
 
-const calculateProbabilities = ({ cards, seen, lands }) =>
-  cards.map((card, cardIndex) => (seen.includes(cardIndex) ? getCastingProbability(card, lands) : 0));
+const calculateProbabilities = ({ cards, seen, lands }) => {
+  const seenSet = [...new Set(seen)].map((ci) => [getCastingProbability(cards[ci], lands), ci]);
+  const res = cards.map(() => null);
+  for (const [prob, ci] of seenSet) {
+    res[ci] = prob;
+  }
+  return res;
+};
 
 const calculateScore = (botState) => {
-  const { cardIndex, picked, cards, probabilities } = botState;
-  const drafting = !!cardIndex || cardIndex === 0;
-  const oracleResults = ORACLES.filter(({ draftingOnly }) => !draftingOnly || drafting).map(
+  const { cardIndices, picked, cards, probabilities } = botState;
+  const drafting = cardIndices.length > 0;
+  const globalOracleResults = ORACLES.filter(({ perConsideredCard }) => !perConsideredCard).map(
     ({ title, tooltip, computeWeight, computeValue }) => ({
       title,
       tooltip,
@@ -337,8 +349,21 @@ const calculateScore = (botState) => {
       value: computeValue(botState),
     }),
   );
-  const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
   if (drafting) {
+    const perCardOracleResults = ORACLES.filter(({ perConsideredCard }) => perConsideredCard).map(
+      ({ title, tooltip, computeWeight, computeValue }) => {
+        const perCard = cardIndices.map((cardIndex) => computeValue({ ...botState, cardIndex }));
+        return {
+          title,
+          tooltip,
+          perCard,
+          weight: computeWeight(botState),
+          value: perCard.reduce((acc, x) => acc + x, 0),
+        };
+      },
+    );
+    const oracleResults = [...perCardOracleResults, ...globalOracleResults];
+    const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
     return {
       score,
       oracleResults,
@@ -351,9 +376,10 @@ const calculateScore = (botState) => {
     (acc, c) => (acc + cardType(cards[c]).toLowerCase().includes('land') ? 0 : probabilities[c]),
     0,
   );
+  const score = nonlandProbability * globalOracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
   return {
-    score: nonlandProbability * score,
-    oracleResults,
+    score,
+    oracleResults: globalOracleResults,
     botState,
     probability: botState.probabilities[botState.cardIndex],
     colors: getCombinationForLands(botState.lands),
@@ -361,13 +387,12 @@ const calculateScore = (botState) => {
   };
 };
 
-export const evaluateCardOrPool = (cardIndex, drafterState) => {
+export const evaluateCardsOrPool = (cardIndices, drafterState) => {
+  if ((cardIndices ?? null) === null) cardIndices = [];
+  if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let currentLands = getInitialLandsForPool(
-    cardIndex || cardIndex === 0 ? [...drafterState.picked, cardIndex] : drafterState.picked,
-    drafterState.cards,
-  );
-  const initialBotState = { ...drafterState, cardIndex, lands: currentLands };
+  let currentLands = getInitialLandsForPool([...drafterState.picked, ...cardIndices], drafterState.cards);
+  const initialBotState = { ...drafterState, cardIndices, lands: currentLands };
   initialBotState.probabilities = calculateProbabilities(initialBotState);
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
@@ -383,7 +408,7 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
             lands[increaseColor] += 1;
             lands[decreaseColor] -= 1;
             if (!landCountsAreEqual(lands, prevLands)) {
-              const botState = { ...drafterState, cardIndex, lands };
+              const botState = { ...drafterState, cardIndices, lands };
               botState.probabilities = calculateProbabilities(botState);
               botState.totalProbability = sum(botState.probabilities);
               const newScore = calculateScore(botState);
@@ -409,5 +434,23 @@ export const evaluateCardOrPool = (cardIndex, drafterState) => {
 
 export const calculateBotPick = (drafterState, reverse = false) =>
   drafterState.cardsInPack
-    .map((cardIndex) => [evaluateCardOrPool(cardIndex, drafterState).score, cardIndex])
+    .map((cardIndex) => [evaluateCardsOrPool(cardIndex, drafterState).score, cardIndex])
     .sort(([a], [b]) => (reverse ? a - b : b - a))[0][1];
+
+const GRID_DRAFT_OPTIONS = [0, 1, 2]
+  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
+  .flat(1);
+
+export const calculateGridBotPick = (gridDrafterState) =>
+  GRID_DRAFT_OPTIONS.map((packIndices) =>
+    packIndices.map((pi) => [gridDrafterState.cardsInPack[pi], pi]).filter(([x]) => x || x === 0),
+  )
+    .filter((option) => option.length > 0)
+    .map((option) => [
+      evaluateCardsOrPool(
+        option.map(([x]) => x),
+        gridDrafterState,
+      ).score,
+      option,
+    ])
+    .sort(([a], [b]) => a - b)[0][1];

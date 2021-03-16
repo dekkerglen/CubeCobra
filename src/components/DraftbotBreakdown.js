@@ -9,7 +9,7 @@ import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
 import { cardName, encodeName } from 'utils/Card';
-import { evaluateCardOrPool, ORACLES_BY_NAME } from 'drafting/draftbots';
+import { evaluateCardsOrPool, ORACLES_BY_NAME } from 'drafting/draftbots';
 import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -57,7 +57,7 @@ export const DraftbotBreakdownTable = ({ drafterState }) => {
   const botEvaluations = useMemo(
     () =>
       drafterState.cardsInPack.map((card) => ({
-        ...evaluateCardOrPool(card, drafterState),
+        ...evaluateCardsOrPool(card, drafterState),
         card: drafterState.cards[card],
       })),
     [drafterState],

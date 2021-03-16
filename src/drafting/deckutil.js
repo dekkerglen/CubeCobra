@@ -1,4 +1,4 @@
-import { evaluateCardOrPool, getSynergy, isPlayableLand, MAX_SCORE, ORACLES_BY_NAME } from 'drafting/draftbots';
+import { evaluateCardsOrPool, getSynergy, isPlayableLand, MAX_SCORE, ORACLES_BY_NAME } from 'drafting/draftbots';
 import { cardCmc, cardIsSpecialZoneType, cardName, cardType } from 'utils/Card';
 
 // Ignore cards below this value.
@@ -152,7 +152,7 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 };
 
 export const calculateBasicCounts = (picked, cards) => {
-  const { lands, colors } = evaluateCardOrPool({
+  const { lands, colors } = evaluateCardsOrPool({
     picked,
     cards,
     seen: null,
@@ -284,7 +284,7 @@ async function build({ lands, colors, probabilities }, picked, cards, basics) {
 }
 
 export async function buildDeck(cards, picked, basics) {
-  const botEvaluation = evaluateCardOrPool(null, {
+  const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked,
     seen: null,

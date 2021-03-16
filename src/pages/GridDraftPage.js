@@ -30,11 +30,14 @@ import CubePropType from 'proptypes/CubePropType';
 import UserPropType from 'proptypes/UserPropType';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import Location from 'drafting/DraftLocation';
+import Location, { moveOrAddCard } from 'drafting/DraftLocation';
+import { calculateGridBotPick } from 'drafting/draftbots';
+import { getDefaultPosition } from 'drafting/draftutil';
+import { getGridDrafterState } from 'drafting/griddraftutils';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
 
-const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
+const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
@@ -53,7 +56,19 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
         <Col xs="1" />
         {[0, 1, 2].map((col) => (
           <Col key={`col-btn-${col}`} xs="3" md="2">
-            <Button block outline color="success" onClick={() => pickCol(col)}>
+            <Button
+              block
+              outline
+              color="success"
+              onClick={() => {
+                makePick({
+                  seatIndex,
+                  cardIndices: [0, 1, 2]
+                    .map((row) => [pack[3 * row + col]?.index, 3 * row + col])
+                    .filter(([x]) => x || x === 0),
+                });
+              }}
+            >
               🡇
             </Button>
           </Col>
@@ -62,7 +77,19 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
       {[0, 1, 2].map((row) => (
         <Row key={`row-${row}`} className="justify-content-center">
           <Col className="my-2" xs="1">
-            <Button className="float-right h-100" outline color="success" onClick={() => pickRow(row)}>
+            <Button
+              className="float-right h-100"
+              outline
+              color="success"
+              onClick={() => {
+                makePick({
+                  seatIndex,
+                  cardIndices: [0, 1, 2]
+                    .map((col) => [pack[3 * row + col]?.index, 3 * row + col])
+                    .filter(([x]) => x || x === 0),
+                });
+              }}
+            >
               🡆
             </Button>
           </Col>
@@ -91,8 +118,8 @@ Pack.propTypes = {
   pack: PropTypes.arrayOf(CardPropType).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
-  pickRow: PropTypes.func.isRequired,
-  pickCol: PropTypes.func.isRequired,
+  seatIndex: PropTypes.number.isRequired,
+  makePick: PropTypes.func.isRequired,
   turn: PropTypes.number,
 };
 
@@ -101,7 +128,15 @@ Pack.defaultProps = {
 };
 
 const MUTATIONS = {
-  makePick: ({ newGridDraft, seatIndex, cardIndices }) => {},
+  makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
+    console.log('making pick for', seatIndex, 'as', cardIndices);
+    newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
+    newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
+    for (const [cardIndex] of cardIndices) {
+      const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].drafted);
+      newGridDraft.seats[seatIndex].drafted = moveOrAddCard(newGridDraft.seats[seatIndex].drafted, pos, cardIndex);
+    }
+  },
 };
 
 const useMutatableGridDraft = (initialGridDraft) => {
@@ -169,9 +204,11 @@ const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [doneDrafting, gridDraft]);
 
   useEffect(() => {
+    console.log('in effect');
     if (!turn && draftType === 'bot') {
+      console.log(turn);
       const cardIndices = calculateGridBotPick(drafterStates[1]);
-      mutations.pickCards({ cardIndices, seatIndex: 1 });
+      mutations.makePick({ cardIndices, seatIndex: (seatNumber + 1) % 2 });
     }
   }, [turn, draftType, drafterStates, mutations]);
 
@@ -197,7 +234,13 @@ const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
           </CSRFForm>
           <DndProvider>
             <ErrorBoundary>
-              <Pack pack={pack} packNumber={packNum} pickNumber={pickNum} makePick={mutations.makePick} />
+              <Pack
+                pack={pack}
+                packNumber={packNum}
+                pickNumber={pickNum}
+                seatIndex={turn ? 0 : 1}
+                makePick={mutations.makePick}
+              />
             </ErrorBoundary>
             <ErrorBoundary className="mt-3">
               <Card className="mt-3">

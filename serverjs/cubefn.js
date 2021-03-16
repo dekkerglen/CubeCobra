@@ -5,7 +5,7 @@ const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 
 const util = require('./util');
-const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 
 function getCubeId(cube) {
   if (cube.urlAlias) return cube.urlAlias;

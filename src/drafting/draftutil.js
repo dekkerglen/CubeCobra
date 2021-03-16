@@ -89,28 +89,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
             const takenCardIndex = action.match(/pick/)
               ? draft.seats[seatIndex].pickorder[pickedNum]
               : draft.seats[seatIndex].trashorder[trashedNum];
-            if (action.match(/pick/)) {
-              console.log(
-                'seatIndex',
-                seatIndex,
-                'pickorder',
-                draft.seats[seatIndex].pickorder,
-                'pickedNum',
-                pickedNum,
-              );
-            } else {
-              console.log(
-                'seatIndex',
-                seatIndex,
-                'trashorder',
-                draft.seats[seatIndex].trashorder,
-                'trashedNum',
-                trashedNum,
-              );
-            }
-            console.log('takenCardIndex', takenCardIndex);
             const cardsInPackForSeat = packsWithCards[offsetSeatIndex];
-            console.log('offsetSeatIndex', offsetSeatIndex, 'cardsInPackForSeat', cardsInPackForSeat);
             const indexToRemove = cardsInPackForSeat.indexOf(takenCardIndex);
             if (indexToRemove < 0) {
               console.error(
@@ -199,7 +178,7 @@ export const allBotsDraft = (draft) => {
       throw new Error(errorStr);
     }
     const newDraft = draft;
-    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ newDraft, seatNumber }));
+    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: newDraft, seatNumber }));
     [
       {
         numPacks,

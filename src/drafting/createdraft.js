@@ -178,7 +178,7 @@ export const getDraftFormat = (params, cube) => {
     format.custom = false;
     format.multiples = false;
     for (let pack = 0; pack < params.packs; pack++) {
-      format[pack] = { steps: null };
+      format[pack] = { slots: [], steps: null };
       for (let card = 0; card < params.cards; card++) {
         format[pack].slots.push('*'); // any card
       }

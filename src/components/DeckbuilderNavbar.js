@@ -164,15 +164,19 @@ const DeckbuilderNavbar = ({
   }, [deleteModalOpen, setDeleteModalOpen]);
 
   const stripped = useMemo(() => {
+    console.log(deck);
     const res = JSON.parse(JSON.stringify(deck));
 
     for (const collection of [res.playerdeck, res.playersideboard]) {
-      for (const pack of collection) {
-        pack.forEach((card, index) => {
-          if (!Number.isFinite(card)) {
-            pack[index] = deck.cards.findIndex((deckCard) => deckCard.cardID === card.cardID);
-          }
-        });
+      console.debug(collection);
+      for (const row of collection) {
+        for (const column of row) {
+          column.forEach((card, index) => {
+            if (!Number.isFinite(card)) {
+              column[index] = deck.cards.findIndex((deckCard) => deckCard.cardID === card.cardID);
+            }
+          });
+        }
       }
     }
     const result = JSON.stringify({

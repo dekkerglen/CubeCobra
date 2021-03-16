@@ -278,6 +278,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const { seed } = initialDraft;
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { draft, mutations } = useMutatableDraft(initialDraft);
+  const { drafted } = draft.seats[seatNum];
   const submitDeckForm = useRef();
   const rng = useMemo(() => seedrandom(seed), [seed]);
   const drafterStates = useMemo(
@@ -351,7 +352,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
         <DisplayContextProvider>
           <CubeDraftPlayerUI
             drafterState={drafterStates[seatNum]}
-            seat={draft.seats[seatNum]}
+            drafted={drafted}
             takeCard={takeCard}
             moveCard={moveCard}
           />

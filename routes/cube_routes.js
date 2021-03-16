@@ -29,8 +29,8 @@ const {
   generateSamplepackImage,
 } = require('../serverjs/cubefn.js');
 
-const { buildDeck } = require('../dist/drafting/deckutil').default;
-const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft').default;
+const { buildDeck } = require('../dist/drafting/deckutil');
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 const cardutil = require('../dist/utils/Card.js');
 const sortutil = require('../dist/utils/Sort.js');
 const filterutil = require('../dist/filtering/FilterCards.js');
@@ -1621,8 +1621,12 @@ router.post(
       }
 
       const pool = [];
-      for (let i = 0; i < 16; i += 1) {
-        pool.push([]);
+      for (let i = 0; i < 2; i++) {
+        const row = [];
+        for (let j = 0; j < 8; j++) {
+          row.push([]);
+        }
+        pool.push(row);
       }
 
       gridDraft.initial_state = cards;
@@ -1637,6 +1641,7 @@ router.post(
         drafted: pool,
         sideboard: pool,
         pickorder: [],
+        pickedIndices: [],
       });
 
       // add bot
@@ -1689,8 +1694,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').t
 
     const source = shuffle(cube.cards).slice(0, numCards);
     const pool = [];
-    for (let i = 0; i < 16; i += 1) {
-      pool.push([]);
+    for (let i = 0; i < 2; i++) {
+      const row = [];
+      for (let j = 0; j < 8; j++) {
+        row.push([]);
+      }
+      pool.push(row);
     }
     const cardsArray = [];
     for (const card of source) {
@@ -1699,10 +1708,12 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').t
       // sort by color
       const details = carddb.cardFromId(card.cardID);
       const type = card.type_line || details.type;
-      const colors = card.colors || details.colors;
+      const colors = card.colors || details.color_identity;
 
+      let row = type.toLowerCase().includes('creature') ? 0 : 1;
       if (type.toLowerCase().includes('land')) {
         index = 7;
+        row = colors.length >= 2 ? 1 : 0;
       } else if (colors.length === 1) {
         index = ['W', 'U', 'B', 'R', 'G'].indexOf(colors[0].toUpperCase());
       } else if (colors.length === 0) {
@@ -1711,14 +1722,10 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').t
         index = 5;
       }
 
-      if (!type.toLowerCase().includes('creature')) {
-        index += 8;
-      }
-
-      if (pool[index]) {
-        pool[index].push(card);
+      if (pool[row][index]) {
+        pool[row][index].push(cardsArray.length);
       } else {
-        pool[0].push(card);
+        pool[0][0].push(cardsArray.length);
       }
       cardsArray.push(card);
     }
@@ -2748,7 +2755,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         pickorder: seat.pickorder,
         name: `Draft of ${cube.name}`,
         description: '',
-        cols: 16,
         deck: seat.drafted,
         sideboard: seat.sideboard ? seat.sideboard : [],
       });
@@ -2807,7 +2813,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
         pickorder: seat.pickorder.flat(),
         name: `Grid Draft of ${cube.name}`,
         description: '',
-        cols: 16,
         deck: seat.drafted,
         sideboard: seat.sideboard ? seat.sideboard : [],
       });
@@ -4046,7 +4051,6 @@ router.post('/api/submitdraft/:id', async (req, res) => {
   });
 
   draft.seats = req.body.seats;
-  draft.unopenedPacks = req.body.unopenedPacks;
 
   await draft.save();
 

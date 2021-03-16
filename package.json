@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "beautify": "npm run prettier",
-    "lint:files": "echo {__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}'/**/*.js' *.js",
+    "lint:files": "echo ./{__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}/{,**/}*.js *.js",
     "prettier-base": "prettier `npm run --silent lint:files`",
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",

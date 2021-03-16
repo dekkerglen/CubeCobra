@@ -88,8 +88,8 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
   );
 
   const currentDeck = { ...initialDeck };
-  currentDeck.playerdeck = [...deck[0], ...deck[1]];
-  [currentDeck.playersideboard] = sideboard;
+  currentDeck.playerdeck = deck;
+  currentDeck.playersideboard = sideboard;
 
   const [name, setName] = useState(initialDeck.seats[0].name);
   const [description, setDescription] = useState(initialDeck.seats[0].description);

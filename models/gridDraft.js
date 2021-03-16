@@ -8,20 +8,21 @@ const Seat = {
   bot: Boolean,
   name: String,
   userid: String,
-  drafted: [[Number]], // organized draft picks
-  sideboard: [[Number]], // organized draft picks
-  pickorder: [[Number]],
+  drafted: [[[Number]]], // organized draft picks
+  sideboard: [[[Number]]], // organized draft picks
+  pickorder: [Number],
+  pickedIndices: [Number],
 };
 
 // Cube schema
 const gridDraftSchema = mongoose.Schema({
   basics: {
-    Plains: cardSchema,
-    Island: cardSchema,
-    Swamp: cardSchema,
-    Mountain: cardSchema,
-    Forest: cardSchema,
-    Wastes: cardSchema,
+    Plains: Number,
+    Island: Number,
+    Swamp: Number,
+    Mountain: Number,
+    Forest: Number,
+    Wastes: Number,
   },
   cards: [cardSchema],
   cube: String,

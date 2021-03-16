@@ -36,7 +36,7 @@ export const BotStatePropType = PropTypes.shape({
 export const OraclePropType = PropTypes.shape({
   title: PropTypes.string.isRequired,
   tooltip: PropTypes.string,
-  draftingOnly: PropTypes.bool,
+  perConsideredCard: PropTypes.bool,
   weights: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
   // computeWeight : DrafterState -> number,
   computeWeight: PropTypes.func.isRequired,
