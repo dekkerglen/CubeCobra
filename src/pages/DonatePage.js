@@ -74,11 +74,11 @@ const ContactPage = ({ user, loginCallback }) => (
           </Col>
           <Col xs="12" sm="8">
             <a
-              href="https://www.inkedgaming.com/collections/artists/gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
+              href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
               target="_blank"
               rel="noopener noreferrer"
             >
-              https://www.inkedgaming.com/collections/artists/gwen-dekker
+              https://www.inkedgaming.com/collections/artists-gwen-dekker
             </a>
           </Col>
         </Row>

@@ -101,7 +101,7 @@ const Footer = () => (
               <li>
                 <a
                   className="footer-link"
-                  href="https://www.inkedgaming.com/collections/artists/gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
+                  href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
                 >
                   Merchandise
                 </a>
