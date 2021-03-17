@@ -12,7 +12,14 @@ const BlogPostPage = ({ post, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <Advertisement />
     <DynamicFlash />
-    <BlogPost key={post._id} post={post} canEdit={false} noScroll userid={user ? user.id : null} loggedIn={user !== null} />
+    <BlogPost
+      key={post._id}
+      post={post}
+      canEdit={false}
+      noScroll
+      userid={user ? user.id : null}
+      loggedIn={user !== null}
+    />
   </MainLayout>
 );
 
