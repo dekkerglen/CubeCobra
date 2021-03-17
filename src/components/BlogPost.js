@@ -54,10 +54,12 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    const { post, onEdit } = this.props;
+    const { post, onEdit, noScroll } = this.props;
     if (post.html == 'undefined') {
       post.html = null;
     }
+    let scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
+
     return (
       <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
@@ -81,7 +83,7 @@ class BlogPost extends React.Component {
             <TimeAgo date={post.date} />
           </h6>
         </CardHeader>
-        <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
+        <div style={scrollStyle}>
           {post.changelist && (post.html || post.markdown) ? (
             <Row className="no-gutters">
               <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
