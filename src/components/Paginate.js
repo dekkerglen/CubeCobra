@@ -85,7 +85,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
   );
 
   return (
-    <Pagination aria-label="Table page" className="mt-3">
+    <Pagination aria-label="Table page" className="mt-3 Pagination">
       <PaginationItem disabled={active === 0}>
         <PaginationLink
           previous

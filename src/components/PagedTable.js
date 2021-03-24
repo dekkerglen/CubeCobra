@@ -22,6 +22,7 @@ const PagedTable = ({ pageSize, rows, children, ...props }) => {
           <tbody>{displayRows}</tbody>
         </Table>
       </div>
+      {validPages.length > 1 && <Paginate count={validPages.length} active={current} onClick={(i) => setPage(i)} />}
     </>
   );
 };

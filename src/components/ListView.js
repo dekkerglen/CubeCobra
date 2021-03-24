@@ -74,7 +74,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
   const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
   const [values, setValues] = useState({
     ...card,
-    colors: card.colors.join('') || 'C',
+    colors: (card.colors || []).join('') || 'C',
   });
 
   const { cubeID, updateCubeCard } = useContext(CubeContext);
@@ -339,7 +339,7 @@ const ListView = ({ cards }) => {
 
   const { cube } = useContext(CubeContext);
   const { setGroupModalCards } = useContext(GroupModalContext);
-  const { primary, secondary } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary } = useContext(SortContext);
 
   const { addAlert, alerts } = useAlerts();
 
@@ -403,25 +403,28 @@ const ListView = ({ cards }) => {
     [checked, cards, setGroupModalCards],
   );
 
-  const sorted = sortDeep(cards, primary, secondary);
+  const sorted = sortDeep(cards, quaternary, primary, secondary, tertiary);
 
+  console.log(sorted);
   const rows = sorted.map(([, group1]) =>
     group1.map(([, group2]) =>
-      group2.map((card) => (
-        <ListViewRow
-          key={card._id}
-          card={card}
-          versions={versionDict[normalizeName(card.details.name)] || defaultVersions(card)}
-          versionsLoading={versionsLoading}
-          checked={checked.includes(card.index)}
-          onCheck={handleCheck}
-          addAlert={addAlert}
-        />
-      )),
+      group2.map(([, group3]) =>
+        group3.map((card) => (
+          <ListViewRow
+            key={card._id}
+            card={card}
+            versions={versionDict[normalizeName(card.details.name)] || defaultVersions(card)}
+            versionsLoading={versionsLoading}
+            checked={checked.includes(card.index)}
+            onCheck={handleCheck}
+            addAlert={addAlert}
+          />
+        )),
+      ),
     ),
   );
 
-  const rowsFlat = [].concat(...[].concat(...rows));
+  const rowsFlat = [].concat(...[].concat(...[].concat(...rows)));
 
   return (
     <>
