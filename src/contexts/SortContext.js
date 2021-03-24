@@ -12,14 +12,19 @@ export class SortContextProvider extends React.Component {
   constructor(props) {
     super(props);
     const {
-      defaultSorts: [primary = 'Color Category', secondary = 'Types-Multicolor', tertiary = 'CMC2', quaternary = 'Alphabetical'],
+      defaultSorts: [
+        primary = 'Color Category',
+        secondary = 'Types-Multicolor',
+        tertiary = 'CMC2',
+        quaternary = 'Alphabetical',
+      ],
     } = this.props;
 
     this.state = {
       primary,
       secondary,
       tertiary,
-      quaternary
+      quaternary,
     };
 
     this.changeSort = this.changeSort.bind(this);
