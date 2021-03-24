@@ -52,7 +52,7 @@ const CubeAnalysisPage = ({
   const [activeTab, setActiveTab] = useQueryParam('tab', defaultTab ?? 0);
   const [adds, setAdds] = useState([]);
   const [cuts, setCuts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState('loading');
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
   const [asfans, setAsfans] = useState({});
 
@@ -114,14 +114,14 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj, addCards, cutCards, isLoading) => (
+      component: (collection, cubeObj, addCards, cutCards, loadState) => (
         <Suggestions
           cards={collection}
           cube={cubeObj}
           adds={addCards}
           cuts={cutCards}
           filter={filter}
-          loading={isLoading}
+          loadState={loadState}
           cubes={cubes}
         />
       ),
@@ -160,11 +160,15 @@ const CubeAnalysisPage = ({
   }
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cubeID}`).then(({ toCut, toAdd }) => {
-      setAdds(toAdd);
-      setCuts(toCut);
-      setLoading(false);
-    });
+    getData(`/cube/api/adds/${cubeID}`)
+      .then(({ toCut, toAdd }) => {
+        setAdds(toAdd);
+        setCuts(toCut);
+        setLoading('loaded');
+      })
+      .catch(() => {
+        setLoading('error');
+      });
   }, [cubeID]);
 
   const defaultTagSet = new Set([].concat(...cube.cards.map((card) => card.tags)));

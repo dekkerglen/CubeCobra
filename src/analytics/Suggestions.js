@@ -65,7 +65,7 @@ Suggestion.defaultProps = {
   cubes: [],
 };
 
-const Suggestions = ({ adds, cuts, loading, cube, filter, cubes }) => {
+const Suggestions = ({ adds, cuts, loadState, cube, filter, cubes }) => {
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
@@ -90,72 +90,83 @@ const Suggestions = ({ adds, cuts, loading, cube, filter, cubes }) => {
         View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all
         cubes on Cube Cobra.
       </p>
-      <Row>
-        <Col xs="12" lg="6">
-          <Card>
-            <CardHeader>
-              <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
-              <input className="mr-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
-              <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
-            </CardHeader>
-            <ListGroup className="pb-3">
-              {loading && (
-                <CardBody>
-                  <div className="centered py-3">
-                    <Spinner className="position-absolute" />
-                  </div>
-                </CardBody>
-              )}
-              {!loading &&
-                (filteredAdds.length > 0 ? (
-                  <PagedList
-                    pageSize={20}
-                    showBottom
-                    pageWrap={(element) => <CardBody>{element}</CardBody>}
-                    rows={filteredAdds.slice(0).map(([add, index]) => (
-                      <Suggestion key={add.cardID} index={index} card={add} cubes={cubes} cube={cube} />
-                    ))}
-                  />
-                ) : (
+      {loadState === 'error' ? (
+        <Card>
+          <CardHeader>
+            <h5>Service Unavailable</h5>
+          </CardHeader>
+          <CardBody>
+            <p>We encountered an unexpected error while connecting to the recommender. Please try again later.</p>
+          </CardBody>
+        </Card>
+      ) : (
+        <Row>
+          <Col xs="12" lg="6">
+            <Card>
+              <CardHeader>
+                <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
+                <input className="mr-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
+                <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
+              </CardHeader>
+              <ListGroup className="pb-3">
+                {loadState === 'loading' && (
                   <CardBody>
-                    <em>No results with the given filter.</em>
+                    <div className="centered py-3">
+                      <Spinner className="position-absolute" />
+                    </div>
                   </CardBody>
-                ))}
-            </ListGroup>
-          </Card>
-        </Col>
-        <Col xs="12" lg="6">
-          <Card>
-            <CardHeader>
-              <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
-            </CardHeader>
-            <ListGroup className="pb-3">
-              {loading && (
-                <CardBody>
-                  <div className="centered py-3">
-                    <Spinner className="position-absolute" />
-                  </div>
-                </CardBody>
-              )}
-              {!loading &&
-                (filteredCuts.length > 0 ? (
-                  <PagedList
-                    pageSize={20}
-                    showBottom
-                    pageWrap={(element) => <CardBody>{element}</CardBody>}
-                    rows={filteredCuts.slice(0).map(([card, index]) => (
-                      <Suggestion key={card.cardID} index={index} card={card} cubes={cubes} cube={cube} />
-                    ))}
-                  />
-                ) : (
+                )}
+                {loadState === 'loaded' &&
+                  (filteredAdds.length > 0 ? (
+                    <PagedList
+                      pageSize={20}
+                      showBottom
+                      pageWrap={(element) => <CardBody>{element}</CardBody>}
+                      rows={filteredAdds.slice(0).map(([add, index]) => (
+                        <Suggestion key={add.cardID} index={index} card={add} cubes={cubes} cube={cube} />
+                      ))}
+                    />
+                  ) : (
+                    <CardBody>
+                      <em>No results with the given filter.</em>
+                    </CardBody>
+                  ))}
+              </ListGroup>
+            </Card>
+          </Col>
+          <Col xs="12" lg="6">
+            <Card>
+              <CardHeader>
+                <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
+              </CardHeader>
+              <ListGroup className="pb-3">
+                {loadState === 'loading' && (
                   <CardBody>
-                    <em>No results with the given filter.</em>
+                    <div className="centered py-3">
+                      <Spinner className="position-absolute" />
+                    </div>
                   </CardBody>
-                ))}
-            </ListGroup>
-          </Card>
-        </Col>
-      </Row>
+                )}
+                {loadState === 'loaded' &&
+                  (filteredCuts.length > 0 ? (
+                    <PagedList
+                      pageSize={20}
+                      showBottom
+                      pageWrap={(element) => <CardBody>{element}</CardBody>}
+                      rows={filteredCuts.slice(0).map(([card, index]) => (
+                        <Suggestion key={card.cardID} index={index} card={card} cubes={cubes} cube={cube} />
+                      ))}
+                    />
+                  ) : (
+                    <CardBody>
+                      <em>No results with the given filter.</em>
+                    </CardBody>
+                  ))}
+              </ListGroup>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </>
   );
 };
@@ -163,7 +174,7 @@ const Suggestions = ({ adds, cuts, loading, cube, filter, cubes }) => {
 Suggestions.propTypes = {
   adds: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   cuts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  loading: PropTypes.bool.isRequired,
+  loadState: PropTypes.oneOf(['loading', 'loaded', 'error']).isRequired,
   cube: PropTypes.shape({
     maybe: PropTypes.arrayOf(
       PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
