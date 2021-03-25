@@ -405,7 +405,6 @@ const ListView = ({ cards }) => {
 
   const sorted = sortDeep(cards, quaternary, primary, secondary, tertiary);
 
-  console.log(sorted);
   const rows = sorted.map(([, group1]) =>
     group1.map(([, group2]) =>
       group2.map(([, group3]) =>

@@ -771,28 +771,8 @@ export function sortIntoGroups(cards, sort) {
 
 const OrderSortMap = {
   Alphabetical: alphaCompare,
-  CMC: (a, b) => {
-    const valA = a.details.cmc;
-    const valB = b.details.cmc;
-    if (valB < valA) {
-      return 1;
-    }
-    if (valB > valA) {
-      return -1;
-    }
-    return 0;
-  },
-  Price: (a, b) => {
-    const valA = a.details.price;
-    const valB = b.details.price;
-    if (valB < valA) {
-      return 1;
-    }
-    if (valB > valA) {
-      return -1;
-    }
-    return 0;
-  },
+  CMC: (a, b) => a.details.cmc - b.details.cmc,
+  Price: (a, b) => a.details.price - b.details.price,
 };
 
 export function sortDeep(cards, last, ...sorts) {
@@ -819,12 +799,19 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(cards, primary, secondary, tertiary) {
+export function sortForCSVDownload(
+  cards,
+  primary = 'Color Category',
+  secondary = 'Types-Multicolor',
+  tertiary = 'CMC2',
+  quaternary = 'Alphabetical',
+) {
   const exportCards = [];
   cards = sortDeep(cards, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
       for (const thirdGroup of secondGroup[1]) {
+        thirdGroup[1].sort(OrderSortMap[quaternary]);
         for (const card of thirdGroup[1]) {
           exportCards.push(card);
         }

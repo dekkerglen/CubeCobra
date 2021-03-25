@@ -13,7 +13,6 @@ import GroupModalContext from 'contexts/GroupModalContext';
 const AutocardListGroup = ({ cards, heading, sort, orderedSort, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
   const sorted = sortDeep(cards, orderedSort, sort);
-  console.log(orderedSort);
   const { canEdit } = useContext(CubeContext);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
   const canGroupModal = !noGroupModal && canEdit;
