@@ -284,7 +284,7 @@ const CubeListNavbar = ({
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
-  const { primary, secondary, tertiary } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
@@ -340,7 +340,9 @@ const CubeListNavbar = ({
   const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
   const enc = encodeURIComponent;
-  const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(tertiary)}`;
+  const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(
+    tertiary,
+  )}&quaternary=${enc(quaternary)}`;
   const filterString = filter?.stringify ?? '';
   const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
 

@@ -3,6 +3,7 @@ import {
   cardColorIdentity,
   cardDevotion,
   cardPriceEur,
+  cardPrice,
   cardTix,
   cardType,
   cardCmc,
@@ -144,6 +145,7 @@ export function GetColorCategory(type, colors) {
 export const SORTS = [
   'Artist',
   'CMC',
+  'CMC2',
   'Color Category',
   'Color Category Full',
   'Color Count',
@@ -182,6 +184,8 @@ export const SORTS = [
   'Devotion to Green',
   'Unsorted',
 ];
+
+export const ORDERED_SORTS = ['Alphabetical', 'CMC', 'Price'];
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
@@ -766,17 +770,23 @@ export function sortIntoGroups(cards, sort) {
   return fromEntries(sortGroupsOrdered(cards, sort));
 }
 
-export function sortDeep(cards, ...sorts) {
+const OrderSortMap = {
+  Alphabetical: alphaCompare,
+  CMC: (a, b) => cardCmc(a) - cardCmc(b),
+  Price: (a, b) => cardPrice(a) - cardPrice(b),
+};
+
+export function sortDeep(cards, last, ...sorts) {
   if (sorts.length === 0) {
-    return [...cards].sort(alphaCompare);
+    return [...cards].sort(OrderSortMap[last]);
   }
   const [first, ...rest] = sorts;
   const result = sortGroupsOrdered(cards, first ?? 'Unsorted');
   for (const labelGroup of result) {
     if (rest.length > 0) {
-      labelGroup[1] = sortDeep(labelGroup[1], ...rest);
+      labelGroup[1] = sortDeep(labelGroup[1], last, ...rest);
     } else {
-      labelGroup[1].sort(alphaCompare);
+      labelGroup[1].sort(OrderSortMap[last]);
     }
   }
   return result;
@@ -790,12 +800,19 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(cards, primary, secondary, tertiary) {
+export function sortForCSVDownload(
+  cards,
+  primary = 'Color Category',
+  secondary = 'Types-Multicolor',
+  tertiary = 'CMC2',
+  quaternary = 'Alphabetical',
+) {
   const exportCards = [];
   cards = sortDeep(cards, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
       for (const thirdGroup of secondGroup[1]) {
+        thirdGroup[1].sort(OrderSortMap[quaternary]);
         for (const card of thirdGroup[1]) {
           exportCards.push(card);
         }

@@ -5,26 +5,33 @@ const SortContext = React.createContext({
   primary: 'Color Category',
   secondary: 'Types-Multicolor',
   tertiary: 'CMC2',
+  quaternary: 'Alphabetical',
 });
 
 export class SortContextProvider extends React.Component {
   constructor(props) {
     super(props);
     const {
-      defaultSorts: [primary = 'Color Category', secondary = 'Types-Multicolor'],
+      defaultSorts: [
+        primary = 'Color Category',
+        secondary = 'Types-Multicolor',
+        tertiary = 'CMC2',
+        quaternary = 'Alphabetical',
+      ],
     } = this.props;
 
     this.state = {
       primary,
       secondary,
-      tertiary: 'CMC2',
+      tertiary,
+      quaternary,
     };
 
     this.changeSort = this.changeSort.bind(this);
   }
 
   componentDidMount() {
-    for (const stage of ['primary', 'secondary']) {
+    for (const stage of ['primary', 'secondary', 'tertiary', 'quaternary']) {
       const select = document.getElementById(`${stage}SortSelect`);
       if (select) {
         select.addEventListener('change', (event) => {

@@ -1449,7 +1449,13 @@ router.get('/download/csv/:id', async (req, res) => {
       }
     }
 
-    cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
+    cube.cards = sortutil.sortForCSVDownload(
+      cube.cards,
+      req.query.primary,
+      req.query.secondary,
+      req.query.tertiary,
+      req.query.quaternary,
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
