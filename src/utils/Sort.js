@@ -3,6 +3,7 @@ import {
   cardColorIdentity,
   cardDevotion,
   cardPriceEur,
+  cardPrice,
   cardTix,
   cardType,
   cardCmc,
@@ -771,8 +772,8 @@ export function sortIntoGroups(cards, sort) {
 
 const OrderSortMap = {
   Alphabetical: alphaCompare,
-  CMC: (a, b) => a.details.cmc - b.details.cmc,
-  Price: (a, b) => a.details.price - b.details.price,
+  CMC: (a, b) => cardCmc(a) - cardCmc(b),
+  Price: (a, b) => cardPrice(a) - cardPrice(b),
 };
 
 export function sortDeep(cards, last, ...sorts) {
