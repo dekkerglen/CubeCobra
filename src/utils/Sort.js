@@ -45,11 +45,11 @@ const SHARD_AND_WEDGE_MAP = {
 };
 
 const FOUR_COLOR_MAP = {
-  UBRG: 'Not-White',
-  WBRG: 'Not-Blue',
-  WURG: 'Not-Black',
-  WUBG: 'Not-Red',
-  WUBR: 'Not-Green',
+  UBRG: 'Non-White',
+  WBRG: 'Non-Blue',
+  WURG: 'Non-Black',
+  WUBG: 'Non-Red',
+  WUBR: 'Non-Green',
 };
 
 const ALL_CMCS = Array.from(Array(33).keys())
@@ -75,7 +75,7 @@ const CARD_TYPES = [
 const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
 const SHARDS_AND_WEDGES = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Mardu', 'Temur', 'Abzan', 'Jeskai', 'Sultai'];
-const FOUR_AND_FIVE_COLOR = ['Not-White', 'Not-Blue', 'Not-Black', 'Not-Red', 'Not-Green', 'Five Color'];
+const FOUR_AND_FIVE_COLOR = ['Non-White', 'Non-Blue', 'Non-Black', 'Non-Red', 'Non-Green', 'Five Color'];
 
 const ELO_DEFAULT = 1200;
 
@@ -808,11 +808,10 @@ export function sortForCSVDownload(
   quaternary = 'Alphabetical',
 ) {
   const exportCards = [];
-  cards = sortDeep(cards, primary, secondary, tertiary);
+  cards = sortDeep(cards, quaternary, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
       for (const thirdGroup of secondGroup[1]) {
-        thirdGroup[1].sort(OrderSortMap[quaternary]);
         for (const card of thirdGroup[1]) {
           exportCards.push(card);
         }
