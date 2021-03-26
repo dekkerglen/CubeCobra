@@ -7,12 +7,84 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const similarity = require('compute-cosine-similarity');
+const winston = require('winston');
+const WinstonCloudWatch = require('winston-cloudwatch');
+const uuid = require('uuid/v4');
+const AWS = require('aws-sdk');
 const carddb = require('../serverjs/cards.js');
-const updatedb = require('../serverjs/updatecards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
+
+const formatInfo = ({ message }) => {
+  try {
+    return JSON.stringify(message);
+  } catch (err) {
+    return 'Error formatting info';
+  }
+};
+const formatError = ({ message, stack, request }) =>
+  JSON.stringify({
+    level: 'error',
+    message,
+    target: request ? request.originalUrl : null,
+    uuid: request ? request.uuid : null,
+    stack: (stack || '').split('\n'),
+  });
+
+const linearFormat = winston.format((info) => {
+  if (info.message.type === 'request') {
+    info.message = `request: ${info.message.path}`;
+  } else if (info.level === 'error') {
+    info.message = `${info.message} ${info.stack}`;
+    delete info.stack;
+    delete info.request;
+  }
+  delete info.type;
+  return info;
+});
+
+const consoleFormat = winston.format.combine(linearFormat(), winston.format.simple());
+
+if (process.env.ENV === 'production') {
+  winston.configure({
+    level: 'info',
+    format: winston.format.json(),
+    exitOnError: false,
+    transports: [
+      new WinstonCloudWatch({
+        level: 'info',
+        cloudWatchLogs: new AWS.CloudWatchLogs(),
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_info`,
+        logStreamName: uuid(),
+        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
+        awsRegion: process.env.AWS_REGION,
+        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
+        messageFormatter: formatInfo,
+      }),
+      new WinstonCloudWatch({
+        level: 'error',
+        cloudWatchLogs: new AWS.CloudWatchLogs(),
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_error`,
+        logStreamName: uuid(),
+        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
+        awsRegion: process.env.AWS_REGION,
+        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
+        messageFormatter: formatError,
+      }),
+    ],
+  });
+} else {
+  winston.configure({
+    level: 'info',
+    format: winston.format.json(),
+    exitOnError: false,
+    transports: [new winston.transports.Console({ format: consoleFormat })],
+  });
+}
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
@@ -72,10 +144,10 @@ function createCorrelations() {
       correlations[i].push(0);
     }
     if ((i + 1) % 1000 === 0) {
-      console.log(`Finished: ${i + 1} of ${totalCards} correlations.`);
+      winston.info(`Finished: ${i + 1} of ${totalCards} correlations.`);
     }
   }
-  console.log('Finish init of correlation matrix.');
+  winston.info('Finish init of correlation matrix.');
 }
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
@@ -98,7 +170,7 @@ function createSynergyMatrix() {
       synergies[i].push(getSynergy(allOracleIds[i], allOracleIds[j]));
     }
     if ((i + 1) % 100 === 0) {
-      console.log(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
+      winston.info(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
     }
   }
 }
@@ -131,7 +203,7 @@ async function processDeck(deck) {
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
             } catch (err) {
-              console.log(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
+              winston.info(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
             }
           }
         }
@@ -341,7 +413,7 @@ async function processCard(card) {
 
     await cardHistory.save();
   } catch (error) {
-    console.error(error);
+    winston.error(error, { error });
   }
 }
 
@@ -392,7 +464,7 @@ const run = async () => {
 
   const ratings = await CardRating.find({}).lean();
 
-  console.log('Started: oracles');
+  winston.info('Started: oracles');
 
   distinctOracles = [...new Set(carddb.allOracleIds())];
   const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
@@ -402,9 +474,9 @@ const run = async () => {
     ),
   ];
 
-  console.log('creating correlation matrix...');
+  winston.info('creating correlation matrix...');
   createCorrelations();
-  console.log('creating synergy matrix...');
+  winston.info('creating synergy matrix...');
   createSynergyMatrix();
 
   for (const rating of ratings) {
@@ -412,30 +484,30 @@ const run = async () => {
   }
 
   // process all cube objects
-  console.log('Started: cubes');
+  winston.info('Started: cubes');
   let count = await Cube.countDocuments();
   let cursor = Cube.find().lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processCube(await cursor.next());
     if ((i + 1) % 10 === 0) {
-      console.log(`Finished: ${i + 1} of ${count} cubes.`);
+      winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
   }
-  console.log('Finished: all cubes');
+  winston.info('Finished: all cubes');
 
   // process all deck objects
-  console.log('Started: decks');
+  winston.info('Started: decks');
   count = await Deck.countDocuments();
   cursor = Deck.find().lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processDeck(await cursor.next());
     if ((i + 1) % 1000 === 0) {
-      console.log(`Finished: ${i + 1} of ${count} decks.`);
+      winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
   }
-  console.log('Finished: all decks');
+  winston.info('Finished: all decks');
 
   // save card models
   const allOracleIds = carddb.allOracleIds();
@@ -445,10 +517,10 @@ const run = async () => {
     const card = cardFromOracle(oracleId);
     await processCard(card); // eslint-disable-line no-await-in-loop
     processed += 1;
-    console.log(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
+    winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 
-  console.log('Done');
+  winston.info('Done');
   process.exit();
 };
 
