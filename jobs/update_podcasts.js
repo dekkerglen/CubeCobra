@@ -11,6 +11,7 @@ const WinstonCloudWatch = require('winston-cloudwatch');
 const uuid = require('uuid/v4');
 const AWS = require('aws-sdk');
 
+const { WebpackOptionsValidationError } = require('webpack');
 const { updatePodcast } = require('../serverjs/podcast');
 const Podcast = require('../models/podcast');
 
@@ -86,9 +87,11 @@ if (process.env.ENV === 'production') {
 const run = async () => {
   const podcasts = await Podcast.find();
 
+  winston.info('Updating podcasts...');
+
   await Promise.all(podcasts.map(updatePodcast));
 
-  winston.info('Done');
+  winston.info('Finished updating podcasts.');
   process.exit();
 };
 
