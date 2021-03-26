@@ -284,7 +284,8 @@ function getLabelsRaw(cube, sort) {
     return tags.sort();
   }
   if (sort === 'Tags Full') {
-    return [...getLabelsRaw(cube, 'Tags'), ''];
+    // whitespace around ' Untagged ' to prevent collisions
+    return [...getLabelsRaw(cube, 'Tags'), ' Untagged '];
   }
   if (sort === 'Date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
@@ -554,7 +555,8 @@ export function cardGetLabels(card, sort) {
     return card.tags;
   }
   if (sort === 'Tags Full') {
-    return card.tags.length === 0 ? [''] : card.tags;
+    // whitespace around ' Untagged ' to prevent collisions
+    return card.tags.length === 0 ? [' Untagged '] : card.tags;
   }
   if (sort === 'Status') {
     return [card.status];
