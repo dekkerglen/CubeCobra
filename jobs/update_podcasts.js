@@ -7,13 +7,18 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const winston = require('winston');
-const WinstonCloudWatch = require('winston-cloudwatch');
 const uuid = require('uuid/v4');
+const WinstonCloudWatch = require('winston-cloudwatch');
 const AWS = require('aws-sdk');
-
-const { WebpackOptionsValidationError } = require('webpack');
 const { updatePodcast } = require('../serverjs/podcast');
 const Podcast = require('../models/podcast');
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+// //////////// Configure logger
 
 const formatInfo = ({ message }) => {
   try {
@@ -84,6 +89,8 @@ if (process.env.ENV === 'production') {
   });
 }
 
+// ////////////////
+
 const tryUpdate = async (podcast) => {
   try {
     await updatePodcast(podcast);
@@ -91,15 +98,18 @@ const tryUpdate = async (podcast) => {
     winston.error(`Failed to update podcast: ${podcast.title}`, { error: err });
   }
 };
-
 const run = async () => {
   const podcasts = await Podcast.find({ status: 'published' });
 
-  winston.info('Updating podcasts...');
+  winston.info({ message: 'Updating podcasts...' });
 
   await Promise.all(podcasts.map(tryUpdate));
 
-  winston.info('Finished updating podcasts.');
+  winston.info({ message: 'Finished updating podcasts.' });
+
+  // this is needed for log group to stream
+  await sleep(10000);
+
   process.exit();
 };
 
