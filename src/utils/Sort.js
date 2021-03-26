@@ -174,6 +174,7 @@ export const SORTS = [
   'Subtype',
   'Supertype',
   'Tags',
+  'Tags Full',
   'Toughness',
   'Type',
   'Types-Multicolor',
@@ -281,6 +282,9 @@ function getLabelsRaw(cube, sort) {
       }
     }
     return tags.sort();
+  }
+  if (sort === 'Tags Full') {
+    return [...getLabelsRaw(cube, 'Tags'), ''];
   }
   if (sort === 'Date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
@@ -548,6 +552,9 @@ export function cardGetLabels(card, sort) {
   }
   if (sort === 'Tags') {
     return card.tags;
+  }
+  if (sort === 'Tags Full') {
+    return card.tags.length === 0 ? [''] : card.tags;
   }
   if (sort === 'Status') {
     return [card.status];
