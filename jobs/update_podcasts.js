@@ -84,12 +84,20 @@ if (process.env.ENV === 'production') {
   });
 }
 
+const tryUpdate = async (podcast) => {
+  try {
+    await updatePodcast(podcast);
+  } catch (err) {
+    winston.error(`Failed to update podcast: ${podcast.title}`, { error: err });
+  }
+};
+
 const run = async () => {
   const podcasts = await Podcast.find();
 
   winston.info('Updating podcasts...');
 
-  await Promise.all(podcasts.map(updatePodcast));
+  await Promise.all(podcasts.map(tryUpdate));
 
   winston.info('Finished updating podcasts.');
   process.exit();
