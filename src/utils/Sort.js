@@ -808,11 +808,10 @@ export function sortForCSVDownload(
   quaternary = 'Alphabetical',
 ) {
   const exportCards = [];
-  cards = sortDeep(cards, primary, secondary, tertiary);
+  cards = sortDeep(cards, quaternary, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
       for (const thirdGroup of secondGroup[1]) {
-        thirdGroup[1].sort(OrderSortMap[quaternary]);
         for (const card of thirdGroup[1]) {
           exportCards.push(card);
         }
