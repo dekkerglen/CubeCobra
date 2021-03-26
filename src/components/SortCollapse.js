@@ -23,7 +23,7 @@ const SortCollapse = ({
   const { primary, secondary, tertiary, quaternary, changeSort } = useContext(SortContext);
 
   const formSorts = (src) => {
-    return [src[0] || 'Color Category', src[1] || 'Types-Multicolor', src[2] || 'CMC2', src[3] || 'Alphabetical'];
+    return [src[0] || 'Color Category', src[1] || 'Types-Multicolor', src[2] || 'CMC', src[3] || 'Alphabetical'];
   };
 
   const [defSorts, setDefSorts] = useState(formSorts(defaultSorts));
@@ -255,7 +255,7 @@ SortCollapse.defaultProps = {
   defaultSecondarySort: '',
   defaultTertiarySort: '',
   defaultQuaternarySort: '',
-  defaultSorts: ['Color Category', 'Types-Multicolor', 'CMC2', 'Alphabetical'],
+  defaultSorts: ['Color Category', 'Types-Multicolor', 'CMC', 'Alphabetical'],
 };
 
 export default SortCollapse;

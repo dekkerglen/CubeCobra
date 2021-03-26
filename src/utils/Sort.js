@@ -804,7 +804,7 @@ export function sortForCSVDownload(
   cards,
   primary = 'Color Category',
   secondary = 'Types-Multicolor',
-  tertiary = 'CMC2',
+  tertiary = 'CMC',
   quaternary = 'Alphabetical',
 ) {
   const exportCards = [];
