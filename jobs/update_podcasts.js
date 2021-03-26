@@ -6,16 +6,13 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const similarity = require('compute-cosine-similarity');
 const winston = require('winston');
 const WinstonCloudWatch = require('winston-cloudwatch');
 const uuid = require('uuid/v4');
 const AWS = require('aws-sdk');
-const carddb = require('../serverjs/cards.js');
-const Deck = require('../models/deck');
-const Cube = require('../models/cube');
-const CardHistory = require('../models/cardHistory');
-const CardRating = require('../models/cardrating');
+
+const { updatePodcast } = require('../serverjs/podcast');
+const Podcast = require('../models/podcast');
 
 const formatInfo = ({ message }) => {
   try {
@@ -87,6 +84,10 @@ if (process.env.ENV === 'production') {
 }
 
 const run = async () => {
+  const podcasts = await Podcast.find();
+
+  await Promise.all(podcasts.map(updatePodcast));
+
   winston.info('Done');
   process.exit();
 };

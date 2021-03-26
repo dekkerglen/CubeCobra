@@ -4,7 +4,8 @@ require('dotenv').config();
 const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
-const { getFeedData, getFeedEpisodes } = require('../serverjs/rss');
+const { getFeedData } = require('../serverjs/rss');
+const { updatePodcast } = require('../serverjs/podcast');
 const generateMeta = require('../serverjs/meta.js');
 const Application = require('../models/application');
 const Article = require('../models/article');
@@ -309,37 +310,7 @@ router.get('/podcast/update/:id', ensureContentCreator, async (req, res) => {
     return res.redirect(`/content/podcast/${podcast._id}`);
   }
 
-  const episodes = await getFeedEpisodes(podcast.rss);
-
-  const liveEpisodes = await PodcastEpisode.find({ guid: { $in: episodes.map((episode) => episode.guid) } });
-
-  const guids = liveEpisodes.map((episode) => episode.guid);
-
-  const filtered = episodes.filter((episode) => !guids.includes(episode.guid));
-
-  await Promise.all(
-    filtered.map((episode) => {
-      const podcastEpisode = new PodcastEpisode();
-
-      podcastEpisode.title = episode.title;
-      podcastEpisode.description = episode.description;
-      podcastEpisode.source = episode.source;
-      podcastEpisode.guid = episode.guid;
-      podcastEpisode.link = episode.link;
-      podcastEpisode.date = new Date(episode.date);
-
-      podcastEpisode.podcast = podcast._id;
-      podcastEpisode.owner = podcast.owner;
-      podcastEpisode.image = podcast.image;
-      podcastEpisode.username = podcast.username;
-      podcastEpisode.podcastname = podcast.title;
-
-      return podcastEpisode.save();
-    }),
-  );
-
-  podcast.date = new Date();
-  await podcast.save();
+  await updatePodcast(podcast);
 
   req.flash('success', 'Podcast has been updated with all episodes.');
 
