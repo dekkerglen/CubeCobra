@@ -93,7 +93,7 @@ const tryUpdate = async (podcast) => {
 };
 
 const run = async () => {
-  const podcasts = await Podcast.find();
+  const podcasts = await Podcast.find({ status: 'published' });
 
   winston.info('Updating podcasts...');
 
