@@ -388,7 +388,11 @@ const run = async () => {
   // use correlationIndex for index
   cubesWithCard = [];
 
+  winston.info('Starting card db');
+
   await carddb.initializeCardDb();
+
+  winston.info('finished loading cards');
 
   const ratings = await CardRating.find({}).lean();
 
@@ -452,9 +456,6 @@ const run = async () => {
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
-
-  winston.info('Done');
-  process.exit();
 };
 
 // Connect db
@@ -465,5 +466,11 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    run();
+    try {
+      run();
+    } catch (err) {
+      winston.error(err, { error: err });
+    }
+    winston.info('Done');
+    process.exit();
   });
