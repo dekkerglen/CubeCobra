@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const { updatePodcast } = require('../serverjs/podcast');
 const Podcast = require('../models/podcast');
-const winston = require('../serverjs/cloudwatch');
+const { winston } = require('../serverjs/cloudwatch');
 
 const tryUpdate = async (podcast) => {
   try {
