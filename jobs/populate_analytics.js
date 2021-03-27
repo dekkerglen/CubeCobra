@@ -456,6 +456,8 @@ const run = async () => {
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
+  winston.info('Done');
+  process.exit();
 };
 
 // Connect db
@@ -469,8 +471,6 @@ mongoose
     try {
       run();
     } catch (err) {
-      winston.error(err, { error: err });
+      winston.info(err);
     }
-    winston.info('Done');
-    process.exit();
   });
