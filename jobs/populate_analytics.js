@@ -471,6 +471,6 @@ mongoose
     try {
       run();
     } catch (err) {
-      winston.info(err);
+      console.error(err);
     }
   });
