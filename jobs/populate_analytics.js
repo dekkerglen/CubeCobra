@@ -394,7 +394,7 @@ const run = async () => {
 
   winston.info('finished loading cards');
 
-  const ratings = await CardRating.find({}).lean();
+  const ratings = []; // await CardRating.find({}).lean();
 
   winston.info('Started: oracles');
 
