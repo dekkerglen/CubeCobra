@@ -217,6 +217,7 @@ export const CARD_CATEGORY_DETECTORS = {
   dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
   mdfc: (details) => details.layout === 'modal_dfc',
   meld: (details) => details.layout === 'meld',
+  tdfc: (details) => details.layout === 'transform',
   transform: (details) => details.layout === 'transform',
   flip: (details) => details.layout === 'flip',
   split: (details) => details.layout === 'split',
