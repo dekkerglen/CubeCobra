@@ -388,7 +388,6 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-    const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
@@ -477,7 +476,6 @@ router.get('/overview/:id', async (req, res) => {
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
         pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
-        admin,
       },
       {
         title: `${abbreviate(cube.name)} - Overview`,
@@ -3383,6 +3381,35 @@ router.get('/deckbuilder/:id', async (req, res) => {
   }
 });
 
+router.post(
+  '/api/updatebasics/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Cube can only be updated by cube owner.',
+      });
+    }
+
+    cube.basics = req.body;
+
+    await cube.save();
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
+
 router.get('/deck/:id', async (req, res) => {
   try {
     if (!req.params.id || req.params.id === 'null' || req.params.id === 'false') {
@@ -3692,6 +3719,20 @@ router.post(
 router.post('/resize/:id/:size', async (req, res) => {
   try {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Cube can only be updated by cube owner.',
+      });
+    }
 
     const response = await fetch(
       `${process.env.FLASKROOT}/?cube_name=${encodeURIComponent(

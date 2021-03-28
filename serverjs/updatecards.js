@@ -151,6 +151,7 @@ function addCardToCatalog(card, isExtra) {
   catalog.imagedict[normalizedFullName] = {
     uri: card.art_crop,
     artist: card.artist,
+    id: card._id,
   };
   if (isExtra !== true) {
     const cardImages = {

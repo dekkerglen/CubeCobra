@@ -148,7 +148,7 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  lands: {
+  basics: {
     type: [String],
     default: [
       '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
