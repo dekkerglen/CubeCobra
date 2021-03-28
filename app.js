@@ -11,7 +11,6 @@ const http = require('http');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
 const MongoDBStore = require('connect-mongodb-session')(session);
-const AWS = require('aws-sdk');
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
