@@ -3349,7 +3349,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics`).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -3363,7 +3363,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       {
         cube,
         initialDeck: deck,
-        basics: getBasics(carddb),
+        basics: cube.basics.map((cardID) => carddb.cardFromId(cardID)),
         draft,
       },
       {
