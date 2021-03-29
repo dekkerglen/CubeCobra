@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import UserPropType from 'proptypes/UserPropType';
 
@@ -185,7 +186,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     [pack, picks, update],
   );
 
-  const picked = createSeen();
+  const picked = createSeen(initialDraft.basics);
   addSeen(picked, getPicked(0));
   const seen = getSeen(0);
   return (
@@ -272,6 +273,7 @@ CubeDraftPage.propTypes = {
     _id: PropTypes.string,
     bots: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
     ratings: PropTypes.objectOf(PropTypes.number),
+    basics: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   }).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,

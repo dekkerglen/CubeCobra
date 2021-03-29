@@ -119,9 +119,6 @@ Pack.defaultProps = {
   turn: null,
 };
 
-const seen = createSeen();
-const picked = createSeen();
-
 const options = [];
 
 for (let index = 0; index < 3; index++) {
@@ -152,6 +149,8 @@ for (let index = 0; index < 3; index++) {
 
 const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
   useMemo(() => init(initialDraft), [initialDraft]);
+  const [seen] = useState(() => createSeen());
+  const [picked] = useState(() => createSeen(initialDraft.basics));
 
   const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
   const [packNumber, setPackNumber] = useState(1);

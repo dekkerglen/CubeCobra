@@ -12,7 +12,6 @@ const {
   generatePack,
   setCubeType,
   cardsAreEquivalent,
-  getBasics,
   generateShortId,
   buildIdQuery,
   addCardHtml,
@@ -1639,7 +1638,7 @@ router.post(
       gridDraft.draftType = type;
 
       gridDraft.cube = cube._id;
-      gridDraft.basics = getBasics(carddb);
+      gridDraft.basics = cube.basics;
 
       const cards = [];
       for (let i = 0; i < packs; i++) {
@@ -2122,7 +2121,7 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
-      draft.basics = getBasics(carddb);
+      draft.basics = cube.basics;
 
       await draft.save();
       if (req.body.botsOnly) {
@@ -2151,9 +2150,7 @@ router.post(
             card.details = carddb.cardFromId(card.cardID);
           }
         }
-        for (const key of Object.keys(draft.basics)) {
-          draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
-        }
+        draft.basics = draft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
         return res.status(200).send({
           success: 'true',
           draft,
@@ -2209,11 +2206,10 @@ router.get('/griddraft/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    if (draft.basics) {
-      for (const key of Object.keys(draft.basics)) {
-        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
-      }
+    if (!draft.basics) {
+      draft.basics = [];
     }
+    draft.basics = draft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
 
     return render(
       req,
@@ -2283,11 +2279,10 @@ router.get('/draft/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    if (draft.basics) {
-      for (const key of Object.keys(draft.basics)) {
-        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
-      }
+    if (!draft.basics) {
+      draft.basics = [];
     }
+    draft.basics = draft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
 
     return render(
       req,
@@ -3056,11 +3051,12 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.owner = req.user._id;
 
     if (srcDraft) {
-      for (const card of Object.values(srcDraft.basics)) {
-        card.details = carddb.cardFromId(card.cardID);
+      if (!srcDraft.basics) {
+        srcDraft.basics = [];
       }
+      srcDraft.basics = srcDraft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
       deckutil.default.init(srcDraft);
-      const userPicked = deckutil.default.createSeen();
+      const userPicked = deckutil.default.createSeen(srcDraft.basics);
       deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
       const { colors: userColors } = await deckutil.default.buildDeck(
         base.seats[req.params.index].pickorder,
@@ -3084,7 +3080,11 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           for (const card of base.seats[i].pickorder) {
             card.details = carddb.cardFromId(card.cardID);
           }
-          const picked = deckutil.default.createSeen();
+          if (!srcDraft.basics) {
+            srcDraft.basics = [];
+          }
+          srcDraft.basics = srcDraft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
+          const picked = deckutil.default.createSeen(srcDraft.basics);
           deckutil.default.addSeen(picked, base.seats[i].pickorder);
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
@@ -3187,7 +3187,7 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = getBasics(carddb);
+    draft.basics = srcDraft.basics;
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3242,7 +3242,7 @@ router.post('/api/redraft/:id', async (req, res) => {
     let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = getBasics(carddb);
+    draft.basics = srcDraft.basics;
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3300,9 +3300,10 @@ router.post('/api/redraft/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
+    if (!draft.basics) {
+      draft.basics = [];
     }
+    draft.basics = draft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
     return res.status(200).send({
       success: 'true',
       draft,
@@ -3344,9 +3345,10 @@ router.get('/deckbuilder/:id', async (req, res) => {
       }
     }
     if (draft) {
-      for (const card of Object.values(draft.basics)) {
-        card.details = carddb.cardFromId(card.cardID);
+      if (!draft.basics) {
+        draft.basics = [];
       }
+      draft.basics = draft.basics.map((cardID) => ({ cardID, details: carddb.cardFromId(cardID) }));
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics`).lean();

@@ -14,19 +14,15 @@ import { encodeName } from 'utils/Card';
 import { addSeen, createSeen, init } from 'utils/Draft';
 import {
   botRatingAndCombination,
-  getColor,
+  getColorsOrOpenness,
   getColorWeight,
-  getFixing,
-  getFixingWeight,
   getInternalSynergy,
-  getOpenness,
   getOpennessWeight,
   getPickSynergy,
   getRating,
   getRatingWeight,
   getSynergyWeight,
   getCastingProbability,
-  PROB_TO_INCLUDE,
 } from 'utils/draftbots';
 import { fromEntries } from 'utils/Util';
 
@@ -88,7 +84,7 @@ const renderCardLink = (card) => (
   </AutocardItem>
 );
 
-// arguments (colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating)
+// arguments (colors, card, picked, seen, lands, pickedInCombination, probabilities, rating)
 const TRAITS = Object.freeze([
   {
     title: 'Card',
@@ -101,38 +97,31 @@ const TRAITS = Object.freeze([
     title: 'Rating',
     tooltip: 'The rating based on the Elo and current color commitments.',
     weight: getRatingWeight,
-    compute: (_, card) => getRating(card),
+    compute: (_, card, _2, _3, _4, _5, _6, probabilities) => getRating(card, probabilities),
   },
   {
     title: 'Internal Synergy',
     tooltip: 'A score of how well current picks in these colors synergize with each other.',
     weight: getSynergyWeight,
-    compute: (_, __, picked, _3, ___, ____, pickedInCombination) => getInternalSynergy(pickedInCombination, picked),
+    compute: (_, __, picked, _3, ___, ____, _6, probabilities) => getInternalSynergy(picked, probabilities),
   },
   {
     title: 'Pick Synergy',
     tooltip: 'A score of how well this card synergizes with the current picks.',
     weight: getSynergyWeight,
-    compute: (_, card, picked, _2, __, ___, pickedInCombination) => getPickSynergy(pickedInCombination, card, picked),
+    compute: (_, card, picked, ____, __, ___, _____, probabilities) => getPickSynergy(card, picked, probabilities),
   },
   {
     title: 'Openness',
     tooltip: 'A score of how open these colors appear to be.',
     weight: getOpennessWeight,
-    compute: (combination, _, __, ___, seen) => getOpenness(combination, seen),
+    compute: (_0, _, __, ___, seen, _5, _6, probabilities) => getColorsOrOpenness(seen, probabilities),
   },
   {
     title: 'Color',
     tooltip: 'A score of how well these colors fit in with the current picks.',
     weight: getColorWeight,
-    compute: (_, _____, picked, __, ___, ____, pickedInCombination, probabilities) =>
-      getColor(pickedInCombination, picked, probabilities),
-  },
-  {
-    title: 'Fixing',
-    tooltip: 'The value of how well this card solves mana issues.',
-    weight: getFixingWeight,
-    compute: (combination, card) => getFixing(combination, card),
+    compute: (_, _____, picked, __, ___, ____, _6, probabilities) => getColorsOrOpenness(picked, probabilities),
   },
   {
     title: 'Casting Probability',
@@ -183,14 +172,20 @@ export const Internal = ({ cardsInPack, draft, pack, picks, picked, seen }) => {
         pack + 1,
       );
       const probabilities = {};
-      for (const c of picked.cards.WUBRG) {
-        probabilities[c.cardID] = getCastingProbability(c, lands);
+      for (const c of seen.cards) {
+        if ((probabilities[c.cardID] ?? null) === null) {
+          probabilities[c.cardID] = getCastingProbability(c, lands);
+        }
       }
-      const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
+      for (const c of picked.cards) {
+        if ((probabilities[c.cardID] ?? null) === null) {
+          probabilities[c.cardID] = getCastingProbability(c, lands);
+        }
+      }
       return fromEntries(
         TRAITS.map(({ title, compute }) => [
           title,
-          compute(colors, card, picked, draft.synergies, seen, lands, pickedInCombination, probabilities, rating),
+          compute(colors, card, picked, {}, seen, lands, [], probabilities, rating),
         ]),
       );
     });
@@ -234,14 +229,12 @@ Internal.propTypes = {
   cardsInPack: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+    basics: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   }).isRequired,
   pack: PropTypes.number.isRequired,
   picks: PropTypes.number.isRequired,
-  picked: PropTypes.shape({
-    cards: PropTypes.shape({ WUBRG: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })) }).isRequired,
-  }).isRequired,
-  seen: PropTypes.shape({}).isRequired,
+  picked: PropTypes.shape({ cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired }).isRequired,
+  seen: PropTypes.shape({ cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired }).isRequired,
 };
 
 const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
@@ -261,7 +254,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 
   // find the information for the selected pack
   const [cardsInPack, picks, pack, picksList, seat] = getPackAsSeen(draft.initial_state, index, deck, seatIndex);
-  const picked = createSeen();
+  const picked = createSeen(draft.basics);
   addSeen(picked, seat.pickorder.slice(0, index));
 
   const seen = useMemo(() => {
@@ -311,7 +304,7 @@ const DraftbotBreakdown = ({ draft, seatIndex, deck, defaultIndex }) => {
 DraftbotBreakdown.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.array)).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+    basics: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   }).isRequired,
   deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
