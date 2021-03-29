@@ -84,6 +84,14 @@ const SortCollapse = ({
 
   const addAlert = useCallback((color, message) => setAlerts((alertsB) => [...alertsB, { color, message }]), []);
 
+  const handleReset = useCallback(() => {
+    Query.del('s1');
+    Query.del('s2');
+    Query.del('s3');
+    Query.del('s4');
+    changeSort({ primary: defSorts[0], secondary: defSorts[1], tertiary: defSorts[2], quaternary: defSorts[3] });
+  }, [defSorts, changeSort]);
+
   const handleSave = useCallback(async () => {
     try {
       await csrfFetch(`/cube/api/savesorts/${cubeID}`, {
@@ -217,15 +225,7 @@ const SortCollapse = ({
         </Row>
         <Row className="mb-3">
           <Col>
-            <Button
-              color="success"
-              className="mr-sm-2 mb-3"
-              onClick={() => {
-                Query.del('s1');
-                Query.del('s2');
-                changeSort({ primary: defSorts[0], secondary: defSorts[1] });
-              }}
-            >
+            <Button color="success" className="mr-sm-2 mb-3" onClick={handleReset}>
               Reset Sort
             </Button>
             {!canEdit ? (
