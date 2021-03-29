@@ -26,7 +26,6 @@ const DeckbuilderNavbar = ({
   setDeck,
   ...props
 }) => {
-  console.log(basics);
   const [isOpen, setIsOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -81,7 +80,7 @@ const DeckbuilderNavbar = ({
   const autoBuildDeck = useCallback(async () => {
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
     init(draft);
-    const picked = createSeen();
+    const picked = createSeen(draft.basics);
     addSeen(picked, main, draft.synergies);
     const { sideboard: side, deck: newDeck } = await buildDeck(main, picked, draft.basics);
     setSideboard([side]);

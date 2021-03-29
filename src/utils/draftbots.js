@@ -1,16 +1,7 @@
 import similarity from 'compute-cosine-similarity';
 
-import {
-  COLOR_COMBINATIONS,
-  COLOR_INCLUSION_MAP,
-  cardCmc,
-  cardColorIdentity,
-  cardName,
-  cardType,
-  cardDevotion,
-  cardCost,
-} from 'utils/Card';
-import { arraysAreEqualSets, fromEntries } from 'utils/Util';
+import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardCmc, cardColorIdentity, cardType, cardCost } from 'utils/Card';
+import { arrayShuffle, arraysAreEqualSets } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -26,11 +17,6 @@ const RATING_WEIGHTS = [
   [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-];
-const FIXING_WEIGHTS = [
-  [0.1, 0.3, 0.6, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 const SYNERGY_WEIGHTS = [
   [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
@@ -139,8 +125,6 @@ export const getSynergy = (card1, card2) => {
   return synergyCache[keys[0]];
 };
 
-const BASICS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
-
 export const considerInCombination = (combination, card) =>
   card && COLOR_INCLUSION_MAP[combination.join('')][(cardColorIdentity(card) ?? []).join('')];
 
@@ -148,13 +132,6 @@ export const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
   (FETCH_LANDS[card.details.name] && FETCH_LANDS[card.details.name].some((c) => colors.includes(c)));
-
-const getDevotions = (card) =>
-  fromEntries(
-    cardType(card).toLowerCase().includes('land')
-      ? []
-      : cardColorIdentity(card).map((color) => [color, Math.max(1, cardDevotion(card, color))]),
-  );
 
 export const getCastingProbability = (card, lands) => {
   if (!card.details.cost_colors) {
@@ -232,63 +209,39 @@ export const getCastingProbability = (card, lands) => {
 
 // What is the raw power level of this card? Used to choose a card within a combination.
 // Scale is roughly 0-10.
-export const getRating = (card) => {
-  return 10 ** ((card?.rating ?? 1200) / 400 - 3);
+export const getRating = (card, probabilities) => {
+  return probabilities[card.cardID] * 10 ** ((card?.rating ?? 1200) / 400 - 3);
 };
 
 // How much does the card we're considering synergize with the cards we've picked?
 // Scale is roughly 0-10. Used to select a card within a combination.
-export const getPickSynergy = (pickedInCombination, card, picked) => {
-  if (picked.cards.WUBRG.length === 0) {
+export const getPickSynergy = (card, picked, probabilities) => {
+  if (picked.cards.length === 0) {
     return 0;
   }
 
   let synergy = 0;
-  for (const other of pickedInCombination) {
-    // Don't count synergy for duplicate cards.
+  for (const other of picked.cards) {
     // Maximum synergy is generally around .997 which corresponds to 10.
-    synergy += getSynergy(card, other);
+    synergy += probabilities[other.cardID] * getSynergy(card, other);
   }
-  return synergy / picked.cards.WUBRG.length;
-};
-
-// Does this help us fix for this combination of colors?
-// Scale from 0-10. Perfect is five-color land in 5 color combination.
-// Used to select a card within a color combination.
-export const getFixing = (combination, card) => {
-  const colors = FETCH_LANDS[card.details.name] ?? cardColorIdentity(card);
-  const typeLine = cardType(card);
-  const isLand = typeLine.includes('Land');
-  const isFetch = !!FETCH_LANDS[cardName(card)];
-
-  if (isLand) {
-    const overlap = 4 * colors.filter((c) => combination.includes(c)).length;
-    const hasBasicTypes = BASICS.filter((basic) => typeLine.toLowerCase().includes(basic.toLowerCase())).length > 1;
-    if (isFetch) {
-      return overlap;
-    }
-    if (hasBasicTypes) {
-      return 0.75 * overlap;
-    }
-    return 0.5 * overlap;
-  }
-  return 0;
+  return (probabilities[card.cardID] * synergy) / picked.cards.length;
 };
 
 // How much do the cards we've already picked in this combo synergize with each other?
 // Scale is roughly 0-10. Used to select a color combination.
 // Tends to recommend what we've already picked before.
-export const getInternalSynergy = (pickedInCombination, picked) => {
-  if (picked.cards.WUBRG.length === 0) {
+export const getInternalSynergy = (picked, probabilities, totalProb) => {
+  if (picked.cards.length === 0) {
     return 0;
   }
 
-  const numPairs = (picked.cards.WUBRG.length * (picked.cards.WUBRG.length + 1)) / 2;
+  const numPairs = (picked.cards.length - 1) * totalProb;
 
   let synergy = 0;
-  for (const card1 of pickedInCombination) {
-    for (const card2 of pickedInCombination) {
-      synergy += getSynergy(card1, card2);
+  for (const card1 of picked.cards) {
+    for (const card2 of picked.cards) {
+      synergy += probabilities[card2] * probabilities[card1] * getSynergy(card1, card2);
     }
   }
 
@@ -302,26 +255,17 @@ export const getColorScaling = (combination) => {
 };
 
 // Has this color combination been flowing openly?
-// Scale from roughly 0-10. Used to select a color combination.
 // Tends to recommend new colors to try.
-export const getOpenness = (combination, seen) => {
-  if (seen.cards.length === 0) {
-    return 0;
-  }
-
-  return (getColorScaling(combination) * seen.values[combination.join('')]) / seen.cards.WUBRG.length;
-};
-
 // How good are the cards we've already picked in this color combo?
-// Scale from 0-1. Used to select a color combination.
 // Tends to recommend what we've already picked before.
-export const getColor = (pickedInCombination, picked, probabilities) => {
-  const count = picked.cards.WUBRG.length - picked.cards[''].length;
+// Scale from 0-10. Used to select a color combination.
+export const getColorsOrOpenness = (picked, probabilities) => {
+  const count = picked.cards.length;
   if (count === 0) {
     return 0;
   }
 
-  return pickedInCombination.reduce((acc, card) => acc + getRating(card) * probabilities[card.cardID], 0) / count;
+  return picked.cards.reduce((acc, card) => acc + getRating(card, probabilities), 0) / count;
 };
 
 const getCoordPairs = (pack, pick, initialState) => [
@@ -345,41 +289,41 @@ export const getColorWeight = (pack, pick, initialState) => {
   return interpolateWeight(COLORS_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
 };
 
-export const getFixingWeight = (pack, pick, initialState) => {
-  return interpolateWeight(FIXING_WEIGHTS, ...getCoordPairs(pack, pick, initialState));
-};
-
 const landCountsAreEqual = (count1, count2) =>
-  count1.W === count2.W &&
-  count1.U === count2.U &&
-  count1.B === count2.B &&
-  count1.R === count2.R &&
-  count1.G === count2.G;
+  !Object.entries(count1).some(([k, v]) => v !== (count2[k] ?? 0)) &&
+  !Object.entries(count2).some(([k, v]) => v !== (count1[k] ?? 0));
 
 // TODO: Consider dual lands?
 export const getCombinationForLands = (lands) => {
-  const combination = Object.entries(lands)
-    .filter(([comb, count]) => comb.length === 1 && count > 0)
-    .map(([c]) => c);
+  const combination = [...'WUBRG'].filter(
+    (c) =>
+      Object.entries(lands)
+        .filter(([l]) => l.includes(c))
+        .reduce((acc, [, x]) => acc + x, 0) >= 3,
+  );
   return COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(combination, comb));
 };
 
-const calculateRating = (lands, combination, card, ratingScore, picked, seen, packNum, pickNum, initialState) => {
+const calculateRating = (lands, _2, card, _3, picked, seen, packNum, pickNum, initialState) => {
   const probabilities = {};
-  for (const c of picked.cards.WUBRG) {
-    probabilities[c.cardID] = getCastingProbability(c, lands);
+  for (const c of seen.cards) {
+    if ((probabilities[c.cardID] ?? null) === null) {
+      probabilities[c.cardID] = getCastingProbability(c, lands);
+    }
   }
-  const pickedInCombination = picked.cards.WUBRG.filter((c) => probabilities[c.cardID] > PROB_TO_INCLUDE);
+  for (const c of picked.cards) {
+    if ((probabilities[c.cardID] ?? null) === null) {
+      probabilities[c.cardID] = getCastingProbability(c, lands);
+    }
+  }
+  const totalProb = picked.cards.reduce((acc, c) => acc + probabilities[c.cardID], 0);
   if (card) {
-    const cardCastingProbability = getCastingProbability(card, lands);
-    const pickSynergyScore =
-      getPickSynergy(pickedInCombination, card, picked) * getSynergyWeight(packNum, pickNum, initialState);
     return (
-      getInternalSynergy(pickedInCombination, picked) * getSynergyWeight(packNum, pickNum, initialState) +
-      getOpenness(combination, seen) * getOpennessWeight(packNum, pickNum, initialState) +
-      getColor(pickedInCombination, picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
-      getFixing(combination, card) * getFixingWeight(packNum, pickNum, initialState) +
-      (ratingScore + pickSynergyScore) * cardCastingProbability
+      getInternalSynergy(picked, probabilities, totalProb) * getSynergyWeight(packNum, pickNum, initialState) +
+      getColorsOrOpenness(seen, probabilities) * getOpennessWeight(packNum, pickNum, initialState) +
+      getColorsOrOpenness(picked, probabilities) * getColorWeight(packNum, pickNum, initialState) +
+      getPickSynergy(card, picked, probabilities) * getSynergyWeight(packNum, pickNum, initialState) +
+      getRating(card, probabilities) * getRatingWeight(packNum, pickNum, initialState)
     );
   }
   // We can't filter on castable because that leads to returning
@@ -391,7 +335,8 @@ const calculateRating = (lands, combination, card, ratingScore, picked, seen, pa
     return (
       // We can't just do pickedInCombination since that'll be empty
       // sometimes and more than 1 step from being non-empty
-      (getColor(nonlands, picked, probabilities) + getInternalSynergy(pickedInCombination, picked)) * totalProbability
+      (getColorsOrOpenness({ cards: nonlands }, probabilities) + getInternalSynergy(picked, probabilities, totalProb)) *
+      Math.min(totalProbability, 23)
     );
   }
   return -Infinity;
@@ -402,34 +347,30 @@ export const botRatingAndCombination = (card, picked, seen, initialState, inPack
   // Find the color combination that gives us the highest score1
   // that'll be the color combination we want to play currently.
   const pickNum = (initialState?.[0]?.[packNum - 1]?.length ?? 0) - inPack + 1;
-  const weightedRatingScore = card ? getRating(card) * getRatingWeight(packNum, pickNum, initialState) : 0;
-  let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  let prevLands = {};
   // TODO: Only count dual lands in the combination we want to play.
-  let currentLands = { ...picked.lands };
-  if (card) {
-    const devotions = getDevotions(card);
-    for (const [color, devotion] of Object.entries(devotions)) {
-      if (currentLands[color] < devotion) {
-        let remaining = devotion - currentLands[color];
-        currentLands[color] += remaining;
-        while (remaining > 0) {
-          for (const color2 of COLORS) {
-            if (currentLands[color2] > (devotions[color2] ?? 0)) {
-              currentLands[color2] -= 1;
-              break;
-            }
-          }
-          remaining -= 1;
+  let currentLands = { ...picked.availableLands };
+  const totalLands = Object.values(currentLands).reduce((x, y) => x + y, 0);
+  while (totalLands > 17) {
+    const index = Math.floor(Math.random() * totalLands);
+    const curStart = 0;
+    for (const [key, count] of Object.entries(currentLands)) {
+      if (index < curStart + count) {
+        currentLands[key] -= 1;
+        if (currentLands[key] <= 0) {
+          delete currentLands[key];
         }
+        break;
       }
     }
+    currentLands = { ...picked.availableLands };
   }
   let currentCombination = getCombinationForLands(currentLands);
   let currentRating = calculateRating(
     currentLands,
     currentCombination,
     card,
-    weightedRatingScore,
+    0,
     picked,
     seen,
     packNum,
@@ -441,19 +382,27 @@ export const botRatingAndCombination = (card, picked, seen, initialState, inPack
     let nextLands = currentLands;
     let nextCombination = currentCombination;
     let nextRating = currentRating;
-    for (const increaseColor of COLORS) {
-      for (const decreaseColor of COLORS) {
-        if (increaseColor !== decreaseColor && currentLands[decreaseColor] > 0) {
-          const newLands = { ...prevLands };
-          newLands[increaseColor] += 1;
+    const curLands = currentLands;
+    const availableIncreases = arrayShuffle(
+      Object.keys(picked.avilableLands).filter((c) => (curLands[c] ?? 0) < picked.avilableLands[c]),
+    );
+    for (const increaseColor of availableIncreases) {
+      const availableDecreases = arrayShuffle(Object.keys(currentLands));
+      for (const decreaseColor of availableDecreases) {
+        if (increaseColor !== decreaseColor) {
+          const newLands = { ...currentLands };
+          newLands[increaseColor] = (newLands[increaseColor] ?? 0) + 1;
           newLands[decreaseColor] -= 1;
-          if (!landCountsAreEqual(newLands, prevLands) && (!card || getCastingProbability(card, newLands) > 0)) {
+          if (newLands[decreaseColor] <= 0) {
+            delete newLands[decreaseColor];
+          }
+          if (!landCountsAreEqual(newLands, prevLands)) {
             const newCombination = getCombinationForLands(newLands);
             const newRating = calculateRating(
               newLands,
               newCombination,
               card,
-              weightedRatingScore,
+              0,
               picked,
               seen,
               packNum,
@@ -482,16 +431,13 @@ export const botRatingAndCombination = (card, picked, seen, initialState, inPack
 
 export default {
   getRating,
-  getColor,
   getInternalSynergy,
   getPickSynergy,
-  getOpenness,
-  getFixing,
+  getColorsOrOpenness,
   getRatingWeight,
   getSynergyWeight,
   getOpennessWeight,
   getColorWeight,
-  getFixingWeight,
   botRatingAndCombination,
   considerInCombination,
 };
