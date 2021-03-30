@@ -270,9 +270,13 @@ const CubeListNavbar = ({
   setOpenCollapse,
   defaultPrimarySort,
   defaultSecondarySort,
+  defaultTertiarySort,
+  defaultQuaternarySort,
+  defaultShowUnsorted,
   sorts,
   setSorts,
   defaultSorts,
+  cubeDefaultShowUnsorted,
   defaultFilterText,
   filter,
   setFilter,
@@ -452,9 +456,13 @@ const CubeListNavbar = ({
       <SortCollapse
         defaultPrimarySort={defaultPrimarySort}
         defaultSecondarySort={defaultSecondarySort}
+        defaultTertiarySort={defaultTertiarySort}
+        defaultQuaternarySort={defaultQuaternarySort}
+        defaultShowUnsorted={defaultShowUnsorted}
         sorts={sorts}
         setSorts={setSorts}
         defaultSorts={defaultSorts}
+        cubeDefaultShowUnsorted={cubeDefaultShowUnsorted}
         isOpen={openCollapse === 'sort'}
       />
       <FilterCollapse
@@ -479,9 +487,13 @@ CubeListNavbar.propTypes = {
   setOpenCollapse: PropTypes.func.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
+  defaultTertiarySort: PropTypes.string.isRequired,
+  defaultQuaternarySort: PropTypes.string.isRequired,
+  defaultShowUnsorted: PropTypes.string.isRequired,
   sorts: PropTypes.arrayOf(PropTypes.string),
   setSorts: PropTypes.func.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  cubeDefaultShowUnsorted: PropTypes.bool.isRequired,
   defaultFilterText: PropTypes.string.isRequired,
   filter: PropTypes.func,
   setFilter: PropTypes.func.isRequired,
