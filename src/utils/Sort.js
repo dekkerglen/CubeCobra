@@ -288,6 +288,7 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = tags.sort();
   }
   if (sort === 'Tags Full') {
+    // TODO remove
     // whitespace around ' Untagged ' to prevent collisions
     ret = [...getLabelsRaw(cube, 'Tags'), ' Untagged '];
   }
