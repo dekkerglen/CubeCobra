@@ -53,6 +53,7 @@ AutocardListGroup.propTypes = {
   heading: PropTypes.node.isRequired,
   sort: PropTypes.string,
   orderedSort: PropTypes.string,
+  showOther: PropTypes.bool,
 };
 
 AutocardListGroup.defaultProps = {
@@ -60,6 +61,7 @@ AutocardListGroup.defaultProps = {
   noGroupModal: false,
   sort: 'CMC-Full',
   orderedSort: 'Alphabetical',
+  showOther: false,
 };
 
 export default AutocardListGroup;

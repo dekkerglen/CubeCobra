@@ -43,6 +43,7 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
                 noGroupModal={noGroupModal}
                 sort={tertiary}
                 orderedSort={quaternary}
+                showOther={showOther}
               />
             ))}
           </Col>
