@@ -33,6 +33,9 @@ const CubeListPageRaw = ({
   defaultShowTagColors,
   defaultPrimarySort,
   defaultSecondarySort,
+  defaultTertiarySort,
+  defaultQuaternarySort,
+  defaultShowUnsorted,
 }) => {
   const { cube, canEdit } = useContext(CubeContext);
 
@@ -66,7 +69,7 @@ const CubeListPageRaw = ({
   }, [filter, cube]);
 
   return (
-    <SortContextProvider defaultSorts={cube.default_sorts} showOther={false}>
+    <SortContextProvider defaultSorts={cube.default_sorts} showOther={!!cube.default_show_unsorted}>
       <DisplayContextProvider cubeID={cube._id}>
         <TagContextProvider
           cubeID={cube._id}
@@ -84,9 +87,13 @@ const CubeListPageRaw = ({
                   setOpenCollapse={setOpenCollapse}
                   defaultPrimarySort={defaultPrimarySort}
                   defaultSecondarySort={defaultSecondarySort}
+                  defaultTertiarySort={defaultTertiarySort}
+                  defaultQuaternarySort={defaultQuaternarySort}
+                  defaultShowUnsorted={defaultShowUnsorted}
                   sorts={sorts}
                   setSorts={setSorts}
                   defaultSorts={cube.default_sorts}
+                  cubeDefaultShowUnsorted={cube.default_show_unsorted}
                   defaultFilterText={defaultFilterText}
                   filter={filter}
                   setFilter={setFilter}
@@ -131,6 +138,9 @@ CubeListPageRaw.propTypes = {
   defaultView: PropTypes.string.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
+  defaultTertiarySort: PropTypes.string.isRequired,
+  defaultQuaternarySort: PropTypes.string.isRequired,
+  defaultShowUnsorted: PropTypes.bool.isRequired,
 };
 
 const CubeListPage = ({
@@ -141,6 +151,9 @@ const CubeListPage = ({
   defaultView,
   defaultPrimarySort,
   defaultSecondarySort,
+  defaultTertiarySort,
+  defaultQuaternarySort,
+  defaultShowUnsorted,
   loginCallback,
 }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -151,6 +164,9 @@ const CubeListPage = ({
         defaultView={defaultView}
         defaultPrimarySort={defaultPrimarySort}
         defaultSecondarySort={defaultSecondarySort}
+        defaultTertiarySort={defaultTertiarySort}
+        defaultQuaternarySort={defaultQuaternarySort}
+        defaultShowUnsorted={defaultShowUnsorted}
       />
     </CubeLayout>
   </MainLayout>
@@ -173,6 +189,9 @@ CubeListPage.propTypes = {
   defaultView: PropTypes.string.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
+  defaultTertiarySort: PropTypes.string.isRequired,
+  defaultQuaternarySort: PropTypes.string.isRequired,
+  defaultShowUnsorted: PropTypes.bool.isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };

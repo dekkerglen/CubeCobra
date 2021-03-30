@@ -690,7 +690,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const fields =
-      'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
+      'cards maybe name owner card_count type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -722,6 +722,9 @@ router.get('/list/:id', async (req, res) => {
         defaultView: req.query.view || 'table',
         defaultPrimarySort: req.query.s1 || '',
         defaultSecondarySort: req.query.s2 || '',
+        defaultTertiarySort: req.query.s3 || '',
+        defaultQuaternarySort: req.query.s4 || '',
+        defaultShowUnsorted: req.query.so || '',
         defaultFilterText: req.query.f || '',
         defaultTagColors: cube.tag_colors || [],
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -4111,6 +4114,7 @@ router.post(
     }
 
     cube.default_sorts = req.body.sorts;
+    cube.default_show_unsorted = !!req.body.showOther;
     await cube.save();
     return res.status(200).send({
       success: 'true',

@@ -117,6 +117,7 @@ const cubeSchema = mongoose.Schema({
   date_updated: Date,
   updated_string: String,
   default_sorts: [String],
+  default_show_unsorted: Boolean,
   card_count: Number,
   type: String,
   draft_formats: {
