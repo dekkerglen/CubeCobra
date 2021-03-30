@@ -787,8 +787,8 @@ export function sortGroupsOrdered(cards, sort, showOther) {
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]]);
 }
 
-export function sortIntoGroups(cards, sort) {
-  return fromEntries(sortGroupsOrdered(cards, sort));
+export function sortIntoGroups(cards, sort, showOther) {
+  return fromEntries(sortGroupsOrdered(cards, sort, showOther));
 }
 
 const OrderSortMap = {

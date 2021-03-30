@@ -12,8 +12,8 @@ import CubePropType from 'proptypes/CubePropType';
 import { SORTS, cardCanBeSorted, sortGroupsOrdered } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
-const sortWithTotal = (pool, sort) =>
-  [...sortGroupsOrdered(pool, sort), ['Total', pool]].map(([label, cards]) => [
+const sortWithTotal = (pool, sort, showOther) =>
+  [...sortGroupsOrdered(pool, sort, showOther), ['Total', pool]].map(([label, cards]) => [
     label,
     cards.reduce((acc, card) => acc + card.asfan, 0),
   ]);
@@ -30,13 +30,13 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
     row,
   ]);
   const [columnCounts, columnLabels] = useMemo(() => {
-    const counts = sortWithTotal(cards, column).filter(([label, count]) => label === 'Total' || count > 0);
+    const counts = sortWithTotal(cards, column, showOther).filter(([label, count]) => label === 'Total' || count > 0);
     return [fromEntries(counts), counts.map(([label]) => label)];
   }, [cards, column]);
   const rows = useMemo(
     () =>
-      [...sortGroupsOrdered(cards, row), ['Total', cards]]
-        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards, column))])
+      [...sortGroupsOrdered(cards, row, showOther), ['Total', cards]]
+        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards, column, showOther))])
         .map(([rowLabel, columnValues]) => ({
           rowLabel,
           ...fromEntries(columnLabels.map((label) => [label, columnValues[label] ?? 0])),
