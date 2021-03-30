@@ -236,6 +236,8 @@ function getEloBucket(elo) {
 
 function getLabelsRaw(cube, sort, showOther) {
   let ret = [];
+
+  /* Start of sort Options */
   if (sort === 'Color Category') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
   }
@@ -456,6 +458,7 @@ function getLabelsRaw(cube, sort, showOther) {
     }
     ret = res;
   }
+  /* End of sort options */
 
   if (showOther) {
     ret.push(' Other ');
@@ -474,6 +477,7 @@ function cmcToNumber(card) {
 
 export function cardGetLabels(card, sort, showOther) {
   let ret = [];
+  /* Start of sort options */
   if (sort === 'Color Category') {
     ret = [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
   }
@@ -732,6 +736,7 @@ export function cardGetLabels(card, sort, showOther) {
   if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
+  /* End of sort options */
 
   if (showOther && ret === []) {
     ret = [' Other '];

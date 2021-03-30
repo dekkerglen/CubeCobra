@@ -339,7 +339,7 @@ const ListView = ({ cards }) => {
 
   const { cube } = useContext(CubeContext);
   const { setGroupModalCards } = useContext(GroupModalContext);
-  const { primary, secondary, tertiary, quaternary } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
 
   const { addAlert, alerts } = useAlerts();
 
@@ -403,7 +403,7 @@ const ListView = ({ cards }) => {
     [checked, cards, setGroupModalCards],
   );
 
-  const sorted = sortDeep(cards, quaternary, primary, secondary, tertiary);
+  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
 
   const rows = sorted.map(([, group1]) =>
     group1.map(([, group2]) =>
