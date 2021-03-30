@@ -8,6 +8,7 @@ import { SORTS, ORDERED_SORTS } from 'utils/Sort';
 import CubeContext from 'contexts/CubeContext';
 import SortContext from 'contexts/SortContext';
 import Query from 'utils/Query';
+import Tooltip from 'components/Tooltip';
 
 const SortCollapse = ({
   defaultPrimarySort,
@@ -268,7 +269,9 @@ const SortCollapse = ({
                 changeSort({ showOther: newShowOther });
               }}
             >
-              {showOther ? 'Hide' : 'Show'} Unsorted Cards
+              <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
+                {showOther ? 'Hide' : 'Show'} Unsorted Cards
+              </Tooltip>
             </Button>
           </Col>
         </Row>
