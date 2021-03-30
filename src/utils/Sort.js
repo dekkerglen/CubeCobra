@@ -175,7 +175,6 @@ export const SORTS = [
   'Subtype',
   'Supertype',
   'Tags',
-  'Tags Full',
   'Toughness',
   'Type',
   'Types-Multicolor',
@@ -275,10 +274,6 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = tags.sort();
-  } else if (sort === 'Tags Full') {
-    // TODO remove
-    // whitespace around ' Untagged ' to prevent collisions
-    ret = [...getLabelsRaw(cube, 'Tags'), ' Untagged '];
   } else if (sort === 'Date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
@@ -421,6 +416,7 @@ function getLabelsRaw(cube, sort, showOther) {
   }
   /* End of sort options */
 
+  // whitespace around 'Other' to prevent collisions
   return showOther ? [...ret, ' Other '] : ret;
 }
 
@@ -510,9 +506,6 @@ export function cardGetLabels(card, sort, showOther) {
     }
   } else if (sort === 'Tags') {
     ret = card.tags;
-  } else if (sort === 'Tags Full') {
-    // whitespace around ' Untagged ' to prevent collisions
-    ret = card.tags.length === 0 ? [' Untagged '] : card.tags;
   } else if (sort === 'Status') {
     ret = [card.status];
   } else if (sort === 'Finish') {
@@ -655,6 +648,7 @@ export function cardGetLabels(card, sort, showOther) {
   /* End of sort options */
 
   if (showOther && ret.length === 0) {
+    // whitespace around 'Other' to prevent collisions
     ret = [' Other '];
   }
   return ret;
