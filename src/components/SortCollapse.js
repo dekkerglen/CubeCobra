@@ -20,7 +20,7 @@ const SortCollapse = ({
 }) => {
   const [alerts, setAlerts] = useState([]);
   const { canEdit, cubeID } = useContext(CubeContext);
-  const { primary, secondary, tertiary, quaternary, changeSort } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
 
   const formSorts = (src) => {
     return [src[0] || 'Color Category', src[1] || 'Types-Multicolor', src[2] || 'CMC', src[3] || 'Alphabetical'];
@@ -235,6 +235,13 @@ const SortCollapse = ({
                 Save as Default Sort
               </Button>
             )}
+            <Button
+              color={showOther ? 'danger' : 'success'}
+              className="mr-sm-2 mb-3"
+              onClick={() => changeSort({ showOther: !showOther })}
+            >
+              {showOther ? 'Hide' : 'Show'} Unsorted Cards
+            </Button>
           </Col>
         </Row>
       </Container>

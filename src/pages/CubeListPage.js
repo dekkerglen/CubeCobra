@@ -66,7 +66,7 @@ const CubeListPageRaw = ({
   }, [filter, cube]);
 
   return (
-    <SortContextProvider defaultSorts={cube.default_sorts}>
+    <SortContextProvider defaultSorts={cube.default_sorts} showOther={false}>
       <DisplayContextProvider cubeID={cube._id}>
         <TagContextProvider
           cubeID={cube._id}

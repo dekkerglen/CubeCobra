@@ -461,11 +461,7 @@ function getLabelsRaw(cube, sort, showOther) {
   }
   /* End of sort options */
 
-  if (showOther) {
-    ret.push(' Other ');
-  }
-
-  return ret;
+  return showOther ? [...ret, ' Other '] : ret;
 }
 
 function cmcToNumber(card) {
@@ -739,7 +735,7 @@ export function cardGetLabels(card, sort, showOther) {
   }
   /* End of sort options */
 
-  if (showOther && ret === []) {
+  if (showOther && ret.length === 0) {
     ret = [' Other '];
   }
   return ret;
