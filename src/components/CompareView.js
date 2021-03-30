@@ -190,8 +190,9 @@ const CompareViewRaw = ({ cards, primary, secondary, showOther, both, onlyA, onl
 
 const CompareView = (props) => (
   <SortContext.Consumer>
-    {({ primary, secondary, showOther }) =>
-      <CompareViewRaw primary={primary} secondary={secondary} showOther={showOther} {...props} />}
+    {({ primary, secondary, showOther }) => (
+      <CompareViewRaw primary={primary} secondary={secondary} showOther={showOther} {...props} />
+    )}
   </SortContext.Consumer>
 );
 
