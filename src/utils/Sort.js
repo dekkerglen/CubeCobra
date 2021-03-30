@@ -8,6 +8,7 @@ import {
   cardType,
   cardCmc,
   COLOR_COMBINATIONS,
+  cardRarity,
 } from 'utils/Card';
 
 const COLOR_MAP = {
@@ -480,8 +481,9 @@ export function cardGetLabels(card, sort, showOther) {
     const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
       ret = [getColorCombination(cardColorIdentity(card))];
+    } else {
+      ret = [colorCategory];
     }
-    ret = [colorCategory];
   }
   if (sort === 'Color Identity') {
     ret = [GetColorIdentity(cardColorIdentity(card))];
@@ -498,35 +500,35 @@ export function cardGetLabels(card, sort, showOther) {
   if (sort === 'Color') {
     if (card.details.colors.length === 0) {
       ret = ['Colorless'];
+    } else {
+      ret = card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
-    ret = card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
   }
   if (sort === '4+ Color') {
-    if (cardColorIdentity(card).length < 4) {
-      ret = [];
-    }
     if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
+    } else if (cardColorIdentity(card).length === 4) {
+      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
-    ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
   }
   if (sort === 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
       ret = ['8+'];
+    } else {
+      ret = [cmc.toString()];
     }
-    ret = [cmc.toString()];
   }
   if (sort === 'CMC2') {
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
       ret = ['7+'];
-    }
-    if (cmc <= 1) {
+    } else if (cmc <= 1) {
       ret = ['0-1'];
+    } else {
+      ret = [cmc.toString()];
     }
-    ret = [cmc.toString()];
   }
   if (sort === 'CMC-Full') {
     // Round to half-integer.
@@ -550,12 +552,12 @@ export function cardGetLabels(card, sort, showOther) {
     }
     if (types.includes('Contraption')) {
       ret = ['Contraption'];
-    }
-    if (types.includes('Plane')) {
+    } else if (types.includes('Plane')) {
       ret = ['Plane'];
+    } else {
+      const labels = getLabelsRaw(null, sort, showOther);
+      ret = types.filter((t) => labels.includes(t));
     }
-    const labels = getLabelsRaw(null, sort);
-    ret = types.filter((t) => labels.includes(t));
   }
   if (sort === 'Tags') {
     ret = card.tags;
@@ -574,18 +576,16 @@ export function cardGetLabels(card, sort, showOther) {
     ret = [ISODateToYYYYMMDD(card.addedTmsp)];
   }
   if (sort === 'Guilds') {
-    if (cardColorIdentity(card).length !== 2) {
-      ret = [];
+    if (cardColorIdentity(card).length === 2) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [GUILD_MAP[ordered]];
     }
-    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
-    ret = [GUILD_MAP[ordered]];
   }
   if (sort === 'Shards / Wedges') {
-    if (cardColorIdentity(card).length !== 3) {
-      ret = [];
+    if (cardColorIdentity(card).length === 3) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [SHARD_AND_WEDGE_MAP[ordered]];
     }
-    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
-    ret = [SHARD_AND_WEDGE_MAP[ordered]];
   }
   if (sort === 'Color Count') {
     ret = [cardColorIdentity(card).length];
@@ -594,8 +594,7 @@ export function cardGetLabels(card, sort, showOther) {
     ret = [card.details.set.toUpperCase()];
   }
   if (sort === 'Rarity') {
-    let { rarity } = card.details;
-    if (card.rarity) rarity = card.rarity;
+    const rarity = cardRarity(card);
     ret = [rarity[0].toUpperCase() + rarity.slice(1)];
   }
   if (sort === 'Subtype') {
@@ -604,7 +603,6 @@ export function cardGetLabels(card, sort, showOther) {
       const subtypes = split[1].trim().split(' ');
       ret = subtypes.map((subtype) => subtype.trim()).filter((x) => x);
     }
-    ret = [];
   }
   if (sort === 'Types-Multicolor') {
     if (cardColorIdentity(card).length <= 1) {
@@ -630,17 +628,18 @@ export function cardGetLabels(card, sort, showOther) {
         ].includes(type)
       ) {
         ret = ['Other'];
+      } else {
+        ret = [type];
       }
-      ret = [type];
-    }
-    if (cardColorIdentity(card).length === 5) {
+    } else if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
+    } else {
+      ret = [
+        ...cardGetLabels(card, 'Guilds'),
+        ...cardGetLabels(card, 'Shards / Wedges'),
+        ...cardGetLabels(card, '4+ Color'),
+      ];
     }
-    ret = [
-      ...cardGetLabels(card, 'Guilds'),
-      ...cardGetLabels(card, 'Shards / Wedges'),
-      ...cardGetLabels(card, '4+ Color'),
-    ];
   }
   if (sort === 'Artist') {
     ret = [card.details.artist];
@@ -654,34 +653,28 @@ export function cardGetLabels(card, sort, showOther) {
     if (card.details.power) {
       ret = [card.details.power];
     }
-    ret = [];
   }
   if (sort === 'Toughness') {
     if (card.details.toughness) {
       ret = [card.details.toughness];
     }
-    ret = [];
   }
   if (sort === 'Loyalty') {
     if (card.details.loyalty) {
       ret = [parseInt(card.details.loyalty, 10)];
     }
-    ret = [];
   }
   if (sort === 'Manacost Type') {
     if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
       ret = ['Gold'];
-    }
-    if (
+    } else if (
       card.details.colors.length > 1 &&
       card.details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
     ) {
       ret = ['Hybrid'];
-    }
-    if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
+    } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       ret = ['Phyrexian'];
     }
-    ret = [];
   }
   if (sort === 'Creature/Non-Creature') {
     ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
@@ -690,29 +683,33 @@ export function cardGetLabels(card, sort, showOther) {
     const price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
       ret = [getPriceBucket(price, '$')];
+    } else {
+      ret = ['No Price Available'];
     }
-    ret = ['No Price Available'];
   }
   if (sort === 'Price USD Foil') {
     const price = card.details.prices.usd_foil;
     if (price) {
       ret = [getPriceBucket(price, '$')];
+    } else {
+      ret = ['No Price Available'];
     }
-    ret = ['No Price Available'];
   }
   if (sort === 'Price EUR') {
     const price = cardPriceEur(card);
     if (price) {
       ret = [getPriceBucket(price, '€')];
+    } else {
+      ret = ['No Price Available'];
     }
-    ret = ['No Price Available'];
   }
   if (sort === 'MTGO TIX') {
     const price = cardTix(card);
     if (price) {
       ret = [getPriceBucket(price, '')];
+    } else {
+      ret = ['No Price Available'];
     }
-    ret = ['No Price Available'];
   }
   if (sort === 'Devotion to White') {
     ret = [cardDevotion(card, 'w').toString()];
@@ -736,7 +733,9 @@ export function cardGetLabels(card, sort, showOther) {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
 
-  if (showOther && ret === []) ret = [' Other '];
+  if (showOther && ret === []) {
+    ret = [' Other '];
+  }
   return ret;
 }
 
