@@ -240,43 +240,32 @@ function getLabelsRaw(cube, sort, showOther) {
   /* Start of sort Options */
   if (sort === 'Color Category') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
-  }
-  if (sort === 'Color Category Full') {
+  } else if (sort === 'Color Category Full') {
     ret = SINGLE_COLOR.concat(['Colorless'])
       .concat(GUILDS)
       .concat(SHARDS_AND_WEDGES)
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Lands']);
-  }
-  if (sort === 'Color Identity') {
+  } else if (sort === 'Color Identity') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
-  }
-  if (sort === 'Color Identity Full') {
+  } else if (sort === 'Color Identity Full') {
     ret = SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
-  }
-  if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
+  } else if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
     ret = ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
-  }
-  if (sort === 'CMC') {
+  } else if (sort === 'CMC') {
     ret = ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
-  }
-  if (sort === 'CMC2') {
+  } else if (sort === 'CMC2') {
     ret = ['0-1', '2', '3', '4', '5', '6', '7+'];
-  }
-  if (sort === 'CMC-Full') {
+  } else if (sort === 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
     ret = ALL_CMCS;
-  }
-  if (sort === 'Color') {
+  } else if (sort === 'Color') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-  }
-  if (sort === 'Type') {
+  } else if (sort === 'Type') {
     ret = CARD_TYPES.concat(['Other']);
-  }
-  if (sort === 'Supertype') {
+  } else if (sort === 'Supertype') {
     ret = ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
-  }
-  if (sort === 'Tags') {
+  } else if (sort === 'Tags') {
     const tags = [];
     for (const card of cube) {
       for (const tag of card.tags) {
@@ -286,33 +275,25 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = tags.sort();
-  }
-  if (sort === 'Tags Full') {
+  } else if (sort === 'Tags Full') {
     // TODO remove
     // whitespace around ' Untagged ' to prevent collisions
     ret = [...getLabelsRaw(cube, 'Tags'), ' Untagged '];
-  }
-  if (sort === 'Date Added') {
+  } else if (sort === 'Date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
     ret = removeAdjacentDuplicates(days);
-  }
-  if (sort === 'Status') {
+  } else if (sort === 'Status') {
     ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
-  }
-  if (sort === 'Finish') {
+  } else if (sort === 'Finish') {
     ret = ['Non-foil', 'Foil'];
-  }
-  if (sort === 'Guilds') {
+  } else if (sort === 'Guilds') {
     ret = GUILDS;
-  }
-  if (sort === 'Shards / Wedges') {
+  } else if (sort === 'Shards / Wedges') {
     ret = SHARDS_AND_WEDGES;
-  }
-  if (sort === 'Color Count') {
+  } else if (sort === 'Color Count') {
     ret = ['0', '1', '2', '3', '4', '5'];
-  }
-  if (sort === 'Set') {
+  } else if (sort === 'Set') {
     const sets = [];
     for (const card of cube) {
       if (!sets.includes(card.details.set.toUpperCase())) {
@@ -320,8 +301,7 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = sets.sort();
-  }
-  if (sort === 'Artist') {
+  } else if (sort === 'Artist') {
     const artists = [];
     for (const card of cube) {
       if (!artists.includes(card.details.artist)) {
@@ -329,14 +309,11 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = artists.sort();
-  }
-  if (sort === 'Rarity') {
+  } else if (sort === 'Rarity') {
     ret = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
-  }
-  if (sort === 'Unsorted') {
+  } else if (sort === 'Unsorted') {
     ret = ['All'];
-  }
-  if (sort === 'Subtype') {
+  } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
       const split = card.type_line.split(/[-–—]/);
@@ -349,18 +326,15 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = [...types];
-  }
-  if (sort === 'Types-Multicolor') {
+  } else if (sort === 'Types-Multicolor') {
     ret = CARD_TYPES.slice(0, -1)
       .concat(GUILDS)
       .concat(SHARDS_AND_WEDGES)
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Land', 'Other']);
-  }
-  if (sort === 'Legality') {
+  } else if (sort === 'Legality') {
     ret = ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
-  }
-  if (sort === 'Power') {
+  } else if (sort === 'Power') {
     const items = [];
     for (const card of cube) {
       if (card.details.power) {
@@ -370,8 +344,7 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = items.sort(defaultSort);
-  }
-  if (sort === 'Toughness') {
+  } else if (sort === 'Toughness') {
     const items = [];
     for (const card of cube) {
       if (card.details.toughness) {
@@ -381,8 +354,7 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = items.sort(defaultSort);
-  }
-  if (sort === 'Loyalty') {
+  } else if (sort === 'Loyalty') {
     const items = [];
     for (const card of cube) {
       if (card.details.loyalty) {
@@ -392,56 +364,44 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = items.sort(defaultSort);
-  }
-  if (sort === 'Manacost Type') {
+  } else if (sort === 'Manacost Type') {
     ret = ['Gold', 'Hybrid', 'Phyrexian'];
-  }
-  if (sort === 'Creature/Non-Creature') {
+  } else if (sort === 'Creature/Non-Creature') {
     ret = ['Creature', 'Non-Creature'];
-  }
-  if (['Price', 'Price USD', 'Price Foil', 'Price USD Foil'].includes(sort)) {
+  } else if (['Price', 'Price USD', 'Price Foil', 'Price USD Foil'].includes(sort)) {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, '$'));
     }
     labels.push('No Price Available');
     ret = labels;
-  }
-  if (sort === 'Price EUR') {
+  } else if (sort === 'Price EUR') {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, '€'));
     }
     labels.push('No Price Available');
     ret = labels;
-  }
-  if (sort === 'MTGO TIX') {
+  } else if (sort === 'MTGO TIX') {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, ''));
     }
     labels.push('No Price Available');
     ret = labels;
-  }
-  if (sort === 'Devotion to White') {
+  } else if (sort === 'Devotion to White') {
     ret = allDevotions(cube, 'W');
-  }
-  if (sort === 'Devotion to Blue') {
+  } else if (sort === 'Devotion to Blue') {
     ret = allDevotions(cube, 'U');
-  }
-  if (sort === 'Devotion to Black') {
+  } else if (sort === 'Devotion to Black') {
     ret = allDevotions(cube, 'B');
-  }
-  if (sort === 'Devotion to Red') {
+  } else if (sort === 'Devotion to Red') {
     ret = allDevotions(cube, 'R');
-  }
-  if (sort === 'Devotion to Green') {
+  } else if (sort === 'Devotion to Green') {
     ret = allDevotions(cube, 'G');
-  }
-  if (sort === 'Unsorted') {
+  } else if (sort === 'Unsorted') {
     ret = ['All'];
-  }
-  if (sort === 'Elo') {
+  } else if (sort === 'Elo') {
     let elos = [];
     for (const card of cube) {
       const elo = card.details.elo ?? ELO_DEFAULT;
@@ -477,42 +437,34 @@ export function cardGetLabels(card, sort, showOther) {
   /* Start of sort options */
   if (sort === 'Color Category') {
     ret = [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
-  }
-  if (sort === 'Color Category Full') {
+  } else if (sort === 'Color Category Full') {
     const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
       ret = [getColorCombination(cardColorIdentity(card))];
     } else {
       ret = [colorCategory];
     }
-  }
-  if (sort === 'Color Identity') {
+  } else if (sort === 'Color Identity') {
     ret = [GetColorIdentity(cardColorIdentity(card))];
-  }
-  if (sort === 'Color Identity Full') {
+  } else if (sort === 'Color Identity Full') {
     ret = [getColorCombination(cardColorIdentity(card))];
-  }
-  if (sort === 'Color Combination Includes') {
+  } else if (sort === 'Color Combination Includes') {
     ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
-  }
-  if (sort === 'Includes Color Combination') {
+  } else if (sort === 'Includes Color Combination') {
     ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
-  }
-  if (sort === 'Color') {
+  } else if (sort === 'Color') {
     if (card.details.colors.length === 0) {
       ret = ['Colorless'];
     } else {
       ret = card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
-  }
-  if (sort === '4+ Color') {
+  } else if (sort === '4+ Color') {
     if (cardColorIdentity(card).length === 5) {
       ret = ['Five Color'];
     } else if (cardColorIdentity(card).length === 4) {
       ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
-  }
-  if (sort === 'CMC') {
+  } else if (sort === 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
@@ -520,8 +472,7 @@ export function cardGetLabels(card, sort, showOther) {
     } else {
       ret = [cmc.toString()];
     }
-  }
-  if (sort === 'CMC2') {
+  } else if (sort === 'CMC2') {
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
       ret = ['7+'];
@@ -530,12 +481,10 @@ export function cardGetLabels(card, sort, showOther) {
     } else {
       ret = [cmc.toString()];
     }
-  }
-  if (sort === 'CMC-Full') {
+  } else if (sort === 'CMC-Full') {
     // Round to half-integer.
     ret = [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
-  }
-  if (sort === 'Supertype' || sort === 'Type') {
+  } else if (sort === 'Supertype' || sort === 'Type') {
     const split = cardType(card).split(/[-–—]/);
     let types;
     if (split.length > 1) {
@@ -559,53 +508,41 @@ export function cardGetLabels(card, sort, showOther) {
       const labels = getLabelsRaw(null, sort, showOther);
       ret = types.filter((t) => labels.includes(t));
     }
-  }
-  if (sort === 'Tags') {
+  } else if (sort === 'Tags') {
     ret = card.tags;
-  }
-  if (sort === 'Tags Full') {
+  } else if (sort === 'Tags Full') {
     // whitespace around ' Untagged ' to prevent collisions
     ret = card.tags.length === 0 ? [' Untagged '] : card.tags;
-  }
-  if (sort === 'Status') {
+  } else if (sort === 'Status') {
     ret = [card.status];
-  }
-  if (sort === 'Finish') {
+  } else if (sort === 'Finish') {
     ret = [card.finish];
-  }
-  if (sort === 'Date Added') {
+  } else if (sort === 'Date Added') {
     ret = [ISODateToYYYYMMDD(card.addedTmsp)];
-  }
-  if (sort === 'Guilds') {
+  } else if (sort === 'Guilds') {
     if (cardColorIdentity(card).length === 2) {
       const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
       ret = [GUILD_MAP[ordered]];
     }
-  }
-  if (sort === 'Shards / Wedges') {
+  } else if (sort === 'Shards / Wedges') {
     if (cardColorIdentity(card).length === 3) {
       const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
       ret = [SHARD_AND_WEDGE_MAP[ordered]];
     }
-  }
-  if (sort === 'Color Count') {
+  } else if (sort === 'Color Count') {
     ret = [cardColorIdentity(card).length];
-  }
-  if (sort === 'Set') {
+  } else if (sort === 'Set') {
     ret = [card.details.set.toUpperCase()];
-  }
-  if (sort === 'Rarity') {
+  } else if (sort === 'Rarity') {
     const rarity = cardRarity(card);
     ret = [rarity[0].toUpperCase() + rarity.slice(1)];
-  }
-  if (sort === 'Subtype') {
+  } else if (sort === 'Subtype') {
     const split = cardType(card).split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
       ret = subtypes.map((subtype) => subtype.trim()).filter((x) => x);
     }
-  }
-  if (sort === 'Types-Multicolor') {
+  } else if (sort === 'Types-Multicolor') {
     if (cardColorIdentity(card).length <= 1) {
       const split = cardType(card).split('—');
       const types = split[0].trim().split(' ');
@@ -641,31 +578,25 @@ export function cardGetLabels(card, sort, showOther) {
         ...cardGetLabels(card, '4+ Color'),
       ];
     }
-  }
-  if (sort === 'Artist') {
+  } else if (sort === 'Artist') {
     ret = [card.details.artist];
-  }
-  if (sort === 'Legality') {
+  } else if (sort === 'Legality') {
     ret = Object.entries(card.details.legalities)
       .filter(([, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
       .map(([k]) => k); // eslint-disable-line no-unused-vars
-  }
-  if (sort === 'Power') {
+  } else if (sort === 'Power') {
     if (card.details.power) {
       ret = [card.details.power];
     }
-  }
-  if (sort === 'Toughness') {
+  } else if (sort === 'Toughness') {
     if (card.details.toughness) {
       ret = [card.details.toughness];
     }
-  }
-  if (sort === 'Loyalty') {
+  } else if (sort === 'Loyalty') {
     if (card.details.loyalty) {
       ret = [parseInt(card.details.loyalty, 10)];
     }
-  }
-  if (sort === 'Manacost Type') {
+  } else if (sort === 'Manacost Type') {
     if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
       ret = ['Gold'];
     } else if (
@@ -676,61 +607,49 @@ export function cardGetLabels(card, sort, showOther) {
     } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
       ret = ['Phyrexian'];
     }
-  }
-  if (sort === 'Creature/Non-Creature') {
+  } else if (sort === 'Creature/Non-Creature') {
     ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
-  }
-  if (sort === 'Price USD' || sort === 'Price') {
+  } else if (sort === 'Price USD' || sort === 'Price') {
     const price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {
       ret = ['No Price Available'];
     }
-  }
-  if (sort === 'Price USD Foil') {
+  } else if (sort === 'Price USD Foil') {
     const price = card.details.prices.usd_foil;
     if (price) {
       ret = [getPriceBucket(price, '$')];
     } else {
       ret = ['No Price Available'];
     }
-  }
-  if (sort === 'Price EUR') {
+  } else if (sort === 'Price EUR') {
     const price = cardPriceEur(card);
     if (price) {
       ret = [getPriceBucket(price, '€')];
     } else {
       ret = ['No Price Available'];
     }
-  }
-  if (sort === 'MTGO TIX') {
+  } else if (sort === 'MTGO TIX') {
     const price = cardTix(card);
     if (price) {
       ret = [getPriceBucket(price, '')];
     } else {
       ret = ['No Price Available'];
     }
-  }
-  if (sort === 'Devotion to White') {
+  } else if (sort === 'Devotion to White') {
     ret = [cardDevotion(card, 'w').toString()];
-  }
-  if (sort === 'Devotion to Blue') {
+  } else if (sort === 'Devotion to Blue') {
     ret = [cardDevotion(card, 'u').toString()];
-  }
-  if (sort === 'Devotion to Black') {
+  } else if (sort === 'Devotion to Black') {
     ret = [cardDevotion(card, 'b').toString()];
-  }
-  if (sort === 'Devotion to Red') {
+  } else if (sort === 'Devotion to Red') {
     ret = [cardDevotion(card, 'r').toString()];
-  }
-  if (sort === 'Devotion to Green') {
+  } else if (sort === 'Devotion to Green') {
     ret = [cardDevotion(card, 'g').toString()];
-  }
-  if (sort === 'Unsorted') {
+  } else if (sort === 'Unsorted') {
     ret = ['All'];
-  }
-  if (sort === 'Elo') {
+  } else if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
   /* End of sort options */
