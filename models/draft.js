@@ -18,7 +18,13 @@ const draftSchema = mongoose.Schema({
   initial_state: [[[cardSchema]]],
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
-  basics: [String],
+  basics: {
+    Plains: cardSchema,
+    Island: cardSchema,
+    Swamp: cardSchema,
+    Mountain: cardSchema,
+    Forest: cardSchema,
+  },
 });
 
 module.exports = mongoose.model('Draft', draftSchema);

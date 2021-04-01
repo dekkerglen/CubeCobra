@@ -1,6 +1,13 @@
 import similarity from 'compute-cosine-similarity';
 
-import { cardColorIdentity, cardName, cardType, cardIsSpecialZoneType } from 'utils/Card';
+import {
+  COLOR_COMBINATIONS,
+  cardColorIdentity,
+  cardName,
+  cardType,
+  cardIsSpecialZoneType,
+  COLOR_INCLUSION_MAP,
+} from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import {
   getRating,
@@ -9,29 +16,26 @@ import {
   getPickSynergy,
   isPlayableLand,
   getCastingProbability,
+  COLORS,
   FETCH_LANDS,
   PROB_TO_INCLUDE,
 } from 'utils/draftbots';
-import { arraysAreEqualSets } from 'utils/Util';
+import { fromEntries } from 'utils/Util';
 
 let draft = null;
 
-export const createSeen = (alwaysAvailable = []) => {
-  const cards = [];
-  const availableLands = {};
-  for (const card of alwaysAvailable) {
-    if (cardType(card).toLowerCase().includes('land')) {
-      const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
-      availableLands[colors] = (availableLands[colors] ?? 0) + 1;
-      for (let i = 0; i < 17; i++) {
-        cards.push(card);
-      }
-    } else {
-      cards.push(card);
-      cards.push(card);
-    }
+export const createSeen = () => {
+  const result = {
+    values: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), 0])),
+    cards: fromEntries(COLOR_COMBINATIONS.map((comb) => [comb.join(''), []])),
+    lands: { W: 0, U: 0, B: 3, R: 3, G: 3 },
+  };
+  let desiredLandCount = 17;
+  for (let i = 5; i > 0; i--) {
+    result.lands[COLORS[5 - i]] = Math.floor(desiredLandCount / i);
+    desiredLandCount -= result.lands[COLORS[5 - i]];
   }
-  return { cards, availableLands };
+  return result;
 };
 
 // This function tracks the total goodness of the cards we've seen or picked in this color.
@@ -39,10 +43,36 @@ export const addSeen = (seen, cards) => {
   for (const card of cards) {
     if (cardType(card).toLowerCase().includes('land')) {
       const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
-      seen.availableLands[colors] = (seen.availableLands[colors] ?? 0) + 1;
+      seen.lands[colors.join('')] = (seen.lands[colors.join('')] ?? 0) + 1;
+      let removed = false;
+      for (const color of colors) {
+        if (!removed && seen.lands[color] > 0) {
+          removed = true;
+          seen.lands[color] -= 1;
+        }
+      }
+      if (!removed) {
+        const color = COLORS.find((c) => seen.lands[c] > 0);
+        if (color) seen.lands[color] -= 1;
+      }
+    }
+    if (card.index || card.index === 0) {
+      const rating = getRating(card);
+      const colors = cardColorIdentity(card);
+      const colorsStr = colors.join('');
+      for (const comb of COLOR_COMBINATIONS) {
+        const combStr = comb.join('');
+        if (COLOR_INCLUSION_MAP[combStr][colorsStr] || isPlayableLand(comb, card)) {
+          seen.cards[combStr].push(card);
+          // We ignore colorless because they just reduce variance by
+          // being in all color combinations.
+          if (colors.length > 0) {
+            seen.values[combStr] += rating;
+          }
+        }
+      }
     }
   }
-  seen.cards.push(...cards);
 };
 
 export function init(newDraft) {
@@ -51,7 +81,7 @@ export function init(newDraft) {
     for (const seat of draft.seats) {
       seat.seen = createSeen();
       addSeen(seat.seen, seat.packbacklog[0].slice());
-      seat.picked = createSeen(newDraft.basics);
+      seat.picked = createSeen();
     }
   }
 }
@@ -101,27 +131,31 @@ export const botRating = (card, picked, seen, initialState, inPack = 1, packNum 
 const botColors = (card, picked, seen, initialState, inPack = 1, packNum = 1) =>
   botRatingAndCombination(card, picked, seen, initialState, inPack, packNum).colors;
 
-const rawRating = (c) => 10 ** ((c?.rating ?? 1200) / 400 - 3);
-
-function getSortFn() {
-  return (a, b) => rawRating(b) - rawRating(a);
+function getSortFn(bot) {
+  return (a, b) => {
+    if (bot) {
+      return getRating(bot, b) - getRating(bot, a);
+    }
+    return b.rating - a.rating;
+  };
 }
 
-export const calculateBasicCounts = (main, alwaysAvailable) => {
-  const picked = createSeen(alwaysAvailable);
+export const calculateBasicCounts = (main) => {
+  const picked = createSeen();
   addSeen(picked, main);
-  const remainingLands = picked.cards.filter((c) => cardType(c).toLowerCase().includes('land')).sort(getSortFn());
   const { lands, colors } = botRatingAndCombination(null, picked, null, null, 0, 0);
-  const result = [];
-  for (const [ci, count] of Object.entries(lands)) {
-    const colorLands = remainingLands
-      .map((c, i) => [c, i])
-      .filter(([card]) => arraysAreEqualSets(FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card), ci))
-      .slice(0, count)
-      .reverse();
-    for (const [, i] of colorLands) {
-      result.push(...colorLands.splice(i, 1));
-    }
+
+  const result = {};
+
+  const landDict = {
+    W: 'Plains',
+    U: 'Island',
+    B: 'Swamp',
+    R: 'Mountain',
+    G: 'Forest',
+  };
+  for (const [symbol, name] of Object.entries(landDict)) {
+    result[name] = lands[symbol];
   }
   return { lands: result, colors };
 };
@@ -265,15 +299,17 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 
 async function build(cards, lands, colors, basics) {
   let nonlands = cards.filter((card) => !cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card));
-  const landCards = cards.filter(
-    (card) => cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card),
-  );
+  const landCards = cards.filter((card) => cardType(card).toLowerCase().includes('land'));
   const specialZoneCards = cards.filter(cardIsSpecialZoneType);
 
   const sortFn = getSortFn(colors);
   const inColor = nonlands.filter((item) => getCastingProbability(item, lands) >= PROB_TO_INCLUDE);
   const outOfColor = nonlands.filter((item) => getCastingProbability(item, lands) < PROB_TO_INCLUDE);
 
+  landCards.sort(sortFn);
+
+  const playableLands = landCards.filter((land) => isPlayableLand(colors, land));
+  const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, land));
   nonlands = inColor;
   let side = outOfColor;
   if (nonlands.length < 23) {
@@ -309,13 +345,9 @@ async function build(cards, lands, colors, basics) {
     }
   };
   NKernels(2, 18);
-  const played = createSeen(basics);
+  const played = createSeen();
   addSeen(played, chosen);
   const size = Math.min(23 - chosen.length, nonlands.length);
-  const probabilities = {};
-  for (const c of chosen) {
-    probabilities[c.cardID] = getCastingProbability(c, lands);
-  }
   for (let i = 0; i < size; i++) {
     // add in new synergy data
     let best = 0;
@@ -323,32 +355,33 @@ async function build(cards, lands, colors, basics) {
 
     for (let j = 1; j < nonlands.length; j++) {
       const card = nonlands[j];
-      const score = getPickSynergy(card, played, probabilities) + getRating(card, probabilities);
+      const score =
+        (getPickSynergy(chosen, card, played) + getRating(colors, card)) * getCastingProbability(card, lands);
       if (score > bestScore) {
         best = j;
         bestScore = score;
       }
     }
-    const [current] = nonlands.splice(best, 1);
+    const current = nonlands.splice(best, 1)[0];
     addSeen(played, [current]);
-    probabilities[current.cardID] = getCastingProbability(current, lands);
     chosen.push(current);
   }
   nonlands = nonlands.filter((c) => !chosen.includes(c));
 
-  const main = chosen;
+  const main = chosen.concat(playableLands.slice(0, 17));
+  side.push(...playableLands.slice(17));
+  side.push(...unplayableLands);
   side.push(...nonlands);
   side.push(...specialZoneCards);
 
-  ({ lands, colors } = calculateBasicCounts(main, basics));
-  main.push(...lands);
-  for (const c of lands) {
-    const idx = landCards.findIndex((c2) => c.cardID === c2.cardID);
-    if (idx >= 0) {
-      landCards.splice(idx, 1);
+  if (basics) {
+    ({ lands, colors } = calculateBasicCounts(main));
+    for (const [name, amount] of Object.entries(lands)) {
+      for (let i = 0; i < amount; i++) {
+        main.push(basics[name]);
+      }
     }
   }
-  side.push(...landCards);
   const deck = [];
   const sideboard = [];
   for (let i = 0; i < 16; i += 1) {
@@ -507,7 +540,7 @@ async function finish() {
       draft.seats[i].description = `This deck was drafted by a bot with color preference for ${colors.join('')}.`;
       botIndex += 1;
     } else {
-      const picked = createSeen(draft.basics);
+      const picked = createSeen();
       addSeen(picked, draft.seats[i].pickorder);
       const colors = botColors(null, picked, null, draft.initial_state, 1, draft.initial_state[0].length);
       draft.seats[i].name = `${draft.seats[i].name}: ${colors.join(', ')}`;
@@ -536,7 +569,6 @@ async function finish() {
       }
     }
   }
-  draft.basics = draft.basics.map(({ cardID }) => cardID);
 
   // save draft. if we fail, we fail
   await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {

@@ -6,6 +6,13 @@ import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Ca
 
 import { calculateBasicCounts, init } from 'utils/Draft';
 
+const COLORS = [
+  ['White', 'W', 'Plains'],
+  ['Blue', 'U', 'Island'],
+  ['Black', 'B', 'Swamp'],
+  ['Red', 'R', 'Mountain'],
+  ['Green', 'G', 'Forest'],
+];
 const MAX_BASICS = 20;
 
 const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft, basics }) => {
@@ -18,20 +25,8 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft, basics }) => {
   }, [addBasics, toggle, basics, counts]);
 
   const calculateBasics = useCallback(async () => {
-    const main = deck.playerdeck.flat(2);
-    init(draft);
-    const { lands } = calculateBasicCounts(main, basics);
-    const newCounts = {};
-    for (const land of lands) {
-      const idx = main.findIndex((c) => c.cardID === land.cardID);
-      if (idx < 0) {
-        newCounts[land.cardID] = (newCounts[land.cardId] ?? 0) + 1;
-      } else {
-        main.splice(idx, 1);
-      }
-    }
-    setCounts(basics.map((c) => newCounts[c.cardID] ?? 0));
-  }, [deck, draft, setCounts, basics]);
+    console.log();
+  }, [deck]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xl">
