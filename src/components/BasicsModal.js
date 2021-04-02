@@ -6,14 +6,7 @@ import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Ca
 
 import { buildDeck } from 'utils/Draft';
 
-const COLORS = [
-  ['White', 'W', 'Plains'],
-  ['Blue', 'U', 'Island'],
-  ['Black', 'B', 'Swamp'],
-  ['Red', 'R', 'Mountain'],
-  ['Green', 'G', 'Forest'],
-];
-const MAX_BASICS = 20;
+const MAX_BASICS = 21;
 
 const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics }) => {
   const [counts, setCounts] = useState(basics.map(() => 0));

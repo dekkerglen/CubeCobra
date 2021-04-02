@@ -9,7 +9,7 @@ import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'r
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import BasicsModal from 'components/BasicsModal';
-import { addSeen, buildDeck, createSeen, init } from 'utils/Draft';
+import { buildDeck } from 'utils/Draft';
 import withModal from 'components/WithModal';
 
 const BasicsModalLink = withModal(NavLink, BasicsModal);

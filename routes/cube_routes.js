@@ -12,7 +12,6 @@ const {
   generatePack,
   setCubeType,
   cardsAreEquivalent,
-  getBasics,
   generateShortId,
   buildIdQuery,
   addCardHtml,
