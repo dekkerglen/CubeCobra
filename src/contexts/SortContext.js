@@ -53,8 +53,7 @@ SortContextProvider.propTypes = {
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-SortContext.Wrapped = (Tag) => (props) => (
-  <SortContext.Consumer>{(value) => <Tag {...props} {...value} />}</SortContext.Consumer>
-);
+SortContext.Wrapped = (Tag) => (props) =>
+  <SortContext.Consumer>{(value) => <Tag {...props} {...value} />}</SortContext.Consumer>;
 
 export default SortContext;

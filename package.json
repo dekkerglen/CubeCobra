@@ -7,11 +7,11 @@
   "scripts": {
     "beautify": "npm run prettier",
     "lint:files": "echo ./{__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}/{,**/}*.js *.js",
-    "prettier-base": "prettier `npm run --silent lint:files`",
+    "prettier-base": "prettier --no-error-on-unmatched-pattern `npm run --silent lint:files`",
     "prettier": "npm run prettier-base -- --write",
     "prettier-master": "prettier --write $(git diff master --name-only | grep -E '.js$')",
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
-    "eslint": "eslint --quiet `npm run --silent lint:files`",
+    "eslint": "eslint --no-error-on-unmatched-pattern --quiet `npm run --silent lint:files`",
     "esprint": "esprint",
     "lint": "npm run prettier-base -- --check && npm run eslint",
     "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
@@ -94,6 +94,7 @@
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "performance-now": "^2.1.0",
+    "prettier": "git+https://github.com/prettier/prettier.git",
     "prop-types": "^15.7.2",
     "pug": "^2.0.3",
     "quickselect": "^2.0.0",
@@ -158,7 +159,6 @@
     "form-data": "^3.0.0",
     "jest": "^26.0.1",
     "nodemon": "^2.0.2",
-    "prettier": "^2.0.5",
     "rimraf": "^3.0.0",
     "sinon": "^7.4.2"
   }

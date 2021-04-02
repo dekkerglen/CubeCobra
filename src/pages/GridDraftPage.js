@@ -210,7 +210,7 @@ const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
       const cardIndices = calculateGridBotPick(drafterStates[1]);
       mutations.makePick({ cardIndices, seatIndex: (seatNumber + 1) % 2 });
     }
-  }, [turn, draftType, drafterStates, mutations]);
+  }, [turn, draftType, drafterStates, mutations, seatNumber]);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>

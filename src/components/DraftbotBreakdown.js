@@ -62,12 +62,14 @@ export const DraftbotBreakdownTable = ({ drafterState }) => {
       })),
     [drafterState],
   );
-  const oracles = useMemo(() => botEvaluations[0].oracleResults.map(({ title, tooltip }) => ({ title, tooltip })), [
-    botEvaluations,
-  ]);
-  const weights = useMemo(() => botEvaluations[0].oracleResults.map(({ title, weight }) => ({ title, weight })), [
-    botEvaluations,
-  ]);
+  const oracles = useMemo(
+    () => botEvaluations[0].oracleResults.map(({ title, tooltip }) => ({ title, tooltip })),
+    [botEvaluations],
+  );
+  const weights = useMemo(
+    () => botEvaluations[0].oracleResults.map(({ title, weight }) => ({ title, weight })),
+    [botEvaluations],
+  );
   const rows = useMemo(
     () =>
       botEvaluations.map((botEvaluation) =>
