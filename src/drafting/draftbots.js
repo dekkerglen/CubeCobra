@@ -120,10 +120,12 @@ export const getSynergy = (index1, index2, cards) => {
 export const considerInCombination = (combination, card) =>
   card && COLOR_INCLUSION_MAP[combination.join('')][(cardColorIdentity(card) ?? []).join('')];
 
+const BASICS_MAP = { w: 'Plains', u: 'Island', b: 'Swamp', r: 'Mountain', g: 'Forest' };
 export const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
-  (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c)));
+  (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c))) ||
+  colors.some((color) => cardType(card).toLowerCase().includes(BASICS_MAP[color.toLowerCase()].toLowerCase()));
 
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
