@@ -96,15 +96,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 
   const addBasics = useCallback(
     (numBasics) => {
-      const toAdd = numBasics
-        .map((count, index) => new Array(count).fill(basics[index]))
-        .flat()
-        .map((details) => ({
-          cardID: details.id,
-          type_line: details.type,
-          cmc: 0,
-          details,
-        }));
+      const toAdd = numBasics.map((count, index) => new Array(count).fill(basics[index])).flat();
       const newDeck = [...deck];
       newDeck[1][0] = [].concat(newDeck[1][0], toAdd);
       setDeck(newDeck);
@@ -122,7 +114,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider>
+        <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar
             basics={basics}
             deck={currentDeck}

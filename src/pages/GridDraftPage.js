@@ -218,7 +218,7 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
     const updatedDraft = JSON.parse(JSON.stringify(initialDraft));
 
     if (initialDraft.draftType === 'bot') {
-      const { deck, sideboard, colors } = await buildDeck(botPicks.flat(3), picked, initialDraft.basics);
+      const { deck, sideboard, colors } = await buildDeck(botPicks.flat(3), initialDraft.basics);
 
       updatedDraft.seats[1].drafted = deck;
       updatedDraft.seats[1].sideboard = sideboard;

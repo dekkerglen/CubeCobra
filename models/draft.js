@@ -19,11 +19,13 @@ const draftSchema = mongoose.Schema({
   seats: [Seat],
   unopenedPacks: [[[cardSchema]]],
   basics: {
-    Plains: cardSchema,
-    Island: cardSchema,
-    Swamp: cardSchema,
-    Mountain: cardSchema,
-    Forest: cardSchema,
+    default: [],
+    type: {
+      details: cardSchema,
+      cardID: String,
+      cmc: Number,
+      type_line: String,
+    },
   },
 });
 

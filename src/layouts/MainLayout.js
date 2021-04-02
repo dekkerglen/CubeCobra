@@ -108,7 +108,9 @@ const MainLayout = ({ user, children, loginCallback }) => {
                       </DropdownToggle>
                       <DropdownMenu right>
                         {user.cubes.map((item) => (
-                          <DropdownItem href={`/cube/overview/${item._id}`}>{item.name}</DropdownItem>
+                          <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
+                            {item.name}
+                          </DropdownItem>
                         ))}
                       </DropdownMenu>
                     </UncontrolledDropdown>

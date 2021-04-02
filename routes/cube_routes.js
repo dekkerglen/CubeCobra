@@ -1615,7 +1615,7 @@ router.post(
 
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards owner',
+        '_id name draft_formats card_count type cards owner basics',
       ).lean();
 
       if (!cube) {
@@ -1639,7 +1639,15 @@ router.post(
       gridDraft.draftType = type;
 
       gridDraft.cube = cube._id;
-      gridDraft.basics = getBasics(carddb);
+      gridDraft.basics = cube.basics.map((cardID) => {
+        const details = carddb.cardFromId(cardID);
+        return {
+          details,
+          cardID: details._id,
+          type_line: details.type,
+          cmc: 0,
+        };
+      });
 
       const cards = [];
       for (let i = 0; i < packs; i++) {
@@ -2069,7 +2077,7 @@ router.post(
     try {
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards',
+        '_id name draft_formats card_count type cards basics',
       ).lean();
 
       if (!cube) {
@@ -2122,7 +2130,15 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
-      draft.basics = getBasics(carddb);
+      draft.basics = cube.basics.map((cardID) => {
+        const details = carddb.cardFromId(cardID);
+        return {
+          details,
+          cardID: details._id,
+          type_line: details.type,
+          cmc: 0,
+        };
+      });
 
       await draft.save();
       if (req.body.botsOnly) {
@@ -2150,9 +2166,6 @@ router.post(
           for (const card of seat.pickorder) {
             card.details = carddb.cardFromId(card.cardID);
           }
-        }
-        for (const key of Object.keys(draft.basics)) {
-          draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
         }
         return res.status(200).send({
           success: 'true',
@@ -2207,11 +2220,6 @@ router.get('/griddraft/:id', async (req, res) => {
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
-      }
-    }
-    if (draft.basics) {
-      for (const key of Object.keys(draft.basics)) {
-        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
       }
     }
 
@@ -2281,11 +2289,6 @@ router.get('/draft/:id', async (req, res) => {
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
-      }
-    }
-    if (draft.basics) {
-      for (const key of Object.keys(draft.basics)) {
-        draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
       }
     }
 
@@ -3056,16 +3059,18 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.owner = req.user._id;
 
     if (srcDraft) {
-      for (const card of Object.values(srcDraft.basics)) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
       deckutil.default.init(srcDraft);
-      const userPicked = deckutil.default.createSeen();
-      deckutil.default.addSeen(userPicked, base.seats[req.params.index].pickorder);
       const { colors: userColors } = await deckutil.default.buildDeck(
         base.seats[req.params.index].pickorder,
-        userPicked,
-        srcDraft.basics,
+        cube.basics.map((cardID) => {
+          const details = carddb.cardFromId(cardID);
+          return {
+            details,
+            cardID: details._id,
+            type_line: details.type,
+            cmc: 0,
+          };
+        }),
       );
 
       deck.seats.push({
@@ -3084,13 +3089,18 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           for (const card of base.seats[i].pickorder) {
             card.details = carddb.cardFromId(card.cardID);
           }
-          const picked = deckutil.default.createSeen();
-          deckutil.default.addSeen(picked, base.seats[i].pickorder);
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
-            picked,
-            srcDraft.basics,
+            cube.basics.map((cardID) => {
+              const details = carddb.cardFromId(cardID);
+              return {
+                details,
+                cardID: details._id,
+                type_line: details.type,
+                cmc: 0,
+              };
+            }),
           );
           deck.seats.push({
             userid: null,
@@ -3184,10 +3194,24 @@ router.get('/redraft/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
+    const cube = await Cube.findById(srcDraft.cube);
+    if (!cube) {
+      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = getBasics(carddb);
+    draft.basics = cube.basics.map((cardID) => {
+      const details = carddb.cardFromId(cardID);
+      return {
+        details,
+        cardID: details._id,
+        type_line: details.type,
+        cmc: 0,
+      };
+    });
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3239,10 +3263,24 @@ router.post('/api/redraft/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
+    const cube = await Cube.findById(srcDraft.cube);
+    if (!cube) {
+      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
     let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = getBasics(carddb);
+    draft.basics = cube.basics.map((cardID) => {
+      const details = carddb.cardFromId(cardID);
+      return {
+        details,
+        cardID: details._id,
+        type_line: details.type,
+        cmc: 0,
+      };
+    });
 
     draft.initial_state = srcDraft.initial_state.slice();
     draft.unopenedPacks = srcDraft.initial_state.slice();
@@ -3300,9 +3338,6 @@ router.post('/api/redraft/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    for (const key of Object.keys(draft.basics)) {
-      draft.basics[key].details = carddb.cardFromId(draft.basics[key].cardID);
-    }
     return res.status(200).send({
       success: 'true',
       draft,
@@ -3343,11 +3378,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
         card.details = carddb.cardFromId(card.cardID);
       }
     }
-    if (draft) {
-      for (const card of Object.values(draft.basics)) {
-        card.details = carddb.cardFromId(card.cardID);
-      }
-    }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics`).lean();
 
@@ -3363,7 +3393,15 @@ router.get('/deckbuilder/:id', async (req, res) => {
       {
         cube,
         initialDeck: deck,
-        basics: cube.basics.map((cardID) => carddb.cardFromId(cardID)),
+        basics: cube.basics.map((cardID) => {
+          const details = carddb.cardFromId(cardID);
+          return {
+            details,
+            cardID: details._id,
+            type_line: details.type,
+            cmc: 0,
+          };
+        }),
         draft,
       },
       {

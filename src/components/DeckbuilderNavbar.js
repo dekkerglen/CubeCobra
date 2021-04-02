@@ -26,7 +26,6 @@ const DeckbuilderNavbar = ({
   setDeck,
   ...props
 }) => {
-  console.log(basics);
   const [isOpen, setIsOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -80,13 +79,10 @@ const DeckbuilderNavbar = ({
 
   const autoBuildDeck = useCallback(async () => {
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
-    init(draft);
-    const picked = createSeen();
-    addSeen(picked, main, draft.synergies);
-    const { sideboard: side, deck: newDeck } = await buildDeck(main, picked, draft.basics);
+    const { sideboard: side, deck: newDeck } = await buildDeck(main, basics);
     setSideboard([side]);
     setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
-  }, [deck, draft, setDeck, setSideboard]);
+  }, [deck, setDeck, setSideboard, basics]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
@@ -148,7 +144,6 @@ DeckbuilderNavbar.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-    basics: PropTypes.shape({}),
   }).isRequired,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,

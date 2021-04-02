@@ -1,4 +1,8 @@
 module.exports = {
+  isUnlimited: {
+    type: Boolean,
+    default: false,
+  },
   tags: [String],
   finish: {
     type: String,

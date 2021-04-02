@@ -30,7 +30,7 @@ CubeNavItem.defaultProps = {
 const CubeLayout = ({ cube, canEdit, activeLink, children }) => {
   const subtitle = getCubeDescription(cube);
   return (
-    <CubeContextProvider initialCube={cube} canEdit={canEdit}>
+    <CubeContextProvider cubeID={cube._id} initialCube={cube} canEdit={canEdit}>
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
           <div className="nav-item px-lg-4 px-3 text-sm-left text-center font-weight-boldish mt-auto mb-2">

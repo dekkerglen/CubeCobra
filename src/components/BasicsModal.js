@@ -4,7 +4,7 @@ import CardPropType from 'proptypes/CardPropType';
 
 import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card } from 'reactstrap';
 
-import { calculateBasicCounts, init } from 'utils/Draft';
+import { buildDeck } from 'utils/Draft';
 
 const COLORS = [
   ['White', 'W', 'Plains'],
@@ -15,7 +15,7 @@ const COLORS = [
 ];
 const MAX_BASICS = 20;
 
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft, basics }) => {
+const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics }) => {
   const [counts, setCounts] = useState(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
@@ -25,8 +25,22 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft, basics }) => {
   }, [addBasics, toggle, basics, counts]);
 
   const calculateBasics = useCallback(async () => {
-    console.log();
-  }, [deck]);
+    const { deck: newDeck } = await buildDeck(deck.flat(2), basics);
+
+    console.log(newDeck);
+
+    const newCounts = basics.map(() => 0);
+
+    for (const col of newDeck) {
+      for (const card of col) {
+        if (card.isUnlimited) {
+          newCounts[card.basicId] += 1;
+        }
+      }
+    }
+
+    setCounts(newCounts);
+  }, [deck, basics]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xl">
@@ -34,9 +48,9 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft, basics }) => {
       <ModalBody>
         <Row>
           {basics.map((card, index) => (
-            <Col xs="6" md="3" lg="2" key={`basics-${card.id}`}>
+            <Col xs="6" md="3" lg="2" key={`basics-${card.details._id}`}>
               <Card className="mb-3">
-                <img className="w-100" src={card.image_normal} alt={card.name} />
+                <img className="w-100" src={card.details.image_normal} alt={card.details.name} />
                 <Input
                   className="mt-1"
                   type="select"
