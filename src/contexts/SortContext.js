@@ -4,27 +4,37 @@ import PropTypes from 'prop-types';
 const SortContext = React.createContext({
   primary: 'Color Category',
   secondary: 'Types-Multicolor',
-  tertiary: 'CMC2',
+  tertiary: 'CMC',
+  quaternary: 'Alphabetical',
+  showOther: false,
 });
 
 export class SortContextProvider extends React.Component {
   constructor(props) {
     super(props);
     const {
-      defaultSorts: [primary = 'Color Category', secondary = 'Types-Multicolor'],
+      defaultSorts: [
+        primary = 'Color Category',
+        secondary = 'Types-Multicolor',
+        tertiary = 'CMC',
+        quaternary = 'Alphabetical',
+      ],
+      showOther = false,
     } = this.props;
 
     this.state = {
       primary,
       secondary,
-      tertiary: 'CMC2',
+      tertiary,
+      quaternary,
+      showOther,
     };
 
     this.changeSort = this.changeSort.bind(this);
   }
 
   componentDidMount() {
-    for (const stage of ['primary', 'secondary']) {
+    for (const stage of ['primary', 'secondary', 'tertiary', 'quaternary']) {
       const select = document.getElementById(`${stage}SortSelect`);
       if (select) {
         select.addEventListener('change', (event) => {
@@ -51,6 +61,7 @@ export class SortContextProvider extends React.Component {
 
 SortContextProvider.propTypes = {
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  showOther: PropTypes.bool.isRequired,
 };
 
 SortContext.Wrapped = (Tag) => (props) =>

@@ -12,7 +12,7 @@ import SortContext from 'contexts/SortContext';
 const cmc2Labels = getLabels(null, 'CMC2');
 
 const TypeRow = ({ cardType, group }) => {
-  const sorted = fromEntries(sortDeep(group, 'CMC2'));
+  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'CMC2'));
   return (
     <>
       <h6>
@@ -46,7 +46,7 @@ const ColorCard = ({ color, group }) => (
       </h5>
     </CardHeader>
     <CardBody>
-      {sortDeep(group, 'Creature/Non-Creature').map(([label, cncGroup]) => (
+      {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
         <TypeRow key={label} cardType={label} group={cncGroup} />
       ))}
     </CardBody>
@@ -59,13 +59,13 @@ ColorCard.propTypes = {
 };
 
 const CurveView = ({ cards, ...props }) => {
-  const { primary } = useContext(SortContext);
+  const { primary, showOther } = useContext(SortContext);
 
   // We call the groups color and type even though they might be other sorts.
   return (
     <Row {...props}>
       <Col>
-        {sortDeep(cards, primary).map(([color, group]) => (
+        {sortDeep(cards, showOther, 'Alphabetical', primary).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
         ))}
       </Col>

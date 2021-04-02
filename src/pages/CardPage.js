@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
 import CardPricePropType from 'proptypes/CardPricePropType';
@@ -20,6 +20,7 @@ import {
   Table,
   Badge,
   Button,
+  Input,
 } from 'reactstrap';
 
 import ChartComponent from 'react-chartjs-2';
@@ -45,6 +46,7 @@ import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
+import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
@@ -75,7 +77,8 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
     labels: [unit],
     datasets: [
       {
-        lineTension: 0.2,
+        lineTension: 0,
+        pointRadius: 0,
         fill: false,
         borderColor: '#28A745',
         backgroundColor: '#28A745',
@@ -177,6 +180,33 @@ LegalityBadge.propTypes = {
   status: PropTypes.string.isRequired,
 };
 
+const CardIdBadge = ({ id }) => {
+  const [copied, setCopied] = useState(false);
+
+  const onCopyClick = async () => {
+    await navigator.clipboard.writeText(id);
+    setCopied(true);
+  };
+
+  return (
+    <InputGroup className="flex-nowrap mb-3" size="sm">
+      <InputGroupAddon addonType="prepend">
+        <InputGroupText>Card ID</InputGroupText>
+      </InputGroupAddon>
+      <Input className="bg-white" value={id} disabled />
+      <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
+        <Button className="btn-sm input-group-button" onClick={onCopyClick}>
+          {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
+        </Button>
+      </InputGroupAddon>
+    </InputGroup>
+  );
+};
+
+CardIdBadge.propTypes = {
+  id: PropTypes.string.isRequired,
+};
+
 const getPriceTypeUnit = {
   price: 'USD',
   price_foil: 'USD',
@@ -188,6 +218,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
+  const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
@@ -216,12 +247,24 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
         </CardHeader>
         <Row className="mt-2" noGutters>
           <Col className="pl-2 pb-2" xs="12" sm="3">
-            <ImageFallback
-              className="w-100"
-              src={card.image_normal}
-              fallbackSrc="/content/default_card.png"
-              alt={card.name}
-            />
+            <ImageFallback className="w-100" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
+            {card.image_flip && (
+              <Button
+                className="mt-1"
+                color="success"
+                outline
+                block
+                onClick={() => {
+                  if (imageUsed === card.image_normal) {
+                    setImageUsed(card.image_flip);
+                  } else {
+                    setImageUsed(card.image_normal);
+                  }
+                }}
+              >
+                <ArrowSwitchIcon size={16} /> Transform
+              </Button>
+            )}
             <CardBody className="breakdown p-1">
               <p>
                 Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
@@ -231,11 +274,12 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                 color="success"
                 block
                 outline
-                className="mb-2 mr-2"
+                className="mb-1 mr-2"
                 modalProps={{ card, cubes, hideAnalytics: true }}
               >
                 Add to Cube...
               </AddModal>
+              <CardIdBadge id={card._id} />
               {card.prices && Number.isFinite(cardPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
                   <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
@@ -695,6 +739,7 @@ CardPage.propTypes = {
     name: PropTypes.string.isRequired,
     elo: PropTypes.number.isRequired,
     image_normal: PropTypes.string.isRequired,
+    image_flip: PropTypes.string,
     scryfall_uri: PropTypes.string.isRequired,
     tcgplayer_id: PropTypes.number.isRequired,
     _id: PropTypes.string.isRequired,

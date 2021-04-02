@@ -6,25 +6,25 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
+const similarity = require('compute-cosine-similarity');
+const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
-const similarity = require('compute-cosine-similarity');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
-const d = new Date();
-const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+let cardUses = {};
 
-const cardUses = {};
+let ratingsDict = {};
 
-const ratingsDict = {};
+let currentDate = '';
 
 let distinctOracles = [];
 
-const cardSizeUses = {
+let cardSizeUses = {
   size180: {},
   size360: {},
   size450: {},
@@ -39,7 +39,7 @@ const cardSizeUses = {
 };
 
 // global cube stats
-const cubeCounts = {
+let cubeCounts = {
   total: 0,
   size180: 0,
   size360: 0,
@@ -54,12 +54,12 @@ const cubeCounts = {
   vintage: 0,
 };
 
-const correlationIndex = {};
-const correlations = [];
-const synergies = [];
+let correlationIndex = {};
+let correlations = [];
+let synergies = [];
 
 // use correlationIndex for index
-const cubesWithCard = [];
+let cubesWithCard = [];
 
 function createCorrelations() {
   const allOracleIds = carddb.allOracleIds();
@@ -71,11 +71,11 @@ function createCorrelations() {
     for (let j = 0; j < totalCards; j += 1) {
       correlations[i].push(0);
     }
-    if ((i + 1) % 100 === 0) {
-      console.log(`Finished: ${i + 1} of ${totalCards} correlations.`);
+    if ((i + 1) % 1000 === 0) {
+      winston.info(`Finished: ${i + 1} of ${totalCards} correlations.`);
     }
   }
-  console.log('Finish init of correlation matrix.');
+  winston.info('Finish init of correlation matrix.');
 }
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
@@ -83,7 +83,7 @@ const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleI
 function getSynergy(oracle1, oracle2) {
   const em1 = cardFromOracle(oracle1).embedding;
   const em2 = cardFromOracle(oracle2).embedding;
-  if (em1 && em2) {
+  if (em1 && em2 && em1.length === em2.length) {
     return similarity(em1, em2);
   }
   return 0;
@@ -98,7 +98,7 @@ function createSynergyMatrix() {
       synergies[i].push(getSynergy(allOracleIds[i], allOracleIds[j]));
     }
     if ((i + 1) % 100 === 0) {
-      console.log(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
+      winston.info(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
     }
   }
 }
@@ -131,7 +131,7 @@ async function processDeck(deck) {
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
             } catch (err) {
-              console.log(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
+              winston.info(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
             }
           }
         }
@@ -209,24 +209,24 @@ async function processCube(cube) {
   }
 
   const uniqueOracleIds = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
-  uniqueOracleIds.forEach((oracle_id) => {
-    if (correlationIndex[oracle_id]) {
-      cubesWithCard[correlationIndex[oracle_id]].push(cube._id);
+  uniqueOracleIds.forEach((oracleId) => {
+    if (correlationIndex[oracleId]) {
+      cubesWithCard[correlationIndex[oracleId]].push(cube._id);
     }
 
     // total
-    attemptIncrement(cardUses, oracle_id);
+    attemptIncrement(cardUses, oracleId);
 
     // card counts collated by cube sizes
-    attemptIncrement(cubeSizeDict, oracle_id);
+    attemptIncrement(cubeSizeDict, oracleId);
 
     // card counts collated by cube type
-    attemptIncrement(cubeLegalityDict, oracle_id);
+    attemptIncrement(cubeLegalityDict, oracleId);
     if (isPauper) {
-      attemptIncrement(cardSizeUses.pauper, oracle_id);
+      attemptIncrement(cardSizeUses.pauper, oracleId);
     }
     if (isPeasant) {
-      attemptIncrement(cardSizeUses.peasant, oracle_id);
+      attemptIncrement(cardSizeUses.peasant, oracleId);
     }
   });
 }
@@ -235,7 +235,7 @@ async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const { name, oracle_id } = card;
 
-  const rating = ratingsDict[name]; //await CardRating.findOne({ name });
+  const rating = ratingsDict[name]; // await CardRating.findOne({ name });
 
   const currentDatapoint = {};
   currentDatapoint.rating = rating ? rating.rating : null;
@@ -273,7 +273,7 @@ async function processCard(card) {
       count: correlations[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
       type: cardFromOracle(otherOracleId).type.toLowerCase(),
     }))
-    .filter((item) => item.oracle != oracle_id && !item.type.includes('basic land'));
+    .filter((item) => item.oracle !== oracle_id && !item.type.includes('basic land'));
 
   const synergyWith = distinctOracles
     .map((otherOracleId) => ({
@@ -281,7 +281,7 @@ async function processCard(card) {
       synergy: synergies[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
       type: cardFromOracle(otherOracleId).type.toLowerCase(),
     }))
-    .filter((item) => Number.isFinite(item.synergy) && item.oracle != oracle_id && !item.type.includes('basic'));
+    .filter((item) => Number.isFinite(item.synergy) && item.oracle !== oracle_id && !item.type.includes('basic'));
 
   // quickselect isn't sorting correctly for some reason
   cubedWith.sort((first, second) => {
@@ -341,73 +341,136 @@ async function processCard(card) {
 
     await cardHistory.save();
   } catch (error) {
-    console.error(error);
+    winston.error(error, { error });
   }
 }
 
-(async () => {
+const run = async () => {
+  const d = new Date();
+  currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+  cardUses = {};
+  ratingsDict = {};
+
+  cardSizeUses = {
+    size180: {},
+    size360: {},
+    size450: {},
+    size540: {},
+    size720: {},
+    pauper: {},
+    peasant: {},
+    legacy: {},
+    modern: {},
+    standard: {},
+    vintage: {},
+  };
+
+  cubeCounts = {
+    total: 0,
+    size180: 0,
+    size360: 0,
+    size450: 0,
+    size540: 0,
+    size720: 0,
+    pauper: 0,
+    peasant: 0,
+    legacy: 0,
+    modern: 0,
+    standard: 0,
+    vintage: 0,
+  };
+
+  correlationIndex = {};
+  correlations = [];
+  synergies = [];
+
+  // use correlationIndex for index
+  cubesWithCard = [];
+
+  winston.info('Starting card db');
+
   await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    console.log('creating distinct oracles');
 
-    distinctOracles = [...new Set(carddb.allOracleIds())];
-    const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
-    distinctOracles = [
-      ...new Set(
-        distinctNames.map((name) => carddb.cardFromId(carddb.nameToId[name][0]).oracle_id).filter((oracle) => oracle),
-      ),
-    ];
+  winston.info('finished loading cards');
 
-    console.log('creating correlation matrix...');
-    createCorrelations();
-    console.log('creating synergy matrix...');
-    createSynergyMatrix();
+  const ratings = await CardRating.find({}).lean();
 
-    console.log('building ratings dict...');
-    const ratings = await CardRating.find({}).lean();
-    for (const rating of ratings) {
-      ratingsDict[rating.name] = rating;
+  winston.info('Started: oracles');
+
+  distinctOracles = [...new Set(carddb.allOracleIds())];
+  const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
+  distinctOracles = [
+    ...new Set(
+      distinctNames.map((name) => carddb.cardFromId(carddb.nameToId[name][0]).oracle_id).filter((oracle) => oracle),
+    ),
+  ];
+
+  winston.info('creating correlation matrix...');
+  createCorrelations();
+  winston.info('creating synergy matrix...');
+  createSynergyMatrix();
+
+  for (const rating of ratings) {
+    ratingsDict[rating.name] = rating;
+  }
+
+  // process all cube objects
+  winston.info('Started: cubes');
+  let count = await Cube.countDocuments();
+  let cursor = Cube.find().lean().cursor();
+  for (let i = 0; i < count; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await processCube(await cursor.next());
+    if ((i + 1) % 10 === 0) {
+      winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
+  }
+  winston.info('Finished: all cubes');
 
-    // process all cube objects
-    console.log('Started: cubes');
-    let count = await Cube.countDocuments();
-    let cursor = Cube.find().lean().cursor();
-    for (let i = 0; i < count; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      await processCube(await cursor.next());
-      if ((i + 1) % 10 === 0) {
-        console.log(`Finished: ${i + 1} of ${count} cubes.`);
-      }
+  // process all deck objects
+  winston.info('Started: decks');
+  count = await Deck.countDocuments();
+  cursor = Deck.find().lean().cursor();
+  for (let i = 0; i < count; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await processDeck(await cursor.next());
+    if ((i + 1) % 1000 === 0) {
+      winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
-    console.log('Finished: all cubes');
+  }
+  winston.info('Finished: all decks');
 
-    // process all deck objects
-    console.log('Started: decks');
-    count = await Deck.countDocuments();
-    cursor = Deck.find().lean().cursor();
-    for (let i = 0; i < count; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      await processDeck(await cursor.next());
-      if ((i + 1) % 1000 === 0) {
-        console.log(`Finished: ${i + 1} of ${count} decks.`);
-      }
-    }
-    console.log('Finished: all decks');
+  // save card models
+  const allOracleIds = carddb.allOracleIds();
+  const totalCards = allOracleIds.length;
+  let processed = 0;
+  for (const oracleId of allOracleIds) {
+    const card = cardFromOracle(oracleId);
+    await processCard(card); // eslint-disable-line no-await-in-loop
+    processed += 1;
+    winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
+  }
 
-    // save card models
-    const allOracleIds = carddb.allOracleIds();
-    const totalCards = allOracleIds.length;
-    let processed = 0;
-    for (const oracleId of allOracleIds) {
-      const card = cardFromOracle(oracleId);
-      await processCard(card); // eslint-disable-line no-await-in-loop
-      processed += 1;
-      console.log(`Finished: ${processed} of ${totalCards} cards.`);
-    }
-
-    mongoose.disconnect();
-    console.log('done');
-    process.exit();
+  // this is needed for log group to stream
+  await new Promise((resolve) => {
+    setTimeout(resolve, 10000);
   });
-})();
+  winston.info('Done');
+  process.exit();
+};
+
+// Connect db
+mongoose
+  .connect(process.env.MONGODB_URL, {
+    useCreateIndex: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    try {
+      run();
+    } catch (error) {
+      winston.error(error, { error });
+    }
+  });

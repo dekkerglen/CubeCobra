@@ -683,7 +683,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const fields =
-      'cards maybe name owner card_count type tag_colors default_sorts overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
+      'cards maybe name owner card_count type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -715,6 +715,9 @@ router.get('/list/:id', async (req, res) => {
         defaultView: req.query.view || 'table',
         defaultPrimarySort: req.query.s1 || '',
         defaultSecondarySort: req.query.s2 || '',
+        defaultTertiarySort: req.query.s3 || '',
+        defaultQuaternarySort: req.query.s4 || '',
+        defaultShowUnsorted: req.query.so || '',
         defaultFilterText: req.query.f || '',
         defaultTagColors: cube.tag_colors || [],
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -1427,7 +1430,29 @@ router.get('/download/csv/:id', async (req, res) => {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
-    cube.cards = sortutil.sortForCSVDownload(cube.cards, req.query.primary, req.query.secondary, req.query.tertiary);
+
+    if (req.query.filter) {
+      const { filter, err } = filterutil.makeFilter(req.query.filter);
+      if (err) {
+        return util.handleRouteError(
+          req,
+          res,
+          'Error parsing filter.',
+          `/cube/list/${encodeURIComponent(req.params.id)}`,
+        );
+      }
+      if (filter) {
+        cube.cards = cube.cards.filter(filter);
+      }
+    }
+
+    cube.cards = sortutil.sortForCSVDownload(
+      cube.cards,
+      req.query.primary,
+      req.query.secondary,
+      req.query.tertiary,
+      req.query.quaternary,
+    );
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
@@ -2372,7 +2397,9 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters or underscores.').matches(/^[A-Za-z0-9]*$/),
+  body('urlAlias', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+    /^[A-Za-z0-9_-]*$/,
+  ),
   body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
     max: 100,
   }),
@@ -3349,7 +3376,9 @@ router.get(
 router.post(
   '/api/getversions',
   body([], 'Body must be an array.').isArray(),
-  body('*', 'Each ID must be a valid UUID.').matches(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/),
+  body('*', 'Each ID must be a valid UUID.').matches(
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}2?$/,
+  ),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
@@ -3942,6 +3971,7 @@ router.post(
     }
 
     cube.default_sorts = req.body.sorts;
+    cube.default_show_unsorted = !!req.body.showOther;
     await cube.save();
     return res.status(200).send({
       success: 'true',

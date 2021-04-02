@@ -3,8 +3,8 @@ const path = require('path'); // eslint-disable-line import/no-extraneous-depend
 const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
-const winston = require('winston');
 const fetch = require('node-fetch');
+const { winston } = require('./cloudwatch');
 const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');
@@ -12,11 +12,24 @@ const carddb = require('./cards.js');
 
 const catalog = {};
 
-/* cardDetailsSchema = {
+/* // '?' denotes a value may be null or missing
+ * cardDetailsSchema = {
  *   color_identity: [Char],
  *   set: String,
+ *   set_name: String,
+ *   foil: Boolean,
+ *   nonfoil: Boolean,
  *   collector_number: String,
+ *   released_at: Date,
  *   promo: Boolean,
+ *   prices: {
+ *     usd: Float?,
+ *     usd_foil: Float?,
+ *     eur: Float?,
+ *     tix: Float?,
+ *   },
+ *   elo: Integer,
+ *   embedding: [Float],
  *   digital: Boolean,
  *   isToken: Boolean,
  *   border_color: String,
@@ -25,45 +38,47 @@ const catalog = {};
  *   name_lower: String,
  *   // name [set-collector_number]
  *   full_name: String,
- *   artist: String,
- *   // Url
- *   scryfall_uri: String,
+ *   artist: String?,
+ *   scryfall_uri: URI,
  *   rarity: String,
- *   oracle_text: String,
+ *   oracle_text: String?,
  *   // Scryfall ID
  *   _id: UUID,
- *   oracle_id: String,
- *   cmc: Number
+ *   oracle_id: UUID,
+ *   cmc: Float
+ *   // one of "legal", "not_legal", "restricted", "banned"
  *   legalities: {
- *     Legacy: Boolean,
- *     Modern: Boolean,
- *     Standard: Boolean,
- *     Pauper: Boolean,
- *     Pioneer: Boolean,
+ *     Legacy: String,
+ *     Modern: String,
+ *     Standard: String,
+ *     Pauper: String,
+ *     Pioneer: String,
+ *     Brawl: String,
+ *     Historic: String,
+ *     Commander: String,
+ *     Penny: String,
+ *     Vintage: String,
  *   },
  *   // Hybrid looks like w-u
  *   parsed_cost: [String],
- *   colors: [Char],
+ *   colors: [Char]?,
  *   type: String,
  *   full_art: Boolean,
  *   language: String,
- *   mtgo_id: String,
- *   tcgplayer_id: String,
- *   loyalty: UnsignedInteger
- *   power: Number
- *   toughness: Number
- *   // URL
- *   image_small: String
- *   // URL
- *   image_normal: String
- *   // URL
- *   art_crop: String
- *   // URL
- *   image_flip: String
+ *   mtgo_id: Integer?,
+ *   layout: String,
+ *   tcgplayer_id: String?,
+ *   loyalty: String?
+ *   power: String?
+ *   toughness: String?
+ *   image_small: URI?
+ *   image_normal: URI?
+ *   art_crop: URI?
+ *   image_flip: URI?
  *   // Lowercase
  *   color_category: Char
  *   // Card ID's
- *   tokens: [UUID]
+ *   tokens: [UUID]?
  */
 function initializeCatalog() {
   catalog.dict = {};
@@ -82,28 +97,46 @@ initializeCatalog();
 
 function downloadFile(url, filePath) {
   const file = fs.createWriteStream(filePath);
-  return new Promise((resolve) => {
-    https.get(url, (response) => {
-      const stream = response.pipe(file);
-      stream.on('finish', resolve);
-    });
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (response) => {
+        if (response.statusCode !== 200) {
+          response.resume();
+          reject(new Error(`Request to '${url}' failed with status code ${response.statusCode}`));
+          return;
+        }
+
+        const stream = response.pipe(file);
+        response.on('error', (err) => {
+          reject(new Error(`Response error downloading file from '${url}':\n${err.message}`));
+          response.unpipe(stream);
+          stream.destroy();
+        });
+        stream.on('error', (err) => reject(new Error(`Pipe error downloading file from '${url}':\n${err.message}`)));
+        stream.on('finish', resolve);
+      })
+      .on('error', (err) => reject(new Error(`Download error for '${url}':\n${err.message}`)));
   });
 }
 
 async function downloadDefaultCards(basePath = 'private', defaultSourcePath = null, allSourcePath = null) {
-  let defaultUrl = 'https://archive.scryfall.com/json/scryfall-default-cards.json';
-  let allUrl = 'https://archive.scryfall.com/json/scryfall-all-cards.json';
+  let defaultUrl;
+  let allUrl;
 
-  const res = await fetch(`https://api.scryfall.com/bulk-data`);
+  const res = await fetch('https://api.scryfall.com/bulk-data');
+  if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
   const json = await res.json();
 
   for (const data of json.data) {
-    if (data.name === 'Default Cards') {
+    if (data.type === 'default_cards') {
       defaultUrl = data.download_uri;
-    } else if (data.name === 'All Cards') {
+    } else if (data.type === 'all_cards') {
       allUrl = data.download_uri;
     }
   }
+
+  if (!defaultUrl) throw new Error('URL for Default Cards not found in /bulk-data response');
+  if (!allUrl) throw new Error('URL for All Cards not found in /bulk-data response');
 
   return Promise.all([
     downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
@@ -134,7 +167,9 @@ function addCardToCatalog(card, isExtra) {
   if (!catalog.nameToId[normalizedName]) {
     catalog.nameToId[normalizedName] = [];
   }
-  catalog.nameToId[normalizedName].push(card._id);
+  if (!catalog.nameToId[normalizedName].includes(card._id)) {
+    catalog.nameToId[normalizedName].push(card._id);
+  }
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
@@ -583,6 +618,8 @@ function convertCard(card, isExtra) {
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
+  newcard.foil = card.foil;
+  newcard.nonfoil = card.nonfoil;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
 
@@ -597,10 +634,10 @@ function convertCard(card, isExtra) {
     card.set.toLowerCase() === 'exp' || // expeditions
     card.set.toLowerCase() === 'amh1'; // mh1 art cards
   newcard.prices = {
-    usd: card.prices.usd ? parseFloat(card.prices.usd, 10) : null,
-    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil, 10) : null,
-    eur: card.prices.eur ? parseFloat(card.prices.eur, 10) : null,
-    tix: card.prices.tix ? parseFloat(card.prices.tix, 10) : null,
+    usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
+    usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+    eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
+    tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
   newcard.embedding = catalog.embeddingdict[name] || [];
@@ -669,7 +706,6 @@ function convertCard(card, isExtra) {
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }
-
   return newcard;
 }
 
@@ -753,6 +789,7 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
       .on('close', resolve),
   );
 
+  winston.info('Saving cardbase files...');
   await writeCatalog(basePath);
 }
 
@@ -763,11 +800,24 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   winston.info('Updating cardbase, this might take a little while...');
 
   winston.info('Downloading files...');
-  // the module.exports line is necessary to correctly mock this function in unit tests
-  await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+  try {
+    // the module.exports line is necessary to correctly mock this function in unit tests
+    await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+  } catch (error) {
+    winston.error('Downloading card data failed:');
+    winston.error(error.message, error);
+    winston.error('Cardbase was not updated');
+    return;
+  }
 
   winston.info('Creating objects...');
-  await saveAllCards(ratings, basePath, defaultPath, allPath);
+  try {
+    await saveAllCards(ratings, basePath, defaultPath, allPath);
+  } catch (error) {
+    winston.error('Updating cardbase objects failed:');
+    winston.error(error.message, error);
+    winston.error('Cardbase update may not have fully completed');
+  }
 
   winston.info('Finished cardbase update...');
 }

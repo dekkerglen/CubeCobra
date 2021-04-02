@@ -270,9 +270,13 @@ const CubeListNavbar = ({
   setOpenCollapse,
   defaultPrimarySort,
   defaultSecondarySort,
+  defaultTertiarySort,
+  defaultQuaternarySort,
+  defaultShowUnsorted,
   sorts,
   setSorts,
   defaultSorts,
+  cubeDefaultShowUnsorted,
   defaultFilterText,
   filter,
   setFilter,
@@ -284,7 +288,7 @@ const CubeListNavbar = ({
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
-  const { primary, secondary, tertiary } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
@@ -338,6 +342,13 @@ const CubeListNavbar = ({
   const handleOpenTagColorsModal = useCallback(() => setTagColorsModalOpen(true), []);
   const handleToggleTagColorsModal = useCallback(() => setTagColorsModalOpen(false), []);
   const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
+
+  const enc = encodeURIComponent;
+  const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(
+    tertiary,
+  )}&quaternary=${enc(quaternary)}`;
+  const filterString = filter?.stringify ?? '';
+  const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
 
   return (
     <div className={`usercontrols${className ? ` ${className}` : ''}`}>
@@ -430,9 +441,7 @@ const CubeListNavbar = ({
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
                 <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem
-                  href={`/cube/download/csv/${cubeID}?primary=${primary}&secondary=${secondary}&tertiary=${tertiary}`}
-                >
+                <DropdownItem href={`/cube/download/csv/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
                   Comma-Separated (.csv)
                 </DropdownItem>
                 <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
@@ -447,9 +456,13 @@ const CubeListNavbar = ({
       <SortCollapse
         defaultPrimarySort={defaultPrimarySort}
         defaultSecondarySort={defaultSecondarySort}
+        defaultTertiarySort={defaultTertiarySort}
+        defaultQuaternarySort={defaultQuaternarySort}
+        defaultShowUnsorted={defaultShowUnsorted}
         sorts={sorts}
         setSorts={setSorts}
         defaultSorts={defaultSorts}
+        cubeDefaultShowUnsorted={cubeDefaultShowUnsorted}
         isOpen={openCollapse === 'sort'}
       />
       <FilterCollapse
@@ -474,9 +487,13 @@ CubeListNavbar.propTypes = {
   setOpenCollapse: PropTypes.func.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
+  defaultTertiarySort: PropTypes.string.isRequired,
+  defaultQuaternarySort: PropTypes.string.isRequired,
+  defaultShowUnsorted: PropTypes.string.isRequired,
   sorts: PropTypes.arrayOf(PropTypes.string),
   setSorts: PropTypes.func.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  cubeDefaultShowUnsorted: PropTypes.bool.isRequired,
   defaultFilterText: PropTypes.string.isRequired,
   filter: PropTypes.func,
   setFilter: PropTypes.func.isRequired,

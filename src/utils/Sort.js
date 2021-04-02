@@ -3,10 +3,12 @@ import {
   cardColorIdentity,
   cardDevotion,
   cardPriceEur,
+  cardPrice,
   cardTix,
   cardType,
   cardCmc,
   COLOR_COMBINATIONS,
+  cardRarity,
 } from 'utils/Card';
 
 const COLOR_MAP = {
@@ -44,21 +46,37 @@ const SHARD_AND_WEDGE_MAP = {
 };
 
 const FOUR_COLOR_MAP = {
-  UBRG: 'Not-White',
-  WBRG: 'Not-Blue',
-  WURG: 'Not-Black',
-  WUBG: 'Not-Red',
-  WUBR: 'Not-Green',
+  UBRG: 'Non-White',
+  WBRG: 'Non-Blue',
+  WURG: 'Non-Black',
+  WUBG: 'Non-Red',
+  WUBR: 'Non-Green',
 };
 
 const ALL_CMCS = Array.from(Array(33).keys())
   .map((x) => (x / 2).toString())
   .concat(['1000000']);
 
+const CARD_TYPES = [
+  'Creature',
+  'Planeswalker',
+  'Instant',
+  'Sorcery',
+  'Artifact',
+  'Enchantment',
+  'Conspiracy',
+  'Contraption',
+  'Phenomenon',
+  'Plane',
+  'Scheme',
+  'Vanguard',
+  'Land',
+];
+
 const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
 const GUILDS = ['Azorius', 'Dimir', 'Rakdos', 'Gruul', 'Selesnya', 'Orzhov', 'Izzet', 'Golgari', 'Boros', 'Simic'];
 const SHARDS_AND_WEDGES = ['Bant', 'Esper', 'Grixis', 'Jund', 'Naya', 'Mardu', 'Temur', 'Abzan', 'Jeskai', 'Sultai'];
-const FOUR_AND_FIVE_COLOR = ['Not-White', 'Not-Blue', 'Not-Black', 'Not-Red', 'Not-Green', 'Five Color'];
+const FOUR_AND_FIVE_COLOR = ['Non-White', 'Non-Blue', 'Non-Black', 'Non-Red', 'Non-Green', 'Five Color'];
 
 const ELO_DEFAULT = 1200;
 
@@ -128,6 +146,7 @@ export function GetColorCategory(type, colors) {
 export const SORTS = [
   'Artist',
   'CMC',
+  'CMC2',
   'Color Category',
   'Color Category Full',
   'Color Count',
@@ -166,6 +185,8 @@ export const SORTS = [
   'Devotion to Green',
   'Unsorted',
 ];
+
+export const ORDERED_SORTS = ['Alphabetical', 'CMC', 'Price'];
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
@@ -212,61 +233,38 @@ function getEloBucket(elo) {
   return `${bucketFloor}-${bucketFloor + 49}`;
 }
 
-function getLabelsRaw(cube, sort) {
+function getLabelsRaw(cube, sort, showOther) {
+  let ret = [];
+
+  /* Start of sort Options */
   if (sort === 'Color Category') {
-    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
-  }
-  if (sort === 'Color Category Full') {
-    return SINGLE_COLOR.concat(['Colorless'])
+    ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Hybrid', 'Multicolored', 'Colorless', 'Lands'];
+  } else if (sort === 'Color Category Full') {
+    ret = SINGLE_COLOR.concat(['Colorless'])
       .concat(GUILDS)
       .concat(SHARDS_AND_WEDGES)
       .concat(FOUR_AND_FIVE_COLOR)
       .concat(['Lands']);
-  }
-  if (sort === 'Color Identity') {
-    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
-  }
-  if (sort === 'Color Identity Full') {
-    return SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
-  }
-  if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
-    return ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
-  }
-  if (sort === 'CMC') {
-    return ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
-  }
-  if (sort === 'CMC2') {
-    return ['0-1', '2', '3', '4', '5', '6', '7+'];
-  }
-  if (sort === 'CMC-Full') {
+  } else if (sort === 'Color Identity') {
+    ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless'];
+  } else if (sort === 'Color Identity Full') {
+    ret = SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
+  } else if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
+    ret = ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
+  } else if (sort === 'CMC') {
+    ret = ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
+  } else if (sort === 'CMC2') {
+    ret = ['0-1', '2', '3', '4', '5', '6', '7+'];
+  } else if (sort === 'CMC-Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
-    return ALL_CMCS;
-  }
-  if (sort === 'Color') {
-    return ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-  }
-  if (sort === 'Type') {
-    return [
-      'Creature',
-      'Planeswalker',
-      'Instant',
-      'Sorcery',
-      'Artifact',
-      'Enchantment',
-      'Conspiracy',
-      'Contraption',
-      'Phenomenon',
-      'Plane',
-      'Scheme',
-      'Vanguard',
-      'Land',
-      'Other',
-    ];
-  }
-  if (sort === 'Supertype') {
-    return ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
-  }
-  if (sort === 'Tags') {
+    ret = ALL_CMCS;
+  } else if (sort === 'Color') {
+    ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
+  } else if (sort === 'Type') {
+    ret = CARD_TYPES.concat(['Other']);
+  } else if (sort === 'Supertype') {
+    ret = ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
+  } else if (sort === 'Tags') {
     const tags = [];
     for (const card of cube) {
       for (const tag of card.tags) {
@@ -275,53 +273,42 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return tags.sort();
-  }
-  if (sort === 'Date Added') {
+    ret = tags.sort();
+  } else if (sort === 'Date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
-    return removeAdjacentDuplicates(days);
-  }
-  if (sort === 'Status') {
-    return ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
-  }
-  if (sort === 'Finish') {
-    return ['Non-foil', 'Foil'];
-  }
-  if (sort === 'Guilds') {
-    return GUILDS;
-  }
-  if (sort === 'Shards / Wedges') {
-    return SHARDS_AND_WEDGES;
-  }
-  if (sort === 'Color Count') {
-    return ['0', '1', '2', '3', '4', '5'];
-  }
-  if (sort === 'Set') {
+    ret = removeAdjacentDuplicates(days);
+  } else if (sort === 'Status') {
+    ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
+  } else if (sort === 'Finish') {
+    ret = ['Non-foil', 'Foil'];
+  } else if (sort === 'Guilds') {
+    ret = GUILDS;
+  } else if (sort === 'Shards / Wedges') {
+    ret = SHARDS_AND_WEDGES;
+  } else if (sort === 'Color Count') {
+    ret = ['0', '1', '2', '3', '4', '5'];
+  } else if (sort === 'Set') {
     const sets = [];
     for (const card of cube) {
       if (!sets.includes(card.details.set.toUpperCase())) {
         sets.push(card.details.set.toUpperCase());
       }
     }
-    return sets.sort();
-  }
-  if (sort === 'Artist') {
+    ret = sets.sort();
+  } else if (sort === 'Artist') {
     const artists = [];
     for (const card of cube) {
       if (!artists.includes(card.details.artist)) {
         artists.push(card.details.artist);
       }
     }
-    return artists.sort();
-  }
-  if (sort === 'Rarity') {
-    return ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
-  }
-  if (sort === 'Unsorted') {
-    return ['All'];
-  }
-  if (sort === 'Subtype') {
+    ret = artists.sort();
+  } else if (sort === 'Rarity') {
+    ret = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
+  } else if (sort === 'Unsorted') {
+    ret = ['All'];
+  } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
       const split = card.type_line.split(/[-–—]/);
@@ -333,56 +320,16 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return [...types];
-  }
-  if (sort === 'Types-Multicolor') {
-    return [
-      'Creature',
-      'Planeswalker',
-      'Instant',
-      'Sorcery',
-      'Artifact',
-      'Enchantment',
-      'Conspiracy',
-      'Contraption',
-      'Phenomenon',
-      'Plane',
-      'Scheme',
-      'Vanguard',
-      'Azorius',
-      'Dimir',
-      'Rakdos',
-      'Gruul',
-      'Selesnya',
-      'Orzhov',
-      'Golgari',
-      'Simic',
-      'Izzet',
-      'Boros',
-      'Bant',
-      'Esper',
-      'Grixis',
-      'Jund',
-      'Naya',
-      'Abzan',
-      'Jeskai',
-      'Sultai',
-      'Mardu',
-      'Temur',
-      'Non-White',
-      'Non-Blue',
-      'Non-Black',
-      'Non-Red',
-      'Non-Green',
-      'Five Color',
-      'Land',
-      'Other',
-    ];
-  }
-  if (sort === 'Legality') {
-    return ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
-  }
-  if (sort === 'Power') {
+    ret = [...types];
+  } else if (sort === 'Types-Multicolor') {
+    ret = CARD_TYPES.slice(0, -1)
+      .concat(GUILDS)
+      .concat(SHARDS_AND_WEDGES)
+      .concat(FOUR_AND_FIVE_COLOR)
+      .concat(['Land', 'Other']);
+  } else if (sort === 'Legality') {
+    ret = ['Standard', 'Modern', 'Legacy', 'Vintage', 'Pioneer', 'Brawl', 'Historic', 'Pauper', 'Penny', 'Commander'];
+  } else if (sort === 'Power') {
     const items = [];
     for (const card of cube) {
       if (card.details.power) {
@@ -391,9 +338,8 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort(defaultSort);
-  }
-  if (sort === 'Toughness') {
+    ret = items.sort(defaultSort);
+  } else if (sort === 'Toughness') {
     const items = [];
     for (const card of cube) {
       if (card.details.toughness) {
@@ -402,9 +348,8 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort(defaultSort);
-  }
-  if (sort === 'Loyalty') {
+    ret = items.sort(defaultSort);
+  } else if (sort === 'Loyalty') {
     const items = [];
     for (const card of cube) {
       if (card.details.loyalty) {
@@ -413,57 +358,45 @@ function getLabelsRaw(cube, sort) {
         }
       }
     }
-    return items.sort(defaultSort);
-  }
-  if (sort === 'Manacost Type') {
-    return ['Gold', 'Hybrid', 'Phyrexian'];
-  }
-  if (sort === 'Creature/Non-Creature') {
-    return ['Creature', 'Non-Creature'];
-  }
-  if (['Price', 'Price USD', 'Price Foil', 'Price USD Foil'].includes(sort)) {
+    ret = items.sort(defaultSort);
+  } else if (sort === 'Manacost Type') {
+    ret = ['Gold', 'Hybrid', 'Phyrexian'];
+  } else if (sort === 'Creature/Non-Creature') {
+    ret = ['Creature', 'Non-Creature'];
+  } else if (['Price', 'Price USD', 'Price Foil', 'Price USD Foil'].includes(sort)) {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, '$'));
     }
     labels.push('No Price Available');
-    return labels;
-  }
-  if (sort === 'Price EUR') {
+    ret = labels;
+  } else if (sort === 'Price EUR') {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, '€'));
     }
     labels.push('No Price Available');
-    return labels;
-  }
-  if (sort === 'MTGO TIX') {
+    ret = labels;
+  } else if (sort === 'MTGO TIX') {
     const labels = [];
     for (let i = 0; i <= priceBuckets.length; i++) {
       labels.push(priceBucketLabel(i, ''));
     }
     labels.push('No Price Available');
-    return labels;
-  }
-  if (sort === 'Devotion to White') {
-    return allDevotions(cube, 'W');
-  }
-  if (sort === 'Devotion to Blue') {
-    return allDevotions(cube, 'U');
-  }
-  if (sort === 'Devotion to Black') {
-    return allDevotions(cube, 'B');
-  }
-  if (sort === 'Devotion to Red') {
-    return allDevotions(cube, 'R');
-  }
-  if (sort === 'Devotion to Green') {
-    return allDevotions(cube, 'G');
-  }
-  if (sort === 'Unsorted') {
-    return ['All'];
-  }
-  if (sort === 'Elo') {
+    ret = labels;
+  } else if (sort === 'Devotion to White') {
+    ret = allDevotions(cube, 'W');
+  } else if (sort === 'Devotion to Blue') {
+    ret = allDevotions(cube, 'U');
+  } else if (sort === 'Devotion to Black') {
+    ret = allDevotions(cube, 'B');
+  } else if (sort === 'Devotion to Red') {
+    ret = allDevotions(cube, 'R');
+  } else if (sort === 'Devotion to Green') {
+    ret = allDevotions(cube, 'G');
+  } else if (sort === 'Unsorted') {
+    ret = ['All'];
+  } else if (sort === 'Elo') {
     let elos = [];
     for (const card of cube) {
       const elo = card.details.elo ?? ELO_DEFAULT;
@@ -479,10 +412,12 @@ function getLabelsRaw(cube, sort) {
         res.push(bucket);
       }
     }
-    return res;
+    ret = res;
   }
-  // Unrecognized sort
-  return [];
+  /* End of sort options */
+
+  // whitespace around 'Other' to prevent collisions
+  return showOther ? [...ret, ' Other '] : ret;
 }
 
 function cmcToNumber(card) {
@@ -493,67 +428,59 @@ function cmcToNumber(card) {
   return cmc;
 }
 
-export function cardGetLabels(card, sort) {
+export function cardGetLabels(card, sort, showOther) {
+  let ret = [];
+  /* Start of sort options */
   if (sort === 'Color Category') {
-    return [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
-  }
-  if (sort === 'Color Category Full') {
+    ret = [card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card))];
+  } else if (sort === 'Color Category Full') {
     const colorCategory = card.colorCategory ?? GetColorCategory(cardType(card), cardColorIdentity(card));
     if (colorCategory === 'Multicolored') {
-      return [getColorCombination(cardColorIdentity(card))];
+      ret = [getColorCombination(cardColorIdentity(card))];
+    } else {
+      ret = [colorCategory];
     }
-    return [colorCategory];
-  }
-  if (sort === 'Color Identity') {
-    return [GetColorIdentity(cardColorIdentity(card))];
-  }
-  if (sort === 'Color Identity Full') {
-    return [getColorCombination(cardColorIdentity(card))];
-  }
-  if (sort === 'Color Combination Includes') {
-    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
-  }
-  if (sort === 'Includes Color Combination') {
-    return COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
-  }
-  if (sort === 'Color') {
+  } else if (sort === 'Color Identity') {
+    ret = [GetColorIdentity(cardColorIdentity(card))];
+  } else if (sort === 'Color Identity Full') {
+    ret = [getColorCombination(cardColorIdentity(card))];
+  } else if (sort === 'Color Combination Includes') {
+    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(cardColorIdentity(card), comb)).map(getColorCombination);
+  } else if (sort === 'Includes Color Combination') {
+    ret = COLOR_COMBINATIONS.filter((comb) => arrayIsSubset(comb, cardColorIdentity(card))).map(getColorCombination);
+  } else if (sort === 'Color') {
     if (card.details.colors.length === 0) {
-      return ['Colorless'];
+      ret = ['Colorless'];
+    } else {
+      ret = card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
     }
-    return card.details.colors.map((c) => COLOR_MAP[c]).filter((c) => c);
-  }
-  if (sort === '4+ Color') {
-    if (cardColorIdentity(card).length < 4) {
-      return [];
-    }
+  } else if (sort === '4+ Color') {
     if (cardColorIdentity(card).length === 5) {
-      return ['Five Color'];
+      ret = ['Five Color'];
+    } else if (cardColorIdentity(card).length === 4) {
+      ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
-    return [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
-  }
-  if (sort === 'CMC') {
+  } else if (sort === 'CMC') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
-      return ['8+'];
+      ret = ['8+'];
+    } else {
+      ret = [cmc.toString()];
     }
-    return [cmc.toString()];
-  }
-  if (sort === 'CMC2') {
+  } else if (sort === 'CMC2') {
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
-      return ['7+'];
+      ret = ['7+'];
+    } else if (cmc <= 1) {
+      ret = ['0-1'];
+    } else {
+      ret = [cmc.toString()];
     }
-    if (cmc <= 1) {
-      return ['0-1'];
-    }
-    return [cmc.toString()];
-  }
-  if (sort === 'CMC-Full') {
+  } else if (sort === 'CMC-Full') {
     // Round to half-integer.
-    return [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
-  }
-  if (sort === 'Supertype' || sort === 'Type') {
+    ret = [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
+  } else if (sort === 'Supertype' || sort === 'Type') {
     const split = cardType(card).split(/[-–—]/);
     let types;
     if (split.length > 1) {
@@ -570,60 +497,45 @@ export function cardGetLabels(card, sort) {
         .filter((x) => x);
     }
     if (types.includes('Contraption')) {
-      return ['Contraption'];
+      ret = ['Contraption'];
+    } else if (types.includes('Plane')) {
+      ret = ['Plane'];
+    } else {
+      const labels = getLabelsRaw(null, sort, showOther);
+      ret = types.filter((t) => labels.includes(t));
     }
-    if (types.includes('Plane')) {
-      return ['Plane'];
+  } else if (sort === 'Tags') {
+    ret = card.tags;
+  } else if (sort === 'Status') {
+    ret = [card.status];
+  } else if (sort === 'Finish') {
+    ret = [card.finish];
+  } else if (sort === 'Date Added') {
+    ret = [ISODateToYYYYMMDD(card.addedTmsp)];
+  } else if (sort === 'Guilds') {
+    if (cardColorIdentity(card).length === 2) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [GUILD_MAP[ordered]];
     }
-    const labels = getLabelsRaw(null, sort);
-    return types.filter((t) => labels.includes(t));
-  }
-  if (sort === 'Tags') {
-    return card.tags;
-  }
-  if (sort === 'Status') {
-    return [card.status];
-  }
-  if (sort === 'Finish') {
-    return [card.finish];
-  }
-  if (sort === 'Date Added') {
-    return [ISODateToYYYYMMDD(card.addedTmsp)];
-  }
-  if (sort === 'Guilds') {
-    if (cardColorIdentity(card).length !== 2) {
-      return [];
+  } else if (sort === 'Shards / Wedges') {
+    if (cardColorIdentity(card).length === 3) {
+      const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
+      ret = [SHARD_AND_WEDGE_MAP[ordered]];
     }
-    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
-    return [GUILD_MAP[ordered]];
-  }
-  if (sort === 'Shards / Wedges') {
-    if (cardColorIdentity(card).length !== 3) {
-      return [];
-    }
-    const ordered = [...'WUBRG'].filter((c) => cardColorIdentity(card).includes(c)).join('');
-    return [SHARD_AND_WEDGE_MAP[ordered]];
-  }
-  if (sort === 'Color Count') {
-    return [cardColorIdentity(card).length];
-  }
-  if (sort === 'Set') {
-    return [card.details.set.toUpperCase()];
-  }
-  if (sort === 'Rarity') {
-    let { rarity } = card.details;
-    if (card.rarity) rarity = card.rarity;
-    return [rarity[0].toUpperCase() + rarity.slice(1)];
-  }
-  if (sort === 'Subtype') {
+  } else if (sort === 'Color Count') {
+    ret = [cardColorIdentity(card).length];
+  } else if (sort === 'Set') {
+    ret = [card.details.set.toUpperCase()];
+  } else if (sort === 'Rarity') {
+    const rarity = cardRarity(card);
+    ret = [rarity[0].toUpperCase() + rarity.slice(1)];
+  } else if (sort === 'Subtype') {
     const split = cardType(card).split(/[-–—]/);
     if (split.length > 1) {
       const subtypes = split[1].trim().split(' ');
-      return subtypes.map((subtype) => subtype.trim()).filter((x) => x);
+      ret = subtypes.map((subtype) => subtype.trim()).filter((x) => x);
     }
-    return [];
-  }
-  if (sort === 'Types-Multicolor') {
+  } else if (sort === 'Types-Multicolor') {
     if (cardColorIdentity(card).length <= 1) {
       const split = cardType(card).split('—');
       const types = split[0].trim().split(' ');
@@ -646,114 +558,100 @@ export function cardGetLabels(card, sort) {
           'Land',
         ].includes(type)
       ) {
-        return ['Other'];
+        ret = ['Other'];
+      } else {
+        ret = [type];
       }
-      return [type];
+    } else if (cardColorIdentity(card).length === 5) {
+      ret = ['Five Color'];
+    } else {
+      ret = [
+        ...cardGetLabels(card, 'Guilds'),
+        ...cardGetLabels(card, 'Shards / Wedges'),
+        ...cardGetLabels(card, '4+ Color'),
+      ];
     }
-    if (cardColorIdentity(card).length === 5) {
-      return ['Five Color'];
-    }
-    return [
-      ...cardGetLabels(card, 'Guilds'),
-      ...cardGetLabels(card, 'Shards / Wedges'),
-      ...cardGetLabels(card, '4+ Color'),
-    ];
-  }
-  if (sort === 'Artist') {
-    return [card.details.artist];
-  }
-  if (sort === 'Legality') {
-    return Object.entries(card.details.legalities)
+  } else if (sort === 'Artist') {
+    ret = [card.details.artist];
+  } else if (sort === 'Legality') {
+    ret = Object.entries(card.details.legalities)
       .filter(([, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
       .map(([k]) => k); // eslint-disable-line no-unused-vars
-  }
-  if (sort === 'Power') {
+  } else if (sort === 'Power') {
     if (card.details.power) {
-      return [card.details.power];
+      ret = [card.details.power];
     }
-    return [];
-  }
-  if (sort === 'Toughness') {
+  } else if (sort === 'Toughness') {
     if (card.details.toughness) {
-      return [card.details.toughness];
+      ret = [card.details.toughness];
     }
-    return [];
-  }
-  if (sort === 'Loyalty') {
+  } else if (sort === 'Loyalty') {
     if (card.details.loyalty) {
-      return [parseInt(card.details.loyalty, 10)];
+      ret = [parseInt(card.details.loyalty, 10)];
     }
-    return [];
-  }
-  if (sort === 'Manacost Type') {
+  } else if (sort === 'Manacost Type') {
     if (card.details.colors.length > 1 && card.details.parsed_cost.every((symbol) => !symbol.includes('-'))) {
-      return ['Gold'];
-    }
-    if (
+      ret = ['Gold'];
+    } else if (
       card.details.colors.length > 1 &&
       card.details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p'))
     ) {
-      return ['Hybrid'];
+      ret = ['Hybrid'];
+    } else if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
+      ret = ['Phyrexian'];
     }
-    if (card.details.parsed_cost.some((symbol) => symbol.includes('-p'))) {
-      return ['Phyrexian'];
-    }
-    return [];
-  }
-  if (sort === 'Creature/Non-Creature') {
-    return cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
-  }
-  if (sort === 'Price USD' || sort === 'Price') {
+  } else if (sort === 'Creature/Non-Creature') {
+    ret = cardType(card).toLowerCase().includes('creature') ? ['Creature'] : ['Non-Creature'];
+  } else if (sort === 'Price USD' || sort === 'Price') {
     const price = card.details.prices.usd ?? card.details.prices.usd_foil;
     if (price) {
-      return [getPriceBucket(price, '$')];
+      ret = [getPriceBucket(price, '$')];
+    } else {
+      ret = ['No Price Available'];
     }
-    return ['No Price Available'];
-  }
-  if (sort === 'Price USD Foil') {
+  } else if (sort === 'Price USD Foil') {
     const price = card.details.prices.usd_foil;
     if (price) {
-      return [getPriceBucket(price, '$')];
+      ret = [getPriceBucket(price, '$')];
+    } else {
+      ret = ['No Price Available'];
     }
-    return ['No Price Available'];
-  }
-  if (sort === 'Price EUR') {
+  } else if (sort === 'Price EUR') {
     const price = cardPriceEur(card);
     if (price) {
-      return [getPriceBucket(price, '€')];
+      ret = [getPriceBucket(price, '€')];
+    } else {
+      ret = ['No Price Available'];
     }
-    return ['No Price Available'];
-  }
-  if (sort === 'MTGO TIX') {
+  } else if (sort === 'MTGO TIX') {
     const price = cardTix(card);
     if (price) {
-      return [getPriceBucket(price, '')];
+      ret = [getPriceBucket(price, '')];
+    } else {
+      ret = ['No Price Available'];
     }
-    return ['No Price Available'];
+  } else if (sort === 'Devotion to White') {
+    ret = [cardDevotion(card, 'w').toString()];
+  } else if (sort === 'Devotion to Blue') {
+    ret = [cardDevotion(card, 'u').toString()];
+  } else if (sort === 'Devotion to Black') {
+    ret = [cardDevotion(card, 'b').toString()];
+  } else if (sort === 'Devotion to Red') {
+    ret = [cardDevotion(card, 'r').toString()];
+  } else if (sort === 'Devotion to Green') {
+    ret = [cardDevotion(card, 'g').toString()];
+  } else if (sort === 'Unsorted') {
+    ret = ['All'];
+  } else if (sort === 'Elo') {
+    ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
-  if (sort === 'Devotion to White') {
-    return [cardDevotion(card, 'w').toString()];
+  /* End of sort options */
+
+  if (showOther && ret.length === 0) {
+    // whitespace around 'Other' to prevent collisions
+    ret = [' Other '];
   }
-  if (sort === 'Devotion to Blue') {
-    return [cardDevotion(card, 'u').toString()];
-  }
-  if (sort === 'Devotion to Black') {
-    return [cardDevotion(card, 'b').toString()];
-  }
-  if (sort === 'Devotion to Red') {
-    return [cardDevotion(card, 'r').toString()];
-  }
-  if (sort === 'Devotion to Green') {
-    return [cardDevotion(card, 'g').toString()];
-  }
-  if (sort === 'Unsorted') {
-    return ['All'];
-  }
-  if (sort === 'Elo') {
-    return [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
-  }
-  // Unrecognized sort
-  return [];
+  return ret;
 }
 
 export function cardCanBeSorted(card, sort) {
@@ -775,13 +673,13 @@ export function formatLabel(label) {
 }
 
 // Get labels in string form.
-export function getLabels(cube, sort) {
-  return getLabelsRaw(cube, sort).map(formatLabel);
+export function getLabels(cube, sort, showOther) {
+  return getLabelsRaw(cube, sort, showOther).map(formatLabel);
 }
 
-function sortGroupsOrdered(cards, sort) {
-  const labels = getLabelsRaw(cards, sort);
-  const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort)]);
+export function sortGroupsOrdered(cards, sort, showOther) {
+  const labels = getLabelsRaw(cards, sort, showOther);
+  const allCardLabels = cards.map((card) => [card, cardGetLabels(card, sort, showOther)]);
   const compare = (x, y) => labels.indexOf(x) - labels.indexOf(y);
   const byLabel = {};
   for (const [card, cardLabels] of allCardLabels) {
@@ -798,21 +696,27 @@ function sortGroupsOrdered(cards, sort) {
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]]);
 }
 
-export function sortIntoGroups(cards, sort) {
-  return fromEntries(sortGroupsOrdered(cards, sort));
+export function sortIntoGroups(cards, sort, showOther) {
+  return fromEntries(sortGroupsOrdered(cards, sort, showOther));
 }
 
-export function sortDeep(cards, ...sorts) {
+const OrderSortMap = {
+  Alphabetical: alphaCompare,
+  CMC: (a, b) => cardCmc(a) - cardCmc(b),
+  Price: (a, b) => cardPrice(a) - cardPrice(b),
+};
+
+export function sortDeep(cards, showOther, last, ...sorts) {
   if (sorts.length === 0) {
-    return [...cards].sort(alphaCompare);
+    return [...cards].sort(OrderSortMap[last]);
   }
   const [first, ...rest] = sorts;
-  const result = sortGroupsOrdered(cards, first ?? 'Unsorted');
+  const result = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
   for (const labelGroup of result) {
     if (rest.length > 0) {
-      labelGroup[1] = sortDeep(labelGroup[1], ...rest);
+      labelGroup[1] = sortDeep(labelGroup[1], showOther, last, ...rest);
     } else {
-      labelGroup[1].sort(alphaCompare);
+      labelGroup[1].sort(OrderSortMap[last]);
     }
   }
   return result;
@@ -826,9 +730,16 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(cards, primary, secondary, tertiary) {
+export function sortForCSVDownload(
+  cards,
+  primary = 'Color Category',
+  secondary = 'Types-Multicolor',
+  tertiary = 'CMC',
+  quaternary = 'Alphabetical',
+  showOther = false,
+) {
   const exportCards = [];
-  cards = sortDeep(cards, primary, secondary, tertiary);
+  cards = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
   for (const firstGroup of cards) {
     for (const secondGroup of firstGroup[1]) {
       for (const thirdGroup of secondGroup[1]) {

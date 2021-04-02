@@ -12,6 +12,7 @@ const UserPropType = PropTypes.shape({
   theme: PropTypes.string.isRequired,
   users_following: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   roles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  hide_featured: PropTypes.bool,
 });
 
 export default UserPropType;

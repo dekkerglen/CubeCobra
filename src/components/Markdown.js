@@ -13,28 +13,23 @@ import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import LinkModal from 'components/LinkModal';
 import FoilCardImage from 'components/FoilCardImage';
-import { isInternalURL } from 'utils/Util';
+import { isInternalURL, isSamePageURL } from 'utils/Util';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
 
 const AutocardLink = withAutocard('a');
 const Link = withModal('a', LinkModal);
 
-const renderBlockQuote = (node) => {
-  return (
-    <Card className="quote">
-      <CardBody>{node.children}</CardBody>
-    </Card>
-  );
-};
+const renderBlockQuote = (node) => (
+  <Card className="quote">
+    <CardBody>{node.children}</CardBody>
+  </Card>
+);
 
-const renderImage = (node) => {
-  return <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />;
-};
+const renderImage = (node) => <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />;
 
 const renderLink = (node) => {
-  const ref = encodeURI(node.href ?? '');
-  console.log(node);
+  const ref = node.href ?? '';
 
   if (isInternalURL(ref)) {
     // heading autolink
@@ -46,8 +41,9 @@ const renderLink = (node) => {
       );
     }
 
+    const props = isSamePageURL(ref) ? {} : { target: '_blank', rel: 'noopener noreferrer' };
     return (
-      <a target="_blank" rel="noopener noreferrer" href={ref}>
+      <a href={ref} {...props}>
         {node.children}
       </a>
     );
@@ -61,9 +57,8 @@ const renderLink = (node) => {
   );
 };
 
-const renderHeading = (node) => {
-  return React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
-};
+const renderHeading = (node) =>
+  React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 
 const renderCode = (node) => {
   const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
@@ -76,21 +71,15 @@ const renderCode = (node) => {
   );
 };
 
-const renderTable = (node) => {
-  return (
-    <div className="table-responsive">
-      <table className="table table-bordered">{node.children}</table>
-    </div>
-  );
-};
+const renderTable = (node) => (
+  <div className="table-responsive">
+    <table className="table table-bordered">{node.children}</table>
+  </div>
+);
 
-const renderMath = (node) => {
-  return <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
-};
+const renderMath = (node) => <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
 
-const renderInlineMath = (node) => {
-  return <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
-};
+const renderInlineMath = (node) => <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
 
 const renderUserlink = (node) => {
   const name = node.value;
@@ -132,13 +121,9 @@ const renderCardImage = (node) => {
   );
 };
 
-const renderCentering = (node) => {
-  return <div className="centered-markdown">{node.children}</div>;
-};
+const renderCentering = (node) => <div className="centered-markdown">{node.children}</div>;
 
-const renderCardrow = (node) => {
-  return <Row className="cardRow">{node.children}</Row>;
-};
+const renderCardrow = (node) => <Row className="cardRow">{node.children}</Row>;
 
 const RENDERERS = {
   // overridden defaults

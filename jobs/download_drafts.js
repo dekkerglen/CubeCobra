@@ -6,7 +6,7 @@ const AWS = require('aws-sdk');
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const carddb = require('../serverjs/cards.js');
-const deckutils = require('../dist/drafting/deckutils');
+const deckutils = require('../dist/drafting/deckutil');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,

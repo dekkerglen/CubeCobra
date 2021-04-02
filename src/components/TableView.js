@@ -12,10 +12,10 @@ import DisplayContext from 'contexts/DisplayContext';
 import SortContext from 'contexts/SortContext';
 
 const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
-  const { primary, secondary } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const { compressedView } = useContext(DisplayContext);
 
-  const sorted = sortDeep(cards, primary, secondary);
+  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary);
 
   return (
     <div className={`table-view-container${className ? ` ${className}` : ''}`}>
@@ -41,6 +41,9 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
                 cards={row}
                 rowTag={rowTag}
                 noGroupModal={noGroupModal}
+                sort={tertiary}
+                orderedSort={quaternary}
+                showOther={showOther}
               />
             ))}
           </Col>

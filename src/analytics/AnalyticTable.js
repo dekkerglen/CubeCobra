@@ -9,81 +9,63 @@ import { SortableTable, compareStrings, valueRenderer } from 'components/Sortabl
 import useQueryParam from 'hooks/useQueryParam';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
-import { sortIntoGroups, SORTS, getLabels, cardCanBeSorted } from 'utils/Sort';
+import { SORTS, cardCanBeSorted, sortGroupsOrdered } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
-const sortWithTotal = (pool, sort) => {
-  const groups = sortIntoGroups(pool, sort);
-
-  for (const key of Object.keys(groups)) {
-    groups[key] = groups[key].reduce((acc, card) => acc + card.asfan, 0);
-  }
-
-  groups.Total = pool.reduce((acc, card) => acc + card.asfan, 0);
-
-  return groups;
-};
+const sortWithTotal = (pool, sort) =>
+  [...sortGroupsOrdered(pool, sort), ['Total', pool]].map(([label, cards]) => [
+    label,
+    cards.reduce((acc, card) => acc + card.asfan, 0),
+  ]);
 
 const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) => {
-  const [primary, setPrimary] = useQueryParam('primary', 'Color Identity');
-  const [secondary, setSecondary] = useQueryParam('secondary', 'Type');
+  const [column, setColumn] = useQueryParam('column', 'Color Identity');
+  const [row, setRow] = useQueryParam('row', 'Type');
+  const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
 
   // some criteria cannot be applied to some cards
   const cards = useMemo(
-    () => allCards.filter((card) => cardCanBeSorted(card, primary) && cardCanBeSorted(card, secondary)),
-    [allCards, primary, secondary],
+    () => allCards.filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row)),
+    [allCards, column, row],
   );
-  const primaryGroups = useMemo(() => {
-    const groups = sortIntoGroups(cards, primary);
-    groups.Total = {};
-    for (const key of Object.keys(groups)) {
-      if (key !== 'Total') {
-        groups[key] = sortWithTotal(groups[key], secondary);
-        for (const subkey of Object.keys(groups[key])) {
-          if (!groups.Total[subkey]) {
-            groups.Total[subkey] = 0;
-          }
-          groups.Total[subkey] += groups[key][subkey];
-        }
-      }
-    }
-    return groups;
-  }, [cards, primary, secondary]);
-  const entryRenderer = useCallback(
-    (value) => (
-      <>
-        {valueRenderer(value ?? 0)}
-        <span className="percent">{valueRenderer(((value ?? 0) / primaryGroups.Total.Total) * 100)}%</span>
-      </>
-    ),
-    [primaryGroups],
+  const [columnCounts, columnLabels] = useMemo(() => {
+    const counts = sortWithTotal(cards, column).filter(([label, count]) => label === 'Total' || count > 0);
+    return [fromEntries(counts), counts.map(([label]) => label)];
+  }, [cards, column]);
+  const rows = useMemo(
+    () =>
+      [...sortGroupsOrdered(cards, row), ['Total', cards]]
+        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards, column))])
+        .map(([rowLabel, columnValues]) => ({
+          rowLabel,
+          ...fromEntries(columnLabels.map((label) => [label, columnValues[label] ?? 0])),
+        })),
+    [cards, column, row, columnLabels],
   );
 
-  const primaryLabels = useMemo(
-    () =>
-      getLabels(cards, primary)
-        .filter((label) => primaryGroups[label])
-        .concat(['Total']),
-    [cards, primary, primaryGroups],
+  const entryRenderer = useCallback(
+    (value, { Total: rowTotal }, columnLabel) => {
+      value = Number.isFinite(value) ? value : 0;
+      let scalingFactor = null;
+      if (percentOf === 'total') scalingFactor = 100 / columnCounts.Total;
+      else if (percentOf === 'row') scalingFactor = 100 / rowTotal;
+      else if (percentOf === 'column') scalingFactor = 100 / columnCounts[columnLabel];
+      return (
+        <>
+          {valueRenderer(value)}
+          {scalingFactor && <span className="percent">{valueRenderer(value * scalingFactor)}%</span>}
+        </>
+      );
+    },
+    [columnCounts, percentOf],
   );
-  const rows = useMemo(() => {
-    const secondaryGroups = sortIntoGroups(cards, secondary);
-    return getLabels(cards, secondary)
-      .filter((label) => secondaryGroups[label])
-      .concat(['Total'])
-      .map((secondaryLabel) => ({
-        secondaryLabel,
-        ...fromEntries(
-          primaryLabels.map((primaryLabel) => [primaryLabel, primaryGroups[primaryLabel][secondaryLabel] ?? 0]),
-        ),
-      }));
-  }, [cards, secondary, primaryLabels, primaryGroups]);
+
   const columnProps = useMemo(
     () => [
-      { key: 'secondaryLabel', title: secondary, heading: true, sortable: true },
-      ...primaryLabels.map((title) => ({ key: title, title, heading: false, sortable: true, renderFn: entryRenderer })),
+      { key: 'rowLabel', title: row, heading: true, sortable: true },
+      ...columnLabels.map((title) => ({ key: title, title, heading: false, sortable: true, renderFn: entryRenderer })),
     ],
-    [entryRenderer, primaryLabels, secondary],
+    [entryRenderer, columnLabels, row],
   );
 
   return (
@@ -97,10 +79,10 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
               <InputGroupText>Columns: </InputGroupText>
             </InputGroupAddon>
             <CustomInput
-              id="primarySort"
+              id="columnSort"
               type="select"
-              value={primary}
-              onChange={(event) => setPrimary(event.target.value)}
+              value={column}
+              onChange={(event) => setColumn(event.target.value)}
             >
               {SORTS.map((item) => (
                 <option key={item} value={item}>
@@ -113,12 +95,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Rows: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput
-              id="secondarySort"
-              type="select"
-              value={secondary}
-              onChange={(event) => setSecondary(event.target.value)}
-            >
+            <CustomInput id="rowSort" type="select" value={row} onChange={(event) => setRow(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -126,11 +103,35 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
               ))}
             </CustomInput>
           </InputGroup>
+          <InputGroup className="mb-3">
+            <InputGroupAddon addonType="prepend">
+              <InputGroupText>Show Percent Of: </InputGroupText>
+            </InputGroupAddon>
+            <CustomInput
+              id="percentOf"
+              type="select"
+              value={percentOf}
+              onChange={(event) => setPercentOf(event.target.value)}
+            >
+              <option key="total" value="total">
+                Total
+              </option>
+              <option key="row" value="row">
+                Row Total
+              </option>
+              <option key="column" value="column">
+                Column Total
+              </option>
+              <option key="none" value="none">
+                No Percent
+              </option>
+            </CustomInput>
+          </InputGroup>
         </Col>
       </Row>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
-        <SortableTable columnProps={columnProps} data={rows} sortFns={{ secondaryLabel: compareStrings }} />
+        <SortableTable columnProps={columnProps} data={rows} sortFns={{ rowLabel: compareStrings }} />
       </ErrorBoundary>
     </>
   );

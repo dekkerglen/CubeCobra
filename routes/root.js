@@ -102,10 +102,16 @@ router.get('/explore', async (req, res) => {
 });
 
 router.get('/random', async (req, res) => {
-  const count = await Cube.estimatedDocumentCount();
-  const random = Math.floor(Math.random() * count);
-  const cube = await Cube.findOne().skip(random).lean();
-  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(cube))}`);
+  const lastMonth = () => {
+    const ret = new Date();
+    ret.setMonth(ret.getMonth() - 1);
+    return ret;
+  };
+
+  const [randCube] = await Cube.aggregate()
+    .match({ isListed: true, card_count: { $gte: 360 }, date_updated: { $gte: lastMonth() } })
+    .sample(1);
+  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(randCube))}`);
 });
 
 router.get('/dashboard', async (req, res) => {
@@ -147,17 +153,25 @@ router.get('/dashboard', async (req, res) => {
       })
       .limit(10);
 
+    const featuredq = Cube.find(
+      {
+        isFeatured: true,
+      },
+      CUBE_PREVIEW_FIELDS,
+    ).lean();
+
     const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(10);
     const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(10);
     const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(10);
 
     // We can do these queries in parallel
-    const [cubes, posts, articles, videos, episodes] = await Promise.all([
+    const [cubes, posts, articles, videos, episodes, featured] = await Promise.all([
       cubesq,
       postsq,
       articlesq,
       videosq,
       episodesq,
+      featuredq,
     ]);
 
     const content = [];
@@ -201,7 +215,7 @@ router.get('/dashboard', async (req, res) => {
       .lean()
       .limit(12);
 
-    return render(req, res, 'DashboardPage', { posts, cubes, decks, content });
+    return render(req, res, 'DashboardPage', { posts, cubes, decks, content, featured });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }

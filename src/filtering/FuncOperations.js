@@ -22,6 +22,13 @@ export const defaultOperation = (op, value) => {
   }
 };
 
+// Used for fields that are fetched from database - picks, cubes
+// those fields always have to match in the first filter pass, before the actual values are set for them
+export const fetchedOperation = (op, value) => {
+  const defOp = defaultOperation(op, value);
+  return (fieldValue, card) => !card.details.secondPass || defOp(fieldValue);
+};
+
 export const stringOperation = (op, value) => {
   value = value.toLowerCase();
   switch (op.toString()) {
@@ -73,7 +80,7 @@ export const nameStringOperation = (op, value) => {
     if (shorthand) {
       expandedValue = expandedValue.replace(new RegExp(shorthand, 'g'), NAME_PLACEHOLDER);
     }
-    return strOp(expandedValue);
+    return strOp(fieldValue) || strOp(expandedValue);
   };
 };
 

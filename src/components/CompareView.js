@@ -43,8 +43,8 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 };
 
-const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
-  let columns = sortIntoGroups(cards, primary);
+const CompareViewRaw = ({ cards, primary, secondary, showOther, both, onlyA, onlyB, ...props }) => {
+  let columns = sortIntoGroups(cards, primary, showOther);
   let columnCounts = {};
   let bothCounts = { total: 0 };
   let onlyACounts = { total: 0 };
@@ -78,7 +78,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
     onlyACounts['total'] += onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
     onlyBCounts['total'] += onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
+    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary, showOther);
   }
   const bothCopy = both.slice(0);
   const onlyACopy = onlyA.slice(0);
@@ -115,7 +115,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
           </Row>
         </div>
       }
-      {getLabels(cards, primary)
+      {getLabels(cards, primary, showOther)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
           let column = columns[columnLabel];
@@ -149,7 +149,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                     </Col>
                   </Row>
                 </div>
-                {getLabels(column, secondary)
+                {getLabels(column, secondary, showOther)
                   .filter((label) => column[label])
                   .map((label) => {
                     let group = column[label];
@@ -190,7 +190,9 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
 
 const CompareView = (props) => (
   <SortContext.Consumer>
-    {({ primary, secondary }) => <CompareViewRaw primary={primary} secondary={secondary} {...props} />}
+    {({ primary, secondary, showOther }) => (
+      <CompareViewRaw primary={primary} secondary={secondary} showOther={showOther} {...props} />
+    )}
   </SortContext.Consumer>
 );
 

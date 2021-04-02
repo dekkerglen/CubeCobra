@@ -18,11 +18,25 @@ import withModal from 'components/WithModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) => {
-  const filteredDecks = cubes.length > 2 ? decks : decks.slice(0, 6);
+const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, featured }) => {
+  // where featured cubes are positioned on the screen
+  let featuredPosition;
+  if (!user.hide_featured) {
+    featuredPosition = cubes.length > 2 ? 'right' : 'left';
+  }
+
+  // the number of drafted decks shown, based on where cubes are located
+  let filteredDecks = decks;
+  if (featuredPosition === 'right') {
+    filteredDecks = decks.slice(0, 4);
+  }
+  if (!featuredPosition && cubes.length <= 2) {
+    filteredDecks = decks.slice(0, 6);
+  }
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -50,10 +64,29 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content }) =>
                 )}
               </Row>
             </CardBody>
-            <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
+            {featuredPosition !== 'left' && (
+              <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
+            )}
           </Card>
+          {featuredPosition === 'left' && (
+            <CubesCard
+              title="Featured Cubes"
+              cubes={featured}
+              lean
+              header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+            />
+          )}
         </Col>
         <Col xs="12" md="6">
+          {featuredPosition === 'right' && (
+            <CubesCard
+              className="mb-4"
+              title="Featured Cubes"
+              cubes={featured}
+              lean
+              header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
+            />
+          )}
           <Card>
             <CardHeader>
               <h5>Recent Drafts of Your Cubes</h5>
@@ -122,11 +155,13 @@ DashboardPage.propTypes = {
   user: UserPropType,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,
+  featured: PropTypes.arrayOf(CubePropType),
 };
 
 DashboardPage.defaultProps = {
   user: null,
   loginCallback: '/',
+  featured: [],
 };
 
 export default RenderToRoot(DashboardPage);

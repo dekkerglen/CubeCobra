@@ -20,6 +20,8 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
+import { LinkExternalIcon } from '@primer/octicons-react';
+
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
 
@@ -217,6 +219,11 @@ class CubeOverview extends Component {
                     </i>{' '}
                     • <a href={`/cube/rss/${cube._id}`}>RSS</a>
                   </h6>
+                  <p>
+                    <a href={`https://luckypaper.co/resources/cube-map/?cube=${cube.shortID}`}>
+                      View in Cube Map <LinkExternalIcon size={16} />
+                    </a>
+                  </p>
                   {!cube.privatePrices && (
                     <Row noGutters className="mb-1">
                       {Number.isFinite(priceOwned) && (
