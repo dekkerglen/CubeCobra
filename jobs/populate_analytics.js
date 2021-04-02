@@ -470,7 +470,7 @@ mongoose
   .then(() => {
     try {
       run();
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      winston.error(error, { error });
     }
   });
