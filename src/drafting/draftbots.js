@@ -30,7 +30,7 @@ import {
   cardName,
   cardType,
 } from 'utils/Card';
-import { arraysAreEqualSets, fromEntries } from 'utils/Util';
+import { arrayShuffle, arraysAreEqualSets, fromEntries } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -125,6 +125,7 @@ export const isPlayableLand = (colors, card) =>
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
   (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c)));
 
+// TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
   const name = cardName(card);
@@ -134,66 +135,57 @@ export const getCastingProbability = (card, lands) => {
     if (cardType(card).toLowerCase().includes('land') || cardIsSpecialZoneType(card) || !cost?.length) return 1;
     const colorSymbols = {};
     for (const symbol of cost) {
-      const symbolLower = symbol.toLowerCase();
-      if (!symbolLower.includes('p') && !symbolLower.includes('2')) {
-        const symbolColors = [...symbolLower].filter((char) => COLORS.includes(char));
-        if (symbolColors.length > 0) {
+      const symbolUpper = symbol.toUpperCase();
+      if (!symbolUpper.includes('p') && !symbolUpper.includes('2')) {
+        const unsortedSymbolColors = [...COLORS].filter((char) => symbolUpper.includes(char));
+        if (unsortedSymbolColors.length > 0) {
+          const symbolColors = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(unsortedSymbolColors, comb));
           colorSymbols[symbolColors.join('')] = (colorSymbols[symbolColors.join('')] ?? 0) + 1;
         }
       }
     }
     // It woudl be nice if we could cache this value.
-    colors = Object.entries(colorSymbols);
+    colors = Object.entries(colorSymbols).map(([combination, count]) => [
+      COLOR_COMBINATIONS.map((comb) => comb.join('')).filter((comb) => [...combination].some((c) => comb.includes(c))),
+      count,
+    ]);
+    if (colors.length > 2) {
+      colors = [
+        ...colors,
+        [
+          COLOR_COMBINATIONS.map((c) => c.join('')).filter((comb) => colors.some(([combs]) => combs.includes(comb))),
+          colors.reduce((acc, [, c]) => acc + c),
+        ],
+      ];
+    }
+    if (colors.length === 2) {
+      colors = [
+        [colors[0][0].filter((c) => !colors[1][0].includes(c)), colors[0][1]],
+        [colors[1][0].filter((c) => !colors[0][0].includes(c)), colors[1][1]],
+        colors[0][0].filter((c) => colors[1][0].includes(c)),
+      ];
+    }
     devotionsCache[name] = colors;
   }
   if (colors.length === 0) return 1;
   if (colors.length === 1) {
-    const [[color, devotion]] = colors;
-    let landCount = 0;
-    for (const [key, count] of Object.entries(lands)) {
-      if ([...color].some((c) => key.includes(c))) {
-        landCount += count;
-      }
-    }
+    const [[combs, devotion]] = colors;
+    const landCount = combs.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
     return probTable[cardCmc(card)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0;
   }
-  if (colors.length === 2) {
-    const [[colorA, devotionA], [colorB, devotionB]] = colors;
-    let landCountA = 0;
-    let landCountB = 0;
-    let landCountAB = 0;
-    for (const [key, amount] of Object.entries(lands)) {
-      const isA = [...colorA].some((c) => key.includes(c));
-      const isB = [...colorB].some((c) => key.includes(c));
-      if (isA && isB) {
-        landCountAB += amount;
-      } else if (isA) {
-        landCountA += amount;
-      } else if (isB) {
-        landCountB += amount;
-      }
-    }
+  if (colors.length === 3) {
+    const [[combsA, devotionA], [combsB, devotionB], combsAB] = colors;
+    const landCountA = combsA.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
+    const landCountB = combsB.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
+    const landCountAB = combsAB.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
     return probTable[cardCmc(card)]?.[devotionA]?.[devotionB]?.[landCountA]?.[landCountB]?.[landCountAB] ?? 0;
   }
   // This is a really poor approximation, it probably underestimates,
   // but could easily overestimate as well.
-  let totalDevotion = 0;
-  let prob = 1;
-  for (const [color, devotion] of colors) {
-    totalDevotion += devotion;
-    let landCount = 0;
-    for (const [key, amount] of Object.entries(lands)) {
-      if ([...color].some((c) => key.includes(c))) {
-        landCount += amount;
-      }
-    }
-    prob *= probTable[cardCmc(card)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0;
-  }
-  const landCount = Object.entries(lands).reduce(
-    (acc, [key, amount]) => (colors.some((color) => [...color].some((c) => key.includes(c))) ? acc + amount : acc),
-    0,
-  );
-  return prob * (probTable[cardCmc(card)]?.[totalDevotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0);
+  return colors.reduce((acc, [combs, devotion]) => {
+    const landCount = combs.reduce((acc2, c) => acc2 + (lands[c] ?? 0), 0);
+    return acc * (probTable[cardCmc(card)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0);
+  }, 1);
 };
 
 const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
@@ -311,7 +303,8 @@ const getInitialLandsForPool = (pool, cards) => {
     const card = cards[cardIndex];
     if (cardType(card).toLowerCase().includes('land')) {
       const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
-      lands[colors.join('')] = (lands[colors.join('')] ?? 0) + 1;
+      const key = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors))?.join?.('') ?? '';
+      lands[key] = (lands[key] ?? 0) + 1;
       let removed = false;
       for (const color of colors) {
         if (lands[color] > 0) {
@@ -330,9 +323,10 @@ const getInitialLandsForPool = (pool, cards) => {
 };
 
 const calculateProbabilities = ({ cards, seen, lands }) => {
-  const seenSet = [...new Set(seen)].map((ci) => [getCastingProbability(cards[ci], lands), ci]);
+  const seenSet = [...new Set(seen)].map((ci) => [ci, cards[ci]]);
+  const seenProbs = seenSet.map(([ci, card]) => [ci, getCastingProbability(card, lands)]);
   const res = cards.map(() => null);
-  for (const [prob, ci] of seenSet) {
+  for (const [ci, prob] of seenProbs) {
     res[ci] = prob;
   }
   return res;
@@ -387,47 +381,51 @@ const calculateScore = (botState) => {
   };
 };
 
+const findBetterLands = (currentScore) => {
+  const { botState, score } = currentScore;
+  // This makes the bots non-deterministic are we good with that?
+  for (const increaseColor of arrayShuffle([...COLORS])) {
+    for (const decreaseColor of arrayShuffle(COLORS.filter((c) => increaseColor !== c && botState.lands[c] > 0))) {
+      const lands = { ...botState.lands };
+      lands[increaseColor] += 1;
+      lands[decreaseColor] -= 1;
+      const newBotState = { ...botState, lands };
+      botState.probabilities = calculateProbabilities(newBotState);
+      botState.totalProbability = sum(newBotState.probabilities);
+      console.debug(
+        'Testing the score at',
+        lands,
+        'which increases',
+        increaseColor,
+        'and decreases',
+        decreaseColor,
+        'and gives probabilities',
+        newBotState.probabilities.filter((p) => p !== null),
+      );
+      const newScore = calculateScore(newBotState);
+      if (newScore.score > score) {
+        // We assume we won't get caught in a local maxima so it's safe to take first ascent.
+        console.log('Improved by moving to', lands);
+        return newScore;
+      }
+    }
+  }
+  console.debug('Did not find an increase from', currentScore.botState.lands);
+  return currentScore;
+};
+
 export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if ((cardIndices ?? null) === null) cardIndices = [];
   if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let currentLands = getInitialLandsForPool([...drafterState.picked, ...cardIndices], drafterState.cards);
-  const initialBotState = { ...drafterState, cardIndices, lands: currentLands };
+  const initialBotState = { ...drafterState, cardIndices };
+  initialBotState.lands = getInitialLandsForPool([...drafterState.picked, ...cardIndices], drafterState.cards);
   initialBotState.probabilities = calculateProbabilities(initialBotState);
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
-  while (!landCountsAreEqual(prevLands, currentLands)) {
-    prevLands = currentLands;
-    let nextLands = currentLands;
-    let nextScore = currentScore;
-    for (const decreaseColor of COLORS) {
-      if (currentLands[decreaseColor] > 0) {
-        for (const increaseColor of COLORS) {
-          if (increaseColor !== decreaseColor) {
-            const lands = { ...prevLands };
-            lands[increaseColor] += 1;
-            lands[decreaseColor] -= 1;
-            if (!landCountsAreEqual(lands, prevLands)) {
-              const botState = { ...drafterState, cardIndices, lands };
-              botState.probabilities = calculateProbabilities(botState);
-              botState.totalProbability = sum(botState.probabilities);
-              const newScore = calculateScore(botState);
-              if (newScore.score > nextScore.score) {
-                nextLands = lands;
-                nextScore = newScore;
-                // We assume we won't get caught in a local maxima so it's safe to take first ascent.
-                break;
-              }
-            }
-          }
-        }
-      }
-      if (!landCountsAreEqual(currentLands, nextLands)) {
-        currentLands = nextLands;
-        currentScore = nextScore;
-        break;
-      }
-    }
+  while (!landCountsAreEqual(prevLands, currentScore.botState.lands)) {
+    prevLands = currentScore.botState.lands;
+    currentScore = findBetterLands(currentScore);
   }
   return currentScore;
 };

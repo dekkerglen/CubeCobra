@@ -152,16 +152,20 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 };
 
 export const calculateBasicCounts = (picked, cards) => {
-  const { lands, colors } = evaluateCardsOrPool({
+  const {
+    botState: { lands },
+    colors,
+  } = evaluateCardsOrPool([], {
     picked,
     cards,
-    seen: null,
+    seen: picked,
     packNum: 3,
     pickNum: 15,
     numPacks: 3,
     packSize: 15,
   });
   const result = {};
+  console.debug('calculateBasicLandCounts', lands);
 
   for (const [symbol, name] of Object.entries(LAND_DICT)) {
     result[name] = lands[symbol] ?? 0;
@@ -169,7 +173,7 @@ export const calculateBasicCounts = (picked, cards) => {
   return { lands: result, colors };
 };
 
-async function build({ lands, colors, probabilities }, picked, cards, basics) {
+async function build({ botState: { lands, probabilities }, colors }, picked, cards, basics) {
   let nonlands = picked.filter(
     (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
   );
@@ -180,6 +184,12 @@ async function build({ lands, colors, probabilities }, picked, cards, basics) {
   const outOfColor = nonlands.filter((item) => probabilities[item] < PROB_TO_INCLUDE);
   const playableLands = landCards.filter((land) => isPlayableLand(colors, cards[land]));
   const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, cards[land]));
+  console.debug('build', lands);
+  console.log(probabilities);
+  console.log(inColor);
+  console.log(outOfColor);
+  console.log(inColor.map((item) => probabilities[item]));
+  console.log(outOfColor.map((item) => probabilities[item]));
 
   playableLands.sort(sortFn);
 
@@ -192,7 +202,7 @@ async function build({ lands, colors, probabilities }, picked, cards, basics) {
   }
 
   let chosen = [];
-  const distanceFunc = (c1, c2) => 1 - getSynergy(c1, c2, cards) / MAX_SCORE;
+  const distanceFunc = (c1, c2) => 1 - (probabilities[c1] * probabilities[c2] * getSynergy(c1, c2, cards)) / MAX_SCORE;
   const NKernels = (n, total) => {
     let remaining = Math.min(total, nonlands.length);
     for (let i = 0; i < n; i++) {
@@ -243,14 +253,6 @@ async function build({ lands, colors, probabilities }, picked, cards, basics) {
   side.push(...nonlands);
   side.push(...specialZoneCards);
 
-  if (basics) {
-    ({ lands, colors } = calculateBasicCounts(main, cards));
-    for (const [name, amount] of Object.entries(lands)) {
-      for (let i = 0; i < amount; i++) {
-        main.push(basics[name].index);
-      }
-    }
-  }
   const deck = [];
   const sideboard = [];
   for (let i = 0; i < 16; i += 1) {
@@ -287,11 +289,11 @@ export async function buildDeck(cards, picked, basics) {
   const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked,
-    seen: null,
+    seen: picked,
     packNum: 3,
     pickNum: 15,
     numPacks: 3,
     packSize: 15,
   });
-  return build(botEvaluation, cards, picked, basics);
+  return build(botEvaluation, picked, cards, basics);
 }

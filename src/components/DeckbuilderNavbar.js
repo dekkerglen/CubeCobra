@@ -33,7 +33,7 @@ const COLORS = [
 ];
 const MAX_BASICS = 20;
 
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
+const BasicsModal = ({ isOpen, toggle, addBasics, deck, cards }) => {
   const refs = {};
   for (const [, , basic] of COLORS) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -50,8 +50,8 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
   }, [addBasics, toggle, refs]);
 
   const calculateBasics = useCallback(async () => {
-    const main = deck.flat(2);
-    const { lands: basics } = calculateBasicCounts(main, draft.cards);
+    const main = deck.flat(2).map((c) => c.index);
+    const { lands: basics } = calculateBasicCounts(main, cards);
     for (const [basic, count] of Object.entries(basics)) {
       const opts = refs[basic].current.options;
       for (let i = 0; i < opts.length; i++) {
@@ -60,7 +60,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
         }
       }
     }
-  }, [refs, deck, draft]);
+  }, [refs, deck, cards]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="sm">
@@ -103,11 +103,7 @@ BasicsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   addBasics: PropTypes.func.isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-    cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  }).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
 };
 
@@ -164,11 +160,9 @@ const DeckbuilderNavbar = ({
   }, [deleteModalOpen, setDeleteModalOpen]);
 
   const stripped = useMemo(() => {
-    console.log(deck);
     const res = JSON.parse(JSON.stringify(deck));
 
     for (const collection of [res.playerdeck, res.playersideboard]) {
-      console.debug(collection);
       for (const row of collection) {
         for (const column of row) {
           column.forEach((card, index) => {
@@ -188,10 +182,16 @@ const DeckbuilderNavbar = ({
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
-    const { sideboard: side, deck: newDeck } = await buildDeck(draft.cards, main, draft.basics);
-    setSideboard([side]);
-    setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
+    const main = deck.playerdeck
+      .flat(2)
+      .concat(deck.playersideboard.flat(2))
+      .map((c) => c.index);
+    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, draft.basics);
+    setSideboard([side.map((col) => col.map((ci) => deck.cards[ci]))]);
+    setDeck([
+      newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(0, 8),
+      newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(8, 16),
+    ]);
   }, [deck, draft, setDeck, setSideboard]);
 
   return (
@@ -223,7 +223,7 @@ const DeckbuilderNavbar = ({
               isOpen={basicsModalOpen}
               toggle={toggleBasicsModal}
               addBasics={addBasics}
-              draft={draft}
+              cards={deck.cards}
               deck={deck.playerdeck}
             />
           </NavItem>
