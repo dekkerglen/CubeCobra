@@ -3,8 +3,8 @@ const path = require('path'); // eslint-disable-line import/no-extraneous-depend
 const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
-const winston = require('winston');
 const fetch = require('node-fetch');
+const { winston } = require('./cloudwatch');
 const cardutil = require('../dist/utils/Card.js');
 
 const util = require('./util.js');

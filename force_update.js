@@ -1,8 +1,8 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const winston = require('winston');
 const mongoose = require('mongoose');
+const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards.js');
 const CardRating = require('./models/cardrating');
 

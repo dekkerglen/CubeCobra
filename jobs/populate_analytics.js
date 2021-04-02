@@ -7,8 +7,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const similarity = require('compute-cosine-similarity');
+const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards.js');
-const updatedb = require('../serverjs/updatecards.js');
 const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
@@ -72,10 +72,10 @@ function createCorrelations() {
       correlations[i].push(0);
     }
     if ((i + 1) % 1000 === 0) {
-      console.log(`Finished: ${i + 1} of ${totalCards} correlations.`);
+      winston.info(`Finished: ${i + 1} of ${totalCards} correlations.`);
     }
   }
-  console.log('Finish init of correlation matrix.');
+  winston.info('Finish init of correlation matrix.');
 }
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
@@ -98,7 +98,7 @@ function createSynergyMatrix() {
       synergies[i].push(getSynergy(allOracleIds[i], allOracleIds[j]));
     }
     if ((i + 1) % 100 === 0) {
-      console.log(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
+      winston.info(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
     }
   }
 }
@@ -131,7 +131,7 @@ async function processDeck(deck) {
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
               correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
             } catch (err) {
-              console.log(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
+              winston.info(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
             }
           }
         }
@@ -341,7 +341,7 @@ async function processCard(card) {
 
     await cardHistory.save();
   } catch (error) {
-    console.error(error);
+    winston.error(error, { error });
   }
 }
 
@@ -388,11 +388,15 @@ const run = async () => {
   // use correlationIndex for index
   cubesWithCard = [];
 
+  winston.info('Starting card db');
+
   await carddb.initializeCardDb();
+
+  winston.info('finished loading cards');
 
   const ratings = await CardRating.find({}).lean();
 
-  console.log('Started: oracles');
+  winston.info('Started: oracles');
 
   distinctOracles = [...new Set(carddb.allOracleIds())];
   const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
@@ -402,9 +406,9 @@ const run = async () => {
     ),
   ];
 
-  console.log('creating correlation matrix...');
+  winston.info('creating correlation matrix...');
   createCorrelations();
-  console.log('creating synergy matrix...');
+  winston.info('creating synergy matrix...');
   createSynergyMatrix();
 
   for (const rating of ratings) {
@@ -412,30 +416,30 @@ const run = async () => {
   }
 
   // process all cube objects
-  console.log('Started: cubes');
+  winston.info('Started: cubes');
   let count = await Cube.countDocuments();
   let cursor = Cube.find().lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processCube(await cursor.next());
     if ((i + 1) % 10 === 0) {
-      console.log(`Finished: ${i + 1} of ${count} cubes.`);
+      winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
   }
-  console.log('Finished: all cubes');
+  winston.info('Finished: all cubes');
 
   // process all deck objects
-  console.log('Started: decks');
+  winston.info('Started: decks');
   count = await Deck.countDocuments();
   cursor = Deck.find().lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processDeck(await cursor.next());
     if ((i + 1) % 1000 === 0) {
-      console.log(`Finished: ${i + 1} of ${count} decks.`);
+      winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
   }
-  console.log('Finished: all decks');
+  winston.info('Finished: all decks');
 
   // save card models
   const allOracleIds = carddb.allOracleIds();
@@ -445,10 +449,14 @@ const run = async () => {
     const card = cardFromOracle(oracleId);
     await processCard(card); // eslint-disable-line no-await-in-loop
     processed += 1;
-    console.log(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
+    winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 
-  console.log('Done');
+  // this is needed for log group to stream
+  await new Promise((resolve) => {
+    setTimeout(resolve, 10000);
+  });
+  winston.info('Done');
   process.exit();
 };
 
@@ -460,5 +468,9 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    run();
+    try {
+      run();
+    } catch (error) {
+      winston.error(error, { error });
+    }
   });

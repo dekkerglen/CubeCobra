@@ -1,5 +1,5 @@
 const shuffleSeed = require('shuffle-seed');
-const winston = require('winston');
+const { winston } = require('./cloudwatch');
 
 function hasProfanity(text) {
   if (!text) return false;
