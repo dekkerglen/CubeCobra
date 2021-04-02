@@ -6,6 +6,7 @@ const SortContext = React.createContext({
   secondary: 'Types-Multicolor',
   tertiary: 'CMC',
   quaternary: 'Alphabetical',
+  showOther: false,
 });
 
 export class SortContextProvider extends React.Component {
@@ -18,6 +19,7 @@ export class SortContextProvider extends React.Component {
         tertiary = 'CMC',
         quaternary = 'Alphabetical',
       ],
+      showOther = false,
     } = this.props;
 
     this.state = {
@@ -25,6 +27,7 @@ export class SortContextProvider extends React.Component {
       secondary,
       tertiary,
       quaternary,
+      showOther,
     };
 
     this.changeSort = this.changeSort.bind(this);
@@ -58,6 +61,7 @@ export class SortContextProvider extends React.Component {
 
 SortContextProvider.propTypes = {
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
+  showOther: PropTypes.bool.isRequired,
 };
 
 SortContext.Wrapped = (Tag) => (props) => (

@@ -10,9 +10,9 @@ import AutocardListItem from 'components/AutocardListItem';
 import CubeContext from 'contexts/CubeContext';
 import GroupModalContext from 'contexts/GroupModalContext';
 
-const AutocardListGroup = ({ cards, heading, sort, orderedSort, rowTag, noGroupModal }) => {
+const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, rowTag, noGroupModal }) => {
   const RowTag = rowTag;
-  const sorted = sortDeep(cards, orderedSort, sort);
+  const sorted = sortDeep(cards, showOther, orderedSort, sort);
   const { canEdit } = useContext(CubeContext);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
   const canGroupModal = !noGroupModal && canEdit;
@@ -53,6 +53,7 @@ AutocardListGroup.propTypes = {
   heading: PropTypes.node.isRequired,
   sort: PropTypes.string,
   orderedSort: PropTypes.string,
+  showOther: PropTypes.bool,
 };
 
 AutocardListGroup.defaultProps = {
@@ -60,6 +61,7 @@ AutocardListGroup.defaultProps = {
   noGroupModal: false,
   sort: 'CMC-Full',
   orderedSort: 'Alphabetical',
+  showOther: false,
 };
 
 export default AutocardListGroup;
