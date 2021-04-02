@@ -685,7 +685,7 @@ function convertCard(card, isExtra) {
     newcard.image_small = faceAttributeSource.image_uris.small;
     newcard.image_normal = faceAttributeSource.image_uris.normal;
     newcard.art_crop = faceAttributeSource.image_uris.art_crop;
-  } else {
+  } else if (card.image_uris) {
     newcard.image_small = card.image_uris.small;
     newcard.image_normal = card.image_uris.normal;
     newcard.art_crop = card.image_uris.art_crop;
