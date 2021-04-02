@@ -13,6 +13,7 @@ import LoadingButton from 'components/LoadingButton';
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
   const { cube, cubeID, setCube } = useContext(CubeContext);
   const formRef = useRef();
+
   const handleSave = useCallback(async () => {
     const formObject = formDataObject(formRef.current);
     const response = await postJson(`/cube/api/settings/${cubeID}`, formObject);
@@ -30,6 +31,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
     }
     toggle();
   }, [toggle, addAlert, onCubeUpdate, cube, cubeID, setCube, formRef]);
+
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader toggle={toggle}>Edit Settings</ModalHeader>

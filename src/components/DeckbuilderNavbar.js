@@ -2,116 +2,21 @@ import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import DeckDeleteModal from 'components/DeckDeleteModal';
+import CardPropType from 'proptypes/CardPropType';
 
-import {
-  Button,
-  Collapse,
-  Form,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Nav,
-  Navbar,
-  NavbarToggler,
-  NavItem,
-  NavLink,
-  Input,
-} from 'reactstrap';
+import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { addSeen, buildDeck, calculateBasicCounts, createSeen, init } from 'utils/Draft';
+import BasicsModal from 'components/BasicsModal';
+import { buildDeck } from 'utils/Draft';
+import withModal from 'components/WithModal';
 
-const COLORS = [
-  ['White', 'W', 'Plains'],
-  ['Blue', 'U', 'Island'],
-  ['Black', 'B', 'Swamp'],
-  ['Red', 'R', 'Mountain'],
-  ['Green', 'G', 'Forest'],
-];
-const MAX_BASICS = 20;
-
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, draft }) => {
-  const refs = {};
-  for (const [, , basic] of COLORS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    refs[basic] = useRef();
-  }
-
-  const handleAddBasics = useCallback(() => {
-    const numBasics = {};
-    for (const basic of Object.keys(refs)) {
-      numBasics[basic] = parseInt(refs[basic].current.value, 10);
-    }
-    addBasics(numBasics);
-    toggle();
-  }, [addBasics, toggle, refs]);
-
-  const calculateBasics = useCallback(async () => {
-    const main = deck.flat(2);
-    init(draft);
-    const { lands: basics } = calculateBasicCounts(main);
-    for (const [basic, count] of Object.entries(basics)) {
-      const opts = refs[basic].current.options;
-      for (let i = 0; i < opts.length; i++) {
-        if (parseInt(opts[i].value, 10) === count) {
-          opts[i].selected = true;
-        }
-      }
-    }
-  }, [refs, deck, draft]);
-
-  return (
-    <Modal isOpen={isOpen} toggle={toggle} size="sm">
-      <ModalHeader toggle={toggle}>Add Basic Lands</ModalHeader>
-      <ModalBody>
-        {COLORS.map(([long, short, basic]) => (
-          <Form key={short} className="mb-1" inline>
-            <img
-              src={`/content/symbols/${short.toLowerCase()}.png`}
-              alt={long}
-              title={long}
-              className="mr-1 mana-symbol"
-            />
-            <Input type="select" name={long} defaultValue={0} innerRef={refs[basic]}>
-              {Array.from(new Array(MAX_BASICS).keys()).map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </Input>
-          </Form>
-        ))}
-      </ModalBody>
-      <ModalFooter>
-        <Button type="submit" color="success" onClick={handleAddBasics}>
-          Add
-        </Button>
-        <Button color="success" onClick={calculateBasics}>
-          Calculate
-        </Button>
-        <Button color="secondary" onClick={toggle}>
-          Close
-        </Button>
-      </ModalFooter>
-    </Modal>
-  );
-};
-
-BasicsModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  addBasics: PropTypes.func.isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  }).isRequired,
-  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
-};
+const BasicsModalLink = withModal(NavLink, BasicsModal);
 
 const DeckbuilderNavbar = ({
   deck,
+  basics,
   addBasics,
   name,
   description,
@@ -122,7 +27,6 @@ const DeckbuilderNavbar = ({
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [basicsModalOpen, setBasicsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const toggleNavbar = useCallback(
@@ -131,16 +35,6 @@ const DeckbuilderNavbar = ({
       setIsOpen(!isOpen);
     },
     [isOpen],
-  );
-
-  const toggleBasicsModal = useCallback(
-    (event) => {
-      if (event) {
-        event.preventDefault();
-      }
-      setBasicsModalOpen(!basicsModalOpen);
-    },
-    [basicsModalOpen],
   );
 
   const saveForm = useRef(null);
@@ -185,13 +79,10 @@ const DeckbuilderNavbar = ({
 
   const autoBuildDeck = useCallback(async () => {
     const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
-    init(draft);
-    const picked = createSeen();
-    addSeen(picked, main, draft.synergies);
-    const { sideboard: side, deck: newDeck } = await buildDeck(main, picked, draft.basics);
+    const { sideboard: side, deck: newDeck } = await buildDeck(main, basics);
     setSideboard([side]);
     setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
-  }, [deck, draft, setDeck, setSideboard]);
+  }, [deck, setDeck, setSideboard, basics]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
@@ -215,16 +106,16 @@ const DeckbuilderNavbar = ({
             <DeckDeleteModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} deckID={deck._id} cubeID={deck.cube} />
           </NavItem>
           <NavItem>
-            <NavLink href="#" onClick={toggleBasicsModal}>
+            <BasicsModalLink
+              modalProps={{
+                basics,
+                addBasics,
+                draft,
+                deck: deck.playerdeck,
+              }}
+            >
               Add Basic Lands
-            </NavLink>
-            <BasicsModal
-              isOpen={basicsModalOpen}
-              toggle={toggleBasicsModal}
-              addBasics={addBasics}
-              draft={draft}
-              deck={deck.playerdeck}
-            />
+            </BasicsModalLink>
           </NavItem>
           <NavItem>
             <NavLink href="#" onClick={autoBuildDeck}>
@@ -239,6 +130,7 @@ const DeckbuilderNavbar = ({
 };
 
 DeckbuilderNavbar.propTypes = {
+  basics: PropTypes.arrayOf(CardPropType).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     cube: PropTypes.string.isRequired,
@@ -252,7 +144,6 @@ DeckbuilderNavbar.propTypes = {
   draft: PropTypes.shape({
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-    basics: PropTypes.shape({}),
   }).isRequired,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,

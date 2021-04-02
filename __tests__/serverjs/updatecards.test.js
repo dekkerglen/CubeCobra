@@ -517,6 +517,7 @@ test("addCardToCatalog successfully adds a card's information to the internal st
   const normalizedName = cardutil.normalizeName(card.name);
   const expectedImagedictStructure = {
     uri: card.art_crop,
+    id: card._id,
     artist: card.artist,
   };
   const expectedCardimagesStructure = {
@@ -546,6 +547,7 @@ test("addCardToCatalog successfully adds a double-faced card's information to th
   const normalizedName = carddb.normalizedName(card);
   const expectedImagedictStructure = {
     uri: card.art_crop,
+    id: card._id,
     artist: card.artist,
   };
   expect(Object.keys(catalog.dict).length).toBe(1);

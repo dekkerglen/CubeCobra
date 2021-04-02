@@ -22,11 +22,13 @@ const gridDraftSchema = mongoose.Schema({
     enum: ['bot', '2playerlocal'],
   },
   basics: {
-    Plains: cardSchema,
-    Island: cardSchema,
-    Swamp: cardSchema,
-    Mountain: cardSchema,
-    Forest: cardSchema,
+    default: [],
+    type: {
+      details: cardSchema,
+      cardID: String,
+      cmc: Number,
+      type_line: String,
+    },
   },
 });
 

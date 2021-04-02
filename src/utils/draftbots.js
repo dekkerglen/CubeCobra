@@ -140,6 +140,7 @@ export const getSynergy = (card1, card2) => {
 };
 
 const BASICS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
+const BASICS_MAP = { w: 'Plains', u: 'Island', b: 'Swamp', r: 'Mountain', g: 'Forest' };
 
 export const considerInCombination = (combination, card) =>
   card && COLOR_INCLUSION_MAP[combination.join('')][(cardColorIdentity(card) ?? []).join('')];
@@ -147,7 +148,8 @@ export const considerInCombination = (combination, card) =>
 export const isPlayableLand = (colors, card) =>
   considerInCombination(colors, card) ||
   colors.filter((c) => cardColorIdentity(card).includes(c)).length > 1 ||
-  (FETCH_LANDS[card.details.name] && FETCH_LANDS[card.details.name].some((c) => colors.includes(c)));
+  (FETCH_LANDS[card.details.name] && FETCH_LANDS[card.details.name].some((c) => colors.includes(c))) ||
+  colors.some((color) => cardType(card).toLowerCase().includes(BASICS_MAP[color.toLowerCase()].toLowerCase()));
 
 const getDevotions = (card) =>
   fromEntries(
