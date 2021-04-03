@@ -4,11 +4,12 @@ import CardPropType from 'proptypes/CardPropType';
 
 import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card } from 'reactstrap';
 
-import { buildDeck } from 'utils/Draft';
+import { buildDeck } from 'drafting/deckutil';
+import { fromEntries } from 'utils/Util';
 
 const MAX_BASICS = 21;
 
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics }) => {
+const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
   const [counts, setCounts] = useState(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
@@ -18,32 +19,35 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics }) => {
   }, [addBasics, toggle, basics, counts]);
 
   const calculateBasics = useCallback(async () => {
-    const { deck: newDeck } = await buildDeck(deck.flat(2), basics);
-
-    console.log(newDeck);
+    const { deck: newDeck } = await buildDeck(cards, deck.flat(2), basics);
+    const basicIds = fromEntries(basics.map((ci, idx) => [ci, idx]));
 
     const newCounts = basics.map(() => 0);
 
     for (const col of newDeck) {
-      for (const card of col) {
-        if (card.isUnlimited) {
-          newCounts[card.basicId] += 1;
+      for (const cardIndex of col) {
+        if ((basicIds[cardIndex] ?? null) !== null) {
+          newCounts[basicIds[cardIndex]] += 1;
         }
       }
     }
 
     setCounts(newCounts);
-  }, [deck, basics]);
+  }, [deck, basics, cards]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xl">
       <ModalHeader toggle={toggle}>Add Basic Lands</ModalHeader>
       <ModalBody>
         <Row>
-          {basics.map((card, index) => (
-            <Col xs="6" md="3" lg="2" key={`basics-${card.details._id}`}>
+          {basics.map((cardIndex, index) => (
+            <Col xs="6" md="3" lg="2" key={`basics-${cards[cardIndex].details._id}`}>
               <Card className="mb-3">
-                <img className="w-100" src={card.details.image_normal} alt={card.details.name} />
+                <img
+                  className="w-100"
+                  src={cards[cardIndex].details.image_normal}
+                  alt={cards[cardIndex].details.name}
+                />
                 <Input
                   className="mt-1"
                   type="select"
@@ -89,7 +93,8 @@ BasicsModal.propTypes = {
     synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
   }).isRequired,
   deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
-  basics: PropTypes.arrayOf(CardPropType).isRequired,
+  basics: PropTypes.arrayOf(PropTypes.number).isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
 export default BasicsModal;

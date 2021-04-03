@@ -95,24 +95,26 @@ const synergyCache = {};
 export const getSynergy = (index1, index2, cards) => {
   const card1 = cards[index1];
   const card2 = cards[index2];
-  if (!card1?.details?.embedding?.length || !card2?.details?.embedding?.length) return 0;
-  if (cardName(card1) === cardName(card2)) return MAX_SCORE;
-
   const name1 = cardName(card1);
   const name2 = cardName(card2);
-  const key1 = `${name1}@@${name2}`;
-  const synergy = synergyCache[key1];
-  if (!synergy && synergy !== 0) {
-    const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
-
-    if (Number.isFinite(similarityValue)) {
-      synergyCache[key1] = 1 / (1 - scaleSimilarity(similarityValue)) - 1;
+  let synergy = synergyCache[name1]?.[name2];
+  if ((synergy ?? null) === null) {
+    if (!synergyCache[name1]) synergyCache[name1] = {};
+    if (!synergyCache[name2]) synergyCache[name2] = {};
+    if (!card1?.details?.embedding?.length || !card2?.details?.embedding?.length) {
+      synergy = 0;
+    } else if (name1 === name2) {
+      synergy = MAX_SCORE;
     } else {
-      synergyCache[key1] = similarityValue > 0 ? MAX_SCORE : 0;
+      const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
+      if (Number.isFinite(similarityValue)) {
+        synergy = 1 / (1 - scaleSimilarity(similarityValue)) - 1;
+      } else {
+        synergy = similarityValue > 0 ? MAX_SCORE : 0;
+      }
     }
-    const key2 = `${name2}@@${name1}`;
-    synergyCache[key2] = synergyCache[key1];
-    return synergyCache[key1];
+    synergyCache[name1][name2] = synergy;
+    synergyCache[name2][name1] = synergy;
   }
   return synergy;
 };
@@ -193,10 +195,14 @@ export const getCastingProbability = (card, lands) => {
 const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
 const fst = (arr, end) => arr.slice(0, end);
 
-const eloToValue = (elo) => Math.sqrt(10 ** ((elo ?? 1200) / 400 - 4));
+const eloToValue = (elo) => Math.sqrt(10 ** (((elo ?? 1200) - 1200) / 800));
 
-const sumWeightedRatings = (idxs, cards, p) =>
-  idxs.length > 0 ? sum(idxs.map((c) => Math.min(MAX_SCORE, p[c] * eloToValue(cardElo(cards[c]))))) / idxs.length : 0;
+const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
+  idxs = idxs.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land') || countLands);
+  return idxs.length > 0
+    ? sum(idxs.map((ci) => Math.min(MAX_SCORE, p[ci] * eloToValue(cardElo(cards[ci]))))) / idxs.length
+    : 0;
+};
 
 const sumSynergy = (cardIndex, idxs, cards, probabilities) =>
   probabilities[cardIndex] * sum(idxs.map((ci) => probabilities[ci] * getSynergy(cardIndex, ci, cards)));
@@ -216,7 +222,8 @@ export const ORACLES = Object.freeze(
         [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
       ],
       // What is the raw power level of this card? Used to assess how much we want to play this card.
-      computeValue: ({ cardIndex, cards, probabilities }) => sumWeightedRatings([cardIndex], cards, probabilities),
+      computeValue: ({ cardIndices, cards, probabilities }) =>
+        sumWeightedRatings(cardIndices, cards, probabilities, true),
     },
     {
       title: 'Pick Synergy',
@@ -229,8 +236,11 @@ export const ORACLES = Object.freeze(
       ],
       // How much does the card we're considering synergize with the cards we've picked?
       // Helps us assess how much we want to play this card.
-      computeValue: ({ picked, cardIndex: ci, cards, probabilities: p }) =>
-        picked.length > 0 ? sumSynergy(ci, picked, cards, p) / picked.length : 0,
+      computeValue: ({ picked, cardIndices, cards, probabilities: p, basics }) =>
+        picked.length + basics.length > 0
+          ? cardIndices.reduce((acc, ci) => sumSynergy(ci, picked.concat(basics), cards, p) + acc, 0) /
+            (picked.length + basics.length)
+          : 0,
     },
     {
       title: 'Internal Synergy',
@@ -244,13 +254,17 @@ export const ORACLES = Object.freeze(
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked: arr, cards: cs, probabilities: ps, totalProbability: tp }) =>
+      computeValue: ({ picked, cards, probabilities: p, totalProbability: total, basics }) =>
         // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
         // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
         // average over the Pick Synergy of each picked card with the rest. There are two ordered
         // pairs for every distinct unordered pair so we multiply by 2.
-        tp > 1 ? (2 * sum(arr.map((ci, i) => sumSynergy(ci, fst(arr, i), cs, ps)))) / arr.length / (tp - 1) : 0,
+        total > 1 && picked.length + basics.length > 0
+          ? (2 * sum(picked.concat(basics).map((ci, i) => sumSynergy(ci, fst(picked.concat(basics), i), cards, p)))) /
+            (picked.length + basics.length) /
+            (total - 1)
+          : 0,
     },
     {
       title: 'Color',
@@ -264,7 +278,8 @@ export const ORACLES = Object.freeze(
       // How good are the cards we've already picked in this color combo?
       // Used to select a color combination.
       // Tends to recommend what we've already picked before.
-      computeValue: ({ picked, probabilities, cards }) => sumWeightedRatings(picked, cards, probabilities),
+      computeValue: ({ picked, basics, probabilities, cards }) =>
+        sumWeightedRatings(picked.concat(basics), cards, probabilities),
     },
     {
       title: 'Openness',
@@ -284,7 +299,8 @@ export const ORACLES = Object.freeze(
 export const ORACLES_BY_NAME = Object.freeze(fromEntries(ORACLES.map((oracle) => [oracle.title, oracle])));
 
 const landCountsAreEqual = (count1, count2) =>
-  COLOR_COMBINATIONS.every((comb) => (count1[comb.join('')] ?? 0) === (count2[comb.join('')] ?? 0));
+  !Object.entries(count1).some(([k, v]) => v !== (count2[k] ?? 0)) &&
+  !Object.entries(count2).some(([k, v]) => v !== (count1[k] ?? 0));
 
 const getCombinationForLands = (lands) => {
   const counts = fromEntries(COLORS.map((c) => [c, 0]));
@@ -299,33 +315,41 @@ const getCombinationForLands = (lands) => {
   return COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(combination, comb));
 };
 
-const getInitialLandsForPool = (pool, cards) => {
-  const lands = { W: 4, U: 4, B: 3, R: 3, G: 3 };
-  for (const cardIndex of pool) {
+const getAvailableLands = (pool, basics, cards) => {
+  const availableLands = {};
+  for (const cardIndex of pool.concat(...basics.map((ci) => new Array(17).fill(ci)))) {
     const card = cards[cardIndex];
     if (cardType(card).toLowerCase().includes('land')) {
       const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
-      const key = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors))?.join?.('') ?? '';
-      lands[key] = (lands[key] ?? 0) + 1;
-      let removed = false;
-      for (const color of colors) {
-        if (lands[color] > 0) {
-          removed = true;
-          lands[color] -= 1;
-          break;
+      const key = (COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors)) ?? []).join('');
+      availableLands[key] = (availableLands[key] ?? 0) + 1;
+    }
+  }
+  return availableLands;
+};
+
+const getRandomLands = (availableLands) => {
+  const currentLands = { ...availableLands };
+  let totalLands = Object.values(currentLands).reduce((x, y) => x + y, 0);
+  while (totalLands > 17) {
+    const index = Math.floor(Math.random() * totalLands);
+    const curStart = 0;
+    for (const [key, count] of Object.entries(currentLands)) {
+      if (index < curStart + count) {
+        currentLands[key] -= 1;
+        totalLands -= 1;
+        if (currentLands[key] <= 0) {
+          delete currentLands[key];
         }
-      }
-      if (!removed) {
-        const color = COLORS.find((c) => lands[c] > 0);
-        if (color) lands[color] -= 1;
+        break;
       }
     }
   }
-  return lands;
+  return currentLands;
 };
 
-const calculateProbabilities = ({ cards, seen, lands }) => {
-  const seenSet = [...new Set(seen)].map((ci) => [ci, cards[ci]]);
+const calculateProbabilities = ({ cards, seen, picked, basics, lands }) => {
+  const seenSet = [...new Set(seen.concat(picked, basics))].map((ci) => [ci, cards[ci]]);
   const seenProbs = seenSet.map(([ci, card]) => [ci, getCastingProbability(card, lands)]);
   const res = cards.map(() => null);
   for (const [ci, prob] of seenProbs) {
@@ -335,47 +359,20 @@ const calculateProbabilities = ({ cards, seen, lands }) => {
 };
 
 const calculateScore = (botState) => {
-  const { cardIndices, picked, cards, probabilities } = botState;
-  const drafting = cardIndices.length > 0;
-  const globalOracleResults = ORACLES.filter(({ perConsideredCard }) => !perConsideredCard).map(
-    ({ title, tooltip, computeWeight, computeValue }) => ({
-      title,
-      tooltip,
-      weight: computeWeight(botState),
-      value: computeValue(botState),
-    }),
-  );
-  if (drafting) {
-    const perCardOracleResults = ORACLES.filter(({ perConsideredCard }) => perConsideredCard).map(
-      ({ title, tooltip, computeWeight, computeValue }) => {
-        const perCard = cardIndices.map((cardIndex) => computeValue({ ...botState, cardIndex }));
-        return {
-          title,
-          tooltip,
-          perCard,
-          weight: computeWeight(botState),
-          value: perCard.reduce((acc, x) => acc + x, 0),
-        };
-      },
-    );
-    const oracleResults = [...perCardOracleResults, ...globalOracleResults];
-    const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
-    return {
-      score,
-      oracleResults,
-      botState,
-      probability: botState.probabilities[botState.cardIndex],
-      colors: getCombinationForLands(botState.lands),
-    };
-  }
-  const nonlandProbability = picked.reduce(
-    (acc, c) => (acc + cardType(cards[c]).toLowerCase().includes('land') ? 0 : probabilities[c]),
-    0,
-  );
-  const score = nonlandProbability * globalOracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
+  const { picked, cards, probabilities, basics } = botState;
+  const oracleResults = ORACLES.map(({ title, tooltip, computeWeight, computeValue }) => ({
+    title,
+    tooltip,
+    weight: computeWeight(botState),
+    value: computeValue(botState),
+  }));
+  const nonlandProbability = picked
+    .concat(basics)
+    .reduce((acc, c) => (acc + cardType(cards[c]).toLowerCase().includes('land') ? 0 : probabilities[c]), 0);
+  const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
   return {
     score,
-    oracleResults: globalOracleResults,
+    oracleResults,
     botState,
     probability: botState.probabilities[botState.cardIndex],
     colors: getCombinationForLands(botState.lands),
@@ -386,33 +383,31 @@ const calculateScore = (botState) => {
 const findBetterLands = (currentScore) => {
   const { botState, score } = currentScore;
   // This makes the bots non-deterministic are we good with that?
-  for (const increaseColor of arrayShuffle([...COLORS])) {
-    for (const decreaseColor of arrayShuffle(COLORS.filter((c) => increaseColor !== c && botState.lands[c] > 0))) {
-      const lands = { ...botState.lands };
-      lands[increaseColor] += 1;
-      lands[decreaseColor] -= 1;
-      const newBotState = { ...botState, lands };
-      botState.probabilities = calculateProbabilities(newBotState);
-      botState.totalProbability = sum(newBotState.probabilities);
-      console.debug(
-        'Testing the score at',
-        lands,
-        'which increases',
-        increaseColor,
-        'and decreases',
-        decreaseColor,
-        'and gives probabilities',
-        newBotState.probabilities.filter((p) => p !== null),
-      );
-      const newScore = calculateScore(newBotState);
-      if (newScore.score > score) {
-        // We assume we won't get caught in a local maxima so it's safe to take first ascent.
-        console.log('Improved by moving to', lands);
-        return newScore;
+  const curLands = botState.lands;
+  const availableIncreases = arrayShuffle(
+    Object.keys(botState.availableLands).filter((c) => (curLands[c] ?? 0) < botState.availableLands[c]),
+  );
+  for (const increaseColor of availableIncreases) {
+    const availableDecreases = arrayShuffle(Object.keys(botState.lands));
+    for (const decreaseColor of availableDecreases) {
+      if (increaseColor !== decreaseColor) {
+        const lands = { ...botState.lands };
+        lands[increaseColor] = (lands[increaseColor] ?? 0) + 1;
+        lands[decreaseColor] -= 1;
+        if (lands[decreaseColor] === 0) {
+          delete lands[decreaseColor];
+        }
+        const newBotState = { ...botState, lands };
+        botState.probabilities = calculateProbabilities(newBotState);
+        botState.totalProbability = sum(newBotState.probabilities);
+        const newScore = calculateScore(newBotState);
+        if (newScore.score > score) {
+          // We assume we won't get caught in a local maxima so it's safe to take first ascent.
+          return newScore;
+        }
       }
     }
   }
-  console.debug('Did not find an increase from', currentScore.botState.lands);
   return currentScore;
 };
 
@@ -421,7 +416,12 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
   let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   const initialBotState = { ...drafterState, cardIndices };
-  initialBotState.lands = getInitialLandsForPool([...drafterState.picked, ...cardIndices], drafterState.cards);
+  initialBotState.availableLands = getAvailableLands(
+    [...drafterState.picked, ...cardIndices],
+    drafterState.basics,
+    drafterState.cards,
+  );
+  initialBotState.lands = getRandomLands(initialBotState.availableLands);
   initialBotState.probabilities = calculateProbabilities(initialBotState);
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);

@@ -115,10 +115,11 @@ const DeckbuilderNavbar = ({
           <NavItem>
             <BasicsModalLink
               modalProps={{
-                basics,
+                basics: draft.basics,
                 addBasics,
                 draft,
                 deck: deck.playerdeck,
+                cards: deck.cards,
               }}
             >
               Add Basic Lands

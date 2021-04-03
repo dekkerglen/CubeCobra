@@ -3,6 +3,9 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
+const Draft = require('../models/draft');
+const GridDraft = require('../models/gridDraft');
+const Deck = require('../models/Deck');
 
 const batchSize = 100;
 

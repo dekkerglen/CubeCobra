@@ -12,7 +12,7 @@ module.exports = {
   },
   colors: {
     type: [{ type: String, enum: ['W', 'U', 'B', 'R', 'G', 'C'] }],
-    default: null,
+    default: void 0, // eslint-disable-line
   },
   finish: {
     type: String,

@@ -24,6 +24,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
   const submitCard = () => {
     if (imageDict) {
       const result = imageDict[cardName.toLowerCase()];
+      console.debug(result);
       if (result) {
         setBasics([...basics, result.id]);
         setCardName('');

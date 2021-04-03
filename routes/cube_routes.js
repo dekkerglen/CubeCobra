@@ -2118,6 +2118,7 @@ router.post(
       draft.initial_state = populated.initial_state;
       draft.seats = populated.seats;
       addBasics(draft, populated.cards, cube.basics, carddb, true);
+      draft.cards = populated.cards;
       draft.cube = cube._id;
 
       await draft.save();
@@ -2771,17 +2772,32 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.owner = draft.seats[0].userid;
     deck.cards = draft.cards;
 
+    const cards = draft.cards.map((c) => ({ ...c, details: carddb.cardFromId(c.cardID) }));
     for (const seat of draft.seats) {
-      deck.seats.push({
-        bot: seat.bot,
-        userid: seat.userid,
-        username: seat.name,
-        pickorder: seat.pickorder,
-        name: `Draft of ${cube.name}`,
-        description: '',
-        deck: seat.drafted,
-        sideboard: seat.sideboard ? seat.sideboard : [],
-      });
+      if (seat.bot) {
+        const { sideboard: side, deck: newDeck } = await buildDeck(cards, seat.pickorder, draft.basics); // eslint-disable-line
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: seat.name,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          sideboard: [side],
+          deck: [newDeck.slice(0, 8), newDeck.slice(8, 16)],
+        });
+      } else {
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: seat.name,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          deck: seat.drafted,
+          sideboard: seat.sideboard ? seat.sideboard : [],
+        });
+      }
     }
 
     if (!cube.numDecks) {

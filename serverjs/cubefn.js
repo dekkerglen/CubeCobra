@@ -170,18 +170,17 @@ function getBasics(carddb) {
 }
 
 function addBasics(deck, cardsArray, basics, carddb, saveToDeck = false) {
-  const populatedBasics = Object.fromEntries(
-    basics.map((cardID) => {
-      const details = carddb.cardFromId(cardID);
-      const populatedCard = {
-        index: cardsArray.length,
-        cardID: details._id,
-        type_line: details.type,
-      };
-      cardsArray.push(populatedCard);
-      return populatedCard;
-    }),
-  );
+  const populatedBasics = basics.map((cardID) => {
+    const details = carddb.cardFromId(cardID);
+    const populatedCard = {
+      cardID: details._id,
+      index: cardsArray.length,
+      isUnlimited: true,
+      type_line: details.type,
+    };
+    cardsArray.push(populatedCard);
+    return populatedCard;
+  });
   if (saveToDeck) deck.basics = populatedBasics.map(({ index }) => index);
 }
 

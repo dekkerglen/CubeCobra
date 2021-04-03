@@ -14,7 +14,7 @@ export const defaultStepsForLength = (length) =>
     .map((action) => ({ ...action }));
 
 export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber = null }) => {
-  const { cards } = draft;
+  const { cards, basics } = draft;
   const numSeats = draft.initial_state.length;
   const seatNum = parseInt(seatNumber, 10);
   const ourPacks = draft.initial_state[seatNum];
@@ -40,11 +40,14 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
       for (let completedAmount = 0; completedAmount < Math.abs(amount ?? 1); completedAmount++) {
         if (useSteps && curStepNumber >= stepEnd) {
           return {
-            cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) ? card : null)),
+            cards: cards.map((card, cardIndex) =>
+              seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null,
+            ),
             picked: ourSeat.pickorder.slice(0, pickedNum),
             trashed: ourSeat.trashorder.slice(0, trashedNum),
             seen,
             cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
+            basics,
             packNum,
             pickNum,
             numPacks,
@@ -66,11 +69,14 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
         } else if (action.match(/pick|trash/)) {
           if (!useSteps && pickedNum + trashedNum >= pickEnd) {
             return {
-              cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) ? card : null)),
+              cards: cards.map((card, cardIndex) =>
+                seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null,
+              ),
               picked: ourSeat.pickorder.slice(0, pickedNum),
               trashed: ourSeat.trashorder.slice(0, trashedNum),
               seen,
               cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
+              basics,
               packNum,
               pickNum,
               numPacks,
@@ -113,11 +119,12 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
     }
   }
   return {
-    cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) ? card : null)),
+    cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
     picked: ourSeat.pickorder.slice(),
     trashed: ourSeat.trashorder.slice(),
     seen,
     cardsInPack: [],
+    basics,
     packNum: numPacks,
     pickNum: 15,
     numPacks,

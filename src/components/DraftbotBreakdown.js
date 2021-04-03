@@ -32,12 +32,12 @@ const TRAITS = Object.freeze([
     title: 'Casting Probability',
     tooltip:
       'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    compute: ({ probability }) => probability,
+    compute: ({ botState: { cardIndices, probabilities } }) => probabilities[cardIndices?.[0]],
   },
   {
     title: 'Lands',
     tooltip: 'This is the color combination the bot is assuming that will maximize the total score.',
-    compute: ({ lands }) => JSON.stringify(lands),
+    compute: ({ botState: { lands } }) => JSON.stringify(lands),
   },
   {
     title: 'Total Score',
@@ -92,7 +92,7 @@ export const DraftbotBreakdownTable = ({ drafterState }) => {
           sortable: true,
         }))}
         data={rows}
-        defaultSortConfig={{ key: 'Total', direction: 'descending' }}
+        defaultSortConfig={{ key: 'Total Score', direction: 'descending' }}
         sortFns={{ Lands: compareStrings, Card: (a, b) => compareStrings(a.details.name, b.details.name) }}
       />
       <h4 className="mt-4 mb-2">{`Pack ${drafterState.packNum + 1}: Pick ${drafterState.pickNum + 1} Weights`}</h4>
