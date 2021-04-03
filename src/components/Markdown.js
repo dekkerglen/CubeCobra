@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
 import { LIMITED_PLUGINS, ALL_PLUGINS } from 'markdown/parser';

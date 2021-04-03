@@ -29,21 +29,15 @@ const Seat = {
 // Cube schema
 const draftSchema = mongoose.Schema({
   basics: {
-    Plains: Number,
-    Island: Number,
-    Swamp: Number,
-    Mountain: Number,
-    Forest: Number,
-    Wastes: Number,
+    default: [],
+    type: [Number],
   },
   cards: [cardSchema],
   cube: String,
   initial_state: [[Pack]],
+  schemaVersion: Number,
   seats: [Seat],
   seed: String,
-  schemaVersion: {
-    type: Number,
-  },
 });
 
 draftSchema.pre('save', () => {

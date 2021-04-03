@@ -169,15 +169,20 @@ function getBasics(carddb) {
   return res;
 }
 
-function addBasicsToDeck(deck, cardsArray, carddb, saveToDeck) {
-  const basics = Object.fromEntries(
-    Object.entries(getBasics(carddb)).map(([name, { details: _, ...card }], idx) => [
-      name,
-      { ...card, index: cardsArray.length + idx },
-    ]),
+function addBasics(deck, cardsArray, basics, carddb, saveToDeck = false) {
+  const populatedBasics = Object.fromEntries(
+    basics.map((cardID) => {
+      const details = carddb.cardFromId(cardID);
+      const populatedCard = {
+        index: cardsArray.length,
+        cardID: details._id,
+        type_line: details.type,
+      };
+      cardsArray.push(populatedCard);
+      return populatedCard;
+    }),
   );
-  deck.cards = cardsArray.concat(Object.values(basics));
-  if (saveToDeck) deck.basics = Object.fromEntries(Object.entries(basics).map(([name, { index }]) => [name, index]));
+  if (saveToDeck) deck.basics = populatedBasics.map(({ index }) => index);
 }
 
 function cardHtml(card) {
@@ -502,7 +507,7 @@ const generateSamplepackImage = (sources = [], options = {}) =>
   });
 
 const methods = {
-  addBasicsToDeck,
+  addBasics,
   getBasics,
   setCubeType,
   cardsAreEquivalent,

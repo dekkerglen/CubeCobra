@@ -173,7 +173,7 @@ export const calculateBasicCounts = (picked, cards) => {
   return { lands: result, colors };
 };
 
-async function build({ botState: { lands, probabilities }, colors }, picked, cards, basics) {
+async function build({ botState: { cards, picked, probabilities }, colors }) {
   let nonlands = picked.filter(
     (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
   );
@@ -184,12 +184,6 @@ async function build({ botState: { lands, probabilities }, colors }, picked, car
   const outOfColor = nonlands.filter((item) => probabilities[item] < PROB_TO_INCLUDE);
   const playableLands = landCards.filter((land) => isPlayableLand(colors, cards[land]));
   const unplayableLands = landCards.filter((land) => !isPlayableLand(colors, cards[land]));
-  console.debug('build', lands);
-  console.log(probabilities);
-  console.log(inColor);
-  console.log(outOfColor);
-  console.log(inColor.map((item) => probabilities[item]));
-  console.log(outOfColor.map((item) => probabilities[item]));
 
   playableLands.sort(sortFn);
 

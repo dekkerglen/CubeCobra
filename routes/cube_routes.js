@@ -12,8 +12,7 @@ const {
   generatePack,
   setCubeType,
   cardsAreEquivalent,
-  addBasicsToDeck,
-  getBasics,
+  addBasics,
   generateShortId,
   buildIdQuery,
   addCardHtml,
@@ -381,7 +380,6 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-    const admin = util.isAdmin(req.user);
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
@@ -470,7 +468,6 @@ router.get('/overview/:id', async (req, res) => {
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
         pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
-        admin,
       },
       {
         title: `${abbreviate(cube.name)} - Overview`,
@@ -1614,7 +1611,7 @@ router.post(
 
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards owner',
+        '_id name draft_formats card_count type cards owner basics',
       ).lean();
 
       if (!cube) {
@@ -1638,7 +1635,7 @@ router.post(
       gridDraft.draftType = type;
 
       gridDraft.cube = cube._id;
-      addBasicsToDeck(gridDraft, source, carddb, true);
+      addBasics(gridDraft, source, cube.basics, carddb, true);
 
       const cards = [];
       for (let i = 0; i < packs; i++) {
@@ -1763,7 +1760,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').t
     deck.seats = [];
     deck.owner = user._id;
     deck.cards = pool;
-    addBasicsToDeck(deck, cardsArray, carddb);
+    addBasics(deck, cardsArray, cube.basics, carddb);
 
     deck.seats.push({
       userid: user._id,
@@ -2075,7 +2072,7 @@ router.post(
     try {
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards',
+        '_id name draft_formats card_count type cards basics',
       ).lean();
 
       if (!cube) {
@@ -2120,7 +2117,7 @@ router.post(
 
       draft.initial_state = populated.initial_state;
       draft.seats = populated.seats;
-      addBasicsToDeck(draft, populated.cards, carddb, true);
+      addBasics(draft, populated.cards, cube.basics, carddb, true);
       draft.cube = cube._id;
 
       await draft.save();
@@ -3001,7 +2998,11 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         if (i !== parseInt(req.params.index, 10)) {
           const picked = base.seats[i].pickorder;
           // eslint-disable-next-line no-await-in-loop
-          const { deck: builtDeck, sideboard, colors } = await buildDeck(deck.cards, picked, srcDraft.basics);
+          const { deck: builtDeck, sideboard, colors } = await buildDeck(
+            deck.cards.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) })),
+            picked,
+            srcDraft.basics,
+          );
           deck.seats.push({
             userid: null,
             username: `Bot ${botNumber}: ${colors.join(', ')}`,
@@ -3094,6 +3095,12 @@ router.get('/redraft/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
+    const cube = await Cube.findById(srcDraft.cube);
+    if (!cube) {
+      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
@@ -3146,6 +3153,12 @@ router.post('/api/redraft/:id', async (req, res) => {
 
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+
+    const cube = await Cube.findById(srcDraft.cube);
+    if (!cube) {
+      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
@@ -3218,7 +3231,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       card.details = carddb.cardFromId(card.cardID);
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics`).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -3232,7 +3245,15 @@ router.get('/deckbuilder/:id', async (req, res) => {
       {
         cube,
         initialDeck: deck,
-        basics: getBasics(carddb),
+        basics: cube.basics.map((cardID) => {
+          const details = carddb.cardFromId(cardID);
+          return {
+            details,
+            cardID: details._id,
+            type_line: details.type,
+            cmc: 0,
+          };
+        }),
         draft,
       },
       {
@@ -3249,6 +3270,35 @@ router.get('/deckbuilder/:id', async (req, res) => {
     return util.handleRouteError(req, res, err, '/404');
   }
 });
+
+router.post(
+  '/api/updatebasics/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Cube can only be updated by cube owner.',
+      });
+    }
+
+    cube.basics = req.body;
+
+    await cube.save();
+
+    return res.status(200).send({
+      success: 'true',
+    });
+  }),
+);
 
 router.get('/deck/:id', async (req, res) => {
   try {
@@ -3552,6 +3602,20 @@ router.post(
 router.post('/resize/:id/:size', async (req, res) => {
   try {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!cube) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Cube can only be updated by cube owner.',
+      });
+    }
 
     const response = await fetch(
       `${process.env.FLASKROOT}/?cube_name=${encodeURIComponent(

@@ -17,12 +17,8 @@ const Seat = {
 // Cube schema
 const gridDraftSchema = mongoose.Schema({
   basics: {
-    Plains: Number,
-    Island: Number,
-    Swamp: Number,
-    Mountain: Number,
-    Forest: Number,
-    Wastes: Number,
+    default: [],
+    type: [Number],
   },
   cards: [cardSchema],
   cube: String,

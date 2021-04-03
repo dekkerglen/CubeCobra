@@ -12,6 +12,7 @@ import TextEntry from 'components/TextEntry';
 import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
@@ -78,10 +79,9 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 
   const addBasics = useCallback(
     (numBasics) => {
-      const addedLists = Object.entries(numBasics).map(([basic, count]) => new Array(count).fill(basics[basic]));
-      const added = addedLists.flat();
+      const toAdd = numBasics.map((count, index) => new Array(count).fill(basics[index])).flat();
       const newDeck = [...deck];
-      newDeck[1][0] = [].concat(newDeck[1][0], added);
+      newDeck[1][0] = [].concat(newDeck[1][0], toAdd);
       setDeck(newDeck);
     },
     [deck, basics],
@@ -97,8 +97,9 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider>
+        <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar
+            basics={basics}
             deck={currentDeck}
             addBasics={addBasics}
             name={name}
@@ -150,7 +151,6 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
                     onChange={(e) => setName(e.target.value)}
                   />
                   <br />
-
                   <h6>Description</h6>
                   <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
                 </CardBody>
@@ -164,7 +164,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 };
 
 CubeDeckbuilderPage.propTypes = {
-  basics: PropTypes.objectOf(PropTypes.object).isRequired,
+  basics: PropTypes.arrayOf(CardPropType).isRequired,
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,
   draft: PropTypes.shape({
