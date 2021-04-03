@@ -213,7 +213,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     )}
                   </Row>
                 )}
-                {user.roles.includes('Admin') && (
+                {user && user.roles.includes('Admin') && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
