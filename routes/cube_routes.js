@@ -58,6 +58,14 @@ const { ensureAuth, csrfProtection, flashValidationErrors, jsonValidationErrors 
 
 router.use(csrfProtection);
 
+const DEFAULT_BASICS = [
+  '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
+  '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
+  '19e71532-3f79-4fec-974f-b0e85c7fe701',
+  '8365ab45-6d78-47ad-a6ed-282069b0fabc',
+  '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
+];
+
 // Add Submit POST Route
 router.post('/add', ensureAuth, async (req, res) => {
   try {
@@ -1641,7 +1649,7 @@ router.post(
       gridDraft.draftType = type;
 
       gridDraft.cube = cube._id;
-      gridDraft.basics = cube.basics.map((cardID) => {
+      gridDraft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
         const details = carddb.cardFromId(cardID);
         return {
           details,
@@ -2132,7 +2140,7 @@ router.post(
       draft.unopenedPacks = populated.unopenedPacks;
       draft.seats = populated.seats;
       draft.cube = cube._id;
-      draft.basics = cube.basics.map((cardID) => {
+      draft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
         const details = carddb.cardFromId(cardID);
         return {
           details,
@@ -3064,7 +3072,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       deckutil.default.init(srcDraft);
       const { colors: userColors } = await deckutil.default.buildDeck(
         base.seats[req.params.index].pickorder,
-        cube.basics.map((cardID) => {
+        (cube.basics || DEFAULT_BASICS).map((cardID) => {
           const details = carddb.cardFromId(cardID);
           return {
             details,
@@ -3094,7 +3102,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
-            cube.basics.map((cardID) => {
+            (cube.basics || DEFAULT_BASICS).map((cardID) => {
               const details = carddb.cardFromId(cardID);
               return {
                 details,
@@ -3205,7 +3213,7 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = cube.basics.map((cardID) => {
+    draft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
       const details = carddb.cardFromId(cardID);
       return {
         details,
@@ -3274,7 +3282,7 @@ router.post('/api/redraft/:id', async (req, res) => {
     let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = cube.basics.map((cardID) => {
+    draft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
       const details = carddb.cardFromId(cardID);
       return {
         details,
@@ -3395,7 +3403,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       {
         cube,
         initialDeck: deck,
-        basics: cube.basics.map((cardID) => {
+        basics: (cube.basics || DEFAULT_BASICS).map((cardID) => {
           const details = carddb.cardFromId(cardID);
           return {
             details,
