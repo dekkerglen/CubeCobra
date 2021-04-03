@@ -472,6 +472,8 @@ router.get('/overview/:id', async (req, res) => {
     delete cube.draft_formats;
     delete cube.maybe;
 
+    cube.basics = cube.basics || DEFAULT_BASICS;
+
     return render(
       req,
       res,
