@@ -437,12 +437,8 @@ export const calculateBotPick = (drafterState, reverse = false) =>
     .map((cardIndex) => [evaluateCardsOrPool(cardIndex, drafterState).score, cardIndex])
     .sort(([a], [b]) => (reverse ? a - b : b - a))[0][1];
 
-const GRID_DRAFT_OPTIONS = [0, 1, 2]
-  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
-  .flat(1);
-
-export const calculateGridBotPick = (gridDrafterState) =>
-  GRID_DRAFT_OPTIONS.map((packIndices) =>
+export const calculateBotPickFromOptions = (options) => (gridDrafterState) =>
+  options.map((packIndices) =>
     packIndices.map((pi) => [gridDrafterState.cardsInPack[pi], pi]).filter(([x]) => x || x === 0),
   )
     .filter((option) => option.length > 0)

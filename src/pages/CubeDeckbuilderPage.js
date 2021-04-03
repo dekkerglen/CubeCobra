@@ -26,7 +26,8 @@ const oppositeLocation = {
   [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
 };
 
-const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
+const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
+  const { basics } = initialDeck;
   const [deck, setDeck] = useState(
     initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
@@ -86,7 +87,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
     },
     [deck, basics],
   );
-
+  console.debug('initialDeck.cards', initialDeck.cards);
   const currentDeck = { ...initialDeck };
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
@@ -99,13 +100,11 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar
-            basics={basics}
             deck={currentDeck}
             addBasics={addBasics}
             name={name}
             description={description}
             className="mb-3"
-            draft={draft}
             setDeck={setDeck}
             setSideboard={setSideboard}
             cards={initialDeck.cards}
@@ -164,12 +163,8 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
 };
 
 CubeDeckbuilderPage.propTypes = {
-  basics: PropTypes.arrayOf(CardPropType).isRequired,
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
-  }).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };

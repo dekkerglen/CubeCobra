@@ -18,8 +18,14 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
     toggle();
   }, [addBasics, toggle, basics, counts]);
 
+  console.debug(
+    'cards[basics]',
+    basics.map((ci) => cards[ci]),
+    'deck[basics]',
+    deck.map((ci) => cards[ci]),
+  );
   const calculateBasics = useCallback(async () => {
-    const { deck: newDeck } = await buildDeck(cards, deck.flat(2), basics);
+    const { deck: newDeck } = await buildDeck(cards, deck, basics);
     const basicIds = fromEntries(basics.map((ci, idx) => [ci, idx]));
 
     const newCounts = basics.map(() => 0);
@@ -88,11 +94,7 @@ BasicsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   addBasics: PropTypes.func.isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  }).isRequired,
-  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
+  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
   basics: PropTypes.arrayOf(PropTypes.number).isRequired,
   cards: PropTypes.arrayOf(CardPropType).isRequired,
 };

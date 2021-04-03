@@ -41,6 +41,7 @@ const deckSchema = mongoose.Schema({
   schemaVersion: {
     type: Number,
   },
+  basics: [Number],
 });
 
 deckSchema.index({

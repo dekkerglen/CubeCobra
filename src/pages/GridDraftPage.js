@@ -31,18 +31,23 @@ import UserPropType from 'proptypes/UserPropType';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
-import { calculateGridBotPick } from 'drafting/draftbots';
+import { calculateBotPickFromOptions } from 'drafting/draftbots';
 import { getDefaultPosition } from 'drafting/draftutil';
 import { getGridDrafterState } from 'drafting/griddraftutils';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
+
+const GRID_DRAFT_OPTIONS = [0, 1, 2]
+  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
+  .flat(1);
+export const calculateGridBotPick = calculateBotPickFromOptions(GRID_DRAFT_OPTIONS);
 
 const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
         <h4>
-          Pack {packNumber}, Pick {pickNumber}
+          Pack {packNumber + 1}, Pick {pickNumber + 1}
         </h4>
         <h4 className="mb-0">
           {turn && (
@@ -163,15 +168,14 @@ const useMutatableGridDraft = (initialGridDraft) => {
   return { gridDraft, mutations };
 };
 
-const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
+export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
   const { cards, draftType } = initialDraft;
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
-  const drafterStates = useMemo(
-    () => gridDraft.seats.map((_, seatIndex) => getGridDrafterState({ gridDraft, seatNumber: seatIndex })),
-    [gridDraft],
-  );
+  const drafterStates = useMemo(() => [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx })), [
+    gridDraft,
+  ]);
   const { turn, numPacks, packNum, pickNum, cardsInPack } = drafterStates[seatNum];
   const doneDrafting = packNum >= numPacks;
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
@@ -183,6 +187,8 @@ const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
       ),
     [gridDraft, cards],
   );
+  const botIndex = (seatNum + 1) % 2;
+  const botDrafterState = drafterStates[botIndex];
 
   // The finish callback.
   useEffect(() => {
@@ -204,13 +210,11 @@ const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [doneDrafting, gridDraft]);
 
   useEffect(() => {
-    console.log('in effect');
-    if (!turn && draftType === 'bot') {
-      console.log(turn);
-      const cardIndices = calculateGridBotPick(drafterStates[1]);
-      mutations.makePick({ cardIndices, seatIndex: (seatNumber + 1) % 2 });
+    if (botDrafterState.turn && draftType === 'bot') {
+      console.log('in effect to make bot picks', botDrafterState);
+      mutations.makePick({ cardIndices: calculateGridBotPick(botDrafterState), seatIndex: botIndex });
     }
-  }, [turn, draftType, drafterStates, mutations, seatNumber]);
+  }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -278,8 +282,8 @@ GridDraftPage.propTypes = {
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.array.isRequired,
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
-    basics: PropTypes.shape([]),
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired)).isRequired,
+    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,
   }).isRequired,

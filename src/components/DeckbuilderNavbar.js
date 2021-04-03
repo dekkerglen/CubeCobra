@@ -14,18 +14,8 @@ import withModal from 'components/WithModal';
 
 const BasicsModalLink = withModal(NavLink, BasicsModal);
 
-const DeckbuilderNavbar = ({
-  deck,
-  basics,
-  addBasics,
-  name,
-  description,
-  className,
-  draft,
-  setSideboard,
-  setDeck,
-  ...props
-}) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setSideboard, setDeck, ...props }) => {
+  const { basics } = deck;
   const [isOpen, setIsOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -83,13 +73,13 @@ const DeckbuilderNavbar = ({
       .flat(2)
       .concat(deck.playersideboard.flat(2))
       .map((c) => c.index);
-    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, draft.basics);
+    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
     setSideboard([side.map((col) => col.map((ci) => deck.cards[ci]))]);
     setDeck([
       newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(0, 8),
       newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(8, 16),
     ]);
-  }, [deck, draft, setDeck, setSideboard]);
+  }, [deck, basics, setDeck, setSideboard]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
@@ -115,10 +105,9 @@ const DeckbuilderNavbar = ({
           <NavItem>
             <BasicsModalLink
               modalProps={{
-                basics: draft.basics,
+                basics,
                 addBasics,
-                draft,
-                deck: deck.playerdeck,
+                deck: deck.playerdeck.flat(3).map(({ index }) => index),
                 cards: deck.cards,
               }}
             >
@@ -138,23 +127,19 @@ const DeckbuilderNavbar = ({
 };
 
 DeckbuilderNavbar.propTypes = {
-  basics: PropTypes.arrayOf(CardPropType).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     cube: PropTypes.string.isRequired,
-    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(CardPropType.isRequired).isRequired).isRequired)
+      .isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
+    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   }).isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   className: PropTypes.string,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-    basics: PropTypes.arrayOf(PropTypes.number.isRequired),
-  }).isRequired,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,
 };

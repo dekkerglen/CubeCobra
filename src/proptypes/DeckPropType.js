@@ -7,6 +7,7 @@ const DeckPropType = PropTypes.shape({
   seats: PropTypes.arrayOf(DraftSeatPropType),
   date: PropTypes.instanceOf(Date),
   comments: PropTypes.arrayOf(PropTypes.object),
+  basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
 });
 
 export default DeckPropType;
