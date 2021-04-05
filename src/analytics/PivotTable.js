@@ -20,9 +20,10 @@ const PivotTable = ({ cards, characteristics }) => {
     'Price TIX': cardTix(card),
     Elo: card.details.elo,
     'Cube Elo': characteristics['Cube Elo'](card),
-    'Mainboard Rate': characteristics['Mainboard Rate'](card),
     'Pick Rate': characteristics['Pick Rate'](card),
     'Pick Count': characteristics['Pick Count'](card),
+    'Mainboard Rate': characteristics['Mainboard Rate'](card),
+    'Mainboard Count': characteristics['Mainboard Count'](card),
   }));
 
   const [state, updateState] = useState(data);
@@ -37,7 +38,13 @@ const PivotTable = ({ cards, characteristics }) => {
 
 PivotTable.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  characteristics: PropTypes.shape({}).isRequired,
+  characteristics: PropTypes.shape({
+    'Cube Elo': PropTypes.func.isRequired,
+    'Mainboard Rate': PropTypes.func.isRequired,
+    'Mainboard Count': PropTypes.func.isRequired,
+    'Pick Rate': PropTypes.func.isRequired,
+    'Pick Count': PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default PivotTable;
