@@ -25,6 +25,8 @@ const {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  newCardAnalytics,
+  getEloAdjustment,
 } = require('../serverjs/cubefn.js');
 
 const deckutil = require('../dist/utils/Draft.js');
@@ -464,7 +466,6 @@ router.get('/overview/:id', async (req, res) => {
 
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
-
     cube.raw_desc = cube.body;
 
     // Performance
@@ -4231,40 +4232,43 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft) {
-      // TODO: fix cube schema, fix out of sync if an edit is also occuring
-      /*
-      const cube = await Cube.findOne(buildIdQuery(draft.cube));
+      try {
+        const cube = await Cube.findOne(buildIdQuery(draft.cube), 'cardAnalytics');
+        if (!cube.cardAnalytics) {
+          cube.cardAnalytics = [];
+        }
 
-      if (cube) {
-        const picked = [];
-        const passed = [];
-        for (const card of cube.cards) {
-          const { name } = carddb.cardFromId(card.cardID);
-          if (name === req.body.pick) {
-            picked.push(card);
+        if (cube) {
+          let pickIndex = cube.cardAnalytics.findIndex(
+            (card) => card.cardName.toLowerCase() === req.body.pick.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              cube.cardAnalytics.push(newCardAnalytics(req.body.pick.toLowerCase(), ELO_BASE + ELO_RANGE / 2)) - 1;
           }
-          if (req.body.pack.indexOf(name) !== -1) {
-            passed.push(card);
+
+          const packIndeces = {};
+          for (const packCard of req.body.pack) {
+            let index = cube.cardAnalytics.findIndex((card) => card.cardName.toLowerCase() === packCard.toLowerCase());
+            if (index === -1) {
+              index = cube.cardAnalytics.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE + ELO_RANGE / 2)) - 1;
+            }
+            packIndeces[packCard] = index;
+
+            const adjustments = getEloAdjustment(cube.cardAnalytics[pickIndex].elo, cube.cardAnalytics[index].elo);
+            cube.cardAnalytics[pickIndex].elo += adjustments[0];
+            cube.cardAnalytics[index].elo += adjustments[1];
+
+            cube.cardAnalytics[index].passes += 1;
           }
+
+          cube.cardAnalytics[pickIndex].picks += 1;
+
+          await cube.save();
         }
-        const pick =
-          draft.initial_state[0][Math.min(draft.initial_state[0].length - 1, req.body.packNum - 1)].length -
-          req.body.pack.length;
-        for (const card of picked) {
-          if (!card.picks) {
-            card.picks = [];
-          }
-          card.picks.push([req.body.packNum, pick]);
-        }
-        for (const card of passed) {
-          if (!card.passed) {
-            card.passed = 0;
-          }
-          card.passed += 1;
-        }
-        await cube.save();
+      } catch (err) {
+        req.logger.error(err);
       }
-      */
 
       if (!rating.elo) {
         rating.name = req.body.pick;
@@ -4289,14 +4293,10 @@ router.post(
           }
         }
 
-        const diff = other.elo - rating.elo;
-        // Expected performance for pick.
-        const expectedA = 1 / (1 + 10 ** (diff / 400));
-        const expectedB = 1 - expectedA;
-        const adjustmentA = 2 * (1 - expectedA);
-        const adjustmentB = 2 * (0 - expectedB);
-        rating.elo += adjustmentA;
-        other.elo += adjustmentB;
+        const adjustments = getEloAdjustment(rating.elo, other.elo);
+
+        rating.elo += adjustments[0];
+        other.elo += adjustments[1];
       }
       await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }

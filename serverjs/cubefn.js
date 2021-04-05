@@ -517,6 +517,25 @@ const methods = {
       pack: draft.initial_state[0][0],
     };
   },
+  newCardAnalytics: (cardName, elo) => {
+    return {
+      cardName,
+      picks: 0,
+      passes: 0,
+      elo,
+      mainboards: 0,
+      sideboards: 0,
+    };
+  },
+  getEloAdjustment: (winner, loser) => {
+    const diff = loser - winner;
+    // Expected performance for pick.
+    const expectedA = 1 / (1 + 10 ** (diff / 400));
+    const expectedB = 1 - expectedA;
+    const adjustmentA = 2 * (1 - expectedA);
+    const adjustmentB = 2 * (0 - expectedB);
+    return [adjustmentA, adjustmentB];
+  },
   generateShortId,
   buildIdQuery,
   getCubeId,

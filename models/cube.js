@@ -159,6 +159,19 @@ const cubeSchema = mongoose.Schema({
       '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
     ],
   },
+  cardAnalytics: {
+    type: [
+      {
+        cardName: String,
+        picks: Number,
+        passes: Number,
+        elo: Number,
+        mainboards: Number,
+        sideboards: Number,
+      },
+    ],
+    default: [],
+  },
 });
 
 cubeSchema.index({
