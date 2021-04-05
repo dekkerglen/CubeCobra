@@ -187,7 +187,7 @@ const fetchTree = async (treeUrl, treePath) => {
 };
 
 const AutocompleteInput = forwardRef(
-  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, ...props }, ref) => {
+  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, cubeId, ...props }, ref) => {
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
@@ -286,7 +286,7 @@ const AutocompleteInput = forwardRef(
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
-              <AutocardLi front={`/tool/cardimage/${match}`} key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
+              <AutocardLi front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`} key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
                 {match}
               </AutocardLi>
             ))}

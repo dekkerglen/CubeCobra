@@ -198,6 +198,7 @@ const EditCollapse = ({ ...props }) => {
           <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
+                cubeId={cube._id}
                 treeUrl={`/cube/api/cubecardnames/${cubeID}`}
                 treePath="cardnames"
                 type="text"
