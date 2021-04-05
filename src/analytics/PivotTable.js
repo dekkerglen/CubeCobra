@@ -19,7 +19,7 @@ const PivotTable = ({ cards, characteristics }) => {
     'Price EUR': cardPriceEur(card),
     'Price TIX': cardTix(card),
     Elo: card.details.elo,
-    'Cube ELO': characteristics['Cube ELO'](card),
+    'Cube Elo': characteristics['Cube Elo'](card),
     'Mainboard Rate': characteristics['Mainboard Rate'](card),
     'Pick Rate': characteristics['Pick Rate'](card),
     'Pick Count': characteristics['Pick Count'](card),

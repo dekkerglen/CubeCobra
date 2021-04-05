@@ -4275,7 +4275,7 @@ router.post(
       if (!Number.isFinite(rating.elo)) {
         rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
       }
-      // Update ELO.
+      // Update Elo.
       for (const other of packRatings) {
         if (!Number.isFinite(other.elo)) {
           if (!Number.isFinite(other.value)) {

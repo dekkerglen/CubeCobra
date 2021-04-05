@@ -78,7 +78,7 @@ const CubeAnalysisPage = ({
     'Price USD Foil': (card) => parseFloat(cardFoilPrice(card)),
     'Price EUR': (card) => parseFloat(cardPriceEur(card)),
     'MTGO TIX': (card) => parseFloat(cardTix(card)),
-    'Cube ELO': (card) =>
+    'Cube Elo': (card) =>
       cardAnalyticsDict[card.details.name.toLowerCase()]
         ? Math.round(cardAnalyticsDict[card.details.name.toLowerCase()].elo)
         : null,
