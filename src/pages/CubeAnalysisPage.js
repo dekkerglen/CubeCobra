@@ -82,10 +82,6 @@ const CubeAnalysisPage = ({
       cardAnalyticsDict[card.details.name.toLowerCase()]
         ? Math.round(cardAnalyticsDict[card.details.name.toLowerCase()].elo)
         : null,
-    'Mainboard Rate': (card) =>
-      cardAnalyticsDict[card.details.name.toLowerCase()]
-        ? mainboardRate(cardAnalyticsDict[card.details.name.toLowerCase()])
-        : null,
     'Pick Rate': (card) =>
       cardAnalyticsDict[card.details.name.toLowerCase()]
         ? pickRate(cardAnalyticsDict[card.details.name.toLowerCase()])
@@ -93,6 +89,14 @@ const CubeAnalysisPage = ({
     'Pick Count': (card) =>
       cardAnalyticsDict[card.details.name.toLowerCase()]
         ? cardAnalyticsDict[card.details.name.toLowerCase()].picks
+        : null,
+    'Mainboard Rate': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? mainboardRate(cardAnalyticsDict[card.details.name.toLowerCase()])
+        : null,
+    'Mainboard Count': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? cardAnalyticsDict[card.details.name.toLowerCase()].mainboards
         : null,
     'Devotion to White': (card) => cardDevotion(card, 'w'),
     'Devotion to Blue': (card) => cardDevotion(card, 'u'),

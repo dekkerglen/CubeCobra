@@ -84,7 +84,7 @@ export const mainboardRate = ({ mainboards, sideboards }) => {
 };
 
 export const pickRate = ({ picks, passes }) => {
-  return picks / (picks + passes);
+  return picks + passes > 0 ? picks / (picks + passes) : 0;
 };
 
 export const cardTags = (card) => card.tags;

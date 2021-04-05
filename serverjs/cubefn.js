@@ -330,6 +330,79 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
+const newCardAnalytics = (cardName, elo) => {
+  return {
+    cardName,
+    picks: 0,
+    passes: 0,
+    elo,
+    mainboards: 0,
+    sideboards: 0,
+  };
+};
+
+const removeDeckCardAnalytics = (cube, deck, carddb) => {
+  cube.numDecks -= 1;
+
+  for (const col of deck.seats[0].deck) {
+    for (const current of col) {
+      let pickIndex = cube.cardAnalytics.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      cube.cardAnalytics[pickIndex].mainboards = Math.max(0, cube.cardAnalytics[pickIndex].mainboards - 1);
+    }
+  }
+  for (const col of deck.seats[0].sideboard) {
+    for (const current of col) {
+      let pickIndex = cube.cardAnalytics.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      cube.cardAnalytics[pickIndex].sideboards = Math.max(0, cube.cardAnalytics[pickIndex].sideboards - 1);
+    }
+  }
+
+  return cube;
+};
+
+const addDeckCardAnalytics = (cube, deck, carddb) => {
+  cube.numDecks += 1;
+
+  for (const col of deck.seats[0].deck) {
+    for (const current of col) {
+      let pickIndex = cube.cardAnalytics.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      cube.cardAnalytics[pickIndex].mainboards += 1;
+    }
+  }
+  for (const col of deck.seats[0].sideboard) {
+    for (const current of col) {
+      let pickIndex = cube.cardAnalytics.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      cube.cardAnalytics[pickIndex].sideboards += 1;
+    }
+  }
+
+  return cube;
+};
+
 /*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
@@ -517,16 +590,7 @@ const methods = {
       pack: draft.initial_state[0][0],
     };
   },
-  newCardAnalytics: (cardName, elo) => {
-    return {
-      cardName,
-      picks: 0,
-      passes: 0,
-      elo,
-      mainboards: 0,
-      sideboards: 0,
-    };
-  },
+  newCardAnalytics,
   getEloAdjustment: (winner, loser) => {
     const diff = loser - winner;
     // Expected performance for pick.
@@ -553,6 +617,8 @@ const methods = {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  removeDeckCardAnalytics,
+  addDeckCardAnalytics,
 };
 
 module.exports = methods;

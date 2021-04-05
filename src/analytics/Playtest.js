@@ -27,6 +27,7 @@ const AnalyticTable = ({ cards: allCards, cube }) => {
           mainboard: mainboardRate({ mainboards, sideboards }),
           pickrate: pickRate({ picks, passes }),
           picks,
+          mainboards,
         })),
     [cube, cardDict],
   );
@@ -38,9 +39,10 @@ const AnalyticTable = ({ cards: allCards, cube }) => {
           columnProps={[
             { key: 'cardName', title: 'Card Name', heading: true, sortable: true },
             { key: 'elo', title: 'Cube Elo', sortable: true, heading: false },
-            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false },
             { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false },
             { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
+            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false },
+            { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
           ]}
           data={data}
           sortFns={{ label: compareStrings }}

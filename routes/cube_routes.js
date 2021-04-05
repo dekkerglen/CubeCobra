@@ -27,6 +27,8 @@ const {
   generateSamplepackImage,
   newCardAnalytics,
   getEloAdjustment,
+  removeDeckCardAnalytics,
+  addDeckCardAnalytics,
 } = require('../serverjs/cubefn.js');
 
 const deckutil = require('../dist/utils/Draft.js');
@@ -1185,16 +1187,10 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      {
-        $inc: {
-          numDecks: 1,
-        },
-      },
-    );
+
+    addDeckCardAnalytics(cube, deck, carddb);
+
+    await cube.save();
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
@@ -1728,7 +1724,7 @@ router.post(
 
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards owner numDecks disableNotifications',
+        '_id name draft_formats card_count type cards owner numDecks disableNotifications cardAnalytics',
       );
 
       if (!cube) {
@@ -1798,10 +1794,7 @@ router.post(
 
       await deck.save();
 
-      if (!cube.numDecks) {
-        cube.numDecks = 0;
-      }
-      cube.numDecks += 1;
+      addDeckCardAnalytics(cube, deck, carddb);
 
       await cube.save();
 
@@ -2825,6 +2818,10 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
+    const cube = await Cube.findOne({ _id: deck.cube });
+
+    removeDeckCardAnalytics(cube, deck, carddb);
+
     const newdeck = JSON.parse(req.body.draftraw);
     const name = JSON.parse(req.body.name);
     const description = JSON.parse(req.body.description);
@@ -2836,6 +2833,10 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     deck.seats[0].description = description;
 
     await deck.save();
+
+    addDeckCardAnalytics(cube, deck, carddb);
+
+    await cube.save();
 
     req.flash('success', 'Deck saved successfully');
     return res.redirect(`/cube/deck/${deck._id}`);
@@ -2874,11 +2875,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       });
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
@@ -2892,6 +2888,8 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         `${user.username} drafted your cube: ${cube.name}`,
       );
     }
+
+    addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -2931,11 +2929,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       });
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
@@ -2949,6 +2942,8 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
         `${user.username} drafted your cube: ${cube.name}`,
       );
     }
+
+    addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -3155,10 +3150,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       }
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
+    addDeckCardAnalytics(cube, deck, carddb);
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
