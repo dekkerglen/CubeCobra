@@ -1,6 +1,9 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Input } from 'reactstrap';
+import withAutocard from 'components/WithAutocard';
+
+const AutocardLi = withAutocard('li');
 
 function getAllMatches(names, current) {
   const posts = getPosts(names, current);
@@ -283,9 +286,9 @@ const AutocompleteInput = forwardRef(
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
-              <li key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
+              <AutocardLi front={`/tool/cardimage/${match}`} key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
                 {match}
-              </li>
+              </AutocardLi>
             ))}
           </ul>
         )}

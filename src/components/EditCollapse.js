@@ -14,6 +14,7 @@ import {
   Input,
   Card,
   FormText,
+  InputGroupText,
 } from 'reactstrap';
 
 import { encodeName } from 'utils/Card';
@@ -61,6 +62,7 @@ const EditCollapse = ({ ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
   const [mentions, setMentions] = useState('');
+  const [specifyEdition, setSpecifyEdition] = useState(false);
 
   const {
     changes,
@@ -173,7 +175,7 @@ const EditCollapse = ({ ...props }) => {
           <Form inline className="mb-2 mr-2" onSubmit={handleAdd}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
-                treeUrl="/cube/api/cardnames"
+                treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
                 treePath="cardnames"
                 type="text"
                 innerRef={addInputRef}
@@ -214,6 +216,22 @@ const EditCollapse = ({ ...props }) => {
                   Remove/Replace
                 </Button>
               </InputGroupAddon>
+            </InputGroup>
+          </Form>
+          <Form inline className="mb-2 mr-2">
+            <InputGroup>
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>
+                  <Input
+                    addon
+                    type="checkbox"
+                    aria-label="Checkbox for following text input"
+                    checked={specifyEdition}
+                    onChange={() => setSpecifyEdition(!specifyEdition)}
+                  />
+                </InputGroupText>
+              </InputGroupAddon>
+              <Input disabled value="Specify Versions" />
             </InputGroup>
           </Form>
         </Row>
