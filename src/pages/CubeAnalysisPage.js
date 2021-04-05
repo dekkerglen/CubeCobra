@@ -8,6 +8,7 @@ import Chart from 'analytics/Chart';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
+import Playtest from 'analytics/Playtest';
 import PivotTable from 'analytics/PivotTable';
 import AnalyticTable from 'analytics/AnalyticTable';
 import Cloud from 'analytics/Cloud';
@@ -32,9 +33,12 @@ import {
   cardToughness,
   cardPriceEur,
   cardTix,
+  mainboardRate,
+  pickRate,
 } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
+import { fromEntries } from 'utils/Util';
 
 const CubeAnalysisPage = ({
   user,
@@ -60,6 +64,10 @@ const CubeAnalysisPage = ({
     return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
   }, [asfans, cube, filter]);
 
+  const cardAnalyticsDict = fromEntries(
+    cube.cardAnalytics.map((cardAnalytic) => [cardAnalytic.cardName, cardAnalytic]),
+  );
+
   const characteristics = {
     CMC: cardCmc,
     Power: (card) => parseInt(cardPower(card), 10),
@@ -70,6 +78,22 @@ const CubeAnalysisPage = ({
     'Price USD Foil': (card) => parseFloat(cardFoilPrice(card)),
     'Price EUR': (card) => parseFloat(cardPriceEur(card)),
     'MTGO TIX': (card) => parseFloat(cardTix(card)),
+    'Cube ELO': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? Math.round(cardAnalyticsDict[card.details.name.toLowerCase()].elo)
+        : null,
+    'Mainboard Rate': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? mainboardRate(cardAnalyticsDict[card.details.name.toLowerCase()])
+        : null,
+    'Pick Rate': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? pickRate(cardAnalyticsDict[card.details.name.toLowerCase()])
+        : null,
+    'Pick Count': (card) =>
+      cardAnalyticsDict[card.details.name.toLowerCase()]
+        ? cardAnalyticsDict[card.details.name.toLowerCase()].picks
+        : null,
     'Devotion to White': (card) => cardDevotion(card, 'w'),
     'Devotion to Blue': (card) => cardDevotion(card, 'u'),
     'Devotion to Black': (card) => cardDevotion(card, 'b'),
@@ -127,6 +151,10 @@ const CubeAnalysisPage = ({
       ),
     },
     {
+      name: 'Playtest',
+      component: (collection) => <Playtest cards={collection} cube={cube} />,
+    },
+    {
       name: 'Tokens',
       component: (_, cubeObj) => <Tokens cube={cubeObj} />,
     },
@@ -138,7 +166,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Pivot Table',
-      component: (collection) => <PivotTable cards={collection} />,
+      component: (collection) => <PivotTable cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Hypergeometric Calculator',

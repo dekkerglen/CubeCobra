@@ -79,6 +79,14 @@ export function cardsAreEquivalent(a, b) {
   );
 }
 
+export const mainboardRate = ({ mainboards, sideboards }) => {
+  return mainboards + sideboards > 0 ? mainboards / (mainboards + sideboards) : 0;
+};
+
+export const pickRate = ({ picks, passes }) => {
+  return picks / (picks + passes);
+};
+
 export const cardTags = (card) => card.tags;
 
 export const cardFinish = (card) => card.finish;
