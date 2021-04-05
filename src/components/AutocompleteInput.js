@@ -286,7 +286,12 @@ const AutocompleteInput = forwardRef(
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
-              <AutocardLi front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`} key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
+              <AutocardLi
+                front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
+                key={index}
+                onClick={handleClickSuggestion}
+                className={index === position ? 'active' : undefined}
+              >
                 {match}
               </AutocardLi>
             ))}

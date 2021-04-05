@@ -342,7 +342,12 @@ class CubeOverviewModal extends Component {
                 <br />
 
                 <h6>Description</h6>
-                <TextEntry name="blog" value={pickDescriptionFromCube(cube)} onChange={this.handleDescriptionChange} maxLength={100000}/>
+                <TextEntry
+                  name="blog"
+                  value={pickDescriptionFromCube(cube)}
+                  onChange={this.handleDescriptionChange}
+                  maxLength={100000}
+                />
                 <FormText>
                   Having trouble formatting your posts? Check out the{' '}
                   <a href="/markdown" target="_blank">
