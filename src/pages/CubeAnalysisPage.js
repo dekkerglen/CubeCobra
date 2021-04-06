@@ -40,7 +40,7 @@ import {
 import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries } from 'utils/Util';
-import { getLabels, cardIsLabel, cardGetLabels } from 'utils/Sort';
+import { getLabels, cardIsLabel } from 'utils/Sort';
 
 const CubeAnalysisPage = ({
   user,
