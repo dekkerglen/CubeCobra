@@ -29,6 +29,7 @@ const {
   getEloAdjustment,
   removeDeckCardAnalytics,
   addDeckCardAnalytics,
+  cachePromise,
 } = require('../serverjs/cubefn.js');
 
 const deckutil = require('../dist/utils/Draft.js');
