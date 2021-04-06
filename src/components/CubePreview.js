@@ -35,7 +35,9 @@ const CubePreview = ({ cube }) => {
         <em className="cube-preview-artist">Art by {cube.image_artist}</em>
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
-        <h5 className="text-muted text-ellipsis my-0">{cube.name}</h5>
+        <h5 className="text-muted text-ellipsis my-0" title={cube.name}>
+          {cube.name}
+        </h5>
         <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
         <em className="text-muted text-ellipsis">
           Designed by{' '}
