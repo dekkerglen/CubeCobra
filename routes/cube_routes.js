@@ -55,6 +55,7 @@ const Blog = require('../models/blog');
 const User = require('../models/user');
 const Draft = require('../models/draft');
 const GridDraft = require('../models/gridDraft');
+const CubeAnalytic = require('../models/cubeAnalytic');
 const CardRating = require('../models/cardrating');
 
 const { render } = require('../serverjs/render');
@@ -855,12 +856,15 @@ router.get('/analysis/:id', async (req, res) => {
     cube.cards = addDetails(cube.cards || []);
     cube.maybe = addDetails(cube.maybe || []);
 
+    const cubeAnalytics = await CubeAnalytic.findOne({ cube: cube._id });
+
     return render(
       req,
       res,
       'CubeAnalysisPage',
       {
         cube,
+        cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
         defaultNav: req.query.nav,
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -1188,7 +1192,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     await deck.save();
 
-    addDeckCardAnalytics(cube, deck, carddb);
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await cube.save();
 
@@ -1724,7 +1729,7 @@ router.post(
 
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards owner numDecks disableNotifications cardAnalytics',
+        '_id name draft_formats card_count type cards owner numDecks disableNotifications',
       );
 
       if (!cube) {
@@ -1794,7 +1799,8 @@ router.post(
 
       await deck.save();
 
-      addDeckCardAnalytics(cube, deck, carddb);
+      cube.numDecks += 1;
+      await addDeckCardAnalytics(cube, deck, carddb);
 
       await cube.save();
 
@@ -2820,7 +2826,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     const cube = await Cube.findOne({ _id: deck.cube });
 
-    removeDeckCardAnalytics(cube, deck, carddb);
+    await removeDeckCardAnalytics(cube, deck, carddb);
 
     const newdeck = JSON.parse(req.body.draftraw);
     const name = JSON.parse(req.body.name);
@@ -2834,7 +2840,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     await deck.save();
 
-    addDeckCardAnalytics(cube, deck, carddb);
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await cube.save();
 
@@ -2889,7 +2895,8 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       );
     }
 
-    addDeckCardAnalytics(cube, deck, carddb);
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -2943,7 +2950,8 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       );
     }
 
-    addDeckCardAnalytics(cube, deck, carddb);
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -3150,7 +3158,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       }
     }
 
-    addDeckCardAnalytics(cube, deck, carddb);
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
@@ -4203,9 +4212,10 @@ router.post(
   }),
 );
 
-const ELO_BASE = 400;
-const ELO_RANGE = 1600;
-const ELO_SPEED = 1000;
+const ELO_BASE = 1200;
+const ELO_SPEED = 1;
+const CUBE_ELO_SPEED = 10;
+
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
@@ -4225,46 +4235,47 @@ router.post(
 
     if (draft) {
       try {
-        const cube = await Cube.findOne(buildIdQuery(draft.cube), 'cardAnalytics');
-        if (!cube.cardAnalytics) {
-          cube.cardAnalytics = [];
+        let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
+
+        if (!analytic) {
+          analytic = new CubeAnalytic();
+          analytic.cube = draft.cube;
         }
 
-        if (cube) {
-          let pickIndex = cube.cardAnalytics.findIndex(
-            (card) => card.cardName.toLowerCase() === req.body.pick.toLowerCase(),
+        let pickIndex = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === req.body.pick.toLowerCase());
+        if (pickIndex === -1) {
+          pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick.toLowerCase(), ELO_BASE)) - 1;
+        }
+
+        const packIndeces = {};
+        for (const packCard of req.body.pack) {
+          let index = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === packCard.toLowerCase());
+          if (index === -1) {
+            index = analytic.cards.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE)) - 1;
+          }
+          packIndeces[packCard] = index;
+
+          const adjustments = getEloAdjustment(
+            analytic.cards[pickIndex].elo,
+            analytic.cards[index].elo,
+            CUBE_ELO_SPEED,
           );
-          if (pickIndex === -1) {
-            pickIndex =
-              cube.cardAnalytics.push(newCardAnalytics(req.body.pick.toLowerCase(), ELO_BASE + ELO_RANGE / 2)) - 1;
-          }
+          analytic.cards[pickIndex].elo += adjustments[0];
+          analytic.cards[index].elo += adjustments[1];
 
-          const packIndeces = {};
-          for (const packCard of req.body.pack) {
-            let index = cube.cardAnalytics.findIndex((card) => card.cardName.toLowerCase() === packCard.toLowerCase());
-            if (index === -1) {
-              index = cube.cardAnalytics.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE + ELO_RANGE / 2)) - 1;
-            }
-            packIndeces[packCard] = index;
-
-            const adjustments = getEloAdjustment(cube.cardAnalytics[pickIndex].elo, cube.cardAnalytics[index].elo);
-            cube.cardAnalytics[pickIndex].elo += adjustments[0];
-            cube.cardAnalytics[index].elo += adjustments[1];
-
-            cube.cardAnalytics[index].passes += 1;
-          }
-
-          cube.cardAnalytics[pickIndex].picks += 1;
-
-          await cube.save();
+          analytic.cards[index].passes += 1;
         }
+
+        analytic.cards[pickIndex].picks += 1;
+
+        await analytic.save();
       } catch (err) {
         req.logger.error(err);
       }
 
       if (!rating.elo) {
         rating.name = req.body.pick;
-        rating.elo = ELO_BASE + ELO_RANGE / 2;
+        rating.elo = ELO_BASE;
       }
 
       if (!rating.picks) {
@@ -4273,19 +4284,17 @@ router.post(
       rating.picks += 1;
 
       if (!Number.isFinite(rating.elo)) {
-        rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
+        rating.elo = ELO_BASE;
       }
       // Update Elo.
       for (const other of packRatings) {
         if (!Number.isFinite(other.elo)) {
           if (!Number.isFinite(other.value)) {
-            other.elo = ELO_BASE + ELO_RANGE / 2;
-          } else {
-            other.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - other.value));
+            other.elo = ELO_BASE;
           }
         }
 
-        const adjustments = getEloAdjustment(rating.elo, other.elo);
+        const adjustments = getEloAdjustment(rating.elo, other.elo, ELO_SPEED);
 
         rating.elo += adjustments[0];
         other.elo += adjustments[1];

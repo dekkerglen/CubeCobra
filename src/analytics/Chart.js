@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
@@ -7,7 +7,7 @@ import AsfanDropdown from 'components/AsfanDropdown';
 import useQueryParam from 'hooks/useQueryParam';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
-import { sortIntoGroups, SORTS, getLabels, cardIsLabel } from 'utils/Sort';
+import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
@@ -26,9 +26,12 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
   };
   const colors = [...Object.values(colorMap), '#000000'];
 
-  const getColor = (label, index) => {
-    return colorMap[label] ?? colors[index % colors.length];
-  };
+  const getColor = useMemo(
+    () => (label, index) => {
+      return colorMap[label] ?? colors[index % colors.length];
+    },
+    [colorMap, colors],
+  );
 
   const options = {
     responsive: true,
@@ -61,20 +64,31 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
       ],
     },
   };
-  const labels = getLabels(cards, characteristic);
-  const data = {
-    labels,
-    datasets: Object.keys(groups).map((key, index) => ({
-      label: key,
-      data: labels.map((label) =>
-        groups[key]
-          .filter((card) => cardIsLabel(card, label, characteristic))
-          .reduce((acc, card) => acc + card.asfan, 0),
-      ),
-      backgroundColor: getColor(key, index),
-      borderColor: getColor(key, index),
-    })),
-  };
+
+  const labels = useMemo(() => characteristics[characteristic].labels(cards, characteristic), [
+    characteristic,
+    characteristics,
+    cards,
+  ]);
+
+  const data = useMemo(
+    () => ({
+      labels,
+      datasets: Object.keys(groups).map((key, index) => ({
+        label: key,
+        data: labels.map((label) =>
+          groups[key]
+            .filter((card) => characteristics[characteristic].cardIsLabel(card, label))
+            .reduce((acc, card) => acc + card.asfan, 0),
+        ),
+        backgroundColor: getColor(key, index),
+        borderColor: getColor(key, index),
+      })),
+    }),
+    [labels, characteristic, characteristics, getColor, groups],
+  );
+
+  console.log(data);
 
   return (
     <>

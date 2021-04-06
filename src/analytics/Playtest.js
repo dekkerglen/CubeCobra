@@ -2,24 +2,21 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
+import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import { fromEntries } from 'utils/Util';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { mainboardRate, pickRate } from 'utils/Card';
 
-const AnalyticTable = ({ cards: allCards, cube }) => {
-  console.log(cube.cardAnalytics);
-  console.log(allCards);
-
+const AnalyticTable = ({ cards: allCards, cubeAnalytics }) => {
   const cardDict = useMemo(() => fromEntries(allCards.map((card) => [card.details.name.toLowerCase(), card])), [
     allCards,
   ]);
 
   const data = useMemo(
     () =>
-      cube.cardAnalytics
+      cubeAnalytics.cards
         .filter((cardAnalytic) => cardDict[cardAnalytic.cardName])
         .map(({ cardName, elo, mainboards, sideboards, picks, passes }) => ({
           cardName: cardDict[cardName].details.name,
@@ -29,7 +26,7 @@ const AnalyticTable = ({ cards: allCards, cube }) => {
           picks,
           mainboards,
         })),
-    [cube, cardDict],
+    [cubeAnalytics, cardDict],
   );
 
   return (
@@ -54,7 +51,7 @@ const AnalyticTable = ({ cards: allCards, cube }) => {
 
 AnalyticTable.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  cube: CubePropType.isRequired,
+  cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
 
 export default AnalyticTable;

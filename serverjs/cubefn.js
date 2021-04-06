@@ -3,6 +3,7 @@ const sanitizeHtml = require('sanitize-html');
 
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
+const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
@@ -341,66 +342,76 @@ const newCardAnalytics = (cardName, elo) => {
   };
 };
 
-const removeDeckCardAnalytics = (cube, deck, carddb) => {
-  cube.numDecks -= 1;
+const removeDeckCardAnalytics = async (cube, deck, carddb) => {
+  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+  if (!analytic) {
+    analytic = new CubeAnalytic();
+    analytic.cube = cube._id;
+  }
 
   for (const col of deck.seats[0].deck) {
     for (const current of col) {
-      let pickIndex = cube.cardAnalytics.findIndex(
+      let pickIndex = analytic.cards.findIndex(
         (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
       );
       if (pickIndex === -1) {
         pickIndex =
-          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
       }
-      cube.cardAnalytics[pickIndex].mainboards = Math.max(0, cube.cardAnalytics[pickIndex].mainboards - 1);
+      analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
     }
   }
   for (const col of deck.seats[0].sideboard) {
     for (const current of col) {
-      let pickIndex = cube.cardAnalytics.findIndex(
+      let pickIndex = analytic.cards.findIndex(
         (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
       );
       if (pickIndex === -1) {
         pickIndex =
-          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
       }
-      cube.cardAnalytics[pickIndex].sideboards = Math.max(0, cube.cardAnalytics[pickIndex].sideboards - 1);
+      analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
     }
   }
 
-  return cube;
+  await analytic.save();
 };
 
-const addDeckCardAnalytics = (cube, deck, carddb) => {
-  cube.numDecks += 1;
+const addDeckCardAnalytics = async (cube, deck, carddb) => {
+  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+  if (!analytic) {
+    analytic = new CubeAnalytic();
+    analytic.cube = cube._id;
+  }
 
   for (const col of deck.seats[0].deck) {
     for (const current of col) {
-      let pickIndex = cube.cardAnalytics.findIndex(
+      let pickIndex = analytic.cards.findIndex(
         (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
       );
       if (pickIndex === -1) {
         pickIndex =
-          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
       }
-      cube.cardAnalytics[pickIndex].mainboards += 1;
+      analytic.cards[pickIndex].mainboards += 1;
     }
   }
   for (const col of deck.seats[0].sideboard) {
     for (const current of col) {
-      let pickIndex = cube.cardAnalytics.findIndex(
+      let pickIndex = analytic.cards.findIndex(
         (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
       );
       if (pickIndex === -1) {
         pickIndex =
-          cube.cardAnalytics.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
       }
-      cube.cardAnalytics[pickIndex].sideboards += 1;
+      analytic.cards[pickIndex].sideboards += 1;
     }
   }
 
-  return cube;
+  await analytic.save();
 };
 
 /*
@@ -591,13 +602,13 @@ const methods = {
     };
   },
   newCardAnalytics,
-  getEloAdjustment: (winner, loser) => {
+  getEloAdjustment: (winner, loser, speed) => {
     const diff = loser - winner;
     // Expected performance for pick.
     const expectedA = 1 / (1 + 10 ** (diff / 400));
     const expectedB = 1 - expectedA;
-    const adjustmentA = 2 * (1 - expectedA);
-    const adjustmentB = 2 * (0 - expectedB);
+    const adjustmentA = 2 * (1 - expectedA) * speed;
+    const adjustmentB = 2 * (0 - expectedB) * speed;
     return [adjustmentA, adjustmentB];
   },
   generateShortId,
