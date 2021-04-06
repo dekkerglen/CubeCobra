@@ -937,36 +937,34 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
 
-    const imageBuffer = await cachePromise(
-      `/samplepack/${req.params.id}/${req.params.seed}`,
-      async () => {
-        const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
+      const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
-        const imgScale = 0.9;
-        // Try to make it roughly 5 times as wide as it is tall in cards.
-        const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
-        const height = Math.ceil(pack.pack.length / width);
+      const imgScale = 0.9;
+      // Try to make it roughly 5 times as wide as it is tall in cards.
+      const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
+      const height = Math.ceil(pack.pack.length / width);
 
-        const srcArray = pack.pack.map((card, index) => {
-          return {
-            src: card.imgUrl || card.details.image_normal,
-            x: imgScale * CARD_WIDTH * (index % width),
-            y: imgScale * CARD_HEIGHT * Math.floor(index / width),
-            w: imgScale * CARD_WIDTH,
-            h: imgScale * CARD_HEIGHT,
-            rX: imgScale * 0.065 * CARD_WIDTH,
-            rY: imgScale * 0.0464 * CARD_HEIGHT,
-          };
-        });
-
-        const image = await generateSamplepackImage(srcArray, {
-          width: imgScale * CARD_WIDTH * width,
-          height: imgScale * CARD_HEIGHT * height,
-          Canvas,
-        });
-
-        return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+      const srcArray = pack.pack.map((card, index) => {
+        return {
+          src: card.imgUrl || card.details.image_normal,
+          x: imgScale * CARD_WIDTH * (index % width),
+          y: imgScale * CARD_HEIGHT * Math.floor(index / width),
+          w: imgScale * CARD_WIDTH,
+          h: imgScale * CARD_HEIGHT,
+          rX: imgScale * 0.065 * CARD_WIDTH,
+          rY: imgScale * 0.0464 * CARD_HEIGHT,
+        };
       });
+
+      const image = await generateSamplepackImage(srcArray, {
+        width: imgScale * CARD_WIDTH * width,
+        height: imgScale * CARD_HEIGHT * height,
+        Canvas,
+      });
+
+      return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+    });
 
     res.writeHead(200, {
       'Content-Type': 'image/png',
