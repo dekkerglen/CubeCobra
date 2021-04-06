@@ -1,3 +1,4 @@
+const NodeCache = require('node-cache');
 const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
@@ -538,6 +539,25 @@ const generateSamplepackImage = (sources = [], options = {}) =>
     );
   });
 
+// A cache for promises that are expensive to compute and will always produce
+// the same value, such as pack images. If a promise produces an error, it's
+// removed from the cache. Each promise lives five minutes by default.
+const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false });
+
+// / Caches the result of the given callback in `promiseCache` with the given
+// / key.
+function cachePromise(key, callback) {
+  const existingPromise = promiseCache.get(key);
+  if (existingPromise) return existingPromise;
+
+  const newPromise = callback().catch((error) => {
+    dromiseCache.del(key);
+    throw error;
+  });
+  imagePromiseCache.set(key, newPromise);
+  return newPromise;
+}
+
 const methods = {
   getBasics(carddb) {
     const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
@@ -630,6 +650,7 @@ const methods = {
   generateSamplepackImage,
   removeDeckCardAnalytics,
   addDeckCardAnalytics,
+  cachePromise,
 };
 
 module.exports = methods;
