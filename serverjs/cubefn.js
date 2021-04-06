@@ -551,10 +551,10 @@ function cachePromise(key, callback) {
   if (existingPromise) return existingPromise;
 
   const newPromise = callback().catch((error) => {
-    dromiseCache.del(key);
+    promiseCache.del(key);
     throw error;
   });
-  imagePromiseCache.set(key, newPromise);
+  promiseCache.set(key, newPromise);
   return newPromise;
 }
 
