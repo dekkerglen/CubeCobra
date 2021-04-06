@@ -970,7 +970,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     res.writeHead(200, {
       'Content-Type': 'image/png',
     });
-    res.end(imageBuffer);
+    return res.end(imageBuffer);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
