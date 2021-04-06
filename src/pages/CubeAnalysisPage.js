@@ -8,7 +8,7 @@ import Chart from 'analytics/Chart';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
-import Playtest from 'analytics/Playtest';
+import Playtest from 'analytics/PlaytestData';
 import PivotTable from 'analytics/PivotTable';
 import AnalyticTable from 'analytics/AnalyticTable';
 import Cloud from 'analytics/Cloud';
@@ -237,7 +237,7 @@ const CubeAnalysisPage = ({
       ),
     },
     {
-      name: 'Playtest',
+      name: 'Playtest Data',
       component: (collection) => <Playtest cards={collection} cubeAnalytics={cubeAnalytics} />,
     },
     {

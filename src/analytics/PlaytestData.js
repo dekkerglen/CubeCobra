@@ -9,7 +9,7 @@ import { fromEntries } from 'utils/Util';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { mainboardRate, pickRate } from 'utils/Card';
 
-const Playtest = ({ cards: allCards, cubeAnalytics }) => {
+const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
   const cardDict = useMemo(() => fromEntries(allCards.map((card) => [card.details.name.toLowerCase(), card])), [
     allCards,
   ]);
@@ -49,9 +49,9 @@ const Playtest = ({ cards: allCards, cubeAnalytics }) => {
   );
 };
 
-Playtest.propTypes = {
+PlaytestData.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
 
-export default Playtest;
+export default PlaytestData;
