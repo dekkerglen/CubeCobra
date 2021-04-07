@@ -15,6 +15,8 @@ const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 
+const { buildIdQuery } = require('../serverjs/cubefn.js');
+
 const router = express.Router();
 
 /* Minimum number of picks for data to show up in Top Cards list. */
@@ -359,6 +361,31 @@ router.get('/cardimage/:id', async (req, res) => {
 
     // if id is not a scryfall ID, error
     const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_normal);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cube = await Cube.findOne(buildIdQuery(req.params.cubeid), 'cards').lean();
+
+    const found = cube.cards
+      .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
+      .find(
+        (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,
+      );
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(found ? found.cardID : '');
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
       return res.redirect('/404');

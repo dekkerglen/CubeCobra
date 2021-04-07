@@ -327,7 +327,7 @@ class CubeOverviewModal extends Component {
                 </Row>
                 <br />
                 <AutocompleteInput
-                  treeUrl={'/cube/api/fullnames'}
+                  treeUrl="/cube/api/fullnames"
                   treePath="cardnames"
                   type="text"
                   className="mr-2"
