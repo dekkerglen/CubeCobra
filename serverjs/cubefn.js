@@ -4,6 +4,7 @@ const sanitizeHtml = require('sanitize-html');
 
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
+const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
@@ -331,6 +332,89 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
+const newCardAnalytics = (cardName, elo) => {
+  return {
+    cardName,
+    picks: 0,
+    passes: 0,
+    elo,
+    mainboards: 0,
+    sideboards: 0,
+  };
+};
+
+const removeDeckCardAnalytics = async (cube, deck, carddb) => {
+  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+  if (!analytic) {
+    analytic = new CubeAnalytic();
+    analytic.cube = cube._id;
+  }
+
+  for (const col of deck.seats[0].deck) {
+    for (const current of col) {
+      let pickIndex = analytic.cards.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
+    }
+  }
+  for (const col of deck.seats[0].sideboard) {
+    for (const current of col) {
+      let pickIndex = analytic.cards.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
+    }
+  }
+
+  await analytic.save();
+};
+
+const addDeckCardAnalytics = async (cube, deck, carddb) => {
+  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+  if (!analytic) {
+    analytic = new CubeAnalytic();
+    analytic.cube = cube._id;
+  }
+
+  for (const col of deck.seats[0].deck) {
+    for (const current of col) {
+      let pickIndex = analytic.cards.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      analytic.cards[pickIndex].mainboards += 1;
+    }
+  }
+  for (const col of deck.seats[0].sideboard) {
+    for (const current of col) {
+      let pickIndex = analytic.cards.findIndex(
+        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+      );
+      if (pickIndex === -1) {
+        pickIndex =
+          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+      }
+      analytic.cards[pickIndex].sideboards += 1;
+    }
+  }
+
+  await analytic.save();
+};
+
 /*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
@@ -458,19 +542,19 @@ const generateSamplepackImage = (sources = [], options = {}) =>
 // A cache for promises that are expensive to compute and will always produce
 // the same value, such as pack images. If a promise produces an error, it's
 // removed from the cache. Each promise lives five minutes by default.
-const promiseCache = new NodeCache({stdTTL: 60 * 5, useClones: false});
+const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false });
 
-/// Caches the result of the given callback in `promiseCache` with the given
-/// key.
+// / Caches the result of the given callback in `promiseCache` with the given
+// / key.
 function cachePromise(key, callback) {
   const existingPromise = promiseCache.get(key);
   if (existingPromise) return existingPromise;
 
-  const newPromise = callback().catch(error => {
-    dromiseCache.del(key);
+  const newPromise = callback().catch((error) => {
+    promiseCache.del(key);
     throw error;
   });
-  imagePromiseCache.set(key, newPromise);
+  promiseCache.set(key, newPromise);
   return newPromise;
 }
 
@@ -537,6 +621,16 @@ const methods = {
       pack: draft.initial_state[0][0],
     };
   },
+  newCardAnalytics,
+  getEloAdjustment: (winner, loser, speed) => {
+    const diff = loser - winner;
+    // Expected performance for pick.
+    const expectedA = 1 / (1 + 10 ** (diff / 400));
+    const expectedB = 1 - expectedA;
+    const adjustmentA = 2 * (1 - expectedA) * speed;
+    const adjustmentB = 2 * (0 - expectedB) * speed;
+    return [adjustmentA, adjustmentB];
+  },
   generateShortId,
   buildIdQuery,
   getCubeId,
@@ -554,6 +648,8 @@ const methods = {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  removeDeckCardAnalytics,
+  addDeckCardAnalytics,
   cachePromise,
 };
 

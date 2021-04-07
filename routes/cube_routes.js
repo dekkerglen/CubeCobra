@@ -25,6 +25,11 @@ const {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  newCardAnalytics,
+  getEloAdjustment,
+  removeDeckCardAnalytics,
+  addDeckCardAnalytics,
+  cachePromise,
 } = require('../serverjs/cubefn.js');
 
 const deckutil = require('../dist/utils/Draft.js');
@@ -51,6 +56,7 @@ const Blog = require('../models/blog');
 const User = require('../models/user');
 const Draft = require('../models/draft');
 const GridDraft = require('../models/gridDraft');
+const CubeAnalytic = require('../models/cubeAnalytic');
 const CardRating = require('../models/cardrating');
 
 const { render } = require('../serverjs/render');
@@ -464,7 +470,6 @@ router.get('/overview/:id', async (req, res) => {
 
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
-
     cube.raw_desc = cube.body;
 
     // Performance
@@ -852,12 +857,15 @@ router.get('/analysis/:id', async (req, res) => {
     cube.cards = addDetails(cube.cards || []);
     cube.maybe = addDetails(cube.maybe || []);
 
+    const cubeAnalytics = await CubeAnalytic.findOne({ cube: cube._id });
+
     return render(
       req,
       res,
       'CubeAnalysisPage',
       {
         cube,
+        cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
         defaultNav: req.query.nav,
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
@@ -930,41 +938,39 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
 
-    const imageBuffer = await cachePromise(
-      `/samplepack/${req.params.id}/${req.params.seed}`,
-      async () => {
-        const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
+      const pack = await generatePack(req.params.id, carddb, req.params.seed);
 
-        const imgScale = 0.9;
-        // Try to make it roughly 5 times as wide as it is tall in cards.
-        const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
-        const height = Math.ceil(pack.pack.length / width);
+      const imgScale = 0.9;
+      // Try to make it roughly 5 times as wide as it is tall in cards.
+      const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
+      const height = Math.ceil(pack.pack.length / width);
 
-        const srcArray = pack.pack.map((card, index) => {
-          return {
-            src: card.imgUrl || card.details.image_normal,
-            x: imgScale * CARD_WIDTH * (index % width),
-            y: imgScale * CARD_HEIGHT * Math.floor(index / width),
-            w: imgScale * CARD_WIDTH,
-            h: imgScale * CARD_HEIGHT,
-            rX: imgScale * 0.065 * CARD_WIDTH,
-            rY: imgScale * 0.0464 * CARD_HEIGHT,
-          };
-        });
-
-        const image = await generateSamplepackImage(srcArray, {
-          width: imgScale * CARD_WIDTH * width,
-          height: imgScale * CARD_HEIGHT * height,
-          Canvas,
-        });
-
-        return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+      const srcArray = pack.pack.map((card, index) => {
+        return {
+          src: card.imgUrl || card.details.image_normal,
+          x: imgScale * CARD_WIDTH * (index % width),
+          y: imgScale * CARD_HEIGHT * Math.floor(index / width),
+          w: imgScale * CARD_WIDTH,
+          h: imgScale * CARD_HEIGHT,
+          rX: imgScale * 0.065 * CARD_WIDTH,
+          rY: imgScale * 0.0464 * CARD_HEIGHT,
+        };
       });
+
+      const image = await generateSamplepackImage(srcArray, {
+        width: imgScale * CARD_WIDTH * width,
+        height: imgScale * CARD_HEIGHT * height,
+        Canvas,
+      });
+
+      return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+    });
 
     res.writeHead(200, {
       'Content-Type': 'image/png',
     });
-    res.end(imageBuffer);
+    return res.end(imageBuffer);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -1189,16 +1195,11 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     deck.draft = await createDraftForSingleDeck(deck);
 
     await deck.save();
-    await Cube.updateOne(
-      {
-        _id: cube._id,
-      },
-      {
-        $inc: {
-          numDecks: 1,
-        },
-      },
-    );
+
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
+
+    await cube.save();
 
     return res.redirect(`/cube/deckbuilder/${deck._id}`);
   } catch (err) {
@@ -1802,10 +1803,8 @@ router.post(
 
       await deck.save();
 
-      if (!cube.numDecks) {
-        cube.numDecks = 0;
-      }
       cube.numDecks += 1;
+      await addDeckCardAnalytics(cube, deck, carddb);
 
       await cube.save();
 
@@ -2829,6 +2828,10 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
+    const cube = await Cube.findOne({ _id: deck.cube });
+
+    await removeDeckCardAnalytics(cube, deck, carddb);
+
     const newdeck = JSON.parse(req.body.draftraw);
     const name = JSON.parse(req.body.name);
     const description = JSON.parse(req.body.description);
@@ -2840,6 +2843,10 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     deck.seats[0].description = description;
 
     await deck.save();
+
+    await addDeckCardAnalytics(cube, deck, carddb);
+
+    await cube.save();
 
     req.flash('success', 'Deck saved successfully');
     return res.redirect(`/cube/deck/${deck._id}`);
@@ -2878,11 +2885,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       });
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
@@ -2896,6 +2898,9 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         `${user.username} drafted your cube: ${cube.name}`,
       );
     }
+
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -2935,11 +2940,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       });
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
-    cube.numDecks += 1;
-
     const userq = User.findById(deck.seats[0].userid);
     const cubeOwnerq = User.findById(cube.owner);
 
@@ -2953,6 +2953,9 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
         `${user.username} drafted your cube: ${cube.name}`,
       );
     }
+
+    cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
@@ -3159,10 +3162,8 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       }
     }
 
-    if (!cube.numDecks) {
-      cube.numDecks = 0;
-    }
     cube.numDecks += 1;
+    await addDeckCardAnalytics(cube, deck, carddb);
 
     const userq = User.findById(req.user._id);
     const baseuserq = User.findById(base.owner);
@@ -4215,9 +4216,10 @@ router.post(
   }),
 );
 
-const ELO_BASE = 400;
-const ELO_RANGE = 1600;
-const ELO_SPEED = 1000;
+const ELO_BASE = 1200;
+const ELO_SPEED = 1;
+const CUBE_ELO_SPEED = 10;
+
 router.post(
   '/api/draftpickcard/:id',
   util.wrapAsyncApi(async (req, res) => {
@@ -4236,44 +4238,48 @@ router.post(
     const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
 
     if (draft) {
-      // TODO: fix cube schema, fix out of sync if an edit is also occuring
-      /*
-      const cube = await Cube.findOne(buildIdQuery(draft.cube));
+      try {
+        let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
 
-      if (cube) {
-        const picked = [];
-        const passed = [];
-        for (const card of cube.cards) {
-          const { name } = carddb.cardFromId(card.cardID);
-          if (name === req.body.pick) {
-            picked.push(card);
-          }
-          if (req.body.pack.indexOf(name) !== -1) {
-            passed.push(card);
-          }
+        if (!analytic) {
+          analytic = new CubeAnalytic();
+          analytic.cube = draft.cube;
         }
-        const pick =
-          draft.initial_state[0][Math.min(draft.initial_state[0].length - 1, req.body.packNum - 1)].length -
-          req.body.pack.length;
-        for (const card of picked) {
-          if (!card.picks) {
-            card.picks = [];
-          }
-          card.picks.push([req.body.packNum, pick]);
+
+        let pickIndex = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === req.body.pick.toLowerCase());
+        if (pickIndex === -1) {
+          pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick.toLowerCase(), ELO_BASE)) - 1;
         }
-        for (const card of passed) {
-          if (!card.passed) {
-            card.passed = 0;
+
+        const packIndeces = {};
+        for (const packCard of req.body.pack) {
+          let index = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === packCard.toLowerCase());
+          if (index === -1) {
+            index = analytic.cards.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE)) - 1;
           }
-          card.passed += 1;
+          packIndeces[packCard] = index;
+
+          const adjustments = getEloAdjustment(
+            analytic.cards[pickIndex].elo,
+            analytic.cards[index].elo,
+            CUBE_ELO_SPEED,
+          );
+          analytic.cards[pickIndex].elo += adjustments[0];
+          analytic.cards[index].elo += adjustments[1];
+
+          analytic.cards[index].passes += 1;
         }
-        await cube.save();
+
+        analytic.cards[pickIndex].picks += 1;
+
+        await analytic.save();
+      } catch (err) {
+        req.logger.error(err);
       }
-      */
 
       if (!rating.elo) {
         rating.name = req.body.pick;
-        rating.elo = ELO_BASE + ELO_RANGE / 2;
+        rating.elo = ELO_BASE;
       }
 
       if (!rating.picks) {
@@ -4282,26 +4288,20 @@ router.post(
       rating.picks += 1;
 
       if (!Number.isFinite(rating.elo)) {
-        rating.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - rating.value));
+        rating.elo = ELO_BASE;
       }
-      // Update ELO.
+      // Update Elo.
       for (const other of packRatings) {
         if (!Number.isFinite(other.elo)) {
           if (!Number.isFinite(other.value)) {
-            other.elo = ELO_BASE + ELO_RANGE / 2;
-          } else {
-            other.elo = ELO_BASE + ELO_RANGE / (1 + ELO_SPEED ** -(0.5 - other.value));
+            other.elo = ELO_BASE;
           }
         }
 
-        const diff = other.elo - rating.elo;
-        // Expected performance for pick.
-        const expectedA = 1 / (1 + 10 ** (diff / 400));
-        const expectedB = 1 - expectedA;
-        const adjustmentA = 2 * (1 - expectedA);
-        const adjustmentB = 2 * (0 - expectedB);
-        rating.elo += adjustmentA;
-        other.elo += adjustmentB;
+        const adjustments = getEloAdjustment(rating.elo, other.elo, ELO_SPEED);
+
+        rating.elo += adjustments[0];
+        other.elo += adjustments[1];
       }
       await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
     }

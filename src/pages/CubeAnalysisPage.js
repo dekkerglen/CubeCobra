@@ -8,6 +8,7 @@ import Chart from 'analytics/Chart';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
+import Playtest from 'analytics/PlaytestData';
 import PivotTable from 'analytics/PivotTable';
 import AnalyticTable from 'analytics/AnalyticTable';
 import Cloud from 'analytics/Cloud';
@@ -22,6 +23,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import UserPropType from 'proptypes/UserPropType';
+import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 import {
   cardCmc,
   cardDevotion,
@@ -32,9 +34,13 @@ import {
   cardToughness,
   cardPriceEur,
   cardTix,
+  mainboardRate,
+  pickRate,
 } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
+import { fromEntries } from 'utils/Util';
+import { getLabels, cardIsLabel } from 'utils/Sort';
 
 const CubeAnalysisPage = ({
   user,
@@ -46,6 +52,7 @@ const CubeAnalysisPage = ({
   defaultShowTagColors,
   cubes,
   loginCallback,
+  cubeAnalytics,
 }) => {
   defaultFormatId = cube.defaultDraftFormat ?? -1;
   const [filter, setFilter] = useState(null);
@@ -60,21 +67,124 @@ const CubeAnalysisPage = ({
     return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
   }, [asfans, cube, filter]);
 
+  const cardAnalyticsDict = fromEntries(
+    cubeAnalytics.cards.map((cardAnalytic) => [cardAnalytic.cardName, cardAnalytic]),
+  );
+
+  const convertToCharacteristic = (name, func) => ({
+    get: func,
+    labels: (list) => getLabels(list, name),
+    cardIsLabel: (card, label) => cardIsLabel(card, label.toString(), name),
+  });
+
+  const getCubeElo = (card) =>
+    cardAnalyticsDict[card.details.name.toLowerCase()]
+      ? Math.round(cardAnalyticsDict[card.details.name.toLowerCase()].elo)
+      : null;
+
+  const getPickRate = (card) =>
+    cardAnalyticsDict[card.details.name.toLowerCase()]
+      ? pickRate(cardAnalyticsDict[card.details.name.toLowerCase()])
+      : null;
+
+  const getPickCount = (card) =>
+    cardAnalyticsDict[card.details.name.toLowerCase()]
+      ? cardAnalyticsDict[card.details.name.toLowerCase()].picks
+      : null;
+
+  const getMainboardRate = (card) =>
+    cardAnalyticsDict[card.details.name.toLowerCase()]
+      ? mainboardRate(cardAnalyticsDict[card.details.name.toLowerCase()])
+      : null;
+
+  const getMainboardCount = (card) =>
+    cardAnalyticsDict[card.details.name.toLowerCase()]
+      ? cardAnalyticsDict[card.details.name.toLowerCase()].mainboards
+      : null;
+
   const characteristics = {
-    CMC: cardCmc,
-    Power: (card) => parseInt(cardPower(card), 10),
-    Toughness: (card) => parseInt(cardToughness(card), 10),
-    Elo: (card) => parseFloat(card.details.elo, 10),
-    Price: (card) => parseFloat(cardPrice(card), 10),
-    'Price USD': (card) => parseFloat(cardNormalPrice(card)),
-    'Price USD Foil': (card) => parseFloat(cardFoilPrice(card)),
-    'Price EUR': (card) => parseFloat(cardPriceEur(card)),
-    'MTGO TIX': (card) => parseFloat(cardTix(card)),
-    'Devotion to White': (card) => cardDevotion(card, 'w'),
-    'Devotion to Blue': (card) => cardDevotion(card, 'u'),
-    'Devotion to Black': (card) => cardDevotion(card, 'b'),
-    'Devotion to Red': (card) => cardDevotion(card, 'r'),
-    'Devotion to Green': (card) => cardDevotion(card, 'g'),
+    CMC: convertToCharacteristic('CMC', cardCmc),
+    Power: convertToCharacteristic('Power', (card) => parseInt(cardPower(card), 10)),
+    Toughness: convertToCharacteristic('Toughness', (card) => parseInt(cardToughness(card), 10)),
+    Elo: convertToCharacteristic('Elo', (card) => parseFloat(card.details.elo, 10)),
+    Price: convertToCharacteristic('Price', (card) => parseFloat(cardPrice(card), 10)),
+    'Price USD': convertToCharacteristic('Price USD', (card) => parseFloat(cardNormalPrice(card))),
+    'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => parseFloat(cardFoilPrice(card))),
+    'Price EUR': convertToCharacteristic('Price EUR', (card) => parseFloat(cardPriceEur(card))),
+    'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => parseFloat(cardTix(card))),
+    'Cube Elo': {
+      get: getCubeElo,
+      labels: (list) =>
+        getLabels(
+          list.map((card) => {
+            const newcard = JSON.parse(JSON.stringify(card));
+            newcard.details.elo = getCubeElo(card);
+            return newcard;
+          }),
+          'Elo',
+        ),
+      cardIsLabel: (card, label) => {
+        const newcard = JSON.parse(JSON.stringify(card));
+        newcard.details.elo = getCubeElo(card);
+
+        return cardIsLabel(newcard, label, 'Elo');
+      },
+    },
+    'Pick Rate': {
+      get: getPickRate,
+      labels: () => {
+        const labels = [];
+        for (let i = 0; i < 10; i++) {
+          labels.push(`${i * 10}% - ${(i + 1) * 10}%`);
+        }
+        return labels;
+      },
+      cardIsLabel: (card, label) => {
+        const v = Math.floor(getPickRate(card) * 10) * 10;
+        return label === `${v}% - ${v + 10}%`;
+      },
+    },
+    'Pick Count': {
+      get: getPickCount,
+      labels: (list) => {
+        const set = new Set(list.map(getPickCount));
+
+        return Array.from(set)
+          .filter((c) => c)
+          .sort();
+      },
+      cardIsLabel: (card, label) => getPickCount(card) === parseInt(label, 10),
+    },
+    'Mainboard Rate': {
+      get: getMainboardRate,
+      labels: () => {
+        const labels = [];
+        for (let i = 0; i < 10; i++) {
+          labels.push(`${i * 10}% - ${(i + 1) * 10}%`);
+        }
+        return labels;
+      },
+      cardIsLabel: (card, label) => {
+        const v = Math.floor(getMainboardRate(card) * 10) * 10;
+        return label === `${v}% - ${v + 10}%`;
+      },
+    },
+    'Mainboard Count': {
+      get: getMainboardCount,
+      labels: (list) => {
+        const set = new Set(list.map(getMainboardCount));
+
+        return Array.from(set)
+          .filter((c) => c)
+          .sort();
+      },
+      cardIsLabel: (card, label) => getMainboardCount(card) === parseInt(label, 10),
+    },
+    'Devotion to White': convertToCharacteristic('Devotion to White', (card) => cardDevotion(card, 'w').toString()),
+    'Devotion to Blue': convertToCharacteristic('Devotion to Blue', (card) => cardDevotion(card, 'u').toString()),
+    'Devotion to Black': convertToCharacteristic('Devotion to Black', (card) => cardDevotion(card, 'b').toString()),
+    'Devotion to Red': convertToCharacteristic('Devotion to Red', (card) => cardDevotion(card, 'r').toString()),
+    'Devotion to Green': convertToCharacteristic('Devotion to Green', (card) => cardDevotion(card, 'g').toString()),
   };
 
   const analytics = [
@@ -127,6 +237,10 @@ const CubeAnalysisPage = ({
       ),
     },
     {
+      name: 'Playtest Data',
+      component: (collection) => <Playtest cards={collection} cubeAnalytics={cubeAnalytics} />,
+    },
+    {
       name: 'Tokens',
       component: (_, cubeObj) => <Tokens cube={cubeObj} />,
     },
@@ -138,7 +252,7 @@ const CubeAnalysisPage = ({
     },
     {
       name: 'Pivot Table',
-      component: (collection) => <PivotTable cards={collection} />,
+      component: (collection) => <PivotTable cards={collection} characteristics={characteristics} />,
     },
     {
       name: 'Hypergeometric Calculator',
@@ -244,6 +358,7 @@ CubeAnalysisPage.propTypes = {
   cubes: PropTypes.arrayOf(PropTypes.shape({})),
   user: UserPropType,
   loginCallback: PropTypes.string,
+  cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
 
 CubeAnalysisPage.defaultProps = {

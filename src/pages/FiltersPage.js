@@ -581,7 +581,7 @@ const ContactPage = ({ user, loginCallback }) => (
       </Accordion>
       <Accordion title="Miscellaneous">
         <p>
-          You can use <code>elo:</code> to filter cards by their ELO rating.
+          You can use <code>elo:</code> to filter cards by their Elo rating.
         </p>
         <p>
           <strong>Filters for individual cubes:</strong>
@@ -601,7 +601,7 @@ const ContactPage = ({ user, loginCallback }) => (
               <td>
                 <code>{'elo>1500'}</code>
               </td>
-              <td>All cards with an ELO rating above 1500.</td>
+              <td>All cards with an Elo rating above 1500.</td>
             </tr>
             <tr>
               <td>

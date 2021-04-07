@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
+import { CSVLink } from 'react-csv';
 
 import HeaderCell from 'components/HeaderCell';
 import useSortableData from 'hooks/UseSortableData';
@@ -18,50 +19,55 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
   return (
-    <Table bordered responsive className="mt-lg-3" {...props}>
-      <thead>
-        <tr>
-          {columnProps.map(({ title, key, sortable, heading, tooltip }) => {
-            if (sortable) {
-              return (
-                <HeaderCell
-                  key={key}
-                  fieldName={key}
-                  label={title}
-                  sortConfig={sortConfig}
-                  requestSort={requestSort}
-                  tooltip={tooltip}
-                  className={heading ? 'corner' : ''}
-                />
-              );
-            }
-            if (heading) {
-              return (
-                <th key={key} scope="col">
-                  {title}
-                </th>
-              );
-            }
-            return <td key={key}>{title}</td>;
-          })}
-        </tr>
-      </thead>
-      <tbody className="breakdown">
-        {items.map((row, idx) => (
-          <tr key={`row-${idx}` /* eslint-disable-line react/no-array-index-key */}>
-            {columnProps.map(({ key, heading, renderFn }) =>
-              heading ? (
-                <th scope="row" key={key}>
-                  {(renderFn ?? valueRenderer)(row[key], row, key)}
-                </th>
-              ) : (
-                <td key={key}>{(renderFn ?? valueRenderer)(row[key], row, key)}</td>
-              ),
-            )}
+    <>
+      <CSVLink data={data} filename="export.csv">
+        Download CSV
+      </CSVLink>
+      <Table bordered responsive {...props}>
+        <thead>
+          <tr>
+            {columnProps.map(({ title, key, sortable, heading, tooltip }) => {
+              if (sortable) {
+                return (
+                  <HeaderCell
+                    key={key}
+                    fieldName={key}
+                    label={title}
+                    sortConfig={sortConfig}
+                    requestSort={requestSort}
+                    tooltip={tooltip}
+                    className={heading ? 'corner' : ''}
+                  />
+                );
+              }
+              if (heading) {
+                return (
+                  <th key={key} scope="col">
+                    {title}
+                  </th>
+                );
+              }
+              return <td key={key}>{title}</td>;
+            })}
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody className="breakdown">
+          {items.map((row, idx) => (
+            <tr key={`row-${idx}` /* eslint-disable-line react/no-array-index-key */}>
+              {columnProps.map(({ key, heading, renderFn }) =>
+                heading ? (
+                  <th scope="row" key={key}>
+                    {(renderFn ?? valueRenderer)(row[key], row, key)}
+                  </th>
+                ) : (
+                  <td key={key}>{(renderFn ?? valueRenderer)(row[key], row, key)}</td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </>
   );
 };
 
