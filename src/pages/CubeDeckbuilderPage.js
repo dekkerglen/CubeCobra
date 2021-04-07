@@ -12,7 +12,6 @@ import TextEntry from 'components/TextEntry';
 import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
@@ -161,14 +160,12 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
     </MainLayout>
   );
 };
-
 CubeDeckbuilderPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
-
 CubeDeckbuilderPage.defaultProps = {
   user: null,
   loginCallback: '/',

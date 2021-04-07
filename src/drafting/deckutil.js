@@ -2,18 +2,7 @@ import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME, FETCH_LAND
 import { cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType } from 'utils/Card';
 import { arraysAreEqualSets } from 'utils/Util';
 
-// Ignore cards below this value.
-const PROB_TO_INCLUDE = 0.67;
-
 const getSortFn = (draftCards) => (a, b) => draftCards[b].rating - draftCards[a].rating;
-
-const LAND_DICT = Object.freeze({
-  W: 'Plains',
-  U: 'Island',
-  B: 'Swamp',
-  R: 'Mountain',
-  G: 'Forest',
-});
 
 const allPairsShortestPath = (distances) => {
   const result = [];
@@ -152,41 +141,25 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
   return bestNodes.map((ind) => nodes[ind]);
 };
 
-export const calculateBasicCounts = (picked, cards) => {
+export const calculateBasicCounts = ({ picked, cards, basics }) => {
   const {
-    botState: { lands },
+    botState: { lands, probabilities },
     colors,
   } = evaluateCardsOrPool([], {
     picked,
     cards,
-    seen: picked,
+    basics,
+    seen: [],
     packNum: 3,
     pickNum: 15,
     numPacks: 3,
     packSize: 15,
   });
-  const result = {};
-  console.debug('calculateBasicLandCounts', lands);
-
-  for (const [symbol, name] of Object.entries(LAND_DICT)) {
-    result[name] = lands[symbol] ?? 0;
-  }
-  return { lands: result, colors };
-};
-
-async function build({ botState: { cards, picked, probabilities, lands }, colors }) {
-  let nonlands = picked.filter(
-    (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
-  );
-  console.log(picked);
-  const landCards = picked.filter((card) => cardType(cards[card]).toLowerCase().includes('land'));
-  const specialZoneCards = picked.filter((card) => cardIsSpecialZoneType(cards[card]));
-  const sortFn = getSortFn(cards);
-  const inColor = nonlands.filter((item) => probabilities[item] >= PROB_TO_INCLUDE);
-  const outOfColor = nonlands.filter((item) => probabilities[item] < PROB_TO_INCLUDE);
-
+  const landCards = picked
+    .concat(...basics.map((ci) => new Array(17).fill(ci)))
+    .filter((ci) => cardType(cards[ci]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[ci]))
+    .sort(getSortFn(cards));
   const main = [];
-  console.log(lands);
   for (const [comb, count] of Object.entries(lands)) {
     for (let i = 0; i < count; i++) {
       const match = landCards.findIndex((ci) =>
@@ -199,17 +172,40 @@ async function build({ botState: { cards, picked, probabilities, lands }, colors
       }
     }
   }
+  console.log(lands, '\n', picked.map((ci) => `${cardName(cards[ci])}: ${probabilities[ci]}`).join('\n'));
+  const remainingLands = landCards.filter((ci) => !basics.includes(ci));
+  return { lands: main, remainingLands, colors };
+};
+
+async function build({ cards, picked, probabilities, basics, lands: orginalLands }) {
+  const landCount = Object.values(orginalLands).reduce((acc, x) => acc + x, 0);
+  let nonlands = picked.filter(
+    (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
+  );
+  const specialZoneCards = picked.filter((card) => cardIsSpecialZoneType(cards[card]));
+  const sortFn = getSortFn(cards);
+  let margin = 0.1;
+  let inColor = nonlands.filter((item) => probabilities[item] >= 1 - margin);
+  while (inColor.length < 23 && inColor.length < nonlands.length) {
+    margin *= 1.2;
+    const currentCutoff = 1 - margin;
+    inColor = nonlands.filter((item) => probabilities[item] >= currentCutoff);
+  }
+  const outOfColor = nonlands.filter((item) => probabilities[item] < 1 - margin);
+
+  const main = [];
 
   nonlands = inColor;
   let side = outOfColor;
-  const neededNonLands = 40 - main.length;
+  const neededNonLands = 40 - landCount;
   if (nonlands.length < neededNonLands) {
     outOfColor.sort(sortFn);
     nonlands.push(...outOfColor.splice(0, neededNonLands - nonlands.length));
     side = [...outOfColor];
   }
 
-  const distanceFunc = (c1, c2) => 1 - (probabilities[c1] * probabilities[c2] * getSynergy(c1, c2, cards)) / MAX_SCORE;
+  const distanceFunc = (c1, c2) =>
+    1 - (Math.sqrt(probabilities[c1] * probabilities[c2]) * getSynergy(c1, c2, cards)) / MAX_SCORE;
   const NKernels = (n, total) => {
     let remaining = Math.min(total, nonlands.length);
     for (let i = 0; i < n; i++) {
@@ -224,7 +220,7 @@ async function build({ botState: { cards, picked, probabilities, lands }, colors
     }
   };
   NKernels(2, Math.floor(neededNonLands * 0.75));
-  const size = Math.min(neededNonLands - main.length, nonlands.length);
+  const size = Math.min(40 - main.length - landCount, nonlands.length);
   for (let i = 0; i < size; i++) {
     // add in new synergy data
     let best = 0;
@@ -238,7 +234,7 @@ async function build({ botState: { cards, picked, probabilities, lands }, colors
         probabilities,
         basics: [],
         picked: main,
-        seen: null,
+        seen: [],
         packNum: 3,
         pickNum: 15,
         numPacks: 3,
@@ -255,7 +251,12 @@ async function build({ botState: { cards, picked, probabilities, lands }, colors
     main.push(current);
   }
 
-  side.push(...landCards);
+  const landCards = picked.filter(
+    (ci) => cardType(cards[ci]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[ci]),
+  );
+  const { lands, remainingLands, colors } = calculateBasicCounts({ picked: main.concat(landCards), cards, basics });
+  main.push(...lands);
+  side.push(...remainingLands);
   side.push(...nonlands);
   side.push(...specialZoneCards);
 
@@ -283,9 +284,6 @@ async function build({ botState: { cards, picked, probabilities, lands }, colors
   for (const cardIndex of side.filter((ci) => !cards[ci].isUnlimited)) {
     sideboard[Math.min(cardCmc(cards[cardIndex]) ?? 0, 7)].push(cardIndex);
   }
-  for (const cardIndex of main) {
-    console.log(cards[cardIndex]);
-  }
 
   return {
     deck,
@@ -305,5 +303,5 @@ export async function buildDeck(cards, picked, basics) {
     numPacks: 3,
     packSize: 15,
   });
-  return build(botEvaluation);
+  return build(botEvaluation.botState);
 }

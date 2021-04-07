@@ -14,8 +14,8 @@ const BATCH_SIZE = 1000;
 
 const updateEmbeddings = async (names, embeddings) => {
   const ratings = await CardRating.find({ name: { $in: names } });
-
   ratings.forEach((rating, index) => {
+    console.log(rating.embedding);
     rating.embedding = embeddings[names.indexOf(rating.name)];
   });
 

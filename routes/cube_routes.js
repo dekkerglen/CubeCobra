@@ -1768,7 +1768,7 @@ router.post('/startsealed/:id', body('packs').toInt({ min: 1 }), body('cards').t
     deck.seats.push({
       userid: user._id,
       username: user.username,
-      pickorder: [],
+      pickorder: cardsArray.map(({ index }) => index),
       name: `Sealed from ${cube.name}`,
       description: '',
       cols: 16,

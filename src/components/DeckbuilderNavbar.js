@@ -69,10 +69,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    const main = deck.playerdeck
-      .flat(2)
-      .concat(deck.playersideboard.flat(2))
-      .map((c) => c.index);
+    const main = deck.seats[0].pickorder;
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
     setSideboard([side.map((col) => col.map((ci) => deck.cards[ci]))]);
     setDeck([

@@ -131,9 +131,9 @@ const DraftbotBreakdown = (props) => {
                   data-pick-number={pickNumber}
                 >
                   {drafterState.pickNumber === pickNumber ? (
-                    <strong>{`${ACTION_LABELS[action]} ${cardName(card)}`}</strong>
+                    <strong>{`${ACTION_LABELS[action]}: ${cardName(card)}`}</strong>
                   ) : (
-                    <>{`${ACTION_LABELS[action]} ${cardName(card)}`}</>
+                    <>{`${ACTION_LABELS[action]}: ${cardName(card)}`}</>
                   )}
                 </AutocardItem>
               ))}

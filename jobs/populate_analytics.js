@@ -6,7 +6,6 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const similarity = require('compute-cosine-similarity');
 const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
@@ -84,7 +83,7 @@ function getSynergy(oracle1, oracle2) {
   const em1 = cardFromOracle(oracle1).embedding;
   const em2 = cardFromOracle(oracle2).embedding;
   if (em1 && em2 && em1.length === em2.length) {
-    return similarity(em1, em2);
+    return em1.reduce((acc, x, i) => acc + x * em2[i], 0);
   }
   return 0;
 }

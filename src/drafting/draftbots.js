@@ -17,8 +17,6 @@
 //   probabilities : { [str]: number },
 // }
 // getDrafterState : (Draft, int, int?) -> DrafterState
-import similarity from 'compute-cosine-similarity';
-
 import {
   COLOR_COMBINATIONS,
   COLOR_INCLUSION_MAP,
@@ -30,7 +28,7 @@ import {
   cardName,
   cardType,
 } from 'utils/Card';
-import { arrayShuffle, arraysAreEqualSets, fromEntries } from 'utils/Util';
+import { arrayShuffle, arraysAreEqualSets, fromEntries, arrayIsSubset } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -106,7 +104,7 @@ export const getSynergy = (index1, index2, cards) => {
     } else if (name1 === name2) {
       synergy = MAX_SCORE;
     } else {
-      const similarityValue = similarity(card1.details.embedding, card2.details.embedding);
+      const similarityValue = card1.details.embedding.reduce((acc, x, i) => acc + x * card2.details.embedding[i], 0);
       if (Number.isFinite(similarityValue)) {
         synergy = 1 / (1 - scaleSimilarity(similarityValue)) - 1;
       } else {
@@ -140,7 +138,7 @@ export const getCastingProbability = (card, lands) => {
     const colorSymbols = {};
     for (const symbol of cost) {
       const symbolUpper = symbol.toUpperCase();
-      if (!symbolUpper.includes('p') && !symbolUpper.includes('2')) {
+      if (!symbolUpper.includes('P') && !symbolUpper.includes('2')) {
         const unsortedSymbolColors = [...COLORS].filter((char) => symbolUpper.includes(char));
         if (unsortedSymbolColors.length > 0) {
           const symbolColors = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(unsortedSymbolColors, comb));
@@ -151,7 +149,7 @@ export const getCastingProbability = (card, lands) => {
     // It woudl be nice if we could cache this value.
     colors = Object.entries(colorSymbols).map(([combination, count]) => [
       COLOR_COMBINATIONS.map((comb) => comb.join('')).filter((comb) => [...combination].some((c) => comb.includes(c))),
-      count,
+      Math.min(count, 7),
     ]);
     if (colors.length > 2) {
       colors = [
@@ -168,6 +166,13 @@ export const getCastingProbability = (card, lands) => {
         [colors[1][0].filter((c) => !colors[0][0].includes(c)), colors[1][1]],
         colors[0][0].filter((c) => colors[1][0].includes(c)),
       ];
+      if (colors[0][1] > colors[1][1]) {
+        const temp = colors[1];
+        [colors[1]] = colors;
+        colors[0] = temp;
+      }
+      colors[0][1] = Math.min(colors[0][1], 7);
+      colors[1][1] = Math.min(colors[1][1], 3);
     }
     devotionsCache[name] = colors;
   }
@@ -199,6 +204,13 @@ const eloToValue = (elo) => Math.sqrt(10 ** (((elo ?? 1200) - 1200) / 800));
 
 const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
   idxs = idxs.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land') || countLands);
+  if (idxs.length === 0) return 0;
+  // console.debug(
+  //   'value[idxs]',
+  //   idxs.map((ci) => eloToValue(cardElo(cards[ci]))),
+  //   'prob[idxs]',
+  //   idxs.map((ci) => p[ci]),
+  // );
   return idxs.length > 0
     ? sum(idxs.map((ci) => Math.min(MAX_SCORE, p[ci] * eloToValue(cardElo(cards[ci]))))) / idxs.length
     : 0;
@@ -267,7 +279,7 @@ export const ORACLES = Object.freeze(
           : 0,
     },
     {
-      title: 'Color',
+      title: 'Colors',
       tooltip: 'A score of how well these colors fit in with the current picks.',
       perConsideredCard: false,
       weights: [
@@ -332,17 +344,19 @@ const getRandomLands = (availableLands) => {
   const currentLands = { ...availableLands };
   let totalLands = Object.values(currentLands).reduce((x, y) => x + y, 0);
   while (totalLands > 17) {
-    const index = Math.floor(Math.random() * totalLands);
-    const curStart = 0;
-    for (const [key, count] of Object.entries(currentLands)) {
-      if (index < curStart + count) {
-        currentLands[key] -= 1;
-        totalLands -= 1;
-        if (currentLands[key] <= 0) {
-          delete currentLands[key];
-        }
-        break;
-      }
+    const availableDecreases = Object.keys(currentLands).filter((comb) => (currentLands[comb] ?? 0) > 0);
+    const trueDecreases = availableDecreases.filter(
+      (comb) =>
+        !availableDecreases.some(
+          (comb2) => arrayIsSubset([...comb2], [...comb]) && !arraysAreEqualSets([...comb2], [...comb]),
+        ),
+    );
+    const index = Math.floor(Math.random() * trueDecreases.length);
+    totalLands -= 1;
+    const key = trueDecreases[index];
+    currentLands[key] -= 1;
+    if (currentLands[key] === 0) {
+      delete currentLands[key];
     }
   }
   return currentLands;
@@ -368,53 +382,108 @@ const calculateScore = (botState) => {
   }));
   const nonlandProbability = picked
     .concat(basics)
-    .reduce((acc, c) => (acc + cardType(cards[c]).toLowerCase().includes('land') ? 0 : probabilities[c]), 0);
+    .filter((c) => !cardType(cards[c]).toLowerCase().includes('land'))
+    .reduce((acc, c) => acc + probabilities[c], 0);
   const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
   return {
     score,
     oracleResults,
     botState,
-    probability: botState.probabilities[botState.cardIndex],
     colors: getCombinationForLands(botState.lands),
     nonlandProbability,
   };
 };
 
-const findBetterLands = (currentScore) => {
-  const { botState, score } = currentScore;
-  // This makes the bots non-deterministic are we good with that?
-  const curLands = botState.lands;
-  const availableIncreases = arrayShuffle(
-    Object.keys(botState.availableLands).filter((c) => (curLands[c] ?? 0) < botState.availableLands[c]),
+const findTransitions = ({ botState: { lands, availableLands } }) => {
+  const availableIncreases = Object.keys(availableLands).filter((comb) => availableLands[comb] > lands[comb] ?? 0);
+  const availableDecreases = Object.keys(lands).filter((comb) => (lands[comb] ?? 0) > 0);
+  const trueIncreases = availableIncreases.filter(
+    (comb) =>
+      !availableIncreases.some(
+        (comb2) => arrayIsSubset([...comb], [...comb2]) && !arraysAreEqualSets([...comb], [...comb2]),
+      ),
   );
-  for (const increaseColor of availableIncreases) {
-    const availableDecreases = arrayShuffle(Object.keys(botState.lands));
-    for (const decreaseColor of availableDecreases) {
-      if (increaseColor !== decreaseColor) {
-        const lands = { ...botState.lands };
-        lands[increaseColor] = (lands[increaseColor] ?? 0) + 1;
-        lands[decreaseColor] -= 1;
-        if (lands[decreaseColor] === 0) {
-          delete lands[decreaseColor];
-        }
-        const newBotState = { ...botState, lands };
-        botState.probabilities = calculateProbabilities(newBotState);
-        botState.totalProbability = sum(newBotState.probabilities);
-        const newScore = calculateScore(newBotState);
-        if (newScore.score > score) {
-          // We assume we won't get caught in a local maxima so it's safe to take first ascent.
-          return newScore;
-        }
+  const trueDecreases = availableDecreases.filter(
+    (comb) =>
+      !availableDecreases.some(
+        (comb2) => arrayIsSubset([...comb2], [...comb]) && !arraysAreEqualSets([...comb2], [...comb]),
+      ),
+  );
+  const result = [];
+  for (const increase of trueIncreases) {
+    for (const decrease of trueDecreases) {
+      if (!arrayIsSubset([...increase], [...decrease])) {
+        result.push([increase, decrease]);
       }
     }
   }
-  return currentScore;
+  return result;
+};
+
+const findBetterLands = (currentScore) => {
+  const { botState } = currentScore;
+  console.debug(
+    '\n\nCurrent score is',
+    currentScore.score,
+    'with',
+    Object.entries(botState.lands)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([comb, count]) => `${comb}-${count}`)
+      .join(','),
+    'and totalProb',
+    currentScore.totalProbability,
+    'scoreObj',
+    currentScore,
+  );
+  let result = currentScore;
+  // This makes the bots non-deterministic are we good with that?
+  for (const [increase, decrease] of arrayShuffle(findTransitions(currentScore))) {
+    const lands = { ...botState.lands };
+    lands[increase] = (lands[increase] ?? 0) + 1;
+    lands[decrease] -= 1;
+    if (lands[decrease] === 0) {
+      delete lands[decrease];
+    }
+    const newBotState = { ...botState, lands };
+    botState.probabilities = calculateProbabilities(newBotState);
+    botState.totalProbability = sum(newBotState.probabilities);
+    const newScore = calculateScore(newBotState);
+    // console.debug(
+    //   'trying',
+    //   Object.entries(lands)
+    //     .sort(([a], [b]) => a.localeCompare(b))
+    //     .map(([comb, count]) => `${comb}-${count}`)
+    //     .join(','),
+    //   'with',
+    //   newScore.score,
+    //   'and scoreObj',
+    //   newScore,
+    // );
+    if (newScore.score > result.score) {
+      // We assume we won't get caught in a local maxima so it's safe to take first ascent.
+      // return newScore;
+      result = newScore;
+      console.debug(
+        'ADOPTED\nCurrent score is',
+        result.score,
+        'with',
+        Object.entries(lands)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([comb, count]) => `${comb}-${count}`)
+          .join(','),
+        'and totalProb',
+        result.nonlandProbability,
+        'scoreObj',
+        result,
+      );
+    }
+  }
+  return result;
 };
 
 export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if ((cardIndices ?? null) === null) cardIndices = [];
   if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
-  let prevLands = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   const initialBotState = { ...drafterState, cardIndices };
   initialBotState.availableLands = getAvailableLands(
     [...drafterState.picked, ...cardIndices],
@@ -425,9 +494,11 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   initialBotState.probabilities = calculateProbabilities(initialBotState);
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
-  while (!landCountsAreEqual(prevLands, currentScore.botState.lands)) {
-    prevLands = currentScore.botState.lands;
+  let prevScore = { ...currentScore, score: -1 };
+  while (prevScore.score < currentScore.score) {
+    prevScore = currentScore;
     currentScore = findBetterLands(currentScore);
+    console.log('Looping');
   }
   return currentScore;
 };
@@ -437,15 +508,14 @@ export const calculateBotPick = (drafterState, reverse = false) =>
     .map((cardIndex) => [evaluateCardsOrPool(cardIndex, drafterState).score, cardIndex])
     .sort(([a], [b]) => (reverse ? a - b : b - a))[0][1];
 
-export const calculateBotPickFromOptions = (options) => (gridDrafterState) =>
-  options.map((packIndices) =>
-    packIndices.map((pi) => [gridDrafterState.cardsInPack[pi], pi]).filter(([x]) => x || x === 0),
-  )
+export const calculateBotPickFromOptions = (options) => (drafterState) =>
+  options
+    .map((packIndices) => packIndices.map((pi) => [drafterState.cardsInPack[pi], pi]).filter(([x]) => x || x === 0))
     .filter((option) => option.length > 0)
     .map((option) => [
       evaluateCardsOrPool(
         option.map(([x]) => x),
-        gridDrafterState,
+        drafterState,
       ).score,
       option,
     ])

@@ -270,13 +270,14 @@ export const createDraft = (format, cubeCards, seats, user, seed = false) => {
     )
     .map(([card, oldIdx], newIdx) => [card, oldIdx, newIdx])
     .sort(([, a], [, b]) => a - b);
+  console.debug(shuffledIndices.map(([, i]) => i));
   draft.initial_state = draft.initial_state.map((packs) =>
     packs.map(({ cards, ...pack }) => ({
       ...pack,
       cards: cards.map((oldIndex) => shuffledIndices[oldIndex][2]),
     })),
   );
-  draft.cards = shuffledIndices.sort(([, , a], [, , b]) => a - b).map(([card]) => card);
+  draft.cards = shuffledIndices.sort(([, , a], [, , b]) => a - b).map(([card], index) => ({ ...card, index }));
 
   // Need a better way to assign this for when there's more than one player, or the player isn't index 0
   draft.seats = draft.initial_state.map((_, seatIndex) => ({
