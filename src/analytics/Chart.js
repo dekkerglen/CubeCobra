@@ -11,7 +11,7 @@ import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
-  const [characteristic, setcharacteristic] = useQueryParam('field', 'CMC');
+  const [characteristic, setcharacteristic] = useQueryParam('field', 'Mana Value');
 
   const groups = sortIntoGroups(cards, sort);
 
@@ -95,7 +95,7 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
       <Row>
         <Col>
           <h4 className="d-lg-block d-none">Chart</h4>
-          <p>View the counts of a characteristic on a chart. For unstacked columns, used 'Unsorted'.</p>
+          <p>View the counts of a characteristic on a chart. For unstacked columns, use 'Unsorted'.</p>
           <InputGroup className="mb-3">
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Group by: </InputGroupText>

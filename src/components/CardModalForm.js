@@ -98,6 +98,10 @@ const CardModalForm = ({ children, ...props }) => {
     if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
       updated.colorCategory = null;
     }
+    updated.cmc = parseInt(updated.cmc, 10);
+    if (isNaN(updated.cmc)) {
+      updated.cmc = null;
+    }
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);

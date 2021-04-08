@@ -9,10 +9,10 @@ import { fromEntries } from 'utils/Util';
 import AutocardListGroup from 'components/AutocardListGroup';
 import SortContext from 'contexts/SortContext';
 
-const cmc2Labels = getLabels(null, 'CMC2');
+const cmc2Labels = getLabels(null, 'Mana Value 2');
 
 const TypeRow = ({ cardType, group }) => {
-  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'CMC2'));
+  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
   return (
     <>
       <h6>

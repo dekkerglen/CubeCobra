@@ -59,7 +59,7 @@ AutocardListGroup.propTypes = {
 AutocardListGroup.defaultProps = {
   rowTag: AutocardListItem,
   noGroupModal: false,
-  sort: 'CMC-Full',
+  sort: 'Mana Value Full',
   orderedSort: 'Alphabetical',
   showOther: false,
 };

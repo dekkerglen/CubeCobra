@@ -145,8 +145,8 @@ export function GetColorCategory(type, colors) {
 
 export const SORTS = [
   'Artist',
-  'CMC',
-  'CMC2',
+  'Mana Value',
+  'Mana Value 2',
   'Color Category',
   'Color Category Full',
   'Color Count',
@@ -186,7 +186,7 @@ export const SORTS = [
   'Unsorted',
 ];
 
-export const ORDERED_SORTS = ['Alphabetical', 'CMC', 'Price'];
+export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price'];
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
@@ -251,11 +251,11 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = SINGLE_COLOR.concat(['Colorless']).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
   } else if (sort === 'Color Combination Includes' || sort === 'Includes Color Combination') {
     ret = ['Colorless'].concat(SINGLE_COLOR).concat(GUILDS).concat(SHARDS_AND_WEDGES).concat(FOUR_AND_FIVE_COLOR);
-  } else if (sort === 'CMC') {
+  } else if (sort === 'Mana Value') {
     ret = ['0', '1', '2', '3', '4', '5', '6', '7', '8+'];
-  } else if (sort === 'CMC2') {
+  } else if (sort === 'Mana Value 2') {
     ret = ['0-1', '2', '3', '4', '5', '6', '7+'];
-  } else if (sort === 'CMC-Full') {
+  } else if (sort === 'Mana Value Full') {
     // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
     ret = ALL_CMCS;
   } else if (sort === 'Color') {
@@ -460,7 +460,7 @@ export function cardGetLabels(card, sort, showOther) {
     } else if (cardColorIdentity(card).length === 4) {
       ret = [...'WUBRG'].filter((c) => !cardColorIdentity(card).includes(c)).map((c) => `Non-${COLOR_MAP[c]}`);
     }
-  } else if (sort === 'CMC') {
+  } else if (sort === 'Mana Value') {
     // Sort by CMC, but collapse all >= 8 into '8+' category.
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 8) {
@@ -468,7 +468,7 @@ export function cardGetLabels(card, sort, showOther) {
     } else {
       ret = [cmc.toString()];
     }
-  } else if (sort === 'CMC2') {
+  } else if (sort === 'Mana Value 2') {
     const cmc = Math.round(cmcToNumber(card));
     if (cmc >= 7) {
       ret = ['7+'];
@@ -477,7 +477,7 @@ export function cardGetLabels(card, sort, showOther) {
     } else {
       ret = [cmc.toString()];
     }
-  } else if (sort === 'CMC-Full') {
+  } else if (sort === 'Mana Value Full') {
     // Round to half-integer.
     ret = [(Math.round(cmcToNumber(card) * 2) / 2).toString()];
   } else if (sort === 'Supertype' || sort === 'Type') {
@@ -702,7 +702,7 @@ export function sortIntoGroups(cards, sort, showOther) {
 
 const OrderSortMap = {
   Alphabetical: alphaCompare,
-  CMC: (a, b) => cardCmc(a) - cardCmc(b),
+  'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
   Price: (a, b) => cardPrice(a) - cardPrice(b),
 };
 
@@ -734,7 +734,7 @@ export function sortForCSVDownload(
   cards,
   primary = 'Color Category',
   secondary = 'Types-Multicolor',
-  tertiary = 'CMC',
+  tertiary = 'Mana Value',
   quaternary = 'Alphabetical',
   showOther = false,
 ) {

@@ -32,7 +32,7 @@ import CubeContext from 'contexts/CubeContext';
 const allFields = [
   'name',
   'oracle',
-  'cmc',
+  'mv',
   'mana',
   'type',
   'set',
@@ -53,7 +53,7 @@ const allFields = [
   'is',
 ];
 const numFields = [
-  'cmc',
+  'mv',
   'price',
   'priceFoil',
   'priceEur',
@@ -92,8 +92,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           onChange={onChange}
         />
         <NumericField
-          name="cmc"
-          humanName="CMC"
+          name="mv"
+          humanName="Mana Value"
           placeholder={'Any value, e.g. "2"'}
           value={values.cmc}
           valueOp={values.cmcOp}
@@ -426,7 +426,7 @@ class FilterCollapse extends Component {
     }
 
     if (this.state.cmcQuick) {
-      tokens.push(`cmc${this.state.cmcQuickOp}${this.state.cmcQuick}`);
+      tokens.push(`mv${this.state.cmcQuickOp}${this.state.cmcQuick}`);
     }
 
     for (const name of ['type', 'text']) {
@@ -552,7 +552,7 @@ class FilterCollapse extends Component {
             <Col xs="auto" style={{ padding: '0 5px' }}>
               <InputGroup size="sm" className="mb-3">
                 <InputGroupAddon addonType="prepend">
-                  <InputGroupText htmlFor="cmcQuick">CMC</InputGroupText>
+                  <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
                 </InputGroupAddon>
                 <CustomInput
                   id="cmcQickOp"

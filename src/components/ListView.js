@@ -440,7 +440,7 @@ const ListView = ({ cards }) => {
               <th>Type</th>
               <th>Status</th>
               <th>Finish</th>
-              <th>CMC</th>
+              <th>MV</th>
               <th>Color</th>
               <th>Tags</th>
             </tr>

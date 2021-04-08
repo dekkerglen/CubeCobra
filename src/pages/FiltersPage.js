@@ -313,9 +313,9 @@ const ContactPage = ({ user, loginCallback }) => (
           </tr>
         </table>
       </Accordion>
-      <Accordion title="Converted Mana Cost">
+      <Accordion title="Mana Value">
         <p>
-          You can use <code>cmc:</code> to search for specific converted mana costs.
+          You can use <code>mv:</code> to search for specific mana values.
         </p>
         <p>
           Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
@@ -328,15 +328,15 @@ const ContactPage = ({ user, loginCallback }) => (
           <tr>
             <td>
               {' '}
-              <code>{'cmc>5'}</code>{' '}
+              <code>{'mv>5'}</code>{' '}
             </td>
-            <td>Cards with converted mana cost greater than 5.</td>
+            <td>Cards with mana value greater than 5.</td>
           </tr>
           <tr>
             <td>
-              <code>cmc=3</code>{' '}
+              <code>mv=3</code>{' '}
             </td>
-            <td>Cards with converted mana cost of exactly 3.</td>
+            <td>Cards with mana value of exactly 3.</td>
           </tr>
         </table>
       </Accordion>

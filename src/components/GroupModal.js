@@ -310,7 +310,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 <h5>Override Attribute on All</h5>
                 <InputGroup className="mb-2">
                   <InputGroupAddon addonType="prepend">
-                    <InputGroupText>CMC</InputGroupText>
+                    <InputGroupText>Mana Value</InputGroupText>
                   </InputGroupAddon>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
