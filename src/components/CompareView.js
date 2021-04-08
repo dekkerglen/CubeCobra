@@ -8,9 +8,9 @@ import AutocardListItem from './AutocardListItem';
 import SortContext from 'contexts/SortContext';
 
 const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
-  let bothCmc = sortIntoGroups(both, 'CMC');
-  let onlyACmc = sortIntoGroups(onlyA, 'CMC');
-  let onlyBCmc = sortIntoGroups(onlyB, 'CMC');
+  let bothCmc = sortIntoGroups(both, 'Mana Value');
+  let onlyACmc = sortIntoGroups(onlyA, 'Mana Value');
+  let onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
 
   return (
     <ListGroup className="list-outline">
@@ -22,7 +22,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
           <Col>({onlyB.length})</Col>
         </Row>
       </ListGroupItem>
-      {getLabels(null, 'CMC')
+      {getLabels(null, 'Mana Value')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">

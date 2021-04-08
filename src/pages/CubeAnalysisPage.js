@@ -103,7 +103,7 @@ const CubeAnalysisPage = ({
       : null;
 
   const characteristics = {
-    CMC: convertToCharacteristic('CMC', cardCmc),
+    'Mana Value': convertToCharacteristic('Mana Value', cardCmc),
     Power: convertToCharacteristic('Power', (card) => parseInt(cardPower(card), 10)),
     Toughness: convertToCharacteristic('Toughness', (card) => parseInt(cardToughness(card), 10)),
     Elo: convertToCharacteristic('Elo', (card) => parseFloat(card.details.elo, 10)),

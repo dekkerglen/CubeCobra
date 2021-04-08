@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 const SortContext = React.createContext({
   primary: 'Color Category',
   secondary: 'Types-Multicolor',
-  tertiary: 'CMC',
+  tertiary: 'Mana Value',
   quaternary: 'Alphabetical',
   showOther: false,
 });
@@ -16,7 +16,7 @@ export class SortContextProvider extends React.Component {
       defaultSorts: [
         primary = 'Color Category',
         secondary = 'Types-Multicolor',
-        tertiary = 'CMC',
+        tertiary = 'Mana Value',
         quaternary = 'Alphabetical',
       ],
       showOther = false,

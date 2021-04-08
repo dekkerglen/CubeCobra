@@ -130,9 +130,9 @@ const CardModal = ({
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
-                  <InputGroupText>CMC</InputGroupText>
+                  <InputGroupText>Mana Value</InputGroupText>
                 </InputGroupAddon>
-                <Input type="text" name="cmc" value={values.cmc} onChange={onChange} />
+                <Input type="number" name="cmc" value={values.cmc} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupAddon addonType="prepend">
