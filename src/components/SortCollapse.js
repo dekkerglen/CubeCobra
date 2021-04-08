@@ -25,8 +25,18 @@ const SortCollapse = ({
   const { canEdit, cubeID } = useContext(CubeContext);
   const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
 
+  const normalizeSort = (sort) => {
+    if (sort === 'CMC') return 'Mana Value';
+    if (sort === 'CMC2') return 'Mana Value 2';
+    if (sort === 'CMC-Full') return 'Mana Value Full';
+    return sort;
+  };
   const formSorts = (src) => {
-    return [src[0] || 'Color Category', src[1] || 'Types-Multicolor', src[2] || 'Mana Value', src[3] || 'Alphabetical'];
+    const sorts = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'];
+    for (let i = 0; i < 4; i++) {
+      if (src[i]) sorts[i] = normalizeSort(src[i]);
+    }
+    return sorts;
   };
 
   const [defSorts, setDefSorts] = useState(formSorts(defaultSorts));
@@ -35,10 +45,10 @@ const SortCollapse = ({
   const prevSorts = useRef(defSorts);
   const prevShow = useRef(defShow);
   useEffect(() => {
-    let currentPrimarySort = defaultPrimarySort ?? '';
-    let currentSecondarySort = defaultSecondarySort ?? '';
-    let currentTertiarySort = defaultTertiarySort ?? '';
-    let currentQuaternarySort = defaultQuaternarySort ?? '';
+    let currentPrimarySort = normalizeSort(defaultPrimarySort) ?? '';
+    let currentSecondarySort = normalizeSort(defaultSecondarySort) ?? '';
+    let currentTertiarySort = normalizeSort(defaultTertiarySort) ?? '';
+    let currentQuaternarySort = normalizeSort(defaultQuaternarySort) ?? '';
     let currentShowUnsorted = defaultShowUnsorted ?? '';
     if (!SORTS.includes(currentPrimarySort)) currentPrimarySort = '';
     if (!SORTS.includes(currentSecondarySort)) currentSecondarySort = '';
