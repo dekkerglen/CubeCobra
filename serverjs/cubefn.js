@@ -344,75 +344,80 @@ const newCardAnalytics = (cardName, elo) => {
 };
 
 const removeDeckCardAnalytics = async (cube, deck, carddb) => {
-  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+  // we don't want to save deck analytics for decks have not been built
+  if (deck.seats[0].sideboard.flat().length > 0) {
+    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
 
-  if (!analytic) {
-    analytic = new CubeAnalytic();
-    analytic.cube = cube._id;
-  }
-
-  for (const col of deck.seats[0].deck) {
-    for (const current of col) {
-      let pickIndex = analytic.cards.findIndex(
-        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-      );
-      if (pickIndex === -1) {
-        pickIndex =
-          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
-      }
-      analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
+    if (!analytic) {
+      analytic = new CubeAnalytic();
+      analytic.cube = cube._id;
     }
-  }
-  for (const col of deck.seats[0].sideboard) {
-    for (const current of col) {
-      let pickIndex = analytic.cards.findIndex(
-        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-      );
-      if (pickIndex === -1) {
-        pickIndex =
-          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
-      }
-      analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
-    }
-  }
 
-  await analytic.save();
+    for (const col of deck.seats[0].deck) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
+      }
+    }
+    for (const col of deck.seats[0].sideboard) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
+      }
+    }
+
+    await analytic.save();
+  }
 };
 
 const addDeckCardAnalytics = async (cube, deck, carddb) => {
-  let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+  // we don't want to save deck analytics for decks have not been built
+  if (deck.seats[0].sideboard.flat().length > 0) {
+    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
 
-  if (!analytic) {
-    analytic = new CubeAnalytic();
-    analytic.cube = cube._id;
-  }
-
-  for (const col of deck.seats[0].deck) {
-    for (const current of col) {
-      let pickIndex = analytic.cards.findIndex(
-        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-      );
-      if (pickIndex === -1) {
-        pickIndex =
-          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
-      }
-      analytic.cards[pickIndex].mainboards += 1;
+    if (!analytic) {
+      analytic = new CubeAnalytic();
+      analytic.cube = cube._id;
     }
-  }
-  for (const col of deck.seats[0].sideboard) {
-    for (const current of col) {
-      let pickIndex = analytic.cards.findIndex(
-        (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-      );
-      if (pickIndex === -1) {
-        pickIndex =
-          analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
-      }
-      analytic.cards[pickIndex].sideboards += 1;
-    }
-  }
 
-  await analytic.save();
+    for (const col of deck.seats[0].deck) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].mainboards += 1;
+      }
+    }
+    for (const col of deck.seats[0].sideboard) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].sideboards += 1;
+      }
+    }
+    await analytic.save();
+  }
 };
 
 /*
