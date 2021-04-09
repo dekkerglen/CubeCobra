@@ -128,10 +128,12 @@ const processDeck = (deck, draft, analytic) => {
     // process all cube objects
     console.log('Started');
     const count = await Cube.countDocuments();
+    console.log(`Found ${count} cubes`);
     const cursor = Cube.find().lean().cursor();
 
     for (let i = 0; i < count; i++) {
       const cube = await cursor.next();
+      console.log(`Started "${cube.name} - ${cube._id}"`);
       let cubeAnalytic = await CubeAnalytic.findOne({ cube: cube._id });
       if (!cubeAnalytic) {
         cubeAnalytic = new CubeAnalytic();
@@ -139,16 +141,19 @@ const processDeck = (deck, draft, analytic) => {
       }
       cubeAnalytic.cards = [];
 
-      const decks = await Deck.find({ cube: cube._id }, 'seats draft');
-      const drafts = await Draft.find({ cube: cube._id }, 'seats initial_state');
+      const decks = await Deck.find({ cube: cube._id }, 'seats draft').lean();
+      console.log(`saving ${decks.length} decks`);
+      const drafts = await Draft.find(
+        { _id: { $in: decks.map((deck) => deck.draft).filter((id) => id) } },
+        'seats initial_state',
+      ).lean();
+      console.log(`saving ${drafts.length} drafts`);
 
       const draftDict = fromEntries(drafts.map((draft) => [draft._id, draft]));
 
       for (const deck of decks) {
         processDeck(deck, draftDict[deck.draft], cubeAnalytic);
       }
-
-      console.log(`For cube "${cube.name}", saving ${decks.length} decks and ${drafts.length} drafts`);
 
       await cubeAnalytic.save();
       console.log(`Finished: ${Math.min(count, i + 1)} of ${count} cubes`);
