@@ -55,7 +55,10 @@ const cubeSchema = mongoose.Schema({
     required: true,
     unique: true,
   },
-  urlAlias: String,
+  urlAlias: {
+    type: String,
+    unique: true,
+  },
   owner: {
     type: String,
     required: true,
