@@ -53,8 +53,12 @@ const cubeSchema = mongoose.Schema({
   shortID: {
     type: String,
     required: true,
+    unique: true,
   },
-  urlAlias: String,
+  urlAlias: {
+    type: String,
+    unique: true,
+  },
   owner: {
     type: String,
     required: true,
