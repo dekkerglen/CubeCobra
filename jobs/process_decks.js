@@ -13,6 +13,7 @@ const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 const carddb = require('../serverjs/cards.js');
 const { newCardAnalytics, getEloAdjustment } = require('../serverjs/cubefn');
+const { fromEntries } = require('../serverjs/util');
 
 const ELO_BASE = 1200;
 const CUBE_ELO_SPEED = 10;
@@ -83,41 +84,40 @@ const processDraft = (draft, deck, analytic) => {
   }
 };
 
-const processDeck = async (deck, analytic) => {
-  if (!deck.bot) {
-    for (const col of deck.seats[0].deck) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+const processDeck = (deck, draft, analytic) => {
+  try {
+    if (!deck.seats[0].bot) {
+      for (const col of deck.seats[0].deck) {
+        for (const current of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          }
+          analytic.cards[pickIndex].mainboards += 1;
         }
-        analytic.cards[pickIndex].mainboards += 1;
+      }
+      for (const col of deck.seats[0].sideboard) {
+        for (const current of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+          }
+          analytic.cards[pickIndex].sideboards += 1;
+        }
       }
     }
-    for (const col of deck.seats[0].sideboard) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
-        }
-        analytic.cards[pickIndex].sideboards += 1;
-      }
-    }
-  }
 
-  if (deck.draft) {
-    const draft = await Draft.findOne({ _id: deck.draft });
-    try {
+    if (draft) {
       processDraft(draft, deck, analytic);
-    } catch (error) {
-      console.error(error);
     }
+  } catch (error) {
+    console.error(error);
   }
 };
 
@@ -138,9 +138,13 @@ const processDeck = async (deck, analytic) => {
       }
       cubeAnalytic.cards = [];
 
-      const decks = await Deck.find({ cube: cube._id });
+      const decks = await Deck.find({ cube: cube._id }, 'seats');
+      const drafts = await Draft.find({ cube: cube._id }, 'seats initial_state');
+
+      const draftDict = fromEntries(drafts.map((draft) => [draft._id, draft]));
+
       for (const deck of decks) {
-        await processDeck(deck, cubeAnalytic);
+        processDeck(deck, draftDict[deck.draft], cubeAnalytic);
       }
 
       console.log(`For cube "${cube.name}", saving ${decks.length} decks`);
