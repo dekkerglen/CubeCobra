@@ -86,7 +86,8 @@ const processDraft = (draft, deck, analytic) => {
 
 const processDeck = (deck, draft, analytic) => {
   try {
-    if (!deck.seats[0].bot) {
+    // we don't want to process bot decks or decks that have not been 'built'
+    if (!deck.seats[0].bot && deck.seats[0].sideboard.flat().length > 0) {
       for (const col of deck.seats[0].deck) {
         for (const current of col) {
           let pickIndex = analytic.cards.findIndex(
@@ -138,7 +139,7 @@ const processDeck = (deck, draft, analytic) => {
       }
       cubeAnalytic.cards = [];
 
-      const decks = await Deck.find({ cube: cube._id }, 'seats');
+      const decks = await Deck.find({ cube: cube._id }, 'seats draft');
       const drafts = await Draft.find({ cube: cube._id }, 'seats initial_state');
 
       const draftDict = fromEntries(drafts.map((draft) => [draft._id, draft]));
@@ -147,7 +148,7 @@ const processDeck = (deck, draft, analytic) => {
         processDeck(deck, draftDict[deck.draft], cubeAnalytic);
       }
 
-      console.log(`For cube "${cube.name}", saving ${decks.length} decks`);
+      console.log(`For cube "${cube.name}", saving ${decks.length} decks and ${drafts.length} drafts`);
 
       await cubeAnalytic.save();
       console.log(`Finished: ${Math.min(count, i + 1)} of ${count} cubes`);
