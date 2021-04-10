@@ -271,7 +271,7 @@ function CSVtoCards(csvString, carddb) {
         finish: finish || 'Non-foil',
         imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
         imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
-        tags: tags && tags.length > 0 ? tags.split(',') : [],
+        tags: tags && tags.length > 0 ? tags.split(';').map((t) => t.strip()) : [],
         notes: notes || '',
         rarity: rarity || null,
         colorCategory: colorCategory || null,
