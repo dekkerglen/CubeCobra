@@ -1252,7 +1252,7 @@ router.post(
       const bots = draftutil.getDraftBots(params);
       const format = draftutil.getDraftFormat(params, cube);
 
-      const draft = new Draft();
+      let draft = new Draft();
       let populated = {};
       try {
         populated = draftutil.createDraft(
@@ -1287,6 +1287,44 @@ router.post(
       });
 
       await draft.save();
+
+      if (req.body.botsOnly) {
+        draft = await Draft.findById(draft._id).lean();
+        // insert card details everywhere that needs them
+        for (const seat of draft.unopenedPacks) {
+          for (const pack of seat) {
+            for (const card of pack) {
+              card.details = carddb.cardFromId(card.cardID);
+              if (eloOverrideDict[card.details.name_lower]) {
+                card.details.elo = eloOverrideDict[card.details.name_lower];
+              }
+            }
+          }
+        }
+
+        for (const seat of draft.seats) {
+          for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
+            for (const pack of collection) {
+              for (const card of pack) {
+                card.details = carddb.cardFromId(card.cardID);
+                if (eloOverrideDict[card.details.name_lower]) {
+                  card.details.elo = eloOverrideDict[card.details.name_lower];
+                }
+              }
+            }
+          }
+          for (const card of seat.pickorder) {
+            card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
+          }
+        }
+        return res.status(200).send({
+          success: 'true',
+          draft,
+        });
+      }
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
