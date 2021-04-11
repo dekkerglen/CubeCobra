@@ -21,6 +21,7 @@ const translateType = {
   podcast: 'Podcast',
   video: 'Video',
   episode: 'Podcast Epsiode',
+  package: 'Card Package',
 };
 
 const translateLink = {
@@ -32,6 +33,7 @@ const translateLink = {
   video: (id) => `/content/video/${id}`,
   podcast: (id) => `/content/podcast/${id}`,
   episode: (id) => `/content/episode/${id}`,
+  package: (id) => `/packages/${id}`,
 };
 
 const CommentPage = ({ comment, user, loginCallback }) => {

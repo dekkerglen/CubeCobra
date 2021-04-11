@@ -13,13 +13,7 @@ const generateMeta = require('../../serverjs/meta.js');
 const cardutil = require('../../dist/utils/Card.js');
 const { ensureAuth } = require('../middleware');
 
-const {
-  fromEntries,
-  buildIdQuery,
-  abbreviate,
-  addDeckCardAnalytics,
-  removeDeckCardAnalytics,
-} = require('../../serverjs/cubefn.js');
+const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
 
 const { exportToMtgo, createDraftForSingleDeck, DEFAULT_BASICS } = require('./helper.js');
 
@@ -334,7 +328,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
     }
 
     // add details to cards
@@ -465,7 +459,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
     }
 
     for (const card of base.seats[req.params.index].pickorder) {
@@ -951,7 +945,7 @@ router.get('/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
     }
 
     for (const seat of deck.seats) {

@@ -105,6 +105,9 @@ const CardSearchPage = ({ user, loginCallback }) => {
             <div className="text-right">
               <ButtonLink outline color="success" href="/tool/topcards">
                 View Top Cards
+              </ButtonLink>{' '}
+              <ButtonLink outline color="success" href="/tool/topcards">
+                View Card Packages
               </ButtonLink>
             </div>
           </Col>

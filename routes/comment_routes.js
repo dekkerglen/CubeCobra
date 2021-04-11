@@ -14,6 +14,7 @@ const Video = require('../models/video');
 const Podcast = require('../models/podcast');
 const PodcastEpisode = require('../models/podcastEpisode');
 const Blog = require('../models/blog');
+const Package = require('../models/package');
 const { render } = require('../serverjs/render');
 
 const router = express.Router();
@@ -63,6 +64,10 @@ const getReplyContext = {
     const episode = await PodcastEpisode.findById(id);
     return [episode.owner, 'podcast episode'];
   },
+  package: async (id) => {
+    const pack = await Package.findById(id);
+    return [pack.userid, 'card package'];
+  },
   default: async () => null, // nobody gets a notification for this
 };
 
@@ -72,7 +77,11 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const poster = await User.findById(req.user.id);
 
-    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode'].includes(req.params.type)) {
+    if (
+      !['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(
+        req.params.type,
+      )
+    ) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',
