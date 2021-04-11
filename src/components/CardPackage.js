@@ -151,7 +151,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
         </Row>
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="package" parent={cardPackage._id} user={user} collapse />
+        <CommentsSection parentType="package" parent={cardPackage._id} userid={user.id} collapse />
       </div>
     </Card>
   );

@@ -207,4 +207,12 @@ router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
   });
 });
 
+router.get('/:id', async (req, res) => {
+  const pack = await Package.findById(req.params.id);
+
+  return render(req, res, 'PackagePage', {
+    pack,
+  });
+});
+
 module.exports = router;
