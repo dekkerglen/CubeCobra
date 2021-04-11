@@ -172,7 +172,7 @@ app.use('', require('./routes/root'));
 
 app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
-app.use('/dev', require('./routes/cube/index'));
+app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
