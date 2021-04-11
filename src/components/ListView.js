@@ -205,7 +205,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
           setValues(updateF);
         } catch (err) {
           // FIXME: Display in UI.
-          console.log(err);
+          console.error(err);
         }
       } else {
         setValues(updateF);

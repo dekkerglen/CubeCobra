@@ -47,7 +47,7 @@ const CardSearchPage = ({ user, loginCallback }) => {
       ]);
       const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
 
       Query.set('f', filter);

@@ -46,8 +46,6 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
   const approve = async () => {
     const response = await csrfFetch(`/packages/approve/${cardPackage._id}`);
     if (response.ok) {
-      const json = await response.json();
-      console.log(json);
       refresh();
     }
   };
@@ -55,8 +53,6 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
   const unapprove = async () => {
     const response = await csrfFetch(`/packages/unapprove/${cardPackage._id}`);
     if (response.ok) {
-      const json = await response.json();
-      console.log(json);
       refresh();
     }
   };
@@ -64,8 +60,6 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
   const remove = async () => {
     const response = await csrfFetch(`/packages/remove/${cardPackage._id}`);
     if (response.ok) {
-      const json = await response.json();
-      console.log(json);
       refresh();
     }
   };
@@ -151,7 +145,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
         </Row>
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="package" parent={cardPackage._id} userid={user.id} collapse />
+        <CommentsSection parentType="package" parent={cardPackage._id} userid={user ? user.id : null} collapse />
       </div>
     </Card>
   );
