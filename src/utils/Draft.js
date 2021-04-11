@@ -136,7 +136,7 @@ function getSortFn(bot) {
     if (bot) {
       return getRating(bot, b) - getRating(bot, a);
     }
-    return b.rating - a.rating;
+    return b.details.elo - a.details.elo;
   };
 }
 
@@ -466,8 +466,8 @@ function botPicks() {
       const inPack = packFrom.length;
       const [packNum] = packPickNumber();
       for (let cardIndex = 0; cardIndex < packFrom.length; cardIndex++) {
-        if (!packFrom[cardIndex].rating) {
-          packFrom[cardIndex].rating = 1200;
+        if (!packFrom[cardIndex].details.elo) {
+          packFrom[cardIndex].details.elo = 1200;
         }
         ratedPicks.push(cardIndex);
       }
