@@ -13,6 +13,7 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
+const updatedb = require('../serverjs/updatecards.js');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
@@ -233,7 +234,8 @@ async function processCube(cube) {
 
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
-  const { name, oracle_id } = card;
+  const { name } = card;
+  const oracleId = name.oracle_id;
 
   const rating = ratingsDict[name]; // await CardRating.findOne({ name });
 
@@ -243,14 +245,14 @@ async function processCard(card) {
   currentDatapoint.picks = rating ? rating.picks : 0;
   // currentDatapoint.embedding = embeddings[card.name_lower];
 
-  currentDatapoint.total = cardUses[oracle_id] ? [cardUses[oracle_id], cardUses[oracle_id] / cubeCounts.total] : [0, 0];
+  currentDatapoint.total = cardUses[oracleId] ? [cardUses[oracleId], cardUses[oracleId] / cubeCounts.total] : [0, 0];
   for (const cubeCategory of Object.keys(cardSizeUses)) {
-    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][oracle_id]
-      ? [cardSizeUses[cubeCategory][oracle_id], cardSizeUses[cubeCategory][oracle_id] / cubeCounts[cubeCategory]]
+    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][oracleId]
+      ? [cardSizeUses[cubeCategory][oracleId], cardSizeUses[cubeCategory][oracleId] / cubeCounts[cubeCategory]]
       : [0, 0];
   }
 
-  const cubes = cubesWithCard[correlationIndex[oracle_id]] || [];
+  const cubes = cubesWithCard[correlationIndex[oracleId]] || [];
   currentDatapoint.cubes = cubes.length;
 
   currentDatapoint.prices = versions.map((id) => {
@@ -270,18 +272,18 @@ async function processCard(card) {
   const cubedWith = distinctOracles
     .map((otherOracleId) => ({
       oracle: otherOracleId,
-      count: correlations[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
+      count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
       type: cardFromOracle(otherOracleId).type.toLowerCase(),
     }))
-    .filter((item) => item.oracle !== oracle_id && !item.type.includes('basic land'));
+    .filter((item) => item.oracle !== oracleId && !item.type.includes('basic land'));
 
   const synergyWith = distinctOracles
     .map((otherOracleId) => ({
       oracle: otherOracleId,
-      synergy: synergies[correlationIndex[oracle_id]][correlationIndex[otherOracleId]],
+      synergy: synergies[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
       type: cardFromOracle(otherOracleId).type.toLowerCase(),
     }))
-    .filter((item) => Number.isFinite(item.synergy) && item.oracle !== oracle_id && !item.type.includes('basic'));
+    .filter((item) => Number.isFinite(item.synergy) && item.oracle !== oracleId && !item.type.includes('basic'));
 
   // quickselect isn't sorting correctly for some reason
   cubedWith.sort((first, second) => {
@@ -297,15 +299,15 @@ async function processCard(card) {
     }
     return 0;
   });
-  let cardHistory = await CardHistory.findOne({ oracleId: oracle_id });
+  let cardHistory = await CardHistory.findOne({ oracleId });
   try {
     if (!cardHistory) {
       cardHistory = new CardHistory();
       cardHistory.cardName = name;
-      cardHistory.oracleId = oracle_id; // eslint-disable-line camelcase
+      cardHistory.oracleId = oracleId; // eslint-disable-line camelcase
       cardHistory.versions = versions;
     } else if (!cardHistory.oracleId || cardHistory.oracleId.length === 0) {
-      cardHistory.oracle_id = oracle_id;
+      cardHistory.oracle_id = oracleId;
     }
 
     cardHistory.cubes = cubes;
@@ -395,6 +397,7 @@ const run = async () => {
   winston.info('finished loading cards');
 
   const ratings = await CardRating.find({}).lean();
+  await updatedb.updateCardbase(ratings);
 
   winston.info('Started: oracles');
 

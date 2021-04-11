@@ -209,7 +209,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
             className="d-none"
             innerRef={submitDeckForm}
             method="POST"
-            action={`/cube/submitdeck/${Draft.cube()}`}
+            action={`/cube/deck/submitdeck/${Draft.cube()}`}
           >
             <Input type="hidden" name="body" value={Draft.id()} />
           </CSRFForm>

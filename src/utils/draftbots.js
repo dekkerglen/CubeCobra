@@ -235,7 +235,7 @@ export const getCastingProbability = (card, lands) => {
 // What is the raw power level of this card? Used to choose a card within a combination.
 // Scale is roughly 0-10.
 export const getRating = (card) => {
-  return 10 ** ((card?.rating ?? 1200) / 400 - 3);
+  return 10 ** ((card?.elo ?? 1200) / 400 - 3);
 };
 
 // How much does the card we're considering synergize with the cards we've picked?

@@ -170,7 +170,7 @@ app.use('/cube/api/cubeJSON', apiLimiter);
 // Route files; they manage their own CSRF protection
 app.use('', require('./routes/root'));
 
-app.use('/cube', require('./routes/cube_routes'));
+app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));

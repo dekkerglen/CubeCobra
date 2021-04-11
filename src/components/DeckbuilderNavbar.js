@@ -93,7 +93,7 @@ const DeckbuilderNavbar = ({
             <NavLink href="#" onClick={saveDeck}>
               Save Deck
             </NavLink>
-            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/editdeck/${deck._id}`}>
+            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck._id}`}>
               <Input type="hidden" name="draftraw" value={JSON.stringify(stripped)} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />

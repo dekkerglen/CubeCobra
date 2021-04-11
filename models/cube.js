@@ -153,6 +153,10 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  useCubeElo: {
+    type: Boolean,
+    default: false,
+  },
   basics: {
     type: [String],
     default: [
