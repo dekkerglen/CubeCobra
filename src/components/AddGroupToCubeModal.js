@@ -121,9 +121,19 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes }) => {
       <Modal isOpen={isOpen} toggle={toggle} size="xs">
         <ModalHeader toggle={toggle}>Add Package to Cube</ModalHeader>
         <ModalBody>
-          {cards.map((c) => (
-            <p>{c}</p>
-          ))}
+          <ListGroup className="list-outline">
+            {details.map((card) => (
+              <AutocardItem
+                key={card.index}
+                card={{ details: card }}
+                className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+                data-in-modal
+                index={card.index}
+              >
+                <>{card.name}</>
+              </AutocardItem>
+            ))}
+          </ListGroup>
           <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
