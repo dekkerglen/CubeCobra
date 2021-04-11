@@ -92,6 +92,7 @@ const clientConfig = merge(config, {
     PodcastEpisodePage: './src/pages/PodcastEpisodePage.js',
     BrowseContentPage: './src/pages/BrowseContentPage.js',
     LeaveWarningPage: './src/pages/LeaveWarningPage.js',
+    BrowsePackagesPage: './src/pages/BrowsePackagesPage.js',
   },
   output: {
     filename: '[name].bundle.js',
@@ -171,6 +172,7 @@ const serverConfig = merge(config, {
     'pages/PodcastEpisodePage': './src/pages/PodcastEpisodePage.js',
     'pages/BrowseContentPage': './src/pages/BrowseContentPage.js',
     'pages/LeaveWarningPage': './src/pages/LeaveWarningPage.js',
+    'pages/BrowsePackagesPage': './src/pages/BrowsePackagesPage.js',
     'utils/Card': './src/utils/Card.js',
     'utils/draftutil': './src/utils/draftutil.js',
     'utils/Draft': './src/utils/Draft.js',

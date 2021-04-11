@@ -717,14 +717,6 @@ router.get('/analysis/:id', async (req, res) => {
         defaultFormatId: Number(req.query.formatId),
         defaultFilterText: req.query.f,
         defaultTab: req.query.tab ? Number(req.query.tab) : 0,
-        cubes: req.user
-          ? await Cube.find(
-              {
-                owner: req.user._id,
-              },
-              'name _id',
-            )
-          : [],
       },
       {
         metadata: generateMeta(

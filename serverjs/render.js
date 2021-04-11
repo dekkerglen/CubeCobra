@@ -74,6 +74,7 @@ if (NODE_ENV === 'production') {
   pages.BulkUploadPage = require('../dist/pages/BulkUploadPage').default;
   pages.CardPage = require('../dist/pages/CardPage').default;
   pages.LeaveWarningPage = require('../dist/pages/LeaveWarningPage').default;
+  pages.BrowsePackagesPage = require('../dist/pages/BrowsePackagesPage').default;
 }
 
 const getPage = (page) => pages[page] || pages.Loading;

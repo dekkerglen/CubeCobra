@@ -50,7 +50,6 @@ const CubeAnalysisPage = ({
   defaultTab,
   defaultFormatId,
   defaultShowTagColors,
-  cubes,
   loginCallback,
   cubeAnalytics,
 }) => {
@@ -232,7 +231,7 @@ const CubeAnalysisPage = ({
           cuts={cutCards}
           filter={filter}
           loadState={loadState}
-          cubes={cubes}
+          cubes={user ? user.cubes : []}
         />
       ),
     },
@@ -355,7 +354,6 @@ CubeAnalysisPage.propTypes = {
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
   defaultShowTagColors: PropTypes.bool,
-  cubes: PropTypes.arrayOf(PropTypes.shape({})),
   user: UserPropType,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
@@ -366,7 +364,6 @@ CubeAnalysisPage.defaultProps = {
   defaultTab: 0,
   defaultFormatId: null,
   defaultShowTagColors: true,
-  cubes: [],
   user: null,
   loginCallback: '/',
 };

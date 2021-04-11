@@ -276,6 +276,16 @@ router.get(
 );
 
 router.post(
+  '/getdetailsforcards',
+  util.wrapAsyncApi(async (req, res) => {
+    return res.status(200).send({
+      success: 'true',
+      details: req.body.cards.map((id) => carddb.cardFromId(id)),
+    });
+  }),
+);
+
+router.post(
   '/saveshowtagcolors',
   ensureAuth,
   body('show_tag_colors').toBoolean(),
@@ -843,7 +853,8 @@ router.post(
       });
     }
 
-    cube.cards.push(util.newCard(req.body.add.details));
+    cube.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+
     cube = setCubeType(cube, carddb);
     await cube.save();
 

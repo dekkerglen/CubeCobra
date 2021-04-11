@@ -78,6 +78,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
                 <DropdownMenu right>
                   <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
                   <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
+                  <DropdownItem href="/packages/browse">Packages</DropdownItem>
                   <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
                   <DropdownItem href="/filters">Filter Syntax</DropdownItem>
                 </DropdownMenu>
