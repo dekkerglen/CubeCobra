@@ -12,6 +12,7 @@ const CubePropType = PropTypes.shape({
       sideboards: PropTypes.number,
     }),
   ).isRequired,
+  useCubeElo: PropTypes.bool,
 });
 
 export default CubePropType;

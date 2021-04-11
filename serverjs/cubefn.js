@@ -220,21 +220,6 @@ async function getCardElo(cardname, round) {
   return round ? Math.round(rating.elo) : rating.elo;
 }
 
-async function getElo(cardnames, round) {
-  const ratings = await CardRating.find({ name: { $in: cardnames } }).lean();
-  const result = {};
-
-  for (const cardname of cardnames) {
-    result[cardname] = 1200; // default values
-  }
-
-  for (const rating of ratings) {
-    result[rating.name] = round ? Math.round(rating.elo) : rating.elo;
-  }
-
-  return result;
-}
-
 function CSVtoCards(csvString, carddb) {
   let { data } = Papa.parse(csvString.trim(), { header: true });
   data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
@@ -649,7 +634,6 @@ const methods = {
   cubeCardTags,
   maybeCards,
   getCardElo,
-  getElo,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
