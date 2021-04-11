@@ -51,6 +51,7 @@ const User = require('../../models/user');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
+const { fromEntries } = require('../../serverjs/util.js');
 
 const router = express.Router();
 router.use(csrfProtection);
@@ -1226,7 +1227,7 @@ router.post(
     try {
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats card_count type cards basics',
+        '_id name draft_formats card_count type cards basics useCubeElo',
       ).lean();
 
       if (!cube) {
@@ -1242,15 +1243,24 @@ router.post(
 
       const params = req.body;
 
+      let eloOverrideDict = {};
+      if (cube.useCubeElo) {
+        const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
+
       // insert card details everywhere that needs them
       for (const card of cube.cards) {
         card.details = carddb.cardFromId(card.cardID);
+        if (eloOverrideDict[card.details.name_lower]) {
+          card.details.elo = eloOverrideDict[card.details.name_lower];
+        }
       }
       // setup draft
       const bots = draftutil.getDraftBots(params);
       const format = draftutil.getDraftFormat(params, cube);
 
-      let draft = new Draft();
+      const draft = new Draft();
       let populated = {};
       try {
         populated = draftutil.createDraft(
@@ -1285,37 +1295,6 @@ router.post(
       });
 
       await draft.save();
-      if (req.body.botsOnly) {
-        draft = await Draft.findById(draft._id).lean();
-        // insert card details everywhere that needs them
-        for (const seat of draft.unopenedPacks) {
-          for (const pack of seat) {
-            for (const card of pack) {
-              card.details = carddb.cardFromId(
-                card.cardID,
-                'cmc type image_normal parsed_cost image_flip name color_identity',
-              );
-            }
-          }
-        }
-
-        for (const seat of draft.seats) {
-          for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-            for (const pack of collection) {
-              for (const card of pack) {
-                card.details = carddb.cardFromId(card.cardID);
-              }
-            }
-          }
-          for (const card of seat.pickorder) {
-            card.details = carddb.cardFromId(card.cardID);
-          }
-        }
-        return res.status(200).send({
-          success: 'true',
-          draft,
-        });
-      }
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -1344,13 +1323,19 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
     // insert card details everywhere that needs them
     for (const pack of draft.unopenedPacks) {
       for (const card of pack) {
-        card.details = carddb.cardFromId(
-          card.cardID,
-          'cmc type image_normal image_flip name color_identity parsed_cost',
-        );
+        card.details = carddb.cardFromId(card.cardID);
+        if (eloOverrideDict[card.details.name_lower]) {
+          card.details.elo = eloOverrideDict[card.details.name_lower];
+        }
       }
     }
 
@@ -1359,11 +1344,17 @@ router.get('/griddraft/:id', async (req, res) => {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
           }
         }
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
+        if (eloOverrideDict[card.details.name_lower]) {
+          card.details.elo = eloOverrideDict[card.details.name_lower];
+        }
       }
     }
 
@@ -1411,14 +1402,20 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
     // insert card details everywhere that needs them
     for (const seat of draft.unopenedPacks) {
       for (const pack of seat) {
         for (const card of pack) {
-          card.details = carddb.cardFromId(
-            card.cardID,
-            'cmc type image_normal image_flip name color_identity parsed_cost embedding elo',
-          );
+          card.details = carddb.cardFromId(card.cardID);
+          if (eloOverrideDict[card.details.name_lower]) {
+            card.details.elo = eloOverrideDict[card.details.name_lower];
+          }
         }
       }
     }
@@ -1428,11 +1425,17 @@ router.get('/draft/:id', async (req, res) => {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
           }
         }
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
+        if (eloOverrideDict[card.details.name_lower]) {
+          card.details.elo = eloOverrideDict[card.details.name_lower];
+        }
       }
     }
 

@@ -13,7 +13,13 @@ const generateMeta = require('../../serverjs/meta.js');
 const cardutil = require('../../dist/utils/Card.js');
 const { ensureAuth } = require('../middleware');
 
-const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
+const {
+  fromEntries,
+  buildIdQuery,
+  abbreviate,
+  addDeckCardAnalytics,
+  removeDeckCardAnalytics,
+} = require('../../serverjs/cubefn.js');
 
 const { exportToMtgo, createDraftForSingleDeck, DEFAULT_BASICS } = require('./helper.js');
 
@@ -21,6 +27,7 @@ const { exportToMtgo, createDraftForSingleDeck, DEFAULT_BASICS } = require('./he
 const Cube = require('../../models/cube');
 const Deck = require('../../models/deck');
 const User = require('../../models/user');
+const CubeAnalytic = require('../../models/cubeAnalytic');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 
@@ -317,25 +324,37 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    // add images to cards
+    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
+
+    if (!cube) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/404');
+    }
+
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
+    // add details to cards
     for (const seat of deck.seats) {
       for (const collection of [seat.deck, seat.sideboard]) {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
           }
         }
       }
       for (const card of seat.pickorder) {
         card.details = carddb.cardFromId(card.cardID);
+        if (eloOverrideDict[card.details.name_lower]) {
+          card.details.elo = eloOverrideDict[card.details.name_lower];
+        }
       }
-    }
-
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics`).lean();
-
-    if (!cube) {
-      req.flash('danger', 'Cube not found');
-      return res.redirect('/404');
     }
 
     return render(
@@ -443,8 +462,17 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const cube = await Cube.findById(base.cube);
     const srcDraft = await Draft.findById(base.draft).lean();
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
     for (const card of base.seats[req.params.index].pickorder) {
       card.details = carddb.cardFromId(card.cardID);
+      if (eloOverrideDict[card.details.name_lower]) {
+        card.details.elo = eloOverrideDict[card.details.name_lower];
+      }
     }
 
     const deck = new Deck();
@@ -486,6 +514,9 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         if (i !== parseInt(req.params.index, 10)) {
           for (const card of base.seats[i].pickorder) {
             card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
           }
           // eslint-disable-next-line no-await-in-loop
           const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
@@ -917,17 +948,29 @@ router.get('/:id', async (req, res) => {
       drafter = deckUser.username;
     }
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
     for (const seat of deck.seats) {
       for (const collection of [seat.deck, seat.sideboard]) {
         for (const pack of collection) {
           for (const card of pack) {
             card.details = carddb.cardFromId(card.cardID);
+            if (eloOverrideDict[card.details.name_lower]) {
+              card.details.elo = eloOverrideDict[card.details.name_lower];
+            }
           }
         }
       }
       if (seat.pickorder) {
         for (const card of seat.pickorder) {
           card.details = carddb.cardFromId(card.cardID);
+          if (eloOverrideDict[card.details.name_lower]) {
+            card.details.elo = eloOverrideDict[card.details.name_lower];
+          }
         }
       }
     }
