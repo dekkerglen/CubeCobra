@@ -16,7 +16,7 @@ class DeckDeleteModal extends React.Component {
   }
 
   async confirm() {
-    const response = await csrfFetch(`/cube/deletedeck/${this.deckID}`, {
+    const response = await csrfFetch(`/cube/deck/deletedeck/${this.deckID}`, {
       method: 'DELETE',
       headers: {},
     });
