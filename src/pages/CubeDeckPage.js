@@ -132,7 +132,9 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                     <DropdownMenu right>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}`}>Redraft</DropdownItem>
                       <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
-                      <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
+                      <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
+                        Clone and Rebuild
+                      </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 ) : (
