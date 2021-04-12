@@ -107,7 +107,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
         </Row>
         <Row>
           {cards.map((cardId, index) => (
-            <Col key={cardId} className="col-sm-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
+            <Col key={cardId} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
               <Card className="mb-3">
                 <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
                 <Button

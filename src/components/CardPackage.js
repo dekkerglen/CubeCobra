@@ -136,7 +136,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
       <CardBody>
         <Row>
           {cardPackage.cards.map((cardId) => (
-            <Col key={`${cardPackage._id}-${cardId}`} className="col-sm-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
+            <Col key={`${cardPackage._id}-${cardId}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
               <Card className="mb-3">
                 <AutocardA href={`/tool/card/${cardId}`} front={`/tool/cardimage/${cardId}`} target="_blank">
                   <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
