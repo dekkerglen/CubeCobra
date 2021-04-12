@@ -31,7 +31,7 @@ const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
               <ButtonLink outline color="success" href="/tool/searchcards">
                 Search All Cards
               </ButtonLink>{' '}
-              <ButtonLink outline color="success" href="/tool/topcards">
+              <ButtonLink outline color="success" href="/packages/browse">
                 View Card Packages
               </ButtonLink>
             </div>
