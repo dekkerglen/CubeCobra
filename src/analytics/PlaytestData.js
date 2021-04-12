@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { ListGroupItem } from 'reactstrap';
 
 import CardPropType from 'proptypes/CardPropType';
 import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
@@ -7,7 +8,23 @@ import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import { fromEntries } from 'utils/Util';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { mainboardRate, pickRate } from 'utils/Card';
+import { mainboardRate, pickRate, encodeName } from 'utils/Card';
+
+import withAutocard from 'components/WithAutocard';
+
+const AutocardItem = withAutocard(ListGroupItem);
+
+const renderCardLink = (card) => (
+  <AutocardItem className="p-0" key={card.index} card={card} data-in-modal index={card.index}>
+    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
+      {card.details.name}
+    </a>
+  </AutocardItem>
+);
+
+const renderPercent = (val) => {
+  return <>{parseInt(val * 1000, 10) / 10}%</>;
+};
 
 const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
   const cardDict = useMemo(() => fromEntries(allCards.map((card) => [card.details.name.toLowerCase(), card])), [
@@ -19,7 +36,7 @@ const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
       cubeAnalytics.cards
         .filter((cardAnalytic) => cardDict[cardAnalytic.cardName])
         .map(({ cardName, elo, mainboards, sideboards, picks, passes }) => ({
-          cardName: cardDict[cardName].details.name,
+          card: cardDict[cardName],
           elo: Math.round(elo),
           mainboard: mainboardRate({ mainboards, sideboards }),
           pickrate: pickRate({ picks, passes }),
@@ -34,11 +51,17 @@ const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
       <ErrorBoundary>
         <SortableTable
           columnProps={[
-            { key: 'cardName', title: 'Card Name', heading: true, sortable: true },
+            {
+              key: 'card',
+              title: 'Card Name',
+              heading: true,
+              sortable: true,
+              renderFn: renderCardLink,
+            },
             { key: 'elo', title: 'Cube Elo', sortable: true, heading: false },
-            { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false },
+            { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false, renderFn: renderPercent },
             { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
-            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false },
+            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },
             { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
           ]}
           data={data}
