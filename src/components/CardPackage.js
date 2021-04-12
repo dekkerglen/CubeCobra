@@ -69,10 +69,12 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
       <CardHeader className="pl-4 pr-0 pt-2 pb-0">
         <Row>
           <Col xs="12" sm="6">
-            <h5 className="card-title">{cardPackage.title}</h5>
+            <h5 className="card-title">
+              <a href={`/packages/${cardPackage._id}`}>{cardPackage.title}</a>
+            </h5>
             <h6 className="card-subtitle mb-2 text-muted">
               <a href={`/user/view/${cardPackage.userid}`}>{cardPackage.username}</a>
-              {cardPackage.approved ? ' approved ' : ' submitted '}
+              {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>
           </Col>
@@ -98,7 +100,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
                 <AddGroupToCubeModalLink
                   outline
                   color="success"
-                  modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [] }}
+                  modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage._id }}
                 >
                   Add To Cube
                 </AddGroupToCubeModalLink>

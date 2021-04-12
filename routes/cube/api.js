@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body } = require('express-validator');
@@ -22,6 +23,7 @@ const {
   maybeCards,
   newCardAnalytics,
   getEloAdjustment,
+  addCardHtml,
 } = require('../../serverjs/cubefn.js');
 
 const { DEFAULT_BASICS, ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('./helper');
@@ -32,6 +34,8 @@ const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const CardRating = require('../../models/cardrating');
+const Package = require('../../models/package');
+const Blog = require('../../models/blog');
 
 const router = express.Router();
 
@@ -853,10 +857,48 @@ router.post(
       });
     }
 
-    cube.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+    let tag = null;
+    if (req.body.packid) {
+      const pack = await Package.findById(req.body.packid);
+      if (pack) {
+        tag = pack.title;
+      }
+    }
+
+    if (tag) {
+      cube.cards.push(
+        ...req.body.cards.map((id) => {
+          const c = util.newCard(carddb.cardFromId(id));
+          c.tags = [tag];
+          c.notes = `Added from package "${tag}": ${process.env.HOST}/packages/${req.body.packid}`;
+          return c;
+        }),
+      );
+    } else {
+      cube.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+    }
 
     cube = setCubeType(cube, carddb);
     await cube.save();
+
+    if (tag) {
+      const blogpost = new Blog();
+      blogpost.title = `Added Package "${tag}"`;
+      blogpost.changelist = req.body.cards.reduce(
+        (changes, card) => changes + addCardHtml(carddb.cardFromId(card)),
+        '',
+      );
+      blogpost.markdown = `Add from the package [${tag}](/packages/${req.body.packid})`;
+      blogpost.owner = cube.owner;
+      blogpost.date = Date.now();
+      blogpost.cube = cube._id;
+      blogpost.dev = 'false';
+      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+      blogpost.username = cube.owner_name;
+      blogpost.cubename = cube.name;
+
+      await blogpost.save();
+    }
 
     return res.status(200).send({
       success: 'true',

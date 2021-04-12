@@ -22,7 +22,7 @@ import {
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes }) => {
+const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
   const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0]._id : null);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +58,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes }) => {
         method: 'POST',
         body: JSON.stringify({
           cards,
+          packid,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -199,6 +200,11 @@ AddGroupToCubeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
+  packid: PropTypes.string,
+};
+
+AddGroupToCubeModal.defaultProps = {
+  packid: null,
 };
 
 export default AddGroupToCubeModal;

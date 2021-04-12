@@ -33,7 +33,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
   try {
     const blogpost = new Blog();
     blogpost.title = 'Cube Bulk Import - Automatic Post';
-    blogpost.html = changelog;
+    blogpost.changelist = changelog;
     blogpost.owner = cube.owner;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;

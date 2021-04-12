@@ -1717,7 +1717,7 @@ router.post('/resize/:id/:size', async (req, res) => {
 
     const blogpost = new Blog();
     blogpost.title = 'Resize - Automatic Post';
-    blogpost.html = changelog;
+    blogpost.changelist = changelog;
     blogpost.owner = cube.owner;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;
