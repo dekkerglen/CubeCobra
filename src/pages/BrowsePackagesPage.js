@@ -9,8 +9,6 @@ import {
   Row,
   Col,
   Nav,
-  TabContent,
-  TabPane,
   UncontrolledAlert,
   Button,
   InputGroup,
