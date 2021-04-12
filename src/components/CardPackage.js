@@ -68,7 +68,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
     <Card className="mb-4">
       <CardHeader className="pl-4 pr-0 pt-2 pb-0">
         <Row>
-          <Col xs="6">
+          <Col xs="12" sm="6">
             <h5 className="card-title">{cardPackage.title}</h5>
             <h6 className="card-subtitle mb-2 text-muted">
               <a href={`/user/view/${cardPackage.userid}`}>{cardPackage.username}</a>
@@ -78,7 +78,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
           </Col>
 
           {user ? (
-            <Col xs="6">
+            <Col xs="12" sm="6" className="pb-2">
               <div className="flex-container flex-row-reverse">
                 <TextBadge name="Votes" className="mx-2">
                   <Tooltip text={voted ? 'Click to remove your upvote' : 'Click to upvote this package'}>
@@ -134,7 +134,7 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
       <CardBody>
         <Row>
           {cardPackage.cards.map((cardId) => (
-            <Col key={cardId} xs="6" md="3" lg="2">
+            <Col key={`${cardPackage._id}-${cardId}`} xs="6" md="3" lg="2">
               <Card className="mb-3">
                 <AutocardA href={`/tool/card/${cardId}`} front={`/tool/cardimage/${cardId}`} target="_blank">
                   <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />

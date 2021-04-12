@@ -82,8 +82,6 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
     fetchData();
   }, [filter, page, sort, sortDirection, selectedTab, refresh, setRefresh]);
 
-  console.log(packages);
-
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <Advertisement />
@@ -180,10 +178,6 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
             </Tab>
           )}
         </Nav>
-        <TabContent activeTab={selectedTab}>
-          <TabPane tabId="0" />
-        </TabContent>
-
         <CardBody>
           {total / PAGE_SIZE > 1 && (
             <Paginate count={Math.ceil(total / PAGE_SIZE)} active={page} onClick={(i) => setPage(i)} />
@@ -193,7 +187,9 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
               <Spinner className="position-absolute" />
             </div>
           ) : (
-            packages.map((pack) => <CardPackage cardPackage={pack} user={user} refresh={() => setRefresh(true)} />)
+            packages.map((pack) => (
+              <CardPackage key={pack._id} cardPackage={pack} user={user} refresh={() => setRefresh(true)} />
+            ))
           )}
           {total / PAGE_SIZE > 1 && (
             <Paginate count={Math.ceil(total / PAGE_SIZE)} active={page} onClick={(i) => setPage(i)} />

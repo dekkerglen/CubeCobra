@@ -6,7 +6,7 @@ const CardPropType = PropTypes.shape({
   date: PropTypes.string.isRequired,
   userid: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
-  approved: PropTypes.string.isRequired,
+  approved: PropTypes.bool.isRequired,
   cards: PropTypes.arrayOf(PropTypes.string).isRequired,
   votes: PropTypes.number.isRequired,
   voters: PropTypes.arrayOf(PropTypes.string).isRequired,
