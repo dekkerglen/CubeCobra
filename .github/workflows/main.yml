@@ -2,11 +2,12 @@
 
 name: Deploy master to dev server
 
-workflow_run:
-  workflows: ["CI Tests"]
-  branches: [master]
-  types: 
-    - completed
+on:
+  workflow_run:
+    workflows: ["CI Tests"]
+    branches: [master]
+    types: 
+      - completed
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -45,6 +46,13 @@ jobs:
 
       - name: Generate deployment package
         run: zip -r deploy.zip * -x node_modules/\* -x .\* -x private/\*
+
+      - name: Upload Deployment Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-zip
+          path: deploy.zip
+          if-no-files-found: error
 
       - name: Get timestamp
         uses: gerred/actions/current-time@master
