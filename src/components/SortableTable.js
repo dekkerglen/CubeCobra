@@ -5,6 +5,7 @@ import { CSVLink } from 'react-csv';
 
 import HeaderCell from 'components/HeaderCell';
 import useSortableData from 'hooks/UseSortableData';
+import { fromEntries } from 'utils/Util';
 
 export const valueRenderer = (value) => {
   if (!Number.isFinite(value) || Number.isInteger(value)) {
@@ -18,9 +19,22 @@ export const compareStrings = (a, b) => a?.toString?.()?.localeCompare?.(b?.toSt
 export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, totalRow, totalCol, ...props }) => {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
+  const exportData = data.map((row) =>
+    fromEntries(
+      Object.entries(row).map(([key, value]) => {
+        if (value.exportValue) {
+          return [key, value.exportValue];
+        }
+        return [key, value];
+      }),
+    ),
+  );
+
+  console.log(exportData);
+
   return (
     <>
-      <CSVLink data={data} filename="export.csv">
+      <CSVLink data={exportData} filename="export.csv">
         Download CSV
       </CSVLink>
       <Table bordered responsive {...props}>
