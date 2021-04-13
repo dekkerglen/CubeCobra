@@ -10,7 +10,7 @@ const carddb = require('../../serverjs/cards.js');
 const util = require('../../serverjs/util.js');
 
 const { buildIdQuery } = require('../../serverjs/cubefn.js');
-const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper.js')
+const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper.js');
 
 // Bring in models
 const Cube = require('../../models/cube');
