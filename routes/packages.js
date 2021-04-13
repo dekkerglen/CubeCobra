@@ -127,10 +127,18 @@ router.post('/submit', ensureAuth, async (req, res) => {
   pack.userid = poster._id;
   pack.username = poster.username;
   pack.cards = cards;
-  pack.keywords = packageName.toLowerCase().split(' ');
+  pack.keywords = packageName
+    .toLowerCase()
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+    .split(' ');
 
   for (const card of cards) {
-    pack.keywords.push(...carddb.cardFromId(card).name_lower.split(' '));
+    pack.keywords.push(
+      ...carddb
+        .cardFromId(card)
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+        .name_lower.split(' '),
+    );
   }
 
   // make distinct
