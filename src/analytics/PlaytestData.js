@@ -36,7 +36,10 @@ const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
       cubeAnalytics.cards
         .filter((cardAnalytic) => cardDict[cardAnalytic.cardName])
         .map(({ cardName, elo, mainboards, sideboards, picks, passes }) => ({
-          card: cardDict[cardName],
+          card: {
+            exportValue: cardName,
+            ...cardDict[cardName],
+          },
           elo: Math.round(elo),
           mainboard: mainboardRate({ mainboards, sideboards }),
           pickrate: pickRate({ picks, passes }),
