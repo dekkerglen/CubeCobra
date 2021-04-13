@@ -60,8 +60,8 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
   };
 
   const changeTab = (i) => {
-	setPage(0);
-	setSelectedTab(i);
+    setPage(0);
+    setSelectedTab(i);
   };
 
   useEffect(() => {
