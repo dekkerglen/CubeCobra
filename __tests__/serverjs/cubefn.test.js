@@ -22,17 +22,7 @@ afterEach(() => {
   carddb.unloadCardDb();
 });
 
-test('getCubeId returns urlAlias when defined', () => {
-  const testCube = {
-    urlAlias: 'a',
-    shortID: 'bbb',
-    _id: 'c',
-  };
-  const result = cubefn.getCubeId(testCube);
-  expect(result).toBe(testCube.urlAlias);
-});
-
-test('getCubeId returns shortId when urlAlias is not present', () => {
+test('getCubeId returns shortID when defined', () => {
   const testCube = {
     shortID: 'bbb',
     _id: 'c',
@@ -55,13 +45,10 @@ test('buildIdQuery returns a simple query when passed a 24-character alphanumeri
   expect(result._id).toBe(testId);
 });
 
-test('buildIdQuery returns a boolean query when passed a non-alphanumeric string', () => {
+test('buildIdQuery returns a shortID query when passed a non-alphanumeric string', () => {
   const testId = 'a1a-a1a1a1a1a1a1a1a1a1a1';
   const result = cubefn.buildIdQuery(testId);
-  const condition = result.$or;
-  expect(condition.length).toBe(2);
-  expect(condition[0].shortID).toBe(testId);
-  expect(condition[1].urlAlias).toBe(testId);
+  expect(result.shortID).toBe(testId);
 });
 
 test('cardsAreEquivalent returns true for two equivalent cards', () => {
@@ -117,7 +104,6 @@ test('legalityToInt returns the expected values', () => {
 test('generateShortId returns a valid short ID', async () => {
   const dummyModel = {
     shortID: '1x',
-    urlAlias: 'a real alias',
   };
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
@@ -136,7 +122,6 @@ test('generateShortId returns a valid short ID', async () => {
 test('generateShortId returns a valid short ID with profanity', async () => {
   const dummyModel = {
     shortID: '1x',
-    urlAlias: 'a real alias',
   };
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
