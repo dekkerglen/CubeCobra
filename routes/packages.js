@@ -134,7 +134,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
   }
 
   // make distinct
-  pack.keywords = pack.keywords.filter((value, index, self) => self.indexOf(value));
+  pack.keywords = pack.keywords.filter((value, index, self) => self.indexOf(value) === index);
 
   await pack.save();
 
