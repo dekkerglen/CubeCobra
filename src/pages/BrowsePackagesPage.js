@@ -59,6 +59,11 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
     setRefresh(true);
   };
 
+  const changeTab = (i) => {
+	setPage(0);
+	setSelectedTab(i);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (refresh) {
@@ -164,14 +169,14 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
           </Row>
         </div>
         <Nav tabs>
-          <Tab tab={selectedTab} setTab={setSelectedTab} index="0">
+          <Tab tab={selectedTab} setTab={changeTab} index="0">
             Approved
           </Tab>
-          <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
+          <Tab tab={selectedTab} setTab={changeTab} index="1">
             Submitted
           </Tab>
           {user && (
-            <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
+            <Tab tab={selectedTab} setTab={changeTab} index="2">
               Your Packages
             </Tab>
           )}
