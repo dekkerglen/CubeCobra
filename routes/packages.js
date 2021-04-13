@@ -136,8 +136,8 @@ router.post('/submit', ensureAuth, async (req, res) => {
     pack.keywords.push(
       ...carddb
         .cardFromId(card)
-        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
-        .name_lower.split(' '),
+        .name_lower.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+        .split(' '),
     );
   }
 
