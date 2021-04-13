@@ -90,6 +90,42 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
   }
 });
 
+router.get('/blogpost/:id', async (req, res) => {
+  try {
+    const post = await Blog.findById(req.params.id);
+
+    return render(req, res, 'BlogPostPage', {
+      post,
+    });
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.delete('/remove/:id', ensureAuth, async (req, res) => {
+  try {
+    const query = {
+      _id: req.params.id,
+    };
+
+    const blog = await Blog.findById(req.params.id);
+
+    if (!req.user._id.equals(blog.owner)) {
+      req.flash('danger', 'Unauthorized');
+      return res.redirect('/404');
+    }
+    await Blog.deleteOne(query);
+
+    req.flash('success', 'Post Removed');
+    return res.send('Success');
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: 'Error deleting post.',
+    });
+  }
+});
+
 router.get(
   '/src/:id',
   util.wrapAsyncApi(async (req, res) => {
@@ -154,42 +190,6 @@ router.get('/:id/:page', async (req, res) => {
     );
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
-  }
-});
-
-router.get('/blogpost/:id', async (req, res) => {
-  try {
-    const post = await Blog.findById(req.params.id);
-
-    return render(req, res, 'BlogPostPage', {
-      post,
-    });
-  } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
-  }
-});
-
-router.delete('/remove/:id', ensureAuth, async (req, res) => {
-  try {
-    const query = {
-      _id: req.params.id,
-    };
-
-    const blog = await Blog.findById(req.params.id);
-
-    if (!req.user._id.equals(blog.owner)) {
-      req.flash('danger', 'Unauthorized');
-      return res.redirect('/404');
-    }
-    await Blog.deleteOne(query);
-
-    req.flash('success', 'Post Removed');
-    return res.send('Success');
-  } catch (err) {
-    return res.status(500).send({
-      success: 'false',
-      message: 'Error deleting post.',
-    });
   }
 });
 
