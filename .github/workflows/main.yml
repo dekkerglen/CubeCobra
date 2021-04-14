@@ -67,16 +67,16 @@ jobs:
           replace-with: '-'
           flags: 'g'
 
-      - name: Beanstalk Deploy for app
-        uses: einaregilsson/beanstalk-deploy@v16
-        with:
-          aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
-          aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-          application_name: CubeCobra
-          environment_name: Cubecobra-dev-env-2
-          region: us-east-2
-          version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
-          deployment_package: deploy.zip
+      #- name: Beanstalk Deploy for app
+      #  uses: einaregilsson/beanstalk-deploy@v16
+      #  with:
+      #    aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
+      #    aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      #    application_name: CubeCobra
+      #    environment_name: Cubecobra-dev-env-2
+      #    region: us-east-2
+      #    version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
+      #    deployment_package: deploy.zip
 
       - name: Deployed!
         run: echo App deployed to ELB
