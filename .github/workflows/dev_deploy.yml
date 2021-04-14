@@ -1,11 +1,11 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Deploy prod to prod server
+name: Deploy master to dev server
 
 on:
   workflow_run:
     workflows: ["CI Tests"]
-    branches: [prod]
+    branches: [master]
     types: 
       - completed
 
@@ -73,7 +73,7 @@ jobs:
           aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           application_name: CubeCobra
-          environment_name: Cubecobra-env
+          environment_name: Cubecobra-dev-env-2
           region: us-east-2
           version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
           deployment_package: deploy.zip
