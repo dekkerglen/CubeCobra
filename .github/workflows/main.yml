@@ -45,7 +45,7 @@ jobs:
         run: npm run build
 
       - name: Generate deployment package
-        run: zip -r deploy.zip * -x node_modules/\* -x .\* -x private/\*
+        run: zip -r deploy.zip * -x node_modules/\* -x private/\*
 
       - name: Upload Deployment Artifacts
         uses: actions/upload-artifact@v2
