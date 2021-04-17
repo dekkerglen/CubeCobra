@@ -231,12 +231,13 @@ class CubeOverviewModal extends Component {
               <ModalBody>
                 <h6>Cube Name</h6>
                 <input
-                  className="form-control"
-                  name="name"
-                  type="text"
+                  className='form-control'
+                  name='name'
+                  type='text'
                   value={cube.name}
+                  required={true}
                   onChange={this.handleChange}
-                ></input>
+                />
                 <br />
 
                 <h6>Options</h6>
@@ -368,6 +369,7 @@ class CubeOverviewModal extends Component {
                   type="text"
                   value={cube.shortID}
                   onChange={this.handleChange}
+                  required={true}
                   placeholder="Give this cube an easy to remember URL."
                 />
                 <br />

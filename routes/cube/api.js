@@ -24,7 +24,6 @@ const {
   newCardAnalytics,
   getEloAdjustment,
   addCardHtml,
-  generateShortId,
 } = require('../../serverjs/cubefn.js');
 
 const { DEFAULT_BASICS, ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('./helper');
@@ -67,7 +66,8 @@ router.post(
   body('shortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('shortID', `Custom URL may not be longer than 100 characters.`).isLength({
+  body('shortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
+    min: 1,
     max: 100,
   }),
   body('shortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
@@ -91,7 +91,7 @@ router.post(
       });
     }
 
-    if (updatedCube.shortID && updatedCube.shortID.length > 0 && updatedCube.shortID !== cube.shortID) {
+    if (updatedCube.shortID !== cube.shortID) {
       updatedCube.shortID = updatedCube.shortID.toLowerCase();
       const taken = await Cube.findOne(buildIdQuery(updatedCube.shortID));
 
@@ -103,8 +103,6 @@ router.post(
       }
 
       cube.shortID = updatedCube.shortID;
-    } else if (!updatedCube.shortID || updatedCube.shortID === '') {
-      cube.shortID = generateShortId(); // generate a new short ID if old one is deleted
     }
 
     cube.name = updatedCube.name;
