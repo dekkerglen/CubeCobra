@@ -12,7 +12,6 @@ const carddb = require('../../../serverjs/cards');
 const fixturesPath = 'fixtures';
 const cubeID = cubefixture.exampleCube.shortID;
 
-
 app.use('/', router);
 
 let mongoServer;
