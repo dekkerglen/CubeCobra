@@ -2,7 +2,7 @@ const router = require('../../../routes/cube/download');
 const request = require('supertest');
 const express = require('express');
 const app = express();
-const dbSetup = require('../../../serverjs/dbTestSetup');
+const dbSetup = require('../../helpers/dbTestSetup');
 
 const Cube = require('../../../models/cube');
 const cubefixture = require('../../../fixtures/examplecube');
@@ -11,6 +11,7 @@ const carddb = require('../../../serverjs/cards');
 
 const fixturesPath = 'fixtures';
 const cubeID = cubefixture.exampleCube.shortID;
+
 
 app.use('/', router);
 
