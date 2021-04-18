@@ -33,7 +33,7 @@ test('cubelist', () => {
     .get('/cubelist/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain; charset=utf-8')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = res.text
         .trim()
         .split('\n')

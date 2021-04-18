@@ -34,7 +34,7 @@ test('cubecobra text download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender [eld-1]');
       expect(lines.length).toEqual(exampleCube.cards.length);
@@ -47,7 +47,7 @@ test('plaintext download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender');
       expect(lines.length).toEqual(exampleCube.cards.length);
@@ -60,7 +60,7 @@ test('MTGO download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 Acclaimed Contender');
       expect(lines[1]).toEqual('2 Brazen Borrower');
@@ -80,7 +80,7 @@ test('csv download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.csv')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual(headerLine);
       expect(lines[1]).toEqual(faerieGuidemotherLine);
@@ -95,7 +95,7 @@ test('forge download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.dck')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('[metadata]');
       expect(lines[1]).toEqual('Name=' + exampleCube.name);
@@ -112,7 +112,7 @@ test('xmage download', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.dck')
-    .expect(function (res) {
+    .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 [ELD:1] Acclaimed Contender');
       expect(lines.length).toEqual(exampleCube.cards.length);
