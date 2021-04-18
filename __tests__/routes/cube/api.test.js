@@ -34,7 +34,11 @@ test('cubelist', () => {
     .expect(200)
     .expect('Content-Type', 'text/plain; charset=utf-8')
     .expect(function (res) {
-      expect(res.text).toEqual(expect.stringContaining('Acclaimed Contender'));
-      expect(res.text.split('\n').length).toEqual(exampleCube.cards.length);
+      const lines = res.text
+        .trim()
+        .split('\n')
+        .map((l) => l.trim());
+      expect(lines[0]).toEqual('Acclaimed Contender');
+      expect(lines.length).toEqual(exampleCube.cards.length);
     });
 });
