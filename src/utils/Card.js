@@ -189,7 +189,7 @@ export const cardImageFlip = (card) => card.details.image_flip;
 
 export const cardTokens = (card) => card.details.tokens;
 
-export const cardElo = (card) => card.details.elo || 1200;
+export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200);
 
 export const cardLayout = (card) => card.details.layout;
 
