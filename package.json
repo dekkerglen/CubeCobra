@@ -154,9 +154,11 @@
     "eslint-plugin-react-hooks": "^4.0.0",
     "form-data": "^3.0.0",
     "jest": "^26.0.1",
+    "mongodb-memory-server": "^6.9.6",
     "nodemon": "^2.0.2",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.0",
-    "sinon": "^7.4.2"
+    "sinon": "^7.4.2",
+    "supertest": "^6.1.3"
   }
 }
