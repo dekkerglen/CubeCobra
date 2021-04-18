@@ -10,7 +10,8 @@ const { buildIdQuery } = require('../../../serverjs/cubefn');
 const carddb = require('../../../serverjs/cards');
 
 const fixturesPath = 'fixtures';
-const cubeID = cubefixture.exampleCube.shortID;
+const exampleCube = cubefixture.exampleCube;
+const cubeID = exampleCube.shortID;
 
 app.use('/', router);
 
@@ -19,7 +20,7 @@ let mongoServer;
 beforeAll(async () => {
   mongoServer = await dbSetup.connect();
   await carddb.initializeCardDb(fixturesPath, true);
-  await new Cube(cubefixture.exampleCube).save();
+  await new Cube(exampleCube).save();
 });
 
 afterAll(async () => {
@@ -30,10 +31,11 @@ afterAll(async () => {
 test('text download', () => {
   return request(app)
     .get('/cubecobra/' + cubeID)
-    .expect('Content-Type', 'text/plain')
     .expect(200)
+    .expect('Content-Type', 'text/plain')
+    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
     .expect(function (res) {
-      // TODO: add more expectations
       expect(res.text).toEqual(expect.stringContaining('Acclaimed Contender [eld-1]'));
+      expect(res.text.trim().split('\n').length).toEqual(exampleCube.cards.length);
     });
 });
