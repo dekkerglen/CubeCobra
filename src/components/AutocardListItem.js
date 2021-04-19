@@ -1,69 +1,101 @@
-import React from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import cx from 'classnames';
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
-import { Button } from 'reactstrap';
+import CardModalContext from 'contexts/CardModalContext';
+import TagContext from 'contexts/TagContext';
+import withAutocard from 'components/WithAutocard';
 
-import CardModalContext from './CardModalContext';
-import DisplayContext from './DisplayContext';
-import TagContext from './TagContext';
-import withAutocard from './WithAutocard';
+const AutocardDiv = withAutocard('li');
 
-import Affiliate from '../util/Affiliate';
+const CARD_NAME_FALLBACK = 'Unidentified Card';
+const CARD_ID_FALLBACK = 'undefined';
 
-const AutocardDiv = withAutocard('div');
+/** 2020-11-18 struesdell:
+ *  Added noOp callback to allow props to fall through without passing undefined to children.
+ */
+const noOp = () => undefined;
 
-function handleAuxEvent(event, card) {
-  if (event.button == 1) {
-    window.open(Affiliate.getTCGLink(card));
-  }
-}
+/** 2020-11-18 struesdell:
+ *  Pulled out className constants for maintainability
+ */
+const styles = {
+  root: 'card-list-item list-group-item',
+  name: 'card-list-item_name',
+  children: 'card-list-item_children',
+};
 
-const AutocardListItemRaw = ({ card, noCardModal, cardColorClass, openCardModal, children }) => {
-  let { display_image, image_normal, image_flip, name } = card.details;
-  let { tags } = card;
+const AutocardListItem = ({ card, noCardModal, inModal, className, children }) => {
+  const { cardColorClass } = useContext(TagContext);
+  const openCardModal = useContext(CardModalContext);
+
+  /** 2020-11-18 struesdell:
+   *  Replaced destructuring with `useMemo` tuple to minimize rerenders
+   */
+  const [cardName, cardId] = useMemo(
+    () => (card && card.details ? [card.details.name, card.details._id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
+    [card],
+  );
+
+  const openCardToolWindow = useCallback(() => {
+    window.open(`/tool/card/${cardId}`);
+  }, [cardId]);
+
+  const handleClick = useCallback(
+    (event) => {
+      event.preventDefault();
+      if (event.ctrlKey) {
+        openCardToolWindow();
+      } else {
+        openCardModal(card);
+      }
+    },
+    [card, openCardModal, openCardToolWindow],
+  );
+
+  const handleAuxClick = useCallback(
+    (event) => {
+      if (event.button === 1) {
+        event.preventDefault();
+        openCardToolWindow();
+      }
+    },
+    [openCardToolWindow],
+  );
+
+  /** 2020-11-18 struesdell:
+   *  Memoized card color (WUBRG) derivation to minimize rerenders
+   *  @note: tag coloring is handled by AutocardDiv automatically.
+   */
+  const colorClassname = useMemo(() => cardColorClass(card), [card, cardColorClass]);
 
   return (
     <AutocardDiv
-      className={`card-list-item list-group-item autocard d-flex flex-row ${cardColorClass(card)}`}
+      className={cx(styles.root, colorClassname, className)}
       card={card}
-      cardindex={card.index}
+      onAuxClick={noCardModal ? noOp : handleAuxClick}
+      onClick={noCardModal ? noOp : handleClick}
+      inModal={inModal}
+      role="button"
     >
-      <a
-        href={noCardModal ? undefined : '#'}
-        className="d-block w-100"
-        onAuxClick={
-          noCardModal
-            ? undefined
-            : (e) => {
-                e.preventDefault();
-                handleAuxEvent(e, card);
-              }
-        }
-        onClick={
-          noCardModal
-            ? undefined
-            : (e) => {
-                e.preventDefault();
-                openCardModal(card);
-              }
-        }
-      >
-        {name}
-      </a>
-      {children}
+      <span className={styles.name}>{cardName}</span>
+      <span className={styles.children}>{children}</span>
     </AutocardDiv>
   );
 };
-
-const AutocardListItem = (props) => (
-  <TagContext.Consumer>
-    {({ cardColorClass }) => (
-      <CardModalContext.Consumer>
-        {(openCardModal) => (
-          <AutocardListItemRaw cardColorClass={cardColorClass} openCardModal={openCardModal} {...props} />
-        )}
-      </CardModalContext.Consumer>
-    )}
-  </TagContext.Consumer>
-);
+AutocardListItem.propTypes = {
+  card: CardPropType.isRequired,
+  noCardModal: PropTypes.bool,
+  inModal: PropTypes.bool,
+  className: PropTypes.string,
+  children: PropTypes.node,
+};
+AutocardListItem.defaultProps = {
+  noCardModal: false,
+  inModal: false,
+  className: '',
+  children: undefined,
+};
 
 export default AutocardListItem;

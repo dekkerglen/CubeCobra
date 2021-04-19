@@ -121,7 +121,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/0/70496f16-c4c0-4c03-beef-454eb4824cd1.jpg?1562788028", 
               "full_name": "Deathrite Shaman [rtr-213]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/0/70496f16-c4c0-4c03-beef-454eb4824cd1.jpg?1562788028", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/0/70496f16-c4c0-4c03-beef-454eb4824cd1.jpg?1562788028", 
@@ -175,7 +174,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/6/8/683eaf5a-2f43-477f-b212-70ca5fe04f13.jpg?1562819273", 
               "full_name": "Firedrinker Satyr [ths-122]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/6/8/683eaf5a-2f43-477f-b212-70ca5fe04f13.jpg?1562819273", 
               "image_small": "https://img.scryfall.com/cards/small/front/6/8/683eaf5a-2f43-477f-b212-70ca5fe04f13.jpg?1562819273", 
@@ -232,7 +230,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/b/2bb8cb8c-0d03-4cbf-b7f2-a97324817698.jpg?1562784181", 
               "full_name": "Dryad Militant [rtr-214]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/b/2bb8cb8c-0d03-4cbf-b7f2-a97324817698.jpg?1562784181", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/b/2bb8cb8c-0d03-4cbf-b7f2-a97324817698.jpg?1562784181", 
@@ -286,15 +283,23 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/e/4ed5790a-3354-49c2-89b6-3fc0de8dcc7c.jpg?1562829999", 
               "full_name": "Diregraf Ghoul [isd-97]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/e/4ed5790a-3354-49c2-89b6-3fc0de8dcc7c.jpg?1562829999", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/e/4ed5790a-3354-49c2-89b6-3fc0de8dcc7c.jpg?1562829999", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "name": "Diregraf Ghoul", 
               "name_lower": "diregraf ghoul", 
@@ -342,7 +347,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/d/fd8b5c0c-acda-411e-9f17-6d9292628a56.jpg?1562618689", 
               "full_name": "Plated Geopede [zen-141]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/d/fd8b5c0c-acda-411e-9f17-6d9292628a56.jpg?1562618689", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/d/fd8b5c0c-acda-411e-9f17-6d9292628a56.jpg?1562618689", 
@@ -400,7 +404,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/b/3b628197-f26c-457a-b9a4-c1f1d3e02f3d.jpg?1562785115", 
               "full_name": "Lotleth Troll [rtr-177]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/b/3b628197-f26c-457a-b9a4-c1f1d3e02f3d.jpg?1562785115", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/b/3b628197-f26c-457a-b9a4-c1f1d3e02f3d.jpg?1562785115", 
@@ -458,7 +461,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/7/e7b5893d-6df6-4cae-ae70-d02d443d1740.jpg?1562941484", 
               "full_name": "Ayli, Eternal Pilgrim [ogw-151]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/7/e7b5893d-6df6-4cae-ae70-d02d443d1740.jpg?1562941484", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/7/e7b5893d-6df6-4cae-ae70-d02d443d1740.jpg?1562941484", 
@@ -516,7 +518,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/a/1abecc77-07f2-43e4-8585-0a8199cdcf01.jpg?1562701606", 
               "full_name": "Tidehollow Sculler [ala-202]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/a/1abecc77-07f2-43e4-8585-0a8199cdcf01.jpg?1562701606", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/a/1abecc77-07f2-43e4-8585-0a8199cdcf01.jpg?1562701606", 
@@ -576,7 +577,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/f/df9a9635-c2aa-4afb-bad7-c8ab303106cd.jpg?1551119767", 
               "full_name": "Trygon Predator [gk2-125]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/f/df9a9635-c2aa-4afb-bad7-c8ab303106cd.jpg?1551119767", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/f/df9a9635-c2aa-4afb-bad7-c8ab303106cd.jpg?1551119767", 
@@ -632,7 +632,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/e/ee8e9928-d9b2-4570-adb8-44b34115decd.jpg?1562714359", 
               "full_name": "Tireless Tracker [soi-233]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/e/ee8e9928-d9b2-4570-adb8-44b34115decd.jpg?1562714359", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/e/ee8e9928-d9b2-4570-adb8-44b34115decd.jpg?1562714359", 
@@ -690,7 +689,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
               "full_name": "Wall of Denial [arb-16]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
@@ -746,7 +744,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/6/2616aa0e-8413-4e63-877c-bffd5263f552.jpg?1562876105", 
               "full_name": "Porcelain Legionnaire [nph-19]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/6/2616aa0e-8413-4e63-877c-bffd5263f552.jpg?1562876105", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/6/2616aa0e-8413-4e63-877c-bffd5263f552.jpg?1562876105", 
@@ -801,7 +798,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/2/322cdf67-5b36-43f9-99b3-f0e24d423314.jpg?1562702574", 
               "full_name": "Master of Etherium [ala-49]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/2/322cdf67-5b36-43f9-99b3-f0e24d423314.jpg?1562702574", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/2/322cdf67-5b36-43f9-99b3-f0e24d423314.jpg?1562702574", 
@@ -858,7 +854,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/2/d24721dc-7473-4a7b-b42e-8ddcf027c7e2.jpg?1562555684", 
               "full_name": "Nekrataal [10e-163\u2605]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/2/d24721dc-7473-4a7b-b42e-8ddcf027c7e2.jpg?1562555684", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/2/d24721dc-7473-4a7b-b42e-8ddcf027c7e2.jpg?1562555684", 
@@ -914,7 +909,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/d/0dcafa9e-3637-42ca-bdb2-45a2b5da7294.jpg?1562007012", 
               "full_name": "Pia and Kiran Nalaar [ori-157]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/d/0dcafa9e-3637-42ca-bdb2-45a2b5da7294.jpg?1562007012", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/d/0dcafa9e-3637-42ca-bdb2-45a2b5da7294.jpg?1562007012", 
@@ -970,7 +964,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/e/be95b6b0-ff20-405f-81ae-87f5cce45fb2.jpg?1562935299", 
               "full_name": "Thelonite Hermit [tsp-228]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/e/be95b6b0-ff20-405f-81ae-87f5cce45fb2.jpg?1562935299", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/e/be95b6b0-ff20-405f-81ae-87f5cce45fb2.jpg?1562935299", 
@@ -1025,7 +1018,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
               "full_name": "Vengevine [roe-212]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
@@ -1081,7 +1073,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/b/7bf6baf2-d20b-467d-8929-abefcf7dfa99.jpg?1562820377", 
               "full_name": "Purphoros, God of the Forge [ths-135]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/b/7bf6baf2-d20b-467d-8929-abefcf7dfa99.jpg?1562820377", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/b/7bf6baf2-d20b-467d-8929-abefcf7dfa99.jpg?1562820377", 
@@ -1138,7 +1129,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/6/162018eb-5483-4fa2-9c5a-abb639eecf91.jpg?1562757915", 
               "full_name": "Kiki-Jiki, Mirror Breaker [chk-175]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/6/162018eb-5483-4fa2-9c5a-abb639eecf91.jpg?1562757915", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/6/162018eb-5483-4fa2-9c5a-abb639eecf91.jpg?1562757915", 
@@ -1199,15 +1189,23 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/9/b92ca85d-eede-4c7f-b491-f555da1c23eb.jpg?1562934137", 
               "full_name": "Overgrown Tomb [exp-13]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/9/b92ca85d-eede-4c7f-b491-f555da1c23eb.jpg?1562934137", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/9/b92ca85d-eede-4c7f-b491-f555da1c23eb.jpg?1562934137", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "name": "Overgrown Tomb", 
               "name_lower": "overgrown tomb", 
@@ -1251,15 +1249,23 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/3/33c519df-c6b1-4e32-92bc-8a67ae5cbaab.jpg?1562905899", 
               "full_name": "Sacred Foundry [exp-14]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/3/33c519df-c6b1-4e32-92bc-8a67ae5cbaab.jpg?1562905899", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/3/33c519df-c6b1-4e32-92bc-8a67ae5cbaab.jpg?1562905899", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "name": "Sacred Foundry", 
               "name_lower": "sacred foundry", 
@@ -1303,7 +1309,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/f/1f35877c-e66c-4ef0-842a-f68cd233ae4b.jpg?1559596915", 
               "full_name": "Underground Sea [3ed-290]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/f/1f35877c-e66c-4ef0-842a-f68cd233ae4b.jpg?1559596915", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/f/1f35877c-e66c-4ef0-842a-f68cd233ae4b.jpg?1559596915", 
@@ -1353,7 +1358,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/f/bf09ecef-1e30-4206-9648-8fe5c8a71c71.jpg?1562864219", 
               "full_name": "Ghitu Encampment [ulg-141]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/f/bf09ecef-1e30-4206-9648-8fe5c8a71c71.jpg?1562864219", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/f/bf09ecef-1e30-4206-9648-8fe5c8a71c71.jpg?1562864219", 
@@ -1405,7 +1409,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/2/42696fdb-de1f-44ae-bef3-b6af068958d0.jpg?1562908356", 
               "full_name": "Slaughter Pact [fut-78]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/2/42696fdb-de1f-44ae-bef3-b6af068958d0.jpg?1562908356", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/2/42696fdb-de1f-44ae-bef3-b6af068958d0.jpg?1562908356", 
@@ -1455,7 +1458,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/2/4216656e-90e8-45fc-a0f6-0d0d79d0a021.jpg?1562345880", 
               "full_name": "Shelldock Isle [lrw-272]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/2/4216656e-90e8-45fc-a0f6-0d0d79d0a021.jpg?1562345880", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/2/4216656e-90e8-45fc-a0f6-0d0d79d0a021.jpg?1562345880", 
@@ -1509,7 +1511,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/9/995486ce-58bb-4753-a812-0ca73ef1a235.jpg?1562880052", 
               "full_name": "Gitaxian Probe [nph-35]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/9/995486ce-58bb-4753-a812-0ca73ef1a235.jpg?1562880052", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/9/995486ce-58bb-4753-a812-0ca73ef1a235.jpg?1562880052", 
@@ -1561,7 +1562,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/c/3c1bf210-ecdb-4b49-8504-51360c269e66.jpg?1562256070", 
               "full_name": "Rolling Earthquake [ptk-122]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/c/3c1bf210-ecdb-4b49-8504-51360c269e66.jpg?1562256070", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/c/3c1bf210-ecdb-4b49-8504-51360c269e66.jpg?1562256070", 
@@ -1614,7 +1614,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/9/0938e686-345e-4411-b564-cf9324ec6b9d.jpg?1562896776", 
               "full_name": "Reckless Charge [ody-215]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/9/0938e686-345e-4411-b564-cf9324ec6b9d.jpg?1562896776", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/9/0938e686-345e-4411-b564-cf9324ec6b9d.jpg?1562896776", 
@@ -1666,7 +1665,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/a/8a4d8527-af29-408d-a3a3-6781db0cf439.jpg?1562438059", 
               "full_name": "Rancor [a25-186]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/a/8a4d8527-af29-408d-a3a3-6781db0cf439.jpg?1562438059", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/a/8a4d8527-af29-408d-a3a3-6781db0cf439.jpg?1562438059", 
@@ -1718,7 +1716,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/2/02335747-54e3-4827-ae19-4e362863da9b.jpg?1562609284", 
               "full_name": "Green Sun's Zenith [mbs-81]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/2/02335747-54e3-4827-ae19-4e362863da9b.jpg?1562609284", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/2/02335747-54e3-4827-ae19-4e362863da9b.jpg?1562609284", 
@@ -1773,7 +1770,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/0/a084d0fb-8db2-4873-a2f9-e6e5fecdd38c.jpg?1564536205", 
               "full_name": "Sinkhole [ema-106]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/0/a084d0fb-8db2-4873-a2f9-e6e5fecdd38c.jpg?1564536205", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/0/a084d0fb-8db2-4873-a2f9-e6e5fecdd38c.jpg?1564536205", 
@@ -1831,7 +1827,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/f/3fcb7810-1054-4001-855c-6e17939b3d3f.jpg?1562864959", 
               "full_name": "Dack Fayden [cns-42]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/f/3fcb7810-1054-4001-855c-6e17939b3d3f.jpg?1562864959", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/f/3fcb7810-1054-4001-855c-6e17939b3d3f.jpg?1562864959", 
@@ -1889,7 +1884,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/6/8652e3a1-bcd4-4c0c-a085-34f19702df26.jpg?1562437624", 
               "full_name": "Pernicious Deed [a25-212]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/6/8652e3a1-bcd4-4c0c-a085-34f19702df26.jpg?1562437624", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/6/8652e3a1-bcd4-4c0c-a085-34f19702df26.jpg?1562437624", 
@@ -1946,7 +1940,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/d/ad30aec2-cb67-4c92-9694-d33bef1884ee.jpg?1562927285", 
               "full_name": "Daretti, Ingenious Iconoclast [cn2-74]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/d/ad30aec2-cb67-4c92-9694-d33bef1884ee.jpg?1562927285", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/d/ad30aec2-cb67-4c92-9694-d33bef1884ee.jpg?1562927285", 
@@ -1995,7 +1988,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/3/736fff86-2417-4a77-b8eb-be2d1d142a9f.jpg?1562819011", 
               "full_name": "Mimic Vat [som-175]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/3/736fff86-2417-4a77-b8eb-be2d1d142a9f.jpg?1562819011", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/3/736fff86-2417-4a77-b8eb-be2d1d142a9f.jpg?1562819011", 
@@ -2049,7 +2041,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/b/eb22ae62-6207-4693-87cf-7adf0fc1fe29.jpg?1562839147", 
               "full_name": "Forbidden Alchemy [isd-55]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/b/eb22ae62-6207-4693-87cf-7adf0fc1fe29.jpg?1562839147", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/b/eb22ae62-6207-4693-87cf-7adf0fc1fe29.jpg?1562839147", 
@@ -2102,7 +2093,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/4/0463e989-ba32-4a46-a82f-e0d6daf3cd51.jpg?1562164919", 
               "full_name": "Sulfuric Vortex [ema-150]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/4/0463e989-ba32-4a46-a82f-e0d6daf3cd51.jpg?1562164919", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/4/0463e989-ba32-4a46-a82f-e0d6daf3cd51.jpg?1562164919", 
@@ -2156,7 +2146,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/6/76ae81ea-13e3-4ab8-b956-4c7b139a5e9c.jpg?1562054494", 
               "full_name": "Corpse Dance [tmp-116]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/6/76ae81ea-13e3-4ab8-b956-4c7b139a5e9c.jpg?1562054494", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/6/76ae81ea-13e3-4ab8-b956-4c7b139a5e9c.jpg?1562054494", 
@@ -2211,7 +2200,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/f/efb37556-186f-4660-8b75-c52ef16a6d8f.jpg?1562665298", 
               "full_name": "Chandra, the Firebrand [m12-124]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/f/efb37556-186f-4660-8b75-c52ef16a6d8f.jpg?1562665298", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/f/efb37556-186f-4660-8b75-c52ef16a6d8f.jpg?1562665298", 
@@ -2267,7 +2255,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/0/e0b099ef-4b43-4b63-a7fc-cec19cf29f4e.jpg?1562940128", 
               "full_name": "Bribery [8ed-64]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/0/e0b099ef-4b43-4b63-a7fc-cec19cf29f4e.jpg?1562940128", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/0/e0b099ef-4b43-4b63-a7fc-cec19cf29f4e.jpg?1562940128", 
@@ -2324,7 +2311,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
               "full_name": "Venser, the Sojourner [som-135]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
@@ -2379,7 +2365,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/a/4a37fbca-32db-40cc-9fd3-4764c7fd81e2.jpg?1562908556", 
               "full_name": "Nissa, Worldwaker [e01-68]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/a/4a37fbca-32db-40cc-9fd3-4764c7fd81e2.jpg?1562908556", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/a/4a37fbca-32db-40cc-9fd3-4764c7fd81e2.jpg?1562908556", 
@@ -2428,7 +2413,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/d/1df70ef3-8919-43ac-9317-23548437a181.jpg?1562732376", 
               "full_name": "Skysovereign, Consul Flagship [kld-234]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/d/1df70ef3-8919-43ac-9317-23548437a181.jpg?1562732376", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/d/1df70ef3-8919-43ac-9317-23548437a181.jpg?1562732376", 
@@ -2484,7 +2468,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/c/3c7474e1-cfae-4867-a11a-d5cf9ff7ea5f.jpg?1562527625", 
               "full_name": "Mind's Desire [scg-41]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/c/3c7474e1-cfae-4867-a11a-d5cf9ff7ea5f.jpg?1562527625", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/c/3c7474e1-cfae-4867-a11a-d5cf9ff7ea5f.jpg?1562527625", 
@@ -2532,7 +2515,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/8/98fb1eaa-2871-491a-a4f5-3e358778ba40.jpg?1562151747", 
               "full_name": "Mindslaver [mrd-206]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/8/98fb1eaa-2871-491a-a4f5-3e358778ba40.jpg?1562151747", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/8/98fb1eaa-2871-491a-a4f5-3e358778ba40.jpg?1562151747", 
@@ -3015,7 +2997,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/b/ab107a7f-cafc-44a7-a58c-4d83acf8f99e.jpg?1562926931", 
               "full_name": "Fyndhorn Elves [v13-4]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/b/ab107a7f-cafc-44a7-a58c-4d83acf8f99e.jpg?1562926931", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/b/ab107a7f-cafc-44a7-a58c-4d83acf8f99e.jpg?1562926931", 
@@ -3069,7 +3050,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/e/ae8a0362-b973-445a-a355-5a2f3dc67f16.jpg?1562791558", 
               "full_name": "Dragon Hunter [dtk-10]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/e/ae8a0362-b973-445a-a355-5a2f3dc67f16.jpg?1562791558", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/e/ae8a0362-b973-445a-a355-5a2f3dc67f16.jpg?1562791558", 
@@ -3119,7 +3099,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/b/4b942605-eb4a-452d-9b07-a4f912f96958.jpg?1562817275", 
               "full_name": "Perilous Myr [som-192]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/b/4b942605-eb4a-452d-9b07-a4f912f96958.jpg?1562817275", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/b/4b942605-eb4a-452d-9b07-a4f912f96958.jpg?1562817275", 
@@ -3171,7 +3150,6 @@
               "colorcategory": "b", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/1/216a8e4e-ea7b-41c7-a982-b5751025ff25.jpg?1562732528", 
               "full_name": "Scrapheap Scrounger [kld-231]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/1/216a8e4e-ea7b-41c7-a982-b5751025ff25.jpg?1562732528", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/1/216a8e4e-ea7b-41c7-a982-b5751025ff25.jpg?1562732528", 
@@ -3225,7 +3203,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/2/824423ff-6441-4be6-b754-810adf9ca6a2.jpg?1562925761", 
               "full_name": "Thalia, Guardian of Thraben [dka-24]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/2/824423ff-6441-4be6-b754-810adf9ca6a2.jpg?1562925761", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/2/824423ff-6441-4be6-b754-810adf9ca6a2.jpg?1562925761", 
@@ -3283,7 +3260,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/5/75256550-bbe0-499d-909e-af10691749c2.jpg?1562642150", 
               "full_name": "Qasali Pridemage [arb-75]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/5/75256550-bbe0-499d-909e-af10691749c2.jpg?1562642150", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/5/75256550-bbe0-499d-909e-af10691749c2.jpg?1562642150", 
@@ -3338,7 +3314,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/2/820e2f07-f637-4144-b45a-0e1430dcf55e.jpg?1562832416", 
               "full_name": "Devoted Druid [shm-110]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/2/820e2f07-f637-4144-b45a-0e1430dcf55e.jpg?1562832416", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/2/820e2f07-f637-4144-b45a-0e1430dcf55e.jpg?1562832416", 
@@ -3393,7 +3368,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/6/a6c10816-e825-452a-90b0-80eb9f20bd6d.jpg?1562219939", 
               "full_name": "Eidolon of the Great Revel [jou-94]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/6/a6c10816-e825-452a-90b0-80eb9f20bd6d.jpg?1562219939", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/6/a6c10816-e825-452a-90b0-80eb9f20bd6d.jpg?1562219939", 
@@ -3448,7 +3422,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188", 
               "full_name": "Scorned Villager [dka-125]", 
               "image_flip": "https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188", 
@@ -3505,15 +3478,23 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/d/bd8f179a-f6ab-4d4c-8195-ed077a7770d3.jpg?1562836350", 
               "full_name": "Mentor of the Meek [isd-21]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/d/bd8f179a-f6ab-4d4c-8195-ed077a7770d3.jpg?1562836350", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/d/bd8f179a-f6ab-4d4c-8195-ed077a7770d3.jpg?1562836350", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "name": "Mentor of the Meek", 
               "name_lower": "mentor of the meek", 
@@ -3560,7 +3541,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/d/bd92bcec-ddfa-41bf-97e4-983d850fe32e.jpg?1562554375", 
               "full_name": "Squee, Goblin Nabob [10e-239]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/d/bd92bcec-ddfa-41bf-97e4-983d850fe32e.jpg?1562554375", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/d/bd92bcec-ddfa-41bf-97e4-983d850fe32e.jpg?1562554375", 
@@ -3615,7 +3595,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/b/abcd0e32-2e6b-419b-9e8a-af38f2b48a66.jpg?1562828716", 
               "full_name": "Monastery Mentor [frf-20]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/b/abcd0e32-2e6b-419b-9e8a-af38f2b48a66.jpg?1562828716", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/b/abcd0e32-2e6b-419b-9e8a-af38f2b48a66.jpg?1562828716", 
@@ -3670,7 +3649,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/2/f252ae53-443c-4a27-b8f0-639a9a2b8598.jpg?1562374183", 
               "full_name": "Pestermite [lrw-78]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/2/f252ae53-443c-4a27-b8f0-639a9a2b8598.jpg?1562374183", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/2/f252ae53-443c-4a27-b8f0-639a9a2b8598.jpg?1562374183", 
@@ -3725,7 +3703,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/0/9039e8f6-5513-4307-a1b5-07209dc8e1c8.jpg?1562695417", 
               "full_name": "Diregraf Colossus [soi-107]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/0/9039e8f6-5513-4307-a1b5-07209dc8e1c8.jpg?1562695417", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/0/9039e8f6-5513-4307-a1b5-07209dc8e1c8.jpg?1562695417", 
@@ -3783,7 +3760,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
               "full_name": "Wall of Denial [arb-16]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/d/dd66cb50-6ef5-4b1f-b6c3-ad1210d2d380.jpg?1562644603", 
@@ -3839,7 +3815,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/9/79c43502-5b82-43b6-a62d-162b49667f39.jpg?1561947443", 
               "full_name": "Silverblade Paladin [c14-88]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/9/79c43502-5b82-43b6-a62d-162b49667f39.jpg?1561947443", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/9/79c43502-5b82-43b6-a62d-162b49667f39.jpg?1561947443", 
@@ -3897,7 +3872,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
               "full_name": "Vengevine [roe-212]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/1/51eb9f05-9d5a-4196-9329-626ce4793c42.jpg?1562703875", 
@@ -3955,7 +3929,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/3/f3920f7d-8559-40f8-95be-860c16bf7700.jpg?1562745607", 
               "full_name": "Angel of Invention [kld-4]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/3/f3920f7d-8559-40f8-95be-860c16bf7700.jpg?1562745607", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/3/f3920f7d-8559-40f8-95be-860c16bf7700.jpg?1562745607", 
@@ -4011,7 +3984,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/6/1/61ba17c6-2a96-460e-9ad1-a09174e7710a.jpg?1562461796", 
               "full_name": "Acidic Slime [m11-161]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/6/1/61ba17c6-2a96-460e-9ad1-a09174e7710a.jpg?1562461796", 
               "image_small": "https://img.scryfall.com/cards/small/front/6/1/61ba17c6-2a96-460e-9ad1-a09174e7710a.jpg?1562461796", 
@@ -4067,7 +4039,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/6/5629edd4-b5d3-43f8-8c7c-f9d916e35158.jpg?1562878601", 
               "full_name": "Reveillark [mor-22]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/6/5629edd4-b5d3-43f8-8c7c-f9d916e35158.jpg?1562878601", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/6/5629edd4-b5d3-43f8-8c7c-f9d916e35158.jpg?1562878601", 
@@ -4128,7 +4099,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/6/f625b270-f560-402b-b253-51951822ce42.jpg?1562616424", 
               "full_name": "Simic Sky Swallower [dis-130]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/6/f625b270-f560-402b-b253-51951822ce42.jpg?1562616424", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/6/f625b270-f560-402b-b253-51951822ce42.jpg?1562616424", 
@@ -4186,7 +4156,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/5/d556d10b-83cc-4736-b269-4ce65aae2837.jpg?1562296742", 
               "full_name": "Stirring Wildwood [wwk-144]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/5/d556d10b-83cc-4736-b269-4ce65aae2837.jpg?1562296742", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/5/d556d10b-83cc-4736-b269-4ce65aae2837.jpg?1562296742", 
@@ -4238,7 +4207,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/7/472034a2-0ba9-4876-ab7a-aa7013d603bb.jpg?1559596701", 
               "full_name": "Scrubland [3ed-286]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/7/472034a2-0ba9-4876-ab7a-aa7013d603bb.jpg?1559596701", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/7/472034a2-0ba9-4876-ab7a-aa7013d603bb.jpg?1559596701", 
@@ -4284,7 +4252,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/a/fa884399-0046-4203-9d45-0fba1bb44ef0.jpg?1562948047", 
               "full_name": "Wooded Foothills [exp-19]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/a/fa884399-0046-4203-9d45-0fba1bb44ef0.jpg?1562948047", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/a/fa884399-0046-4203-9d45-0fba1bb44ef0.jpg?1562948047", 
@@ -4330,7 +4297,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/3/73127ee0-9a0c-48fa-9c60-b4c600ace8f7.jpg?1562919176", 
               "full_name": "Lotus Bloom [tsp-259]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/3/73127ee0-9a0c-48fa-9c60-b4c600ace8f7.jpg?1562919176", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/3/73127ee0-9a0c-48fa-9c60-b4c600ace8f7.jpg?1562919176", 
@@ -4384,7 +4350,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/8/58d4f5a0-b2d0-4a60-b1e1-bb2140abfd6d.jpg?1562611759", 
               "full_name": "Condemn [dis-8]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/8/58d4f5a0-b2d0-4a60-b1e1-bb2140abfd6d.jpg?1562611759", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/8/58d4f5a0-b2d0-4a60-b1e1-bb2140abfd6d.jpg?1562611759", 
@@ -4436,7 +4401,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/8/c80596a4-b464-4b9e-8186-94a1c44838eb.jpg?1562836883", 
               "full_name": "Devil's Play [isd-140]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/8/c80596a4-b464-4b9e-8186-94a1c44838eb.jpg?1562836883", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/8/c80596a4-b464-4b9e-8186-94a1c44838eb.jpg?1562836883", 
@@ -4489,7 +4453,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/5/a5af083f-5820-4185-ac04-4c4368f7703c.jpg?1562823699", 
               "full_name": "Chained to the Rocks [ths-4]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/5/a5af083f-5820-4185-ac04-4c4368f7703c.jpg?1562823699", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/5/a5af083f-5820-4185-ac04-4c4368f7703c.jpg?1562823699", 
@@ -4541,7 +4504,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/3/435589bb-27c6-4a6d-9d63-394d5092b9d8.jpg?1561978182", 
               "full_name": "Lightning Bolt [m10-146]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/3/435589bb-27c6-4a6d-9d63-394d5092b9d8.jpg?1561978182", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/3/435589bb-27c6-4a6d-9d63-394d5092b9d8.jpg?1561978182", 
@@ -4589,7 +4551,6 @@
               "colorcategory": "c", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/0/c07903f1-defc-4ec7-accb-724b0219acd8.jpg?1562822389", 
               "full_name": "Ankh of Mishra [6ed-273]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/0/c07903f1-defc-4ec7-accb-724b0219acd8.jpg?1562822389", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/0/c07903f1-defc-4ec7-accb-724b0219acd8.jpg?1562822389", 
@@ -4641,7 +4602,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/5/c513f51b-a0db-4c08-8acc-1e91060b93b7.jpg?1562931887", 
               "full_name": "Tainted Pact [ody-164]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/5/c513f51b-a0db-4c08-8acc-1e91060b93b7.jpg?1562931887", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/5/c513f51b-a0db-4c08-8acc-1e91060b93b7.jpg?1562931887", 
@@ -4694,7 +4654,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/9/29bb1b85-9444-4bfa-b622-092a6873631c.jpg?1562234566", 
               "full_name": "Counterspell [7ed-67]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/9/29bb1b85-9444-4bfa-b622-092a6873631c.jpg?1562234566", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/9/29bb1b85-9444-4bfa-b622-092a6873631c.jpg?1562234566", 
@@ -4747,7 +4706,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/d/ade7d00d-4e7b-46e9-ace1-63f628a589fc.jpg?1559592011", 
               "full_name": "Time Walk [2ed-84]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/d/ade7d00d-4e7b-46e9-ace1-63f628a589fc.jpg?1559592011", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/d/ade7d00d-4e7b-46e9-ace1-63f628a589fc.jpg?1559592011", 
@@ -4800,7 +4758,6 @@
               "colorcategory": "m", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/b/1bae1f86-4639-4424-b47b-fdc826bf6e97.jpg?1562094132", 
               "full_name": "Boros Signet [rav-255]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/b/1bae1f86-4639-4424-b47b-fdc826bf6e97.jpg?1562094132", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/b/1bae1f86-4639-4424-b47b-fdc826bf6e97.jpg?1562094132", 
@@ -4854,7 +4811,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/d/ed0f633e-7238-4d02-ad8b-06dd20453030.jpg?1562942622", 
               "full_name": "Harrow [inv-189]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/d/ed0f633e-7238-4d02-ad8b-06dd20453030.jpg?1562942622", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/d/ed0f633e-7238-4d02-ad8b-06dd20453030.jpg?1562942622", 
@@ -4907,7 +4863,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/e/1e2fee55-227b-4373-a3f7-b463f220033f.jpg?1562639706", 
               "full_name": "Tinker [v09-14]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/e/1e2fee55-227b-4373-a3f7-b463f220033f.jpg?1562639706", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/e/1e2fee55-227b-4373-a3f7-b463f220033f.jpg?1562639706", 
@@ -4960,7 +4915,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/9/c920236f-c3d7-421c-b021-103996da790e.jpg?1562822975", 
               "full_name": "Genesis Wave [som-122]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/9/c920236f-c3d7-421c-b021-103996da790e.jpg?1562822975", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/9/c920236f-c3d7-421c-b021-103996da790e.jpg?1562822975", 
@@ -5017,7 +4971,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/5/0559352e-95c1-403b-bd8f-d0679717cfa2.jpg?1562524962", 
               "full_name": "Tendrils of Agony [scg-75]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/5/0559352e-95c1-403b-bd8f-d0679717cfa2.jpg?1562524962", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/5/0559352e-95c1-403b-bd8f-d0679717cfa2.jpg?1562524962", 
@@ -5071,7 +5024,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/c/bcf71574-5b1e-4483-9a8e-c3212148ce9c.jpg?1562934913", 
               "full_name": "Careful Consideration [tsp-52]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/c/bcf71574-5b1e-4483-9a8e-c3212148ce9c.jpg?1562934913", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/c/bcf71574-5b1e-4483-9a8e-c3212148ce9c.jpg?1562934913", 
@@ -5128,7 +5080,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/9/f98f4538-5b5b-475d-b98f-49d01dae6f04.jpg?1562954160", 
               "full_name": "Fire // Ice [apc-128]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/9/f98f4538-5b5b-475d-b98f-49d01dae6f04.jpg?1562954160", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/9/f98f4538-5b5b-475d-b98f-49d01dae6f04.jpg?1562954160", 
@@ -5183,7 +5134,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/1/11dca9ba-b27f-4af8-9962-3794e743886f.jpg?1562255837", 
               "full_name": "Ravages of War [ptk-17]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/1/11dca9ba-b27f-4af8-9962-3794e743886f.jpg?1562255837", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/1/11dca9ba-b27f-4af8-9962-3794e743886f.jpg?1562255837", 
@@ -5236,7 +5186,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/f/2f8f22fb-7291-4517-9b15-e98501f2856b.jpg?1562702491", 
               "full_name": "Splinter Twin [roe-165]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/f/2f8f22fb-7291-4517-9b15-e98501f2856b.jpg?1562702491", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/f/2f8f22fb-7291-4517-9b15-e98501f2856b.jpg?1562702491", 
@@ -5290,7 +5239,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/e/5e8a7e5c-f252-4de8-94d7-e7327210bf26.jpg?1562529682", 
               "full_name": "Decree of Justice [scg-8]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/e/5e8a7e5c-f252-4de8-94d7-e7327210bf26.jpg?1562529682", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/e/5e8a7e5c-f252-4de8-94d7-e7327210bf26.jpg?1562529682", 
@@ -5351,7 +5299,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
               "full_name": "Venser, the Sojourner [som-135]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/d/3d48d62e-5c1f-464c-aa81-8a5d2690f48e.jpg?1562816637", 
@@ -5408,7 +5355,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/6/86901bf2-7722-43f8-b879-7a30630371fa.jpg?1562444693", 
               "full_name": "Yawgmoth's Bargain [uds-75]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/6/86901bf2-7722-43f8-b879-7a30630371fa.jpg?1562444693", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/6/86901bf2-7722-43f8-b879-7a30630371fa.jpg?1562444693", 
@@ -5920,7 +5866,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1562792246", 
               "full_name": "Zurgo Bellstriker [dtk-169]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1562792246", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/b/bbac6d75-59ab-4d7d-87ae-46875abf8cc7.jpg?1562792246", 
@@ -5977,7 +5922,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/b/4b04d7e8-df17-4acb-a763-71d47215fd03.jpg?1551119528", 
               "full_name": "Rakdos Cackler [gk2-67]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/b/4b04d7e8-df17-4acb-a763-71d47215fd03.jpg?1551119528", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/b/4b04d7e8-df17-4acb-a763-71d47215fd03.jpg?1551119528", 
@@ -6031,7 +5975,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/b/8bbcfb77-daa1-4ce5-b5f9-48d0a8edbba9.jpg?1548379822", 
               "full_name": "Llanowar Elves [gnt-46]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/b/8bbcfb77-daa1-4ce5-b5f9-48d0a8edbba9.jpg?1548379822", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/b/8bbcfb77-daa1-4ce5-b5f9-48d0a8edbba9.jpg?1548379822", 
@@ -6087,7 +6030,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/f/1f994e2b-1784-4bb7-9784-ac2de600cf5f.jpg?1562901256", 
               "full_name": "Mindblade Render [bbd-49]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/f/1f994e2b-1784-4bb7-9784-ac2de600cf5f.jpg?1562901256", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/f/1f994e2b-1784-4bb7-9784-ac2de600cf5f.jpg?1562901256", 
@@ -6142,7 +6084,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/5/359d1b13-6156-43b0-a9a7-6bfff36c1a91.jpg?1562678361", 
               "full_name": "Thing in the Ice [soi-92]", 
               "image_flip": "https://img.scryfall.com/cards/normal/back/3/5/359d1b13-6156-43b0-a9a7-6bfff36c1a91.jpg?1562678361", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/5/359d1b13-6156-43b0-a9a7-6bfff36c1a91.jpg?1562678361", 
@@ -6197,15 +6138,23 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/0/7/075bbe5d-d0f3-4be3-a3a6-072d5d3d614c.jpg?1549414568", 
               "full_name": "Incubation Druid [rna-131]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/0/7/075bbe5d-d0f3-4be3-a3a6-072d5d3d614c.jpg?1549414568", 
               "image_small": "https://img.scryfall.com/cards/small/front/0/7/075bbe5d-d0f3-4be3-a3a6-072d5d3d614c.jpg?1549414568", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "name": "Incubation Druid", 
               "name_lower": "incubation druid", 
@@ -6254,7 +6203,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/5/b58a6a63-c7d8-4f2f-acaf-b0a871eb5a7c.jpg?1561968098", 
               "full_name": "Pestermite [mma-59]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/5/b58a6a63-c7d8-4f2f-acaf-b0a871eb5a7c.jpg?1561968098", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/5/b58a6a63-c7d8-4f2f-acaf-b0a871eb5a7c.jpg?1561968098", 
@@ -6315,7 +6263,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/d/dda80811-0410-4b51-bc67-82c50209a0a2.jpg?1564578129", 
               "full_name": "Leovold, Emissary of Trest [puma-U22]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/d/dda80811-0410-4b51-bc67-82c50209a0a2.jpg?1564578129", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/d/dda80811-0410-4b51-bc67-82c50209a0a2.jpg?1564578129", 
@@ -6371,7 +6318,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/d/9d53b9ef-fedc-4471-ac90-018d7033a9fc.jpg?1561766543", 
               "full_name": "Blade Splicer [mm3-3]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/d/9d53b9ef-fedc-4471-ac90-018d7033a9fc.jpg?1561766543", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/d/9d53b9ef-fedc-4471-ac90-018d7033a9fc.jpg?1561766543", 
@@ -6426,7 +6372,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/6/8683a978-1bef-4b01-9361-56b1fc157d26.jpg?1562437629", 
               "full_name": "Courser of Kruphix [a25-164]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/6/8683a978-1bef-4b01-9361-56b1fc157d26.jpg?1562437629", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/6/8683a978-1bef-4b01-9361-56b1fc157d26.jpg?1562437629", 
@@ -6484,7 +6429,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/7/7735ecda-9bb0-4ef9-86b2-16e5b6592e61.jpg?1562738072", 
               "full_name": "Gonti, Lord of Luxury [kld-84]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/7/7735ecda-9bb0-4ef9-86b2-16e5b6592e61.jpg?1562738072", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/7/7735ecda-9bb0-4ef9-86b2-16e5b6592e61.jpg?1562738072", 
@@ -6543,7 +6487,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/3/53399f12-0d62-40bf-a532-1d02b6c2f19e.jpg?1561763415", 
               "full_name": "Falkenrath Aristocrat [mm3-163]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/3/53399f12-0d62-40bf-a532-1d02b6c2f19e.jpg?1561763415", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/3/53399f12-0d62-40bf-a532-1d02b6c2f19e.jpg?1561763415", 
@@ -6599,7 +6542,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/7/17a278d0-f601-4d57-bc3d-2972f8602a69.jpg?1562899733", 
               "full_name": "Kalitas, Traitor of Ghet [ogw-86]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/7/17a278d0-f601-4d57-bc3d-2972f8602a69.jpg?1562899733", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/7/17a278d0-f601-4d57-bc3d-2972f8602a69.jpg?1562899733", 
@@ -6658,7 +6600,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/1/116eafca-668b-4864-bb7b-9d615c93c059.jpg?1562272422", 
               "full_name": "Inferno Titan [cm2-109]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/1/116eafca-668b-4864-bb7b-9d615c93c059.jpg?1562272422", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/1/116eafca-668b-4864-bb7b-9d615c93c059.jpg?1562272422", 
@@ -6717,7 +6658,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/2/d23cd764-3f5c-4c93-ba83-e5ff397003a2.jpg?1543676414", 
               "full_name": "Sheltered Thicket [akh-248]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/2/d23cd764-3f5c-4c93-ba83-e5ff397003a2.jpg?1543676414", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/2/d23cd764-3f5c-4c93-ba83-e5ff397003a2.jpg?1543676414", 
@@ -6769,7 +6709,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/c/ccb541aa-3bf6-41f3-89e5-9c6c56ea210a.jpg?1543676407", 
               "full_name": "Scattered Groves [akh-247]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/c/ccb541aa-3bf6-41f3-89e5-9c6c56ea210a.jpg?1543676407", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/c/ccb541aa-3bf6-41f3-89e5-9c6c56ea210a.jpg?1543676407", 
@@ -6821,7 +6760,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/7/e7d7e102-c52d-4891-a2a2-55fead79dc61.jpg?1564578149", 
               "full_name": "Creeping Tar Pit [puma-U34]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/7/e7d7e102-c52d-4891-a2a2-55fead79dc61.jpg?1564578149", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/7/e7d7e102-c52d-4891-a2a2-55fead79dc61.jpg?1564578149", 
@@ -6873,7 +6811,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/0/30a73816-1f33-4798-a9d6-5f0410d19625.jpg?1562906381", 
               "full_name": "Shambling Vent [bfz-244]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/0/30a73816-1f33-4798-a9d6-5f0410d19625.jpg?1562906381", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/0/30a73816-1f33-4798-a9d6-5f0410d19625.jpg?1562906381", 
@@ -6925,7 +6862,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/d/dd125949-38c4-470f-9128-b80c45621086.jpg?1562442064", 
               "full_name": "Pact of Negation [a25-68]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/d/dd125949-38c4-470f-9128-b80c45621086.jpg?1562442064", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/d/dd125949-38c4-470f-9128-b80c45621086.jpg?1562442064", 
@@ -6977,7 +6913,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/0/30bd7f43-a0ed-4601-a6d8-f87e7bbd269d.jpg?1562434037", 
               "full_name": "Cascade Bluffs [a25-237]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/0/30bd7f43-a0ed-4601-a6d8-f87e7bbd269d.jpg?1562434037", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/0/30bd7f43-a0ed-4601-a6d8-f87e7bbd269d.jpg?1562434037", 
@@ -7029,7 +6964,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/5/a5dc736d-7e61-4909-973f-61f7adb82b64.jpg?1562852502", 
               "full_name": "Ancestral Vision [ima-42]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/5/a5dc736d-7e61-4909-973f-61f7adb82b64.jpg?1562852502", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/5/a5dc736d-7e61-4909-973f-61f7adb82b64.jpg?1562852502", 
@@ -7081,7 +7015,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/a/e/ae703d94-6f1f-463b-ab25-1b3f462e7e78.jpg?1543676378", 
               "full_name": "Fetid Pools [akh-243]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/a/e/ae703d94-6f1f-463b-ab25-1b3f462e7e78.jpg?1543676378", 
               "image_small": "https://img.scryfall.com/cards/small/front/a/e/ae703d94-6f1f-463b-ab25-1b3f462e7e78.jpg?1543676378", 
@@ -7127,7 +7060,6 @@
               "colorcategory": "l", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/2/f2661d4a-450a-433a-b893-b1ee15982494.jpg?1561770559", 
               "full_name": "Scalding Tarn [mm3-244]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/2/f2661d4a-450a-433a-b893-b1ee15982494.jpg?1561770559", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/2/f2661d4a-450a-433a-b893-b1ee15982494.jpg?1561770559", 
@@ -7181,7 +7113,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/d/fd915d09-5ecf-45b6-90ae-970a2c7de475.jpg?1562004077", 
               "full_name": "Oust [ddp-7]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/d/fd915d09-5ecf-45b6-90ae-970a2c7de475.jpg?1562004077", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/d/fd915d09-5ecf-45b6-90ae-970a2c7de475.jpg?1562004077", 
@@ -7233,7 +7164,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/8/78d22ece-0cb1-4faf-a871-995449c1a41f.jpg?1562706111", 
               "full_name": "Preordain [c15-101]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/8/78d22ece-0cb1-4faf-a871-995449c1a41f.jpg?1562706111", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/8/78d22ece-0cb1-4faf-a871-995449c1a41f.jpg?1562706111", 
@@ -7290,7 +7220,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/b/bbc95892-c8fc-4e8d-9452-709cf9992db0.jpg?1551119552", 
               "full_name": "Rakdos's Return [gk2-72]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/b/bbc95892-c8fc-4e8d-9452-709cf9992db0.jpg?1551119552", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/b/bbc95892-c8fc-4e8d-9452-709cf9992db0.jpg?1551119552", 
@@ -7344,7 +7273,6 @@
               "colorcategory": "m", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/3/43ec73b2-4215-4e30-ad6d-1764879030f4.jpg?1562907405", 
               "full_name": "Talisman of Dominance [e01-90]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/3/43ec73b2-4215-4e30-ad6d-1764879030f4.jpg?1562907405", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/3/43ec73b2-4215-4e30-ad6d-1764879030f4.jpg?1562907405", 
@@ -7396,7 +7324,6 @@
               "colorcategory": "m", 
               "colors": [], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/8/2/826f99c7-f534-4183-8f0d-efe1609808ac.jpg?1562202524", 
               "full_name": "Talisman of Hierarchy [mh1-233]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/8/2/826f99c7-f534-4183-8f0d-efe1609808ac.jpg?1562202524", 
               "image_small": "https://img.scryfall.com/cards/small/front/8/2/826f99c7-f534-4183-8f0d-efe1609808ac.jpg?1562202524", 
@@ -7448,7 +7375,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/f/ef9fc225-71c0-4643-aac9-fe91abfb7bb1.jpg?1562131028", 
               "full_name": "Goblin Bombardment [ddn-24]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/f/ef9fc225-71c0-4643-aac9-fe91abfb7bb1.jpg?1562131028", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/f/ef9fc225-71c0-4643-aac9-fe91abfb7bb1.jpg?1562131028", 
@@ -7501,7 +7427,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/2/f23dff46-e040-4cba-890a-97c2899701f2.jpg?1562378497", 
               "full_name": "Incinerate [jvc-51]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/2/f23dff46-e040-4cba-890a-97c2899701f2.jpg?1562378497", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/2/f23dff46-e040-4cba-890a-97c2899701f2.jpg?1562378497", 
@@ -7554,7 +7479,6 @@
                 "B"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/7/e/7e89b4da-a095-4790-b1b7-2369fa221aa4.jpg?1562924813", 
               "full_name": "Doom Blade [e02-18]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/7/e/7e89b4da-a095-4790-b1b7-2369fa221aa4.jpg?1562924813", 
               "image_small": "https://img.scryfall.com/cards/small/front/7/e/7e89b4da-a095-4790-b1b7-2369fa221aa4.jpg?1562924813", 
@@ -7607,7 +7531,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/c/1/c1963e9f-94e4-44fa-943f-ae726438408b.jpg?1561921781", 
               "full_name": "Martial Coup [c18-69]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/c/1/c1963e9f-94e4-44fa-943f-ae726438408b.jpg?1561921781", 
               "image_small": "https://img.scryfall.com/cards/small/front/c/1/c1963e9f-94e4-44fa-943f-ae726438408b.jpg?1561921781", 
@@ -7663,7 +7586,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/2/5/25f05814-a5a5-460f-9d29-0ab03efecf4c.jpg?1562903961", 
               "full_name": "Disallow [aer-31]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/2/5/25f05814-a5a5-460f-9d29-0ab03efecf4c.jpg?1562903961", 
               "image_small": "https://img.scryfall.com/cards/small/front/2/5/25f05814-a5a5-460f-9d29-0ab03efecf4c.jpg?1562903961", 
@@ -7717,7 +7639,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/3/f/3f3c77ad-fce8-4506-90e1-7ef71552a71c.jpg?1559592998", 
               "full_name": "Wheel of Fortune [sum-185]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/3/f/3f3c77ad-fce8-4506-90e1-7ef71552a71c.jpg?1559592998", 
               "image_small": "https://img.scryfall.com/cards/small/front/3/f/3f3c77ad-fce8-4506-90e1-7ef71552a71c.jpg?1559592998", 
@@ -7769,7 +7690,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/d/e/de8a1c0e-23fc-4d27-925f-cc560548ccba.jpg?1561758232", 
               "full_name": "Jace Beleren [ss1-1]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/d/e/de8a1c0e-23fc-4d27-925f-cc560548ccba.jpg?1561758232", 
               "image_small": "https://img.scryfall.com/cards/small/front/d/e/de8a1c0e-23fc-4d27-925f-cc560548ccba.jpg?1561758232", 
@@ -7824,7 +7744,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/5/959ce13f-519f-4472-bbd1-f26a972723d7.jpg?1543674653", 
               "full_name": "Gideon of the Trials [akh-14]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/5/959ce13f-519f-4472-bbd1-f26a972723d7.jpg?1543674653", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/5/959ce13f-519f-4472-bbd1-f26a972723d7.jpg?1543674653", 
@@ -7879,7 +7798,6 @@
                 "R"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/1/f11cd406-c6ae-4018-ae45-4e5577aa82ae.jpg?1543675701", 
               "full_name": "Sweltering Suns [akh-149]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/1/f11cd406-c6ae-4018-ae45-4e5577aa82ae.jpg?1543675701", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/1/f11cd406-c6ae-4018-ae45-4e5577aa82ae.jpg?1543675701", 
@@ -7935,7 +7853,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/b/c/bcf1288a-8e2c-4a69-afcf-af293f66d007.jpg?1561767966", 
               "full_name": "Lingering Souls [mm3-12]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/b/c/bcf1288a-8e2c-4a69-afcf-af293f66d007.jpg?1561767966", 
               "image_small": "https://img.scryfall.com/cards/small/front/b/c/bcf1288a-8e2c-4a69-afcf-af293f66d007.jpg?1561767966", 
@@ -7988,7 +7905,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/e/2/e2e1694b-4d69-4961-b189-a7ba25a11836.jpg?1561925877", 
               "full_name": "Overgrowth [c18-157]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/e/2/e2e1694b-4d69-4961-b189-a7ba25a11836.jpg?1561925877", 
               "image_small": "https://img.scryfall.com/cards/small/front/e/2/e2e1694b-4d69-4961-b189-a7ba25a11836.jpg?1561925877", 
@@ -8044,7 +7960,6 @@
                 "U"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/3/5335ad67-5145-48f5-b5af-19996c4d11c0.jpg?1555611620", 
               "full_name": "Dack Fayden [med-RA6]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/3/5335ad67-5145-48f5-b5af-19996c4d11c0.jpg?1555611620", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/3/5335ad67-5145-48f5-b5af-19996c4d11c0.jpg?1555611620", 
@@ -8101,7 +8016,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/4/3/4351bf97-0b9e-44a5-bb7c-1098a683b18d.jpg?1562908574", 
               "full_name": "Wrath of God [mp2-7]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/4/3/4351bf97-0b9e-44a5-bb7c-1098a683b18d.jpg?1562908574", 
               "image_small": "https://img.scryfall.com/cards/small/front/4/3/4351bf97-0b9e-44a5-bb7c-1098a683b18d.jpg?1562908574", 
@@ -8158,7 +8072,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/f/3/f3bf1867-aab4-4935-b891-45489ebeb231.jpg?1562952828", 
               "full_name": "Ajani Vengeant [ddh-1]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/f/3/f3bf1867-aab4-4935-b891-45489ebeb231.jpg?1562952828", 
               "image_small": "https://img.scryfall.com/cards/small/front/f/3/f3bf1867-aab4-4935-b891-45489ebeb231.jpg?1562952828", 
@@ -8213,7 +8126,6 @@
                 "W"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/1/c/1c8e887e-bf53-44e3-b3e5-d00d8974d0b3.jpg?1547515498", 
               "full_name": "Faith's Fetters [uma-16]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/1/c/1c8e887e-bf53-44e3-b3e5-d00d8974d0b3.jpg?1547515498", 
               "image_small": "https://img.scryfall.com/cards/small/front/1/c/1c8e887e-bf53-44e3-b3e5-d00d8974d0b3.jpg?1547515498", 
@@ -8272,15 +8184,23 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/9/6/967b7272-33a6-46e9-b0aa-4757aee54b3a.jpg?1562560392", 
               "full_name": "Vraska, Relic Seeker [xln-232]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/9/6/967b7272-33a6-46e9-b0aa-4757aee54b3a.jpg?1562560392", 
               "image_small": "https://img.scryfall.com/cards/small/front/9/6/967b7272-33a6-46e9-b0aa-4757aee54b3a.jpg?1562560392", 
               "legalities": {
-                "Legacy": true, 
-                "Modern": true, 
-                "Pauper": false, 
-                "Standard": true
+      "standard": "legal",
+      "future": "legal",
+      "historic": "legal",
+      "pioneer": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper":  "not_legal",
+      "vintage": "legal",
+      "penny": "legal",
+      "commander": "legal",
+      "brawl": "legal",
+      "duel": "legal",
+      "oldschool":  "not_legal"
               }, 
               "loyalty": "6", 
               "name": "Vraska, Relic Seeker", 
@@ -8332,7 +8252,6 @@
                 "G"
               ], 
               "digital": false, 
-              "display_image": "https://img.scryfall.com/cards/normal/front/5/4/543515aa-4b8c-437c-89aa-56dd57a4a6d5.jpg?1565358275", 
               "full_name": "Garruk, Apex Predator [med-WS5]", 
               "image_normal": "https://img.scryfall.com/cards/normal/front/5/4/543515aa-4b8c-437c-89aa-56dd57a4a6d5.jpg?1565358275", 
               "image_small": "https://img.scryfall.com/cards/small/front/5/4/543515aa-4b8c-437c-89aa-56dd57a4a6d5.jpg?1565358275", 

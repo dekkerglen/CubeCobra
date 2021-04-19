@@ -1,9 +1,15 @@
-var sinon = require('sinon');
-const cubefn = require('../../serverjs/cubefn');
+const sinon = require('sinon');
+
 const carddb = require('../../serverjs/cards');
+const cubefn = require('../../serverjs/cubefn');
+const util = require('../../serverjs/util');
+
 const cubefixture = require('../../fixtures/examplecube');
 const landsfixture = require('../../fixtures/examplelands');
-let Cube = require('../../models/cube');
+
+const Cube = require('../../models/cube');
+
+const { arraysEqual } = require('../../src/utils/Util.js');
 
 const fixturesPath = 'fixtures';
 
@@ -16,43 +22,43 @@ afterEach(() => {
   carddb.unloadCardDb();
 });
 
-test('get_cube_id returns urlAlias when defined', () => {
+test('getCubeId returns urlAlias when defined', () => {
   const testCube = {
     urlAlias: 'a',
     shortID: 'bbb',
     _id: 'c',
   };
-  const result = cubefn.get_cube_id(testCube);
+  const result = cubefn.getCubeId(testCube);
   expect(result).toBe(testCube.urlAlias);
 });
 
-test('get_cube_id returns shortId when urlAlias is not present', () => {
+test('getCubeId returns shortId when urlAlias is not present', () => {
   const testCube = {
     shortID: 'bbb',
     _id: 'c',
   };
-  const result = cubefn.get_cube_id(testCube);
+  const result = cubefn.getCubeId(testCube);
   expect(result).toBe(testCube.shortID);
 });
 
-test('get_cube_id returns _id when other ID fields are not present', () => {
+test('getCubeId returns _id when other ID fields are not present', () => {
   const testCube = {
     _id: 'c',
   };
-  const result = cubefn.get_cube_id(testCube);
+  const result = cubefn.getCubeId(testCube);
   expect(result).toBe(testCube._id);
 });
 
-test('build_id_query returns a simple query when passed a 24-character alphanumeric string', () => {
+test('buildIdQuery returns a simple query when passed a 24-character alphanumeric string', () => {
   const testId = 'a1a1a1a1a1a1a1a1a1a1a1a1';
-  const result = cubefn.build_id_query(testId);
+  const result = cubefn.buildIdQuery(testId);
   expect(result._id).toBe(testId);
 });
 
-test('build_id_query returns a boolean query when passed a non-alphanumeric string', () => {
+test('buildIdQuery returns a boolean query when passed a non-alphanumeric string', () => {
   const testId = 'a1a-a1a1a1a1a1a1a1a1a1a1';
-  const result = cubefn.build_id_query(testId);
-  const condition = result['$or'];
+  const result = cubefn.buildIdQuery(testId);
+  const condition = result.$or;
   expect(condition.length).toBe(2);
   expect(condition[0].shortID).toBe(testId);
   expect(condition[1].urlAlias).toBe(testId);
@@ -67,6 +73,7 @@ test('cardsAreEquivalent returns true for two equivalent cards', () => {
     tags: ['New'],
     colors: ['W'],
     randomField: 'y',
+    finish: 'Foil',
   };
   const testCard2 = JSON.parse(JSON.stringify(testCard1));
   const result = cubefn.cardsAreEquivalent(testCard1, testCard2);
@@ -93,35 +100,59 @@ test('intToLegality returns the expected values', () => {
   expect(cubefn.intToLegality(0)).toBe('Vintage');
   expect(cubefn.intToLegality(1)).toBe('Legacy');
   expect(cubefn.intToLegality(2)).toBe('Modern');
-  expect(cubefn.intToLegality(3)).toBe('Standard');
-  expect(cubefn.intToLegality(4)).toBe(undefined);
+  expect(cubefn.intToLegality(3)).toBe('Pioneer');
+  expect(cubefn.intToLegality(4)).toBe('Standard');
+  expect(cubefn.intToLegality(5)).toBe(undefined);
 });
 
 test('legalityToInt returns the expected values', () => {
   expect(cubefn.legalityToInt('Vintage')).toBe(0);
   expect(cubefn.legalityToInt('Legacy')).toBe(1);
   expect(cubefn.legalityToInt('Modern')).toBe(2);
-  expect(cubefn.legalityToInt('Standard')).toBe(3);
+  expect(cubefn.legalityToInt('Pioneer')).toBe(3);
+  expect(cubefn.legalityToInt('Standard')).toBe(4);
   expect(cubefn.legalityToInt('not a format')).toBe(undefined);
 });
 
-test('generate_short_id returns a valid short ID', async () => {
-  var dummyModel = {
+test('generateShortId returns a valid short ID', async () => {
+  const dummyModel = {
     shortID: '1x',
     urlAlias: 'a real alias',
   };
-  var queryMockPromise = new Promise((resolve, reject) => {
+  const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
       resolve([dummyModel]);
     });
   });
-  var queryMock = jest.fn();
+  const queryMock = jest.fn();
   queryMock.mockReturnValue(queryMockPromise);
-  var initialCubeFind = Cube.find;
+  const initialCubeFind = Cube.find;
   Cube.find = queryMock;
-  var result = await cubefn.generate_short_id();
+  const result = await cubefn.generateShortId();
   expect(result).toBe('1y');
   Cube.find = initialCubeFind;
+});
+
+test('generateShortId returns a valid short ID with profanity', async () => {
+  const dummyModel = {
+    shortID: '1x',
+    urlAlias: 'a real alias',
+  };
+  const queryMockPromise = new Promise((resolve) => {
+    process.nextTick(() => {
+      resolve([dummyModel]);
+    });
+  });
+  const queryMock = jest.fn().mockReturnValue(queryMockPromise);
+  const initialCubeFind = Cube.find;
+  Cube.find = queryMock;
+  const initialHasProfanity = util.hasProfanity;
+  const mockHasProfanity = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+  util.hasProfanity = mockHasProfanity;
+  const result = await cubefn.generateShortId();
+  expect(result).toBe('1z');
+  Cube.find = initialCubeFind;
+  util.hasProfanity = initialHasProfanity;
 });
 
 test('getBasics returns the expected set of basic lands', () => {
@@ -140,19 +171,24 @@ test('getBasics returns the expected set of basic lands', () => {
     swamp: 'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
     island: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
   };
-  var mockCarddict = {};
-  var expected = {};
-  var exampleLand, expectedLandObject;
-  basicLands.forEach(function(name) {
+  const mockCarddict = {};
+  const expected = {};
+  let exampleLand;
+  let expectedLandObject;
+  for (const name of basicLands) {
     mockCarddict[mockNameToId[name.toLowerCase()]] = landsfixture.exampleBasics[name.toLowerCase()];
     exampleLand = landsfixture.exampleBasics[name.toLowerCase()];
+    const details = JSON.parse(JSON.stringify(exampleLand));
     expectedLandObject = {
       // copy necessary because getBasics modifies carddb (bad)
-      details: JSON.parse(JSON.stringify(exampleLand)),
+      type_line: details.type,
+      cmc: 0,
+      cardID: mockNameToId[name.toLowerCase()][0],
+      details,
     };
-    expectedLandObject.details.display_image = expectedDisplayImages[name.toLowerCase()];
+    expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
     expected[name] = expectedLandObject;
-  });
+  }
   const initialCarddict = carddb._carddict;
   const initialNameToId = carddb.nameToId;
 
@@ -161,9 +197,9 @@ test('getBasics returns the expected set of basic lands', () => {
 
   const result = cubefn.getBasics(carddb);
   expect(result).toEqual(expected);
-  basicLands.forEach(function(name) {
+  for (const name of basicLands) {
     expect(result[name].details).toEqual(expected[name].details);
-  });
+  }
 
   carddb._carddict = initialCarddict;
   carddb.nameToId = initialNameToId;
@@ -171,10 +207,10 @@ test('getBasics returns the expected set of basic lands', () => {
 
 test('setCubeType correctly sets the type and card_count of its input cube', () => {
   expect.assertions(4);
-  var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    var result = cubefn.setCubeType(exampleCube, carddb);
+  const exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
+  const promise = carddb.initializeCardDb(fixturesPath, true);
+  return promise.then(() => {
+    const result = cubefn.setCubeType(exampleCube, carddb);
     expect(result.card_count).toBe(exampleCube.cards.length);
     expect(result.type).toBe('Standard');
     expect(exampleCube.card_count).toBe(exampleCube.cards.length);
@@ -190,31 +226,102 @@ test('sanitize allows the correct tags', () => {
   expect(result).toBe(expected);
 });
 
-test('addAutocard correctly replaces autocard format strings', () => {
-  expect.assertions(1);
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    const exampleHtml = '<div>lkgdfsge</div><strong>[[Embercleave]]</strong><ol><li>gfgwwerer</li></ol>';
-    const expected =
-      '<div>lkgdfsge</div><strong><a class="autocard" card="https://img.scryfall.com/cards/normal/front/9/3/939b8bcc-b9ac-4d8c-9db4-2bf91a853f03.jpg?1571537886">Embercleave</a></strong><ol><li>gfgwwerer</li></ol>';
-    const result = cubefn.addAutocard(exampleHtml, carddb);
-    expect(result).toBe(expected);
+describe('CSVtoCards', () => {
+  it('can find a card', async () => {
+    const expectedId = 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6';
+    const expectedCard = {
+      name: 'Embercleave',
+      cmc: '3',
+      type_line: 'Creature - Test',
+      colors: ['U'],
+      set: 'ELD',
+      collector_number: '359',
+      status: 'Owned',
+      finish: 'Is Foil',
+      imgUrl: 'http://example.com/',
+      tags: ['tag1', 'tag2'],
+    };
+    const expectedMaybe = {
+      name: 'Embercleave',
+      cmc: '2',
+      type_line: 'Creature - Type',
+      colors: ['R', 'W'],
+      set: 'ELD',
+      collector_number: '120',
+      status: 'Not Owned',
+      finish: 'Is Not Foil',
+      imgUrl: null,
+      tags: ['tag3', 'tag4'],
+    };
+    const cards = [
+      'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Maybeboard,Image URL,Tags',
+      `"${expectedCard.name}",${expectedCard.cmc},${expectedCard.type_line.replace(
+        '—',
+        '-',
+      )},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${
+        expectedCard.finish
+      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
+      `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace(
+        '—',
+        '-',
+      )},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${
+        expectedMaybe.status
+      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`,
+    ];
+    await carddb.initializeCardDb(fixturesPath, true);
+    const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards.join('\n'), carddb);
+    expect.extend({
+      equalsArray: (received, expected) => ({
+        message: () => `expected ${received} to equal array ${expected}`,
+        pass: arraysEqual(received, expected),
+      }),
+    });
+    const expectSame = (card, expected) => {
+      expect(card.cardID).toBe(expectedId);
+      expect(card.name).toBe(expected.name);
+      expect(card.cmc).toBe(expected.cmc);
+      expect(card.colors).equalsArray(expected.colors);
+      expect(card.collector_number).toBe(expected.collector_number);
+      expect(card.status).toBe(expected.status);
+      expect(card.finish).toBe(expected.finish);
+      expect(card.imgUrl).toBe(expected.imgUrl);
+      expect(card.tags).equalsArray(expected.tags);
+    };
+    expect(newCards.length).toBe(1);
+    expectSame(newCards[0], expectedCard);
+    expect(newMaybe.length).toBe(1);
+    expectSame(newMaybe[0], expectedMaybe);
+    expect(missing).toBe('');
   });
 });
 
-test('generatePack generates a valid pack of cards', () => {
-  expect.assertions(16);
-  const seed = 1569704729;
-  var exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
-  Cube.findOne.yields(null, exampleCube);
-  var callback = sinon.stub();
-  var promise = carddb.initializeCardDb(fixturesPath, true);
-  return promise.then(function() {
-    cubefn.generatePack('', carddb, seed, callback);
-    var argument = callback.getCall(0).args[1];
-    argument.pack.forEach(function(card, index) {
-      expect(card).toEqual(cubefixture.examplePack.pack[index]);
+describe('compareCubes', () => {
+  it('can calculate the diff between two cubes', async () => {
+    await carddb.initializeCardDb(fixturesPath, true);
+    const queryMockPromise = new Promise((resolve) => {
+      process.nextTick(() => {
+        resolve({});
+      });
     });
-    expect(argument.seed).toBe(seed);
+    const queryMock = jest.fn();
+    queryMock.mockReturnValue(queryMockPromise);
+    const cardsA = [cubefixture.exampleCube.cards[0], cubefixture.exampleCube.cards[1]];
+    const cardsB = [cubefixture.exampleCube.cards[1], cubefixture.exampleCube.cards[2]];
+    for (const card of cardsA) {
+      card.details = { ...carddb.cardFromId(card.cardID) };
+    }
+    for (const card of cardsB) {
+      card.details = { ...carddb.cardFromId(card.cardID) };
+    }
+    const { inBoth, onlyA, onlyB, aNames, bNames, allCards } = await cubefn.compareCubes(cardsA, cardsB);
+    expect(inBoth.length).toBe(1);
+    expect(inBoth[0].cardID).toBe(cubefixture.exampleCube.cards[1].cardID);
+    expect(onlyA.length).toBe(1);
+    expect(onlyA[0].cardID).toBe(cubefixture.exampleCube.cards[0].cardID);
+    expect(onlyB.length).toBe(1);
+    expect(onlyB[0].cardID).toBe(cubefixture.exampleCube.cards[2].cardID);
+    expect(aNames.length).toBe(1);
+    expect(bNames.length).toBe(1);
+    expect(allCards.length).toBe(3);
   });
 });

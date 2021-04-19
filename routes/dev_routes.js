@@ -1,95 +1,44 @@
 const express = require('express');
-const router = express.Router();
-var util = require('../serverjs/util.js');
+const util = require('../serverjs/util.js');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
+const { render } = require('../serverjs/render');
 
 // Bring in models
-let User = require('../models/user');
-let Blog = require('../models/blog');
+const User = require('../models/user');
+const Blog = require('../models/blog');
+
+const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get('/blog', function(req, res) {
+router.get('/blog', (req, res) => {
   res.redirect('/dev/blog/0');
 });
 
-router.get('/blog/:id', function(req, res) {
-  if (!req.user) {
-    req.user = {
-      _id: '',
-    };
+const PAGESIZE = 10;
+
+router.get('/blog/:id', async (req, res) => {
+  const blogs = await Blog.find({
+    dev: 'true',
+  })
+    .sort({ date: -1 })
+    .skip(PAGESIZE * req.params.id)
+    .limit(PAGESIZE);
+
+  const count = await Blog.countDocuments({ dev: 'true' });
+
+  for (const item of blogs) {
+    if (!item.date_formatted) {
+      item.date_formatted = item.date.toLocaleString('en-US');
+    }
   }
-  User.findById(req.user._id, function(err, user) {
-    var admin = util.isAdmin(user);
 
-    Blog.find({
-      dev: 'true',
-    })
-      .sort('date')
-      .exec(function(err, blogs) {
-        blogs.forEach(function(item, index) {
-          if (!item.date_formatted) {
-            item.date_formatted = item.date.toLocaleString('en-US');
-          }
-        });
-        var pages = [];
-        blogs.reverse();
-        if (blogs.length > 10) {
-          var page = parseInt(req.params.id);
-          if (!page) {
-            page = 0;
-          }
-          for (i = 0; i < blogs.length / 10; i++) {
-            if (page == i) {
-              pages.push({
-                url: '/dev/blog/' + i,
-                content: i + 1,
-                active: true,
-              });
-            } else {
-              pages.push({
-                url: '/dev/blog/' + i,
-                content: i + 1,
-              });
-            }
-          }
-          blog_page = [];
-          for (i = 0; i < 10; i++) {
-            if (blogs[i + page * 10]) {
-              blog_page.push(blogs[i + page * 10]);
-            }
-          }
-
-          if (admin) {
-            res.render('blog/devblog', {
-              blogs: blog_page,
-              pages: pages,
-              admin: 'true',
-              loginCallback: '/dev/blog/' + req.params.id,
-            });
-          } else {
-            res.render('blog/devblog', {
-              blogs: blog_page,
-              pages: pages,
-              loginCallback: '/dev/blog/' + req.params.id,
-            });
-          }
-        } else {
-          if (admin) {
-            res.render('blog/devblog', {
-              blogs: blogs,
-              admin: 'true',
-              loginCallback: '/dev/blog/' + req.params.id,
-            });
-          } else {
-            res.render('blog/devblog', {
-              blogs: blogs,
-              loginCallback: '/dev/blog/' + req.params.id,
-            });
-          }
-        }
-      });
+  return render(req, res, 'DevBlog', {
+    blogs,
+    pages: Math.ceil(count / PAGESIZE),
+    activePage: req.params.id,
+    userid: req.user ? req.user._id : null,
   });
 });
 
@@ -98,7 +47,7 @@ router.post('/blogpost', ensureAuth, async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user && util.isAdmin(user)) {
-      var blogpost = new Blog();
+      const blogpost = new Blog();
       blogpost.title = req.body.title;
       if (req.body.html && req.body.html.length > 0) {
         blogpost.html = req.body.html;
@@ -120,7 +69,7 @@ router.post('/blogpost', ensureAuth, async (req, res) => {
       success: 'false',
       message: err,
     });
-    console.error(err);
+    req.logger.error(err);
   }
 });
 

@@ -1,238 +1,239 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { csrfFetch } from '../util/CSRF';
+import { cardsAreEquivalent, normalizeName } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import { arrayMove } from 'utils/Util';
 
-import CardModal from './CardModal';
-import CardModalContext from './CardModalContext';
+import CardModal from 'components/CardModal';
+import CardModalContext from 'contexts/CardModalContext';
+import ChangelistContext from 'contexts/ChangelistContext';
+import CubeContext from 'contexts/CubeContext';
+import MaybeboardContext from 'contexts/MaybeboardContext';
+import { cardGetLabels } from 'utils/Sort';
 
-class CardModalForm extends Component {
-  constructor(props) {
-    super(props);
+const CardModalForm = ({ children, ...props }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [card, setCard] = useState({ colors: [], details: { type: '' }, tags: [], type_line: '' });
+  const [maybe, setMaybe] = useState(false);
+  const [versionDict, setVersionDict] = useState({});
+  const [versionsLoading, setVersionsLoading] = useState(true);
+  const [formValues, setFormValues] = useState({ tags: [] });
 
-    this.state = {
-      card: { details: {}, colors: [] },
-      versions: [],
-      isOpen: false,
-      formValues: { tags: [] },
-    };
+  const { addChange } = useContext(ChangelistContext);
+  const { updateMaybeboardCard } = useContext(MaybeboardContext);
+  const { cube, canEdit, cubeID, updateCubeCard } = useContext(CubeContext);
 
-    this.changeCardVersion = this.changeCardVersion.bind(this);
-    this.openCardModal = this.openCardModal.bind(this);
-    this.closeCardModal = this.closeCardModal.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.saveChanges = this.saveChanges.bind(this);
-    this.queueRemoveCard = this.queueRemoveCard.bind(this);
-    this.addTag = this.addTag.bind(this);
-    this.deleteTag = this.deleteTag.bind(this);
-    this.reorderTag = this.reorderTag.bind(this);
-  }
-
-  addTag(tag) {
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        tags: [...formValues.tags, tag],
-      },
-    }));
-  }
-
-  deleteTag(tagIndex) {
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        tags: formValues.tags.filter((tag, i) => i !== tagIndex),
-      },
-    }));
-  }
-
-  reorderTag(tag, currIndex, newIndex) {
-    this.setState(({ formValues }) => {
-      const tags = [...formValues.tags];
-      tags.splice(currIndex, 1);
-      tags.splice(newIndex, 0, tag);
-      return {
-        formValues: {
-          ...formValues,
-          tags,
+  useEffect(() => {
+    const wrapper = async () => {
+      if (!cube) return;
+      const allIds = [...cube.cards, ...(cube.maybe || [])].map(({ cardID }) => cardID);
+      const response = await csrfFetch(`/cube/api/getversions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      };
-    });
-  }
+        body: JSON.stringify(allIds),
+      });
+      const json = await response.json();
+      setVersionDict(json.dict || {});
+      setVersionsLoading(false);
+    };
+    wrapper();
+  }, [cube]);
 
-  handleChange(event) {
+  const setTagInput = useCallback(
+    (value) =>
+      setFormValues((formValues) => ({
+        ...formValues,
+        tagInput: value,
+      })),
+    [],
+  );
+
+  const setTags = useCallback((tagF) => {
+    setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
+  }, []);
+  const addTag = useCallback((tag) => {
+    setTags((tags) => [...tags, tag]);
+    setTagInput('');
+  }, []);
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }), [addTag]);
+  const deleteTag = useCallback((tagIndex) => {
+    setTags((tags) => tags.filter((_, i) => i !== tagIndex));
+  }, []);
+  const reorderTag = useCallback((_, currIndex, newIndex) => {
+    setTags((tags) => arrayMove(tags, currIndex, newIndex));
+  }, []);
+
+  const handleChange = useCallback((event) => {
     const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
 
-    this.setState(({ formValues }) => ({
-      formValues: {
-        ...formValues,
-        [name]: value,
-      },
+    setFormValues((formValues) => ({
+      ...formValues,
+      [name]: value,
     }));
+  }, []);
 
-    if (name === 'version') {
-      // This should guarantee that version array is non-null.
-      const { versions } = this.state;
-      const newDetails = versions.find((version) => version._id === value);
-      if (versions.length > 0 && newDetails) {
-        this.setState(({ card }) => ({
-          card: {
-            ...card,
-            details: {
-              ...newDetails,
-              display_image: card.imgUrl || newDetails.image_normal,
-            },
-          },
-        }));
-      } else {
-        console.error("Can't find version");
-      }
-    }
-  }
-
-  async saveChanges() {
-    let colors = [...'WUBRG'].filter((color) => this.state.formValues['color' + color]);
-    let updated = { ...this.state.formValues, colors };
-    for (let color of [...'WUBRG']) {
-      delete updated['color' + color];
+  const saveChanges = useCallback(async () => {
+    const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
+    const updated = { ...formValues, colors };
+    updated.rarity = updated.rarity.toLowerCase();
+    for (const color of [...'WUBRG']) {
+      delete updated[`color${color}`];
     }
     if (updated.imgUrl === '') {
       updated.imgUrl = null;
+    }
+    if (updated.imgBackUrl === '') {
+      updated.imgBackUrl = null;
+    }
+    if (updated.notes === '') {
+      updated.notes = null;
+    }
+    if (updated.rarity === card.details.rarity) {
+      updated.rarity = null;
+    }
+    if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
+      updated.colorCategory = null;
+    }
+    updated.cmc = parseInt(updated.cmc, 10);
+    if (isNaN(updated.cmc)) {
+      updated.cmc = null;
     }
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);
 
-    let card = this.state.card;
-
-    if (
-      updated.cardID === card.cardID &&
-      updated.type_line === card.type_line &&
-      updated.status === card.status &&
-      updated.cmc === card.cmc &&
-      updated.imgUrl === card.imgUrl &&
-      updated.colors.join('') === card.colors.join('') &&
-      updated.tags.join(',') === card.tags.join(',')
-    ) {
+    if (cardsAreEquivalent(updated, card)) {
       // no need to sync
+      closeCardModal();
       return;
     }
 
-    let response = await csrfFetch('/cube/api/updatecard/' + document.getElementById('cubeID').value, {
-      method: 'POST',
-      body: JSON.stringify({ src: card, updated }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch((err) => console.error(err));
-    let json = await response.json().catch((err) => console.error(err));
-    if (json.success === 'true') {
-      let cardResponse = await fetch('/cube/api/getcardfromid/' + updated.cardID).catch((err) => console.error(err));
-      let cardJson = await cardResponse.json().catch((err) => console.error(err));
+    try {
+      if (!maybe) {
+        const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ src: card, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await response.json();
+        if (json.success === 'true') {
+          const cardResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+          const cardJson = await cardResponse.json();
 
-      let index = card.index;
-      let newCard = {
-        ...cube[index],
-        ...updated,
-        index,
-        details: {
-          ...cardJson.card,
-          display_image: updated.imgUrl || cardJson.card.image_normal,
-        },
-      };
-
-      // magical incantation to get the global state right.
-      cube[index] = newCard;
-      cubeDict[cube[index].index] = newCard;
-      this.setState({ card: newCard, isOpen: false });
-      updateCubeList();
-    }
-  }
-
-  queueRemoveCard() {
-    // FIXME: Bring all this state inside React-world.
-    changes.push({
-      remove: this.state.card.details,
-    });
-    updateCollapse();
-    $('#navedit').collapse('show');
-    $('.warnings').collapse('hide');
-    this.props.setOpenCollapse(() => 'edit');
-    this.setState({ isOpen: false });
-  }
-
-  getCardVersions(card) {
-    fetch('/cube/api/getversions/' + card.cardID)
-      .then((response) => response.json())
-      .then((json) => {
-        // Otherwise the modal has changed in between.
-        if (card.details.name == this.state.card.details.name) {
-          this.setState({
-            versions: json.cards,
-          });
+          const newCard = {
+            ...card,
+            ...updated,
+            details: {
+              ...card.details,
+              ...cardJson.card,
+            },
+          };
+          updateCubeCard(card.index, newCard);
+          setIsOpen(false);
         }
-      });
-  }
+      } else {
+        const response = await csrfFetch(`/cube/api/maybe/update/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ id: card._id, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await response.json();
 
-  changeCardVersion(card) {
-    this.setState({
-      card,
-      versions: [],
+        if (json.success === 'true') {
+          const newCard = {
+            ...card,
+            ...updated,
+          };
+          if (json.details) {
+            newCard.details = json.details;
+          }
+          updateMaybeboardCard(newCard);
+          setIsOpen(false);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [card, formValues, updateCubeCard, updateMaybeboardCard]);
+
+  const queueRemoveCard = useCallback(() => {
+    addChange({
+      remove: card,
     });
-  }
+    setIsOpen(false);
+  }, [card, addChange]);
 
-  openCardModal(card) {
-    this.setState({
-      card,
-      versions: [],
-      formValues: {
-        version: card.cardID,
-        status: card.status,
-        cmc: card.cmc,
-        type_line: card.type_line,
-        imgUrl: card.imgUrl,
-        tags: card.tags.map((tag) => ({ id: tag, text: tag })),
-        colorW: card.colors.includes('W'),
-        colorU: card.colors.includes('U'),
-        colorB: card.colors.includes('B'),
-        colorR: card.colors.includes('R'),
-        colorG: card.colors.includes('G'),
-      },
-      isOpen: true,
+  const openCardModal = useCallback((newCard, newMaybe) => {
+    const colors = newCard.colors || newCard.details.colors;
+    const typeLine = newCard.type_line || newCard.details.type;
+    let rarity = newCard.rarity || newCard.details.rarity;
+    rarity = rarity[0].toUpperCase() + rarity.slice(1);
+    const tags = newCard.tags || [];
+    setCard(newCard);
+    setMaybe(!!newMaybe);
+    setFormValues({
+      version: newCard.cardID,
+      status: newCard.status,
+      finish: newCard.finish,
+      cmc: newCard.cmc,
+      type_line: typeLine,
+      rarity: rarity,
+      imgUrl: newCard.imgUrl || '',
+      imgBackUrl: newCard.imgBackUrl || '',
+      notes: newCard.notes || '',
+      tags: tags.map((tag) => ({ id: tag, text: tag })),
+      tagInput: '',
+      colorW: colors.includes('W'),
+      colorU: colors.includes('U'),
+      colorB: colors.includes('B'),
+      colorR: colors.includes('R'),
+      colorG: colors.includes('G'),
     });
-    this.getCardVersions(card);
-  }
+    setIsOpen(true);
+  }, []);
 
-  closeCardModal() {
-    this.setState({ isOpen: false });
-  }
+  const closeCardModal = useCallback(() => setIsOpen(false));
 
-  render() {
-    let { canEdit, setOpenCollapse, children, ...props } = this.props;
-    return (
-      <CardModalContext.Provider value={this.openCardModal}>
-        {children}
-        <CardModal
-          values={this.state.formValues}
-          onChange={this.handleChange}
-          card={this.state.card}
-          versions={this.state.versions}
-          toggle={this.closeCardModal}
-          isOpen={this.state.isOpen}
-          disabled={!canEdit}
-          saveChanges={this.saveChanges}
-          queueRemoveCard={this.queueRemoveCard}
-          tagActions={{
-            addTag: this.addTag,
-            deleteTag: this.deleteTag,
-            reorderTag: this.reorderTag,
-          }}
-          {...props}
-        />
-      </CardModalContext.Provider>
-    );
-  }
-}
+  const versions = card.details.name ? versionDict[normalizeName(card.details.name)] || [card.details] : [];
+  const details = versions.find((version) => version._id === formValues.version) || card.details;
+  const renderCard = {
+    ...card,
+    details: {
+      ...card.details,
+      image_normal: details.image_normal,
+      image_flip: details.image_flip,
+    },
+  };
+  return (
+    <CardModalContext.Provider value={openCardModal}>
+      {children}
+      <CardModal
+        values={formValues}
+        onChange={handleChange}
+        card={renderCard}
+        maybe={maybe}
+        versions={versions}
+        versionsLoading={versionsLoading}
+        toggle={closeCardModal}
+        isOpen={isOpen}
+        disabled={!canEdit}
+        saveChanges={saveChanges}
+        queueRemoveCard={queueRemoveCard}
+        setTagInput={setTagInput}
+        addTagText={addTagText}
+        tagActions={{ addTag, deleteTag, reorderTag }}
+        {...props}
+      />
+    </CardModalContext.Provider>
+  );
+};
 
 export default CardModalForm;

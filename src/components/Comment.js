@@ -1,210 +1,244 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import CommentPropType from 'proptypes/CommentPropType';
+import TimeAgo from 'react-timeago';
 
-import { Collapse } from 'reactstrap';
+import {
+  Collapse,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  CustomInput,
+  ModalFooter,
+  Button,
+  Input,
+} from 'reactstrap';
 
-import CommentEntry from './CommentEntry';
-import CommentsSection from './CommentsSection';
-import CommentContextMenu from './CommentContextMenu';
-import AgeText from './AgeText';
+import LinkButton from 'components/LinkButton';
+import CommentContextMenu from 'components/CommentContextMenu';
+import CSRFForm from 'components/CSRFForm';
+import useComments from 'hooks/UseComments';
+import useToggle from 'hooks/UseToggle';
+import CommentEntry from 'components/CommentEntry';
+import Markdown from 'components/Markdown';
 
-class Comment extends React.Component {
-  constructor(props) {
-    super(props);
+const maxDepth = 4;
 
-    this.state = {
-      isEdit: false,
-      editValue: '',
-      childExpanded: this.props.focused ? true : false,
-      highlighted: this.props.focused ? this.props.focused.length == 0 : false,
-    };
+const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
+  const [replyExpanded, toggleReply] = useToggle(false);
+  const [expanded, toggle] = useToggle(false);
+  const [comments, addComment, , editChildComment] = useComments('comment', comment._id);
+  const [loaded, setLoaded] = useState(false);
+  const [shareModalOpen, toggleShareModal] = useToggle(false);
+  const [reportModalOpen, toggleReportModal] = useToggle(false);
+  const [isEdit, setIsEdit] = useState(false);
 
-    this.onPost = this.onPost.bind(this);
-    this.startEdit = this.startEdit.bind(this);
-    this.stopEdit = this.stopEdit.bind(this);
-    this.submitEdit = this.submitEdit.bind(this);
-    this.submitDelete = this.submitDelete.bind(this);
-    this.updateServerSide = this.updateServerSide.bind(this);
-    this.toggleChildCollapse = this.toggleChildCollapse.bind(this);
-  }
-
-  onPost(comment) {
-    comment.index = this.props.comment.comments.length;
-    this.props.comment.comments.push(comment);
-    this.forceUpdate();
-    this.setState({
-      childExpanded: true,
+  const remove = () => {
+    editComment({
+      _id: comment._id,
+      parent: comment.parent,
+      parentType: comment.parentType,
+      owner: null,
+      ownerName: null,
+      content: '[deleted]',
+      timePosted: new Date(),
+      updated: true,
+      image: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+      artist: 'Allan Pollack',
     });
-  }
+  };
 
-  submitEdit() {
-    if (this.state.editValue.length > 0) {
-      this.props.comment.content = this.state.editValue;
-      this.props.comment.updated = true;
-      //this -1000 (ms) is to prevent a strange date display bug
-      this.props.comment.timePosted = new Date() - 1000;
-
-      this.props.submitEdit(this.props.comment, this.props.position);
-      this.setState({
-        isEdit: false,
-      });
-
-      this.updateServerSide();
-    }
-  }
-
-  submitDelete() {
-    this.props.comment.content = '[comment deleted]';
-    this.props.comment.updated = true;
-    //this -1000 (ms) is to prevent a strange date display bug
-    this.props.comment.timePosted = new Date() - 1000;
-    this.props.comment.owner = null;
-    this.props.comment.ownerName = null;
-
-    this.props.submitEdit(this.props.comment, this.props.position);
-    this.forceUpdate();
-
-    this.updateServerSide();
-  }
-
-  async updateServerSide() {
-    //send edit command to server
-    await csrfFetch(`/cube/api/editcomment`, {
-      method: 'POST',
-      body: JSON.stringify({
-        id: this.props.id,
-        comment: this.props.comment,
-        position: this.props.position,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch((err) => this.error(err));
-  }
-
-  startEdit() {
-    this.setState({
-      isEdit: true,
+  const edit = (content) => {
+    editComment({
+      _id: comment._id,
+      parent: comment.parent,
+      parentType: comment.parentType,
+      owner: comment.owner,
+      ownerName: comment.ownerName,
+      content,
+      timePosted: new Date(),
+      updated: true,
+      image: comment.image,
+      artist: comment.artist,
     });
-  }
+  };
 
-  stopEdit() {
-    this.setState({
-      isEdit: false,
-    });
-  }
-
-  updateEditValue(evt) {
-    this.setState({
-      editValue: evt.target.value,
-    });
-  }
-
-  toggleChildCollapse() {
-    console.log('toggle');
-    console.log(this.state);
-    this.setState({
-      childExpanded: !this.state.childExpanded,
-    });
-  }
-
-  render() {
-    var comment = this.props.comment;
-    return (
-      <div className="mb-1">
-        <div className={'comment border mt-1 px-2' + (this.state.highlighted ? ' comment-highlighted' : '')}>
-          {true ? (
-            ''
-          ) : (
-            <a href={'/user/view/' + comment.owner}>
-              <img className="profile-thumbnail mt-2 mr-2" src={comment.image} title={'Art by ' + comment.artist} />
-            </a>
-          )}
-          <div className="form-group mb-1">
-            {comment.ownerName ? (
-              <a href={'/user/view/' + comment.owner}>
-                <small>{comment.ownerName}</small>
-              </a>
-            ) : (
-              <a>
-                <small>Anonymous</small>
-              </a>
-            )}
-            {comment.timePosted &&
-              (comment.updated ? (
-                <em>
-                  <small>
-                    {' '}
-                    - Updated <AgeText date={comment.timePosted} />
-                  </small>
-                </em>
-              ) : (
-                <a>
-                  <small>
-                    {' '}
-                    - <AgeText date={comment.timePosted} />
-                  </small>
-                </a>
-              ))}
-            {comment.owner == this.props.userid && (
-              <div className="float-sm-right">
-                <CommentContextMenu
-                  className="float-sm-right"
-                  comment={comment}
-                  value="..."
-                  edit={this.startEdit}
-                  delete={this.submitDelete}
-                />
-              </div>
-            )}
-            <br></br>
-            <Collapse isOpen={!this.state.isEdit}>
-              <a>{comment.content}</a>
-            </Collapse>
-            <Collapse isOpen={this.state.isEdit}>
-              <textarea
-                value={this.state.inputValue}
-                onChange={(evt) => this.updateEditValue(evt)}
-                className="form-control"
-                id="exampleFormControlTextarea1"
-                rows="2"
-                maxLength="500"
-                defaultValue={comment.content}
-              ></textarea>
-              <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.submitEdit}>
-                Submit
-              </a>{' '}
-              <a className="comment-button ml-1 mt-1 text-muted clickable" onClick={this.stopEdit}>
-                Cancel
-              </a>
-            </Collapse>
-            {this.props.position.length < 20 && this.props.loggedIn && (
+  return (
+    <>
+      <Modal isOpen={shareModalOpen} toggle={toggleShareModal} size="md">
+        <ModalHeader toggle={toggle}>Share this Comment</ModalHeader>
+        <ModalBody>
+          <a href={`/comment/${comment._id}`}>Link to Comment</a>
+        </ModalBody>
+      </Modal>
+      <Modal isOpen={reportModalOpen} toggle={toggleReportModal} size="lg">
+        <CSRFForm method="POST" action="/comment/report" autoComplete="off">
+          <ModalHeader toggle={toggle}>Report this Comment</ModalHeader>
+          <ModalBody>
+            <InputGroup className="mb-3">
+              <InputGroupAddon addonType="prepend">
+                <InputGroupText>Report Reason:</InputGroupText>
+              </InputGroupAddon>
+              <CustomInput type="select" id="reason" name="reason">
+                <option>This is spam or phishing</option>
+                <option>This is offensive or abusive</option>
+                <option>It expresses intentions of self-harm or suicide</option>
+              </CustomInput>
+            </InputGroup>
+            <Input
+              type="textarea"
+              className="w-100"
+              id="info"
+              name="info"
+              placeholder="Put any additional comments here."
+            />
+            <Input type="hidden" name="commentid" value={comment._id} />
+          </ModalBody>
+          <ModalFooter>
+            <Button color="success">Submit Report</Button>
+            <Button color="danger" onClick={toggleReportModal}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </CSRFForm>
+      </Modal>
+      <div className={`pl-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
+        <a href={`/user/view/${comment.owner}`}>
+          <img className="profile-thumbnail" src={comment.image} alt={comment.artist} title={comment.artist} />
+        </a>
+        <div className="flex-grow ml-2">
+          <div className="flex-container flex-direction-col">
+            <div className="flex-container flex-space-between">
               <div>
-                <CommentEntry id={this.props.id} position={this.props.position} onPost={this.onPost}>
-                  <span className="comment-button mb-2 text-muted clickable">Reply</span>
-                </CommentEntry>
+                {comment.ownerName ? (
+                  <a href={`/user/view/${comment.owner}`}>
+                    <small>{comment.ownerName}</small>
+                  </a>
+                ) : (
+                  <small>Anonymous</small>
+                )}
+                {comment.timePosted &&
+                  (comment.updated ? (
+                    <em>
+                      <small>
+                        {' '}
+                        - Updated <TimeAgo date={comment.timePosted} />
+                      </small>
+                    </em>
+                  ) : (
+                    <small>
+                      {' '}
+                      - <TimeAgo date={comment.timePosted} />
+                    </small>
+                  ))}
               </div>
+              {comment.owner === userid && (
+                <div>
+                  <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
+                    <small>...</small>
+                  </CommentContextMenu>
+                </div>
+              )}
+            </div>
+            <Collapse isOpen={!isEdit}>
+              <p className="mb-0">
+                <Markdown markdown={comment.content} limited />
+              </p>
+            </Collapse>
+            <CommentEntry
+              submit={(res) => {
+                edit(res);
+                setIsEdit(false);
+              }}
+              expanded={isEdit}
+              defaultValue={comment.content}
+              toggle={() => setIsEdit(false)}
+            />
+            <div>
+              {!noReplies && userid && (
+                <LinkButton onClick={toggleReply}>
+                  <small>Reply</small>
+                </LinkButton>
+              )}
+              {!noReplies && comments.length > 0 && depth < maxDepth && (
+                <LinkButton
+                  className="ml-2"
+                  onClick={() => {
+                    toggle();
+                    setLoaded(true);
+                  }}
+                >
+                  <small>{`${expanded ? 'Hide' : 'View'} Replies (${comments.length})`}</small>
+                </LinkButton>
+              )}
+              {!noReplies && comments.length > 0 && depth >= maxDepth && (
+                <a className="m-2" href={`/comment/${comment._id}`}>
+                  <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
+                </a>
+              )}
+              <LinkButton className="ml-2" onClick={toggleShareModal}>
+                <small>Share</small>
+              </LinkButton>
+              <LinkButton className="ml-2" onClick={toggleReportModal}>
+                <small>Report</small>
+              </LinkButton>
+            </div>
+            <CommentEntry
+              submit={(res) => {
+                addComment(res);
+                setLoaded(true);
+                if (!expanded) {
+                  toggle();
+                }
+              }}
+              expanded={replyExpanded}
+              toggle={toggleReply}
+            />
+            {loaded && comments.length > 0 && (
+              <Collapse className="border-left" isOpen={expanded}>
+                {comments
+                  .slice(0)
+                  .reverse()
+                  .map((item, pos) => (
+                    <Comment
+                      key={`comment-${comment._id}`}
+                      comment={item}
+                      index={index + comments.length - pos}
+                      depth={depth + 1}
+                      userid={userid}
+                      editComment={editChildComment}
+                    />
+                  ))}
+                {comments.length > 10 && (
+                  <a className="m-2" href={`/comment/${comment._id}`}>
+                    View All...
+                  </a>
+                )}
+              </Collapse>
             )}
           </div>
         </div>
-        {comment.comments.length > 0 && (
-          <div className="pl-2 pt-1 pr-1 border-left border-right border-bottom">
-            <CommentsSection
-              className="pl-4"
-              expanded={this.state.childExpanded}
-              toggle={this.toggleChildCollapse}
-              id={this.props.id}
-              comments={comment.comments}
-              position={this.props.position}
-              userid={this.props.userid}
-              loggedIn={this.props.loggedIn}
-              submitEdit={this.props.submitEdit}
-              focused={this.props.focused && this.props.focused.length > 0 ? this.props.focused : this.props.focused}
-            />
-          </div>
-        )}
       </div>
-    );
-  }
-}
+    </>
+  );
+};
+
+Comment.propTypes = {
+  comment: CommentPropType.isRequired,
+  index: PropTypes.number.isRequired,
+  depth: PropTypes.number,
+  userid: PropTypes.string,
+  noReplies: PropTypes.bool,
+  editComment: PropTypes.func.isRequired,
+};
+
+Comment.defaultProps = {
+  depth: 0,
+  userid: null,
+  noReplies: false,
+};
 
 export default Comment;

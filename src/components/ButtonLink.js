@@ -1,11 +1,13 @@
 import React from 'react';
 
-import { Button } from 'reactstrap';
+const ButtonLink = ({ children, outline, color = 'primary', block, ...props }) => {
+  let type = outline ? `btn-outline-${color}` : `btn-${color}`;
 
-const ButtonLink = ({ href, children, ...props }) => (
-  <a href={href}>
-    <Button {...props}>{children}</Button>
-  </a>
-);
+  return (
+    <a className={`btn ${type} ${block ? 'btn-block' : ''}`} {...props} role="button">
+      {children}
+    </a>
+  );
+};
 
 export default ButtonLink;

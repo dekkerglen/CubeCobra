@@ -1,100 +1,80 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useContext } from 'react';
+import PropTypes from 'prop-types';
 
-import { Card, CardHeader, CardBody, Col, Container, Row } from 'reactstrap';
+import { Card, CardHeader, CardBody, Col, Row } from 'reactstrap';
 
-import AutocardListGroup from './AutocardListGroup';
-import SortContext from './SortContext';
+import { getLabels, sortDeep } from 'utils/Sort';
+import { fromEntries } from 'utils/Util';
 
-const TypeRow = ({ cardType, groups, count, primary }) => (
-  <Fragment key={cardType}>
-    <Row className="mt-2">
-      <h6 className="ml-1">
-        {cardType} ({count})
+import AutocardListGroup from 'components/AutocardListGroup';
+import SortContext from 'contexts/SortContext';
+
+const cmc2Labels = getLabels(null, 'Mana Value 2');
+
+const TypeRow = ({ cardType, group }) => {
+  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
+  return (
+    <>
+      <h6>
+        {cardType} ({group.length})
       </h6>
-    </Row>
-    <Row className="even-cols">
-      {getLabels('CMC2').map((cmc) => (
-        <div key={cmc} className="col-even" style={{ width: 100 / getLabels('CMC2').length + '%' }}>
-          <AutocardListGroup
-            heading={`${cmc} (${(groups[cmc] || []).length})`}
-            cards={groups[cmc] || []}
-            sort={'Unsorted'}
-          />
-        </div>
-      ))}
-    </Row>
-  </Fragment>
-);
+      <Row className="row-low-padding mb-2">
+        {cmc2Labels.map((cmc) => (
+          <div key={cmc} className="col-low-padding" style={{ width: `${100 / cmc2Labels.length}%` }}>
+            <AutocardListGroup
+              heading={`${cmc} (${(sorted[cmc] || []).length})`}
+              cards={sorted[cmc] || []}
+              sort="Unsorted"
+            />
+          </div>
+        ))}
+      </Row>
+    </>
+  );
+};
 
-const ColorCard = ({ color, groups, count, typeCounts, primary }) => (
-  <Card>
+TypeRow.propTypes = {
+  cardType: PropTypes.string.isRequired,
+  group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
+
+const ColorCard = ({ color, group }) => (
+  <Card className="mb-3">
     <CardHeader>
-      <h5>
-        {color} {count}
+      <h5 className="mb-0">
+        {color} {group.length}
       </h5>
     </CardHeader>
     <CardBody>
-      {getLabels('CNC')
-        .filter((cardType) => groups[cardType])
-        .map((cardType) => (
-          <TypeRow key={cardType} cardType={cardType} groups={groups[cardType]} count={typeCounts[cardType]} />
-        ))}
+      {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
+        <TypeRow key={label} cardType={label} group={cncGroup} />
+      ))}
     </CardBody>
   </Card>
 );
 
-const CurveViewRaw = ({ cards, primary, secondary, tertiary, changeSort, ...props }) => {
+ColorCard.propTypes = {
+  color: PropTypes.string.isRequired,
+  group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
+
+const CurveView = ({ cards, ...props }) => {
+  const { primary, showOther } = useContext(SortContext);
+
   // We call the groups color and type even though they might be other sorts.
-  let groups = sortIntoGroups(cards, primary);
-  let colorCounts = {};
-  let typeCounts = {};
-
-  for (let color of Object.keys(groups)) {
-    groups[color] = sortIntoGroups(groups[color], 'CNC');
-    colorCounts[color] = 0;
-    typeCounts[color] = {};
-    for (let cardType of Object.keys(groups[color])) {
-      groups[color][cardType] = sortIntoGroups(groups[color][cardType], 'CMC2');
-      typeCounts[color][cardType] = 0;
-      for (let cmc of Object.keys(groups[color][cardType])) {
-        let count = groups[color][cardType][cmc].length;
-        colorCounts[color] += count;
-        typeCounts[color][cardType] += count;
-        groups[color][cardType][cmc].sort((x, y) => {
-          if (x.cmc < y.cmc) {
-            return -1;
-          } else if (x.cmc > y.cmc) {
-            return 1;
-          } else if (x.details.name < y.details.name) {
-            return -1;
-          } else if (x.details.name > y.details.name) {
-            return 1;
-          } else return 0;
-        });
-      }
-    }
-  }
-
   return (
-    <Row className="mt-3" {...props}>
+    <Row {...props}>
       <Col>
-        {getLabels(primary)
-          .filter((color) => groups[color])
-          .map((color) => (
-            <ColorCard
-              key={color}
-              color={color}
-              groups={groups[color]}
-              count={colorCounts[color]}
-              typeCounts={typeCounts[color]}
-              primary={color}
-            />
-          ))}
+        {sortDeep(cards, showOther, 'Alphabetical', primary).map(([color, group]) => (
+          <ColorCard key={color} color={color} group={group} />
+        ))}
       </Col>
     </Row>
   );
 };
 
-const CurveView = SortContext.Wrapped(CurveViewRaw);
+CurveView.propTypes = {
+  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
 
 export default CurveView;

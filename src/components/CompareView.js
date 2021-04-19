@@ -2,13 +2,15 @@ import React from 'react';
 
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
+import { getLabels, sortIntoGroups } from '../utils/Sort';
+
 import AutocardListItem from './AutocardListItem';
-import SortContext from './SortContext';
+import SortContext from 'contexts/SortContext';
 
 const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
-  let bothCmc = sortIntoGroups(both, 'CMC');
-  let onlyACmc = sortIntoGroups(onlyA, 'CMC');
-  let onlyBCmc = sortIntoGroups(onlyB, 'CMC');
+  let bothCmc = sortIntoGroups(both, 'Mana Value');
+  let onlyACmc = sortIntoGroups(onlyA, 'Mana Value');
+  let onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
 
   return (
     <ListGroup className="list-outline">
@@ -20,14 +22,18 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
           <Col>({onlyB.length})</Col>
         </Row>
       </ListGroupItem>
-      {getLabels('CMC')
+      {getLabels(null, 'Mana Value')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} noGutters className="cmc-group">
-            {[[bothCmc, 'both'], [onlyACmc, 'a'], [onlyBCmc, 'b']].map(([cards, key]) => (
+            {[
+              [bothCmc, 'both'],
+              [onlyACmc, 'a'],
+              [onlyBCmc, 'b'],
+            ].map(([cards, key]) => (
               <Col xs="4" key={key}>
-                {(cards[cmc] || []).map((card) => (
-                  <AutocardListItem key={card.cardID} card={card} />
+                {(cards[cmc] || []).map((card, index) => (
+                  <AutocardListItem key={index} card={card} />
                 ))}
               </Col>
             ))}
@@ -37,12 +43,12 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 };
 
-const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...props }) => {
-  let columns = sortIntoGroups(cards, primary);
+const CompareViewRaw = ({ cards, primary, secondary, showOther, both, onlyA, onlyB, ...props }) => {
+  let columns = sortIntoGroups(cards, primary, showOther);
   let columnCounts = {};
-  let bothCounts = {};
-  let onlyACounts = {};
-  let onlyBCounts = {};
+  let bothCounts = { total: 0 };
+  let onlyACounts = { total: 0 };
+  let onlyBCounts = { total: 0 };
 
   let both_copy = both.slice(0);
   let only_a_copy = onlyA.slice(0);
@@ -67,18 +73,49 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
 
     columnCounts[columnLabel] = columns[columnLabel].length;
     bothCounts[columnLabel] = bothCount;
+    bothCounts['total'] += bothCount;
     onlyACounts[columnLabel] = onlyACount;
+    onlyACounts['total'] += onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary);
+    onlyBCounts['total'] += onlyBCount;
+    columns[columnLabel] = sortIntoGroups(columns[columnLabel], secondary, showOther);
   }
-
-  both = both.slice(0);
-  only_a = onlyA.slice(0);
-  only_b = onlyB.slice(0);
+  const bothCopy = both.slice(0);
+  const onlyACopy = onlyA.slice(0);
+  const onlyBCopy = onlyB.slice(0);
 
   return (
     <>
-      {getLabels(primary)
+      {
+        <div className="compare-header pt-2">
+          <Row>
+            <Col>
+              <h6 className="text-center">Total</h6>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs="4">
+              <h6 className="text-center">
+                In Both Cubes
+                <br />({bothCounts['total']})
+              </h6>
+            </Col>
+            <Col xs="4">
+              <h6 className="text-center">
+                Only in Base Cube
+                <br />({onlyACounts['total']})
+              </h6>
+            </Col>
+            <Col xs="4">
+              <h6 className="text-center">
+                Only in Comparison Cube
+                <br />({onlyBCounts['total']})
+              </h6>
+            </Col>
+          </Row>
+        </div>
+      }
+      {getLabels(cards, primary, showOther)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
           let column = columns[columnLabel];
@@ -112,7 +149,7 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                     </Col>
                   </Row>
                 </div>
-                {getLabels(secondary)
+                {getLabels(column, secondary, showOther)
                   .filter((label) => column[label])
                   .map((label) => {
                     let group = column[label];
@@ -121,15 +158,15 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
                       onlyBGroup = [];
 
                     for (let card of group) {
-                      if (both.includes(card.details.name)) {
+                      if (bothCopy.includes(card.details.name)) {
                         bothGroup.push(card);
-                        both.splice(both.indexOf(card.details.name), 1);
-                      } else if (only_a.includes(card.details.name)) {
+                        bothCopy.splice(bothCopy.indexOf(card.details.name), 1);
+                      } else if (onlyACopy.includes(card.details.name)) {
                         onlyAGroup.push(card);
-                        only_a.splice(only_a.indexOf(card.details.name), 1);
-                      } else if (only_b.includes(card.details.name)) {
+                        onlyACopy.splice(onlyACopy.indexOf(card.details.name), 1);
+                      } else if (onlyBCopy.includes(card.details.name)) {
                         onlyBGroup.push(card);
-                        only_b.splice(only_b.indexOf(card.details.name), 1);
+                        onlyBCopy.splice(onlyBCopy.indexOf(card.details.name), 1);
                       }
                     }
 
@@ -153,7 +190,9 @@ const CompareViewRaw = ({ cards, primary, secondary, both, onlyA, onlyB, ...prop
 
 const CompareView = (props) => (
   <SortContext.Consumer>
-    {({ primary, secondary }) => <CompareViewRaw primary={primary} secondary={secondary} {...props} />}
+    {({ primary, secondary, showOther }) => (
+      <CompareViewRaw primary={primary} secondary={secondary} showOther={showOther} {...props} />
+    )}
   </SortContext.Consumer>
 );
 

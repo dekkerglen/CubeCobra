@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "module": "es6",
+        "target": "es6",
+        "baseUrl": "./",
+        "paths": {
+            "serverjs/*": ["./serverjs/*"],
+            "routes/*": ["./routes/*"],
+            "analytics/*": ["./src/analytics/*"],
+            "components/*": ["./src/components/*"],
+            "contexts/*": ["./src/contexts/*"],
+            "filtering/*": ["./src/filtering/*"],
+            "generated/*": ["./src/generated/*"],
+            "hooks/*": ["./src/hooks/*"],
+            "layouts/*": ["./src/layouts/*"],
+            "markdown/*": ["./src/markdown/*"],
+            "pages/*": ["./src/pages/*"],
+            "proptypes/*": ["./src/proptypes/*"],
+            "res/*": ["./src/res/*"],
+            "utils/*": ["./src/utils/*"]
+        }
+    },
+    "include": ["src/**/*", "app.js", "serverjs/*", "routes/*"]
+}

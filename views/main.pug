@@ -1,0 +1,68 @@
+doctype html
+html(lang='en')
+	head
+		meta(charset='UTF-8')
+		meta(name='description', content='Build, playtest, and share your Magic the Gathering cube!')
+		meta(name='keywords', content='MTG,Magic the Gathering,Magic,Cube,Cubing,Cube Management,Cube Draft')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		if csrfToken
+			meta(name='csrf-token', content=csrfToken)
+		if metadata
+			for metadatum, i in metadata
+				if metadatum.name
+					meta(name=metadatum.name, content=metadatum.content)
+				if metadatum.property
+					meta(property=metadatum.property, content=metadatum.content)
+		link(rel='icon', href='/content/favicon.ico?v=1.1', type='image/x-icon')
+		title=title
+		if node_env === 'production'
+			link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css', integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh', crossorigin='anonymous')
+		else
+			link(rel='stylesheet' href='/bower_components/bootstrap/dist/css/bootstrap.min.css')
+		link(rel='stylesheet' href=colors)
+		link(rel='stylesheet' href='/css/autocomplete.css')
+		link(rel='stylesheet' href='/css/draft.css')
+		link(rel='stylesheet' href='/css/editcube.css')
+		link(rel='stylesheet' href='/css/stylesheet.css')
+		link(rel='stylesheet' href='/css/tags.css')
+		link(href='//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css', rel='stylesheet')
+		link(href='https://code.cdn.mozilla.net/fonts/fira.css' rel='stylesheet')
+		link(href='https://unpkg.com/react-pivottable@0.9.0/pivottable.css', rel='stylesheet')
+
+	body
+		#autocardPopup.d-none
+			.autocard-background
+				.row.no-gutters
+					.position-relative.card-border
+						img.foilOverlay(src='/content/foilOverlay.png')
+						img#autocardImageFront(src='', alt='')
+					.position-relative.card-border
+						img.foilOverlay(src='/content/foilOverlay.png')
+						img#autocardImageBack(src='', alt='')
+				#autocardTags.row.no-gutters.p-1
+		include dynamic_flash
+		#react-root !{reactHTML}
+		
+		if node_env === 'production'
+			script(src='https://code.jquery.com/jquery-3.4.1.slim.min.js', integrity='sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n', crossorigin='anonymous')
+			script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js', integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6', crossorigin='anonymous', async)
+		else
+			script(src='/bower_components/jquery/dist/jquery.slim.min.js')
+			script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js', async)
+		script(src='/js/csrf.js', async)
+		
+		if node_env === 'production'
+			script(src='https://unpkg.com/react@16/umd/react.production.min.js', crossorigin)
+			script(src='https://unpkg.com/react-dom@16/umd/react-dom.production.min.js', crossorigin)
+		else
+			script(src='https://unpkg.com/react@16/umd/react.development.js', crossorigin)
+			script(src='https://unpkg.com/react-dom@16/umd/react-dom.development.js', crossorigin)
+
+		script(type='text/javascript').
+			window.reactProps = !{reactProps};
+		script(src='/js/'+page+'.bundle.js')
+
+		script(src='/js/autocard.js')
+		script(type='text/javascript').
+			autocard_init('autocard');
+			autocard_init('dynamic-autocard');

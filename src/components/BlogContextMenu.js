@@ -1,83 +1,66 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse } from 'reactstrap';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+
+import BlogDeleteModal from 'components/BlogDeleteModal';
 
 class BlogContextMenu extends React.Component {
   constructor(props) {
     super(props);
     this.toggle = this.toggle.bind(this);
+    this.toggleDeleteModal = this.toggleDeleteModal.bind(this);
+    this.openDeleteModal = this.openDeleteModal.bind(this);
     this.state = {
       dropdownOpen: false,
-      collapseOpen: false,
+      deleteModalOpen: false,
     };
   }
 
-  toggle(event) {
+  toggle() {
+    this.setState((prevState) => ({
+      dropdownOpen: !prevState.dropdownOpen,
+    }));
+  }
+
+  toggleDeleteModal() {
+    this.setState((prevState) => ({
+      deleteModalOpen: !prevState.deleteModalOpen,
+    }));
+  }
+
+  openDeleteModal() {
     this.setState({
-      dropdownOpen: !this.state.dropdownOpen,
+      deleteModalOpen: true,
     });
-    updateBlog();
-  }
-
-  clickEdit(post) {
-    csrfFetch('/cube/blogsrc/' + post._id, {
-      method: 'GET',
-      headers: {},
-    })
-      .then((response) => response.json())
-      .then(function(json) {
-        if (json.src) {
-          $('#editor').html(json.src);
-        } else {
-          $('#editor').html(json.body);
-        }
-
-        $('#postBlogTitleInput').val(json.title);
-        $('#postBlogHiddenId').val(post._id);
-        $('#blogEditTitle').text('Edit Blog Post');
-        $('#editBlogModal').modal('show');
-        autocard_init('autocard');
-      });
-  }
-
-  clickDelete(post) {
-    $('#deleteModal').modal('show');
-
-    $('.delete-blog')
-      .off()
-      .on('click', function(e) {
-        csrfFetch('/cube/blog/remove/' + post._id, {
-          method: 'DELETE',
-          headers: {},
-        }).then((response) => {
-          if (!response.ok) {
-            console.log(response);
-          } else {
-            window.location.href = '';
-          }
-        });
-      });
   }
 
   render() {
+    const { dropdownOpen, deleteModalOpen } = this.state;
+    const { post, value, onEdit } = this.props;
     return (
-      <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
-        <DropdownToggle tag="a" className="nav-link clickable">
-          {this.props.value}
-        </DropdownToggle>
-        <DropdownMenu right>
-          <DropdownItem onClick={() => this.clickEdit(this.props.post)}>Edit</DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              this.clickDelete(this.props.post);
-            }}
-          >
-            Delete
-          </DropdownItem>
-        </DropdownMenu>
-      </Dropdown>
+      <>
+        <Dropdown isOpen={dropdownOpen} toggle={this.toggle}>
+          <DropdownToggle tag="a" className="nav-link clickable">
+            {value}
+          </DropdownToggle>
+          <DropdownMenu right>
+            <DropdownItem onClick={() => onEdit(post._id)}>Edit</DropdownItem>
+            <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={deleteModalOpen} postID={post._id} />
+      </>
     );
   }
 }
+
+BlogContextMenu.propTypes = {
+  post: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+  }).isRequired,
+  value: PropTypes.string.isRequired,
+  onEdit: PropTypes.func.isRequired,
+};
 
 export default BlogContextMenu;

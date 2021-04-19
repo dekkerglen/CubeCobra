@@ -1,14 +1,20 @@
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 // Cube schema
-let cardRatingSchema = mongoose.Schema({
+const cardRatingSchema = mongoose.Schema({
   value: Number,
+  elo: Number,
   picks: Number,
   name: String,
+  embedding: [Number],
 });
 
 cardRatingSchema.index({
   name: 1,
 });
 
-let CardRating = (module.exports = mongoose.model('CardRating', cardRatingSchema));
+cardRatingSchema.index({
+  elo: -1,
+});
+
+module.exports = mongoose.model('CardRating', cardRatingSchema);

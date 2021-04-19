@@ -1,16 +1,22 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
-import { Input } from 'reactstrap';
+import { Form, Input } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
-import { arraysEqual, fromEntries } from '../util/Util';
+import { cardsAreEquivalent, normalizeName } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import { getLabels, sortDeep } from 'utils/Sort';
 
-import GroupModalContext from './GroupModalContext';
-import PagedTable from './PagedTable';
-import SortContext from './SortContext';
-import TagContext from './TagContext';
-import TagInput from './TagInput';
-import withAutocard from './WithAutocard';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
+import PagedTable from 'components/PagedTable';
+import SortContext from 'contexts/SortContext';
+import TagContext from 'contexts/TagContext';
+import TagInput from 'components/TagInput';
+import withAutocard from 'components/WithAutocard';
+import withLoading from 'components/WithLoading';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const colorCombos = [
   'C',
@@ -49,338 +55,408 @@ const colorCombos = [
 
 const AutocardTd = withAutocard('td');
 
-class ListViewRaw extends Component {
-  constructor(props) {
-    super(props);
+const LoadingInput = withLoading(Input, ['onBlur']);
+const LoadingInputChange = withLoading(Input, ['onChange']);
+const LoadingTagInput = withLoading(TagInput, ['handleInputBlur']);
 
-    const cardValues = [].concat.apply(
-      [],
-      this.props.cards.map(({ index, ...card }) => [
-        [`tdcheck${index}`, false],
-        [`tdversion${index}`, card.cardID],
-        [`tdtype${index}`, card.type_line],
-        [`tdstatus${index}`, card.status],
-        [`tdcmc${index}`, card.cmc],
-        [`tdcolors${index}`, (card.colors || ['C']).join('')],
-        [`tags${index}`, (card.tags || []).map((tag) => ({ id: tag, text: tag }))],
-      ]),
-    );
+const defaultVersions = (card) => {
+  const fullName = card.details.full_name;
+  return [
+    {
+      ...card.details,
+      version: fullName.toUpperCase().substring(fullName.indexOf('[') + 1, fullName.indexOf(']')),
+    },
+  ];
+};
 
-    this.state = {
-      ...fromEntries(cardValues),
-      versionDict: {},
-    };
+const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAlert }) => {
+  // FIXME: This state should just be managed in the card object.
+  const [tags, setTags] = useState(card.tags.map((tag) => ({ id: tag, text: tag })));
+  const [values, setValues] = useState({
+    ...card,
+    colors: (card.colors || []).join('') || 'C',
+  });
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleBlur = this.handleBlur.bind(this);
-    this.checkAll = this.checkAll.bind(this);
-  }
+  const { cubeID, updateCubeCard } = useContext(CubeContext);
+  const { cardColorClass } = useContext(TagContext);
 
-  updateVersions() {
-    const knownIds = new Set(Object.keys(this.state.versionDict));
-    const currentIds = this.props.cards.map((card) => card.cardID);
-    const newIds = currentIds.filter((id) => !knownIds.has(id));
-    if (newIds.length > 0) {
-      csrfFetch('/cube/api/getversions', {
+  const { index } = card;
+
+  const syncCard = useCallback(
+    async (updated) => {
+      updated = { ...card, ...updated };
+      delete updated.details;
+
+      if (cardsAreEquivalent(card, updated)) {
+        // no need to sync
+        return;
+      }
+
+      try {
+        const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            src: card,
+            updated,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          addAlert('danger', `Failed to update ${card.details.name} (status ${response.statusCode})`);
+          return;
+        }
+
+        const json = await response.json();
+        if (json.success === 'true') {
+          const oldCardID = card.cardID;
+          const newCard = { ...card, ...updated };
+          updateCubeCard(card.index, newCard);
+          if (updated.cardID !== oldCardID) {
+            // changed version
+            const getResponse = await fetch(`/cube/api/getcardfromid/${updated.cardID}`);
+            const getJson = await getResponse.json();
+            updateCubeCard(card.index, { ...newCard, details: { ...newCard.details, ...getJson.card } });
+          }
+        }
+      } catch (err) {
+        addAlert('danger', 'Failed to send update request.');
+        throw err;
+      }
+    },
+    [cubeID, card, updateCubeCard, addAlert],
+  );
+
+  const addTag = useCallback(
+    async (tag) => {
+      const newTags = [...tags, tag];
+      setTags(newTags);
+      try {
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
+    },
+    [syncCard, tags],
+  );
+
+  const deleteTag = useCallback(
+    async (deleteIndex) => {
+      const newTags = tags.filter((tag, tagIndex) => tagIndex !== deleteIndex);
+      setTags(newTags);
+      try {
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
+    },
+    [syncCard, tags],
+  );
+
+  const reorderTag = useCallback(
+    async (tag, currIndex, newIndex) => {
+      const newTags = [...tags];
+      newTags.splice(currIndex, 1);
+      newTags.splice(newIndex, 0, tag);
+      setTags(newTags);
+      try {
+        await syncCard({ tags: newTags.map((newTag) => newTag.text) });
+      } catch (err) {
+        setTags(tags);
+      }
+    },
+    [syncCard, tags],
+  );
+
+  const tagBlur = useCallback(
+    async (tag) => {
+      if (tag.trim()) {
+        await addTag({
+          id: tag.trim(),
+          text: tag.trim(),
+        });
+      }
+    },
+    [addTag],
+  );
+
+  const handleChange = useCallback(
+    async (event) => {
+      const { target } = event;
+      const value = target.type === 'checkbox' ? target.checked : target.value;
+      const { name, tagName } = target;
+
+      const updateF = (currentValues) => ({
+        ...currentValues,
+        [name]: value,
+      });
+
+      if (tagName.toLowerCase() === 'select') {
+        try {
+          const updatedCard = {};
+          if (name === 'colors') {
+            updatedCard.colors = value === 'C' ? [] : [...value];
+          } else {
+            updatedCard[name] = value;
+          }
+
+          await syncCard(updatedCard);
+          setValues(updateF);
+        } catch (err) {
+          // FIXME: Display in UI.
+          console.error(err);
+        }
+      } else {
+        setValues(updateF);
+      }
+    },
+    [syncCard],
+  );
+
+  const handleBlur = useCallback(
+    async (event) => {
+      const { target } = event;
+      const { name, value, tagName } = target;
+
+      // <select>s handled in handleChange above.
+      if (tagName.toLowerCase() !== 'select') {
+        try {
+          // Note: We can use this logic on all but the colors field, which is a select anyway so this path is irrelevant.
+          await syncCard({
+            [name]: value,
+          });
+        } catch (err) {
+          // FIXME: Display in UI.
+          console.error(err);
+        }
+      }
+    },
+    [syncCard],
+  );
+
+  const inputProps = (field) => ({
+    bsSize: 'sm',
+    spinnerSize: 'sm',
+    name: field,
+    onChange: handleChange,
+    onBlur: handleBlur,
+    value: values[field],
+    'data-lpignore': true,
+  });
+
+  return (
+    <tr className={cardColorClass(card)}>
+      <td className="align-middle">
+        <Input
+          type="checkbox"
+          bsSize="sm"
+          data-index={index}
+          checked={checked}
+          onChange={onCheck}
+          className="d-block mx-auto"
+        />
+      </td>
+      <AutocardTd className="align-middle text-truncate" card={card}>
+        {card.details.name}
+      </AutocardTd>
+      <td>
+        <LoadingInputChange
+          {...inputProps('cardID')}
+          type="select"
+          style={{ maxWidth: '6rem' }}
+          className="w-100"
+          loading={versionsLoading ? true : null}
+        >
+          {versions.map(({ _id, version }) => (
+            <option key={_id} value={_id}>
+              {version}
+            </option>
+          ))}
+        </LoadingInputChange>
+      </td>
+      <td>
+        <LoadingInput {...inputProps('type_line')} type="text" />
+      </td>
+      <td>
+        <LoadingInputChange {...inputProps('status')} type="select">
+          {getLabels(null, 'Status').map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </LoadingInputChange>
+      </td>
+      <td>
+        <LoadingInputChange {...inputProps('finish')} type="select">
+          {getLabels(null, 'Finish').map((finish) => (
+            <option key={finish}>{finish}</option>
+          ))}
+        </LoadingInputChange>
+      </td>
+      <td>
+        <LoadingInput {...inputProps('cmc')} type="text" style={{ maxWidth: '3rem' }} />
+      </td>
+      <td>
+        <LoadingInputChange {...inputProps('colors')} type="select">
+          {colorCombos.map((combo) => (
+            <option key={combo}>{combo}</option>
+          ))}
+        </LoadingInputChange>
+      </td>
+      <td style={{ minWidth: '15rem' }}>
+        <LoadingTagInput
+          tags={tags}
+          value={values.tagInput}
+          name="tagInput"
+          onChange={handleChange}
+          handleInputBlur={tagBlur}
+          addTag={addTag}
+          deleteTag={deleteTag}
+          reorderTag={reorderTag}
+        />
+      </td>
+    </tr>
+  );
+};
+
+ListViewRow.propTypes = {
+  card: CardPropType.isRequired,
+  versions: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      version: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  versionsLoading: PropTypes.bool.isRequired,
+  checked: PropTypes.bool.isRequired,
+  onCheck: PropTypes.func.isRequired,
+  addAlert: PropTypes.func.isRequired,
+};
+
+const ListView = ({ cards }) => {
+  const [versionDict, setVersionDict] = useState({});
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [checked, setChecked] = useState([]);
+
+  const { cube } = useContext(CubeContext);
+  const { setGroupModalCards } = useContext(GroupModalContext);
+  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
+
+  const { addAlert, alerts } = useAlerts();
+
+  useEffect(() => {
+    const wrapper = async () => {
+      setVersionsLoading(true);
+      const response = await csrfFetch('/cube/api/getversions', {
         method: 'POST',
-        body: JSON.stringify(newIds),
+        body: JSON.stringify(cube.cards.map(({ cardID }) => cardID)),
         headers: {
           'Content-Type': 'application/json',
         },
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          this.setState(({ versionDict }) => ({
-            versionDict: { ...versionDict, ...json.dict },
-          }));
-        });
-    }
-  }
-
-  componentDidMount() {
-    /* global */
-    activateTags();
-
-    this.updateVersions();
-  }
-
-  componentDidUpdate() {
-    this.updateVersions();
-  }
-
-  syncCard(index, updated) {
-    /* globals */
-    const cubeID = document.getElementById('cubeID').value;
-    const card = cube[index];
-
-    updated = { ...card, ...updated };
-    delete updated.details;
-
-    if (
-      updated.cardID === card.cardID &&
-      updated.type_line === card.type_line &&
-      updated.status === card.status &&
-      updated.cmc === card.cmc &&
-      arraysEqual(updated.colors, card.colors) &&
-      arraysEqual(updated.tags, card.tags)
-    ) {
-      // no need to sync
-      return;
-    }
-
-    csrfFetch(`/cube/api/updatecard/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        src: card,
-        updated,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .catch((err) => console.error(err))
-      .then((json) => {
-        if (json.success === 'true') {
-          cube[index] = { ...cube[index], ...updated };
-          if (updated.cardID !== card.cardID) {
-            // changed version
-            fetch(`/cube/api/getcardfromid/${updated.cardID}`)
-              .then((response) => response.json())
-              .then((json) => {
-                cube[index].details = json.card;
-                cube[index].details.display_image = updated.imgUrl || json.card.image_normal;
-                cubeDict[cube[index].index] = cube[index];
-              })
-              .catch((err) => console.error(err));
-          }
-        }
-      })
-      .catch((err) => console.error(err));
-  }
-
-  addTag(cardIndex, tag) {
-    const name = `tags${cardIndex}`;
-    const newTags = [...this.state[name], tag];
-    this.setState({
-      [name]: newTags,
-    });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
-  }
-
-  deleteTag(cardIndex, tagIndex) {
-    const name = `tags${cardIndex}`;
-    const newTags = this.state[name].filter((tag, i) => i !== tagIndex);
-    this.setState({
-      [name]: newTags,
-    });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
-  }
-
-  reorderTag(cardIndex, tag, currIndex, newIndex) {
-    const name = `tags${cardIndex}`;
-    const newTags = [...this.state[name]];
-    newTags.splice(currIndex, 1);
-    newTags.splice(newIndex, 0, tag);
-    this.setState({
-      [name]: newTags,
-    });
-    this.syncCard(cardIndex, { tags: newTags.map((tag) => tag.text) });
-  }
-
-  getChecked() {
-    return this.props.cards.filter(({ index }) => this.state[`tdcheck${index}`]);
-  }
-
-  handleChange(event) {
-    const target = event.target;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    const name = target.name;
-    const index = parseInt(target.getAttribute('data-index'));
-
-    this.setState({
-      [name]: value,
-    });
-
-    if (target.tagName.toLowerCase() === 'select') {
-      const updated = {};
-      if (name.startsWith('tdversion')) {
-        updated.cardID = value;
-      } else if (name.startsWith('tdstatus')) {
-        updated.status = value;
-      } else if (name.startsWith('tdcolor')) {
-        updated.colors = value === 'C' ? [] : [...value];
+      });
+      if (!response.ok) {
+        console.error(response);
+        return;
       }
-      this.syncCard(index, updated);
-    }
 
-    if (name.startsWith('tdcheck')) {
-      let checked = this.getChecked();
-      if (value && !checked.some((card) => card.index === index)) {
-        checked.push(this.props.cards.find((card) => card.index === index));
-      } else if (!value) {
-        checked = checked.filter((card) => card.index !== index);
-      }
-      this.props.setGroupModalCards(checked);
-    }
-  }
-
-  handleBlur(event) {
-    const target = event.target;
-    const index = parseInt(target.getAttribute('data-index'));
-
-    const colorString = this.state[`tdcolors${index}`];
-    const updated = {
-      cardID: this.state[`tdversion${index}`],
-      type_line: this.state[`tdtype${index}`],
-      status: this.state[`tdstatus${index}`],
-      cmc: this.state[`tdcmc${index}`],
-      tags: this.state[`tags${index}`].map((tagDict) => tagDict.text),
-      colors: colorString === 'C' ? [] : [...colorString],
+      const json = await response.json();
+      setVersionsLoading(false);
+      setVersionDict((current) => ({ ...current, ...json.dict }));
     };
+    wrapper();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // <select>s handled in handleChange above.
-    if (target.tagName.toLowerCase() !== 'select') {
-      this.syncCard(index, updated);
-    }
-  }
+  const handleCheckAll = useCallback(
+    (event) => {
+      const value = event.target.checked;
 
-  checkAll(event) {
-    const target = event.target;
-    const value = target.checked;
+      if (value) {
+        setChecked(cards.map(({ index }) => index));
+        setGroupModalCards(cards);
+      } else {
+        setChecked([]);
+        setGroupModalCards([]);
+      }
+    },
+    [cards, setGroupModalCards],
+  );
 
-    const entries = this.props.cards.map(({ index }) => [`tdcheck${index}`, value]);
-    this.setState(fromEntries(entries));
+  const handleCheck = useCallback(
+    (event) => {
+      const value = event.target.checked;
+      const index = parseInt(event.target.getAttribute('data-index'), 10);
+      if (Number.isInteger(index)) {
+        let newChecked = checked;
+        if (value) {
+          if (!newChecked.includes(index)) {
+            newChecked = [...checked, index];
+          }
+        } else {
+          newChecked = checked.filter((testIndex) => testIndex !== index);
+        }
+        setChecked(newChecked);
+        setGroupModalCards(
+          newChecked.map((cardIndex) => cards.find((card) => card.index === cardIndex)).filter((x) => x),
+        );
+      }
+    },
+    [checked, cards, setGroupModalCards],
+  );
 
-    this.props.setGroupModalCards(this.props.cards);
-  }
+  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
 
-  render() {
-    const { cards, primary, secondary, tertiary, changeSort, cardColorClass } = this.props;
-    const groups = {};
-    for (const [label1, primaryGroup] of Object.entries(sortIntoGroups(cards, primary))) {
-      groups[label1] = sortIntoGroups(primaryGroup, secondary);
-    }
+  const rows = sorted.map(([, group1]) =>
+    group1.map(([, group2]) =>
+      group2.map(([, group3]) =>
+        group3.map((card) => (
+          <ListViewRow
+            key={card._id}
+            card={card}
+            versions={versionDict[normalizeName(card.details.name)] || defaultVersions(card)}
+            versionsLoading={versionsLoading}
+            checked={checked.includes(card.index)}
+            onCheck={handleCheck}
+            addAlert={addAlert}
+          />
+        )),
+      ),
+    ),
+  );
 
-    const inputProps = (index, field) => ({
-      bsSize: 'sm',
-      name: `td${field}${index}`,
-      'data-index': index,
-      onChange: this.handleChange,
-      onBlur: this.handleBlur,
-      [field === 'check' ? 'checked' : 'value']: this.state[`td${field}${index}`],
-    });
+  const rowsFlat = [].concat(...[].concat(...[].concat(...rows)));
 
-    const rows = [].concat.apply(
-      [],
-      getLabels(primary)
-        .filter((label1) => groups[label1])
-        .map((label1) =>
-          [].concat.apply(
-            [],
-            getLabels(secondary)
-              .filter((label2) => groups[label1][label2])
-              .map((label2) =>
-                groups[label1][label2]
-                  .sort(function(a, b) {
-                    const textA = a.details.name.toUpperCase();
-                    const textB = b.details.name.toUpperCase();
-                    return textA < textB ? -1 : textA > textB ? 1 : 0;
-                  })
-                  .map(({ index, details, ...card }) => (
-                    <tr key={index} className={cardColorClass(card)}>
-                      <td className="align-middle">
-                        <Input {...inputProps(index, 'check')} type="checkbox" className="d-block mx-auto" />
-                      </td>
-                      <AutocardTd className="align-middle text-truncate" card={{ details, ...card }}>
-                        {details.name}
-                      </AutocardTd>
-                      <td>
-                        <Input
-                          {...inputProps(index, 'version')}
-                          type="select"
-                          style={{ maxWidth: '6rem' }}
-                          className="w-100"
-                        >
-                          {(this.state.versionDict[card.cardID] || []).map((version) => (
-                            <option key={version.id} value={version.id}>
-                              {version.version}
-                            </option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td>
-                        <Input {...inputProps(index, 'type')} type="text" />
-                      </td>
-                      <td>
-                        <Input {...inputProps(index, 'status')} type="select">
-                          {getLabels('Status').map((status) => (
-                            <option key={status}>{status}</option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td>
-                        <Input {...inputProps(index, 'cmc')} type="text" style={{ maxWidth: '3rem' }} />
-                      </td>
-                      <td>
-                        <Input {...inputProps(index, 'colors')} type="select">
-                          {colorCombos.map((combo) => (
-                            <option key={combo}>{combo}</option>
-                          ))}
-                        </Input>
-                      </td>
-                      <td style={{ minWidth: '15rem' }}>
-                        <TagInput
-                          tags={this.state[`tags${index}`]}
-                          addTag={this.addTag.bind(this, index)}
-                          deleteTag={this.deleteTag.bind(this, index)}
-                          reorderTag={this.reorderTag.bind(this, index)}
-                        />
-                      </td>
-                    </tr>
-                  )),
-              ),
-          ),
-        ),
-    );
-
-    return (
-      <form className="form-inline">
-        <PagedTable rows={rows} size="sm">
+  return (
+    <>
+      <Alerts alerts={alerts} />
+      <Form inline>
+        <PagedTable rows={rowsFlat} size="sm" className="list-view-table">
           <thead>
             <tr>
               <th className="align-middle">
-                <Input type="checkbox" className="d-block mx-auto" onChange={this.checkAll} />
+                <Input type="checkbox" className="d-block mx-auto" onChange={handleCheckAll} />
               </th>
               <th>Name</th>
               <th>Version</th>
               <th>Type</th>
               <th>Status</th>
-              <th>CMC</th>
+              <th>Finish</th>
+              <th>MV</th>
               <th>Color</th>
               <th>Tags</th>
             </tr>
           </thead>
         </PagedTable>
-      </form>
-    );
-  }
-}
+      </Form>
+    </>
+  );
+};
 
-const ListView = (props) => (
-  <SortContext.Consumer>
-    {(sortValue) => (
-      <TagContext.Consumer>
-        {({ cardColorClass }) => (
-          <GroupModalContext.Consumer>
-            {({ setGroupModalCards, openGroupModal }) => (
-              <ListViewRaw {...sortValue} {...{ cardColorClass, setGroupModalCards, openGroupModal }} {...props} />
-            )}
-          </GroupModalContext.Consumer>
-        )}
-      </TagContext.Consumer>
-    )}
-  </SortContext.Consumer>
-);
+ListView.propTypes = {
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+};
 
 export default ListView;

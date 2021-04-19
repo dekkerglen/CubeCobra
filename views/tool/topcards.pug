@@ -1,9 +1,0 @@
-extends ../layout
-
-block content
-  include ../flash
-  input(type='hidden', id='topcardsNumResults', value=numResults)
-  input(type='hidden', id='topcards', value=JSON.stringify(data))
-  #react-root
-  script(src='/js/autocard.js')
-  script(src='/js/topcards.bundle.js')

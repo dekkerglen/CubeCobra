@@ -1,0 +1,9 @@
+node_modules/
+cubecobrasecrets.example/
+dist/
+private/
+.docker/
+Dockerfile
+.git/
+.gitignore
+.github/

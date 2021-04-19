@@ -1,157 +1,566 @@
+// Load Environment Variables
+require('dotenv').config();
+
 const express = require('express');
-const quickselect = require('quickselect');
 
 const carddb = require('../serverjs/cards');
-const Filter = require('../dist/util/Filter');
+const cardutil = require('../dist/utils/Card.js');
+const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
+const { filterUses, filterUsedFields, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
+const generateMeta = require('../serverjs/meta.js');
+const util = require('../serverjs/util.js');
+const { render } = require('../serverjs/render');
 
-const CardRating = require('../models/cardrating');
+const CardHistory = require('../models/cardHistory');
+const Cube = require('../models/cube');
+const Deck = require('../models/deck');
+
+const { buildIdQuery } = require('../serverjs/cubefn.js');
 
 const router = express.Router();
 
-/* Minimum number of picks to show up in Top Cards list. */
-const MIN_PICKS = 40;
-/* Maximum results to return on a vague filter string. */
-const MAX_RESULTS = 1000;
+/* Minimum number of picks for data to show up in Top Cards list. */
+const MIN_PICKS = 100;
+/* Page size for results */
+const PAGE_SIZE = 96;
+/* Filter fields that need to be fetched from the database */
+const DB_FIELDS = ['picks', 'cubes'];
 
-/* Gets k sorted minimum elements of arr. */
-/* Modifies arr. */
-function sortLimit(arr, k, keyF) {
-  keyF = keyF || ((x) => x);
-  const compareF = (x, y) => keyF(x) - keyF(y);
-  if (k < arr.length) {
-    quickselect(arr, k, 0, arr.length - 1, compareF);
+async function matchingCards(filter) {
+  let cards = carddb.printedCardList; // all non-token, non-digital cards
+  const usesNonDbField = filterUsedFields(filter).some((field) => !DB_FIELDS.includes(field));
+  if (usesNonDbField) cards = filterCardsDetails(cards, filter);
+  // In the first pass, cards don't have picks or cube information, and so match all those filters.
+  // In the second pass, we add that information if needed.
+  if (DB_FIELDS.some((field) => filterUses(filter, field))) {
+    let dbFilter = {};
+    // if the filter uses *only* database fields, simply fetch the whole database without creating an ID query
+    if (usesNonDbField) {
+      const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
+      dbFilter = { oracleId: { $in: oracleIds } };
+    }
+
+    const historyObjects = await CardHistory.find(dbFilter, 'oracleId current.picks current.cubes').lean();
+    const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
+
+    cards = cards.map((card) => {
+      const history = historyDict.get(card.oracle_id);
+      return {
+        ...card,
+        picks: history ? history.current.picks : undefined,
+        cubes: history ? history.current.cubes : undefined,
+        secondPass: true,
+      };
+    });
+    return filterCardsDetails(cards, filter);
   }
-  const result = arr.slice(0, k);
-  result.sort(compareF);
-  return result;
+
+  return cards;
 }
 
-function matchingCards(filter) {
-  const cards = carddb.allCards();
-  if (filter.length > 0) {
-    return cards.filter((card) =>
-      Filter.filterCard(
-        {
-          details: card,
-        },
-        filter,
-        /* inCube */ false,
-      ),
-    );
-  } else {
-    return cards;
-  }
-}
+async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
+  let cards = await matchingCards(filter);
 
-function makeFilter(filterText) {
-  if (!filterText || filterText.trim() === '') {
-    return {
-      err: false,
-      filter: [],
-    };
+  const keys = new Set();
+  const filtered = [];
+  for (const card of cards) {
+    if (!keys.has(card.name_lower)) {
+      filtered.push(carddb.getMostReasonableById(card._id));
+      keys.add(card.name_lower);
+    }
+  }
+  cards = filtered;
+
+  const oracleIdMap = new Map();
+  for (const card of cards) {
+    if (oracleIdMap.has(card.oracle_id)) {
+      oracleIdMap.get(card.oracle_id).push(card);
+    } else {
+      oracleIdMap.set(card.oracle_id, [card]);
+    }
   }
 
-  const tokens = [];
-  const valid = Filter.tokenizeInput(filterText, tokens) && Filter.verifyTokens(tokens);
+  const oracleIds = [...oracleIdMap.keys()];
+  const query = filter
+    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
+    : { 'current.picks': { $gte: minPicks } };
+  const selectedVersions = new Map(
+    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
+      oracleId,
+      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
+    ]),
+  );
+
+  const sortName = `current.${sortField}`;
+  const sort = {};
+  sort[sortName] = direction === 'ascending' ? 1 : -1;
+
+  const dataQ = await CardHistory.find(query)
+    .sort(sort)
+    .skip(PAGE_SIZE * page)
+    .limit(PAGE_SIZE)
+    .lean();
+  const numResultsQ = CardHistory.countDocuments(query);
+
+  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
 
   return {
-    err: !valid,
-    filter: valid ? [Filter.parseTokens(tokens)] : [],
+    numResults,
+    data: data
+      .filter(({ oracleId }) => selectedVersions.has(oracleId))
+      .map(({ oracleId, current }) => {
+        const { elo, picks, cubes } = current;
+        const version = selectedVersions.get(oracleId);
+        return [
+          version.name,
+          version.image_normal,
+          version.image_flip || null,
+          Number.isFinite(picks) ? picks : 0,
+          Number.isFinite(elo) ? elo : null,
+          Number.isFinite(cubes) ? cubes : 0,
+        ];
+      }),
   };
 }
 
-function topCards(filter, res) {
-  const cards = matchingCards(filter);
-  const nameMap = new Map();
-  for (const card of cards) {
-    if (nameMap.has(card.name)) {
-      nameMap.get(card.name).push(card);
-    } else {
-      nameMap.set(card.name, [card]);
-    }
-  }
-  const names = [...nameMap.keys()];
-  const versions = [...nameMap.values()].map((possible) => {
-    // TODO: pull out and use notPromoOrDigitalId in cube_routes.js
-    let nonPromo = possible.find((card) => !card.promo && !card.digital && card.border_color != 'gold');
-    return nonPromo || possible[0];
-  });
+// sorts: ['elo', 'date', 'price', 'alphabetical']
+// direction: ['ascending', 'descending']
+// distinct: ['names', 'printings']
 
-  return CardRating.find({
-    name: {
-      $in: names,
-    },
-    picks: {
-      $gte: MIN_PICKS,
-    },
-  }).then((ratings) => {
-    const ratingDict = new Map(ratings.map((r) => [r.name, r]));
-    const fullData = versions.map((v) => {
-      const rating = ratingDict.get(v.name);
-      /* This is a Bayesian adjustment to the rating like IMDB does. */
-      const adjust = (r) => (r.picks * r.value + MIN_PICKS * 0.5) / (r.picks + MIN_PICKS);
-      return [
-        v.name,
-        v.image_normal,
-        v.image_flip || null,
-        rating ? adjust(rating) : null,
-        rating ? rating.picks : null,
-      ];
-    });
-    const nonNullData = fullData.filter((x) => x[3] !== null);
-    const data = sortLimit(nonNullData, MAX_RESULTS, (x) => (x[3] === null ? -1 : x[3]));
-    return {
-      ratings,
-      versions,
-      names,
-      data,
-    };
-  });
+const sortFunctions = {
+  elo: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.elo > b.elo) {
+      return factor;
+    }
+    if (a.elo < b.elo) {
+      return -factor;
+    }
+    return 0;
+  },
+  date: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if (a.released_at > b.released_at) {
+      return factor;
+    }
+    if (a.released_at < b.released_at) {
+      return -factor;
+    }
+    return 0;
+  },
+  price: (direction) => (a, b) => {
+    const factor = direction === 'ascending' ? 1 : -1;
+    if ((a.prices.usd || a.prices.usd_foil) > (b.prices.usd || b.prices.usd_foil)) {
+      return factor;
+    }
+    if ((a.prices.usd || a.prices.usd_foil) < (b.prices.usd || b.prices.usd_foil)) {
+      return -factor;
+    }
+    return 0;
+  },
+  alphabetical: (direction) => (a, b) => {
+    const factor = direction === 'descending' ? 1 : -1;
+    return a.name.localeCompare(b.name) * factor;
+  },
+};
+
+async function searchCards(filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') {
+  let cards = await matchingCards(filter);
+
+  if (distinct === 'names') {
+    const keys = new Set();
+    const filtered = [];
+    for (const card of cards) {
+      if (!keys.has(card.name_lower)) {
+        filtered.push(carddb.getMostReasonableById(card._id));
+        keys.add(card.name_lower);
+      }
+    }
+    cards = filtered;
+  }
+
+  cards = cards.sort(sortFunctions[sort](direction));
+
+  page = parseInt(page, 10);
+
+  return {
+    numResults: cards.length,
+    data: cards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+  };
 }
 
-router.get('/api/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
-  if (err) {
-    res.status(400).send({
-      success: 'false',
-    });
-    return;
-  }
-
-  topCards(filter, res)
-    .then(({ data, names }) => {
-      res.status(200).send({
-        success: 'true',
-        numResults: names.length,
-        data,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).send({
+router.get('/api/topcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
+    if (err) {
+      res.status(400).send({
         success: 'false',
+        numResults: 0,
+        data: [],
       });
+      return;
+    }
+    const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    res.status(200).send({
+      success: 'true',
+      ...results,
     });
+  } catch (err) {
+    req.logger.error(err);
+    res.status(500).send({
+      success: 'false',
+      numResults: 0,
+      data: [],
+    });
+  }
 });
 
-router.get('/topcards', (req, res) => {
-  const { err, filter } = makeFilter(req.query.f);
-
-  if (err) {
-    req.flash('Invalid filter.');
-  }
-
-  topCards(filter, res)
-    .then(({ data, names }) => {
-      res.render('tool/topcards', {
-        numResults: names.length,
-        data,
+router.get('/api/searchcards', async (req, res) => {
+  try {
+    const { err, filter } = makeFilter(req.query.f);
+    if (err) {
+      res.status(400).send({
+        success: 'false',
+        numResults: 0,
+        data: [],
       });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500);
+      return;
+    }
+    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
+    res.status(200).send({
+      success: 'true',
+      ...results,
     });
+  } catch (err) {
+    req.logger.error(err);
+    res.status(500).send({
+      success: 'false',
+      numResults: 0,
+      data: [],
+    });
+  }
+});
+
+router.get('/topcards', async (req, res) => {
+  try {
+    const { filter } = makeFilter(req.query.f);
+    const { data, numResults } = await topCards(filter, req.query.s, req.query.p, req.query.d);
+
+    return render(
+      req,
+      res,
+      'TopCardsPage',
+      {
+        data,
+        numResults,
+      },
+      {
+        title: 'Top Cards',
+      },
+    );
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/randomcard', async (req, res) => {
+  const card = carddb.allCards()[Math.floor(Math.random() * carddb.allCards().length)];
+  res.redirect(`/tool/card/${card.oracle_id}`);
+});
+
+router.get('/card/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    // otherwise just go to this ID.
+    let data = await CardHistory.findOne({ oracleId: card.oracle_id });
+    // id is valid but has no matching history
+    if (!data) {
+      data = getBlankCardHistory(id);
+    }
+    const related = {};
+
+    for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
+      related[category] = data.cubedWith[category].map((oracle) =>
+        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
+      );
+    }
+
+    return render(
+      req,
+      res,
+      'CardPage',
+      {
+        card,
+        data,
+        versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+        related,
+      },
+      {
+        title: `${card.name}`,
+        metadata: generateMeta(
+          `${card.name} - Cube Cobra`,
+          `Analytics for ${card.name} on CubeCobra`,
+          card.image_normal,
+          `https://cubecobra.com/card/${req.params.id}`,
+        ),
+      },
+    );
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimage/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_normal);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const cube = await Cube.findOne(buildIdQuery(req.params.cubeid), 'cards').lean();
+
+    const found = cube.cards
+      .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
+      .find(
+        (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,
+      );
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(found ? found.cardID : '');
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_normal);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/cardimageflip/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName)._id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    return res.redirect(card.image_flip);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+const cubePageSize = 100;
+
+router.get('/api/downloadcubes/:page/:key', async (req, res) => {
+  try {
+    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
+      return res.status(401).send({
+        success: 'false',
+      });
+    }
+
+    const count = await Cube.estimatedDocumentCount();
+    if (req.params.page * cubePageSize > count) {
+      return res.status(400).send({
+        message: 'Page exceeds collection size',
+        success: 'false',
+      });
+    }
+
+    let cubeQ;
+    if (req.query.prevMax) {
+      cubeQ = Deck.find({ shortID: { $gt: req.query.prevMax } }, 'cards shortID')
+        .sort({ shortID: 1 })
+        .limit(cubePageSize)
+        .lean();
+    } else {
+      cubeQ = Deck.find({}, 'cards shortID')
+        .sort({ shortID: 1 })
+        .skip(req.params.page * cubePageSize)
+        .limit(cubePageSize)
+        .lean();
+    }
+    const cubes = await cubeQ;
+
+    const prevMax = cubes[cubes.length - 1].shortID;
+    return res.status(200).send({
+      success: 'true',
+      prevMax,
+      pages: Math.ceil(count / cubePageSize),
+      cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
+    });
+  } catch (err) {
+    return res.status(500).send({
+      message: err.message,
+      success: 'false',
+    });
+  }
+});
+
+const deckPageSize = 1000;
+
+router.get('/api/downloaddecks/:page/:key', async (req, res) => {
+  try {
+    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
+      return res.status(401).send({
+        success: 'false',
+      });
+    }
+
+    const count = await Deck.estimatedDocumentCount();
+    if (req.params.page * deckPageSize > count) {
+      return res.status(400).send({
+        message: 'Page exceeds collection size',
+        success: 'false',
+      });
+    }
+
+    let deckQ;
+    if (req.query.prevMax) {
+      deckQ = Deck.find({ date: { $gt: req.query.prevMax } }, 'seats date')
+        .sort({ date: 1 })
+        .limit(deckPageSize)
+        .lean();
+    } else {
+      deckQ = Deck.find({}, 'seats date')
+        .sort({ date: 1 })
+        .skip(req.params.page * deckPageSize)
+        .limit(deckPageSize)
+        .lean();
+    }
+    const decks = await deckQ;
+
+    const prevMax = decks[decks.length - 1].date;
+
+    return res.status(200).send({
+      success: 'true',
+      prevMax,
+      pages: Math.ceil(count / deckPageSize),
+      decks: decks.map((deck) => {
+        const main = [];
+        const side = [];
+
+        if (deck.seats[0] && deck.seats[0].deck) {
+          for (const col of deck.seats[0].deck) {
+            for (const card of col) {
+              if (card && card.cardID) {
+                main.push(carddb.cardFromId(card.cardID).name_lower);
+              }
+            }
+          }
+        }
+
+        if (deck.seats[0] && deck.seats[0].sideboard) {
+          for (const col of deck.seats[0].sideboard) {
+            for (const card of col) {
+              side.push(carddb.cardFromId(card.cardID).name_lower);
+            }
+          }
+        }
+
+        return { main, side };
+      }),
+    });
+  } catch (err) {
+    return res.status(500).send({
+      message: err.message,
+      success: 'false',
+    });
+  }
+});
+
+router.get('/searchcards', async (req, res) => {
+  return render(
+    req,
+    res,
+    'CardSearchPage',
+    {},
+    {
+      title: 'Search Cards',
+    },
+  );
 });
 
 module.exports = router;

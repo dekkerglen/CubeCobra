@@ -1,60 +1,37 @@
-import React, { Component } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 
-import { Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
+import { Table } from 'reactstrap';
 
-class PagedTable extends Component {
-  constructor(props) {
-    super(props);
+import Paginate from 'components/Paginate';
+import useQueryParam from 'hooks/useQueryParam';
 
-    this.state = { page: 0 };
+const PagedTable = ({ pageSize, rows, children, ...props }) => {
+  const [page, setPage] = useQueryParam('page', '0');
 
-    this.setPage = this.setPage.bind(this);
-  }
+  const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
+  const current = Math.min(parseInt(page, 10), validPages.length - 1);
+  const displayRows = rows.slice(current * pageSize, (current + 1) * pageSize);
 
-  setPage(event) {
-    event.preventDefault();
-    this.setState({
-      page: parseInt(event.target.getAttribute('page')),
-    });
-  }
+  return (
+    <>
+      {validPages.length > 1 && <Paginate count={validPages.length} active={current} onClick={(i) => setPage(i)} />}
+      <div className="table-responsive">
+        <Table {...props}>
+          {children}
+          <tbody>{displayRows}</tbody>
+        </Table>
+      </div>
+      {validPages.length > 1 && <Paginate count={validPages.length} active={current} onClick={(i) => setPage(i)} />}
+    </>
+  );
+};
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.rows.length !== this.props.rows.length) {
-      this.setState({ page: 0 });
-    }
-  }
-
-  render() {
-    const { pageSize, rows, children, ...props } = this.props;
-    const { page } = this.state;
-    const displayRows = rows.slice(page * pageSize, (page + 1) * pageSize);
-    const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
-
-    return (
-      <>
-        {validPages.length === 1 ? (
-          ''
-        ) : (
-          <Pagination aria-label="Table page" className="mt-3">
-            {validPages.map((page) => (
-              <PaginationItem key={page} active={page === this.state.page}>
-                <PaginationLink tag="a" href="#" page={page} onClick={this.setPage}>
-                  {page + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-          </Pagination>
-        )}
-        <div className="table-responsive">
-          <Table {...props}>
-            {children}
-            <tbody>{displayRows}</tbody>
-          </Table>
-        </div>
-      </>
-    );
-  }
-}
+PagedTable.propTypes = {
+  children: PropTypes.element.isRequired,
+  pageSize: PropTypes.number,
+  rows: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+};
 
 PagedTable.defaultProps = {
   pageSize: 60,

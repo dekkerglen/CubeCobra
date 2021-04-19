@@ -15,9 +15,10 @@ import {
   Row,
 } from 'reactstrap';
 
-import { arrayMove } from '../util/Util';
+import { arrayMove } from '../utils/Util';
 
-import TagContext, { getTagColorClass } from './TagContext';
+import LoadingButton from './LoadingButton';
+import TagContext, { getTagColorClass, TAG_COLORS } from 'contexts/TagContext';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
@@ -37,8 +38,8 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) => (
       <div className={tagClass}>{tag}</div>
     </Col>
     <Col className="d-flex flex-column justify-content-center">
-      <Input type="select" size="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
-        {TagContext.colors.map(([name, value]) => (
+      <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
+        {TAG_COLORS.map(([name, value]) => (
           <option key={value || 'none'} value={value || 'none'}>
             {name}
           </option>
@@ -105,11 +106,20 @@ class TagColorsModalRaw extends Component {
     });
   }
 
-  handleSortEnd({ oldIndex, newIndex }) {
+  layoutTagColors() {
     const { allTags } = this.props;
     const { tagColors } = this.state;
-    const filteredTags = allTags.filter((tag) => !tagColors.some((tagColor) => tag === tagColor.tag));
-    const allTagColors = [...this.state.tagColors, ...filteredTags.map((tag) => ({ tag, color: null }))];
+
+    const knownTags = tagColors.map(({ tag }) => tag);
+    const knownTagColors = tagColors.filter(({ tag }) => allTags.includes(tag));
+    const unknownTags = allTags.filter((tag) => !knownTags.includes(tag));
+    const unknownTagColors = unknownTags.map((tag) => ({ tag, color: null }));
+
+    return [...knownTagColors, ...unknownTagColors];
+  }
+
+  handleSortEnd({ oldIndex, newIndex }) {
+    const allTagColors = this.layoutTagColors();
     this.setState({
       tagColors: arrayMove(allTagColors, oldIndex, newIndex),
     });
@@ -119,13 +129,10 @@ class TagColorsModalRaw extends Component {
     const { canEdit, isOpen, toggle, allTags } = this.props;
     const { tagColors, showTagColors } = this.state;
 
-    const knownTags = tagColors.map(({ tag, color }) => tag);
-    const unknownTags = allTags.filter((tag) => !knownTags.includes(tag));
-    const unknownTagColors = unknownTags.map((tag) => ({ tag, color: null }));
-    const orderedTags = [...tagColors, ...unknownTagColors];
+    const orderedTags = this.layoutTagColors();
 
     const editableRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `tag-item ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
       return {
         element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={this.handleChangeColor} />,
         key: tag,
@@ -133,7 +140,7 @@ class TagColorsModalRaw extends Component {
     });
 
     const staticRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `mr-2 tag-item ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `mr-2 tag ${getTagColorClass(tagColors, tag)}`;
       return (
         <span key={tag} className={tagClass}>
           {tag}
@@ -167,9 +174,9 @@ class TagColorsModalRaw extends Component {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button color="success" className="ml-auto" onClick={this.handleSubmit}>
+          <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
             Submit
-          </Button>
+          </LoadingButton>
         </ModalFooter>
       </Modal>
     );

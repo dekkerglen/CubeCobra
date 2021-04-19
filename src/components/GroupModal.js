@@ -1,11 +1,13 @@
-import React, { Component } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import {
   Button,
   Row,
   Col,
+  CustomInput,
   Form,
   FormGroup,
+  FormText,
   Input,
   Label,
   InputGroup,
@@ -19,84 +21,59 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-import { csrfFetch } from '../util/CSRF';
-import { fromEntries } from '../util/Util';
+import { csrfFetch } from 'utils/CSRF';
+import { fromEntries } from 'utils/Util';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
 
-import AutocardListItem from './AutocardListItem';
-import ColorCheck from './ColorCheck';
-import GroupModalContext from './GroupModalContext';
-import MassBuyButton from './MassBuyButton';
-import TagInput from './TagInput';
+import AutocardListItem from 'components/AutocardListItem';
+import ChangelistContext from 'contexts/ChangelistContext';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import CubeContext from 'contexts/CubeContext';
+import GroupModalContext from 'contexts/GroupModalContext';
+import LoadingButton from 'components/LoadingButton';
+import MassBuyButton from 'components/MassBuyButton';
+import TagInput from 'components/TagInput';
+import TextBadge from 'components/TextBadge';
+import Tooltip from 'components/Tooltip';
 
-class GroupModal extends Component {
-  constructor(props) {
-    super(props);
+const DEFAULT_FORM_VALUES = {
+  status: '',
+  finish: '',
+  cmc: '',
+  type_line: '',
+  ...fromEntries([...'WUBRGC'].map((c) => [`color${c}`, false])),
+  addTags: true,
+  deleteTags: false,
+  tags: [],
+  tagInput: '',
+};
 
-    this.state = {
-      isOpen: false,
-      cards: [],
-      alerts: [],
-      status: '',
-      cmc: '',
-      type_line: '',
-      ...fromEntries([...'WUBRGC'].map((c) => [`color${c}`, false])),
-      addTags: true,
-      deleteTags: false,
-      tags: [],
-    };
+const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [cardIndices, setCardIndices] = useState([]);
+  const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
 
-    this.open = this.open.bind(this);
-    this.setCards = this.setCards.bind(this);
-    this.close = this.close.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleRemoveCard = this.handleRemoveCard.bind(this);
-    this.addTag = this.addTag.bind(this);
-    this.deleteTag = this.deleteTag.bind(this);
-    this.reorderTag = this.reorderTag.bind(this);
-    this.handleApply = this.handleApply.bind(this);
-    this.handleRemoveAll = this.handleRemoveAll.bind(this);
+  const { cube, updateCubeCards } = useContext(CubeContext);
+  const { addChanges } = useContext(ChangelistContext);
 
-    this.tagActions = {
-      addTag: this.addTag,
-      deleteTag: this.deleteTag,
-      reorderTag: this.reorderTag,
-    };
-  }
+  const open = useCallback(() => {
+    setFormValues(DEFAULT_FORM_VALUES);
+    setIsOpen(true);
+  });
+  const close = useCallback(() => setIsOpen(false));
 
-  open() {
-    this.setState({
-      isOpen: true,
-      status: '',
-      cmc: '',
-      type_line: '',
-      ...fromEntries([...'WUBRGC'].map((c) => [`color${c}`, false])),
-      addTags: true,
-      deleteTags: false,
-      tags: [],
-    });
-  }
+  const error = useCallback((message) => {
+    setAlerts((alerts) => [
+      ...alerts,
+      {
+        color: 'danger',
+        message,
+      },
+    ]);
+  });
 
-  setCards(cards) {
-    this.setState({ cards });
-  }
-
-  close() {
-    this.setState({ isOpen: false });
-  }
-
-  error(message) {
-    this.setState(({ alerts }) => ({
-      alerts: [
-        ...alerts,
-        {
-          color: 'danger',
-          message,
-        },
-      ],
-    }));
-  }
-
-  handleChange(event) {
+  const handleChange = useCallback((event) => {
     const target = event.target;
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
     const name = target.name;
@@ -107,261 +84,298 @@ class GroupModal extends Component {
     if (name === 'deleteTags') {
       extra.addTags = false;
     }
-
-    this.setState({
+    setFormValues((formValues) => ({
+      ...formValues,
       [name]: value,
       ...extra,
-    });
-  }
+    }));
+  });
 
-  handleRemoveCard(event) {
+  const handleRemoveCard = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.currentTarget;
     const index = target.getAttribute('data-index');
-    console.log('handle', target);
-    this.setState(({ cards }) => ({
-      cards: cards.filter((c) => c.index !== parseInt(index)),
-    }));
-  }
 
-  addTag(tag) {
-    this.setState(({ tags }) => ({
-      tags: [...tags, tag],
-    }));
-  }
+    if (cards.length == 1) {
+      close();
+    } else {
+      setCardIndices((cards) => cards.filter((c) => c !== parseInt(index)));
+    }
+  });
 
-  deleteTag(tagIndex) {
-    this.setState(({ tags }) => ({
-      tags: tags.filter((tag, i) => i !== tagIndex),
-    }));
-  }
+  const setTagInput = useCallback((value) =>
+    setFormValues((formValues) => ({
+      ...formValues,
+      tagInput: value,
+    })),
+  );
 
-  reorderTag(tag, currIndex, newIndex) {
-    this.setState(({ tags }) => {
-      const copy = [...tags];
-      copy.splice(currIndex, 1);
-      copy.splice(newIndex, 0, tag);
-      return { tags: copy };
-    });
-  }
+  const setTags = useCallback((tagF) => {
+    setFormValues(({ tags, ...formValues }) => ({ ...formValues, tags: tagF(tags) }));
+  });
+  const addTag = useCallback((tag) => {
+    setTags((tags) => [...tags, tag]);
+    setTagInput('');
+  });
+  const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag.trim(), id: tag.trim() }));
+  const deleteTag = useCallback((tagIndex) => {
+    setTags((tags) => tags.filter((tag, i) => i !== tagIndex));
+  });
+  const reorderTag = useCallback((tag, currIndex, newIndex) => {
+    setTags((tags) => arrayMove(tags, currIndex, newIndex));
+  });
 
-  async handleApply(event) {
-    event.preventDefault();
-    const { cards, status, cmc, type_line, colorC, addTags, deleteTags } = this.state;
-    const { cubeID } = this.props;
-    const tags = this.state.tags.map((tag) => tag.text);
+  const handleApply = useCallback(
+    async (event) => {
+      event.preventDefault();
 
-    const selected = cards.map((card) => ({ index: card.index }));
-    const colors = [...'WUBRG'].filter((color) => this.state[`color${color}`]);
-    const updated = {
-      status: status || undefined,
-      cmc: parseInt(cmc) || undefined,
-      type_line: type_line || undefined,
-      colors: colors.length > 0 ? colors : undefined,
-      colorC: colorC || undefined,
-      tags: tags || undefined,
-      addTags,
-      deleteTags,
-    };
-    const response = await csrfFetch(`/cube/api/updatecards/${cubeID}`, {
-      method: 'POST',
-      body: JSON.stringify({ selected, updated }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch((err) => this.error(err));
-    const json = await response.json().catch((err) => this.error(err));
-    if (json.success === 'true') {
-      // Make shallow copy of each card.
-      const updatedCards = cards.map((card) => ({ ...card }));
-      for (const card of updatedCards) {
-        if (status) {
-          card.status = status;
-        }
-        if (cmc) {
-          card.cmc = cmc;
-        }
-        if (type_line) {
-          card.type_line = type_line;
-        }
-        if (addTags) {
-          card.tags = [...card.tags, ...tags.filter((tag) => !card.tags.includes(tag))];
-        }
-        if (deleteTags) {
-          card.tags = card.tags.filter((tag) => !tags.includes(tag));
-        }
-
-        if (colors.length > 0) {
-          card.colors = [...colors];
-        }
-        if (colorC) {
-          card.colors = [];
-        }
-        cube[card.index] = card;
-        cubeDict[card.index] = card;
+      const selected = cardIndices;
+      const colors = [...'WUBRG'].filter((color) => formValues[`color${color}`]);
+      const updated = {
+        ...formValues,
+        tags: formValues.tags.map((tag) => tag.text),
+      };
+      updated.cmc = parseInt(updated.cmc);
+      if (isNaN(updated.cmc)) {
+        delete updated.cmc;
       }
-      /* global */ updateCubeList();
+      updated.colors = colors;
+      if (updated.colors.length === 0) {
+        delete updated.colors;
+      }
+      [...'WUBRG'].forEach((color) => delete updated[`color${color}`]);
 
-      this.close();
-    }
+      try {
+        const response = await csrfFetch(`/cube/api/updatecards/${cubeID}`, {
+          method: 'POST',
+          body: JSON.stringify({ selected, updated }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await response.json();
+        if (json.success === 'true') {
+          // Make shallow copy of each card.
+          const updatedCards = cardIndices.map((index) => ({ ...cube.cards[index] }));
+          for (const card of updatedCards) {
+            updated.status && (card.status = updated.status);
+            updated.finish && (card.finish = updated.finish);
+            !isNaN(updated.cmc) && (card.cmc = updated.cmc);
+            updated.type_line && (card.type_line = updated.type_line);
+            if (updated.addTags) {
+              card.tags = [...card.tags, ...updated.tags.filter((tag) => !card.tags.includes(tag))];
+            }
+            if (updated.deleteTags) {
+              card.tags = card.tags.filter((tag) => !updated.tags.includes(tag));
+            }
+
+            if (colors.length > 0) {
+              card.colors = [...colors];
+            }
+            if (updated.colorC) {
+              card.colors = [];
+            }
+          }
+          updateCubeCards(updatedCards);
+
+          close();
+        }
+      } catch (e) {
+        console.error(e);
+        error(e);
+      }
+    },
+    [cardIndices, formValues, updateCubeCards, close, error],
+  );
+
+  const handleRemoveAll = useCallback(
+    (event) => {
+      event.preventDefault();
+      addChanges(
+        cardIndices.map((index) => ({
+          remove: cube.cards[index],
+        })),
+      );
+      close();
+    },
+    [addChanges, cardIndices, cube, close],
+  );
+
+  const cards = cardIndices.map((index) => cube.cards[index]);
+  const setCards = useCallback((cards) => setCardIndices(cards.map((card) => card.index)));
+
+  const contextChildren = (
+    <GroupModalContext.Provider value={{ groupModalCards: cards, openGroupModal: open, setGroupModalCards: setCards }}>
+      {children}
+    </GroupModalContext.Provider>
+  );
+
+  if (!canEdit) {
+    return contextChildren;
   }
 
-  handleRemoveAll(event) {
-    event.preventDefault();
-    /* global */
-    changes = changes.concat(
-      this.state.cards.map((card) => ({
-        remove: card.details,
-      })),
-    );
-    editListeners.forEach((listener) => listener());
-    updateCollapse();
-    this.props.setOpenCollapse(() => 'edit');
-    this.close();
-  }
+  const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
+  const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
+  const totalPriceEur = cards.length ? cards.reduce((total, card) => total + (cardPriceEur(card) ?? 0), 0) : 0;
+  const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
-  render() {
-    const { cubeID, canEdit, setOpenCollapse, children, ...props } = this.props;
-    const { isOpen, cards, alerts, status, cmc, type_line, addTags, deleteTags, tags } = this.state;
-    const tcgplayerMassEntryUrl =
-      'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
-      '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
-
-    const contextChildren = (
-      <GroupModalContext.Provider
-        value={{ groupModalCards: cards, openGroupModal: this.open, setGroupModalCards: this.setCards }}
-      >
-        {children}
-      </GroupModalContext.Provider>
-    );
-
-    if (!canEdit) {
-      return contextChildren;
-    }
-
-    const accumulator = (total, card) => total + (card.details.price || 0);
-    const accumulatorFoil = (total, card) => total + (card.details.price_foil || 0);
-    const totalPrice = cards.length ? cards.reduce(accumulator, 0) : 0;
-    const totalPriceFoil = cards.length ? cards.reduce(accumulatorFoil, 0) : 0;
-
-    const checkColors = [
-      ['White', 'W'],
-      ['Blue', 'U'],
-      ['Black', 'B'],
-      ['Red', 'R'],
-      ['Green', 'G'],
-      ['Colorless', 'C'],
-    ];
-    return (
-      <>
-        {contextChildren}
-        <Modal size="lg" isOpen={isOpen} toggle={this.close} {...props}>
-          <ModalHeader toggle={this.close}>Edit Selected</ModalHeader>
-          <ModalBody>
-            {alerts.map(({ color, message }) => (
-              <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
-            ))}
-            <Row>
-              <Col xs="4" style={{ maxHeight: '35rem', overflow: 'scroll' }}>
-                <ListGroup className="list-outline">
+  return (
+    <>
+      {contextChildren}
+      <Modal size="lg" isOpen={isOpen} toggle={close} {...props}>
+        <ModalHeader toggle={close}>Edit Selected</ModalHeader>
+        <ModalBody>
+          {alerts.map(({ color, message }) => (
+            <UncontrolledAlert color={color}>{message}</UncontrolledAlert>
+          ))}
+          <Row>
+            <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
+              <Row noGutters className="w-100" style={{ overflow: 'scroll', flexShrink: 1 }}>
+                <ListGroup className="list-outline w-100">
                   {cards.map((card) => (
-                    <AutocardListItem key={card.index} card={card} noCardModal>
-                      <Button
-                        close
-                        className="float-none mr-1"
-                        data-index={card.index}
-                        onClick={this.handleRemoveCard}
-                      />
+                    <AutocardListItem key={card.index} card={card} noCardModal inModal>
+                      <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
                     </AutocardListItem>
                   ))}
                 </ListGroup>
-              </Col>
-              <Col xs="8">
-                <Form>
-                  <Label for="groupStatus">
-                    <h5>Set Status of All</h5>
-                  </Label>
-                  <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Status</InputGroupText>
-                    </InputGroupAddon>
-                    <Input type="select" id="groupStatus" name="status" value={status} onChange={this.handleChange}>
-                      {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned'].map((status) => (
-                        <option key={status}>{status}</option>
-                      ))}
-                    </Input>
-                  </InputGroup>
-
-                  <h5>Override Attribute on All</h5>
-                  <InputGroup className="mb-2">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>CMC</InputGroupText>
-                    </InputGroupAddon>
-                    <Input type="text" name="cmc" value={cmc} onChange={this.handleChange} />
-                  </InputGroup>
-                  <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Type</InputGroupText>
-                    </InputGroupAddon>
-                    <Input type="text" name="type_line" value={type_line} onChange={this.handleChange} />
-                  </InputGroup>
-
-                  <h5>Color Identity Override</h5>
-                  <div>
-                    {checkColors.map((color) => (
-                      <ColorCheck
-                        key={color[1]}
-                        color={color[0]}
-                        short={color[1]}
-                        value={this.state['color' + color[1]]}
-                        onChange={this.handleChange}
-                      />
+              </Row>
+              <Row noGutters>
+                {Number.isFinite(totalPriceUsd) && (
+                  <TextBadge name="Price USD" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceUsdFoil) && (
+                  <TextBadge name="Foil USD" className="mt-2 mr-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceEur) && (
+                  <TextBadge name="EUR" className="mt-2 mr-2">
+                    <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceTix) && (
+                  <TextBadge name="TIX" className="mt-2 mr-2">
+                    <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+              </Row>
+            </Col>
+            <Col xs="8">
+              <Form>
+                <Label for="groupStatus">
+                  <h5>Set Status of All</h5>
+                </Label>
+                <InputGroup className="mb-3">
+                  <InputGroupAddon addonType="prepend">
+                    <InputGroupText>Status</InputGroupText>
+                  </InputGroupAddon>
+                  <CustomInput
+                    type="select"
+                    id="groupStatus"
+                    name="status"
+                    value={formValues.status}
+                    onChange={handleChange}
+                  >
+                    {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
+                      <option key={status}>{status}</option>
                     ))}
-                  </div>
-                  <p>
-                    <em>
-                      Selecting no mana symbols will cause the selected cards' color identity to remain unchanged.
-                      Selecting only colorless will cause the selected cards' color identity to be set to colorless.
-                    </em>
-                  </p>
-                  <h5>Edit Tags</h5>
-                  <FormGroup tag="fieldset">
-                    <FormGroup check>
-                      <Label check>
-                        <Input type="radio" name="addTags" checked={addTags} onChange={this.handleChange} /> Add tags to
-                        all
-                      </Label>
-                    </FormGroup>
-                    <FormGroup check>
-                      <Label check>
-                        <Input type="radio" name="deleteTags" checked={deleteTags} onChange={this.handleChange} />{' '}
-                        Delete tags from all
-                      </Label>
-                    </FormGroup>
+                  </CustomInput>
+                </InputGroup>
+
+                <Label for="groupStatus">
+                  <h5>Set Finish of All</h5>
+                </Label>
+                <InputGroup className="mb-3">
+                  <InputGroupAddon addonType="prepend">
+                    <InputGroupText>Finish</InputGroupText>
+                  </InputGroupAddon>
+                  <CustomInput
+                    type="select"
+                    id="groupFinish"
+                    name="finish"
+                    value={formValues.finish}
+                    onChange={handleChange}
+                  >
+                    {['', 'Non-foil', 'Foil'].map((finish) => (
+                      <option key={finish}>{finish}</option>
+                    ))}
+                  </CustomInput>
+                </InputGroup>
+
+                <h5>Override Attribute on All</h5>
+                <InputGroup className="mb-2">
+                  <InputGroupAddon addonType="prepend">
+                    <InputGroupText>Mana Value</InputGroupText>
+                  </InputGroupAddon>
+                  <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
+                </InputGroup>
+                <InputGroup className="mb-2">
+                  <InputGroupAddon addonType="prepend">
+                    <InputGroupText>Type</InputGroupText>
+                  </InputGroupAddon>
+                  <Input type="text" name="type_line" value={formValues.type_line} onChange={handleChange} />
+                </InputGroup>
+
+                <InputGroup>
+                  <InputGroupText className="square-right">Color Identity</InputGroupText>
+                  <ColorChecksAddon
+                    addonType="append"
+                    colorless
+                    prefix="color"
+                    values={formValues}
+                    onChange={handleChange}
+                  />
+                </InputGroup>
+                <FormText>
+                  Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
+                  only colorless will cause the selected cards' color identity to be set to colorless.
+                </FormText>
+
+                <h5 className="mt-3">Edit Tags</h5>
+                <FormGroup tag="fieldset">
+                  <FormGroup check>
+                    <Label check>
+                      <Input type="radio" name="addTags" checked={formValues.addTags} onChange={handleChange} /> Add
+                      tags to all
+                    </Label>
                   </FormGroup>
-                  <TagInput tags={tags} {...this.tagActions} />
-                </Form>
-              </Col>
-            </Row>
-            <Row>
-              <Col xs="4">
-                <div className="card-price">Total Price: ${totalPrice.toFixed(2)}</div>
-                <div className="card-price">Total Foil Price: ${totalPriceFoil.toFixed(2)}</div>
-              </Col>
-            </Row>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" onClick={this.handleRemoveAll}>
-              Remove all from cube
-            </Button>
-            <MassBuyButton cards={cards}>Buy all</MassBuyButton>
-            <Button color="success" onClick={this.handleApply}>
-              Apply to all
-            </Button>
-          </ModalFooter>
-        </Modal>
-      </>
-    );
-  }
-}
+                  <FormGroup check>
+                    <Label check>
+                      <Input type="radio" name="deleteTags" checked={formValues.deleteTags} onChange={handleChange} />{' '}
+                      Delete tags from all
+                    </Label>
+                  </FormGroup>
+                </FormGroup>
+                <TagInput
+                  tags={formValues.tags}
+                  inputValue={formValues.tagInput}
+                  handleInputChange={setTagInput}
+                  handleInputBlur={addTagText}
+                  addTag={addTag}
+                  deleteTag={deleteTag}
+                  reorderTag={reorderTag}
+                />
+              </Form>
+            </Col>
+          </Row>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="danger" onClick={handleRemoveAll}>
+            Remove all from cube
+          </Button>
+          <MassBuyButton cards={cards}>Buy all</MassBuyButton>
+          <LoadingButton color="success" onClick={handleApply}>
+            Apply to all
+          </LoadingButton>
+        </ModalFooter>
+      </Modal>
+    </>
+  );
+};
 
 export default GroupModal;

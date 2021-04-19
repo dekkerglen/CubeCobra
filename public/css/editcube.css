@@ -1,22 +1,67 @@
 .clickx
 {
-	color:black;
+	color:var(--text);
 	font-weight: bold;
 	text-decoration:none;
 }
 .clickx:hover
 {
-	color:red;
+	color:var(--danger);
 	font-weight: bold;
 	text-decoration:none;
+}
+
+.changelist-container {
+	max-height: 19rem;
+	overflow: auto;
+}
+
+.changelist {
+	padding-left: 0;
+	margin-bottom: 0;
+}
+
+.changelist li {
+	list-style-type: none;
+}
+
+.blogpost-editor {
+	min-height: 12rem;
+	padding: 0.375rem;
+}
+
+.autocomplete-list {
+	position: absolute;
+	z-index: 100;
+	padding: 0;
+	border: 1px solid var(--border);
+	background-color: var(--bg);
+}
+
+.autocomplete-list li {
+	list-style-type: none;
+	padding: 0.5rem;
+}
+
+.autocomplete-list li:not(:first-child) {
+	border-top: 1px solid var(--border);
+}
+
+.autocomplete-list li:hover {
+	background-color: var(--bg-hover);
+}
+
+.autocomplete-list li.active {
+	background-color: var(--success) !important;
+	color: var(--bg);
 }
 
 .compare-header
 {
 	margin-top:40px;
     margin-bottom: 10px;
-	background:#F4F4F4;
-	border:1px solid #bbb;
+	background:var(--header);
+	border:1px solid var(--border-dark);
 	border-radius:5px;
 }
 
@@ -25,14 +70,9 @@
 	margin-top:0px;
 }
 
-.cmc-group
-{
-	background:#fbfbfb;
-}
-
 .tag-color-container {
   padding-bottom: 1px;
-  background-color: #dee2e6;
+  background-color: var(--header);
 }
 
 .tag-color-row {
@@ -43,5 +83,5 @@
 #showTagColors {
   padding: 20px;
   padding-left: 45px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-light);
 }

@@ -1,40 +1,29 @@
-import React, { Component } from 'react';
+import React, { useMemo } from 'react';
 
 import { UncontrolledAlert } from 'reactstrap';
 
-const colorMap = {
-  info: 'info',
-  alert: 'alert',
-  error: 'danger',
+const DynamicFlash = (props) => {
+  const messages = useMemo(() => {
+    if (typeof document !== 'undefined') {
+      const flashInput = document.getElementById('flash');
+      const flashValue = flashInput ? flashInput.value : '[]';
+      return JSON.parse(flashValue);
+    } else {
+      return [];
+    }
+  }, []);
+
+  return (
+    <div className="mt-3">
+      {Object.keys(messages).map((type) =>
+        messages[type].map((message, index) => (
+          <UncontrolledAlert key={type + index} color={type} {...props}>
+            {message}
+          </UncontrolledAlert>
+        )),
+      )}
+    </div>
+  );
 };
-
-class DynamicFlash extends Component {
-  constructor(props) {
-    super(props);
-
-    const flashInput = document.getElementById('flash');
-    const flashValue = flashInput ? flashInput.value : '[]';
-    this.state = {
-      messages: JSON.parse(flashValue),
-    };
-  }
-
-  render() {
-    return (
-      <>
-        {[].concat.apply(
-          [],
-          Object.keys(this.state.messages).map((type) =>
-            this.state.messages[type].map((message, index) => (
-              <UncontrolledAlert className="mb-0 mt-3" key={type + index} color={type}>
-                {message}
-              </UncontrolledAlert>
-            )),
-          ),
-        )}
-      </>
-    );
-  }
-}
 
 export default DynamicFlash;

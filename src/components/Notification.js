@@ -1,8 +1,7 @@
 import React from 'react';
+import TimeAgo from 'react-timeago';
 
-import AgeText from './AgeText';
-
-class DeckPreview extends React.Component {
+class Notification extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -18,7 +17,7 @@ class DeckPreview extends React.Component {
             <a href={'/user/view/' + notification.user_from}>{notification.user_from_name}</a>
             <a href={notification.url}>{texts[1]}</a>
             {' - '}
-            <AgeText date={notification.date} />
+            <TimeAgo date={notification.date} />
           </h6>
         </div>
       </a>
@@ -26,4 +25,4 @@ class DeckPreview extends React.Component {
   }
 }
 
-export default DeckPreview;
+export default Notification;

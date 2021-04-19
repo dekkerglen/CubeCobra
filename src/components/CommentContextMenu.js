@@ -1,37 +1,30 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Collapse } from 'reactstrap';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
-class BlogContextMenu extends React.Component {
-  constructor(props) {
-    super(props);
-    this.toggle = this.toggle.bind(this);
-    this.state = {
-      dropdownOpen: false,
-      collapseOpen: false,
-    };
-  }
+import useToggle from 'hooks/UseToggle';
 
-  toggle(event) {
-    this.setState({
-      dropdownOpen: !this.state.dropdownOpen,
-    });
-    updateBlog();
-  }
+const CommentContextMenu = ({ edit, remove, children }) => {
+  const [open, toggle] = useToggle(false);
 
-  render() {
-    return (
-      <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
-        <DropdownToggle tag="a" className="nav-link clickable">
-          {this.props.value}
-        </DropdownToggle>
-        <DropdownMenu right>
-          <DropdownItem onClick={this.props.edit}>Edit</DropdownItem>
-          <DropdownItem onClick={this.props.delete}>Delete</DropdownItem>
-        </DropdownMenu>
-      </Dropdown>
-    );
-  }
-}
+  return (
+    <Dropdown isOpen={open} toggle={toggle}>
+      <DropdownToggle tag="a" className="nav-link clickable py-0">
+        {children}
+      </DropdownToggle>
+      <DropdownMenu right>
+        <DropdownItem onClick={edit}>Edit</DropdownItem>
+        <DropdownItem onClick={remove}>Delete</DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
+  );
+};
 
-export default BlogContextMenu;
+CommentContextMenu.propTypes = {
+  edit: PropTypes.func.isRequired,
+  remove: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};
+
+export default CommentContextMenu;

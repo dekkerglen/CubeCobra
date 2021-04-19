@@ -1,9 +1,9 @@
 import React from 'react';
+import TimeAgo from 'react-timeago';
 import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
-import BlogContextMenu from './BlogContextMenu';
-import CommentsSection from './CommentsSection';
-import CommentEntry from './CommentEntry';
-import AgeText from './AgeText';
+import BlogContextMenu from 'components/BlogContextMenu';
+import CommentsSection from 'components/CommentsSection';
+import Markdown from 'components/Markdown';
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -50,26 +50,25 @@ class BlogPost extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.focused) {
-      var $container = $('html,body');
-      var $scrollTo = $('.comment-highlighted');
-
-      $container.animate(
-        { scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0 },
-        300,
-      );
-    }
+    // FIXME: Restore scrolling to highlighted comment.
   }
 
   render() {
-    var post = this.props.post;
+    const { post, onEdit, noScroll } = this.props;
+    if (post.html == 'undefined') {
+      post.html = null;
+    }
+    let scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
+
     return (
-      <Card className="shadowed rounded-0 mt-3">
+      <Card className="shadowed rounded-0 mb-3">
         <CardHeader className="pl-4 pr-0 pt-2 pb-0">
           <h5 className="card-title">
-            {post.title}
+            <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
             <div className="float-sm-right">
-              {this.props.canEdit && <BlogContextMenu className="float-sm-right" post={post} value="..." />}
+              {this.props.canEdit && (
+                <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />
+              )}
             </div>
           </h5>
           <h6 className="card-subtitle mb-2 text-muted">
@@ -81,20 +80,24 @@ class BlogPost extends React.Component {
               <a href={'/cube/overview/' + post.cube}>{post.cubename}</a>
             )}
             {' - '}
-            <AgeText date={post.date} />
+            <TimeAgo date={post.date} />
           </h6>
         </CardHeader>
-        <div style={{ overflow: 'auto', maxHeight: '50vh' }}>
-          {post.changelist && post.html ? (
+        <div style={scrollStyle}>
+          {post.changelist && (post.html || post.markdown) ? (
             <Row className="no-gutters">
-              <Col className="col-12 col-l-3 col-md-3 col-sm-12" style={{ borderRight: '1px solid #DFDFDF' }}>
+              <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
                 <CardBody className="py-2">
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
                 </CardBody>
               </Col>
-              <Col className="col-9">
+              <Col className="col-l-7 col-m-6">
                 <CardBody className="py-2">
-                  <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                  {post.markdown ? (
+                    <Markdown markdown={post.markdown} limited />
+                  ) : (
+                    <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                  )}
                 </CardBody>
               </Col>
             </Row>
@@ -102,32 +105,18 @@ class BlogPost extends React.Component {
             <CardBody className="py-2">
               {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
               {post.body && <CardText>{post.body}</CardText>}
-              {post.html && <CardText dangerouslySetInnerHTML={{ __html: post.html }} />}
+              {(post.html || post.markdown) &&
+                (post.markdown ? (
+                  <Markdown markdown={post.markdown} limited />
+                ) : (
+                  <CardText dangerouslySetInnerHTML={{ __html: post.html }} />
+                ))}
             </CardBody>
           )}
         </div>
-        {this.props.loggedIn && (
-          <CardBody className="px-4 pt-2 pb-0 border-top">
-            <CommentEntry id={post._id} position={[]} onPost={this.onPost}>
-              <h6 className="comment-button mb-2 text-muted clickable">Add Comment</h6>
-            </CommentEntry>
-          </CardBody>
-        )}
-        {post.comments.length > 0 && (
-          <CardBody className=" px-4 pt-2 pb-0 border-top">
-            <CommentsSection
-              expanded={this.state.childExpanded}
-              toggle={this.toggleChildCollapse}
-              id={post._id}
-              comments={post.comments}
-              position={[]}
-              userid={this.props.userid}
-              loggedIn={this.props.loggedIn}
-              submitEdit={this.submitEdit}
-              focused={this.props.focused}
-            />
-          </CardBody>
-        )}
+        <div className="border-top">
+          <CommentsSection parentType="blog" parent={post._id} userid={this.props.userid} collapse={false} />
+        </div>
       </Card>
     );
   }

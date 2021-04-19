@@ -19,14 +19,11 @@ function generateFilters(filterText) {
 
       //TODO: generate a filter string, and return better errors to user
       document.getElementById('filterarea').innerHTML = '<p><em>Filter Applied.</em></p>';
-      $('#filterInput').removeClass('invalid-filter');
       updateCubeList();
     } else {
-      $('#filterInput').addClass('invalid-filter');
       document.getElementById('filterarea').innerHTML = '<p class="invalid-filter"><em>Invalid Filter String.</em></p>';
     }
   } else {
-    $('#filterInput').addClass('invalid-filter');
     document.getElementById('filterarea').innerHTML = '<p class="invalid-filter"><em>Invalid Filter String.</em></p>';
   }
 }
