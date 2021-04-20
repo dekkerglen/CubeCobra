@@ -9,8 +9,16 @@ const cubefixture = require('../../../fixtures/examplecube');
 const { buildIdQuery } = require('../../../serverjs/cubefn');
 const carddb = require('../../../serverjs/cards');
 
+const exampleCubeWithName = (name) => {
+  const cube = new Cube(cubefixture.exampleCube);
+  cube.name = name;
+  return cube;
+};
+
 const fixturesPath = 'fixtures';
-const exampleCube = cubefixture.exampleCube;
+const cubeName = '"Galaxy Brain" Cube!!! :)';
+const sanitizedCubeName = 'GalaxyBrainCube';
+const exampleCube = exampleCubeWithName(cubeName);
 const cubeID = exampleCube.shortID;
 
 app.use('/', router);
@@ -20,7 +28,7 @@ let mongoServer;
 beforeAll(async () => {
   mongoServer = await dbSetup.connect();
   await carddb.initializeCardDb(fixturesPath, true);
-  await new Cube(exampleCube).save();
+  await exampleCube.save();
 });
 
 afterAll(async () => {
@@ -33,7 +41,7 @@ test('cubecobra text download', () => {
     .get('/cubecobra/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender [eld-1]');
@@ -46,7 +54,7 @@ test('plaintext download', () => {
     .get('/plaintext/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender');
@@ -59,7 +67,7 @@ test('MTGO download', () => {
     .get('/mtgo/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.txt')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 Acclaimed Contender');
@@ -79,7 +87,7 @@ test('csv download', () => {
     .get('/csv/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.csv')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.csv')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual(headerLine);
@@ -94,7 +102,7 @@ test('forge download', () => {
     .get('/forge/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.dck')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.dck')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('[metadata]');
@@ -111,7 +119,7 @@ test('xmage download', () => {
     .get('/xmage/' + cubeID)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + exampleCube.name + '.dck')
+    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.dck')
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 [ELD:1] Acclaimed Contender');
@@ -119,9 +127,4 @@ test('xmage download', () => {
     });
 });
 
-function splitText(text) {
-  return text
-    .trim()
-    .split('\n')
-    .map((l) => l.trim());
-}
+const splitText = (text) => text.trim().split('\n').map((l) => l.trim());
