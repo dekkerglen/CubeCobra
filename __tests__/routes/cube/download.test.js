@@ -1,13 +1,13 @@
-const router = require('../../../routes/cube/download');
 const request = require('supertest');
 const express = require('express');
-const app = express();
-const dbSetup = require('../../helpers/dbTestSetup');
+const Papa = require('papaparse');
 
+const router = require('../../../routes/cube/download');
 const Cube = require('../../../models/cube');
-const cubefixture = require('../../../fixtures/examplecube');
-const { buildIdQuery } = require('../../../serverjs/cubefn');
 const carddb = require('../../../serverjs/cards');
+const { buildIdQuery } = require('../../../serverjs/cubefn');
+const cubefixture = require('../../../fixtures/examplecube');
+const dbSetup = require('../../helpers/dbTestSetup');
 
 const exampleCubeWithName = (name) => {
   const cube = new Cube(cubefixture.exampleCube);
@@ -21,6 +21,7 @@ const sanitizedCubeName = 'GalaxyBrainCube';
 const exampleCube = exampleCubeWithName(cubeName);
 const cubeID = exampleCube.shortID;
 
+const app = express();
 app.use('/', router);
 
 let mongoServer;
@@ -81,7 +82,7 @@ test('csv download', () => {
   const headerLine =
     'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
   const faerieGuidemotherLine =
-    '"Faerie Guidemother",1,"Creature - Faerie",W,"eld","11",common,w,Not Owned,Non-foil,false,,,"New","",78110,';
+    '"Faerie Guidemother",1,"Creature - Faerie",W,"eld","11",common,w,Not Owned,Non-foil,false,,,"New","",78110';
 
   return request(app)
     .get('/csv/' + cubeID)
@@ -89,6 +90,10 @@ test('csv download', () => {
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.csv')
     .expect((res) => {
+      // Verify CSV format is valid
+      const parsed = Papa.parse(res.text.trim(), { header: true });
+      expect(parsed.errors).toEqual([]);
+
       const lines = splitText(res.text);
       expect(lines[0]).toEqual(headerLine);
       expect(lines[1]).toEqual(faerieGuidemotherLine);
@@ -127,4 +132,8 @@ test('xmage download', () => {
     });
 });
 
-const splitText = (text) => text.trim().split('\n').map((l) => l.trim());
+const splitText = (text) =>
+  text
+    .trim()
+    .split('\n')
+    .map((l) => l.trim());
