@@ -814,7 +814,7 @@ router.get('/redraft/:id', async (req, res) => {
 
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id));
     if (!cube) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
