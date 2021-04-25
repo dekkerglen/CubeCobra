@@ -79,10 +79,43 @@ test('MTGO download', () => {
 });
 
 test('csv download', () => {
-  const headerLine =
-    'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
-  const faerieGuidemotherLine =
-    '"Faerie Guidemother",1,"Creature - Faerie",W,"eld","11",common,w,Not Owned,Non-foil,false,,,"New","",78110';
+  const headerFields = [
+    'Name',
+    'CMC',
+    'Type',
+    'Color',
+    'Set',
+    'Collector Number',
+    'Rarity',
+    'Color Category',
+    'Status',
+    'Finish',
+    'Maybeboard',
+    'Image URL',
+    'Image Back URL',
+    'Tags',
+    'Notes',
+    'MTGO ID',
+  ];
+
+  const faerieGuidemotherData = {
+    Name: 'Faerie Guidemother',
+    CMC: '1',
+    Type: 'Creature - Faerie',
+    Color: 'W',
+    Set: 'eld',
+    'Collector Number': '11',
+    Rarity: 'common',
+    'Color Category': 'w',
+    Status: 'Not Owned',
+    Finish: 'Non-foil',
+    Maybeboard: 'false',
+    'Image URL': '',
+    'Image Back URL': '',
+    Tags: 'New',
+    Notes: '',
+    'MTGO ID': '78110',
+  };
 
   return request(app)
     .get('/csv/' + cubeID)
@@ -90,15 +123,12 @@ test('csv download', () => {
     .expect('Content-Type', 'text/plain')
     .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.csv')
     .expect((res) => {
-      // Verify CSV format is valid
       const parsed = Papa.parse(res.text.trim(), { header: true });
       expect(parsed.errors).toEqual([]);
 
-      const lines = splitText(res.text);
-      expect(lines[0]).toEqual(headerLine);
-      expect(lines[1]).toEqual(faerieGuidemotherLine);
-      // Extra line expected for header
-      expect(lines.length).toEqual(exampleCube.cards.length + 1);
+      expect(parsed.meta.fields.sort()).toEqual(headerFields.sort());
+      expect(parsed.data[0]).toEqual(faerieGuidemotherData);
+      expect(parsed.data.length).toEqual(exampleCube.cards.length);
     });
 });
 
