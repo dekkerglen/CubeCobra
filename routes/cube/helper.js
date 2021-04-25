@@ -191,7 +191,7 @@ function writeCard(res, card, maybe) {
     res.write(tag);
   });
   res.write(`","${card.notes || ''}",`);
-  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''},`);
+  res.write(`${carddb.cardFromId(card.cardID).mtgo_id || ''}`);
   res.write('\r\n');
 }
 

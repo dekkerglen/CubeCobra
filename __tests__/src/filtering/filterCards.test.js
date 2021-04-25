@@ -1,5 +1,5 @@
 import { makeFilter } from 'filtering/FilterCards';
-import { expectOperator } from '../../helpers';
+import { expectOperator } from '../../helpers/helpers';
 
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
