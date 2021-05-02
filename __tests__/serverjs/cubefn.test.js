@@ -102,12 +102,10 @@ test('legalityToInt returns the expected values', () => {
 });
 
 test('generateShortId returns a valid short ID', async () => {
-  const dummyModel = {
-    shortID: '1x',
-  };
+  const dummyModel = [{ shortID: '1x' }, { shortID: 'a2c' }, { shortID: 'custom_short-ID' }];
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
-      resolve([dummyModel]);
+      resolve(dummyModel);
     });
   });
   const queryMock = jest.fn();
@@ -115,11 +113,16 @@ test('generateShortId returns a valid short ID', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const result = await cubefn.generateShortId();
-  expect(result).toBe('1y');
+  // result is a base36 number
+  expect(result).toMatch(/[0-9a-z]+/g);
+  // result is unique
+  for (const cube of dummyModel) {
+    expect(result).not.toEqual(cube.shortID);
+  }
   Cube.find = initialCubeFind;
 });
 
-test('generateShortId returns a valid short ID with profanity', async () => {
+test('generateShortId returns a valid short ID without profanity', async () => {
   const dummyModel = {
     shortID: '1x',
   };
@@ -132,10 +135,14 @@ test('generateShortId returns a valid short ID with profanity', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const initialHasProfanity = util.hasProfanity;
-  const mockHasProfanity = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+  const mockHasProfanity = jest.fn().mockReturnValueOnce(true).mockReturnValue(false);
   util.hasProfanity = mockHasProfanity;
-  const result = await cubefn.generateShortId();
-  expect(result).toBe('1z');
+  await cubefn.generateShortId();
+  // hasProfanity must be called at least once
+  expect(mockHasProfanity.mock.calls.length).toBeGreaterThan(0);
+  // the last profanity check must return false
+  const { results } = mockHasProfanity.mock;
+  expect(results[results.length - 1].value).toBe(false);
   Cube.find = initialCubeFind;
   util.hasProfanity = initialHasProfanity;
 });
