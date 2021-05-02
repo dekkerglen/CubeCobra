@@ -23,7 +23,7 @@ import AutocompleteInput from 'components/AutocompleteInput';
 const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
   const [cards, setCards] = useState([]);
   const [cardName, setCardName] = useState('');
-  const [packageName, setPackageName] = useState('Untitled Package');
+  const [packageName, setPackageName] = useState('');
   const [imageDict, setImageDict] = useState({});
 
   useEffect(() => {
@@ -57,6 +57,9 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
 
     if (json.success === 'true') {
       onSuccess('Succesfully created package');
+      setCards([]);
+      setCardName('');
+      setPackageName('');
     } else {
       console.log(json);
       onError(`Error creating package: ${json.message}`);
@@ -76,7 +79,12 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Package Name</InputGroupText>
           </InputGroupAddon>
-          <Input type="text" value={packageName} onChange={(e) => setPackageName(e.target.value)} />
+          <Input
+            type="text"
+            value={packageName}
+            placeholder="Untitled Package"
+            onChange={(e) => setPackageName(e.target.value)}
+          />
         </InputGroup>
         <Row className="pb-3">
           <Col xs="12" md="8">
