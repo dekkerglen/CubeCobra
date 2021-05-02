@@ -23,22 +23,14 @@ function buildIdQuery(id) {
 
 async function generateShortId() {
   const cubes = await Cube.find({}, ['shortID']);
-
   const shortIds = cubes.map((cube) => cube.shortID);
-
-  const ids = cubes.map((cube) => util.fromBase36(cube.shortID));
-  let max = Math.max(...ids);
-
-  if (max < 0) {
-    max = 0;
-  }
+  const space = shortIds.length * 2;
 
   let newId = '';
   let isGoodId = false;
   while (!isGoodId) {
-    max += 1;
-    newId = util.toBase36(max);
-
+    const rand = Math.floor(Math.random() * space);
+    newId = util.toBase36(rand);
     isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId);
   }
 
