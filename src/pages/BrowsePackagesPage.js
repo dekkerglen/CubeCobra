@@ -132,6 +132,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
               valid={filterTemp !== filter}
               value={filterTemp}
               onChange={(e) => setFilterTemp(e.target.value)}
+              onKeyDown={(e) => e.keyCode === 13 && setFilter(filterTemp)}
             />
             <InputGroupAddon addonType="append">
               <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
