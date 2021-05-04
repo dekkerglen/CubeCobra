@@ -1777,6 +1777,12 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
     }
 
     cube.draft_formats.splice(index, 1);
+    // update defaultFormat if necessary
+    if (index === cube.defaultDraftFormat) {
+      cube.defaultDraftFormat = -1;
+    } else if (index < cube.defaultDraftFormat) {
+      cube.defaultDraftFormat -= 1;
+    }
 
     await cube.save();
     return res.status(200).send({
