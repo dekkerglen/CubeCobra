@@ -497,10 +497,10 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
         .map((format, index) => ({ ...format, index }))
         .sort((a, b) => {
           if (a.index === defaultDraftFormat) {
-            return 1;
+            return -1;
           }
           if (b.index === defaultDraftFormat) {
-            return -1;
+            return 1;
           }
           return a.title.localeCompare(b.title);
         }),
