@@ -53,10 +53,6 @@ const FOUR_COLOR_MAP = {
   WUBR: 'Non-Green',
 };
 
-const ALL_CMCS = Array.from(Array(33).keys())
-  .map((x) => (x / 2).toString())
-  .concat(['1000000']);
-
 const CARD_TYPES = [
   'Creature',
   'Planeswalker',
@@ -147,6 +143,7 @@ export const SORTS = [
   'Artist',
   'Mana Value',
   'Mana Value 2',
+  'Mana Value Full',
   'Color Category',
   'Color Category Full',
   'Color Count',
@@ -233,6 +230,14 @@ function getEloBucket(elo) {
   return `${bucketFloor}-${bucketFloor + 49}`;
 }
 
+function cmcToNumber(card) {
+  const cmc = cardCmc(card);
+  if (typeof cmc !== 'number') {
+    return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc, 10);
+  }
+  return cmc;
+}
+
 function getLabelsRaw(cube, sort, showOther) {
   let ret = [];
 
@@ -256,8 +261,9 @@ function getLabelsRaw(cube, sort, showOther) {
   } else if (sort === 'Mana Value 2') {
     ret = ['0-1', '2', '3', '4', '5', '6', '7+'];
   } else if (sort === 'Mana Value Full') {
-    // All CMCs from 0-16, with halves included, plus Gleemax at 1,000,000.
-    ret = ALL_CMCS;
+    // All unique CMCs of cards in the cube, rounded to a half-integer
+    ret = cube.map((card) => Math.round(cmcToNumber(card) * 2) / 2);
+    ret = [...new Set(ret)].sort((a, b) => a - b).map((n) => n.toString());
   } else if (sort === 'Color') {
     ret = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
   } else if (sort === 'Type') {
@@ -418,14 +424,6 @@ function getLabelsRaw(cube, sort, showOther) {
 
   // whitespace around 'Other' to prevent collisions
   return showOther ? [...ret, ' Other '] : ret;
-}
-
-function cmcToNumber(card) {
-  const cmc = cardCmc(card);
-  if (typeof cmc !== 'number') {
-    return cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc, 10);
-  }
-  return cmc;
 }
 
 export function cardGetLabels(card, sort, showOther) {
