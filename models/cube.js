@@ -45,129 +45,132 @@ const Card = {
 };
 
 // Cube schema
-const cubeSchema = mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  shortID: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  urlAlias: {
-    type: String,
-    unique: true,
-  },
-  owner: {
-    type: String,
-    required: true,
-  },
-  isListed: {
-    type: Boolean,
-    default: true,
-  },
-  privatePrices: {
-    type: Boolean,
-    default: false,
-  },
-  isFeatured: {
-    type: Boolean,
-    default: false,
-  },
-  overrideCategory: {
-    type: Boolean,
-    default: false,
-  },
-  categoryOverride: {
-    type: String,
-    default: 'Vintage',
-  },
-  categoryPrefixes: {
-    type: [String],
-    default: [],
-  },
-  tags: {
-    type: [String],
-    default: [],
-  },
-  cards: {
-    type: [Card],
-    default: [],
-  },
-  maybe: {
-    type: [Card],
-    default: [],
-  },
-  tag_colors: [
-    {
-      tag: String,
-      color: String,
+const cubeSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-  ],
-  defaultDraftFormat: {
-    type: Number,
-    default: -1,
-  },
-  numDecks: {
-    type: Number,
-    default: 0,
-  },
-  description: String,
-  image_uri: String,
-  image_artist: String,
-  image_name: String,
-  owner_name: String,
-  date_updated: Date,
-  updated_string: String,
-  default_sorts: [String],
-  default_show_unsorted: Boolean,
-  card_count: Number,
-  type: String,
-  draft_formats: {
-    type: [
+    shortID: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    urlAlias: {
+      type: String,
+      unique: true,
+    },
+    owner: {
+      type: String,
+      required: true,
+    },
+    isListed: {
+      type: Boolean,
+      default: true,
+    },
+    privatePrices: {
+      type: Boolean,
+      default: false,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    overrideCategory: {
+      type: Boolean,
+      default: false,
+    },
+    categoryOverride: {
+      type: String,
+      default: 'Vintage',
+    },
+    categoryPrefixes: {
+      type: [String],
+      default: [],
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    cards: {
+      type: [Card],
+      default: [],
+    },
+    maybe: {
+      type: [Card],
+      default: [],
+    },
+    tag_colors: [
       {
-        title: String,
-        multiples: Boolean,
-        html: String,
-        markdown: String,
-        packs: String,
+        tag: String,
+        color: String,
       },
     ],
-    default: [],
-  },
-  users_following: {
-    type: [String],
-    default: [],
-  },
-  defaultStatus: {
+    defaultDraftFormat: {
+      type: Number,
+      default: -1,
+    },
+    numDecks: {
+      type: Number,
+      default: 0,
+    },
+    description: String,
+    image_uri: String,
+    image_artist: String,
+    image_name: String,
+    owner_name: String,
+    date_updated: Date,
+    updated_string: String,
+    default_sorts: [String],
+    default_show_unsorted: Boolean,
+    card_count: Number,
     type: String,
-    default: 'Owned',
+    draft_formats: {
+      type: [
+        {
+          title: String,
+          multiples: Boolean,
+          html: String,
+          markdown: String,
+          packs: String,
+        },
+      ],
+      default: [],
+    },
+    users_following: {
+      type: [String],
+      default: [],
+    },
+    defaultStatus: {
+      type: String,
+      default: 'Owned',
+    },
+    defaultPrinting: {
+      type: String,
+      // Values: first, recent
+      default: 'recent',
+    },
+    disableNotifications: {
+      type: Boolean,
+      default: false,
+    },
+    useCubeElo: {
+      type: Boolean,
+      default: false,
+    },
+    basics: {
+      type: [String],
+      default: [
+        '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
+        '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
+        '19e71532-3f79-4fec-974f-b0e85c7fe701',
+        '8365ab45-6d78-47ad-a6ed-282069b0fabc',
+        '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
+      ],
+    },
   },
-  defaultPrinting: {
-    type: String,
-    // Values: first, recent
-    default: 'recent',
-  },
-  disableNotifications: {
-    type: Boolean,
-    default: false,
-  },
-  useCubeElo: {
-    type: Boolean,
-    default: false,
-  },
-  basics: {
-    type: [String],
-    default: [
-      '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
-      '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
-      '19e71532-3f79-4fec-974f-b0e85c7fe701',
-      '8365ab45-6d78-47ad-a6ed-282069b0fabc',
-      '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
-    ],
-  },
-});
+  { timestamps: true },
+);
 
 cubeSchema.index({
   shortID: 1,

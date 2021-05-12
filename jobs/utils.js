@@ -4,7 +4,7 @@ const path = require('path');
 const carddb = require('../serverjs/cards');
 
 const date = new Date();
-const folder = `${process.argv[2]}/exports/${date.getUTCFullYear()}${(date.getUTCMonth() + 1)
+const folder = `exports/${date.getUTCFullYear()}${(date.getUTCMonth() + 1)
   .toString()
   .padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
 
@@ -12,7 +12,7 @@ const writeFile = (filename, object) => {
   const fullPath = `${folder}/${filename}`;
   const dirname = path.dirname(fullPath);
   fs.mkdirSync(dirname, { recursive: true });
-  fs.writeFileSync(`${folder}/${dirname}/${filename}`, JSON.stringify(object));
+  fs.writeFileSync(fullPath, JSON.stringify(object));
 };
 
 const loadCardToInt = async () => {

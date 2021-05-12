@@ -17,20 +17,25 @@ const minFileSize = 128 * 1024 * 1024; // 128 MB
 const processCube = (cube, cardToInt) => ({
   name: cube.name,
   id: cube._id,
-  owner: cube.owner_name,
-  shortID: cube.shortID,
+  ownerName: cube.owner_name,
   urlAlias: cube.urlAlias,
   categoryOverride: cube.categoryOverride,
   categoryPrefixes: cube.categoryPrefixes,
   tags: cube.tags,
-  date_updated: cube.date_updated,
+  dateUpdated: cube.date_updated,
   cards: cube.cards.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
   maybe: cube.maybe.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
   basics: cube.basics.map((card) => cardToInt[carddb.cardFromId(card).name_lower]),
+  numUsersFollowing: cube.users_following.length,
+  imageUri: cube.image_uri,
+  imageName: cube.image_name,
+  imageArtist: cube.image_artist,
+  numDecks: cube.numDecks,
+  type: cube.type,
 });
 
 (async () => {
-  const { cardToInt } = loadCardToInt();
+  const { cardToInt } = await loadCardToInt();
   await mongoose.connect(process.env.MONGODB_URL);
   // process all cube objects
   console.log('Started');
@@ -45,6 +50,7 @@ const processCube = (cube, cardToInt) => ({
       for (let j = 0; j < Math.min(batchSize, count - i); j++) {
         // eslint-disable-next-line no-await-in-loop
         const cube = await cursor.next();
+        console.log(Object.keys(cube));
         if (cube.isListed) {
           cubes.push(processCube(cube, cardToInt));
         }

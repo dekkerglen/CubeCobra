@@ -64,7 +64,7 @@ const processDeck = async (deck, draft, cardToInt) => {
 };
 
 (async () => {
-  const { cardToInt } = loadCardToInt();
+  const { cardToInt } = await loadCardToInt();
   await mongoose.connect(process.env.MONGODB_URL);
   // process all deck objects
   console.log('Started');
