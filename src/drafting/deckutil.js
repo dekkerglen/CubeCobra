@@ -187,10 +187,18 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
   let margin = 0.1;
   let inColor = nonlands.filter((item) => probabilities[item] >= 1 - margin);
   while (inColor.length < 23 && inColor.length < nonlands.length) {
-    margin *= 1.2;
+    margin *= 10 ** (1 / 15);
     const currentCutoff = 1 - margin;
     inColor = nonlands.filter((item) => probabilities[item] >= currentCutoff);
   }
+  console.log(margin);
+  console.log(
+    probabilities
+      .map((p, idx) => [p, cardName(cards[idx])])
+      .filter(([p]) => p !== null)
+      .map(([p, n]) => `${n}: ${p}`)
+      .join('\n'),
+  );
   const outOfColor = nonlands.filter((item) => probabilities[item] < 1 - margin);
 
   const main = [];
