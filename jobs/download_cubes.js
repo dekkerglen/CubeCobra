@@ -14,9 +14,20 @@ const batchSize = 1000;
 // Minimum size in bytes of the output files (last file may be smaller).
 const minFileSize = 128 * 1024 * 1024; // 128 MB
 
-const processCube = (cube, cardToInt) => {
-  return cube.cards.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]);
-};
+const processCube = (cube, cardToInt) => ({
+  name: cube.name,
+  id: cube._id,
+  owner: cube.owner_name,
+  shortID: cube.shortID,
+  urlAlias: cube.urlAlias,
+  categoryOverride: cube.categoryOverride,
+  categoryPrefixes: cube.categoryPrefixes,
+  tags: cube.tags,
+  date_updated: cube.date_updated,
+  cards: cube.cards.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
+  maybe: cube.maybe.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
+  basics: cube.basics.map((card) => cardToInt[carddb.cardFromId(card).name_lower]),
+});
 
 (async () => {
   const { cardToInt } = loadCardToInt();
@@ -34,7 +45,9 @@ const processCube = (cube, cardToInt) => {
       for (let j = 0; j < Math.min(batchSize, count - i); j++) {
         // eslint-disable-next-line no-await-in-loop
         const cube = await cursor.next();
-        cubes.push(processCube(cube, cardToInt));
+        if (cube.isListed) {
+          cubes.push(processCube(cube, cardToInt));
+        }
       }
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
     }

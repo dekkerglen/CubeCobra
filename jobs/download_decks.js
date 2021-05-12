@@ -34,7 +34,7 @@ const processDeck = (deck, cardToInt) => {
     }
   }
 
-  return { main, side, cubeid: deck.cube };
+  return { main, side, cubeid: deck.cube, username: deck.seats[0].username, date: deck.date };
 };
 
 (async () => {
