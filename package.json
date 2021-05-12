@@ -49,7 +49,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "canvas": "^2.6.1",
-    "chart.js": "^2.9.2",
+    "chart.js": "^2.9.4",
     "cheerio": "^1.0.0-rc.3",
     "classnames": "^2.2.6",
     "compression": "^1.7.4",
