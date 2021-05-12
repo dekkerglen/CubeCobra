@@ -51,7 +51,16 @@ const processDeck = async (deck, draft, cardToInt) => {
   const main = deck.seats[0].deck.flat(2).map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
   const sideboard = deck.seats[0].sideboard.flat(2).map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
   const cards = draft.initial_state.flat(3).map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
-  return { picks, main, sideboard, cards, cubeid: deck.cube, username: deck.seats[0].username, date: deck.date };
+  return {
+    picks,
+    main,
+    sideboard,
+    cards,
+    cubeid: deck.cube,
+    username: deck.seats[0].username,
+    date: deck.date,
+    id: draft._id,
+  };
 };
 
 (async () => {
