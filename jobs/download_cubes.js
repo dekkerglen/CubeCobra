@@ -3,61 +3,50 @@
 
 // Load Environment Variables
 require('dotenv').config();
-const fs = require('fs');
-
-const path = (batch) => `jobs/export/cubes/${batch}.json`;
-
 const mongoose = require('mongoose');
 
 const Cube = require('../models/cube');
-const carddb = require('../serverjs/cards.js');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
+const carddb = require('../serverjs/cards');
+const { loadCardToInt, writeFile } = require('./utils');
 
+// Number of documents to process at a time
 const batchSize = 1000;
+// Minimum size in bytes of the output files (last file may be smaller).
+const minFileSize = 128 * 1024 * 1024; // 128 MB
 
-const processCube = (cube) => {
-  return cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower);
+const processCube = (cube, cardToInt) => {
+  return cube.cards.map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]);
 };
 
-const folder = 'august2';
-
 (async () => {
-  await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    // process all cube objects
-    console.log('Started');
-    const count = await Cube.countDocuments();
-    const cursor = Cube.find()
-      .lean()
-      .cursor();
+  const { cardToInt } = loadCardToInt();
+  await mongoose.connect(process.env.MONGODB_URL);
+  // process all cube objects
+  console.log('Started');
+  const count = await Cube.countDocuments();
+  const cursor = Cube.find().lean().cursor();
 
-    // batch them in 100
-    for (let i = 0; i < count; i += batchSize) {
-      const cubes = [];
-      for (let j = 0; j < batchSize; j++) {
-        if (i + j < count) {
-          const cube = await cursor.next();
-          if (cube) {
-            cubes.push(cube);
-          }
-        }
+  let counter = 0;
+  let i = 0;
+  const cubes = [];
+  while (i < count) {
+    for (; Buffer.byteLength(JSON.stringify(cubes)) < minFileSize && i < count; i += batchSize) {
+      for (let j = 0; j < Math.min(batchSize, count - i); j++) {
+        // eslint-disable-next-line no-await-in-loop
+        const cube = await cursor.next();
+        cubes.push(processCube(cube, cardToInt));
       }
-
-     const params = {
-         Bucket: 'cubecobra', // pass your bucket name
-         Key: `${folder}/cubes/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
-         Body: JSON.stringify(cubes.map(processCube))
-     };
-     await s3.upload(params).promise();
-     
-    console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
-     
+      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
     }
-    mongoose.disconnect();
-    console.log('done');
-  });
+    if (cubes.length > 0) {
+      const filename = `cubes/${counter.toString().padStart(6, '0')}.json`;
+      writeFile(filename, cubes);
+      counter += 1;
+      console.log(`Wrote file ${filename} with ${cubes.length} cubes.`);
+      cubes.length = 0;
+    }
+  }
+  mongoose.disconnect();
+  console.log('done');
+  process.exit();
 })();

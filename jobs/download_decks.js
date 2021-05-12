@@ -1,28 +1,18 @@
-// run with: node --max-old-space-size=8192 populate_analytics.js
-// will oom without the added tag
-
 // Load Environment Variables
 require('dotenv').config();
-const fs = require('fs');
-
-const path = (batch) => `jobs/export/decks/${batch}.json`;
 
 const mongoose = require('mongoose');
 
 const Deck = require('../models/deck');
 const carddb = require('../serverjs/cards.js');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
+const { writeFile, loadCardToInt } = require('./utils');
 
-
+// Number of documents to process at a time
 const batchSize = 1000;
+// Minimum size in bytes of the output files (last file may be smaller).
+const minFileSize = 128 * 1024 * 1024; // 128 MB
 
-const folder = 'august2';
-
-const processDeck = (deck) => {
+const processDeck = (deck, cardToInt) => {
   const main = [];
   const side = [];
 
@@ -30,7 +20,7 @@ const processDeck = (deck) => {
     for (const col of deck.seats[0].deck) {
       for (const card of col) {
         if (card && card.cardID) {
-          main.push(carddb.cardFromId(card.cardID).name_lower);
+          main.push(cardToInt[carddb.cardFromId(card.cardID).name_lower]);
         }
       }
     }
@@ -39,46 +29,46 @@ const processDeck = (deck) => {
   if (deck.seats[0] && deck.seats[0].sideboard) {
     for (const col of deck.seats[0].sideboard) {
       for (const card of col) {
-        side.push(carddb.cardFromId(card.cardID).name_lower);
+        side.push(cardToInt[carddb.cardFromId(card.cardID).name_lower]);
       }
     }
   }
 
-  return { main, side };
+  return { main, side, cubeid: deck.cube };
 };
 
 (async () => {
-  await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    // process all deck objects
-    console.log('Started');
-    const count = await Deck.countDocuments();
-    console.log(`Counted ${count} documents`);
-    const cursor = Deck.find()
-      .lean()
-      .cursor();
+  const { cardToInt } = await loadCardToInt();
+  await mongoose.connect(process.env.MONGODB_URL);
+  // process all deck objects
+  console.log('Started');
+  const count = await Deck.countDocuments();
+  console.log(`Counted ${count} documents`);
+  const cursor = Deck.find().lean().cursor();
 
-    for (let i = 0; i < count; i += batchSize) {
-      const decks = [];
-      for (let j = 0; j < batchSize; j++) {
-        if (i + j < count) {
-          const deck = await cursor.next();
-          if (deck) {
-            decks.push(processDeck(deck));
-          }
+  let counter = 0;
+  let i = 0;
+  const decks = [];
+  while (i < count) {
+    for (; Buffer.byteLength(JSON.stringify(decks)) < minFileSize && i < count; i += batchSize) {
+      for (let j = 0; j < Math.min(batchSize, count - i); j++) {
+        // eslint-disable-next-line no-await-in-loop
+        const deck = await cursor.next();
+        if (deck) {
+          decks.push(processDeck(deck, cardToInt));
         }
       }
-     const params = {
-         Bucket: 'cubecobra', // pass your bucket name
-         Key: `${folder}/decks/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
-         Body: JSON.stringify(decks)
-     };
-     await s3.upload(params).promise();
-    console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
-
+      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
-    mongoose.disconnect();
-    console.log('done');
-    process.exit();
-  });
+    if (decks.length > 0) {
+      const filename = `decks/${counter.toString().padStart(6, '0')}.json`;
+      writeFile(filename, decks);
+      counter += 1;
+      console.log(`Wrote file ${filename} with ${decks.length} decks.`);
+      decks.length = 0;
+    }
+  }
+  mongoose.disconnect();
+  console.log('done');
+  process.exit();
 })();
