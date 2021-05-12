@@ -18,6 +18,7 @@ const processCube = (cube, cardToInt) => ({
   name: cube.name,
   id: cube._id,
   ownerName: cube.owner_name,
+  shortId: cube.shortID,
   urlAlias: cube.urlAlias,
   categoryOverride: cube.categoryOverride,
   categoryPrefixes: cube.categoryPrefixes,
