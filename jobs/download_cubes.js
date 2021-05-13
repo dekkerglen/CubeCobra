@@ -1,13 +1,10 @@
-// run with: node --max-old-space-size=8192 populate_analytics.js
-// will oom without the added tag
-
 // Load Environment Variables
 require('dotenv').config();
 const mongoose = require('mongoose');
 
 const Cube = require('../models/cube');
 const carddb = require('../serverjs/cards');
-const { loadCardToInt, writeFile } = require('./utils');
+const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
 const batchSize = 1000;
@@ -33,6 +30,7 @@ const processCube = (cube, cardToInt) => ({
   imageArtist: cube.image_artist,
   numDecks: cube.numDecks,
   type: cube.type,
+  createdAt: getObjectCreatedAt(cube._id),
 });
 
 (async () => {

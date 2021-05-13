@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const Deck = require('../models/deck');
 const carddb = require('../serverjs/cards.js');
-const { writeFile, loadCardToInt } = require('./utils');
+const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
 const batchSize = 1000;
@@ -34,7 +34,14 @@ const processDeck = (deck, cardToInt) => {
     }
   }
 
-  return { main, side, cubeid: deck.cube, username: deck.seats[0].username, date: deck.date };
+  return {
+    main,
+    side,
+    cubeid: deck.cube,
+    username: deck.seats[0].username,
+    date: deck.date,
+    createdAt: getObjectCreatedAt(deck._id),
+  };
 };
 
 (async () => {

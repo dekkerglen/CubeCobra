@@ -6,7 +6,7 @@ const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const carddb = require('../serverjs/cards');
 const deckutils = require('../dist/utils/deckutils');
-const { loadCardToInt, writeFile } = require('./utils');
+const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
 const batchSize = 100;
@@ -59,7 +59,10 @@ const processDeck = async (deck, draft, cardToInt) => {
     cubeid: deck.cube,
     username: deck.seats[0].username,
     date: deck.date,
-    id: draft._id,
+    deckid: deck._id,
+    draftid: draft._id,
+    createdAt: getObjectCreatedAt(draft._id),
+    deckCreatedAt: getObjectCreatedAt(deck._id),
   };
 };
 
