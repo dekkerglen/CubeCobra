@@ -209,7 +209,9 @@ async function processCube(cube) {
     }
   }
 
-  const uniqueOracleIds = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  const uniqueOracleIds = Array.from(
+    new Set(cube.cards.filter((c) => c).map((card) => carddb.cardFromId(card.cardID).oracle_id)),
+  );
   uniqueOracleIds.forEach((oracleId) => {
     if (correlationIndex[oracleId]) {
       cubesWithCard[correlationIndex[oracleId]].push(cube._id);
