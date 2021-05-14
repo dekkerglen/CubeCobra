@@ -168,7 +168,7 @@ export function isTouchDevice() {
 }
 
 export function getCubeId(cube) {
-  return cube.urlAlias || cube.shortID || cube._id;
+  return cube.shortID || cube._id;
 }
 
 export function getCubeDescription(cube) {

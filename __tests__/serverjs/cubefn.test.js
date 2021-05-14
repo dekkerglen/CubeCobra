@@ -22,17 +22,7 @@ afterEach(() => {
   carddb.unloadCardDb();
 });
 
-test('getCubeId returns urlAlias when defined', () => {
-  const testCube = {
-    urlAlias: 'a',
-    shortID: 'bbb',
-    _id: 'c',
-  };
-  const result = cubefn.getCubeId(testCube);
-  expect(result).toBe(testCube.urlAlias);
-});
-
-test('getCubeId returns shortId when urlAlias is not present', () => {
+test('getCubeId returns shortID when defined', () => {
   const testCube = {
     shortID: 'bbb',
     _id: 'c',
@@ -55,13 +45,10 @@ test('buildIdQuery returns a simple query when passed a 24-character alphanumeri
   expect(result._id).toBe(testId);
 });
 
-test('buildIdQuery returns a boolean query when passed a non-alphanumeric string', () => {
+test('buildIdQuery returns a shortID query when passed a non-alphanumeric string', () => {
   const testId = 'a1a-a1a1a1a1a1a1a1a1a1a1';
   const result = cubefn.buildIdQuery(testId);
-  const condition = result.$or;
-  expect(condition.length).toBe(2);
-  expect(condition[0].shortID).toBe(testId);
-  expect(condition[1].urlAlias).toBe(testId);
+  expect(result.shortID).toBe(testId);
 });
 
 test('cardsAreEquivalent returns true for two equivalent cards', () => {
@@ -115,13 +102,10 @@ test('legalityToInt returns the expected values', () => {
 });
 
 test('generateShortId returns a valid short ID', async () => {
-  const dummyModel = {
-    shortID: '1x',
-    urlAlias: 'a real alias',
-  };
+  const dummyModel = [{ shortID: '1x' }, { shortID: 'a2c' }, { shortID: 'custom_short-ID' }];
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
-      resolve([dummyModel]);
+      resolve(dummyModel);
     });
   });
   const queryMock = jest.fn();
@@ -129,14 +113,18 @@ test('generateShortId returns a valid short ID', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const result = await cubefn.generateShortId();
-  expect(result).toBe('1y');
+  // result is a base36 number
+  expect(result).toMatch(/[0-9a-z]+/g);
+  // result is unique
+  for (const cube of dummyModel) {
+    expect(result).not.toEqual(cube.shortID);
+  }
   Cube.find = initialCubeFind;
 });
 
-test('generateShortId returns a valid short ID with profanity', async () => {
+test('generateShortId returns a valid short ID without profanity', async () => {
   const dummyModel = {
     shortID: '1x',
-    urlAlias: 'a real alias',
   };
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
@@ -147,10 +135,14 @@ test('generateShortId returns a valid short ID with profanity', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const initialHasProfanity = util.hasProfanity;
-  const mockHasProfanity = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+  const mockHasProfanity = jest.fn().mockReturnValueOnce(true).mockReturnValue(false);
   util.hasProfanity = mockHasProfanity;
-  const result = await cubefn.generateShortId();
-  expect(result).toBe('1z');
+  await cubefn.generateShortId();
+  // hasProfanity must be called at least once
+  expect(mockHasProfanity.mock.calls.length).toBeGreaterThan(0);
+  // the last profanity check must return false
+  const { results } = mockHasProfanity.mock;
+  expect(results[results.length - 1].value).toBe(false);
   Cube.find = initialCubeFind;
   util.hasProfanity = initialHasProfanity;
 });
