@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 const Cube = require('../models/cube');
 const carddb = require('../serverjs/cards.js');
 
-const batchSize = 1000;
+const batchSize = 100;
 
 const processCube = async (cube) => {
   cube.shortID = cube.urlAlias;
