@@ -234,6 +234,7 @@ data = {
   reasonableId,
   reasonableCard,
   normalizedName: (card) => card.name_lower,
+  fileToAttribute,
 };
 
 module.exports = data;
