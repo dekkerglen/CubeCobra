@@ -6,52 +6,38 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-
-const AWS = require('aws-sdk');
 const Cube = require('../models/cube');
 const carddb = require('../serverjs/cards.js');
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
 const batchSize = 1000;
 
-const processCube = (cube) => {
-  const {
-    date_updated,
-    numDecks,
-    type,
-    name,
-    owner,
-    owner_name,
-    tags,
-    image_uri,
-    image_artist,
-    image_name,
-    card_count,
-    users_following,
-    isListed,
-  } = cube;
+const isInvalidCardId = (id) => carddb.cardFromId(id).name === 'Invalid Card';
 
-  return {
-    cards: cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower),
-    id: cube._id,
-    date_updated,
-    numDecks,
-    type,
-    name,
-    owner,
-    owner_name,
-    tags,
-    image_uri,
-    image_artist,
-    image_name,
-    card_count,
-    users_following,
-    isListed,
-  };
+const needsCleaning = (cube) => {
+  if (!cube.cards) {
+    return true;
+  }
+
+  if (cube.cards.some((card) => !card || isInvalidCardId(card.cardID))) {
+    return true;
+  }
+
+  return false;
+};
+
+const processCube = async (leanCube) => {
+  if (needsCleaning(leanCube)) {
+    const cube = await Cube.findById(leanCube._id);
+
+    console.log(`Cleaning cube ${cube.name}: ${cube._id}`);
+
+    if (!cube.cards) {
+      cube.cards = [];
+    }
+    cube.cards = cube.cards.filter((c) => c && !isInvalidCardId(c.cardID));
+
+    await cube.save();
+  }
 };
 
 try {
@@ -75,24 +61,12 @@ try {
           }
         }
 
-        const params = {
-          Bucket: 'cubecobra',
-          Key: `cube_exports/${i / batchSize}.json`,
-          Body: JSON.stringify(cubes.map(processCube)),
-        };
-        await s3.upload(params).promise();
+        await Promise.all(cubes.map(processCube));
 
         console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
       }
+
       mongoose.disconnect();
-
-      const params = {
-        Bucket: 'cubecobra',
-        Key: `cube_exports/manifest.json`,
-        Body: JSON.stringify({ date_exported: new Date() }),
-      };
-      await s3.upload(params).promise();
-
       console.log('done');
       process.exit();
     });
