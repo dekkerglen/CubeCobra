@@ -9,16 +9,12 @@ const deckutils = require('../dist/utils/deckutils');
 const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
-const batchSize = 100;
+const batchSize = 512;
 // Minimum size in bytes of the output files (last file may be smaller).
 const minFileSize = 128 * 1024 * 1024; // 128 MB
 
 const processDeck = async (deck, draft, cardToInt) => {
   const picks = [];
-  if (!draft || !draft.initial_state || !draft.initial_state[0].length || !draft.initial_state[0][0].length) {
-    return null;
-  }
-
   const seen = [];
   let index = 0;
   const { pickorder } = deck.seats[0];
@@ -66,46 +62,62 @@ const processDeck = async (deck, draft, cardToInt) => {
   };
 };
 
+const isValidDraft = (draft) =>
+  draft &&
+  draft.initial_state &&
+  draft.initial_state[0] &&
+  draft.initial_state[0].length &&
+  draft.initial_state[0][0].length;
+const isValidDeck = (deck) =>
+  deck &&
+  deck.draft &&
+  deck.seats &&
+  deck.seats[0] &&
+  deck.seats[0].deck &&
+  deck.seats[0].pickorder &&
+  deck.seats[0].sideboard &&
+  deck.seats[0].pickorder.length &&
+  !deck.seats[0].bot;
+
 (async () => {
   const { cardToInt } = await loadCardToInt();
-  await mongoose.connect(process.env.MONGODB_URL);
+  await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   // process all deck objects
   console.log('Started');
-  const count = await Deck.countDocuments();
+  const count = await Deck.count();
   console.log(`Counted ${count} documents`);
   const cursor = Deck.find().lean().cursor();
   let counter = 0;
   let i = 0;
   const processedDecks = [];
   while (i < count) {
-    for (; Buffer.byteLength(JSON.stringify(processedDecks)) < minFileSize && i < count; i += batchSize) {
+    let size = 0;
+    for (; size < minFileSize && i < count; ) {
       const decks = [];
-      for (let j = 0; j < Math.min(batchSize, count - i); j++) {
+      const nextBound = Math.min(i + batchSize, count);
+      for (; i < nextBound; i++) {
         // eslint-disable-next-line no-await-in-loop
         const deck = await cursor.next();
-        if (
-          deck &&
-          deck.seats &&
-          deck.seats[0] &&
-          deck.seats[0].deck &&
-          deck.seats[0].pickorder &&
-          deck.draft &&
-          deck.seats[0].sideboard &&
-          deck.seats[0].pickorder.length &&
-          !deck.cards &&
-          !deck.seats[0].bot
-        ) {
+        if (isValidDeck(deck)) {
           decks.push(deck);
         }
       }
-      const draftIds = decks.map(({ draft }) => draft);
+      console.log(`There were ${decks.length} valid decks.`);
+      const draftIds = [...new Set(decks.map(({ draft }) => draft))];
       // eslint-disable-next-line no-await-in-loop
       const drafts = await Draft.find({ _id: { $in: draftIds } }).lean();
+      console.log(`Out of ${draftIds.length} draftIds we found ${drafts.length} drafts.`);
       const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
-      const deckQs = decks.map((deck) => processDeck(deck, draftsById[deck.draft], cardToInt));
+      const deckQs = decks
+        .filter((deck) => isValidDraft(draftsById[deck.draft]))
+        .map((deck) => processDeck(deck, draftsById[deck.draft], cardToInt));
+      console.log(`There are ${deckQs.length} decks being processed.`);
       // eslint-disable-next-line no-await-in-loop
-      processedDecks.push(...(await Promise.all(deckQs)).filter((d) => d));
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
+      const processingDecks = (await Promise.all(deckQs)).filter((d) => d);
+      size += Buffer.byteLength(JSON.stringify(processingDecks));
+      processedDecks.push(...processingDecks);
+      console.log(`Finished: ${i} of ${count} decks.`);
+      console.log(`The buffer is at approximately ${size} bytes or ${size / 1024 / 1024} MB.`);
     }
     if (processedDecks.length > 0) {
       const filename = `drafts/${counter.padStart(6, '0')}.json`;

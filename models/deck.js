@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+
 const cardSchema = require('./cardSchema');
+
+mongoose.set('useCreateIndex', true);
 
 // data for each seat, human or bot
 const SeatDeck = {

@@ -36,6 +36,6 @@ const loadCardToInt = async () => {
   return { cardToInt, intToCard };
 };
 
-const getObjectCreatedAt = (id) => new Date(parseInt(id.slice(0, 8), 16) * 1000);
+const getObjectCreatedAt = (id) => new Date(parseInt(id.toString().slice(0, 8), 16) * 1000);
 
 module.exports = { getObjectCreatedAt, loadCardToInt, writeFile };

@@ -8,7 +8,7 @@ const carddb = require('../serverjs/cards.js');
 const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
-const batchSize = 1000;
+const batchSize = 1024;
 // Minimum size in bytes of the output files (last file may be smaller).
 const minFileSize = 128 * 1024 * 1024; // 128 MB
 
@@ -46,10 +46,10 @@ const processDeck = (deck, cardToInt) => {
 
 (async () => {
   const { cardToInt } = await loadCardToInt();
-  await mongoose.connect(process.env.MONGODB_URL);
+  await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   // process all deck objects
   console.log('Started');
-  const count = await Deck.countDocuments();
+  const count = await Deck.count();
   console.log(`Counted ${count} documents`);
   const cursor = Deck.find().lean().cursor();
 
