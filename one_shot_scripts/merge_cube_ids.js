@@ -7,7 +7,6 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
-const carddb = require('../serverjs/cards.js');
 
 const batchSize = 100;
 
@@ -20,7 +19,6 @@ const processCube = async (cube) => {
 
 try {
   (async () => {
-    await carddb.initializeCardDb();
     await mongoose.connect(process.env.MONGODB_URL);
 
     // process all cube objects
