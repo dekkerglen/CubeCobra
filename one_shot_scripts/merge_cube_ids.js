@@ -24,7 +24,7 @@ try {
     // process all cube objects
     console.log('Started');
     const count = await Cube.countDocuments({ urlAlias: { $exists: true, $ne: null } });
-    const cursor = Cube.find({ urlAlias: { $exists: true, $ne: null } }).cursor();
+    const cursor = Cube.find({ urlAlias: { $exists: true, $ne: null } }, 'shortID urlAlias').cursor();
 
     // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
