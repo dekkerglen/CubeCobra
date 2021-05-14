@@ -237,7 +237,7 @@ async function processCube(cube) {
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const { name } = card;
-  const oracleId = name.oracle_id;
+  const oracleId = card.oracle_id;
 
   const rating = ratingsDict[name]; // await CardRating.findOne({ name });
 
@@ -272,11 +272,20 @@ async function processCard(card) {
   // cubed with
   // create correl dict
   const cubedWith = distinctOracles
-    .map((otherOracleId) => ({
-      oracle: otherOracleId,
-      count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
-      type: cardFromOracle(otherOracleId).type.toLowerCase(),
-    }))
+    .map((otherOracleId) => {
+      try {
+        return {
+          oracle: otherOracleId,
+          count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
+          type: cardFromOracle(otherOracleId).type.toLowerCase(),
+        };
+      } catch (e) {
+        console.error(e);
+        console.log(`oracle: ${oracleId}, other: ${otherOracleId}`);
+        console.log(`index: ${correlationIndex[oracleId]}, other: ${correlationIndex[otherOracleId]}`);
+        return {};
+      }
+    })
     .filter((item) => item.oracle !== oracleId && !item.type.includes('basic land'));
 
   const synergyWith = distinctOracles
@@ -430,6 +439,8 @@ const run = async () => {
     if ((i + 1) % 10 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
+
+    break;
   }
   winston.info('Finished: all cubes');
 
@@ -443,6 +454,7 @@ const run = async () => {
     if ((i + 1) % 1000 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
+    break;
   }
   winston.info('Finished: all decks');
 
@@ -457,11 +469,11 @@ const run = async () => {
     winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 
+  winston.info('Done');
   // this is needed for log group to stream
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
-  winston.info('Done');
   process.exit();
 };
 
@@ -477,5 +489,6 @@ mongoose
       run();
     } catch (error) {
       winston.error(error, { error });
+      process.exit();
     }
   });
