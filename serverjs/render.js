@@ -63,6 +63,7 @@ if (NODE_ENV === 'production') {
   pages.VersionPage = require('../dist/pages/VersionPage').default;
   pages.VideoPage = require('../dist/pages/VideoPage').default;
   pages.VideosPage = require('../dist/pages/VideosPage').default;
+  pages.WikiPage = require('../dist/pages/WikiPage').default;
   pages.AdminCommentsPage = require('../dist/pages/AdminCommentsPage').default;
   pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
   pages.ApplicationPage = require('../dist/pages/ApplicationPage').default;

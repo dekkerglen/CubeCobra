@@ -178,6 +178,7 @@ app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/packages', require('./routes/packages'));
+app.use('/wiki', require('./routes/wiki_routes'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {

@@ -85,6 +85,7 @@ const clientConfig = merge(config, {
     VideoPage: './src/pages/VideoPage.js',
     ReviewVideosPage: './src/pages/ReviewVideosPage.js',
     VideosPage: './src/pages/VideosPage.js',
+    WikiPage: './src/pages/WikiPage.js',
     EditPodcastPage: './src/pages/EditPodcastPage.js',
     PodcastPage: './src/pages/PodcastPage.js',
     ReviewPodcastsPage: './src/pages/ReviewPodcastsPage.js',
