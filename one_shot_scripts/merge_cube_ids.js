@@ -11,15 +11,11 @@ const carddb = require('../serverjs/cards.js');
 
 const batchSize = 1000;
 
-const processCube = async (leanCube) => {
-  if (leanCube.urlAlias) {
-    const cube = await Cube.findById(leanCube._id);
+const processCube = async (cube) => {
+  cube.shortID = cube.urlAlias;
+  cube.urlAlias = undefined;
 
-    cube.shortID = cube.urlAlias;
-    cube.urlAlias = undefined;
-
-    await cube.save();
-  }
+  await cube.save();
 };
 
 try {
@@ -29,8 +25,8 @@ try {
 
     // process all cube objects
     console.log('Started');
-    const count = await Cube.countDocuments();
-    const cursor = Cube.find().lean().cursor();
+    const count = await Cube.countDocuments({ urlAlias: { $exists: true, $ne: null } });
+    const cursor = Cube.find({ urlAlias: { $exists: true, $ne: null } }).cursor();
 
     // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
