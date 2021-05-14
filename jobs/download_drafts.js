@@ -10,15 +10,8 @@ const deckutils = require('../dist/utils/deckutils');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
-const monthNames = ["january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
-];
-
-const date = new Date();
-const folder = `${monthNames[date.getMonth()]}${date.getDate()}`;
-
 const batchSize = 1000;
 
 let cardToInt;
@@ -31,7 +24,7 @@ const processDeck = async (deck, draft) => {
 
   const seen = [];
   index = 0;
-  const pickorder = deck.seats[0].pickorder;
+  const { pickorder } = deck.seats[0];
   for (const card of pickorder) {
     // named import doesn't work for some reason
     // eslint-disable-next-line import/no-named-as-default-member
@@ -40,7 +33,7 @@ const processDeck = async (deck, draft) => {
     let pack;
     try {
       [cardsInPack, pick, pack] = deckutils.default.getPackAsSeen(draft.initial_state, index, deck, 0); // eslint-disable-line prefer-const
-    } catch(e) {
+    } catch (e) {
       console.warn(e);
       return null;
     }
@@ -70,9 +63,9 @@ const writeToS3 = async (fileName, body) => {
     Bucket: 'cubecobra',
     Key: `${folder}/${fileName}`,
     Body: JSON.stringify(body),
-  }
+  };
   await s3.upload(params).promise();
-}
+};
 
 (async () => {
   await carddb.initializeCardDb();
@@ -82,7 +75,7 @@ const writeToS3 = async (fileName, body) => {
   for (const card of carddb.allCards()) {
     intToCard[cardToInt[card.name_lower]] = card;
   }
-  
+
   await Promise.all([writeToS3('cardToInt.json', cardToInt), writeToS3('intToCard.json', intToCard)]);
 
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
@@ -98,16 +91,18 @@ const writeToS3 = async (fileName, body) => {
         if (i + j < count) {
           // eslint-disable-next-line no-await-in-loop
           const deck = await cursor.next();
-          if (deck &&
-              deck.seats &&
-              deck.seats[0] &&
-              deck.seats[0].deck &&
-              deck.seats[0].pickorder &&
-              deck.draft &&
-              deck.seats[0].sideboard &&
-              deck.seats[0].pickorder.length &&
-              !deck.cards &&
-              !deck.seats[0].bot) {
+          if (
+            deck &&
+            deck.seats &&
+            deck.seats[0] &&
+            deck.seats[0].deck &&
+            deck.seats[0].pickorder &&
+            deck.draft &&
+            deck.seats[0].sideboard &&
+            deck.seats[0].pickorder.length &&
+            !deck.cards &&
+            !deck.seats[0].bot
+          ) {
             decks.push(deck);
           }
         }
@@ -118,7 +113,7 @@ const writeToS3 = async (fileName, body) => {
       const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
       const deckQs = decks.map((deck) => processDeck(deck, draftsById[deck.draft]));
       // eslint-disable-next-line no-await-in-loop
-      const processedDecks =  (await Promise.all(deckQs)).filter((d) => d);
+      const processedDecks = (await Promise.all(deckQs)).filter((d) => d);
       if (processedDecks.length > 0) {
         await writeToS3(`drafts/${counter}.json`, processedDecks);
         counter += 1;

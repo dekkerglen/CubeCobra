@@ -43,33 +43,33 @@ const processCube = async (leanCube) => {
 try {
   (async () => {
     await carddb.initializeCardDb();
-    mongoose.connect(process.env.MONGODB_URL).then(async () => {
-      // process all cube objects
-      console.log('Started');
-      const count = await Cube.countDocuments();
-      const cursor = Cube.find().lean().cursor();
+    await mongoose.connect(process.env.MONGODB_URL);
 
-      // batch them in 100
-      for (let i = 0; i < count; i += batchSize) {
-        const cubes = [];
-        for (let j = 0; j < batchSize; j++) {
-          if (i + j < count) {
-            const cube = await cursor.next();
-            if (cube) {
-              cubes.push(cube);
-            }
+    // process all cube objects
+    console.log('Started');
+    const count = await Cube.countDocuments();
+    const cursor = Cube.find().lean().cursor();
+
+    // batch them by batchSize
+    for (let i = 0; i < count; i += batchSize) {
+      const cubes = [];
+      for (let j = 0; j < batchSize; j++) {
+        if (i + j < count) {
+          const cube = await cursor.next();
+          if (cube) {
+            cubes.push(cube);
           }
         }
-
-        await Promise.all(cubes.map(processCube));
-
-        console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
       }
 
-      mongoose.disconnect();
-      console.log('done');
-      process.exit();
-    });
+      await Promise.all(cubes.map(processCube));
+
+      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
+    }
+
+    mongoose.disconnect();
+    console.log('done');
+    process.exit();
   })();
 } catch (err) {
   console.error(err);

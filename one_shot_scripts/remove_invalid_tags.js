@@ -31,7 +31,7 @@ const processCube = (cube) => {
     const count = await Cube.countDocuments();
     const cursor = Cube.find().lean().cursor();
 
-    // batch them in 100
+    // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
       const cubes = [];
       for (let j = 0; j < batchSize; j++) {
