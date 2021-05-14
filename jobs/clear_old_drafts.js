@@ -15,7 +15,7 @@ const getObjectCreatedAtPlus7 = (obj) => {
 
 const processDraft = async (draft) => {
   if (draft !== null && getObjectCreatedAtPlus7(draft) < NOW) {
-    if (await Deck.exists({ draft: draft._id })) {
+    if (!(await Deck.exists({ draft: draft._id }))) {
       return draft._id;
     }
   }
