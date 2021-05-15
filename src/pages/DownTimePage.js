@@ -10,11 +10,11 @@ const DownTimePage = () => (
     </Row>
     <Card>
       <CardHeader>
-        <h5>Cube Cobra is currently down for scheduled maintenence.</h5>
+        <h5>Cube Cobra is currently down for scheduled maintenance.</h5>
       </CardHeader>
       <CardBody>
         <p>
-          The Cube Cobra developers are working hard on improving the service! This downtime is neccesary to improve the
+          The Cube Cobra developers are working hard on improving the service! This downtime is necessary to improve the
           long-term performance of Cube Cobra. Sorry for any temporary inconvenience!
         </p>
         <p>
