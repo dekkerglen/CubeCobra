@@ -5,7 +5,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const DownTimePage = () => (
   <Col xs="12" md="8" xl="5" style={{ margin: 'auto' }}>
-    <Row style={{ margin: 'auto' }} width="50%" className="mb-5 mt-4">
+    <Row className="mb-5 mt-4">
       <img src="/content/logo.png" alt="Cube Cobra logo" width="50%" style={{ margin: 'auto' }} />
     </Row>
     <Card>
