@@ -1,27 +1,27 @@
 import React from 'react';
 
 import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const DownTimePage = () => (
-  <MainLayout>
-    <DynamicFlash />
-    <Card className="my-3 mx-4">
+  <Col xs="12" md="8" xl="5" style={{ margin: 'auto' }}>
+    <Row className="mb-5 mt-4">
+      <img src="/content/logo.png" alt="Cube Cobra logo" width="50%" style={{ margin: 'auto' }} />
+    </Row>
+    <Card>
       <CardHeader>
-        <h5>Cube Cobra is currently down for scheduled maintenence.</h5>
+        <h5>Cube Cobra is currently down for scheduled maintenance.</h5>
       </CardHeader>
       <CardBody>
         <p>
-          The Cube Cobra developers are working hard on improving the service! This downtime is neccesary to improve the
+          The Cube Cobra developers are working hard on improving the service! This downtime is necessary to improve the
           long-term performance of Cube Cobra. Sorry for any temporary inconvenience!
         </p>
         <p>
           Feel free to contact us if you have any issues or concerns. Comments, ideas, and suggestions are always
           welcome. Here are the easiest ways to get in touch with us:
         </p>
+
         <Row>
           <Col xs="12" sm="4">
             <strong>Official Twitter</strong>
@@ -48,7 +48,7 @@ const DownTimePage = () => (
         </Row>
       </CardBody>
     </Card>
-  </MainLayout>
+  </Col>
 );
 
 export default RenderToRoot(DownTimePage);
