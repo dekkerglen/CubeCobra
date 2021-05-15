@@ -1,15 +1,14 @@
 import React from 'react';
 
 import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const DownTimePage = () => (
-  <MainLayout>
-    <DynamicFlash />
-    <Card className="my-3 mx-4">
+  <Col xs="12" md="8" xl="5" style={{ margin: 'auto' }}>
+    <Row style={{ margin: 'auto' }} width="50%" className="mb-5 mt-4">
+      <img src="/content/logo.png" alt="Cube Cobra logo" width="50%" style={{ margin: 'auto' }} />
+    </Row>
+    <Card>
       <CardHeader>
         <h5>Cube Cobra is currently down for scheduled maintenence.</h5>
       </CardHeader>
@@ -22,6 +21,7 @@ const DownTimePage = () => (
           Feel free to contact us if you have any issues or concerns. Comments, ideas, and suggestions are always
           welcome. Here are the easiest ways to get in touch with us:
         </p>
+
         <Row>
           <Col xs="12" sm="4">
             <strong>Official Twitter</strong>
@@ -48,7 +48,7 @@ const DownTimePage = () => (
         </Row>
       </CardBody>
     </Card>
-  </MainLayout>
+  </Col>
 );
 
 export default RenderToRoot(DownTimePage);
