@@ -848,7 +848,7 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   }
   winston.info('Updating cardbase, this might take a little while...');
 
-  if (process.env.USE_S3) {
+  if (process.env.USE_S3 === 'true') {
     await downloadFromS3(basePath, defaultPath, allPath);
   } else {
     await downloadFromScryfall(ratings, basePath, defaultPath, allPath);

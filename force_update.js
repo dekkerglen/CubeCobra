@@ -16,7 +16,7 @@ winston.configure({
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     let ratings = [];
-    if (!process.env.USE_S3) {
+    if (!process.env.USE_S3 === 'true') {
       ratings = await CardRating.find({}, 'name elo embedding').lean();
     }
     await updatedb.updateCardbase(ratings);
