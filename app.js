@@ -204,7 +204,7 @@ schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
 
   let ratings = [];
-  if (!process.env.USE_S3 === 'true') {
+  if (process.env.USE_S3 !== 'true') {
     ratings = await CardRating.find({}, 'name elo embedding').lean();
   }
   updatedb.updateCardbase(ratings);

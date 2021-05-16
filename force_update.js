@@ -10,7 +10,7 @@ const CardRating = require('./models/cardrating');
   try {
     await mongoose.connect(process.env.MONGODB_URL);
     let ratings = [];
-    if (!process.env.USE_S3 === 'true') {
+    if (process.env.USE_S3 !== 'true') {
       ratings = await CardRating.find({}, 'name elo embedding').lean();
     }
     await updatedb.updateCardbase(ratings);
