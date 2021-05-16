@@ -13,7 +13,6 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
-const updatedb = require('../serverjs/updatecards.js');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
@@ -476,18 +475,13 @@ const run = async () => {
   process.exit();
 };
 
-// Connect db
-mongoose
-  .connect(process.env.MONGODB_URL, {
-    useCreateIndex: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    try {
-      run();
-    } catch (error) {
-      winston.error(error, { error });
-      process.exit();
-    }
-  });
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    await run();
+  } catch (error) {
+    winston.error(error, { error });
+  }
+
+  process.exit();
+})();
