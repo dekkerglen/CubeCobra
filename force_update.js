@@ -6,13 +6,6 @@ const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards.js');
 const CardRating = require('./models/cardrating');
 
-winston.configure({
-  level: 'info',
-  format: winston.format.simple(),
-  exitOnError: false,
-  transports: [new winston.transports.Console()],
-});
-
 (async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URL);
