@@ -835,7 +835,7 @@ const downloadFromS3 = async (basePath = 'private') => {
           Key: `cards/${file}`,
         })
         .promise();
-      await fs.writeFileSync(`private/${file}`, res.Body);
+      await fs.writeFileSync(`${basePath}}/${file}`, res.Body);
     }),
   );
 
