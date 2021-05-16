@@ -437,8 +437,6 @@ const run = async () => {
     if ((i + 1) % 10 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
-
-    break;
   }
   winston.info('Finished: all cubes');
 
@@ -452,7 +450,6 @@ const run = async () => {
     if ((i + 1) % 1000 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
-    break;
   }
   winston.info('Finished: all decks');
 
