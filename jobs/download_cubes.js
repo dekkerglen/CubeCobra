@@ -22,14 +22,22 @@ const processCube = (cube, cardToInt) => ({
   id: cube._id,
   ownerName: cube.owner_name,
   shortId: cube.shortID,
-  urlAlias: cube.urlAlias,
   categoryOverride: cube.categoryOverride,
   categoryPrefixes: cube.categoryPrefixes,
   tags: cube.tags,
   dateUpdated: cube.date_updated,
-  cards: cube.cards.filter((c) => c).map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
-  maybe: (cube.maybe || []).filter((c) => c).map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower]),
-  basics: (cube.basics || []).filter((c) => c).map((card) => cardToInt[carddb.cardFromId(card).name_lower]),
+  cards: cube.cards
+    .filter((c) => c)
+    .map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower])
+    .filter((c) => c || c === 0),
+  maybe: (cube.maybe || [])
+    .filter((c) => c)
+    .map((card) => cardToInt[carddb.cardFromId(card.cardID).name_lower])
+    .filter((c) => c || c === 0),
+  basics: (cube.basics || [])
+    .filter((c) => c)
+    .map((card) => cardToInt[carddb.cardFromId(card).name_lower])
+    .filter((c) => c || c === 0),
   numUsersFollowing: (cube.users_following || []).length,
   imageUri: cube.image_uri,
   imageName: cube.image_name,

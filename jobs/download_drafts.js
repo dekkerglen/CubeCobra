@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+// run with: node --max-old-space-size=8192 download_drafts.js
+// will oom without the added tag
 // Load Environment Variables
 require('dotenv').config();
 const mongoose = require('mongoose');
