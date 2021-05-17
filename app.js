@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+require('../models/mongoinit');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
@@ -15,6 +16,7 @@ const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
+
 const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');

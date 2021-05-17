@@ -2,6 +2,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
+require('../models/mongoinit');
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const carddb = require('../serverjs/cards');
@@ -9,7 +10,7 @@ const deckutils = require('../dist/utils/deckutils');
 const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
 
 // Number of documents to process at a time
-const batchSize = 512;
+const batchSize = 256;
 // Minimum size in bytes of the output files (last file may be smaller).
 const minFileSize = 128 * 1024 * 1024; // 128 MB
 
@@ -83,14 +84,13 @@ const isValidDeck = (deck) =>
   const { cardToInt } = await loadCardToInt();
   await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   // process all deck objects
-  console.log('Started');
-  const count = await Deck.count();
+  const count = await Deck.countDocuments();
   console.log(`Counted ${count} documents`);
   const cursor = Deck.find().lean().cursor();
   let counter = 0;
   let i = 0;
-  const processedDecks = [];
   while (i < count) {
+    const processedDecks = [];
     let size = 0;
     for (; size < minFileSize && i < count; ) {
       const decks = [];
@@ -102,29 +102,24 @@ const isValidDeck = (deck) =>
           decks.push(deck);
         }
       }
-      console.log(`There were ${decks.length} valid decks.`);
       const draftIds = [...new Set(decks.map(({ draft }) => draft))];
       // eslint-disable-next-line no-await-in-loop
       const drafts = await Draft.find({ _id: { $in: draftIds } }).lean();
-      console.log(`Out of ${draftIds.length} draftIds we found ${drafts.length} drafts.`);
       const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
       const deckQs = decks
         .filter((deck) => isValidDraft(draftsById[deck.draft]))
         .map((deck) => processDeck(deck, draftsById[deck.draft], cardToInt));
-      console.log(`There are ${deckQs.length} decks being processed.`);
       // eslint-disable-next-line no-await-in-loop
       const processingDecks = (await Promise.all(deckQs)).filter((d) => d);
       size += Buffer.byteLength(JSON.stringify(processingDecks));
       processedDecks.push(...processingDecks);
-      console.log(`Finished: ${i} of ${count} decks.`);
-      console.log(`The buffer is at approximately ${size} bytes or ${size / 1024 / 1024} MB.`);
+      console.log(`Finished: ${i} of ${count} decks and the buffer is approximately ${(size / 1024 / 1024).toFixed(2)} MB.`);
     }
     if (processedDecks.length > 0) {
-      const filename = `drafts/${counter.padStart(6, '0')}.json`;
+      const filename = `drafts/${counter.toString().padStart(6, '0')}.json`;
       writeFile(filename, processedDecks);
       counter += 1;
       console.log(`Wrote file ${filename} with ${processedDecks.length} decks.`);
-      processedDecks.length = 0;
     }
   }
   mongoose.disconnect();

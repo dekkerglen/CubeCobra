@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
+require('../models/mongoinit');
 const Deck = require('../models/deck');
 const carddb = require('../serverjs/cards.js');
 const { getObjectCreatedAt, loadCardToInt, writeFile } = require('./utils');
@@ -38,6 +39,7 @@ const processDeck = (deck, cardToInt) => {
     main,
     side,
     cubeid: deck.cube,
+    draftid: deck.draft,
     username: deck.seats[0].username,
     date: deck.date,
     createdAt: getObjectCreatedAt(deck._id),
@@ -48,24 +50,28 @@ const processDeck = (deck, cardToInt) => {
   const { cardToInt } = await loadCardToInt();
   await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   // process all deck objects
-  console.log('Started');
-  const count = await Deck.count();
+  const count = await Deck.countDocuments();
   console.log(`Counted ${count} documents`);
   const cursor = Deck.find().lean().cursor();
 
   let counter = 0;
   let i = 0;
-  const decks = [];
   while (i < count) {
-    for (; Buffer.byteLength(JSON.stringify(decks)) < minFileSize && i < count; i += batchSize) {
-      for (let j = 0; j < Math.min(batchSize, count - i); j++) {
+    const decks = [];
+    let size = 0;
+    for (; size < minFileSize && i < count; ) {
+      const processingDecks = [];
+      const nextBound = Math.min(i + batchSize, count);
+      for (; i < nextBound; i++) {
         // eslint-disable-next-line no-await-in-loop
         const deck = await cursor.next();
         if (deck) {
-          decks.push(processDeck(deck, cardToInt));
+          processingDecks.push(processDeck(deck, cardToInt));
         }
       }
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
+      size += Buffer.byteLength(JSON.stringify(processingDecks));
+      decks.push(...processingDecks);
+      console.log(`Finished: ${i} of ${count} decks and the buffer is approximately ${size / 1024 / 1024} MB.`);
     }
     if (decks.length > 0) {
       const filename = `decks/${counter.toString().padStart(6, '0')}.json`;
