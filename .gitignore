@@ -2,7 +2,7 @@ private/
 /dist/
 /.vscode/
 src/generated/
-jobs/export/
+exports/
 
 .python-version
 

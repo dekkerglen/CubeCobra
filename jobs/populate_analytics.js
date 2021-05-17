@@ -13,7 +13,6 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
-const updatedb = require('../serverjs/updatecards.js');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 
@@ -209,7 +208,9 @@ async function processCube(cube) {
     }
   }
 
-  const uniqueOracleIds = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  const uniqueOracleIds = Array.from(
+    new Set(cube.cards.filter((c) => c).map((card) => carddb.cardFromId(card.cardID).oracle_id)),
+  );
   uniqueOracleIds.forEach((oracleId) => {
     if (correlationIndex[oracleId]) {
       cubesWithCard[correlationIndex[oracleId]].push(cube._id);
@@ -235,7 +236,7 @@ async function processCube(cube) {
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
   const { name } = card;
-  const oracleId = name.oracle_id;
+  const oracleId = card.oracle_id;
 
   const rating = ratingsDict[name]; // await CardRating.findOne({ name });
 
@@ -270,11 +271,20 @@ async function processCard(card) {
   // cubed with
   // create correl dict
   const cubedWith = distinctOracles
-    .map((otherOracleId) => ({
-      oracle: otherOracleId,
-      count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
-      type: cardFromOracle(otherOracleId).type.toLowerCase(),
-    }))
+    .map((otherOracleId) => {
+      try {
+        return {
+          oracle: otherOracleId,
+          count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
+          type: cardFromOracle(otherOracleId).type.toLowerCase(),
+        };
+      } catch (e) {
+        console.error(e);
+        console.log(`oracle: ${oracleId}, other: ${otherOracleId}`);
+        console.log(`index: ${correlationIndex[oracleId]}, other: ${correlationIndex[otherOracleId]}`);
+        return {};
+      }
+    })
     .filter((item) => item.oracle !== oracleId && !item.type.includes('basic land'));
 
   const synergyWith = distinctOracles
@@ -397,7 +407,6 @@ const run = async () => {
   winston.info('finished loading cards');
 
   const ratings = await CardRating.find({}).lean();
-  await updatedb.updateCardbase(ratings);
 
   winston.info('Started: oracles');
 
@@ -455,25 +464,21 @@ const run = async () => {
     winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 
+  winston.info('Done');
   // this is needed for log group to stream
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
-  winston.info('Done');
   process.exit();
 };
 
-// Connect db
-mongoose
-  .connect(process.env.MONGODB_URL, {
-    useCreateIndex: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    try {
-      run();
-    } catch (error) {
-      winston.error(error, { error });
-    }
-  });
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    await run();
+  } catch (error) {
+    winston.error(error, { error });
+  }
+
+  process.exit();
+})();

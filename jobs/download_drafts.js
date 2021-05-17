@@ -24,7 +24,7 @@ const processDeck = async (deck, draft, cardToInt) => {
     let pick;
     let pack;
     try {
-      [cardsInPack, pick, pack] = deckutils.default.getPackAsSeen(draft.initial_state, index, deck, 0);
+      [cardsInPack, pick, pack] = deckutils.default.getPackAsSeen(draft.initial_state, index, deck, 0); // eslint-disable-line prefer-const
     } catch (e) {
       console.warn(e);
       return null;
@@ -80,49 +80,55 @@ const isValidDeck = (deck) =>
   deck.seats[0].pickorder.length &&
   !deck.seats[0].bot;
 
-(async () => {
-  const { cardToInt } = await loadCardToInt();
-  await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  // process all deck objects
-  const count = await Deck.countDocuments();
-  console.log(`Counted ${count} documents`);
-  const cursor = Deck.find().lean().cursor();
-  let counter = 0;
-  let i = 0;
-  while (i < count) {
-    const processedDecks = [];
-    let size = 0;
-    for (; size < minFileSize && i < count; ) {
-      const decks = [];
-      const nextBound = Math.min(i + batchSize, count);
-      for (; i < nextBound; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        const deck = await cursor.next();
-        if (isValidDeck(deck)) {
-          decks.push(deck);
+try {
+  (async () => {
+    const { cardToInt } = await loadCardToInt();
+    // process all deck objects
+    const count = await Deck.countDocuments();
+    console.log(`Counted ${count} documents`);
+    const cursor = Deck.find().lean().cursor();
+    let counter = 0;
+    let i = 0;
+    while (i < count) {
+      const processedDecks = [];
+      let size = 0;
+      for (; size < minFileSize && i < count; ) {
+        const decks = [];
+        const nextBound = Math.min(i + batchSize, count);
+        for (; i < nextBound; i++) {
+          // eslint-disable-next-line no-await-in-loop
+          const deck = await cursor.next();
+          if (isValidDeck(deck)) {
+            decks.push(deck);
+          }
         }
+        const draftIds = [...new Set(decks.map(({ draft }) => draft))];
+        // eslint-disable-next-line no-await-in-loop
+        const drafts = await Draft.find({ _id: { $in: draftIds } }).lean();
+        const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
+        const deckQs = decks
+          .filter((deck) => isValidDraft(draftsById[deck.draft]))
+          .map((deck) => processDeck(deck, draftsById[deck.draft], cardToInt));
+        // eslint-disable-next-line no-await-in-loop
+        const processingDecks = (await Promise.all(deckQs)).filter((d) => d);
+        size += Buffer.byteLength(JSON.stringify(processingDecks));
+        processedDecks.push(...processingDecks);
+        console.log(
+          `Finished: ${i} of ${count} decks and the buffer is approximately ${(size / 1024 / 1024).toFixed(2)} MB.`,
+        );
       }
-      const draftIds = [...new Set(decks.map(({ draft }) => draft))];
-      // eslint-disable-next-line no-await-in-loop
-      const drafts = await Draft.find({ _id: { $in: draftIds } }).lean();
-      const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
-      const deckQs = decks
-        .filter((deck) => isValidDraft(draftsById[deck.draft]))
-        .map((deck) => processDeck(deck, draftsById[deck.draft], cardToInt));
-      // eslint-disable-next-line no-await-in-loop
-      const processingDecks = (await Promise.all(deckQs)).filter((d) => d);
-      size += Buffer.byteLength(JSON.stringify(processingDecks));
-      processedDecks.push(...processingDecks);
-      console.log(`Finished: ${i} of ${count} decks and the buffer is approximately ${(size / 1024 / 1024).toFixed(2)} MB.`);
+      if (processedDecks.length > 0) {
+        const filename = `drafts/${counter.toString().padStart(6, '0')}.json`;
+        writeFile(filename, processedDecks);
+        counter += 1;
+        console.log(`Wrote file ${filename} with ${processedDecks.length} decks.`);
+      }
     }
-    if (processedDecks.length > 0) {
-      const filename = `drafts/${counter.toString().padStart(6, '0')}.json`;
-      writeFile(filename, processedDecks);
-      counter += 1;
-      console.log(`Wrote file ${filename} with ${processedDecks.length} decks.`);
-    }
-  }
-  mongoose.disconnect();
-  console.log('done');
+    mongoose.disconnect();
+    console.log('done');
+    process.exit();
+  })();
+} catch (err) {
+  console.error(err);
   process.exit();
-})();
+}
