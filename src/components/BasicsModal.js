@@ -18,12 +18,6 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
     toggle();
   }, [addBasics, toggle, basics, counts]);
 
-  console.debug(
-    'cards[basics]',
-    basics.map((ci) => cards[ci]),
-    'deck[basics]',
-    deck.map((ci) => cards[ci]),
-  );
   const calculateBasics = useCallback(async () => {
     const { deck: newDeck } = await buildDeck(cards, deck, basics);
     const basicIds = fromEntries(basics.map((ci, idx) => [ci, idx]));

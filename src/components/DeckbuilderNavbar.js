@@ -132,6 +132,7 @@ DeckbuilderNavbar.propTypes = {
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+    seats: PropTypes.arrayOf(PropTypes.shape({ pickorder: PropTypes.number.isRequired }).isRequired).isRequired,
   }).isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,

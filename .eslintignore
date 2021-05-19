@@ -4,10 +4,11 @@ config/passport.js
 jobs/download_cubes.js
 jobs/populate_analytics.js
 jobs/populate_embeddings.js
-jobs/populate_ratings.js
-jobs/test_routes.js
+jobs/archived/populate_ratings.js
+jobs/archived/test_routes.js
 one_shot_scripts/add_blog_names.js
 one_shot_scripts/add_deck_owners.js
+one_shot_scripts/add_default_basics.js
 one_shot_scripts/fix_cube_deck_count.js
 one_shot_scripts/fix_deck_count.js
 one_shot_scripts/generate_short_ids.js

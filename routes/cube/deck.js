@@ -512,8 +512,12 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
               card.details.elo = eloOverrideDict[card.details.name_lower];
             }
           }
-          // eslint-disable-next-line no-await-in-loop
-          const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
+          const {
+            deck: builtDeck,
+            sideboard,
+            colors,
+            // eslint-disable-next-line no-await-in-loop
+          } = await deckutil.default.buildDeck(
             base.seats[i].pickorder,
             (cube.basics || DEFAULT_BASICS).map((cardID) => {
               const details = carddb.cardFromId(cardID);

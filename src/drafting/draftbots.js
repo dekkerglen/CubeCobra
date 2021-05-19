@@ -28,7 +28,7 @@ import {
   cardName,
   cardType,
 } from 'utils/Card';
-import { arrayShuffle, arraysAreEqualSets, fromEntries, arrayIsSubset } from 'utils/Util';
+import { arraysAreEqualSets, fromEntries, arrayIsSubset } from 'utils/Util';
 
 import probTable from 'res/probTable.json';
 
@@ -327,10 +327,6 @@ export const ORACLES = Object.freeze(
 );
 export const ORACLES_BY_NAME = Object.freeze(fromEntries(ORACLES.map((oracle) => [oracle.title, oracle])));
 
-const landCountsAreEqual = (count1, count2) =>
-  !Object.entries(count1).some(([k, v]) => v !== (count2[k] ?? 0)) &&
-  !Object.entries(count2).some(([k, v]) => v !== (count1[k] ?? 0));
-
 const getCombinationForLands = (lands) => {
   const counts = fromEntries(COLORS.map((c) => [c, 0]));
   for (const [comb, count] of Object.entries(lands)) {
@@ -493,11 +489,6 @@ const findBetterLands = (currentScore) => {
         newScore.nonlandProbability,
         'scoreObj',
         newScore,
-      );
-      console.debug(
-        newScore.botState.probabilities
-          .map((prob, ci) => [prob, result.botState.probabilities[ci], cardName(botState.cards[ci])])
-          .filter(([p, p2]) => p !== null && p2 !== null),
       );
       result = newScore;
     }

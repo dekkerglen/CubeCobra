@@ -113,42 +113,6 @@ function setCubeType(cube, carddb) {
   cube.card_count = cube.cards.length;
   return cube;
 }
-function getBasics(carddb) {
-  const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-  const set = 'unh';
-  const res = {};
-  for (const name of names) {
-    let found = false;
-    const options = carddb.getIdsFromName(name);
-    for (const option of options) {
-      const card = carddb.cardFromId(option);
-      if (!found && card.set.toLowerCase() === set) {
-        found = true;
-        res[name] = {
-          cardID: option,
-          type_line: card.type,
-          cmc: 0,
-          details: card,
-        };
-      }
-    }
-  }
-  let found = false;
-  const options = carddb.getIdsFromName('Wastes');
-  for (const option of options) {
-    const card = carddb.cardFromId(option);
-    if (!found && card.set.toLowerCase() === 'ogw') {
-      found = true;
-      res.Wastes = {
-        cardID: option,
-        type_line: card.type,
-        cmc: 0,
-        details: card,
-      };
-    }
-  }
-  return res;
-}
 
 function addBasics(deck, cardsArray, basics, carddb, saveToDeck = false) {
   const populatedBasics = basics.map((cardID) => {
@@ -580,7 +544,6 @@ function cachePromise(key, callback) {
 
 const methods = {
   addBasics,
-  getBasics,
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {

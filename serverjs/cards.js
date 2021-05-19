@@ -139,6 +139,7 @@ function unloadCardDb() {
       fs.unwatchFile(filename);
     } catch (e) {
       // This is likely just because we didn't register them.
+      winston.warn(null, { error: new Error(`Failed to unwatch file ${filename}.`) });
     }
   }
   delete data.printedCardList;
