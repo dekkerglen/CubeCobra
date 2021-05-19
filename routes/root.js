@@ -21,7 +21,7 @@ const router = express.Router();
 router.use(csrfProtection);
 
 const CUBE_PREVIEW_FIELDS =
-  '_id urlAlias shortId image_uri image_name image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
+  '_id shortID image_uri image_name image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
 
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));

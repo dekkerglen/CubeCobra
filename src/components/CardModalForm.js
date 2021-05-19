@@ -98,6 +98,11 @@ const CardModalForm = ({ children, ...props }) => {
     if (updated.colorCategory === cardGetLabels(card, 'Color Category')) {
       updated.colorCategory = null;
     }
+    // allow non-negative integers and half-integers
+    updated.cmc = parseFloat(updated.cmc);
+    if (!Number.isInteger(updated.cmc * 2) || updated.cmc < 0) {
+      updated.cmc = null;
+    }
     updated.cardID = updated.version;
     delete updated.version;
     updated.tags = updated.tags.map((tag) => tag.text);

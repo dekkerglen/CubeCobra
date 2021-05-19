@@ -168,7 +168,7 @@ class CubeOverviewModal extends Component {
         },
       }));
     } else {
-      if (target.name === 'urlAlias') this.setState({ urlChanged: true });
+      if (target.name === 'shortID') this.setState({ urlChanged: true });
       this.setState((prevState) => ({
         cube: {
           ...prevState.cube,
@@ -235,8 +235,9 @@ class CubeOverviewModal extends Component {
                   name="name"
                   type="text"
                   value={cube.name}
+                  required={true}
                   onChange={this.handleChange}
-                ></input>
+                />
                 <br />
 
                 <h6>Options</h6>
@@ -327,7 +328,7 @@ class CubeOverviewModal extends Component {
                 </Row>
                 <br />
                 <AutocompleteInput
-                  treeUrl={'/cube/api/fullnames'}
+                  treeUrl="/cube/api/fullnames"
                   treePath="cardnames"
                   type="text"
                   className="mr-2"
@@ -342,7 +343,12 @@ class CubeOverviewModal extends Component {
                 <br />
 
                 <h6>Description</h6>
-                <TextEntry name="blog" value={pickDescriptionFromCube(cube)} onChange={this.handleDescriptionChange} />
+                <TextEntry
+                  name="blog"
+                  value={pickDescriptionFromCube(cube)}
+                  onChange={this.handleDescriptionChange}
+                  maxLength={100000}
+                />
                 <FormText>
                   Having trouble formatting your posts? Check out the{' '}
                   <a href="/markdown" target="_blank">
@@ -359,10 +365,11 @@ class CubeOverviewModal extends Component {
                 <h6>Custom ID</h6>
                 <input
                   className="form-control"
-                  name="urlAlias"
+                  name="shortID"
                   type="text"
-                  value={cube.urlAlias ? cube.urlAlias : ''}
+                  value={cube.shortID}
                   onChange={this.handleChange}
+                  required={true}
                   placeholder="Give this cube an easy to remember URL."
                 />
                 <br />

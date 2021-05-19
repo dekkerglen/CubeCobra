@@ -205,7 +205,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
           setValues(updateF);
         } catch (err) {
           // FIXME: Display in UI.
-          console.log(err);
+          console.error(err);
         }
       } else {
         setValues(updateF);
@@ -440,7 +440,7 @@ const ListView = ({ cards }) => {
               <th>Type</th>
               <th>Status</th>
               <th>Finish</th>
-              <th>CMC</th>
+              <th>MV</th>
               <th>Color</th>
               <th>Tags</th>
             </tr>

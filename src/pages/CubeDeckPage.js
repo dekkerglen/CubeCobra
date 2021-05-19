@@ -83,7 +83,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
             className="d-none"
             innerRef={submitDeckForm}
             method="POST"
-            action={`/cube/submitdeck/${cube._id}`}
+            action={`/cube/deck/submitdeck/${cube._id}`}
           >
             <Input type="hidden" name="body" value={draftId} />
             <Input type="hidden" name="skipDeckbuilder" value="true" />
@@ -121,7 +121,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                 </NavItem>
                 {user && deck.owner === user.id && (
                   <NavItem>
-                    <NavLink href={`/cube/deckbuilder/${deck._id}`}>Edit</NavLink>
+                    <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
                 )}
                 {loading && <Spinner className="position-absolute" />}
@@ -131,14 +131,16 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                       Rebuild/Redraft
                     </DropdownToggle>
                     <DropdownMenu right>
-                      <DropdownItem href={`/cube/redraft/${deck._id}`}>Redraft</DropdownItem>
+                      <DropdownItem href={`/cube/deck/redraft/${deck._id}`}>Redraft</DropdownItem>
                       <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
-                      <DropdownItem href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
+                      <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
+                        Clone and Rebuild
+                      </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 ) : (
                   <NavItem>
-                    <NavLink href={`/cube/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
+                    <NavLink href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
                   </NavItem>
                 )}
                 <CustomImageToggler />

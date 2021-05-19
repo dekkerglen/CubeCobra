@@ -47,7 +47,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
       <ModalBody>
         <Row>
           {basics.map((cardIndex, index) => (
-            <Col xs="6" md="3" lg="2" key={`basics-${cards[cardIndex].details._id}`}>
+            <Col className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4" key={`basics-${cards[cardIndex].details._id}`}>
               <Card className="mb-3">
                 <img
                   className="w-100"

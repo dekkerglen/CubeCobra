@@ -68,7 +68,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
     });
   };
@@ -81,7 +81,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
     });
   };
@@ -213,7 +213,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     )}
                   </Row>
                 )}
-                {user.roles.includes('Admin') && (
+                {user && user.roles.includes('Admin') && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"

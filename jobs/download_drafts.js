@@ -12,24 +12,6 @@ const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
-const monthNames = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december',
-];
-
-const date = new Date();
-const folder = `${monthNames[date.getMonth()]}${date.getDate()}`;
-
 const batchSize = 1000;
 
 let cardToInt;
@@ -81,7 +63,7 @@ const processDeck = async (deck, draft) => {
 const writeToS3 = async (fileName, body) => {
   const params = {
     Bucket: 'cubecobra',
-    Key: `${folder}/${fileName}`,
+    Key: `${fileName}`,
     Body: JSON.stringify(body),
   };
   await s3.upload(params).promise();

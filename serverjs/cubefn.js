@@ -1,56 +1,37 @@
+const NodeCache = require('node-cache');
 const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
+const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 
 function getCubeId(cube) {
-  if (cube.urlAlias) return cube.urlAlias;
   if (cube.shortID) return cube.shortID;
   return cube._id;
 }
 
 function buildIdQuery(id) {
   if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
-    return {
-      _id: id,
-    };
+    return { _id: id };
   }
-  return {
-    $or: [
-      {
-        shortID: id.toLowerCase(),
-      },
-      {
-        urlAlias: id.toLowerCase(),
-      },
-    ],
-  };
+  return { shortID: id.toLowerCase() };
 }
 
 async function generateShortId() {
-  const cubes = await Cube.find({}, ['shortID', 'urlAlias']);
-
+  const cubes = await Cube.find({}, ['shortID']);
   const shortIds = cubes.map((cube) => cube.shortID);
-  const urlAliases = cubes.map((cube) => cube.urlAlias);
-
-  const ids = cubes.map((cube) => util.fromBase36(cube.shortID));
-  let max = Math.max(...ids);
-
-  if (max < 0) {
-    max = 0;
-  }
+  const space = shortIds.length * 2;
 
   let newId = '';
   let isGoodId = false;
   while (!isGoodId) {
-    max += 1;
-    newId = util.toBase36(max);
-
-    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
+    const rand = Math.floor(Math.random() * space);
+    newId = util.toBase36(rand);
+    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId);
   }
 
   return newId;
@@ -269,21 +250,6 @@ async function getCardElo(cardname, round) {
   return round ? Math.round(rating.elo) : rating.elo;
 }
 
-async function getElo(cardnames, round) {
-  const ratings = await CardRating.find({ name: { $in: cardnames } }).lean();
-  const result = {};
-
-  for (const cardname of cardnames) {
-    result[cardname] = 1200; // default values
-  }
-
-  for (const rating of ratings) {
-    result[rating.name] = round ? Math.round(rating.elo) : rating.elo;
-  }
-
-  return result;
-}
-
 function CSVtoCards(csvString, carddb) {
   let { data } = Papa.parse(csvString.trim(), { header: true });
   data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
@@ -380,6 +346,94 @@ async function compareCubes(cardsA, cardsB) {
     allCards,
   };
 }
+
+const newCardAnalytics = (cardName, elo) => {
+  return {
+    cardName,
+    picks: 0,
+    passes: 0,
+    elo,
+    mainboards: 0,
+    sideboards: 0,
+  };
+};
+
+const removeDeckCardAnalytics = async (cube, deck, carddb) => {
+  // we don't want to save deck analytics for decks have not been built
+  if (deck.seats[0].sideboard.flat().length > 0) {
+    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+    if (!analytic) {
+      analytic = new CubeAnalytic();
+      analytic.cube = cube._id;
+    }
+
+    for (const col of deck.seats[0].deck) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
+      }
+    }
+    for (const col of deck.seats[0].sideboard) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
+      }
+    }
+
+    await analytic.save();
+  }
+};
+
+const addDeckCardAnalytics = async (cube, deck, carddb) => {
+  // we don't want to save deck analytics for decks have not been built
+  if (deck.seats[0].sideboard.flat().length > 0) {
+    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+
+    if (!analytic) {
+      analytic = new CubeAnalytic();
+      analytic.cube = cube._id;
+    }
+
+    for (const col of deck.seats[0].deck) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].mainboards += 1;
+      }
+    }
+    for (const col of deck.seats[0].sideboard) {
+      for (const current of col) {
+        let pickIndex = analytic.cards.findIndex(
+          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+        );
+        if (pickIndex === -1) {
+          pickIndex =
+            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+        }
+        analytic.cards[pickIndex].sideboards += 1;
+      }
+    }
+    await analytic.save();
+  }
+};
 
 /*
 Forked from https://github.com/lukechilds/merge-images
@@ -505,6 +559,25 @@ const generateSamplepackImage = (sources = [], options = {}) =>
     );
   });
 
+// A cache for promises that are expensive to compute and will always produce
+// the same value, such as pack images. If a promise produces an error, it's
+// removed from the cache. Each promise lives five minutes by default.
+const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false });
+
+// / Caches the result of the given callback in `promiseCache` with the given
+// / key.
+function cachePromise(key, callback) {
+  const existingPromise = promiseCache.get(key);
+  if (existingPromise) return existingPromise;
+
+  const newPromise = callback().catch((error) => {
+    promiseCache.del(key);
+    throw error;
+  });
+  promiseCache.set(key, newPromise);
+  return newPromise;
+}
+
 const methods = {
   addBasics,
   getBasics,
@@ -550,6 +623,16 @@ const methods = {
       })),
     };
   },
+  newCardAnalytics,
+  getEloAdjustment: (winner, loser, speed) => {
+    const diff = loser - winner;
+    // Expected performance for pick.
+    const expectedA = 1 / (1 + 10 ** (diff / 400));
+    const expectedB = 1 - expectedA;
+    const adjustmentA = 2 * (1 - expectedA) * speed;
+    const adjustmentB = 2 * (0 - expectedB) * speed;
+    return [adjustmentA, adjustmentB];
+  },
   generateShortId,
   buildIdQuery,
   getCubeId,
@@ -563,10 +646,12 @@ const methods = {
   cubeCardTags,
   maybeCards,
   getCardElo,
-  getElo,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
+  removeDeckCardAnalytics,
+  addDeckCardAnalytics,
+  cachePromise,
 };
 
 module.exports = methods;

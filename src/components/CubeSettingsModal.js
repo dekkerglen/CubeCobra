@@ -50,6 +50,19 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
             />
             <Label for="privatePrices">Hide Total Prices</Label>
           </FormGroup>
+          <FormGroup check>
+            <Input
+              id="disableNotifications"
+              name="disableNotifications"
+              type="checkbox"
+              defaultChecked={cube.disableNotifications || false}
+            />
+            <Label for="disableNotifications">Disable Draft Notifications</Label>
+          </FormGroup>
+          <FormGroup check>
+            <Input id="useCubeElo" name="useCubeElo" type="checkbox" defaultChecked={cube.useCubeElo || false} />
+            <Label for="useCubeElo">Use Cube Elo instead of Global Elo</Label>
+          </FormGroup>
           <FormGroup>
             <Label for="defaultStatus">Default Status</Label>
             <CustomInput
@@ -74,15 +87,6 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               <option value="recent">Most Recent</option>
               <option value="first">First</option>
             </CustomInput>
-          </FormGroup>
-          <FormGroup check>
-            <Input
-              id="disableNotifications"
-              name="disableNotifications"
-              type="checkbox"
-              defaultChecked={cube.disableNotifications || false}
-            />
-            <Label for="disableNotifications">Disable Draft Notifications</Label>
           </FormGroup>
         </CSRFForm>
       </ModalBody>

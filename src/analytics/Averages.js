@@ -13,7 +13,7 @@ import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
-  const [characteristic, setCharacteristic] = useQueryParam('field', 'CMC');
+  const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
 
   const groups = useMemo(() => sortIntoGroups(cards, sort), [cards, sort]);
 
@@ -23,7 +23,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
         .map((tuple) => {
           const vals = tuple[1]
             .filter((card) => {
-              if (characteristic === 'CMC') {
+              if (characteristic === 'Mana Value') {
                 /* If we are calculating the average cmc, we don't want to include lands in the average.
                    We can't just filter out 0 cmc cards, so we need to check the type here. */
                 const type = cardType(card);
@@ -32,7 +32,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
               return true;
             })
             .map((card) => {
-              return [card.asfan, characteristics[characteristic](card)];
+              return [card.asfan, characteristics[characteristic].get(card)];
             })
             .filter(([weight, x]) => {
               // Don't include null, undefined, or NaN values, but we still want to include 0 values.

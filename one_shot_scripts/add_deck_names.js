@@ -32,7 +32,7 @@ async function addVars(deck) {
     const count = await Deck.countDocuments();
     const cursor = Deck.find().cursor();
 
-    // batch them in 100
+    // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
       const decks = [];
       for (let j = 0; j < batchSize; j++) {

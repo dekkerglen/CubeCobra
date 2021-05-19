@@ -51,7 +51,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadDecklistModalTitle">
-      <CSRFForm method="POST" action={`/cube/uploaddecklist/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/deck/uploaddecklist/${cubeID}`}>
         <ModalHeader toggle={toggle} id="uploadDecklistModalTitle">
           Upload Decklist
         </ModalHeader>
@@ -151,7 +151,7 @@ const CustomDraftCard = ({
         className="d-none"
         innerRef={submitDeckForm}
         method="POST"
-        action={`/cube/submitdeck/${cubeID}`}
+        action={`/cube/deck/submitdeck/${cubeID}`}
       >
         <Input type="hidden" name="body" value={draftId} />
         <Input type="hidden" name="skipDeckbuilder" value="true" />
@@ -251,7 +251,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         className="d-none"
         innerRef={submitDeckForm}
         method="POST"
-        action={`/cube/submitdeck/${cubeID}`}
+        action={`/cube/deck/submitdeck/${cubeID}`}
       >
         <Input type="hidden" name="body" value={draftId} />
         <Input type="hidden" name="skipDeckbuilder" value="true" />
@@ -379,7 +379,7 @@ const DecksCard = ({ decks, userID, ...props }) => {
         ))}
       </CardBody>
       <CardFooter>
-        <a href={`/cube/decks/${cubeID}`}>View all</a>
+        <a href={`/cube/deck/decks/${cubeID}`}>View all</a>
       </CardFooter>
     </Card>
   );
@@ -499,10 +499,10 @@ const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) =>
         .map((format, index) => ({ ...format, index }))
         .sort((a, b) => {
           if (a.index === defaultDraftFormat) {
-            return 1;
+            return -1;
           }
           if (b.index === defaultDraftFormat) {
-            return -1;
+            return 1;
           }
           return a.title.localeCompare(b.title);
         }),

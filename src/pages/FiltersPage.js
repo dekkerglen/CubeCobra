@@ -313,9 +313,9 @@ const ContactPage = ({ user, loginCallback }) => (
           </tr>
         </table>
       </Accordion>
-      <Accordion title="Converted Mana Cost">
+      <Accordion title="Mana Value">
         <p>
-          You can use <code>cmc:</code> to search for specific converted mana costs.
+          You can use <code>mv:</code> to search for specific mana values.
         </p>
         <p>
           Operators supported: <code>:</code>, <code>=</code>, <code>{'<'}</code>, <code>{'>'}</code>,{' '}
@@ -328,15 +328,15 @@ const ContactPage = ({ user, loginCallback }) => (
           <tr>
             <td>
               {' '}
-              <code>{'cmc>5'}</code>{' '}
+              <code>{'mv>5'}</code>{' '}
             </td>
-            <td>Cards with converted mana cost greater than 5.</td>
+            <td>Cards with mana value greater than 5.</td>
           </tr>
           <tr>
             <td>
-              <code>cmc=3</code>{' '}
+              <code>mv=3</code>{' '}
             </td>
-            <td>Cards with converted mana cost of exactly 3.</td>
+            <td>Cards with mana value of exactly 3.</td>
           </tr>
         </table>
       </Accordion>
@@ -581,7 +581,7 @@ const ContactPage = ({ user, loginCallback }) => (
       </Accordion>
       <Accordion title="Miscellaneous">
         <p>
-          You can use <code>elo:</code> to filter cards by their ELO rating.
+          You can use <code>elo:</code> to filter cards by their Elo rating.
         </p>
         <p>
           <strong>Filters for individual cubes:</strong>
@@ -601,7 +601,7 @@ const ContactPage = ({ user, loginCallback }) => (
               <td>
                 <code>{'elo>1500'}</code>
               </td>
-              <td>All cards with an ELO rating above 1500.</td>
+              <td>All cards with an Elo rating above 1500.</td>
             </tr>
             <tr>
               <td>

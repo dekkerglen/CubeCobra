@@ -233,7 +233,7 @@ export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallb
             className="d-none"
             innerRef={submitDeckForm}
             method="POST"
-            action={`/cube/submitgriddeck/${initialDraft.cube}`}
+            action={`/cube/deck/submitgriddeck/${initialDraft.cube}`}
           >
             <Input type="hidden" name="body" value={initialDraft._id} />
           </CSRFForm>

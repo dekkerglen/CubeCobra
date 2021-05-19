@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
 
@@ -16,8 +17,6 @@ const s3 = new AWS.S3({
 });
 
 const batchSize = 1000;
-
-const folder = 'august2';
 
 const processDeck = (deck) => {
   const main = [];
@@ -45,9 +44,11 @@ const processDeck = (deck) => {
   return { main, side };
 };
 
-(async () => {
-  await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async () => {
+try {
+  (async () => {
+    await carddb.initializeCardDb();
+    await mongoose.connect(process.env.MONGODB_URL);
+
     // process all deck objects
     console.log('Started');
     const count = await Deck.countDocuments();
@@ -66,14 +67,25 @@ const processDeck = (deck) => {
       }
       const params = {
         Bucket: 'cubecobra', // pass your bucket name
-        Key: `${folder}/decks/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
+        Key: `deck_exports/${i / batchSize}.json`, // file will be saved as testBucket/contacts.csv
         Body: JSON.stringify(decks),
       };
-      await s3.upload(params).promise(); // eslint-disable-line no-await-in-loop
+      await s3.upload(params).promise();
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
     mongoose.disconnect();
+
+    const params = {
+      Bucket: 'cubecobra',
+      Key: `deck_exports/manifest.json`,
+      Body: JSON.stringify({ date_exported: new Date() }),
+    };
+    await s3.upload(params).promise();
+
     console.log('done');
     process.exit();
-  });
-})();
+  })();
+} catch (err) {
+  console.error(err);
+  process.exit();
+}

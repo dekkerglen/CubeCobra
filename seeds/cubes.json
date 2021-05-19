@@ -10007,8 +10007,7 @@
     "publicPrices": false, 
     "shortID": "1", 
     "type": "Vintage", 
-    "updated_string": "9/8/2019, 4:03:55 PM", 
-    "urlAlias": null
+    "updated_string": "9/8/2019, 4:03:55 PM"
   }, 
   {
     "_id": "5d755eba846f3a19d8b4dfa1", 
@@ -17606,7 +17605,6 @@
     "publicPrices": false, 
     "shortID": "2", 
     "type": "Vintage", 
-    "updated_string": "9/8/2019, 4:04:34 PM", 
-    "urlAlias": "seedcube"
+    "updated_string": "9/8/2019, 4:04:34 PM"
   }
 ]

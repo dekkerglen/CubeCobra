@@ -1,6 +1,9 @@
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Input } from 'reactstrap';
+import withAutocard from 'components/WithAutocard';
+
+const AutocardLi = withAutocard('li');
 
 function getAllMatches(names, current) {
   const posts = getPosts(names, current);
@@ -184,7 +187,7 @@ const fetchTree = async (treeUrl, treePath) => {
 };
 
 const AutocompleteInput = forwardRef(
-  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, ...props }, ref) => {
+  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, cubeId, ...props }, ref) => {
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
@@ -212,6 +215,7 @@ const AutocompleteInput = forwardRef(
       (event) => {
         setInputValue(event.target.value);
         setVisible(true);
+        autocard_hide_card(); /* GLOBAL */
         onChange && onChange(event);
       },
       [onChange],
@@ -225,6 +229,7 @@ const AutocompleteInput = forwardRef(
         };
         setInputValue(newValue);
         setVisible(false);
+        autocard_hide_card(); /* GLOBAL */
         setPosition(-1);
         onChange &&
           onChange({
@@ -283,9 +288,15 @@ const AutocompleteInput = forwardRef(
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
-              <li key={index} onClick={handleClickSuggestion} className={index === position ? 'active' : undefined}>
+              <AutocardLi
+                inModal
+                front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
+                key={index}
+                onClick={handleClickSuggestion}
+                className={index === position ? 'active' : undefined}
+              >
                 {match}
-              </li>
+              </AutocardLi>
             ))}
           </ul>
         )}

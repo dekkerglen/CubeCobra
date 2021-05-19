@@ -214,7 +214,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ user, card, data, versions, related, cubes, loginCallback }) => {
+const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
@@ -275,7 +275,7 @@ const CardPage = ({ user, card, data, versions, related, cubes, loginCallback })
                 block
                 outline
                 className="mb-1 mr-2"
-                modalProps={{ card, cubes, hideAnalytics: true }}
+                modalProps={{ card, cubes: user ? user.cubes : [], hideAnalytics: true }}
               >
                 Add to Cube...
               </AddModal>

@@ -79,6 +79,14 @@ export function cardsAreEquivalent(a, b) {
   );
 }
 
+export const mainboardRate = ({ mainboards, sideboards }) => {
+  return mainboards + sideboards > 0 ? mainboards / (mainboards + sideboards) : 0;
+};
+
+export const pickRate = ({ picks, passes }) => {
+  return picks + passes > 0 ? picks / (picks + passes) : 0;
+};
+
 export const cardTags = (card) => card.tags;
 
 export const cardFinish = (card) => card.finish;
@@ -181,7 +189,7 @@ export const cardImageFlip = (card) => card.details.image_flip;
 
 export const cardTokens = (card) => card.details.tokens;
 
-export const cardElo = (card) => card.details.elo;
+export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200);
 
 export const cardLayout = (card) => card.details.layout;
 
