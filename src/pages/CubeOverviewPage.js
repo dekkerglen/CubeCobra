@@ -87,20 +87,6 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       }
     });
   };
-
-  const CubeIdHeader = (
-    <span>
-      Cube ID{' '}
-      <CubeIdModalLink
-        modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState) }}
-        style={{ position: 'relative', top: '-1px' /* the icon is otherwise ~1px too low */ }}
-        aria-label="Show Cube IDs"
-      >
-        <QuestionIcon size="15" />
-      </CubeIdModalLink>
-    </span>
-  );
-
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cubeState} canEdit={user && cubeState.owner === user.id} activeLink="overview">
@@ -172,8 +158,8 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </FollowersModalLink>
                     </h6>
                   </Col>
-                  <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
-                    <TextBadge name={CubeIdHeader}>
+                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
+                    <TextBadge name="Cube ID">
                       <Tooltip text="Click to copy to clipboard">
                         <button
                           type="button"
@@ -190,6 +176,14 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </Tooltip>
                     </TextBadge>
                   </div>
+                  <CubeIdModalLink
+                    modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
+                    aria-label="Show Cube IDs"
+                    className="mr-2"
+                    style={{ position: 'relative', top: '5px' /* the icon needs to be pulled down */ }}
+                  >
+                    <QuestionIcon size="18" />
+                  </CubeIdModalLink>
                 </Row>
               </CardHeader>
               <div className="position-relative">
