@@ -28,7 +28,11 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
         <InputGroup>
           <Input className="bg-white monospaced" value={shortID} readonly />
           <InputGroupAddon addonType="append">
-            <Button className="btn-sm input-group-button" onClick={() => onCopyClick(shortID, 'Short ID')}>
+            <Button
+              className="btn-sm input-group-button"
+              onClick={() => onCopyClick(shortID, 'Short ID')}
+              aria-label="Copy Short ID"
+            >
               <ClippyIcon size={16} />
             </Button>
           </InputGroupAddon>
@@ -39,7 +43,11 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
         <InputGroup>
           <Input className="bg-white monospaced" value={fullID} readonly />
           <InputGroupAddon addonType="append">
-            <Button className="btn-sm input-group-button" onClick={() => onCopyClick(fullID, 'Full ID')}>
+            <Button
+              className="btn-sm input-group-button"
+              onClick={() => onCopyClick(fullID, 'Full ID')}
+              aria-label="Copy Full ID"
+            >
               <ClippyIcon size={16} />
             </Button>
           </InputGroupAddon>
