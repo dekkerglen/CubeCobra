@@ -362,9 +362,10 @@ class CubeOverviewModal extends Component {
                 <TagInput tags={tags} {...this.tagActions} />
                 <br />
 
-                <h6>Custom ID</h6>
+                <h6>Short ID</h6>
                 <input
                   className="form-control"
+                  id="shortID"
                   name="shortID"
                   type="text"
                   value={cube.shortID}
@@ -372,6 +373,7 @@ class CubeOverviewModal extends Component {
                   required={true}
                   placeholder="Give this cube an easy to remember URL."
                 />
+                <FormText>Changing the short ID may break existing links to your cube.</FormText>
                 <br />
               </ModalBody>
               <ModalFooter>
