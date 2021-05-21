@@ -20,7 +20,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon } from '@primer/octicons-react';
+import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
@@ -40,11 +40,13 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import DeleteCubeModal from 'components/DeleteCubeModal';
 import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
+import CubeIdModal from 'components/CubeIdModal';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
+const CubeIdModalLink = withModal('span', CubeIdModal);
 
 const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, user, loginCallback }) => {
   const [alerts, setAlerts] = useState([]);
@@ -85,6 +87,19 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       }
     });
   };
+
+  const CubeIdHeader = (
+    <span>
+      Cube ID{' '}
+      <CubeIdModalLink
+        modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState) }}
+        style={{ position: 'relative', top: '-1px' /* the icon is otherwise ~1px too low */ }}
+        aria-label="Show Cube IDs"
+      >
+        <QuestionIcon size="15" />
+      </CubeIdModalLink>
+    </span>
+  );
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -158,7 +173,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     </h6>
                   </Col>
                   <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
-                    <TextBadge name="Cube ID">
+                    <TextBadge name={CubeIdHeader}>
                       <Tooltip text="Click to copy to clipboard">
                         <button
                           type="button"
