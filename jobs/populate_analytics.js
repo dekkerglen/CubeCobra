@@ -298,20 +298,11 @@ const insertSorted = (array, item, sortFn = (a, b) => a - b) => {
   return array;
 };
 
-let rating = null;
-let currentDatapoint = {};
-let versions = [];
-let cubes = [];
-let cubedWith = [];
-let synergyWith = [];
-let cardHistory = null;
-
 async function processCard(card) {
-  versions = carddb.getVersionsByOracleId(card.oracle_id);
-  rating = ratingsDict[card.name];
+  const versions = carddb.getVersionsByOracleId(card.oracle_id);
+  const rating = ratingsDict[card.name];
 
-  currentDatapoint = {};
-  // / START
+  const currentDatapoint = {};
 
   currentDatapoint.rating = rating ? rating.rating : null;
   currentDatapoint.elo = rating ? rating.elo : null;
@@ -329,7 +320,7 @@ async function processCard(card) {
       : [0, 0];
   }
 
-  cubes = cubesWithCard[correlationIndex[card.oracle_id]] || [];
+  const cubes = cubesWithCard[correlationIndex[card.oracle_id]] || [];
   currentDatapoint.cubes = cubes.length;
 
   currentDatapoint.prices = versions.map((id) => {
@@ -346,7 +337,8 @@ async function processCard(card) {
 
   // cubed with
   // create correl dict
-  cubedWith = [];
+  let cubedWith = [];
+  let synergyWith = [];
 
   for (const otherOracleId of distinctOracles) {
     const item = {
@@ -360,8 +352,6 @@ async function processCard(card) {
     }
   }
 
-  synergyWith = [];
-
   for (const otherOracleId of distinctOracles) {
     const item = {
       oracle: otherOracleId,
@@ -374,8 +364,7 @@ async function processCard(card) {
     }
   }
 
-  cardHistory = (await CardHistory.findOne({ synergyWith: card.oracle_id })) || new CardHistory();
-  // cardHistory = { isNew: true };
+  const cardHistory = (await CardHistory.findOne({ synergyWith: card.oracle_id })) || new CardHistory();
 
   if (cardHistory.isNew) {
     cardHistory.cardName = card.name;
