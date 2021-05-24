@@ -279,7 +279,6 @@ const getIndex = (array, item, sortFn = (a, b) => a - b) => {
 // Assumes array has already been sorted with this sort function
 const insertSorted = (array, item, sortFn = (a, b) => a - b) => {
   if (array.length === 0) {
-    console.log('no items in array');
     return [item];
   }
 
@@ -289,7 +288,6 @@ const insertSorted = (array, item, sortFn = (a, b) => a - b) => {
   }
 
   if (sortFn(item, array[array.length - 1]) > 0) {
-    console.log('no items in array');
     array.splice(array.length, 0, item);
     return array;
   }
@@ -520,7 +518,6 @@ const run = async () => {
     await processCard(cardFromOracle(oracleId));
     processed += 1;
     winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
-    console.log(process.memoryUsage());
   }
 
   winston.info('Done');
