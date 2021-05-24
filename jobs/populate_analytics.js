@@ -372,11 +372,11 @@ async function processCard(card) {
     };
 
     if (Number.isFinite(item.synergy) && item.oracle !== card.oracle_id && !item.type.includes('basic')) {
-      cubedWith = insertSorted(cubedWith, item, sortBySynergy);
+      synergyWith = insertSorted(synergyWith, item, sortBySynergy);
     }
   }
 
-  cardHistory = (await CardHistory.findOne({ oracleId: card.oracle_id })) || new CardHistory();
+  cardHistory = (await CardHistory.findOne({ synergyWith: card.oracle_id })) || new CardHistory();
   // cardHistory = { isNew: true };
 
   if (cardHistory.isNew) {
