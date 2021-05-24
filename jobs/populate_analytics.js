@@ -364,7 +364,7 @@ async function processCard(card) {
     }
   }
 
-  const cardHistory = (await CardHistory.findOne({ synergyWith: card.oracle_id })) || new CardHistory();
+  const cardHistory = (await CardHistory.findOne({ oracleId: card.oracle_id })) || new CardHistory();
 
   if (cardHistory.isNew) {
     cardHistory.cardName = card.name;
