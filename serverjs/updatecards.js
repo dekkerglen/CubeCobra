@@ -91,6 +91,7 @@ function initializeCatalog() {
   catalog.english = {};
   catalog.elodict = {};
   catalog.embeddingdict = {};
+  catalog.poplularitydict = {};
 }
 
 initializeCatalog();
@@ -641,6 +642,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
+  newcard.popularity = catalog.poplularitydict[name] || 0; // Math.round(data.current.total[1] * 1000.0) / 10;
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
@@ -764,12 +766,17 @@ function saveEnglishCard(card) {
   addCardToCatalog(convertCard(card));
 }
 
-async function saveAllCards(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
+async function saveAllCards(ratings = [], basePath = 'private', defaultPath = null, allPath = null,popularities = []) {
   winston.info('Fetching Elo...');
   // create Elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
     catalog.embeddingdict[rating.name] = rating.embedding;
+  }
+
+  //poplulating the popularity dict
+  for (const popularity of popularities) {
+    catalog.poplularitydict[popularity.name] = popularity.popularity;
   }
 
   winston.info('Processing cards...');

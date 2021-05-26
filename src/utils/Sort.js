@@ -184,6 +184,7 @@ export const SORTS = [
   'Devotion to Red',
   'Devotion to Green',
   'Unsorted',
+  'Popularity',
 ];
 
 export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price'];
@@ -308,6 +309,16 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
+  } else if (sort === 'Popularity') {
+    const items = [];
+    for (const card of cube) {
+      if (card.popularity) {
+        if (!items.includes(card.popularity)) {
+          items.push(card.popularity);
+        }
+      }
+    }
+    ret = items.sort(defaultSort);
   } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
@@ -413,6 +424,8 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = res;
+  } else if (sort === 'Popularity') {
+    ret = ['ALL'];
   }
   /* End of sort options */
 
@@ -641,6 +654,8 @@ export function cardGetLabels(card, sort, showOther) {
   } else if (sort === 'Devotion to Green') {
     ret = [cardDevotion(card, 'g').toString()];
   } else if (sort === 'Unsorted') {
+    ret = ['All'];
+  } else if (sort === 'Popularity') {
     ret = ['All'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];

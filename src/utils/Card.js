@@ -191,6 +191,8 @@ export const cardTokens = (card) => card.details.tokens;
 
 export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200);
 
+export const cardPopularity = (card) => card.details.Popularity;
+
 export const cardLayout = (card) => card.details.layout;
 
 export const cardDevotion = (card, color) => {
@@ -345,6 +347,7 @@ export default {
   cardLayout,
   cardIsSpecialZoneType,
   cardElo,
+  cardPopularity,
   COLOR_COMBINATIONS,
   normalizeName,
   encodeName,
