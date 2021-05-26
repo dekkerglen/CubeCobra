@@ -65,6 +65,7 @@ if (process.env.ENV === 'production') {
         retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
         messageFormatter: formatError,
       }),
+      new winston.transports.Console({ format: consoleFormat }),
     ],
   });
 } else {

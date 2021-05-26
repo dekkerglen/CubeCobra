@@ -160,10 +160,11 @@ function reasonableId(id) {
 function getIdsFromName(name) {
   // this is a fully-spcecified card name
   if (name.includes('[') && name.includes(']')) {
-    const split = name.toLowerCase().split('[');
+    name = name.toLowerCase();
+    const split = name.split('[');
     return getIdsFromName(split[0])
       .map((id) => cardFromId(id))
-      .filter((card) => split[1].includes(card.set))
+      .filter((card) => card.full_name.toLowerCase() === name)
       .map((card) => card._id);
   }
 
@@ -234,6 +235,7 @@ data = {
   reasonableId,
   reasonableCard,
   normalizedName: (card) => card.name_lower,
+  fileToAttribute,
 };
 
 module.exports = data;

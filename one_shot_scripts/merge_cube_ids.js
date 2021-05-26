@@ -1,35 +1,30 @@
+/* eslint-disable no-await-in-loop */
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
 
 // Load Environment Variables
 require('dotenv').config();
-const fs = require('fs');
-
-const path = (batch) => `jobs/export/cubes/${batch}.json`;
 
 const mongoose = require('mongoose');
-
 const Cube = require('../models/cube');
-const carddb = require('../serverjs/cards.js');
 
 const batchSize = 100;
 
-const processCube = (cube) => {
-  for (const card of cube.cards) {
-    card.tags = card.tags.filter((tag) => tag && tag.length > 0);
-    card.colors = card.colors.filter((color) => color);
-  }
+const processCube = async (cube) => {
+  cube.shortID = cube.urlAlias;
+  cube.urlAlias = undefined;
 
-  return Cube.updateOne({ _id: cube._id }, cube);
+  await cube.save();
 };
 
-(async () => {
-  await carddb.initializeCardDb();
-  mongoose.connect(process.env.MONGODB_URL).then(async () => {
+try {
+  (async () => {
+    await mongoose.connect(process.env.MONGODB_URL);
+
     // process all cube objects
     console.log('Started');
-    const count = await Cube.countDocuments();
-    const cursor = Cube.find().lean().cursor();
+    const count = await Cube.countDocuments({ urlAlias: { $exists: true, $ne: null } });
+    const cursor = Cube.find({ urlAlias: { $exists: true, $ne: null } }, 'shortID urlAlias').cursor();
 
     // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
@@ -38,15 +33,21 @@ const processCube = (cube) => {
         if (i + j < count) {
           const cube = await cursor.next();
           if (cube) {
-            cubes.push(processCube(cube));
+            cubes.push(cube);
           }
         }
       }
 
-      await Promise.all(cubes);
+      await Promise.all(cubes.map(processCube));
+
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
     }
+
     mongoose.disconnect();
     console.log('done');
-  });
-})();
+    process.exit();
+  })();
+} catch (err) {
+  console.error(err);
+  process.exit();
+}

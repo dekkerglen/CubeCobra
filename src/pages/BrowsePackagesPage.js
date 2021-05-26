@@ -45,7 +45,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
   const [alerts, setAlerts] = useState([]);
   const [page, setPage] = useQueryParam('p', 0);
   const [filter, setFilter] = useQueryParam('f', '');
-  const [filterTemp, setFilterTemp] = useState(filter);
+  const [filterTemp, setFilterTemp] = useState('');
   const [sort, setSort] = useQueryParam('s', 'votes');
   const [sortDirection, setSortDirection] = useQueryParam('d', '-1');
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
@@ -82,7 +82,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
       }
       return [];
     };
-    fetchData();
+    fetchData().then(() => setFilterTemp(filter));
   }, [filter, page, sort, sortDirection, selectedTab, refresh, setRefresh]);
 
   return (
@@ -132,6 +132,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
               valid={filterTemp !== filter}
               value={filterTemp}
               onChange={(e) => setFilterTemp(e.target.value)}
+              onKeyDown={(e) => e.keyCode === 13 && setFilter(filterTemp)}
             />
             <InputGroupAddon addonType="append">
               <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
