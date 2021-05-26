@@ -9,5 +9,4 @@ node --max-old-space-size=8192 jobs/download_drafts.js $NOW
 node --max-old-space-size=8192 jobs/download_cubes.js $NOW
 node --max-old-space-size=8192 jobs/download_decks.js $NOW
 tar -cJf exports.tar.xz exports/$NOW
-node --max-old-space-size=8192 jobs/upload_exports.js $NOW
-aws s3 cp $NOW.tar.xz s3://cubecobra/exports/$NOW.tar.xz
+node --max-old-space-size=8192 jobs/upload_to_aws.js $NOW
