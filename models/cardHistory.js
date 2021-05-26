@@ -32,7 +32,10 @@ const Datapoint = {
 const cardHistorySchema = mongoose.Schema({
   // Normal card name, not lowercased.
   cardName: String,
-  oracleId: String,
+  oracleId: {
+    type: String,
+    unique: true,
+  },
   versions: [String], // Card IDs for all versions of this card.
   current: Datapoint,
   cubedWith: {

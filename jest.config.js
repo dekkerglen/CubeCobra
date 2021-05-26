@@ -1,6 +1,6 @@
 module.exports = {
   moduleDirectories: ['src', 'node_modules'],
-  testPathIgnorePatterns: ['<rootDir>/public/', '<rootDir>/__tests__/helpers.js'],
+  testPathIgnorePatterns: ['<rootDir>/public/', '<rootDir>/__tests__/helpers/'],
   transform: {
     '^.+\\.jsx?$': require.resolve('babel-jest'),
   },

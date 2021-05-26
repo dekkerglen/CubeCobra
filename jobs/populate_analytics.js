@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
 
@@ -13,9 +14,9 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
-const updatedb = require('../serverjs/updatecards.js');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
+const RELATED_LIMIT = 24;
 
 let cardUses = {};
 
@@ -209,7 +210,9 @@ async function processCube(cube) {
     }
   }
 
-  const uniqueOracleIds = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  const uniqueOracleIds = Array.from(
+    new Set(cube.cards.filter((c) => c).map((card) => carddb.cardFromId(card.cardID).oracle_id)),
+  );
   uniqueOracleIds.forEach((oracleId) => {
     if (correlationIndex[oracleId]) {
       cubesWithCard[correlationIndex[oracleId]].push(cube._id);
@@ -232,27 +235,92 @@ async function processCube(cube) {
   });
 }
 
+// -1 if first is higher synergy than second
+// 1 if second is higher synergy than first
+const sortBySynergy = (first, second) => {
+  if (second.synergy < first.synergy) {
+    return -1;
+  }
+  if (second.synergy > first.synergy) {
+    return 1;
+  }
+  return 0;
+};
+
+const sortByCount = (first, second) => {
+  return second.count - first.count;
+};
+
+const getIndex = (array, item, sortFn = (a, b) => a - b) => {
+  let start = 0;
+  let end = array.length - 1;
+  let mid = -1;
+
+  while (start <= end) {
+    mid = Math.floor((start + end) / 2);
+
+    if (sortFn(array[mid], item) === 0) {
+      return mid;
+    }
+
+    if (sortFn(array[mid], item) < 0) {
+      start = mid + 1;
+    } else {
+      end = mid - 1;
+    }
+  }
+
+  if (sortFn(array[mid], item) < 0) {
+    return mid + 1;
+  }
+  return mid;
+};
+
+// Assumes array has already been sorted with this sort function
+const insertSorted = (array, item, sortFn = (a, b) => a - b) => {
+  if (array.length === 0) {
+    return [item];
+  }
+
+  if (sortFn(item, array[0]) < 0) {
+    array.splice(0, 0, item);
+    return array;
+  }
+
+  if (sortFn(item, array[array.length - 1]) > 0) {
+    array.splice(array.length, 0, item);
+    return array;
+  }
+
+  // find index
+  const index = getIndex(array, item, sortFn);
+  array.splice(index, 0, item);
+  return array;
+};
+
 async function processCard(card) {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
-  const { name } = card;
-  const oracleId = name.oracle_id;
-
-  const rating = ratingsDict[name]; // await CardRating.findOne({ name });
+  const rating = ratingsDict[card.name];
 
   const currentDatapoint = {};
+
   currentDatapoint.rating = rating ? rating.rating : null;
   currentDatapoint.elo = rating ? rating.elo : null;
   currentDatapoint.picks = rating ? rating.picks : 0;
-  // currentDatapoint.embedding = embeddings[card.name_lower];
 
-  currentDatapoint.total = cardUses[oracleId] ? [cardUses[oracleId], cardUses[oracleId] / cubeCounts.total] : [0, 0];
+  currentDatapoint.total = cardUses[card.oracle_id]
+    ? [cardUses[card.oracle_id], cardUses[card.oracle_id] / cubeCounts.total]
+    : [0, 0];
   for (const cubeCategory of Object.keys(cardSizeUses)) {
-    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][oracleId]
-      ? [cardSizeUses[cubeCategory][oracleId], cardSizeUses[cubeCategory][oracleId] / cubeCounts[cubeCategory]]
+    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][card.oracle_id]
+      ? [
+          cardSizeUses[cubeCategory][card.oracle_id],
+          cardSizeUses[cubeCategory][card.oracle_id] / cubeCounts[cubeCategory],
+        ]
       : [0, 0];
   }
 
-  const cubes = cubesWithCard[correlationIndex[oracleId]] || [];
+  const cubes = cubesWithCard[correlationIndex[card.oracle_id]] || [];
   currentDatapoint.cubes = cubes.length;
 
   currentDatapoint.prices = versions.map((id) => {
@@ -269,82 +337,70 @@ async function processCard(card) {
 
   // cubed with
   // create correl dict
-  const cubedWith = distinctOracles
-    .map((otherOracleId) => ({
+  let cubedWith = [];
+  let synergyWith = [];
+
+  for (const otherOracleId of distinctOracles) {
+    const item = {
       oracle: otherOracleId,
-      count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
+      count: correlations[correlationIndex[card.oracle_id]][correlationIndex[otherOracleId]],
       type: cardFromOracle(otherOracleId).type.toLowerCase(),
-    }))
-    .filter((item) => item.oracle !== oracleId && !item.type.includes('basic land'));
-
-  const synergyWith = distinctOracles
-    .map((otherOracleId) => ({
-      oracle: otherOracleId,
-      synergy: synergies[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
-      type: cardFromOracle(otherOracleId).type.toLowerCase(),
-    }))
-    .filter((item) => Number.isFinite(item.synergy) && item.oracle !== oracleId && !item.type.includes('basic'));
-
-  // quickselect isn't sorting correctly for some reason
-  cubedWith.sort((first, second) => {
-    return second.count - first.count;
-  });
-
-  synergyWith.sort((first, second) => {
-    if (second.synergy < first.synergy) {
-      return -1;
-    }
-    if (second.synergy > first.synergy) {
-      return 1;
-    }
-    return 0;
-  });
-  let cardHistory = await CardHistory.findOne({ oracleId });
-  try {
-    if (!cardHistory) {
-      cardHistory = new CardHistory();
-      cardHistory.cardName = name;
-      cardHistory.oracleId = oracleId; // eslint-disable-line camelcase
-      cardHistory.versions = versions;
-    } else if (!cardHistory.oracleId || cardHistory.oracleId.length === 0) {
-      cardHistory.oracle_id = oracleId;
-    }
-
-    cardHistory.cubes = cubes;
-    cardHistory.current = currentDatapoint;
-
-    cardHistory.cubedWith = {
-      synergistic: synergyWith.slice(0, 24).map((item) => item.oracle),
-      top: cubedWith.slice(0, 24).map((item) => item.oracle),
-      creatures: cubedWith
-        .filter((item) => item.type.includes('creature'))
-        .slice(0, 24)
-        .map((item) => item.oracle),
-      spells: cubedWith
-        .filter((item) => item.type.includes('instant') || item.type.includes('sorcery'))
-        .slice(0, 24)
-        .map((item) => item.oracle),
-      other: cubedWith
-        .filter(
-          (item) => !item.type.includes('creature') && !item.type.includes('instant') && !item.type.includes('sorcery'),
-        )
-        .slice(0, 24)
-        .map((item) => item.oracle),
     };
 
-    if (!cardHistory.history) {
-      cardHistory.history = [];
+    if (item.oracle !== card.oracle_id && !item.type.includes('basic land')) {
+      cubedWith = insertSorted(cubedWith, item, sortByCount);
     }
-
-    cardHistory.history.push({
-      date: currentDate,
-      data: currentDatapoint,
-    });
-
-    await cardHistory.save();
-  } catch (error) {
-    winston.error(error, { error });
   }
+
+  for (const otherOracleId of distinctOracles) {
+    const item = {
+      oracle: otherOracleId,
+      synergy: synergies[correlationIndex[card.oracle_id]][correlationIndex[otherOracleId]],
+      type: cardFromOracle(otherOracleId).type.toLowerCase(),
+    };
+
+    if (Number.isFinite(item.synergy) && item.oracle !== card.oracle_id && !item.type.includes('basic')) {
+      synergyWith = insertSorted(synergyWith, item, sortBySynergy);
+    }
+  }
+
+  const cardHistory = (await CardHistory.findOne({ oracleId: card.oracle_id })) || new CardHistory();
+
+  if (cardHistory.isNew) {
+    cardHistory.cardName = card.name;
+    cardHistory.oracleId = card.oracle_id;
+    cardHistory.versions = versions;
+    cardHistory.history = [];
+  }
+
+  cardHistory.cubes = cubes.slice(0, 10000);
+  cardHistory.current = currentDatapoint;
+
+  cardHistory.cubedWith = {
+    synergistic: synergyWith.slice(0, 24).map((item) => item.oracle),
+    top: cubedWith.slice(0, 24).map((item) => item.oracle),
+    creatures: cubedWith
+      .filter((item) => item.type.includes('creature'))
+      .slice(0, RELATED_LIMIT)
+      .map((item) => item.oracle),
+    spells: cubedWith
+      .filter((item) => item.type.includes('instant') || item.type.includes('sorcery'))
+      .slice(0, RELATED_LIMIT)
+      .map((item) => item.oracle),
+    other: cubedWith
+      .filter(
+        (item) => !item.type.includes('creature') && !item.type.includes('instant') && !item.type.includes('sorcery'),
+      )
+      .slice(0, RELATED_LIMIT)
+      .map((item) => item.oracle),
+  };
+
+  cardHistory.history.push({
+    date: currentDate,
+    data: currentDatapoint,
+  });
+
+  await cardHistory.save();
 }
 
 const run = async () => {
@@ -397,7 +453,6 @@ const run = async () => {
   winston.info('finished loading cards');
 
   const ratings = await CardRating.find({}).lean();
-  await updatedb.updateCardbase(ratings);
 
   winston.info('Started: oracles');
 
@@ -414,8 +469,8 @@ const run = async () => {
   winston.info('creating synergy matrix...');
   createSynergyMatrix();
 
-  for (const rating of ratings) {
-    ratingsDict[rating.name] = rating;
+  for (const item of ratings) {
+    ratingsDict[item.name] = item;
   }
 
   // process all cube objects
@@ -449,31 +504,26 @@ const run = async () => {
   const totalCards = allOracleIds.length;
   let processed = 0;
   for (const oracleId of allOracleIds) {
-    const card = cardFromOracle(oracleId);
-    await processCard(card); // eslint-disable-line no-await-in-loop
+    await processCard(cardFromOracle(oracleId));
     processed += 1;
     winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
   }
 
+  winston.info('Done');
   // this is needed for log group to stream
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
   });
-  winston.info('Done');
   process.exit();
 };
 
-// Connect db
-mongoose
-  .connect(process.env.MONGODB_URL, {
-    useCreateIndex: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    try {
-      run();
-    } catch (error) {
-      winston.error(error, { error });
-    }
-  });
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URL);
+    await run();
+  } catch (error) {
+    winston.error(error, { error });
+  }
+
+  process.exit();
+})();

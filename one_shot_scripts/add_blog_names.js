@@ -32,7 +32,7 @@ async function addVars(blog) {
     const count = await Blog.countDocuments();
     const cursor = Blog.find().cursor();
 
-    // batch them in 100
+    // batch them by batchSize
     for (let i = 0; i < count; i += batchSize) {
       console.log(`Finished: ${i} of ${count} blogs`);
       const blogs = [];

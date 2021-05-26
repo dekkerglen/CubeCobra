@@ -75,3 +75,4 @@ node --max-old-space-size=8192 jobs/populate_analytics.js
 ```
 
 This will populate the data used for card pages. You will need to do a couple playtest drafts to seed some data for the analytics for this to work correctly. 
+

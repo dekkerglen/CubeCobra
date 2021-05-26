@@ -63,13 +63,14 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+  body('shortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
+  body('shortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
+    min: 1,
     max: 100,
   }),
-  body('urlAlias', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('shortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
@@ -90,9 +91,9 @@ router.post(
       });
     }
 
-    if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias !== cube.urlAlias) {
-      updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
-      const taken = await Cube.findOne(buildIdQuery(updatedCube.urlAlias));
+    if (updatedCube.shortID !== cube.shortID) {
+      updatedCube.shortID = updatedCube.shortID.toLowerCase();
+      const taken = await Cube.findOne(buildIdQuery(updatedCube.shortID));
 
       if (taken) {
         return res.status(400).send({
@@ -101,9 +102,7 @@ router.post(
         });
       }
 
-      cube.urlAlias = updatedCube.urlAlias;
-    } else if (!updatedCube.urlAlias || updatedCube.urlAlias === '') {
-      cube.urlAlias = null;
+      cube.shortID = updatedCube.shortID;
     }
 
     cube.name = updatedCube.name;
@@ -634,7 +633,7 @@ router.post(
       !src ||
       (src && typeof src.index !== 'number') ||
       (updated.cardID && typeof updated.cardID !== 'string') ||
-      (updated.cmc && typeof updated.cmc !== 'number') ||
+      (updated.cmc && (typeof updated.cmc !== 'number' || updated.cmc < 0)) ||
       (updated.status && typeof updated.status !== 'string') ||
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||

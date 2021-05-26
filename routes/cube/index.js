@@ -547,7 +547,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const fields =
-      'cards maybe name owner card_count type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
+      'cards maybe name owner card_count type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1777,6 +1777,12 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
     }
 
     cube.draft_formats.splice(index, 1);
+    // update defaultFormat if necessary
+    if (index === cube.defaultDraftFormat) {
+      cube.defaultDraftFormat = -1;
+    } else if (index < cube.defaultDraftFormat) {
+      cube.defaultDraftFormat -= 1;
+    }
 
     await cube.save();
     return res.status(200).send({

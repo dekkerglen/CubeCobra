@@ -3,8 +3,7 @@ import CardPropType from 'proptypes/CardPropType';
 
 const CubePropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
-  shortId: PropTypes.string,
-  urlAlias: PropTypes.string,
+  shortID: PropTypes.string,
   name: PropTypes.string,
   card_count: PropTypes.number,
   cards: PropTypes.arrayOf(CardPropType),
