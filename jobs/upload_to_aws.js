@@ -17,10 +17,10 @@ const walkSync = async (currentDirPath, callback) => {
   }
 };
 
-const uploadDir = async (s3Path, bucketName) => {
+const uploadDir = async (localRoot, bucketRoot, bucketName) => {
   const s3 = new AWS.S3();
-  await walkSync(s3Path, (filePath) => {
-    const bucketPath = filePath.substring(s3Path.length + 1);
+  await walkSync(localRoot, (filePath) => {
+    const bucketPath = path.join(bucketRoot, filePath.substring(localRoot.length + 1));
     const params = {
       Bucket: bucketName,
       Key: bucketPath,
@@ -31,6 +31,6 @@ const uploadDir = async (s3Path, bucketName) => {
 };
 
 (async () => {
-  await uploadDir(process.argv[2], 'cubecobra');
+  await uploadDir(process.argv[2], process.argv[3], 'cubecobra');
   process.exit(0);
 })();

@@ -3,8 +3,7 @@ const path = require('path');
 
 const carddb = require('../serverjs/cards');
 
-const date = new Date();
-const folder = `exports/${process.argv[2]}`;
+const folder = process.argv[2];
 
 const writeFile = (filename, object) => {
   const fullPath = `${folder}/${filename}`;
