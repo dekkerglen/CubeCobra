@@ -22,29 +22,37 @@ const processDraft = async (draft) => {
   return null;
 };
 
-(async () => {
-  await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  const count = await Draft.count();
-  console.log(`There are ${count} drafts in the database.`);
-  const cursor = Draft.find().lean().cursor();
-  const drafts = [];
-  for (let i = 0; i < count; i++) {
-    const draftPromises = [];
-    const nextBound = Math.min(i + BATCH_SIZE, count);
-    for (let j = i; j < nextBound; j++) {
+try {
+  (async () => {
+    await mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+    const count = await Draft.count();
+    console.log(`There are ${count} drafts in the database.`);
+    const cursor = Draft.find().lean().cursor();
+    const drafts = [];
+    for (let i = 0; i < count; i++) {
+      const draftPromises = [];
+      const nextBound = Math.min(i + BATCH_SIZE, count);
+      for (let j = i; j < nextBound; j++) {
+        // eslint-disable-next-line no-await-in-loop
+        draftPromises.push(processDraft(await cursor.next()));
+      }
       // eslint-disable-next-line no-await-in-loop
-      draftPromises.push(processDraft(await cursor.next()));
+      drafts.push(...(await Promise.all(draftPromises)).filter((d) => d));
+      i = nextBound - 1;
+      console.log(`Processed ${i + 1} out of ${count} drafts, marking ${drafts.length} for deletion.`);
     }
-    // eslint-disable-next-line no-await-in-loop
-    drafts.push(...(await Promise.all(draftPromises)).filter((d) => d));
-    i = nextBound - 1;
-    console.log(`Processed ${i + 1} out of ${count} drafts, marking ${drafts.length} for deletion.`);
-  }
-  if (drafts.length > 0) {
-    console.log(`Deleting ${drafts.length} drafts.`);
-    // eslint-disable-next-line no-await-in-loop
-    await Draft.deleteMany({ _id: { $in: drafts } });
-  }
-  mongoose.disconnect();
+    if (drafts.length > 0) {
+      console.log(`Deleting ${drafts.length} drafts.`);
+      while (drafts.length > 0) {
+        const toDelete = drafts.splice(0, BATCH_SIZE);
+        // eslint-disable-next-line no-await-in-loop
+        await Draft.deleteMany({ _id: { $in: toDelete } });
+      }
+    }
+    mongoose.disconnect();
+    process.exit(0);
+  })();
+} catch (err) {
+  console.error(err);
   process.exit();
-})();
+}
