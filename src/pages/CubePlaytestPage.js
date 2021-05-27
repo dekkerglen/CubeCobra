@@ -422,9 +422,9 @@ const DEFAULT_FORMAT = {
   markdown: '',
   packs: [{ slots: ['rarity:Mythic', 'tag:new', 'identity>1'], steps: null }],
 };
-const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) => {
+const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
-  const [formats, setFormats] = useState(draftFormats);
+  const [formats, setFormats] = useState(cube.draftFormats ?? []);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
@@ -578,14 +578,14 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
+    draftFormats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        markdown: PropTypes.string,
+      }),
+    ),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
-  draftFormats: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      markdown: PropTypes.string,
-    }),
-  ).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };

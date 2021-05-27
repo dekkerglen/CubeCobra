@@ -114,21 +114,6 @@ function setCubeType(cube, carddb) {
   return cube;
 }
 
-function addBasics(deck, cardsArray, basics, carddb, saveToDeck = false) {
-  const populatedBasics = basics.map((cardID) => {
-    const details = carddb.cardFromId(cardID);
-    const populatedCard = {
-      cardID: details._id,
-      index: cardsArray.length,
-      isUnlimited: true,
-      type_line: details.type,
-    };
-    cardsArray.push(populatedCard);
-    return populatedCard;
-  });
-  if (saveToDeck) deck.basics = populatedBasics.map(({ index }) => index);
-}
-
 function cardHtml(card) {
   if (card.image_flip) {
     return `<a class="dynamic-autocard" card="${card.image_normal}" card_flip="${card.image_flip}">${card.name}</a>`;
@@ -543,7 +528,6 @@ function cachePromise(key, callback) {
 }
 
 const methods = {
-  addBasics,
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {
@@ -592,8 +576,8 @@ const methods = {
     // Expected performance for pick.
     const expectedA = 1 / (1 + 10 ** (diff / 400));
     const expectedB = 1 - expectedA;
-    const adjustmentA = 2 * (1 - expectedA) * speed;
-    const adjustmentB = 2 * (0 - expectedB) * speed;
+    const adjustmentA = (1 - expectedA) * speed;
+    const adjustmentB = (0 - expectedB) * speed;
     return [adjustmentA, adjustmentB];
   },
   generateShortId,

@@ -669,7 +669,8 @@ const exampleNonFoilCard = {
       'https://c1.scryfall.com/file/scryfall-cards/normal/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
     large:
       'https://c1.scryfall.com/file/scryfall-cards/large/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
-    png: 'https://c1.scryfall.com/file/scryfall-cards/png/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.png?1562056856',
+    png:
+      'https://c1.scryfall.com/file/scryfall-cards/png/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.png?1562056856',
     art_crop:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
     border_crop:

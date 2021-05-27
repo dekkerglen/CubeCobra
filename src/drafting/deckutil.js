@@ -286,16 +286,18 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
     deck[index].push(cardIndex);
   }
 
-  // sort the basic land col
-  deck[0].sort((a, b) => cardName(cards[a]).localeCompare(cardName(cards[b])));
+  for (const col of deck) {
+    // sort the basic land col
+    col.sort((a, b) => cardName(cards[a]).localeCompare(cardName(cards[b])));
+  }
 
   for (const cardIndex of side.filter((ci) => !cards[ci].isUnlimited)) {
     sideboard[Math.min(cardCmc(cards[cardIndex]) ?? 0, 7)].push(cardIndex);
   }
 
   return {
-    deck,
-    sideboard,
+    deck: [deck.slice(0, 8), deck.slice(8, 16)],
+    sideboard: [sideboard],
     colors,
   };
 }

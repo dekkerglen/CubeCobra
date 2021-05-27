@@ -14,7 +14,6 @@ const SeatDeck = {
     type: String,
     default: 'No description available.',
   },
-  cols: Number,
   deck: [[[Number]]], // nesting is rows->columns->index in column
   sideboard: [[[Number]]], // same as deck.
 };
