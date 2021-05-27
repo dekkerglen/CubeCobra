@@ -166,22 +166,23 @@ function handleRouteError(req, res, err, reroute) {
 }
 
 function toNonNullArray(arr) {
-  arr = arr || [];
+  if (!arr) return [];
   if (!Array.isArray(arr)) {
-    if (typeof arr === 'object') arr = Object.values(arr);
-    else arr = [];
+    if (typeof arr === 'object') {
+      return Object.values(arr);
+    }
+    return [];
   }
   return arr;
 }
 
-function flatten(arr, n) {
-  arr = toNonNullArray(arr);
-  if (n <= 1) return arr;
-  return [].concat(...flatten(arr, n - 1));
-}
-
 function mapNonNull(arr, f) {
   return toNonNullArray(arr).map(f);
+}
+
+function flatten(arr, n) {
+  if (n <= 1) return toNonNullArray(arr);
+  return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
 }
 
 module.exports = {

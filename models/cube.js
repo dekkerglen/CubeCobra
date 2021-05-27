@@ -168,8 +168,11 @@ cubeSchema.index({
   owner: 1,
   numDecks: -1,
 });
+cubeSchema.index({
+  schemaVersion: 1,
+});
 
-cubeSchema.pre('save', () => {
+cubeSchema.pre('save', async () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
 });
 const Cube = mongoose.model('Cube', cubeSchema);

@@ -37,9 +37,7 @@ const deckSchema = mongoose.Schema({
     default: [],
   },
   cards: [cardSchema],
-  schemaVersion: {
-    type: Number,
-  },
+  schemaVersion: Number,
   basics: [Number],
 });
 
@@ -61,7 +59,10 @@ deckSchema.index({
   owner: 1,
   date: -1,
 });
-deckSchema.pre('save', () => {
+deckSchema.index({
+  schemaVersion: 1,
+});
+deckSchema.pre('save', async () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
 });
 const Deck = mongoose.model('Deck', deckSchema);

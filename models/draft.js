@@ -40,6 +40,10 @@ const draftSchema = mongoose.Schema({
   seed: String,
 });
 
+draftSchema.index({
+  schemaVersion: 1,
+});
+
 draftSchema.pre('save', () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
 });

@@ -4,8 +4,6 @@ const updateCubeDraftFormats = (cube) => {
   if (!cube) return null;
   const cubeObject = cube.toObject();
 
-  const defaultPack = Object.freeze({ filters: [], trash: 0, sealed: false, picksPerPass: 1 });
-
   const newFormats = mapNonNull(cubeObject.draft_formats, (oldDraftFormat) => {
     if (!oldDraftFormat) return null;
     const draftFormat = {
@@ -25,7 +23,9 @@ const updateCubeDraftFormats = (cube) => {
         }
         return Object.values(pack).join('');
       });
-      draftFormat.packs = packs.map((packStr) => ({ ...defaultPack, filters: JSON.parse(packStr) }));
+      if (typeof draftFormat.packs === 'string' || draftFormat.packs instanceof String) {
+        draftFormat.packs = packs.map((packStr) => ({ slots: JSON.parse(packStr), steps: null }));
+      }
     }
     return draftFormat;
   }).filter((x) => x);

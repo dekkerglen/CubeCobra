@@ -1,8 +1,7 @@
 // Load Environment Variables
 require('dotenv').config();
-
 const mongoose = require('mongoose');
-const carddb = require('../serverjs/cards');
+
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
@@ -12,12 +11,13 @@ const deckMigrations = require('../models/migrations/deckMigrations');
 const draftMigrations = require('../models/migrations/draftMigrations');
 const gridDraftMigrations = require('../models/migrations/gridDraftMigrations');
 const { applyPendingMigrationsPre } = require('../models/migrations/migrationMiddleware');
+const carddb = require('../serverjs/cards');
 
 const MIGRATABLE = Object.freeze([
+  { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
   { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
   { name: 'Deck', model: Deck, migrate: applyPendingMigrationsPre(deckMigrations) },
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
-  { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
 ]);
 
 const migratableDocsQuery = (currentSchemaVersion) => ({
@@ -32,6 +32,7 @@ const BATCH_SIZE = 500;
   for (const { name, model, migrate } of MIGRATABLE) {
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
     const count = await model.countDocuments(query);
+    console.log(`There are ${count} ${name}'s that need to be updated.`);
     const cursor = model.find(query).cursor();
     let totalSuccesses = 0;
 
@@ -40,14 +41,16 @@ const BATCH_SIZE = 500;
       try {
         migrated = await migrate(doc);
       } catch (e) {
-        console.error(`Could not migrate ${name} with id ${doc._id}.`, e);
+        console.error(`Could not migrate ${name} with id ${doc._id}.`);
+        console.debug(e);
         return 0;
       }
       if (migrated) {
         try {
           await migrated.save();
         } catch (e) {
-          console.error(`Failed to save migrated ${name} with id ${doc._id}.`, e);
+          console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
+          console.debug(e);
           return 0;
         }
       } else {
