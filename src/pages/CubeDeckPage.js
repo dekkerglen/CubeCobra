@@ -64,7 +64,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
   const haveBotsRedraft = useCallback(async () => {
     if (!loading && draft) {
       setLoading(true);
-      const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
+      const response = await csrfFetch(`/cube/api/redraft/${draft._id}/${seatIndex}`, {
         method: 'POST',
       });
       const json = await response.json();
@@ -72,7 +72,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
       await allBotsDraft(draft);
       submitDeckForm.current.submit();
     }
-  }, [draft, loading]);
+  }, [draft, loading, seatIndex]);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -128,10 +128,10 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
                 {draft ? (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
-                      Rebuild/Redraft
+                      Rebuild/Redraft Seat
                     </DropdownToggle>
                     <DropdownMenu right>
-                      <DropdownItem href={`/cube/deck/redraft/${deck._id}`}>Redraft</DropdownItem>
+                      <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
                       <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
                         Clone and Rebuild
