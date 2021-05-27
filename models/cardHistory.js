@@ -61,8 +61,8 @@ const cardHistorySchema = mongoose.Schema({
 cardHistorySchema.index({ oracleId: 1, 'current.rating': 1 });
 cardHistorySchema.index({ oracleId: 1, 'current.elo': -1 });
 cardHistorySchema.index({ oracleId: 1, 'current.picks': -1 });
-cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1 });
-
+cardHistorySchema.index({ oracleId: 1, 'current.total': 1 });
+cardHistorySchema.index({ oracleId: 1, 'oracleId': 1});
 const CardHistory = mongoose.model('CardHistory', cardHistorySchema);
 
 module.exports = CardHistory;
