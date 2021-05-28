@@ -6,13 +6,29 @@ const CURRENT_SCHEMA_VERSION = require('./migrations/draftMigrations').slice(-1)
 
 // Details on each pack, how to draft and what's in it.
 const Pack = {
-  cards: [
-    {
-      type: Number,
-      min: 0,
+  cards: {
+    type: [
+      {
+        type: Number,
+        min: 0,
+      },
+    ],
+    default() {
+      if (this.isNew) {
+        return [];
+      }
+      return void 0; // eslint-disable-line
     },
-  ],
-  steps: stepsSchema,
+  },
+  steps: {
+    type: stepsSchema,
+    default() {
+      if (this.isNew) {
+        return null;
+      }
+      return void 0; // eslint-disable-line
+    },
+  },
 };
 
 // data for each seat, human or bot
@@ -35,7 +51,15 @@ const draftSchema = mongoose.Schema({
   cards: [cardSchema],
   cube: String,
   initial_state: [[Pack]],
-  schemaVersion: Number,
+  schemaVersion: {
+    type: Number,
+    default() {
+      if (this.isNew) {
+        return CURRENT_SCHEMA_VERSION;
+      }
+      return void 0; // eslint-disable-line
+    },
+  },
   seats: [Seat],
   seed: String,
 });

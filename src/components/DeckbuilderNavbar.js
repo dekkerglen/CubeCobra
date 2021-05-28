@@ -71,11 +71,12 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
   const autoBuildDeck = useCallback(async () => {
     const main = deck.seats[0].pickorder;
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
-    setSideboard([side.map((col) => col.map((ci) => deck.cards[ci]))]);
-    setDeck([
-      newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(0, 8),
-      newDeck.map((col) => col.map((ci) => deck.cards[ci])).slice(8, 16),
-    ]);
+    console.debug(newDeck);
+    console.debug(side);
+    const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
+    const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
+    setSideboard(newSide);
+    setDeck(newDeckCards);
   }, [deck, basics, setDeck, setSideboard]);
 
   return (

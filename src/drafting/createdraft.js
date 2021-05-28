@@ -270,7 +270,6 @@ export const createDraft = (format, cubeCards, seats, user, seed = false) => {
     )
     .map(([card, oldIdx], newIdx) => [card, oldIdx, newIdx])
     .sort(([, a], [, b]) => a - b);
-  console.debug(shuffledIndices.map(([, i]) => i));
   draft.initial_state = draft.initial_state.map((packs) =>
     packs.map(({ cards, ...pack }) => ({
       ...pack,

@@ -1,3 +1,4 @@
+const { cleanCards } = require('./cleanCards');
 const Cube = require('../cube');
 const { addBasics, createPool } = require('../../routes/cube/helper');
 const { mapNonNull } = require('../../serverjs/util');
@@ -19,7 +20,7 @@ const dedupeCardObjects = async (deck) => {
     };
   }
 
-  const cardsArray = [];
+  let cardsArray = [];
   const replaceWithIndexNd = (pile) => {
     if (Array.isArray(pile)) {
       return mapNonNull(pile, replaceWithIndexNd);
@@ -50,6 +51,7 @@ const dedupeCardObjects = async (deck) => {
     pool[0][0] = collection.flatten();
     return pool;
   };
+  cardsArray = cleanCards(cardsArray);
 
   deck.seats = mapNonNull(deckObject.seats, (seat) => {
     seat.deck = to3d(replaceWithIndexNd(seat.deck));

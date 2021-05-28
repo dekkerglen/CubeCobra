@@ -39,6 +39,8 @@ import { getDefaultPosition, getDrafterState } from 'drafting/draftutil';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;
 };
@@ -61,7 +63,7 @@ const Pack = ({ pack, packNumber, pickNumber, instructions, picking, onMoveCard,
             xs={3}
             className="col-md-1-5 col-lg-1-5 col-xl-1-5 d-flex justify-content-center align-items-center"
           >
-            {picking !== index ? false : <Spinner className="position-absolute" />}
+            {picking === index && <Spinner className="position-absolute" />}
             <DraggableCard
               location={DraftLocation.pack(index)}
               data-index={index}
@@ -158,7 +160,9 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
+  console.debug(cards);
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
+  console.debug(pack);
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picks = useMemo(() => drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))), [
     drafted,
@@ -180,7 +184,7 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
       if (source.type === DraftLocation.PACK) {
         if (target.type === DraftLocation.PICKS) {
           setPicking(source.data);
-          takeCard(cardsInPack[source.data], target.data);
+          await takeCard(cardsInPack[source.data], target.data);
           setPicking(null);
         } else {
           console.error("Can't move cards inside pack.");
@@ -203,7 +207,7 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
       const cardPackIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
       const cardIndex = cardsInPack[cardPackIndex];
       setPicking(cardPackIndex);
-      takeCard(cardIndex);
+      await takeCard(cardIndex);
       setPicking(null);
     },
     [cardsInPack, setPicking, takeCard],
@@ -333,7 +337,8 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [action, drafterStates, mutations, rng]);
 
   const takeCard = useCallback(
-    (cardIndex, target) => {
+    async (cardIndex, target) => {
+      await sleep(0);
       if (action.match(/pick/)) {
         const cardIndices = makeBotPicks(cardIndex);
         mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });

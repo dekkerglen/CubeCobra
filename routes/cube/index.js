@@ -540,7 +540,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const fields =
-      'cards maybe name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID';
+      'cards maybe card_count name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1248,6 +1248,7 @@ router.post(
       draft.seats = populated.seats;
       draft.cube = cube._id;
       addBasics(populated.cards, cube.basics, draft);
+      draft.cards = populated.cards;
 
       await draft.save();
 

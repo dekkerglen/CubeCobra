@@ -31,6 +31,12 @@ const gridDraftSchema = mongoose.Schema({
   unopenedPacks: [[Number]],
   schemaVersion: {
     type: Number,
+    default() {
+      if (this.isNew) {
+        return CURRENT_SCHEMA_VERSION;
+      }
+      return void 0; // eslint-disable-line
+    },
   },
 });
 

@@ -167,12 +167,7 @@ function handleRouteError(req, res, err, reroute) {
 
 function toNonNullArray(arr) {
   if (!arr) return [];
-  if (!Array.isArray(arr)) {
-    if (typeof arr === 'object') {
-      return Object.values(arr);
-    }
-    return [];
-  }
+  if (!Array.isArray(arr)) return typeof arr === 'object' ? Object.values(arr) : [];
   return arr;
 }
 

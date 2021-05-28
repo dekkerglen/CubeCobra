@@ -116,6 +116,12 @@ const cubeSchema = mongoose.Schema({
   },
   schemaVersion: {
     type: Number,
+    default() {
+      if (this.isNew) {
+        return CURRENT_SCHEMA_VERSION;
+      }
+      return void 0; // eslint-disable-line
+    },
   },
   useCubeElo: {
     type: Boolean,
@@ -172,8 +178,9 @@ cubeSchema.index({
   schemaVersion: 1,
 });
 
-cubeSchema.pre('save', async () => {
+cubeSchema.pre('save', (next) => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
+  next();
 });
 const Cube = mongoose.model('Cube', cubeSchema);
 Cube.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;

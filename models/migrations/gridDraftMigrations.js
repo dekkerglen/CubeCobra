@@ -1,9 +1,7 @@
 const Cube = require('../cube');
 const { addBasics, createPool } = require('../../routes/cube/helper');
-const carddb = require('../../serverjs/cards');
-const { flatten, mapNonNull, toNonNullArray } = require('../../serverjs/util');
-
-const COLORS = ['W', 'U', 'B', 'R', 'G'];
+const { flatten, mapNonNull } = require('../../serverjs/util');
+const { cleanCards } = require('./cleanCards');
 
 const dedupeCardObjects = async (gridDraft) => {
   if (!gridDraft) return null;
@@ -23,7 +21,7 @@ const dedupeCardObjects = async (gridDraft) => {
     };
   }
 
-  const cardsArray = flatten(gridDraftObject.initial_state, 2).filter((c) => c);
+  let cardsArray = flatten(gridDraftObject.initial_state, 2).filter((c) => c);
   if (!Array.isArray(cardsArray) || (cardsArray.length > 0 && (!cardsArray[0] || !cardsArray[0].cardID))) {
     throw new Error(
       `Could not correctly transform the cardsArray. Got ${JSON.stringify(
@@ -33,17 +31,7 @@ const dedupeCardObjects = async (gridDraft) => {
       )}\n\tfrom ${JSON.stringify(gridDraftObject)}`,
     );
   }
-  for (let i = 0; i < cardsArray.length; i++) {
-    cardsArray[i].index = i;
-    cardsArray[i].tags = toNonNullArray(cardsArray[i].tags).filter((t) => t);
-    if (
-      !cardsArray[i].colors ||
-      !Array.isArray(cardsArray[i].colors) ||
-      cardsArray[i].colors.some((c) => !COLORS.includes(c))
-    ) {
-      cardsArray[i].colors = carddb.cardFromId(cardsArray[i].cardID).color_identity;
-    }
-  }
+  cardsArray = cleanCards(cardsArray);
 
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);

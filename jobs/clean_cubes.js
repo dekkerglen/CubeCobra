@@ -7,18 +7,10 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
+const { cardsNeedsCleaning, cleanCards } = require('../models/migrations/cleanCards');
 const carddb = require('../serverjs/cards');
+const { toNonNullArray } = require('../serverjs/util');
 
-const batchSize = 1000;
-const COLORS = ['W', 'U', 'B', 'R', 'G'];
-
-const isInvalidCardId = (id) => carddb.cardFromId(id).name === 'Invalid Card';
-const isInvalidFinish = (finish) => !['Foil', 'Non-foil'].includes(finish);
-const isInvalidStatus = (status) => !['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].includes(status);
-const isInvalidColors = (colors) => !colors || !Array.isArray(colors) || colors.some((c) => !COLORS.includes(c));
-const isInvalidTags = (tags) => tags.some((t) => !t);
-const DEFAULT_FINISH = 'Non-foil';
-const DEFAULT_STATUS = 'Not Owned';
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
   '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
@@ -27,49 +19,26 @@ const DEFAULT_BASICS = [
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
 
-const needsCleaning = (cube) => {
-  if (!cube.cards || !Array.isArray(cube.basics)) {
-    return true;
-  }
-
-  if (
-    cube.cards.some(
-      (card) =>
-        !card ||
-        isInvalidCardId(card.cardID) ||
-        isInvalidFinish(card.finish) ||
-        isInvalidStatus(card.status) ||
-        isInvalidColors(card.colors) ||
-        isInvalidTags(card.tags),
-    )
-  ) {
-    return true;
-  }
-
-  return false;
-};
+const needsCleaning = (cube) =>
+  !cube.cards || !Array.isArray(cube.basics) || cardsNeedsCleaning(cube.cards) || cardsNeedsCleaning(cube.maybe);
 
 const processCube = async (leanCube) => {
   if (needsCleaning(leanCube)) {
     const cube = await Cube.findById(leanCube._id);
 
-    console.log(`Cleaning cube ${cube.name}: ${cube._id}`);
+    console.debug(`Cleaning cube ${cube.name}: ${cube._id}`);
 
     if (!cube.cards) {
       cube.cards = [];
     }
-    if (!cube.basics) {
+    if (!Array.isArray(cube.basics)) {
       cube.basics = DEFAULT_BASICS;
     }
-    cube.cards = cube.cards.filter((c) => c && !isInvalidCardId(c.cardID));
-    cube.maybe = cube.maybe.filter((c) => c && !isInvalidCardId(c.cardID));
-    for (const collection of [cube.cards, cube.maybe]) {
-      for (const card of collection) {
-        if (isInvalidFinish(card.finish)) card.finish = DEFAULT_FINISH;
-        if (isInvalidStatus(card.status)) card.status = DEFAULT_STATUS;
-        if (isInvalidColors(card.colors)) card.colors = carddb.cardFromId(card.cardID).color_identity;
-        if (isInvalidTags(card.tags)) card.tags = card.tags.filter((t) => t);
-      }
+    if (cardsNeedsCleaning(cube.cards)) {
+      cube.cards = cleanCards(cube.cards);
+    }
+    if (cardsNeedsCleaning(cube.maybe)) {
+      cube.maybe = cleanCards(cube.maybe);
     }
 
     await cube.save();

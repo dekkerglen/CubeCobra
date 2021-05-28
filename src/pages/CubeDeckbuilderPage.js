@@ -30,6 +30,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
   const [deck, setDeck] = useState(
     initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
+  console.debug(deck);
   const [sideboard, setSideboard] = useState(
     initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );

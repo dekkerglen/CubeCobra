@@ -1,9 +1,7 @@
+const { cleanCards } = require('./cleanCards');
 const Cube = require('../cube');
 const { addBasics, createPool } = require('../../routes/cube/helper');
-const carddb = require('../../serverjs/cards');
 const { flatten, mapNonNull, toNonNullArray } = require('../../serverjs/util');
-
-const COLORS = ['W', 'U', 'B', 'R', 'G'];
 
 const dedupeCardObjects = async (draft) => {
   if (!draft) return null;
@@ -22,34 +20,29 @@ const dedupeCardObjects = async (draft) => {
     };
   }
 
-  const cardsArray = flatten(draftObject.initial_state, 3).filter((c) => c);
+  let cardsArray = flatten(draftObject.initial_state, 3).filter((c) => c);
   if (!Array.isArray(cardsArray) || (cardsArray.length > 0 && (!cardsArray[0] || !cardsArray[0].cardID))) {
     throw new Error(`Could not correctly transform the cardsArray. Got ${JSON.stringify(cardsArray[0], null, 2)}`);
   }
-  for (let i = 0; i < cardsArray.length; i++) {
-    cardsArray[i].index = i;
-    cardsArray[i].tags = toNonNullArray(cardsArray[i].tags).filter((t) => t);
-    if (
-      !cardsArray[i].colors ||
-      !Array.isArray(cardsArray[i].colors) ||
-      cardsArray[i].colors.some((c) => !COLORS.includes(c))
-    ) {
-      cardsArray[i].colors = carddb.cardFromId(cardsArray[i].cardID).color_identity;
-    }
-  }
+  cardsArray = cleanCards(cardsArray);
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
     if (idx === -1) {
-      throw new Error(
-        `card ${JSON.stringify(card)} could not be found in the cardsArray. ${JSON.stringify(cardsArray)}`,
-      );
+      throw new Error(`card ${JSON.stringify(card)} could not be found in the cardsArray.`);
     }
     return idx;
   };
-  const mapPack = (pack) => ({ steps: null, cards: mapNonNull(pack, replaceWithIndex) });
+  const mapPack = (pack) => {
+    if (pack['0'] && (pack.cards || pack.steps)) {
+      delete pack.cards;
+      delete pack.steps;
+    }
+    pack = toNonNullArray(pack);
+    return { steps: null, cards: pack.map(replaceWithIndex) };
+  };
   const mapPacks = (packs) => mapNonNull(packs, mapPack);
   const mapSeats = (seats) => mapNonNull(seats, mapPacks);
-  const replaceNd = (arr) => (Array.isArray(arr) ? mapNonNull(arr, replaceNd) : replaceWithIndex(arr));
+  const replaceNd = (arr) => (Array.isArray(arr) || arr['0'] ? mapNonNull(arr, replaceNd) : replaceWithIndex(arr));
   const to3d = (collection) => {
     if (!collection || !Array.isArray(collection) || collection.length === 0) return createPool();
     if (Array.isArray(collection[0])) {
