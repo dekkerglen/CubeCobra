@@ -181,7 +181,7 @@ export const SORTS = [
   'Devotion to Red',
   'Devotion to Green',
   'Unsorted',
-  'Popularity',
+  'Popularity (Cube Inclusion Percentage)',
 ];
 
 export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price'];
@@ -315,16 +315,9 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
-  } else if (sort === 'Popularity') {
-    const items = [];
-    for (const card of cube) {
-      if (card.popularity) {
-        if (!items.includes(card.popularity)) {
-          items.push(card.popularity);
-        }
-      }
-    }
-    ret = items.sort(defaultSort);
+  } else if (sort === 'Popularity (Cube Inclusion Percentage)') {
+    ret = ['0-1%', '1-2%', '3-5%', '5-8', '8-12%', '12-20%', '20-30%', '30-50%', '50-100%'];
+    
   } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
@@ -430,9 +423,7 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = res;
-  } else if (sort === 'Popularity') {
-    ret = ['ALL'];
-  }
+  } 
   /* End of sort options */
 
   // whitespace around 'Other' to prevent collisions
@@ -653,8 +644,27 @@ export function cardGetLabels(card, sort, showOther) {
     ret = [cardDevotion(card, 'g').toString()];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
-  } else if (sort === 'Popularity') {
-    ret = ['All'];
+  } else if (sort === 'Popularity (Cube Inclusion Percentage)') {
+    const popularity = Math.round(card.details.popularity);
+    if (popularity<1)
+          ret= ['0-1%'];
+    else if (popularity<2)
+          ret= ['1-2%'];
+    else if (popularity<5)
+          ret= ['3-5%'];
+    else if (popularity<8)
+          ret= ['5-8%'];
+    else if (popularity <12)
+          ret= ['8-12%'];
+    else if (popularity<20)
+          ret= ['12-20%'];
+    else if (popularity <30)
+          ret= ['20-30%'];
+    else if (popularity <50)
+            ret= ['30-50%'];
+    else if (popularity<100)
+          ret = ['50-100%'];
+    
   } else if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }

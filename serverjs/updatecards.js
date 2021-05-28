@@ -643,7 +643,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
-  newcard.popularity = catalog.poplularitydict[card.id] || 0; // Math.round(data.current.total[1] * 1000.0) / 10;
+  newcard.popularity = Math.round(catalog.poplularitydict[card.oracle_id] * 1000.0) / 10|| 0; 
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
@@ -777,7 +777,7 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
 
   //poplulating the popularity dict
   for (const history of histories) {
-    catalog.poplularitydict[history.oracleId] =  history.current.total[1];
+       catalog.poplularitydict[history.oracleId.toString()] =  history.current.total[1];
   }
 
   winston.info('Processing cards...');
