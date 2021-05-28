@@ -23,7 +23,7 @@ const dedupeCardObjects = async (draft) => {
   }
 
   const cardsArray = flatten(draftObject.initial_state, 3).filter((c) => c);
-  if (!Array.isArray(cardsArray) || !cardsArray[0] || !cardsArray[0].cardID) {
+  if (!Array.isArray(cardsArray) || (cardsArray.length > 0 && (!cardsArray[0] || !cardsArray[0].cardID))) {
     throw new Error(`Could not correctly transform the cardsArray. Got ${JSON.stringify(cardsArray[0], null, 2)}`);
   }
   for (let i = 0; i < cardsArray.length; i++) {
