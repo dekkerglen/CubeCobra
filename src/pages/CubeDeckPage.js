@@ -34,6 +34,7 @@ import UserPropType from 'proptypes/UserPropType';
 import { csrfFetch } from 'utils/CSRF';
 import { allBotsDraft } from 'drafting/draftutil';
 import RenderToRoot from 'utils/RenderToRoot';
+import { DraftPropType } from 'proptypes/DraftbotPropTypes';
 
 const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
   const [seatIndex, setSeatIndex] = useQueryParam('seat', 0);
@@ -193,7 +194,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
 CubeDeckPage.propTypes = {
   cube: CubePropType.isRequired,
   deck: DeckPropType.isRequired,
-  draft: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
+  draft: DraftPropType,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
@@ -201,6 +202,7 @@ CubeDeckPage.propTypes = {
 CubeDeckPage.defaultProps = {
   user: null,
   loginCallback: '/',
+  draft: null,
 };
 
 export default RenderToRoot(CubeDeckPage);

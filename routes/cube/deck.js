@@ -927,10 +927,31 @@ router.get('/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
+    for (const card of deck.cards) {
+      card.details = carddb.cardFromId(card.cardID);
+      if (eloOverrideDict[card.details.name_lower]) {
+        card.details.elo = eloOverrideDict[card.details.name_lower];
+      }
+    }
 
     let draft = null;
     if (deck.draft) {
-      draft = await Draft.findById(deck.draft);
+      draft = await Draft.findById(deck.draft).lean();
+      if (draft) {
+        for (const card of draft.cards) {
+          card.details = carddb.cardFromId(card.cardID);
+          console.debug(card.details);
+          if (eloOverrideDict[card.details.name_lower]) {
+            card.details.elo = eloOverrideDict[card.details.name_lower];
+          }
+        }
+      }
     }
 
     let drafter = 'Anonymous';
@@ -939,33 +960,6 @@ router.get('/:id', async (req, res) => {
 
     if (deckUser) {
       drafter = deckUser.username;
-    }
-
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-    }
-
-    for (const seat of deck.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (eloOverrideDict[card.details.name_lower]) {
-              card.details.elo = eloOverrideDict[card.details.name_lower];
-            }
-          }
-        }
-      }
-      if (seat.pickorder) {
-        for (const card of seat.pickorder) {
-          card.details = carddb.cardFromId(card.cardID);
-          if (eloOverrideDict[card.details.name_lower]) {
-            card.details.elo = eloOverrideDict[card.details.name_lower];
-          }
-        }
-      }
     }
 
     return render(

@@ -149,7 +149,7 @@ DraftbotBreakdown.propTypes = {
   // eslint-disable-next-line
   draft: DraftPropType.isRequired,
   // eslint-disable-next-line
-  seatIndex: PropTypes.number.isRequired,
+  seatIndex: PropTypes.oneOfType([PropTypes.number.isRequired, PropTypes.string.isRequired]).isRequired,
   // eslint-disable-next-line
   defaultIndex: PropTypes.number,
 };

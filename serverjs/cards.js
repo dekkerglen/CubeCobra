@@ -64,7 +64,7 @@ function cardFromId(id, fields) {
     details = getPlaceholderCard(id);
   }
 
-  if (typeof fields === 'undefined') {
+  if (!fields) {
     return details;
   }
   if (!Array.isArray(fields)) {

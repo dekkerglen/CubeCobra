@@ -61,23 +61,18 @@ export const PackPropType = PropTypes.shape({
 export const SeatPropType = PropTypes.shape({
   bot: PropTypes.bool,
   name: PropTypes.string.isRequired,
-  userid: PropTypes.string.isRequired,
-  drafted: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
-  sideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired,
+  userid: PropTypes.string,
+  drafted: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
+    .isRequired,
+  sideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
+    .isRequired,
   pickorder: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   trashorder: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   // packbacklog: PropTypes.arrayOf(PackPropType.isRequired).isRequired,
 });
 export const DraftPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
-  basics: PropTypes.shape({
-    Plains: PropTypes.number.isRequired,
-    Island: PropTypes.number.isRequired,
-    Swamp: PropTypes.number.isRequired,
-    Mountain: PropTypes.number.isRequired,
-    Forest: PropTypes.number.isRequired,
-    Wastes: PropTypes.number.isRequired,
-  }).isRequired,
+  basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   cube: PropTypes.string.isRequired,
   initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PackPropType.isRequired).isRequired).isRequired,
