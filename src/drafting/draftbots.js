@@ -492,10 +492,10 @@ const findBetterLands = (currentScore) => {
   let result = currentScore;
   // This makes the bots non-deterministic are we good with that?
   for (const [increase, decrease] of findTransitions(currentScore)) {
-    const lands = new Uint8Array(botState.lands);
+    const lands = new Uint8Array(result.lands);
     lands[increase] += 1;
     lands[decrease] -= 1;
-    const newBotState = { ...botState, lands };
+    const newBotState = { ...result, lands };
     botState.probabilities = calculateProbabilities(newBotState);
     botState.totalProbability = sum(newBotState.probabilities);
     const newScore = calculateScore(newBotState);
