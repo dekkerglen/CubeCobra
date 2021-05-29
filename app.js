@@ -205,11 +205,12 @@ schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
 
   let ratings = [];
+  let histories = [];
   if (process.env.USE_S3 !== 'true') {
     ratings = await CardRating.find({}, 'name elo embedding').lean();
-    histories = await CardHistory.find({},'oracleId current.total').lean();
+    histories = await CardHistory.find({}, 'oracleId current.total').lean();
   }
-  updatedb.updateCardbase(ratings,histories);
+  updatedb.updateCardbase(ratings, histories);
 });
 
 // Start server after carddb is initialized.

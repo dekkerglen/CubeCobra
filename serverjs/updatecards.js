@@ -643,7 +643,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
-  newcard.popularity = Math.round(catalog.poplularitydict[card.oracle_id] * 1000.0) / 10|| 0; 
+  newcard.popularity = Math.round(catalog.poplularitydict[card.oracle_id] * 1000.0) / 10 || 0;
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
@@ -775,9 +775,10 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
     catalog.embeddingdict[rating.name] = rating.embedding;
   }
 
-  //poplulating the popularity dict
+  // poplulating the popularity dict
   for (const history of histories) {
-       catalog.poplularitydict[history.oracleId.toString()] =  history.current.total[1];
+    const percentage = history.current.total[1];
+    catalog.poplularitydict[history.oracleId] = percentage;
   }
 
   winston.info('Processing cards...');
@@ -802,7 +803,13 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
   await writeCatalog(basePath);
 }
 
-const downloadFromScryfall = async (ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) => {
+const downloadFromScryfall = async (
+  ratings = [],
+  histories = [],
+  basePath = 'private',
+  defaultPath = null,
+  allPath = null,
+) => {
   winston.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
@@ -849,7 +856,7 @@ const downloadFromS3 = async (basePath = 'private') => {
   winston.info('Finished downloading files from S3...');
 };
 
-async function updateCardbase(ratings = [],histories = [], basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
