@@ -143,7 +143,7 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
 
 export const calculateBasicCounts = ({ picked, cards, basics }) => {
   const {
-    botState: { lands, probabilities },
+    botState: { lands },
     colors,
   } = evaluateCardsOrPool([], {
     picked,
@@ -166,13 +166,12 @@ export const calculateBasicCounts = ({ picked, cards, basics }) => {
         arraysAreEqualSets([...comb], FETCH_LANDS[cardName(cards[ci])] ?? cardColorIdentity(cards[ci])),
       );
       if (match === -1) {
-        console.warning('Could not find a matching land that the bots said was there.');
+        console.warn('Could not find a matching land that the bots said was there.');
       } else {
         main.push(landCards.splice(match, 1)[0]);
       }
     }
   }
-  console.log(lands, '\n', picked.map((ci) => `${cardName(cards[ci])}: ${probabilities[ci]}`).join('\n'));
   const remainingLands = landCards.filter((ci) => !basics.includes(ci));
   return { lands: main, remainingLands, colors };
 };
@@ -191,14 +190,6 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
     const currentCutoff = 1 - margin;
     inColor = nonlands.filter((item) => probabilities[item] >= currentCutoff);
   }
-  console.log(margin);
-  console.log(
-    probabilities
-      .map((p, idx) => [p, cardName(cards[idx])])
-      .filter(([p]) => p !== null)
-      .map(([p, n]) => `${n}: ${p}`)
-      .join('\n'),
-  );
   const outOfColor = nonlands.filter((item) => probabilities[item] < 1 - margin);
 
   const main = [];

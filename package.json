@@ -98,6 +98,7 @@
     "prop-types": "^15.7.2",
     "pug": "^3.0.1",
     "quickselect": "^2.0.0",
+    "raw-loader": "^4.0.2",
     "react": "^16.13.1",
     "react-audio-player": "^0.13.0",
     "react-chartjs-2": "^2.8.0",

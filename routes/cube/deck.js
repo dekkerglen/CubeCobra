@@ -946,7 +946,6 @@ router.get('/:id', async (req, res) => {
       if (draft) {
         for (const card of draft.cards) {
           card.details = carddb.cardFromId(card.cardID);
-          console.debug(card.details);
           if (eloOverrideDict[card.details.name_lower]) {
             card.details.elo = eloOverrideDict[card.details.name_lower];
           }

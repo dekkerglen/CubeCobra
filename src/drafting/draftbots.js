@@ -28,9 +28,19 @@ import {
   cardName,
   cardType,
 } from 'utils/Card';
-import { arraysAreEqualSets, fromEntries, arrayIsSubset } from 'utils/Util';
+import { arraysAreEqualSets, fromEntries } from 'utils/Util';
+import probTableBase64 from 'res/probTable.b64';
 
-import probTable from 'res/probTable.json';
+const probTable = (() => {
+  const isBrowser = typeof window !== 'undefined' && typeof window.atob === 'function';
+  const probTableBinary = isBrowser
+    ? window.atob(probTableBase64)
+    : Buffer.from(probTableBase64, 'base64').toString('binary');
+
+  const probTableUint8 = Uint8Array.from(probTableBinary, (c) => c.charCodeAt(0));
+
+  return new Float32Array(probTableUint8.buffer);
+})();
 
 // Ignore synergy below this value.
 const SIMILARITY_CLIP = 0.7;
@@ -53,6 +63,19 @@ export const FETCH_LANDS = Object.freeze({
   'Terramorphic Expanse': [...'WUBRG'],
   'Evolving Wilds': [...'WUBRG'],
 });
+const COLOR_COMBINATION_INDICES = fromEntries(COLOR_COMBINATIONS.map((comb, i) => [comb.join(''), i]));
+const COLOR_COMBINATION_INCLUDES = new Uint8Array(32 * 32);
+for (const [comb1, i] of Object.entries(COLOR_COMBINATION_INDICES)) {
+  for (const [comb2, j] of Object.entries(COLOR_COMBINATION_INDICES)) {
+    COLOR_COMBINATION_INCLUDES[i * 32 + j] = COLOR_INCLUSION_MAP[comb1][comb2] ? 255 : 0;
+  }
+}
+const COLOR_COMBINATION_INTERSECTS = new Uint8Array(32 * 32);
+for (const [comb1, i] of Object.entries(COLOR_COMBINATION_INDICES)) {
+  for (const [comb2, j] of Object.entries(COLOR_COMBINATION_INDICES)) {
+    COLOR_COMBINATION_INTERSECTS[i * 32 + j] = [...comb1].some((c) => [...comb2].includes(c)) ? 255 : 0;
+  }
+}
 export const COLORS = Object.freeze([...'WUBRG']);
 export const BASICS = Object.freeze(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest']);
 
@@ -125,93 +148,136 @@ export const isPlayableLand = (colors, card) =>
   (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c))) ||
   colors.some((color) => cardType(card).toLowerCase().includes(BASICS_MAP[color.toLowerCase()].toLowerCase()));
 
+const getMaskedSum = (x, m) => {
+  const x32 = new Uint32Array(x.buffer);
+  const m32 = new Uint32Array(m.buffer, m.byteOffset, 8);
+  const t32 = new Uint32Array(1);
+  t32[0] += x32[0] & m32[0]; // eslint-disable-line
+  t32[0] += x32[1] & m32[1]; // eslint-disable-line
+  t32[0] += x32[2] & m32[2]; // eslint-disable-line
+  t32[0] += x32[3] & m32[3]; // eslint-disable-line
+  t32[0] += x32[4] & m32[4]; // eslint-disable-line
+  t32[0] += x32[5] & m32[5]; // eslint-disable-line
+  t32[0] += x32[6] & m32[6]; // eslint-disable-line
+  t32[0] += x32[7] & m32[7]; // eslint-disable-line
+  const t8 = new Uint8Array(t32.buffer, 0, 4);
+  return t8[0] + t8[1] + t8[2] + t8[3];
+};
+
+const LANDS_DIMS = 18;
+const REQUIRED_A_DIMS = 8;
+const REQUIRED_B_DIMS = 4;
+const MAX_CMC = 8;
+
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
   const name = cardName(card);
   let colors = devotionsCache[name];
   if ((colors ?? null) === null) {
+    colors = [];
     const cost = cardCost(card);
-    if (cardType(card).toLowerCase().includes('land') || cardIsSpecialZoneType(card) || !cost?.length) return 1;
-    const colorSymbols = {};
-    for (const symbol of cost) {
-      const symbolUpper = symbol.toUpperCase();
-      if (!symbolUpper.includes('P') && !symbolUpper.includes('2')) {
-        const unsortedSymbolColors = [...COLORS].filter((char) => symbolUpper.includes(char));
-        if (unsortedSymbolColors.length > 0) {
-          const symbolColors = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(unsortedSymbolColors, comb)).join(
-            '',
-          );
-          colorSymbols[symbolColors] = (colorSymbols[symbolColors] ?? 0) + 1;
+    if (!cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card) && cost?.length) {
+      const colorSymbols = {};
+      for (const symbol of cost) {
+        const symbolUpper = symbol.toUpperCase();
+        if (!symbolUpper.includes('P') && !symbolUpper.includes('2')) {
+          const unsortedSymbolColors = [...COLORS].filter((char) => symbolUpper.includes(char));
+          if (unsortedSymbolColors.length > 0) {
+            const symbolColors = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(unsortedSymbolColors, comb)).join(
+              '',
+            );
+            colorSymbols[symbolColors] = (colorSymbols[symbolColors] ?? 0) + 1;
+          }
         }
       }
-    }
-    // It woudl be nice if we could cache this value.
-    colors = Object.entries(colorSymbols).map(([combination, count]) => [
-      COLOR_COMBINATIONS.map((comb) => comb.join('')).filter((comb) => [...combination].some((c) => comb.includes(c))),
-      Math.min(count, 6),
-    ]);
-    if (colors.length > 2) {
-      colors = [
-        ...colors.map(([combination, count]) => [
-          COLOR_COMBINATIONS.map((comb) => comb.join('')).filter((comb) =>
-            [...combination].some((c) => comb.includes(c)),
-          ),
-          Math.min(count, 6),
-        ]),
-        [
-          COLOR_COMBINATIONS.map((c) => c.join('')).filter((comb) => colors.some(([combs]) => combs.includes(comb))),
-          Math.min(
-            colors.reduce((acc, [, c]) => acc + c),
-            6,
-          ),
-        ],
-      ];
-    }
-    if (colors.length === 2) {
-      colors = [
-        [colors[0][0].filter((c) => !colors[1][0].includes(c)), colors[0][1]],
-        [colors[1][0].filter((c) => !colors[0][0].includes(c)), colors[1][1]],
-        colors[0][0].filter((c) => colors[1][0].includes(c)),
-      ];
-      if (colors[0][1] > colors[1][1]) {
-        const temp = colors[1];
-        [colors[1]] = colors;
-        colors[0] = temp;
+      colors = Object.entries(colorSymbols);
+      if (colors.length > 2) {
+        const cmc = Math.min(cardCmc(card), MAX_CMC);
+        const countAll = Math.min(
+          REQUIRED_A_DIMS - 1,
+          colors.reduce((acc, [, count]) => acc + count, 0),
+        );
+        colors = colors.map(([combination, count]) => [
+          new Uint8Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[combination] * 32, 32),
+          LANDS_DIMS *
+            LANDS_DIMS *
+            LANDS_DIMS *
+            REQUIRED_B_DIMS *
+            (Math.min(count, REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * cmc),
+        ]);
+        const maskAll = new Uint8Array(32);
+        for (const [arr] of colors) {
+          for (let i = 0; i < 32; i++) {
+            maskAll[i] |= arr[i]; // eslint-disable-line
+          }
+        }
+        colors.push([
+          maskAll,
+          LANDS_DIMS * LANDS_DIMS * LANDS_DIMS * REQUIRED_B_DIMS * (countAll + REQUIRED_A_DIMS * cmc),
+        ]);
       }
-      colors[0][1] = Math.min(colors[0][1], 6);
-      colors[1][1] = Math.min(colors[1][1], 3);
+      if (colors.length === 2) {
+        if (colors[0][1] > colors[1][1]) {
+          [colors[1], colors[0]] = colors;
+        }
+        const offset =
+          LANDS_DIMS *
+          LANDS_DIMS *
+          LANDS_DIMS *
+          (Math.min(REQUIRED_B_DIMS - 1, colors[1][1]) +
+            REQUIRED_B_DIMS *
+              (Math.min(REQUIRED_A_DIMS - 1, colors[0][1]) + REQUIRED_A_DIMS * Math.min(MAX_CMC, cardCmc(card))));
+        const maskA = new Uint8Array(
+          COLOR_COMBINATION_INTERSECTS.buffer,
+          COLOR_COMBINATION_INDICES[colors[0][0]] * 32,
+          32,
+        );
+        const maskB = new Uint8Array(
+          COLOR_COMBINATION_INTERSECTS.buffer,
+          COLOR_COMBINATION_INDICES[colors[1][0]] * 32,
+          32,
+        );
+        const c0 = new Uint8Array(32);
+        const c1 = new Uint8Array(32);
+        const c2 = new Uint8Array(32);
+        for (let i = 0; i < 32; i++) {
+          c0[i] = maskA[i] & ~maskB[i]; // eslint-disable-line
+          c1[i] = ~maskA[i] & maskB[i]; // eslint-disable-line
+          c2[i] = maskA[i] & maskB[i]; // eslint-disable-line
+        }
+        colors = [[c0, c1, c2], offset];
+      }
+      if (colors.length === 1) {
+        colors = [
+          [
+            new Uint8Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[colors[0][0]] * 32, 32),
+            LANDS_DIMS *
+              LANDS_DIMS *
+              LANDS_DIMS *
+              REQUIRED_B_DIMS *
+              (Math.min(colors[0][1], REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * Math.min(cardCmc(card), MAX_CMC)),
+          ],
+        ];
+      }
     }
     devotionsCache[name] = colors;
   }
-  if (colors.length === 0) return 1;
-  if (colors.length === 1) {
-    const [[combs, devotion]] = colors;
-    const landCount = combs.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
-    // console.debug(
-    //   cardName(card),
-    //   cardCmc(card),
-    //   devotion,
-    //   landCount,
-    //   combs.map((comb) => [comb, lands[comb]]).filter(([, c]) => c > 0),
-    // );
-    return probTable[Math.min(cardCmc(card), 8)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0;
-  }
-  if (colors.length === 3) {
-    const [[combsA, devotionA], [combsB, devotionB], combsAB] = colors;
-    const landCountA = combsA.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
-    const landCountB = combsB.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
-    const landCountAB = combsAB.reduce((acc, c) => acc + (lands[c] ?? 0), 0);
-    return (
-      probTable[Math.min(cardCmc(card), 8)]?.[devotionA]?.[devotionB]?.[landCountA]?.[landCountB]?.[landCountAB] ?? 0
-    );
+  if (colors.length === 2) {
+    const [[maskA, maskB, maskAB], offset] = colors;
+    const landCountA = getMaskedSum(lands, maskA);
+    const landCountB = getMaskedSum(lands, maskB);
+    const landCountAB = getMaskedSum(lands, maskAB);
+    return probTable[offset + landCountAB + LANDS_DIMS * (landCountB + LANDS_DIMS * landCountA)];
   }
   // This is a really poor approximation, it probably underestimates,
   // but could easily overestimate as well.
-  return colors.reduce((acc, [combs, devotion]) => {
-    const landCount = combs.reduce((acc2, c) => acc2 + (lands[c] ?? 0), 0);
-    return acc * (probTable[Math.min(cardCmc(card), 8)]?.[devotion]?.[0]?.[landCount]?.[0]?.[0] ?? 0);
+  const result = colors.reduce((acc, [mask, offset], i) => {
+    const landCount = getMaskedSum(lands, mask);
+    const prob = probTable[offset + LANDS_DIMS * LANDS_DIMS * landCount];
+    return acc * prob;
   }, 1);
+  return result;
 };
 
 const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
@@ -222,12 +288,6 @@ const eloToValue = (elo) => Math.sqrt(10 ** (((elo ?? 1200) - 1200) / 800));
 const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
   idxs = idxs.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land') || countLands);
   if (idxs.length === 0) return 0;
-  // console.debug(
-  //   'value[idxs]',
-  //   idxs.map((ci) => eloToValue(cardElo(cards[ci]))),
-  //   'prob[idxs]',
-  //   idxs.map((ci) => p[ci]),
-  // );
   return idxs.length > 0
     ? sum(idxs.map((ci) => Math.min(MAX_SCORE, p[ci] * eloToValue(cardElo(cards[ci]))))) / idxs.length
     : 0;
@@ -341,36 +401,32 @@ const getCombinationForLands = (lands) => {
 };
 
 const getAvailableLands = (pool, basics, cards) => {
-  const availableLands = {};
+  const availableLands = new Uint8Array(32);
   for (const cardIndex of pool.concat(...basics.map((ci) => new Array(17).fill(ci)))) {
     const card = cards[cardIndex];
     if (cardType(card).toLowerCase().includes('land')) {
       const colors = FETCH_LANDS[cardName(card)] ?? cardColorIdentity(card);
       const key = (COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors)) ?? []).join('');
-      availableLands[key] = (availableLands[key] ?? 0) + 1;
+      availableLands[COLOR_COMBINATION_INDICES[key]] += 1;
     }
   }
   return availableLands;
 };
 
 const getRandomLands = (availableLands) => {
-  const currentLands = { ...availableLands };
-  let totalLands = Object.values(currentLands).reduce((x, y) => x + y, 0);
+  const currentLands = new Uint8Array(availableLands);
+  let totalLands = currentLands.reduce((x, y) => x + y, 0);
   while (totalLands > 17) {
-    const availableDecreases = Object.keys(currentLands).filter((comb) => (currentLands[comb] ?? 0) > 0);
+    const availableDecreases = [];
+    for (let i = 0; i < 32; i++) {
+      if (currentLands[i] > 0) availableDecreases.push(i);
+    }
     const trueDecreases = availableDecreases.filter(
-      (comb) =>
-        !availableDecreases.some(
-          (comb2) => arrayIsSubset([...comb2], [...comb]) && !arraysAreEqualSets([...comb2], [...comb]),
-        ),
+      (i) => !availableDecreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[i * 32 + j]),
     );
     const index = Math.floor(Math.random() * trueDecreases.length);
     totalLands -= 1;
-    const key = trueDecreases[index];
-    currentLands[key] -= 1;
-    if (currentLands[key] === 0) {
-      delete currentLands[key];
-    }
+    currentLands[trueDecreases[index]] -= 1;
   }
   return currentLands;
 };
@@ -408,88 +464,44 @@ const calculateScore = (botState) => {
 };
 
 const findTransitions = ({ botState: { lands, availableLands } }) => {
-  const availableIncreases = Object.keys(availableLands).filter((comb) => availableLands[comb] > lands[comb] ?? 0);
-  const availableDecreases = Object.keys(lands).filter((comb) => (lands[comb] ?? 0) > 0);
-  console.log('increases:', availableIncreases, 'decreases', availableDecreases);
+  const availableIncreases = [];
+  const availableDecreases = [];
+  for (let i = 0; i < 32; i++) {
+    if (availableLands[i] > lands[i]) availableIncreases.push(i);
+    if (lands[i] > 0) availableDecreases.push(i);
+  }
   const trueIncreases = availableIncreases.filter(
-    (comb) =>
-      !availableIncreases.some(
-        (comb2) => arrayIsSubset([...comb], [...comb2]) && !arraysAreEqualSets([...comb], [...comb2]),
-      ),
+    (i) => !availableIncreases.some((j) => COLOR_COMBINATION_INCLUDES[i * 32 + j]),
   );
   const trueDecreases = availableDecreases.filter(
-    (comb) =>
-      !availableDecreases.some(
-        (comb2) => arrayIsSubset([...comb2], [...comb]) && !arraysAreEqualSets([...comb2], [...comb]),
-      ),
+    (i) => !availableDecreases.some((j) => COLOR_COMBINATION_INCLUDES[j * 32 + i]),
   );
   const result = [];
   for (const increase of trueIncreases) {
     for (const decrease of trueDecreases) {
-      if (!arrayIsSubset([...increase], [...decrease])) {
+      if (!COLOR_COMBINATION_INCLUDES[increase * 32 + decrease]) {
         result.push([increase, decrease]);
       }
     }
   }
-  console.log('Transitions', result);
   return result;
 };
 
 const findBetterLands = (currentScore) => {
   const { botState } = currentScore;
-  console.debug(
-    '\n\nCurrent score is',
-    currentScore.score,
-    'with',
-    Object.entries(botState.lands)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([comb, count]) => `${comb}-${count}`)
-      .join(','),
-    'and totalProb',
-    currentScore.totalProbability,
-    'scoreObj',
-    currentScore,
-  );
   let result = currentScore;
   // This makes the bots non-deterministic are we good with that?
   for (const [increase, decrease] of findTransitions(currentScore)) {
-    const lands = { ...botState.lands };
-    lands[increase] = (lands[increase] ?? 0) + 1;
+    const lands = new Uint8Array(botState.lands);
+    lands[increase] += 1;
     lands[decrease] -= 1;
-    if (lands[decrease] === 0) {
-      delete lands[decrease];
-    }
     const newBotState = { ...botState, lands };
     botState.probabilities = calculateProbabilities(newBotState);
     botState.totalProbability = sum(newBotState.probabilities);
     const newScore = calculateScore(newBotState);
-    // console.debug(
-    //   'trying',
-    //   Object.entries(lands)
-    //     .sort(([a], [b]) => a.localeCompare(b))
-    //     .map(([comb, count]) => `${comb}-${count}`)
-    //     .join(','),
-    //   'with',
-    //   newScore.score,
-    //   'and scoreObj',
-    //   newScore,
-    // );
     if (newScore.score > result.score) {
       // We assume we won't get caught in a local maxima so it's safe to take first ascent.
       // return newScore;
-      console.debug(
-        'ADOPTED\nCurrent score is',
-        newScore.score,
-        'with',
-        Object.entries(newScore.botState.lands)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([comb, count]) => `${comb}-${count}`)
-          .join(','),
-        'and totalProb',
-        newScore.nonlandProbability,
-        'scoreObj',
-        newScore,
-      );
       result = newScore;
     }
   }
@@ -511,7 +523,6 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   let currentScore = calculateScore(initialBotState);
   let prevScore = { ...currentScore, score: -1 };
   while (prevScore.score < currentScore.score) {
-    console.log('Checking transitions.');
     prevScore = currentScore;
     currentScore = findBetterLands(currentScore);
   }

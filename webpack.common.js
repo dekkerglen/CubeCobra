@@ -19,6 +19,10 @@ const config = {
         test: /\.(css|less)$/,
         use: ['style-loader', 'css-loader'],
       },
+      {
+        test: /\.b64$/,
+        use: 'raw-loader',
+      },
     ],
   },
   devtool: 'source-map',

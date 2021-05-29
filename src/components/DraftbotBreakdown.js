@@ -8,7 +8,7 @@ import Tooltip from 'components/Tooltip';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
-import { cardName, encodeName } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardName, encodeName } from 'utils/Card';
 import { evaluateCardsOrPool, ORACLES_BY_NAME } from 'drafting/draftbots';
 import { fromEntries } from 'utils/Util';
 
@@ -37,7 +37,10 @@ const TRAITS = Object.freeze([
   {
     title: 'Lands',
     tooltip: 'This is the color combination the bot is assuming that will maximize the total score.',
-    compute: ({ botState: { lands } }) => JSON.stringify(lands),
+    compute: ({ botState: { lands } }) =>
+      JSON.stringify(
+        fromEntries(COLOR_COMBINATIONS.map((c, i) => [c.length > 0 ? c : 'C', lands[i]]).filter(([, x]) => x)),
+      ),
   },
   {
     title: 'Total Score',
