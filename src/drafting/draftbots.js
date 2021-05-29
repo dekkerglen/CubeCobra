@@ -167,7 +167,7 @@ const getMaskedSum = (x, m) => {
 const LANDS_DIMS = 18;
 const REQUIRED_A_DIMS = 8;
 const REQUIRED_B_DIMS = 4;
-const MAX_CMC = 8;
+const MAX_CMC = 7;
 
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
@@ -268,13 +268,13 @@ export const getCastingProbability = (card, lands) => {
     const landCountA = getMaskedSum(lands, maskA);
     const landCountB = getMaskedSum(lands, maskB);
     const landCountAB = getMaskedSum(lands, maskAB);
-    return probTable[offset + landCountAB + LANDS_DIMS * (landCountB + LANDS_DIMS * landCountA)];
+    return probTable[offset + landCountA + LANDS_DIMS * (landCountB + LANDS_DIMS * landCountAB)];
   }
   // This is a really poor approximation, it probably underestimates,
   // but could easily overestimate as well.
-  const result = colors.reduce((acc, [mask, offset], i) => {
+  const result = colors.reduce((acc, [mask, offset]) => {
     const landCount = getMaskedSum(lands, mask);
-    const prob = probTable[offset + LANDS_DIMS * LANDS_DIMS * landCount];
+    const prob = probTable[offset + landCount];
     return acc * prob;
   }, 1);
   return result;
@@ -492,12 +492,12 @@ const findBetterLands = (currentScore) => {
   let result = currentScore;
   // This makes the bots non-deterministic are we good with that?
   for (const [increase, decrease] of findTransitions(currentScore)) {
-    const lands = new Uint8Array(result.lands);
+    const lands = new Uint8Array(botState.lands);
     lands[increase] += 1;
     lands[decrease] -= 1;
     const newBotState = { ...result, lands };
-    botState.probabilities = calculateProbabilities(newBotState);
-    botState.totalProbability = sum(newBotState.probabilities);
+    newBotState.probabilities = calculateProbabilities(newBotState);
+    newBotState.totalProbability = sum(newBotState.probabilities);
     const newScore = calculateScore(newBotState);
     if (newScore.score > result.score) {
       // We assume we won't get caught in a local maxima so it's safe to take first ascent.
