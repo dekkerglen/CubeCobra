@@ -13,20 +13,23 @@ const Seat = {
 };
 
 // Cube schema
-const draftSchema = mongoose.Schema({
-  cube: String,
-  initial_state: [[[cardSchema]]],
-  seats: [Seat],
-  unopenedPacks: [[[cardSchema]]],
-  basics: {
-    default: [],
-    type: {
-      details: cardSchema,
-      cardID: String,
-      cmc: Number,
-      type_line: String,
+const draftSchema = mongoose.Schema(
+  {
+    cube: String,
+    initial_state: [[[cardSchema]]],
+    seats: [Seat],
+    unopenedPacks: [[[cardSchema]]],
+    basics: {
+      default: [],
+      type: {
+        details: cardSchema,
+        cardID: String,
+        cmc: Number,
+        type_line: String,
+      },
     },
   },
-});
+  { timestamps: true },
+);
 
 module.exports = mongoose.model('Draft', draftSchema);

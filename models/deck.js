@@ -18,24 +18,27 @@ const SeatDeck = {
 };
 
 // Deck schema
-const deckSchema = mongoose.Schema({
-  cube: String,
-  cubeOwner: String,
-  owner: String,
-  date: Date,
-  draft: {
-    type: String,
-    default: '',
+const deckSchema = mongoose.Schema(
+  {
+    cube: String,
+    cubeOwner: String,
+    owner: String,
+    date: Date,
+    draft: {
+      type: String,
+      default: '',
+    },
+    cubename: {
+      type: String,
+      default: 'Cube',
+    },
+    seats: {
+      type: [SeatDeck],
+      default: [],
+    },
   },
-  cubename: {
-    type: String,
-    default: 'Cube',
-  },
-  seats: {
-    type: [SeatDeck],
-    default: [],
-  },
-});
+  { timestamps: true },
+);
 
 deckSchema.index({
   cubeOwner: 1,
@@ -54,6 +57,10 @@ deckSchema.index({
 deckSchema.index({
   owner: 1,
   date: -1,
+});
+
+deckSchema.index({
+  draft: 1,
 });
 
 module.exports = mongoose.model('Deck', deckSchema);
