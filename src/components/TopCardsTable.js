@@ -30,7 +30,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
       ]);
       const response = await fetch(`/tool/api/topcards/?${params.toString()}`);
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
 
       Query.set('f', filter);

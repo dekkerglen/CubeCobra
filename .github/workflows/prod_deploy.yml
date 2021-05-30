@@ -1,0 +1,82 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy prod to prod server
+
+on:
+  workflow_run:
+    workflows: ["CI Tests"]
+    branches: [prod]
+    types: 
+      - completed
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+  
+      - name: Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Installing NPM
+        run: npm install
+
+      - name: Building application
+        run: npm run build
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x .git/\* -x node_modules/\* -x private/\*
+
+      - name: Upload Deployment Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deploy-zip
+          path: deploy.zip
+          if-no-files-found: error
+
+      - name: Get timestamp
+        uses: gerred/actions/current-time@master
+        id: current-time
+
+      - name: Run string replace
+        uses: frabert/replace-string-action@master
+        id: format-time
+        with:
+          pattern: '[:\.]+'
+          string: "${{ steps.current-time.outputs.time }}"
+          replace-with: '-'
+          flags: 'g'
+
+      - name: Beanstalk Deploy for app
+        uses: einaregilsson/beanstalk-deploy@v16
+        with:
+          aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          application_name: CubeCobra
+          environment_name: Cubecobra-env
+          region: us-east-2
+          version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
+          deployment_package: deploy.zip
+
+      - name: Deployed!
+        run: echo App deployed to ELB

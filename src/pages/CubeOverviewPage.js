@@ -20,7 +20,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon } from '@primer/octicons-react';
+import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
@@ -40,11 +40,13 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import DeleteCubeModal from 'components/DeleteCubeModal';
 import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
+import CubeIdModal from 'components/CubeIdModal';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
+const CubeIdModalLink = withModal('span', CubeIdModal);
 
 const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, user, loginCallback }) => {
   const [alerts, setAlerts] = useState([]);
@@ -68,7 +70,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
     });
   };
@@ -81,11 +83,10 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
       headers: {},
     }).then((response) => {
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
     });
   };
-
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cubeState} canEdit={user && cubeState.owner === user.id} activeLink="overview">
@@ -157,7 +158,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </FollowersModalLink>
                     </h6>
                   </Col>
-                  <div className="float-right" style={{ paddingTop: 3, marginRight: '1.25rem' }}>
+                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
                     <TextBadge name="Cube ID">
                       <Tooltip text="Click to copy to clipboard">
                         <button
@@ -175,6 +176,14 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </Tooltip>
                     </TextBadge>
                   </div>
+                  <CubeIdModalLink
+                    modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
+                    aria-label="Show Cube IDs"
+                    className="mr-2"
+                    style={{ position: 'relative', top: '5px' /* the icon needs to be pulled down */ }}
+                  >
+                    <QuestionIcon size="18" />
+                  </CubeIdModalLink>
                 </Row>
               </CardHeader>
               <div className="position-relative">

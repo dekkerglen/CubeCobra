@@ -21,17 +21,19 @@ const translateType = {
   podcast: 'Podcast',
   video: 'Video',
   episode: 'Podcast Epsiode',
+  package: 'Card Package',
 };
 
 const translateLink = {
   comment: (id) => `/comment/${id}`,
-  blog: (id) => `/cube/blogpost/${id}`,
+  blog: (id) => `/cube/blog/blogpost/${id}`,
   deck: (id) => `/cube/deck/${id}`,
   card: (id) => `/tool/card/${id}`,
   article: (id) => `/content/article/${id}`,
   video: (id) => `/content/video/${id}`,
   podcast: (id) => `/content/podcast/${id}`,
   episode: (id) => `/content/episode/${id}`,
+  package: (id) => `/packages/${id}`,
 };
 
 const CommentPage = ({ comment, user, loginCallback }) => {

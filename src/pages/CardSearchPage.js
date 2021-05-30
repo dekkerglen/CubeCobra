@@ -47,7 +47,7 @@ const CardSearchPage = ({ user, loginCallback }) => {
       ]);
       const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
       }
 
       Query.set('f', filter);
@@ -105,6 +105,9 @@ const CardSearchPage = ({ user, loginCallback }) => {
             <div className="text-right">
               <ButtonLink outline color="success" href="/tool/topcards">
                 View Top Cards
+              </ButtonLink>{' '}
+              <ButtonLink outline color="success" href="/packages/browse">
+                View Card Packages
               </ButtonLink>
             </div>
           </Col>

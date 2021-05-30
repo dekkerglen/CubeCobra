@@ -29,7 +29,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext, cube
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
-          add: { details: card },
+          cards: [card._id],
         }),
         headers: {
           'Content-Type': 'application/json',

@@ -170,13 +170,14 @@ app.use('/cube/api/cubeJSON', apiLimiter);
 // Route files; they manage their own CSRF protection
 app.use('', require('./routes/root'));
 
-app.use('/cube', require('./routes/cube_routes'));
+app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
+app.use('/packages', require('./routes/packages'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {
@@ -202,7 +203,10 @@ app.use((err, req, res, next) => {
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
 
-  const ratings = await CardRating.find({}, 'name elo').lean();
+  let ratings = [];
+  if (process.env.USE_S3 !== 'true') {
+    ratings = await CardRating.find({}, 'name elo embedding').lean();
+  }
   updatedb.updateCardbase(ratings);
 });
 

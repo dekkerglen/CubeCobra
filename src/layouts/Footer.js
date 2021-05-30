@@ -72,6 +72,11 @@ const Footer = () => (
                 </a>
               </li>
               <li>
+                <a className="footer-link" href="/packages/browse">
+                  Packages
+                </a>
+              </li>
+              <li>
                 <a className="footer-link" href="/tool/randomcard">
                   Random Card
                 </a>

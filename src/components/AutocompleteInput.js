@@ -215,6 +215,7 @@ const AutocompleteInput = forwardRef(
       (event) => {
         setInputValue(event.target.value);
         setVisible(true);
+        autocard_hide_card(); /* GLOBAL */
         onChange && onChange(event);
       },
       [onChange],
@@ -228,6 +229,7 @@ const AutocompleteInput = forwardRef(
         };
         setInputValue(newValue);
         setVisible(false);
+        autocard_hide_card(); /* GLOBAL */
         setPosition(-1);
         onChange &&
           onChange({
@@ -287,6 +289,7 @@ const AutocompleteInput = forwardRef(
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
               <AutocardLi
+                inModal
                 front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
                 key={index}
                 onClick={handleClickSuggestion}

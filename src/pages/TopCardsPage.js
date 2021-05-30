@@ -30,6 +30,9 @@ const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
             <div className="text-right">
               <ButtonLink outline color="success" href="/tool/searchcards">
                 Search All Cards
+              </ButtonLink>{' '}
+              <ButtonLink outline color="success" href="/packages/browse">
+                View Card Packages
               </ButtonLink>
             </div>
           </Col>

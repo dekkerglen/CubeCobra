@@ -55,10 +55,6 @@ const cubeSchema = mongoose.Schema({
     required: true,
     unique: true,
   },
-  urlAlias: {
-    type: String,
-    unique: true,
-  },
   owner: {
     type: String,
     required: true,
@@ -153,6 +149,10 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  useCubeElo: {
+    type: Boolean,
+    default: false,
+  },
   basics: {
     type: [String],
     default: [
@@ -167,10 +167,6 @@ const cubeSchema = mongoose.Schema({
 
 cubeSchema.index({
   shortID: 1,
-});
-
-cubeSchema.index({
-  urlAlias: 1,
 });
 
 cubeSchema.index({
@@ -208,8 +204,8 @@ cubeSchema.index({
 const Cube = mongoose.model('Cube', cubeSchema);
 
 Cube.LAYOUT_FIELDS =
-  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri urlAlias';
+  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri shortID';
 Cube.PREVIEW_FIELDS =
-  '_id shortId urlAlias name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
+  '_id shortID name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
 
 module.exports = Cube;
