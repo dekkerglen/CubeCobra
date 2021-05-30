@@ -42,9 +42,6 @@ const probTable = (() => {
   return new Float32Array(probTableUint8.buffer);
 })();
 
-// Ignore synergy below this value.
-const SIMILARITY_CLIP = 0.7;
-const SIMILARITY_MULTIPLIER = 1 / (1 - SIMILARITY_CLIP);
 // Maximum value each oracle can achieve.
 export const MAX_SCORE = 10;
 export const FETCH_LANDS = Object.freeze({
@@ -126,7 +123,7 @@ export const getSynergy = (index1, index2, cards) => {
     for (let i = 0; i < 64; i++) {
       synergy += embedding1[i] * embedding2[i];
     }
-    synergy *= 10;
+    synergy *= MAX_SCORE;
     synergyCache[name1][name2] = synergy;
     synergyCache[name2][name1] = synergy;
   }

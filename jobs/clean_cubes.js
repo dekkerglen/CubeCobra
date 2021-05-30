@@ -9,7 +9,6 @@ const mongoose = require('mongoose');
 const Cube = require('../models/cube');
 const { cardsNeedsCleaning, cleanCards } = require('../models/migrations/cleanCards');
 const carddb = require('../serverjs/cards');
-const { toNonNullArray } = require('../serverjs/util');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -18,6 +17,8 @@ const DEFAULT_BASICS = [
   '8365ab45-6d78-47ad-a6ed-282069b0fabc',
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
+
+const BATCH_SIZE = 1024;
 
 const needsCleaning = (cube) =>
   !cube.cards || !Array.isArray(cube.basics) || cardsNeedsCleaning(cube.cards) || cardsNeedsCleaning(cube.maybe);
@@ -56,20 +57,19 @@ try {
     const cursor = Cube.find().lean().cursor();
 
     // batch them by batchSize
-    for (let i = 0; i < count; i += batchSize) {
+    for (let i = 0; i < count; ) {
       const cubes = [];
-      for (let j = 0; j < batchSize; j++) {
-        if (i + j < count) {
-          const cube = await cursor.next();
-          if (cube) {
-            cubes.push(cube);
-          }
+      const nextBound = Math.min(i + BATCH_SIZE, count);
+      for (; i < nextBound; i++) {
+        const cube = await cursor.next();
+        if (cube) {
+          cubes.push(processCube(cube));
         }
       }
 
-      await Promise.all(cubes.map(processCube));
+      await Promise.all(cubes);
 
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
+      console.log(`Finished: ${i} of ${count} cubes`);
     }
 
     mongoose.disconnect();
