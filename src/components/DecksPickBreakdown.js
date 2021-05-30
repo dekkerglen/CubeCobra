@@ -26,7 +26,6 @@ export const usePickListAndDrafterState = ({ draft, seatIndex, defaultIndex }) =
   // from later ones.
   const [drafterStateByPickNumber, picksList] = useMemo(() => {
     const { cards } = draft;
-    console.debug(cards);
     const { pickorder, trashorder } = draft.seats[seatIndex];
     const numToTake = pickorder.length + trashorder.length;
     const takenCards = [];
@@ -86,9 +85,9 @@ const DecksPickBreakdownInternal = (props) => {
                 data-pick-number={pickNumber}
               >
                 {drafterState.pickNumber === pickNumber ? (
-                  <strong>{`${ACTION_LABELS[action]} ${cardName(card)}`}</strong>
+                  <strong>{`${ACTION_LABELS[action]}: ${cardName(card)}`}</strong>
                 ) : (
-                  <>{`${ACTION_LABELS[action]} ${cardName(card)}`}</>
+                  <>{`${ACTION_LABELS[action]}: ${cardName(card)}`}</>
                 )}
               </AutocardItem>
             ))}

@@ -28,68 +28,33 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
   let pickedNum = 0;
   let trashedNum = 0;
   let curStepNumber = 0;
-  for (let packNum = 0; packNum < numPacks; packNum++) {
-    const packsWithCards = draft.initial_state.map((packsForSeat) => [...packsForSeat[packNum].cards]);
-    const packSize = packsWithCards[seatNum].length;
+  let pickNum = 0;
+  let packSize = 0;
+  let packsWithCards = new Array(draft.initial_state.length).fill([]);
+  let action = 'pass';
+  let amount = 0;
+  let packNum = 0;
+  let offset = 0;
+  for (; packNum < numPacks; packNum++) {
+    // eslint-disable-next-line
+    packsWithCards = draft.initial_state.map((packsForSeat) => [...packsForSeat[packNum].cards]);
+    pickNum = 0;
+    packSize = packsWithCards[seatNum].length;
+    offset = 0;
     const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
-    let offset = 0;
-    let pickNum = 0;
     seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
-    for (const { action, amount } of steps) {
+    for ({ action, amount } of steps) {
+      if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
       const negativeAmount = (amount ?? 1) < 0;
       for (let completedAmount = 0; completedAmount < Math.abs(amount ?? 1); completedAmount++) {
-        if (useSteps && curStepNumber >= stepEnd) {
-          return {
-            cards: cards.map((card, cardIndex) =>
-              seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null,
-            ),
-            picked: ourSeat.pickorder.slice(0, pickedNum),
-            trashed: ourSeat.trashorder.slice(0, trashedNum),
-            seen,
-            cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
-            basics,
-            packNum,
-            pickNum,
-            numPacks,
-            packSize,
-            pickedNum,
-            trashedNum,
-            stepNumber: curStepNumber,
-            pickNumber: pickedNum + trashedNum,
-            step: { action, amount },
-            completedAmount,
-          };
-        }
+        if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
         if (action === 'pass') {
           // We have to build our own xor here
-          const passLeft = packNum % 2 === 0 ? !negativeAmount : negativeAmount;
+          const passLeft = (packNum % 2 === 0) === !negativeAmount;
           // We have to add numSeats - 1 because javascript does not handle negative modulo correctly.
           offset = (offset + (passLeft ? 1 : numSeats - 1)) % numSeats;
           seen.push(...packsWithCards[(seatNum + offset) % numSeats]);
         } else if (action.match(/pick|trash/)) {
-          if (!useSteps && pickedNum + trashedNum >= pickEnd) {
-            return {
-              cards: cards.map((card, cardIndex) =>
-                seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null,
-              ),
-              picked: ourSeat.pickorder.slice(0, pickedNum),
-              trashed: ourSeat.trashorder.slice(0, trashedNum),
-              seen,
-              cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
-              basics,
-              packNum,
-              pickNum,
-              numPacks,
-              packSize,
-              pickedNum,
-              trashedNum,
-              stepNumber: curStepNumber,
-              pickNumber: pickedNum + trashedNum,
-              step: { action, amount },
-              completedAmount,
-            };
-          }
-
           for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
             const offsetSeatIndex = (seatIndex + offset) % numSeats;
             const takenCardIndex = action.match(/pick/)
@@ -115,25 +80,30 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
           pickNum += 1;
         }
         curStepNumber += 1;
-      }
-    }
-  }
+        if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
+      } // step amount
+      if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
+    } // step
+    if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
+    pickNum = 15;
+    packSize = 15;
+  } // pack
   return {
     cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
-    picked: ourSeat.pickorder.slice(),
-    trashed: ourSeat.trashorder.slice(),
+    picked: ourSeat.pickorder.slice(0, pickedNum),
+    trashed: ourSeat.trashorder.slice(0, trashedNum),
     seen,
-    cardsInPack: [],
+    cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
     basics,
-    packNum: numPacks,
-    pickNum: 15,
+    packNum,
+    pickNum,
     numPacks,
-    packSize: 15,
-    pickedNum: ourSeat.pickorder.length,
-    trashedNum: ourSeat.trashorder.length,
+    packSize,
+    pickedNum,
+    trashedNum,
     stepNumber: curStepNumber,
     pickNumber: pickedNum + trashedNum,
-    step: { action: 'pass', amount: 1 },
+    step: { action, amount },
     completedAmount: 0,
   };
 };

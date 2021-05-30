@@ -110,8 +110,6 @@ const interpolateWeight = (weights, coordMaxPair, ...coordinates) => {
   );
 };
 
-const scaleSimilarity = (value) => SIMILARITY_MULTIPLIER * Math.max(0, value - SIMILARITY_CLIP);
-
 const synergyCache = {};
 export const getSynergy = (index1, index2, cards) => {
   const card1 = cards[index1];
@@ -122,16 +120,13 @@ export const getSynergy = (index1, index2, cards) => {
   if ((synergy ?? null) === null) {
     if (!synergyCache[name1]) synergyCache[name1] = {};
     if (!synergyCache[name2]) synergyCache[name2] = {};
-    if (!card1?.details?.embedding?.length || !card2?.details?.embedding?.length || name1 === name2) {
-      synergy = 0;
-    } else {
-      const similarityValue = card1.details.embedding.reduce((acc, x, i) => acc + x * card2.details.embedding[i], 0);
-      if (Number.isFinite(similarityValue)) {
-        synergy = 1 / (1 - scaleSimilarity(similarityValue)) - 1;
-      } else {
-        synergy = similarityValue > 0 ? MAX_SCORE : 0;
-      }
+    const embedding1 = card1.details.embedding;
+    const embedding2 = card2.details.embedding;
+    synergy = 0;
+    for (let i = 0; i < 64; i++) {
+      synergy += embedding1[i] * embedding2[i];
     }
+    synergy *= 10;
     synergyCache[name1][name2] = synergy;
     synergyCache[name2][name1] = synergy;
   }
@@ -325,7 +320,7 @@ export const ORACLES = Object.freeze(
       ],
       // How much does the card we're considering synergize with the cards we've picked?
       // Helps us assess how much we want to play this card.
-      computeValue: ({ picked, cardIndices, cards, probabilities: p, basics }) =>
+      computeValue: ({ picked, cardIndices, cards, sqrtProbabilities: p, basics }) =>
         picked.length + basics.length > 0
           ? cardIndices.reduce((acc, ci) => sumSynergy(ci, picked.concat(basics), cards, p) + acc, 0) /
             (picked.length + basics.length)
@@ -343,16 +338,16 @@ export const ORACLES = Object.freeze(
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked, cards, probabilities: p, totalProbability: total, basics }) =>
+      computeValue: ({ picked, cards, sqrtProbabilities: p, totalProbability: total, basics }) =>
         // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
         // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
         // average over the Pick Synergy of each picked card with the rest. There are two ordered
         // pairs for every distinct unordered pair so we multiply by 2.
-        total > 1 && picked.length + basics.length > 0
+        total > 0 && picked.length + basics.length > 0
           ? (2 * sum(picked.concat(basics).map((ci, i) => sumSynergy(ci, fst(picked.concat(basics), i), cards, p)))) /
-            (picked.length + basics.length) /
-            (total - 1)
+            (picked.length + basics.length - 1) /
+            sum(p)
           : 0,
     },
     {
@@ -490,15 +485,16 @@ const findTransitions = ({ botState: { lands, availableLands } }) => {
 const findBetterLands = (currentScore) => {
   const { botState } = currentScore;
   let result = currentScore;
-  // This makes the bots non-deterministic are we good with that?
   for (const [increase, decrease] of findTransitions(currentScore)) {
     const lands = new Uint8Array(botState.lands);
     lands[increase] += 1;
     lands[decrease] -= 1;
-    const newBotState = { ...result, lands };
+    const newBotState = { ...botState, lands };
     newBotState.probabilities = calculateProbabilities(newBotState);
+    newBotState.sqrtProbabilities = newBotState.probabilities.map((p) => Math.sqrt(p));
     newBotState.totalProbability = sum(newBotState.probabilities);
     const newScore = calculateScore(newBotState);
+    console.debug(newScore.score);
     if (newScore.score > result.score) {
       // We assume we won't get caught in a local maxima so it's safe to take first ascent.
       // return newScore;
@@ -519,6 +515,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   );
   initialBotState.lands = getRandomLands(initialBotState.availableLands);
   initialBotState.probabilities = calculateProbabilities(initialBotState);
+  initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => Math.sqrt(p));
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
   let prevScore = { ...currentScore, score: -1 };
@@ -526,6 +523,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
     prevScore = currentScore;
     currentScore = findBetterLands(currentScore);
   }
+  console.log(currentScore);
   return currentScore;
 };
 
