@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-await-in-loop */
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
 
@@ -14,121 +16,80 @@ const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
-
-let cardUses = {};
-
-let ratingsDict = {};
-
-let currentDate = '';
-
-let distinctOracles = [];
-
-let cardSizeUses = {
-  size180: {},
-  size360: {},
-  size450: {},
-  size540: {},
-  size720: {},
-  pauper: {},
-  peasant: {},
-  legacy: {},
-  modern: {},
-  standard: {},
-  vintage: {},
-};
-
-// global cube stats
-let cubeCounts = {
-  total: 0,
-  size180: 0,
-  size360: 0,
-  size450: 0,
-  size540: 0,
-  size720: 0,
-  pauper: 0,
-  peasant: 0,
-  legacy: 0,
-  modern: 0,
-  standard: 0,
-  vintage: 0,
-};
-
-let correlationIndex = {};
-let correlations = [];
-let synergies = [];
-
-// use correlationIndex for index
-let cubesWithCard = [];
-
-function createCorrelations() {
-  const allOracleIds = carddb.allOracleIds();
-  const totalCards = allOracleIds.length;
-  for (let i = 0; i < totalCards; i += 1) {
-    correlationIndex[allOracleIds[i]] = i;
-    correlations.push([]);
-    cubesWithCard.push([]);
-    for (let j = 0; j < totalCards; j += 1) {
-      correlations[i].push(0);
-    }
-    if ((i + 1) % 1000 === 0) {
-      winston.info(`Finished: ${i + 1} of ${totalCards} correlations.`);
-    }
-  }
-  winston.info('Finish init of correlation matrix.');
-}
+const RELATED_LIMIT = 24;
+let ORACLE_COUNT = 0;
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
 
-function getSynergy(oracle1, oracle2) {
+const getSynergy = (oracle1, oracle2) => {
   const em1 = cardFromOracle(oracle1).embedding;
   const em2 = cardFromOracle(oracle2).embedding;
-  if (em1 && em2 && em1.length === em2.length) {
-    return em1.reduce((acc, x, i) => acc + x * em2[i], 0);
+  if (oracle1 === oracle2) {
+    return 1;
   }
-  return 0;
-}
 
-function createSynergyMatrix() {
-  const allOracleIds = carddb.allOracleIds();
-  for (let i = 0; i < allOracleIds.length; i += 1) {
-    synergies.push([]);
-    cubesWithCard.push([]);
-    for (let j = 0; j < allOracleIds.length; j += 1) {
-      synergies[i].push(getSynergy(allOracleIds[i], allOracleIds[j]));
+  let sim = 0;
+  if (em1 && em2 && em1.length === em2.length) {
+    for (let i = 0; i < 64; i++) {
+      sim += em1[i] * em2[i];
+    }
+  }
+  return sim;
+};
+
+const createSynergyMatrix = (distinctOracles) => {
+  const synergies = new Float32Array(ORACLE_COUNT * ORACLE_COUNT).fill(0);
+
+  for (let i = 0; i < ORACLE_COUNT; i += 1) {
+    for (let j = 0; j < ORACLE_COUNT; j += 1) {
+      synergies[i * ORACLE_COUNT + j] = getSynergy(distinctOracles[i], distinctOracles[j]);
+      synergies[j * ORACLE_COUNT + i] = getSynergy(distinctOracles[i], distinctOracles[j]);
     }
     if ((i + 1) % 100 === 0) {
-      winston.info(`Finished: ${i + 1} of ${allOracleIds.length} synergies.`);
+      winston.info(`Finished: ${i + 1} of ${ORACLE_COUNT} synergies.`);
     }
   }
-}
 
-function attemptIncrement(obj, propname) {
+  return synergies;
+};
+
+const accessMatrix = (matrix, oracle, otherOracle, oracleToIndex) =>
+  matrix[oracleToIndex[oracle] * ORACLE_COUNT + oracleToIndex[otherOracle]];
+
+const incrementMatrix = (matrix, oracle, otherOracle, oracleToIndex) => {
+  matrix[oracleToIndex[oracle] * ORACLE_COUNT + oracleToIndex[otherOracle]] += 1;
+};
+
+const attemptIncrement = (obj, propname) => {
   if (!obj[propname]) {
     obj[propname] = 0;
   }
   obj[propname] += 1;
-}
+};
 
-async function processDeck(deck) {
+const processDeck = async (deck, oracleToIndex, correlations) => {
+  const { cards } = deck;
   if (deck.seats && deck.seats[0] && deck.seats[0].deck && deck.seats[0].deck.length > 0) {
     // flatten array
     const deckCards = [];
-    deck.seats[0].deck.forEach((col) => {
-      col.forEach((row) => {
-        if (row && row.cardID) {
-          deckCards.push(carddb.cardFromId(row.cardID).oracle_id);
-        }
-      });
-    });
+    deck.seats[0].deck.forEach((row) =>
+      row.forEach((col) => {
+        col.forEach((ci) => {
+          if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
+            deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
+          }
+        });
+      }),
+    );
 
     for (let i = 0; i < deckCards.length; i += 1) {
       // could be an invalid card
-      if (correlationIndex[deckCards[i]] && !basics.includes(deckCards[i])) {
+      if (oracleToIndex[deckCards[i]] && !basics.includes(deckCards[i])) {
         for (let j = i + 1; j < deckCards.length; j += 1) {
           if (!basics.includes(deckCards[j])) {
             try {
-              correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
-              correlations[correlationIndex[deckCards[j]]][correlationIndex[deckCards[i]]] += 1;
+              incrementMatrix(correlations, deckCards[j], deckCards[i], oracleToIndex);
+              incrementMatrix(correlations, deckCards[i], deckCards[j], oracleToIndex);
             } catch (err) {
               winston.info(`${deckCards[i]} or ${deckCards[j]} cannot be indexed.`);
             }
@@ -137,28 +98,28 @@ async function processDeck(deck) {
       }
     }
   }
-}
+};
 
-async function processCube(cube) {
-  let cubeSizeDict = cardSizeUses.size180;
-  let cubeLegalityDict = cardSizeUses.vintage;
+const processCube = async (cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex, cubesWithCard) => {
+  let cubeSizeDict = cardCountByCubeSize.size180;
+  let cubeLegalityDict = cardCountByCubeSize.vintage;
 
-  cubeCounts.total += 1;
+  cubeCountBySize.total += 1;
   if (cube.card_count <= 180) {
-    cubeSizeDict = cardSizeUses.size180;
-    cubeCounts.size180 += 1;
+    cubeSizeDict = cardCountByCubeSize.size180;
+    cubeCountBySize.size180 += 1;
   } else if (cube.card_count <= 360) {
-    cubeSizeDict = cardSizeUses.size360;
-    cubeCounts.size360 += 1;
+    cubeSizeDict = cardCountByCubeSize.size360;
+    cubeCountBySize.size360 += 1;
   } else if (cube.card_count <= 450) {
-    cubeSizeDict = cardSizeUses.size450;
-    cubeCounts.size450 += 1;
+    cubeSizeDict = cardCountByCubeSize.size450;
+    cubeCountBySize.size450 += 1;
   } else if (cube.card_count <= 540) {
-    cubeSizeDict = cardSizeUses.size540;
-    cubeCounts.size540 += 1;
+    cubeSizeDict = cardCountByCubeSize.size540;
+    cubeCountBySize.size540 += 1;
   } else {
-    cubeSizeDict = cardSizeUses.size720;
-    cubeCounts.size720 += 1;
+    cubeSizeDict = cardCountByCubeSize.size720;
+    cubeCountBySize.size720 += 1;
   }
 
   let isPauper = false;
@@ -168,33 +129,33 @@ async function processCube(cube) {
       cube.type.toLowerCase().includes('standard') ||
       (cube.overrideCategory && cube.categoryOverride.includes('Standard'))
     ) {
-      cubeLegalityDict = cardSizeUses.standard;
-      cubeCounts.standard += 1;
+      cubeLegalityDict = cardCountByCubeSize.standard;
+      cubeCountBySize.standard += 1;
     } else if (
       cube.type.toLowerCase().includes('modern') ||
       (cube.overrideCategory && cube.categoryOverride.includes('Modern'))
     ) {
-      cubeLegalityDict = cardSizeUses.modern;
-      cubeCounts.modern += 1;
+      cubeLegalityDict = cardCountByCubeSize.modern;
+      cubeCountBySize.modern += 1;
     } else if (
       cube.type.toLowerCase().includes('legacy') ||
       (cube.overrideCategory && cube.categoryOverride.includes('Legacy'))
     ) {
-      cubeLegalityDict = cardSizeUses.legacy;
-      cubeCounts.legacy += 1;
+      cubeLegalityDict = cardCountByCubeSize.legacy;
+      cubeCountBySize.legacy += 1;
     } else if (
       cube.type.toLowerCase().includes('vintage') ||
       (cube.overrideCategory && cube.categoryOverride.includes('Vintage'))
     ) {
-      cubeLegalityDict = cardSizeUses.vintage;
-      cubeCounts.vintage += 1;
+      cubeLegalityDict = cardCountByCubeSize.vintage;
+      cubeCountBySize.vintage += 1;
     }
 
     if (
       cube.type.toLowerCase().includes('pauper') ||
       (cube.overrideCategory && cube.categoryPrefixes.includes('Pauper'))
     ) {
-      cubeCounts.pauper += 1;
+      cubeCountBySize.pauper += 1;
       isPauper = true;
     }
 
@@ -202,7 +163,7 @@ async function processCube(cube) {
       cube.type.toLowerCase().includes('peasant') ||
       (cube.overrideCategory && cube.categoryPrefixes.includes('Peasant'))
     ) {
-      cubeCounts.peasant += 1;
+      cubeCountBySize.peasant += 1;
       isPeasant = true;
     }
   }
@@ -211,12 +172,12 @@ async function processCube(cube) {
     new Set(cube.cards.filter((c) => c).map((card) => carddb.cardFromId(card.cardID).oracle_id)),
   );
   uniqueOracleIds.forEach((oracleId) => {
-    if (correlationIndex[oracleId]) {
-      cubesWithCard[correlationIndex[oracleId]].push(cube._id);
+    if (oracleToIndex[oracleId]) {
+      cubesWithCard[oracleToIndex[oracleId]].push(cube._id);
     }
 
     // total
-    attemptIncrement(cardUses, oracleId);
+    attemptIncrement(cardUseCount, oracleId);
 
     // card counts collated by cube sizes
     attemptIncrement(cubeSizeDict, oracleId);
@@ -224,35 +185,108 @@ async function processCube(cube) {
     // card counts collated by cube type
     attemptIncrement(cubeLegalityDict, oracleId);
     if (isPauper) {
-      attemptIncrement(cardSizeUses.pauper, oracleId);
+      attemptIncrement(cardCountByCubeSize.pauper, oracleId);
     }
     if (isPeasant) {
-      attemptIncrement(cardSizeUses.peasant, oracleId);
+      attemptIncrement(cardCountByCubeSize.peasant, oracleId);
     }
   });
-}
+};
 
-async function processCard(card) {
+// negative if otherOracle has greater value than otherOracle2
+// to sort descending
+const compareOracles = (oracle, otherOracle, otherOracle2, matrix, oracleToIndex) =>
+  accessMatrix(matrix, oracle, otherOracle2, oracleToIndex) - accessMatrix(matrix, oracle, otherOracle, oracleToIndex);
+
+const getIndex = (array, oracle, otherOracle, table, oracleToIndex) => {
+  let start = 0;
+  let end = array.length - 1;
+  let mid = -1;
+
+  while (start <= end) {
+    mid = Math.floor((start + end) / 2);
+
+    if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) === 0) {
+      return mid;
+    }
+
+    if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) > 0) {
+      start = mid + 1;
+    } else {
+      end = mid - 1;
+    }
+  }
+
+  if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) > 0) {
+    return mid + 1;
+  }
+  return mid;
+};
+
+// Assumes array has already been sorted with this sort function
+// RELATED_LIMIT is the max size we can make use of
+const insertSorted = (array, oracle, otherOracle, table, oracleToIndex) => {
+  if (array.length === 0) {
+    return [oracle];
+  }
+
+  if (compareOracles(oracle, otherOracle, array[0], table, oracleToIndex) < 0) {
+    // item should be in front of existing array
+    array.splice(0, 0, otherOracle);
+  } else if (
+    compareOracles(oracle, otherOracle, array[array.length - 1], table, oracleToIndex) > 0 &&
+    array.length < RELATED_LIMIT
+  ) {
+    // item should be at end of existing array, and we are under our limit
+    array.splice(array.length, 0, otherOracle);
+  } else {
+    // item should be inserted somewhere into the array
+    const index = getIndex(array, oracle, otherOracle, table, oracleToIndex);
+    array.splice(index, 0, otherOracle);
+  }
+
+  // truncate our array to our limit
+  if (array.length > RELATED_LIMIT) {
+    array.splice(RELATED_LIMIT, array.length - RELATED_LIMIT);
+  }
+
+  return array;
+};
+
+const processCard = async (
+  card,
+  cardUseCount,
+  rating,
+  currentDate,
+  distinctOracles,
+  cardCountByCubeSize,
+  cubeCountBySize,
+  oracleToIndex,
+  correlations,
+  synergies,
+  cubesWithCard,
+) => {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
-  const { name } = card;
-  const oracleId = card.oracle_id;
-
-  const rating = ratingsDict[name]; // await CardRating.findOne({ name });
 
   const currentDatapoint = {};
+
   currentDatapoint.rating = rating ? rating.rating : null;
   currentDatapoint.elo = rating ? rating.elo : null;
   currentDatapoint.picks = rating ? rating.picks : 0;
-  // currentDatapoint.embedding = embeddings[card.name_lower];
 
-  currentDatapoint.total = cardUses[oracleId] ? [cardUses[oracleId], cardUses[oracleId] / cubeCounts.total] : [0, 0];
-  for (const cubeCategory of Object.keys(cardSizeUses)) {
-    currentDatapoint[cubeCategory] = cardSizeUses[cubeCategory][oracleId]
-      ? [cardSizeUses[cubeCategory][oracleId], cardSizeUses[cubeCategory][oracleId] / cubeCounts[cubeCategory]]
+  currentDatapoint.total = cardUseCount[card.oracle_id]
+    ? [cardUseCount[card.oracle_id], cardUseCount[card.oracle_id] / cubeCountBySize.total]
+    : [0, 0];
+  for (const cubeCategory of Object.keys(cardCountByCubeSize)) {
+    currentDatapoint[cubeCategory] = cardCountByCubeSize[cubeCategory][card.oracle_id]
+      ? [
+          cardCountByCubeSize[cubeCategory][card.oracle_id],
+          cardCountByCubeSize[cubeCategory][card.oracle_id] / cubeCountBySize[cubeCategory],
+        ]
       : [0, 0];
   }
 
-  const cubes = cubesWithCard[correlationIndex[oracleId]] || [];
+  const cubes = cubesWithCard[oracleToIndex[card.oracle_id]] || [];
   currentDatapoint.cubes = cubes.length;
 
   currentDatapoint.prices = versions.map((id) => {
@@ -269,101 +303,73 @@ async function processCard(card) {
 
   // cubed with
   // create correl dict
-  const cubedWith = distinctOracles
-    .map((otherOracleId) => {
-      try {
-        return {
-          oracle: otherOracleId,
-          count: correlations[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
-          type: cardFromOracle(otherOracleId).type.toLowerCase(),
-        };
-      } catch (e) {
-        console.error(e);
-        console.log(`oracle: ${oracleId}, other: ${otherOracleId}`);
-        console.log(`index: ${correlationIndex[oracleId]}, other: ${correlationIndex[otherOracleId]}`);
-        return {};
-      }
-    })
-    .filter((item) => item.oracle !== oracleId && !item.type.includes('basic land'));
+  const cubedWith = {
+    synergistic: [],
+    top: [],
+    creatures: [],
+    spells: [],
+    other: [],
+  };
 
-  const synergyWith = distinctOracles
-    .map((otherOracleId) => ({
-      oracle: otherOracleId,
-      synergy: synergies[correlationIndex[oracleId]][correlationIndex[otherOracleId]],
-      type: cardFromOracle(otherOracleId).type.toLowerCase(),
-    }))
-    .filter((item) => Number.isFinite(item.synergy) && item.oracle !== oracleId && !item.type.includes('basic'));
+  for (const otherOracleId of distinctOracles) {
+    const type = cardFromOracle(otherOracleId).type.toLowerCase();
 
-  // quickselect isn't sorting correctly for some reason
-  cubedWith.sort((first, second) => {
-    return second.count - first.count;
-  });
-
-  synergyWith.sort((first, second) => {
-    if (second.synergy < first.synergy) {
-      return -1;
-    }
-    if (second.synergy > first.synergy) {
-      return 1;
-    }
-    return 0;
-  });
-  let cardHistory = await CardHistory.findOne({ oracleId });
-  try {
-    if (!cardHistory) {
-      cardHistory = new CardHistory();
-      cardHistory.cardName = name;
-      cardHistory.oracleId = oracleId; // eslint-disable-line camelcase
-      cardHistory.versions = versions;
-    } else if (!cardHistory.oracleId || cardHistory.oracleId.length === 0) {
-      cardHistory.oracle_id = oracleId;
+    if (otherOracleId !== card.oracle_id && !type.includes('basic')) {
+      cubedWith.synergistic = insertSorted(
+        cubedWith.synergistic,
+        card.oracle_id,
+        otherOracleId,
+        synergies,
+        oracleToIndex,
+      );
+      cubedWith.top = insertSorted(cubedWith.top, card.oracle_id, otherOracleId, correlations, oracleToIndex);
     }
 
-    cardHistory.cubes = cubes;
-    cardHistory.current = currentDatapoint;
-
-    cardHistory.cubedWith = {
-      synergistic: synergyWith.slice(0, 24).map((item) => item.oracle),
-      top: cubedWith.slice(0, 24).map((item) => item.oracle),
-      creatures: cubedWith
-        .filter((item) => item.type.includes('creature'))
-        .slice(0, 24)
-        .map((item) => item.oracle),
-      spells: cubedWith
-        .filter((item) => item.type.includes('instant') || item.type.includes('sorcery'))
-        .slice(0, 24)
-        .map((item) => item.oracle),
-      other: cubedWith
-        .filter(
-          (item) => !item.type.includes('creature') && !item.type.includes('instant') && !item.type.includes('sorcery'),
-        )
-        .slice(0, 24)
-        .map((item) => item.oracle),
-    };
-
-    if (!cardHistory.history) {
-      cardHistory.history = [];
+    if (otherOracleId !== card.oracle_id && type.includes('creature')) {
+      cubedWith.creatures = insertSorted(
+        cubedWith.creatures,
+        card.oracle_id,
+        otherOracleId,
+        correlations,
+        oracleToIndex,
+      );
+    } else if (otherOracleId !== card.oracle_id && (type.includes('instant') || type.includes('sorcery'))) {
+      cubedWith.spells = insertSorted(cubedWith.spells, card.oracle_id, otherOracleId, correlations, oracleToIndex);
+    } else if (otherOracleId !== card.oracle_id && !type.includes('basic')) {
+      cubedWith.other = insertSorted(cubedWith.other, card.oracle_id, otherOracleId, correlations, oracleToIndex);
     }
-
-    cardHistory.history.push({
-      date: currentDate,
-      data: currentDatapoint,
-    });
-
-    await cardHistory.save();
-  } catch (error) {
-    winston.error(error, { error });
   }
-}
+
+  const cardHistory = (await CardHistory.findOne({ oracleId: card.oracle_id })) || new CardHistory();
+
+  if (cardHistory.isNew) {
+    cardHistory.cardName = card.name;
+    cardHistory.oracleId = card.oracle_id;
+    cardHistory.versions = versions;
+    cardHistory.history = [];
+  }
+
+  cardHistory.cubes = cubes.slice(0, 10000);
+  cardHistory.current = currentDatapoint;
+
+  cardHistory.cubedWith = cubedWith;
+
+  cardHistory.history.push({
+    date: currentDate,
+    data: currentDatapoint,
+  });
+
+  await cardHistory.save();
+};
 
 const run = async () => {
   const d = new Date();
-  currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
-  cardUses = {};
-  ratingsDict = {};
+  const cardUseCount = {};
+  const ratingsDict = {};
 
-  cardSizeUses = {
+  const cardCountByCubeSize = {
     size180: {},
     size360: {},
     size450: {},
@@ -377,7 +383,7 @@ const run = async () => {
     vintage: {},
   };
 
-  cubeCounts = {
+  const cubeCountBySize = {
     total: 0,
     size180: 0,
     size360: 0,
@@ -392,13 +398,6 @@ const run = async () => {
     vintage: 0,
   };
 
-  correlationIndex = {};
-  correlations = [];
-  synergies = [];
-
-  // use correlationIndex for index
-  cubesWithCard = [];
-
   winston.info('Starting card db');
 
   await carddb.initializeCardDb();
@@ -409,61 +408,90 @@ const run = async () => {
 
   winston.info('Started: oracles');
 
-  distinctOracles = [...new Set(carddb.allOracleIds())];
-  const distinctNames = [...new Set(distinctOracles.map((oracle) => cardFromOracle(oracle).name_lower))];
-  distinctOracles = [
-    ...new Set(
-      distinctNames.map((name) => carddb.cardFromId(carddb.nameToId[name][0]).oracle_id).filter((oracle) => oracle),
-    ),
-  ];
+  const distinctOracles = carddb.allOracleIds();
+  ORACLE_COUNT = distinctOracles.length;
+
+  console.log(distinctOracles[0]);
+
+  winston.info(`Created list of ${ORACLE_COUNT} oracles`);
+
+  const oracleToIndex = Object.fromEntries(distinctOracles.map((item, index) => [item, index]));
 
   winston.info('creating correlation matrix...');
-  createCorrelations();
-  winston.info('creating synergy matrix...');
-  createSynergyMatrix();
 
-  for (const rating of ratings) {
-    ratingsDict[rating.name] = rating;
+  const cubesWithCard = new Array(ORACLE_COUNT).fill([]);
+  const correlations = new Int32Array(ORACLE_COUNT * ORACLE_COUNT).fill(0);
+
+  winston.info('creating synergy matrix...');
+  const synergies = createSynergyMatrix(distinctOracles);
+
+  for (const item of ratings) {
+    ratingsDict[item.name] = item;
   }
 
   // process all cube objects
   winston.info('Started: cubes');
   let count = await Cube.countDocuments();
-  let cursor = Cube.find().lean().cursor();
+  let cursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
+    .lean()
+    .cursor();
   for (let i = 0; i < count; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    await processCube(await cursor.next());
-    if ((i + 1) % 10 === 0) {
+    await processCube(
+      await cursor.next(),
+      cardUseCount,
+      cardCountByCubeSize,
+      cubeCountBySize,
+      oracleToIndex,
+      cubesWithCard,
+    );
+    if ((i + 1) % 100 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
   }
+  cursor.close();
   winston.info('Finished: all cubes');
 
   // process all deck objects
   winston.info('Started: decks');
-  count = await Deck.countDocuments();
-  cursor = Deck.find().lean().cursor();
+  count = await Deck.count();
+  cursor = Deck.find({}, 'seats').lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
-    await processDeck(await cursor.next());
+    await processDeck(await cursor.next(), oracleToIndex, correlations);
     if ((i + 1) % 1000 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} decks.`);
     }
   }
+  cursor.close();
   winston.info('Finished: all decks');
 
   // save card models
   const allOracleIds = carddb.allOracleIds();
-  const totalCards = allOracleIds.length;
   let processed = 0;
+
   for (const oracleId of allOracleIds) {
     const card = cardFromOracle(oracleId);
-    await processCard(card); // eslint-disable-line no-await-in-loop
+    await processCard(
+      card,
+      cardUseCount,
+      ratingsDict[card.name],
+      currentDate,
+      distinctOracles,
+      cardCountByCubeSize,
+      cubeCountBySize,
+      oracleToIndex,
+      correlations,
+      synergies,
+      cubesWithCard,
+    );
     processed += 1;
-    winston.info(`Finished ${oracleId}: ${processed} of ${totalCards} cards.`);
+    if (processed % 100 === 0) {
+      winston.info(`Finished ${processed} of ${ORACLE_COUNT} cards.`);
+    }
   }
 
   winston.info('Done');
+
   // this is needed for log group to stream
   await new Promise((resolve) => {
     setTimeout(resolve, 10000);
