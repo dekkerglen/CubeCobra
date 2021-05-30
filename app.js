@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
-require('../models/mongoinit');
+require('./models/mongoinit');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
