@@ -252,13 +252,13 @@ describe('CSVtoCards', () => {
         '-',
       )},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${
         expectedCard.finish
-      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
+      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(';')}"`,
       `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace(
         '—',
         '-',
       )},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${
         expectedMaybe.status
-      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`,
+      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(';')}"`,
     ];
     await carddb.initializeCardDb(fixturesPath, true);
     const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards.join('\n'), carddb);
