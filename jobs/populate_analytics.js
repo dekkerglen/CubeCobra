@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /* eslint-disable no-await-in-loop */
 // run with: node --max-old-space-size=8192 populate_analytics.js
 // will oom without the added tag
@@ -24,8 +25,15 @@ const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleI
 const getSynergy = (oracle1, oracle2) => {
   const em1 = cardFromOracle(oracle1).embedding;
   const em2 = cardFromOracle(oracle2).embedding;
+  if (oracle1 === oracle2) {
+    return 1;
+  }
+
   if (em1 && em2 && em1.length === em2.length) {
-    return similarity(em1, em2);
+    const sim = similarity(em1, em2);
+    if (isFinite(sim)) {
+      return sim;
+    }
   }
   return 0;
 };
@@ -183,6 +191,8 @@ const processCube = async (cube, cardUseCount, cardCountByCubeSize, cubeCountByS
   });
 };
 
+// negative if otherOracle has greater value than otherOracle2
+// to sort descending
 const compareOracles = (oracle, otherOracle, otherOracle2, matrix, oracleToIndex) =>
   accessMatrix(matrix, oracle, otherOracle2, oracleToIndex) - accessMatrix(matrix, oracle, otherOracle, oracleToIndex);
 
@@ -198,21 +208,21 @@ const getIndex = (array, oracle, otherOracle, table, oracleToIndex) => {
       return mid;
     }
 
-    if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) < 0) {
+    if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) > 0) {
       start = mid + 1;
     } else {
       end = mid - 1;
     }
   }
 
-  if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) < 0) {
+  if (compareOracles(oracle, otherOracle, array[mid], table, oracleToIndex) > 0) {
     return mid + 1;
   }
   return mid;
 };
 
 // Assumes array has already been sorted with this sort function
-// RELATED_LIMIT is the max size we can make use of`
+// RELATED_LIMIT is the max size we can make use of
 const insertSorted = (array, oracle, otherOracle, table, oracleToIndex) => {
   if (array.length === 0) {
     return [oracle];
@@ -399,6 +409,8 @@ const run = async () => {
   const distinctOracles = carddb.allOracleIds();
   ORACLE_COUNT = distinctOracles.length;
 
+  console.log(distinctOracles[0]);
+
   winston.info(`Created list of ${ORACLE_COUNT} oracles`);
 
   const oracleToIndex = Object.fromEntries(distinctOracles.map((item, index) => [item, index]));
@@ -418,7 +430,7 @@ const run = async () => {
   // process all cube objects
   winston.info('Started: cubes');
   let count = await Cube.countDocuments();
-  let cursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards _id')
+  let cursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
     .lean()
     .cursor();
   for (let i = 0; i < count; i += 1) {
@@ -440,7 +452,7 @@ const run = async () => {
   // process all deck objects
   winston.info('Started: decks');
   count = await Deck.count();
-  cursor = Deck.find({}, 'seats.0').lean().cursor();
+  cursor = Deck.find({}, 'seats').lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processDeck(await cursor.next(), oracleToIndex, correlations);
@@ -472,7 +484,7 @@ const run = async () => {
     );
     processed += 1;
     if (processed % 100 === 0) {
-      winston.info(`Finished ${oracleId}: ${processed} of ${ORACLE_COUNT} cards.`);
+      winston.info(`Finished ${processed} of ${ORACLE_COUNT} cards.`);
     }
   }
 
