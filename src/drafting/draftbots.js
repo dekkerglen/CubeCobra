@@ -491,7 +491,7 @@ const findBetterLands = (currentScore) => {
     lands[decrease] -= 1;
     const newBotState = { ...botState, lands };
     newBotState.probabilities = calculateProbabilities(newBotState);
-    newBotState.sqrtProbabilities = newBotState.probabilities.map((p) => Math.sqrt(p));
+    newBotState.sqrtProbabilities = newBotState.probabilities.map((p) => p && Math.sqrt(p));
     newBotState.totalProbability = sum(newBotState.probabilities);
     const newScore = calculateScore(newBotState);
     console.debug(newScore.score);
@@ -515,7 +515,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   );
   initialBotState.lands = getRandomLands(initialBotState.availableLands);
   initialBotState.probabilities = calculateProbabilities(initialBotState);
-  initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => Math.sqrt(p));
+  initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
   initialBotState.totalProbability = sum(initialBotState.probabilities);
   let currentScore = calculateScore(initialBotState);
   let prevScore = { ...currentScore, score: -1 };

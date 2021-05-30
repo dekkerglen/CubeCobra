@@ -1,5 +1,5 @@
 import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME, FETCH_LANDS } from 'drafting/draftbots';
-import { cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType } from 'utils/Card';
+import { COLOR_COMBINATIONS, cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType } from 'utils/Card';
 import { arraysAreEqualSets } from 'utils/Util';
 
 const getSortFn = (draftCards) => (a, b) => draftCards[b].rating - draftCards[a].rating;
@@ -159,8 +159,9 @@ export const calculateBasicCounts = ({ picked, cards, basics }) => {
     .concat(...basics.map((ci) => new Array(17).fill(ci)))
     .filter((ci) => cardType(cards[ci]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[ci]))
     .sort(getSortFn(cards));
+  const landsByComb = Array.from(lands).map((v, i) => [COLOR_COMBINATIONS[i].join(''), v]);
   const main = [];
-  for (const [comb, count] of Object.entries(lands)) {
+  for (const [comb, count] of landsByComb) {
     for (let i = 0; i < count; i++) {
       const match = landCards.findIndex((ci) =>
         arraysAreEqualSets([...comb], FETCH_LANDS[cardName(cards[ci])] ?? cardColorIdentity(cards[ci])),
@@ -176,7 +177,7 @@ export const calculateBasicCounts = ({ picked, cards, basics }) => {
   return { lands: main, remainingLands, colors };
 };
 
-async function build({ cards, picked, probabilities, basics, lands: orginalLands }) {
+async function build({ cards, picked, probabilities, sqrtProbabilities, basics, lands: orginalLands }) {
   const landCount = Object.values(orginalLands).reduce((acc, x) => acc + x, 0);
   let nonlands = picked.filter(
     (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
@@ -231,6 +232,7 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
         cards,
         cardIndices: [cardIndex],
         probabilities,
+        sqrtProbabilities,
         basics: [],
         picked: main,
         seen: [],
