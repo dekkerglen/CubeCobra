@@ -167,6 +167,16 @@ const apiLimiter = rateLimit({
 });
 app.use('/cube/api/cubeJSON', apiLimiter);
 
+// check for downtime
+
+if (process.env.DOWNTIME_ACTIVE === 'true') {
+  app.use((req, res) => {
+    return render(req, res, 'DownTimePage', {
+      title: 'Down for Maintenance',
+    });
+  });
+}
+
 // Route files; they manage their own CSRF protection
 app.use('', require('./routes/root'));
 
