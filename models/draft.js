@@ -43,26 +43,29 @@ const Seat = {
 };
 
 // Cube schema
-const draftSchema = mongoose.Schema({
-  basics: {
-    default: [],
-    type: [Number],
-  },
-  cards: [cardSchema],
-  cube: String,
-  initial_state: [[Pack]],
-  schemaVersion: {
-    type: Number,
-    default() {
-      if (this.isNew) {
-        return CURRENT_SCHEMA_VERSION;
-      }
-      return void 0; // eslint-disable-line
+const draftSchema = mongoose.Schema(
+  {
+    basics: {
+      default: [],
+      type: [Number],
     },
+    cards: [cardSchema],
+    cube: String,
+    initial_state: [[Pack]],
+    schemaVersion: {
+      type: Number,
+      default() {
+        if (this.isNew) {
+          return CURRENT_SCHEMA_VERSION;
+        }
+      return void 0; // eslint-disable-line
+      },
+    },
+    seats: [Seat],
+    seed: String,
   },
-  seats: [Seat],
-  seed: String,
-});
+  { timestamps: true },
+);
 
 draftSchema.index({
   schemaVersion: 1,

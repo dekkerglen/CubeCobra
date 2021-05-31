@@ -19,35 +19,38 @@ const SeatDeck = {
 };
 
 // Deck schema
-const deckSchema = mongoose.Schema({
-  cube: String,
-  cubeOwner: String,
-  owner: String,
-  date: Date,
-  draft: {
-    type: String,
-    default: '',
-  },
-  cubename: {
-    type: String,
-    default: 'Cube',
-  },
-  seats: {
-    type: [SeatDeck],
-    default: [],
-  },
-  cards: [cardSchema],
-  schemaVersion: {
-    type: Number,
-    default() {
-      if (this.isNew) {
-        return CURRENT_SCHEMA_VERSION;
-      }
-      return void 0; // eslint-disable-line
+const deckSchema = mongoose.Schema(
+  {
+    cube: String,
+    cubeOwner: String,
+    owner: String,
+    date: Date,
+    draft: {
+      type: String,
+      default: '',
     },
+    cubename: {
+      type: String,
+      default: 'Cube',
+    },
+    seats: {
+      type: [SeatDeck],
+      default: [],
+    },
+    cards: [cardSchema],
+    schemaVersion: {
+      type: Number,
+      default() {
+        if (this.isNew) {
+          return CURRENT_SCHEMA_VERSION;
+        }
+      return void 0; // eslint-disable-line
+      },
+    },
+    basics: [Number],
   },
-  basics: [Number],
-});
+  { timestamps: true },
+);
 
 deckSchema.index({
   cubeOwner: 1,
@@ -69,6 +72,9 @@ deckSchema.index({
 });
 deckSchema.index({
   schemaVersion: 1,
+});
+deckSchema.index({
+  draft: 1,
 });
 deckSchema.pre('save', async () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
