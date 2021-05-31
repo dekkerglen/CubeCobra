@@ -273,7 +273,6 @@ export const getCastingProbability = (card, lands) => {
 };
 
 const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
-const fst = (arr, end) => arr.slice(0, end);
 
 const eloToValue = (elo) => Math.sqrt(10 ** (((elo ?? 1200) - 1200) / 800));
 
@@ -284,9 +283,6 @@ const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
     ? sum(idxs.map((ci) => Math.min(MAX_SCORE, p[ci] * eloToValue(cardElo(cards[ci]))))) / idxs.length
     : 0;
 };
-
-const sumSynergy = (cardIndex, idxs, cards, probabilities) =>
-  probabilities[cardIndex] * sum(idxs.map((ci) => probabilities[ci] * getSynergy(cardIndex, ci, cards)));
 
 const sumEmbeddings = (cards, picked, sqrtProbabilities) => {
   const result = new Float32Array(64);
