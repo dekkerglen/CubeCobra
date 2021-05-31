@@ -13,21 +13,20 @@ const fetch = require('node-fetch');
 const BATCH_SIZE = 100;
 
 const processCard = async (card) => {
-  const rating = await CardRating.findOne({name:card.name});
+  const rating = await CardRating.findOne({ name: card.name });
 
-  if(!rating) {
+  if (!rating) {
     const newRating = new CardRating();
     newRating.name = card.name;
     newRating.elo = 1200;
     newRating.picks = 0;
     await newRating.save();
   }
-}
+};
 
 (async () => {
   await carddb.initializeCardDb();
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
-
     let processed = 0;
     const allOracleIds = carddb.allOracleIds();
     for (const oracleId of allOracleIds) {

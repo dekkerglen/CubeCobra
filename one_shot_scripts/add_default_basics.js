@@ -3,6 +3,9 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
+const Draft = require('../models/draft');
+const GridDraft = require('../models/gridDraft');
+const Deck = require('../models/Deck');
 
 const batchSize = 100;
 
@@ -19,7 +22,7 @@ async function addVars(cube) {
 }
 
 (async () => {
-  mongoose.connect(process.env.MONGODB_URL).then(async (db) => {
+  mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const count = await Cube.countDocuments();
     const cursor = Cube.find().cursor();
 
@@ -34,7 +37,9 @@ async function addVars(cube) {
               cubes.push(cube);
             }
           }
-        } catch (err) {}
+        } catch (err) {
+          console.debug(err);
+        }
       }
       await Promise.all(cubes.map((cube) => addVars(cube)));
       console.log(`Finished: ${i} of ${count} cubes`);

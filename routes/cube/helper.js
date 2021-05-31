@@ -10,7 +10,6 @@ const { setCubeType, addCardHtml, CSVtoCards } = require('../../serverjs/cubefn.
 // Bring in models
 const Cube = require('../../models/cube');
 const Blog = require('../../models/blog');
-const Draft = require('../../models/draft');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -21,8 +20,8 @@ const DEFAULT_BASICS = [
 ];
 
 const ELO_BASE = 1200;
-const ELO_SPEED = 1;
-const CUBE_ELO_SPEED = 10;
+const ELO_SPEED = 1 / 8;
+const CUBE_ELO_SPEED = 4;
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -77,23 +76,6 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
 }
-
-const createDraftForSingleDeck = async (deck) => {
-  let index = 0;
-  const populatedCards = [];
-  for (const stack of deck.seats[0].deck) {
-    for (const card of stack) {
-      card.index = index;
-      populatedCards.push(card);
-      index += 1;
-    }
-  }
-  const draft = new Draft();
-  draft.initial_state = [[populatedCards]];
-
-  await draft.save();
-  return draft._id;
-};
 
 async function bulkUpload(req, res, list, cube) {
   const cards = list.match(/[^\r\n]+/g);
@@ -195,13 +177,13 @@ function writeCard(res, card, maybe) {
   res.write('\r\n');
 }
 
-const exportToMtgo = (res, fileName, mainCards, sideCards) => {
+const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
   const main = {};
-  for (const card of mainCards) {
-    const { name } = carddb.cardFromId(card.cardID);
+  for (const cardIndex of mainCards) {
+    const { name } = carddb.cardFromId(cards[cardIndex].cardID);
     if (main[name]) {
       main[name] += 1;
     } else {
@@ -215,8 +197,8 @@ const exportToMtgo = (res, fileName, mainCards, sideCards) => {
   res.write('\r\n\r\n');
 
   const side = {};
-  for (const card of sideCards) {
-    const { name } = carddb.cardFromId(card.cardID);
+  for (const cardIndex of sideCards) {
+    const { name } = carddb.cardFromId(cards[cardIndex].cardID);
     if (side[name]) {
       side[name] += 1;
     } else {
@@ -238,18 +220,68 @@ const shuffle = (a) => {
   return a;
 };
 
+const addBasics = (cardsArray, basics, collection = null) => {
+  const populatedBasics = basics.map((cardID) => {
+    const details = carddb.cardFromId(cardID);
+    const populatedCard = {
+      cardID: details._id,
+      index: cardsArray.length,
+      isUnlimited: true,
+      type_line: details.type,
+    };
+    cardsArray.push(populatedCard);
+    return populatedCard;
+  });
+  if (collection) collection.basics = populatedBasics.map(({ index }) => index);
+};
+
+const createPool = () => {
+  const pool = [];
+  const row = [];
+  for (let j = 0; j < 8; j++) {
+    row.push([]);
+  }
+  for (let i = 0; i < 2; i++) {
+    pool.push(row);
+  }
+  return pool;
+};
+
+const reverseArray = (arr, start, end) => {
+  while (start < end) {
+    [arr[start], arr[end]] = [arr[end], arr[start]];
+    start += 1;
+    end -= 1;
+  }
+};
+
+const rotateArrayRight = (arr, k) => {
+  k %= arr.length;
+  reverseArray(arr, 0, arr.length - 1);
+  reverseArray(arr, 0, k - 1);
+  reverseArray(arr, k, arr.length - 1);
+
+  return arr;
+};
+
+const rotateArrayLeft = (arr, k) => rotateArrayRight(arr, arr.length - (k % arr.length));
+
 module.exports = {
-  updateCubeAndBlog,
-  createDraftForSingleDeck,
-  bulkUpload,
-  writeCard,
-  exportToMtgo,
-  shuffle,
-  DEFAULT_BASICS,
-  ELO_BASE,
-  ELO_SPEED,
-  CUBE_ELO_SPEED,
   CARD_HEIGHT,
   CARD_WIDTH,
   CSV_HEADER,
+  CUBE_ELO_SPEED,
+  DEFAULT_BASICS,
+  ELO_BASE,
+  ELO_SPEED,
+  addBasics,
+  bulkUpload,
+  createPool,
+  exportToMtgo,
+  reverseArray,
+  rotateArrayLeft,
+  rotateArrayRight,
+  shuffle,
+  updateCubeAndBlog,
+  writeCard,
 };

@@ -8,7 +8,6 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
-const similarity = require('compute-cosine-similarity');
 const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards.js');
 const Deck = require('../models/deck');
@@ -29,13 +28,13 @@ const getSynergy = (oracle1, oracle2) => {
     return 1;
   }
 
+  let sim = 0;
   if (em1 && em2 && em1.length === em2.length) {
-    const sim = similarity(em1, em2);
-    if (isFinite(sim)) {
-      return sim;
+    for (let i = 0; i < 64; i++) {
+      sim += em1[i] * em2[i];
     }
   }
-  return 0;
+  return sim;
 };
 
 const createSynergyMatrix = (distinctOracles) => {
@@ -69,16 +68,19 @@ const attemptIncrement = (obj, propname) => {
 };
 
 const processDeck = async (deck, oracleToIndex, correlations) => {
+  const { cards } = deck;
   if (deck.seats && deck.seats[0] && deck.seats[0].deck && deck.seats[0].deck.length > 0) {
     // flatten array
     const deckCards = [];
-    deck.seats[0].deck.forEach((col) => {
-      col.forEach((row) => {
-        if (row && row.cardID) {
-          deckCards.push(carddb.cardFromId(row.cardID).oracle_id);
-        }
-      });
-    });
+    deck.seats[0].deck.forEach((row) =>
+      row.forEach((col) => {
+        col.forEach((ci) => {
+          if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
+            deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
+          }
+        });
+      }),
+    );
 
     for (let i = 0; i < deckCards.length; i += 1) {
       // could be an invalid card

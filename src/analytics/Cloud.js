@@ -87,10 +87,10 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
     [excludeList, setExclude],
   );
   const addTagText = useCallback((tag) => tag.trim() && addTag({ text: tag }), [addTag]);
-  const deleteTag = useCallback((tagIndex) => setExclude(excludeList.filter((_, i) => i !== tagIndex).join(',')), [
-    excludeList,
-    setExclude,
-  ]);
+  const deleteTag = useCallback(
+    (tagIndex) => setExclude(excludeList.filter((_, i) => i !== tagIndex).join(',')),
+    [excludeList, setExclude],
+  );
   const reorderTag = useCallback(
     (_, currIndex, newIndex) => {
       setExclude(arrayMove(excludeList, currIndex, newIndex));

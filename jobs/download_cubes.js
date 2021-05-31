@@ -73,7 +73,6 @@ try {
           }
         }
       }
-
       const params = {
         Bucket: 'cubecobra',
         Key: `cube_exports/${i / batchSize}.json`,

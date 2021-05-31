@@ -19,9 +19,9 @@ const prefix = 'https://cubecobra.com';
     for (const route of routes) {
       console.log(`   Fetching ${route}`);
 
-      console.time("    time");
+      console.time('    time');
       const res = await fetch(`${prefix}${route}`);
-      console.timeEnd("    time");
+      console.timeEnd('    time');
 
       handleResponse(res);
     }

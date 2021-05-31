@@ -8,7 +8,7 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardType } from 'utils/Card';
-import { weightedAverage, weightedMedian, weightedStdDev } from 'utils/draftutil';
+import { weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {

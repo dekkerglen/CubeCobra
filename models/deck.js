@@ -1,20 +1,21 @@
 const mongoose = require('mongoose');
-const cardSchema = require('./cardSchema');
+
+const cardSchema = require('./shared/cardSchema');
+const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
 const SeatDeck = {
   bot: [String], // null bot value means human player
   userid: String,
   username: String,
-  pickorder: [cardSchema],
+  pickorder: [Number],
   name: String,
   description: {
     type: String,
     default: 'No description available.',
   },
-  cols: Number,
-  deck: [[cardSchema]],
-  sideboard: [[cardSchema]],
+  deck: [[[Number]]], // nesting is rows->columns->index in column
+  sideboard: [[[Number]]], // same as deck.
 };
 
 // Deck schema
@@ -36,6 +37,17 @@ const deckSchema = mongoose.Schema(
       type: [SeatDeck],
       default: [],
     },
+    cards: [cardSchema],
+    schemaVersion: {
+      type: Number,
+      default() {
+        if (this.isNew) {
+          return CURRENT_SCHEMA_VERSION;
+        }
+        return void 0; // eslint-disable-line
+      },
+    },
+    basics: [Number],
   },
   { timestamps: true },
 );
@@ -58,9 +70,16 @@ deckSchema.index({
   owner: 1,
   date: -1,
 });
-
+deckSchema.index({
+  schemaVersion: 1,
+});
 deckSchema.index({
   draft: 1,
 });
+deckSchema.pre('save', async () => {
+  this.schemaVersion = CURRENT_SCHEMA_VERSION;
+});
+const Deck = mongoose.model('Deck', deckSchema);
+Deck.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 
-module.exports = mongoose.model('Deck', deckSchema);
+module.exports = Deck;

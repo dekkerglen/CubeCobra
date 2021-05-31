@@ -1,12 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
-
-import Location from 'utils/DraftLocation';
 
 import CardStack from 'components/CardStack';
 import DraggableCard from 'components/DraggableCard';
+import CardPropType from 'proptypes/CardPropType';
+import Location from 'drafting/DraftLocation';
 
 const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
   <>
@@ -44,7 +43,8 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
 );
 
 DeckStacks.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object))).isRequired,
+  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(CardPropType.isRequired).isRequired).isRequired)
+    .isRequired,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.node,
   locationType: PropTypes.string.isRequired,
@@ -58,36 +58,6 @@ DeckStacks.defaultProps = {
   onMoveCard: () => {},
   onClickCard: () => {},
   canDrop: () => true,
-};
-
-DeckStacks.moveOrAddCard = (cards, target, source) => {
-  const newCards = [...cards];
-  let card;
-  if (Array.isArray(source)) {
-    // Source is a location.
-    const [sourceRow, sourceCol, sourceIndex] = source;
-    newCards[sourceRow][sourceCol] = [...newCards[sourceRow][sourceCol]];
-    [card] = newCards[sourceRow][sourceCol].splice(sourceIndex - 1, 1);
-  } else {
-    // Source is a card itself.
-    card = source;
-  }
-
-  const [targetRow, targetCol, targetIndex] = target;
-  if (newCards[targetRow].length < 1 + targetCol) {
-    newCards[targetRow] = newCards[targetRow].concat(new Array(1 + targetCol - newCards[targetRow].length).fill([]));
-  }
-  newCards[targetRow][targetCol] = [...newCards[targetRow][targetCol]];
-  newCards[targetRow][targetCol].splice(targetIndex, 0, card);
-  return newCards;
-};
-
-DeckStacks.removeCard = (cards, source) => {
-  const newCards = [...cards];
-  const [sourceRow, sourceCol, sourceIndex] = source;
-  newCards[sourceRow][sourceCol] = [...newCards[sourceRow][sourceCol]];
-  const [card] = newCards[sourceRow][sourceCol].splice(sourceIndex - 1, 1);
-  return [card, newCards];
 };
 
 export default DeckStacks;

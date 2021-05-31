@@ -1,8 +1,8 @@
 import React, { forwardRef } from 'react';
-
 import { Form, Input } from 'reactstrap';
+import PropTypes from 'prop-types';
 
-import { getCsrfToken } from '../utils/CSRF';
+import { getCsrfToken } from 'utils/CSRF';
 
 const CSRFForm = forwardRef(({ children, ...props }, ref) => (
   <Form ref={ref} {...props}>
@@ -11,6 +11,8 @@ const CSRFForm = forwardRef(({ children, ...props }, ref) => (
   </Form>
 ));
 
-CSRFForm.propTypes = {};
+CSRFForm.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 export default CSRFForm;

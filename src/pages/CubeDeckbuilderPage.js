@@ -1,13 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
-import CardPropType from 'proptypes/CardPropType';
-
-import Location from 'utils/DraftLocation';
-import { sortDeck } from 'utils/Util';
-
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
@@ -17,43 +9,35 @@ import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import TextEntry from 'components/TextEntry';
+import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
-import { makeSubtitle } from 'utils/Card';
 import MainLayout from 'layouts/MainLayout';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import UserPropType from 'proptypes/UserPropType';
+import { makeSubtitle } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = () => true;
 
 const oppositeLocation = {
-  [Location.DECK]: Location.SIDEBOARD,
-  [Location.SIDEBOARD]: Location.DECK,
+  [DraftLocation.DECK]: DraftLocation.SIDEBOARD,
+  [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
 };
 
-const makeInitialStacks = (playerDeck) => {
-  if (playerDeck.length === 2 && Array.isArray(playerDeck[0]) && Array.isArray(playerDeck[0][0])) {
-    // Already good.
-    return playerDeck;
-  }
-  if (playerDeck.length === 16) {
-    // Already in stacks. Split into rows.
-    return [playerDeck.slice(0, 8), playerDeck.slice(8, 16)];
-  }
-  return sortDeck(playerDeck);
-};
-
-const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCallback }) => {
-  const [deck, setDeck] = useState(makeInitialStacks(initialDeck.seats[0].deck));
-  const [sideboard, setSideboard] = useState(() => {
-    const initial = initialDeck.seats[0].sideboard;
-    if (!initial || !Array.isArray(initial) || initial.length === 0) {
-      return [new Array(8).fill([])];
-    }
-    return [initialDeck.seats[0].sideboard.slice(0, 8)];
-  });
+const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
+  const { basics } = initialDeck;
+  const [deck, setDeck] = useState(
+    initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+  );
+  console.debug(deck);
+  const [sideboard, setSideboard] = useState(
+    initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+  );
 
   const locationMap = {
-    [Location.DECK]: [deck, setDeck],
-    [Location.SIDEBOARD]: [sideboard, setSideboard],
+    [DraftLocation.DECK]: [deck, setDeck],
+    [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
   };
 
   const handleMoveCard = useCallback(
@@ -65,9 +49,9 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       const [sourceCards, setSource] = locationMap[source.type];
       const [targetCards, setTarget] = locationMap[target.type];
 
-      const [card, newSourceCards] = DeckStacks.removeCard(sourceCards, source.data);
+      const [card, newSourceCards] = removeCard(sourceCards, source.data);
       setSource(newSourceCards);
-      setTarget(DeckStacks.moveOrAddCard(targetCards, target.data, card));
+      setTarget(moveOrAddCard(targetCards, target.data, card));
     },
     [locationMap],
   );
@@ -79,10 +63,10 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       const eventTarget = event.currentTarget;
       const locationType = eventTarget.getAttribute('data-location-type');
       const locationData = JSON.parse(eventTarget.getAttribute('data-location-data'));
-      const source = new Location(locationType, locationData);
-      const target = new Location(oppositeLocation[source.type], [...source.data]);
+      const source = new DraftLocation(locationType, locationData);
+      const target = new DraftLocation(oppositeLocation[source.type], [...source.data]);
       target.data[2] = 0;
-      if (target.type === Location.SIDEBOARD) {
+      if (target.type === DraftLocation.SIDEBOARD) {
         // Only one row for the sideboard.
         target.data[0] = 0;
       } else {
@@ -103,10 +87,10 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
     },
     [deck, basics],
   );
-
+  console.debug('initialDeck.cards', initialDeck.cards);
   const currentDeck = { ...initialDeck };
-  currentDeck.playerdeck = [...deck[0], ...deck[1]];
-  [currentDeck.playersideboard] = sideboard;
+  currentDeck.playerdeck = deck;
+  currentDeck.playersideboard = sideboard;
 
   const [name, setName] = useState(initialDeck.seats[0].name);
   const [description, setDescription] = useState(initialDeck.seats[0].description);
@@ -116,15 +100,14 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar
-            basics={basics}
             deck={currentDeck}
             addBasics={addBasics}
             name={name}
             description={description}
             className="mb-3"
-            draft={draft}
             setDeck={setDeck}
             setSideboard={setSideboard}
+            cards={initialDeck.cards}
           />
           <DynamicFlash />
           <Row className="mb-3">
@@ -136,7 +119,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
                       cards={deck}
                       title="Deck"
                       subtitle={makeSubtitle(deck.flat().flat())}
-                      locationType={Location.DECK}
+                      locationType={DraftLocation.DECK}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
                       onClickCard={handleClickCard}
@@ -145,7 +128,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
                       className="border-top"
                       cards={sideboard}
                       title="Sideboard"
-                      locationType={Location.SIDEBOARD}
+                      locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
                       onClickCard={handleClickCard}
@@ -178,19 +161,12 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, basics, draft, loginCall
     </MainLayout>
   );
 };
-
 CubeDeckbuilderPage.propTypes = {
-  basics: PropTypes.arrayOf(CardPropType).isRequired,
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  }).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
-
 CubeDeckbuilderPage.defaultProps = {
   user: null,
   loginCallback: '/',

@@ -6,16 +6,17 @@ Canvas.Image = Image;
 
 const miscutil = require('../../dist/utils/Util.js');
 const carddb = require('../../serverjs/cards.js');
-const deckutil = require('../../dist/utils/Draft.js');
+const { buildDeck } = require('../../dist/drafting/deckutil.js');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util.js');
 const generateMeta = require('../../serverjs/meta.js');
 const cardutil = require('../../dist/utils/Card.js');
+const frontutil = require('../../dist/utils/Util.js');
 const { ensureAuth } = require('../middleware');
 
 const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
 
-const { exportToMtgo, createDraftForSingleDeck, DEFAULT_BASICS } = require('./helper.js');
+const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -43,14 +44,16 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     res.charset = 'UTF-8';
     res.write(`NAME:${seat.name}\r\n`);
     const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
+    for (const row of seat.deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
+          if (main[name]) {
+            main[name] += 1;
+          } else {
+            main[name] = 1;
+          }
         }
       }
     }
@@ -59,14 +62,16 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     }
 
     const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
+          if (side[name]) {
+            side[name] += 1;
+          } else {
+            side[name] = 1;
+          }
         }
       }
     }
@@ -95,14 +100,16 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
     res.write(`Name=${seat.name}\r\n`);
     res.write('[Main]\r\n');
     const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}|${details.set.toUpperCase()}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
+    for (const row of seat.deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name}|${details.set.toUpperCase()}`;
+          if (main[name]) {
+            main[name] += 1;
+          } else {
+            main[name] = 1;
+          }
         }
       }
     }
@@ -112,14 +119,16 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
 
     res.write('[Side]\r\n');
     const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}|${details.set.toUpperCase()}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name}|${details.set.toUpperCase()}`;
+          if (side[name]) {
+            side[name] += 1;
+          } else {
+            side[name] = 1;
+          }
         }
       }
     }
@@ -145,10 +154,12 @@ router.get('/download/txt/:id/:seat', async (req, res) => {
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const { name } = carddb.cardFromId(card.cardID);
-        res.write(`${name}\r\n`);
+    for (const row of seat.deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const { name } = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          res.write(`${name}\r\n`);
+        }
       }
     }
     return res.end();
@@ -165,7 +176,7 @@ router.get('/download/mtgo/:id/:seat', async (req, res) => {
       return res.redirect('/404');
     }
     const seat = deck.seats[req.params.seat];
-    return exportToMtgo(res, seat.name, seat.deck.flat(), seat.sideboard.flat());
+    return exportToMtgo(res, seat.name, seat.deck.flat(), seat.sideboard.flat(), deck.cards);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -185,14 +196,16 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
     res.charset = 'UTF-8';
     res.write('Deck\r\n');
     const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
+    for (const row of seat.deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
+          if (main[name]) {
+            main[name] += 1;
+          } else {
+            main[name] = 1;
+          }
         }
       }
     }
@@ -202,14 +215,16 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
 
     res.write('\r\nSideboard\r\n');
     const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
+          if (side[name]) {
+            side[name] += 1;
+          } else {
+            side[name] = 1;
+          }
         }
       }
     }
@@ -236,14 +251,16 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     const main = {};
-    for (const col of seat.deck) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (main[name]) {
-          main[name] += 1;
-        } else {
-          main[name] = 1;
+    for (const row of seat.deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name}`;
+          if (main[name]) {
+            main[name] += 1;
+          } else {
+            main[name] = 1;
+          }
         }
       }
     }
@@ -253,14 +270,16 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
 
     res.write('Sideboard\r\n');
     const side = {};
-    for (const col of seat.sideboard) {
-      for (const card of col) {
-        const details = carddb.cardFromId(card.cardID);
-        const name = `${details.name}`;
-        if (side[name]) {
-          side[name] += 1;
-        } else {
-          side[name] = 1;
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
+          const name = `${details.name}`;
+          if (side[name]) {
+            side[name] += 1;
+          } else {
+            side[name] = 1;
+          }
         }
       }
     }
@@ -307,19 +326,14 @@ router.get('/deckbuilder/:id', async (req, res) => {
       req.flash('danger', 'Deck not found');
       return res.redirect('/404');
     }
-    const draft = deck.draft
-      ? (await Draft.findById(deck.draft).lean()) || (await GridDraft.findById(deck.draft).lean())
-      : null;
 
     const deckOwner = await User.findById(deck.seats[0].userid).lean();
-
     if (!req.user || !deckOwner._id.equals(req.user._id)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
     const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
-
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -332,22 +346,10 @@ router.get('/deckbuilder/:id', async (req, res) => {
     }
 
     // add details to cards
-    for (const seat of deck.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (eloOverrideDict[card.details.name_lower]) {
-              card.details.elo = eloOverrideDict[card.details.name_lower];
-            }
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-        if (eloOverrideDict[card.details.name_lower]) {
-          card.details.elo = eloOverrideDict[card.details.name_lower];
-        }
+    for (const card of deck.cards) {
+      card.details = carddb.cardFromId(card.cardID);
+      if (eloOverrideDict[card.details.name_lower]) {
+        card.details.elo = eloOverrideDict[card.details.name_lower];
       }
     }
 
@@ -358,16 +360,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
       {
         cube,
         initialDeck: deck,
-        basics: (cube.basics || DEFAULT_BASICS).map((cardID) => {
-          const details = carddb.cardFromId(cardID);
-          return {
-            details,
-            cardID: details._id,
-            type_line: details.type,
-            cmc: 0,
-          };
-        }),
-        draft,
       },
       {
         title: `${abbreviate(cube.name)} - Deckbuilder`,
@@ -448,25 +440,26 @@ router.get('/decks/:id', async (req, res) => {
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
+    const index = parseInt(req.params.seat, 10);
     const base = await Deck.findById(req.params.id).lean();
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.redirect('/404');
     }
     const cube = await Cube.findById(base.cube);
-    const srcDraft = await Draft.findById(base.draft).lean();
-
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
       eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
     }
 
-    for (const card of base.seats[req.params.index].pickorder) {
-      card.details = carddb.cardFromId(card.cardID);
-      if (eloOverrideDict[card.details.name_lower]) {
-        card.details.elo = eloOverrideDict[card.details.name_lower];
+    const cardsArray = [];
+    for (const card of base.cards) {
+      const newCard = { ...card, details: carddb.cardFromId(card.cardID) };
+      if (eloOverrideDict[newCard.details.name_lower]) {
+        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
       }
+      cardsArray.push(newCard);
     }
 
     const deck = new Deck();
@@ -477,91 +470,39 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.draft = base.draft;
     deck.seats = [];
     deck.owner = req.user._id;
+    deck.cards = base.cards;
+    deck.basics = base.basics;
 
-    if (srcDraft) {
-      deckutil.default.init(srcDraft);
-      const { colors: userColors } = await deckutil.default.buildDeck(
-        base.seats[req.params.index].pickorder,
-        (cube.basics || DEFAULT_BASICS).map((cardID) => {
-          const details = carddb.cardFromId(cardID);
-          return {
-            details,
-            cardID: details._id,
-            type_line: details.type,
-            cmc: 0,
-          };
-        }),
-      );
+    const { colors: userColors } = await buildDeck(cardsArray, base.seats[index].pickorder, deck.basics);
 
-      deck.seats.push({
-        userid: req.user._id,
-        username: `${req.user.username}: ${userColors}`,
-        pickorder: base.seats[req.params.index].pickorder,
-        name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
-        description: 'This deck was rebuilt from another draft deck.',
-        cols: base.seats[req.params.index].cols,
-        deck: base.seats[req.params.index].deck,
-        sideboard: base.seats[req.params.index].sideboard,
-      });
-      let botNumber = 1;
-      for (let i = 0; i < base.seats.length; i++) {
-        if (i !== parseInt(req.params.index, 10)) {
-          for (const card of base.seats[i].pickorder) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (eloOverrideDict[card.details.name_lower]) {
-              card.details.elo = eloOverrideDict[card.details.name_lower];
-            }
-          }
+    deck.seats.push({
+      userid: req.user._id,
+      username: `${req.user.username}: ${userColors}`,
+      pickorder: base.seats[index].pickorder,
+      name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
+      description: 'This deck was rebuilt from another draft deck.',
+      deck: base.seats[index].deck,
+      sideboard: base.seats[index].sideboard,
+    });
+    let botNumber = 1;
+    for (let i = 0; i < base.seats.length; i++) {
+      if (i !== index) {
+        const {
+          deck: builtDeck,
+          sideboard,
+          colors,
           // eslint-disable-next-line no-await-in-loop
-          const { deck: builtDeck, sideboard, colors } = await deckutil.default.buildDeck(
-            base.seats[i].pickorder,
-            (cube.basics || DEFAULT_BASICS).map((cardID) => {
-              const details = carddb.cardFromId(cardID);
-              return {
-                details,
-                cardID: details._id,
-                type_line: details.type,
-                cmc: 0,
-              };
-            }),
-          );
-          deck.seats.push({
-            userid: null,
-            username: `Bot ${botNumber}: ${colors.join(', ')}`,
-            pickorder: base.seats[i].pickorder,
-            name: `Draft of ${cube.name}`,
-            description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
-            cols: base.seats[i].cols,
-            deck: builtDeck,
-            sideboard,
-          });
-          botNumber += 1;
-        }
-      }
-    } else {
-      deck.seats.push({
-        userid: req.user._id,
-        username: `${req.user.username}`,
-        pickorder: base.seats[req.params.index].pickorder,
-        name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
-        description: 'This deck was rebuilt from another draft deck.',
-        cols: base.seats[req.params.index].cols,
-        deck: base.seats[req.params.index].deck,
-        sideboard: base.seats[req.params.index].sideboard,
-      });
-      for (let i = 0; i < base.seats.length; i++) {
-        if (i !== parseInt(req.params.index, 10)) {
-          deck.seats.push({
-            userid: null,
-            username: base.seats[i].username,
-            pickorder: base.seats[i].pickorder,
-            name: `Draft of ${cube.name}`,
-            description: base.seats[i].description,
-            cols: base.seats[i].cols,
-            deck: base.seats[i].deck,
-            sideboard: base.seats[i].sideboard,
-          });
-        }
+        } = await buildDeck(deck.cards, base.seats[i].pickorder, deck.basics);
+        deck.seats.push({
+          userid: null,
+          username: `Bot ${botNumber}: ${colors.join(', ')}`,
+          pickorder: base.seats[i].pickorder,
+          name: `Draft of ${cube.name}`,
+          description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
+          deck: builtDeck,
+          sideboard,
+        });
+        botNumber += 1;
       }
     }
 
@@ -619,7 +560,6 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     deck.seats[0].deck = newdeck.playerdeck;
     deck.seats[0].sideboard = newdeck.playersideboard;
-    deck.cols = newdeck.cols;
     deck.seats[0].name = name;
     deck.seats[0].description = description;
 
@@ -642,6 +582,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
     const cube = await Cube.findOne(buildIdQuery(draft.cube));
+    // TODO: Should have guards on if the objects aren't found in the DB.
 
     const deck = new Deck();
     deck.cube = draft.cube;
@@ -651,19 +592,52 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     deck.cubename = cube.name;
     deck.seats = [];
     deck.owner = draft.seats[0].userid;
+    deck.cards = draft.cards;
+    deck.basics = draft.basics;
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+    const cards = draft.cards.map((c) => {
+      const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
+      if (eloOverrideDict[newCard.details.name_lower]) {
+        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
+      }
+      return newCard;
+    });
+    const botNumber = 1;
     for (const seat of draft.seats) {
-      deck.seats.push({
-        bot: seat.bot,
-        userid: seat.userid,
-        username: seat.name,
-        pickorder: seat.pickorder,
-        name: `Draft of ${cube.name}`,
-        description: '',
-        cols: 16,
-        deck: seat.drafted,
-        sideboard: seat.sideboard ? seat.sideboard : [],
-      });
+      // eslint-disable-next-line no-await-in-loop
+      const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
+      const colorString =
+        colors.length > 0
+          ? 'C'
+          : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
+      if (seat.bot) {
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: `Bot ${botNumber}: ${colorString}`,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          deck: newDeck,
+          sideboard,
+        });
+      } else {
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: `${seat.name}: ${colorString}`,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          deck: seat.drafted,
+          sideboard: seat.sideboard ? seat.sideboard : [],
+        });
+      }
     }
 
     const userq = User.findById(deck.seats[0].userid);
@@ -706,19 +680,52 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     deck.draft = draft._id;
     deck.cubename = cube.name;
     deck.seats = [];
+    deck.cards = draft.cards;
+    deck.basics = draft.basics;
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+    const cards = draft.cards.map((c) => {
+      const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
+      if (eloOverrideDict[newCard.details.name_lower]) {
+        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
+      }
+      return newCard;
+    });
+    const botNumber = 1;
     for (const seat of draft.seats) {
-      deck.seats.push({
-        bot: seat.bot,
-        userid: seat.userid,
-        username: seat.name,
-        pickorder: seat.pickorder,
-        name: `Grid Draft of ${cube.name}`,
-        description: '',
-        cols: 16,
-        deck: seat.drafted,
-        sideboard: seat.sideboard ? seat.sideboard : [],
-      });
+      // eslint-disable-next-line no-await-in-loop
+      const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
+      const colorString =
+        colors.length > 0
+          ? 'C'
+          : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
+      if (seat.bot) {
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: `Bot ${botNumber}: ${colorString}`,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          deck: newDeck,
+          sideboard,
+        });
+      } else {
+        deck.seats.push({
+          bot: seat.bot,
+          userid: seat.userid,
+          username: `${seat.name}: ${colorString}`,
+          pickorder: seat.pickorder,
+          name: `Draft of ${cube.name}`,
+          description: '',
+          deck: seat.drafted,
+          sideboard: seat.sideboard ? seat.sideboard : [],
+        });
+      }
     }
 
     const userq = User.findById(deck.seats[0].userid);
@@ -735,6 +742,9 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       );
     }
 
+    if (!cube.numDecks) {
+      cube.numDecks = 0;
+    }
     cube.numDecks += 1;
     await addDeckCardAnalytics(cube, deck, carddb);
 
@@ -748,17 +758,22 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
   }
 });
 
-router.get('/redraft/:id', async (req, res) => {
+router.get('/redraft/:id/:seat', async (req, res) => {
   try {
     const base = await Deck.findById(req.params.id).lean();
-
     if (!(base && base.draft)) {
       req.flash('danger', 'Deck not found');
       return res.redirect('/404');
     }
 
-    const srcDraft = await Draft.findById(base.draft).lean();
+    const seat = parseInt(req.params.seat, 10);
+    if (!Number.isInteger(seat) || seat < 0 || seat >= base.seats.length) {
+      req.flash('dangeer', 'Invalid seat index to redraft as.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
 
+    // TODO: Handle gridDraft
+    const srcDraft = await Draft.findById(base.draft).lean();
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
       return res.redirect(`/cube/deck/${req.params.id}`);
@@ -773,37 +788,18 @@ router.get('/redraft/:id', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
-      const details = carddb.cardFromId(cardID);
-      return {
-        details,
-        cardID: details._id,
-        type_line: details.type,
-        cmc: 0,
-      };
-    });
-
+    rotateArrayLeft(draft.seats, seat);
+    draft.cards = srcDraft.cards;
+    draft.basics = srcDraft.basics;
     draft.initial_state = srcDraft.initial_state.slice();
-    draft.unopenedPacks = srcDraft.initial_state.slice();
-    draft.seats[0].bot = null;
 
     for (let i = 0; i < draft.seats.length; i += 1) {
-      if (!draft.seats[i].bot) {
-        draft.seats[i].userid = req.user ? req.user._id : null;
-        draft.seats[i].name = req.user ? req.user.username : 'Anonymous';
-      }
-
-      draft.seats[i].drafted = [];
-      draft.seats[i].sideboard = [];
+      draft.seats[i].drafted = createPool();
+      draft.seats[i].sideboard = createPool();
       draft.seats[i].pickorder = [];
-      draft.seats[i].packbacklog = [];
-
-      for (let j = 0; j < 16; j += 1) {
-        draft.seats[i].drafted.push([]);
-      }
-
-      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].shift());
     }
+    draft.seats[0].userid = req.user ? req.user._id : null;
+    draft.seats[0].name = req.user ? req.user.username : 'Anonymous';
 
     await draft.save();
     return res.redirect(`/cube/draft/${draft._id}`);
@@ -839,10 +835,14 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     for (let i = 0; i < cards.length; i += 1) {
       const item = cards[i].toLowerCase().trim();
-      if (/([0-9]+x )(.*)/.test(item)) {
-        const count = parseInt(item.substring(0, item.indexOf('x')), 10);
+      const numericMatch = item.match(/([0-9]+)x? (.*)/);
+      if (numericMatch) {
+        let count = parseInt(numericMatch[1], 10);
+        if (!Number.isInteger(count)) {
+          count = 1;
+        }
         for (let j = 0; j < count; j += 1) {
-          cards.push(item.substring(item.indexOf('x') + 1));
+          cards.push(numericMatch[2]);
         }
       } else {
         let selected = null;
@@ -889,12 +889,11 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         username: req.user.username,
         pickorder: [],
         name: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
-        cols: 16,
-        deck: added,
-        sideboard: [],
+        deck: [added.slice(0, 8), added.slice(8, 16)],
+        sideboard: createPool(),
       },
     ];
-    deck.draft = await createDraftForSingleDeck(deck);
+    deck.draft = null;
 
     await deck.save();
 
@@ -928,10 +927,30 @@ router.get('/:id', async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+
+    for (const card of deck.cards) {
+      card.details = carddb.cardFromId(card.cardID);
+      if (eloOverrideDict[card.details.name_lower]) {
+        card.details.elo = eloOverrideDict[card.details.name_lower];
+      }
+    }
 
     let draft = null;
     if (deck.draft) {
-      draft = await Draft.findById(deck.draft);
+      draft = await Draft.findById(deck.draft).lean();
+      if (draft) {
+        for (const card of draft.cards) {
+          card.details = carddb.cardFromId(card.cardID);
+          if (eloOverrideDict[card.details.name_lower]) {
+            card.details.elo = eloOverrideDict[card.details.name_lower];
+          }
+        }
+      }
     }
 
     let drafter = 'Anonymous';
@@ -940,33 +959,6 @@ router.get('/:id', async (req, res) => {
 
     if (deckUser) {
       drafter = deckUser.username;
-    }
-
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-    }
-
-    for (const seat of deck.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (eloOverrideDict[card.details.name_lower]) {
-              card.details.elo = eloOverrideDict[card.details.name_lower];
-            }
-          }
-        }
-      }
-      if (seat.pickorder) {
-        for (const card of seat.pickorder) {
-          card.details = carddb.cardFromId(card.cardID);
-          if (eloOverrideDict[card.details.name_lower]) {
-            card.details.elo = eloOverrideDict[card.details.name_lower];
-          }
-        }
-      }
     }
 
     return render(

@@ -24,7 +24,8 @@ const processDeck = (deck) => {
 
   if (deck.seats[0] && deck.seats[0].deck) {
     for (const col of deck.seats[0].deck) {
-      for (const card of col) {
+      for (const cardIndex of col) {
+        const card = deck.cards[cardIndex];
         if (card && card.cardID) {
           main.push(carddb.cardFromId(card.cardID).name_lower);
         }
@@ -34,8 +35,8 @@ const processDeck = (deck) => {
 
   if (deck.seats[0] && deck.seats[0].sideboard) {
     for (const col of deck.seats[0].sideboard) {
-      for (const card of col) {
-        side.push(carddb.cardFromId(card.cardID).name_lower);
+      for (const cardIndex of col) {
+        side.push(carddb.cardFromId(deck.cards[cardIndex].cardID).name_lower);
       }
     }
   }
@@ -58,7 +59,7 @@ try {
       const decks = [];
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {
-          const deck = await cursor.next();
+          const deck = await cursor.next(); // eslint-disable-line no-await-in-loop
           if (deck) {
             decks.push(processDeck(deck));
           }

@@ -7,34 +7,40 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
-const carddb = require('../serverjs/cards.js');
+const { cardsNeedsCleaning, cleanCards } = require('../models/migrations/cleanCards');
+const carddb = require('../serverjs/cards');
 
-const batchSize = 1000;
+const DEFAULT_BASICS = [
+  '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
+  '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
+  '19e71532-3f79-4fec-974f-b0e85c7fe701',
+  '8365ab45-6d78-47ad-a6ed-282069b0fabc',
+  '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
+];
 
-const isInvalidCardId = (id) => carddb.cardFromId(id).name === 'Invalid Card';
+const BATCH_SIZE = 1024;
 
-const needsCleaning = (cube) => {
-  if (!cube.cards) {
-    return true;
-  }
-
-  if (cube.cards.some((card) => !card || isInvalidCardId(card.cardID))) {
-    return true;
-  }
-
-  return false;
-};
+const needsCleaning = (cube) =>
+  !cube.cards || !Array.isArray(cube.basics) || cardsNeedsCleaning(cube.cards) || cardsNeedsCleaning(cube.maybe);
 
 const processCube = async (leanCube) => {
   if (needsCleaning(leanCube)) {
     const cube = await Cube.findById(leanCube._id);
 
-    console.log(`Cleaning cube ${cube.name}: ${cube._id}`);
+    console.debug(`Cleaning cube ${cube.name}: ${cube._id}`);
 
     if (!cube.cards) {
       cube.cards = [];
     }
-    cube.cards = cube.cards.filter((c) => c && !isInvalidCardId(c.cardID));
+    if (!Array.isArray(cube.basics)) {
+      cube.basics = DEFAULT_BASICS;
+    }
+    if (cardsNeedsCleaning(cube.cards)) {
+      cube.cards = cleanCards(cube.cards);
+    }
+    if (cardsNeedsCleaning(cube.maybe)) {
+      cube.maybe = cleanCards(cube.maybe);
+    }
 
     await cube.save();
   }
@@ -51,20 +57,19 @@ try {
     const cursor = Cube.find().lean().cursor();
 
     // batch them by batchSize
-    for (let i = 0; i < count; i += batchSize) {
+    for (let i = 0; i < count; ) {
       const cubes = [];
-      for (let j = 0; j < batchSize; j++) {
-        if (i + j < count) {
-          const cube = await cursor.next();
-          if (cube) {
-            cubes.push(cube);
-          }
+      const nextBound = Math.min(i + BATCH_SIZE, count);
+      for (; i < nextBound; i++) {
+        const cube = await cursor.next();
+        if (cube) {
+          cubes.push(processCube(cube));
         }
       }
 
-      await Promise.all(cubes.map(processCube));
+      await Promise.all(cubes);
 
-      console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
+      console.log(`Finished: ${i} of ${count} cubes`);
     }
 
     mongoose.disconnect();

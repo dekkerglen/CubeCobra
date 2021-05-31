@@ -8,24 +8,14 @@ import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'r
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
+import { buildDeck } from 'drafting/deckutil';
 import BasicsModal from 'components/BasicsModal';
-import { buildDeck } from 'utils/Draft';
 import withModal from 'components/WithModal';
 
 const BasicsModalLink = withModal(NavLink, BasicsModal);
 
-const DeckbuilderNavbar = ({
-  deck,
-  basics,
-  addBasics,
-  name,
-  description,
-  className,
-  draft,
-  setSideboard,
-  setDeck,
-  ...props
-}) => {
+const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setSideboard, setDeck, ...props }) => {
+  const { basics } = deck;
   const [isOpen, setIsOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -59,30 +49,35 @@ const DeckbuilderNavbar = ({
   const stripped = useMemo(() => {
     const res = JSON.parse(JSON.stringify(deck));
 
-    for (const seat of res.seats) {
-      for (const collection of [seat.deck, seat.sideboard]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            delete card.details;
-          }
-        }
-      }
-      if (seat.pickorder) {
-        for (const card of seat.pickorder) {
-          delete card.details;
+    for (const collection of [res.playerdeck, res.playersideboard]) {
+      for (const row of collection) {
+        for (const column of row) {
+          column.forEach((card, index) => {
+            if (!Number.isFinite(card)) {
+              column[index] = deck.cards.findIndex((deckCard) => deckCard.cardID === card.cardID);
+            }
+          });
         }
       }
     }
+    const result = JSON.stringify({
+      playersideboard: res.playersideboard,
+      playerdeck: res.playerdeck,
+    });
 
-    return res;
+    return result;
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    const main = deck.playerdeck.flat(2).concat(deck.playersideboard.flat());
-    const { sideboard: side, deck: newDeck } = await buildDeck(main, basics);
-    setSideboard([side]);
-    setDeck([newDeck.slice(0, 8), newDeck.slice(8, 16)]);
-  }, [deck, setDeck, setSideboard, basics]);
+    const main = deck.seats[0].pickorder;
+    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
+    console.debug(newDeck);
+    console.debug(side);
+    const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
+    const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
+    setSideboard(newSide);
+    setDeck(newDeckCards);
+  }, [deck, basics, setDeck, setSideboard]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
@@ -94,7 +89,7 @@ const DeckbuilderNavbar = ({
               Save Deck
             </NavLink>
             <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck._id}`}>
-              <Input type="hidden" name="draftraw" value={JSON.stringify(stripped)} />
+              <Input type="hidden" name="draftraw" value={stripped} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />
             </CSRFForm>
@@ -110,8 +105,8 @@ const DeckbuilderNavbar = ({
               modalProps={{
                 basics,
                 addBasics,
-                draft,
-                deck: deck.playerdeck,
+                deck: deck.playerdeck.flat(3).map(({ index }) => index),
+                cards: deck.cards,
               }}
             >
               Add Basic Lands
@@ -130,21 +125,20 @@ const DeckbuilderNavbar = ({
 };
 
 DeckbuilderNavbar.propTypes = {
-  basics: PropTypes.arrayOf(CardPropType).isRequired,
   deck: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     cube: PropTypes.string.isRequired,
-    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(CardPropType.isRequired).isRequired).isRequired)
+      .isRequired,
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
+    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
+    seats: PropTypes.arrayOf(PropTypes.shape({ pickorder: PropTypes.number.isRequired }).isRequired).isRequired,
   }).isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   className: PropTypes.string,
-  draft: PropTypes.shape({
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({})))).isRequired,
-    synergies: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  }).isRequired,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,
 };

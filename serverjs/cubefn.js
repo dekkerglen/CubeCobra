@@ -7,7 +7,7 @@ const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
-const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 
 function getCubeId(cube) {
   if (cube.shortID) return cube.shortID;
@@ -528,29 +528,6 @@ function cachePromise(key, callback) {
 }
 
 const methods = {
-  getBasics(carddb) {
-    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    const set = 'unh';
-    const res = {};
-    for (const name of names) {
-      let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
-      for (const option of options) {
-        const card = carddb.cardFromId(option);
-        if (!found && card.set.toLowerCase() === set) {
-          found = true;
-          res[name] = {
-            cardID: option,
-            type_line: card.type,
-            cmc: 0,
-            details: card,
-          };
-        }
-      }
-    }
-
-    return res;
-  },
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {
@@ -587,7 +564,10 @@ const methods = {
     const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0],
+      pack: draft.initial_state[0][0].map((cardIndex) => ({
+        ...draft.cards[cardIndex],
+        details: carddb.cardFromId(draft.cards[cardIndex].cardID),
+      })),
     };
   },
   newCardAnalytics,
@@ -596,8 +576,8 @@ const methods = {
     // Expected performance for pick.
     const expectedA = 1 / (1 + 10 ** (diff / 400));
     const expectedB = 1 - expectedA;
-    const adjustmentA = 2 * (1 - expectedA) * speed;
-    const adjustmentB = 2 * (0 - expectedB) * speed;
+    const adjustmentA = (1 - expectedA) * speed;
+    const adjustmentB = (0 - expectedB) * speed;
     return [adjustmentA, adjustmentB];
   },
   generateShortId,

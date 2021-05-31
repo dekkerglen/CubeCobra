@@ -12,6 +12,8 @@ function expectOperator(test, operator, number) {
       return expect(test).toBeGreaterThanOrEqual(number);
     case '!=':
       return expect(test).not.toEqual(number);
+    default:
+      return expect(false).toEqual(true);
   }
 }
 

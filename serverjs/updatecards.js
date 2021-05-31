@@ -770,7 +770,17 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   // create Elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
-    catalog.embeddingdict[rating.name] = rating.embedding;
+    if (rating.embedding && rating.embedding.length === 64) {
+      let norm = rating.embedding.reduce((acc, x) => acc + x * x, 0);
+      if (norm > 0) {
+        norm = Math.sqrt(norm);
+        catalog.embeddingdict[rating.name] = rating.embedding.map((x) => x / norm);
+      } else {
+        catalog.embeddingdict[rating.name] = new Array(64).fill(0);
+      }
+    } else {
+      catalog.embeddingdict[rating.name] = new Array(64).fill(0);
+    }
   }
 
   winston.info('Processing cards...');
