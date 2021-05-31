@@ -149,20 +149,16 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   const {
     cards,
     cardsInPack,
-    completedAmount,
-    step: { action, amount: totalAmount },
+    step: { action, amount },
     packNum,
     pickNum,
     numPacks,
   } = drafterState;
-  const remainingAmount = totalAmount - completedAmount;
 
   const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
-  console.debug(cards);
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
-  console.debug(pack);
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picks = useMemo(() => drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))), [
     drafted,
@@ -170,13 +166,13 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   ]);
   const instructions = useMemo(() => {
     if (action === 'pick') {
-      return `Pick ${remainingAmount} More Card${remainingAmount > 1 ? 's' : ''}.`;
+      return `Pick ${amount} More Card${amount > 1 ? 's' : ''}.`;
     }
     if (action === 'trash') {
-      return `Trash ${remainingAmount} More Card${remainingAmount > 1 ? 's' : ''}.`;
+      return `Trash ${amount} More Card${amount > 1 ? 's' : ''}.`;
     }
     return null;
-  }, [action, remainingAmount]);
+  }, [action, amount]);
 
   const handleMoveCard = useCallback(
     async (source, target) => {

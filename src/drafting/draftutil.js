@@ -21,9 +21,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
   const numPacks = ourPacks.length;
   const ourSeat = draft.seats[seatNum];
   const stepEnd = toNullableInt(stepNumber);
-  const useSteps = !!(stepEnd || stepEnd === 0);
-  const pickEnd =
-    !useSteps && (pickNumber === -1 ? ourSeat.pickorder.length + ourSeat.trashorder.length : parseInt(pickNumber, 10));
+  const pickEnd = pickNumber === -1 ? ourSeat.pickorder.length + ourSeat.trashorder.length : parseInt(pickNumber, 10);
   const seen = [];
   let pickedNum = 0;
   let trashedNum = 0;
@@ -36,18 +34,22 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
   let packNum = 0;
   let offset = 0;
   for (; packNum < numPacks; packNum++) {
-    // eslint-disable-next-line
-    packsWithCards = draft.initial_state.map((packsForSeat) => [...packsForSeat[packNum].cards]);
+    let done = false;
+    const curPackNum = packNum;
+    packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum].cards.slice());
     pickNum = 0;
     packSize = packsWithCards[seatNum].length;
     offset = 0;
     const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
     seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
     for ({ action, amount } of steps) {
-      if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
       const negativeAmount = (amount ?? 1) < 0;
-      for (let completedAmount = 0; completedAmount < Math.abs(amount ?? 1); completedAmount++) {
-        if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
+      amount = Math.abs(amount ?? 1);
+      for (; amount > 0; amount--) {
+        if (curStepNumber >= (stepEnd ?? curStepNumber + 1)) {
+          done = true;
+          break;
+        }
         if (action === 'pass') {
           // We have to build our own xor here
           const passLeft = (packNum % 2 === 0) === !negativeAmount;
@@ -55,6 +57,10 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
           offset = (offset + (passLeft ? 1 : numSeats - 1)) % numSeats;
           seen.push(...packsWithCards[(seatNum + offset) % numSeats]);
         } else if (action.match(/pick|trash/)) {
+          if (pickedNum + trashedNum >= pickEnd) {
+            done = true;
+            break;
+          }
           for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
             const offsetSeatIndex = (seatIndex + offset) % numSeats;
             const takenCardIndex = action.match(/pick/)
@@ -80,15 +86,12 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
           pickNum += 1;
         }
         curStepNumber += 1;
-        if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
       } // step amount
-      if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
+      if (done) break;
     } // step
-    if ((useSteps && curStepNumber >= stepEnd) || pickedNum + trashedNum >= pickEnd) break;
-    pickNum = 15;
-    packSize = 15;
+    if (done) break;
   } // pack
-  return {
+  const result = {
     cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
     picked: ourSeat.pickorder.slice(0, pickedNum),
     trashed: ourSeat.trashorder.slice(0, trashedNum),
@@ -104,8 +107,8 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
     stepNumber: curStepNumber,
     pickNumber: pickedNum + trashedNum,
     step: { action, amount },
-    completedAmount: 0,
   };
+  return result;
 };
 
 export const getDefaultPosition = (card, picks) => {

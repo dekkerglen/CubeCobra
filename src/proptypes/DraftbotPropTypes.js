@@ -23,7 +23,6 @@ const drafterStateSchema = {
   stepNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
   step: StepPropType,
-  completedAmount: PropTypes.number.isRequired,
 };
 
 export const ColorPropType = PropTypes.oneOf(COLORS);

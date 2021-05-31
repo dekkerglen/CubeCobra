@@ -288,6 +288,25 @@ const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
 const sumSynergy = (cardIndex, idxs, cards, probabilities) =>
   probabilities[cardIndex] * sum(idxs.map((ci) => probabilities[ci] * getSynergy(cardIndex, ci, cards)));
 
+const sumEmbeddings = (cards, picked, sqrtProbabilities) => {
+  const result = new Float32Array(64);
+  for (const ci of picked) {
+    const embedding = cards[ci]?.details?.embedding;
+    for (let i = 0; i < 64; i++) {
+      result[i] += sqrtProbabilities[ci] * embedding?.[i];
+    }
+  }
+  return result;
+};
+
+const dotProduct = (embedding1, embedding2) => {
+  let result = 0;
+  for (let i = 0; i < 64; i++) {
+    result += embedding1[i] * embedding2[i];
+  }
+  return result;
+};
+
 const calculateWeight = (weights, { packNum, pickNum, numPacks, packSize }) =>
   interpolateWeight(weights, [packNum, numPacks], [pickNum, packSize]);
 
@@ -311,16 +330,15 @@ export const ORACLES = Object.freeze(
       tooltip: 'A score of how well this card synergizes with the current picks.',
       perConsideredCard: true,
       weights: [
-        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-        [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-        [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+        [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
       ],
       // How much does the card we're considering synergize with the cards we've picked?
       // Helps us assess how much we want to play this card.
-      computeValue: ({ picked, cardIndices, cards, sqrtProbabilities: p, basics }) =>
-        picked.length + basics.length > 0
-          ? cardIndices.reduce((acc, ci) => sumSynergy(ci, picked.concat(basics), cards, p) + acc, 0) /
-            (picked.length + basics.length)
+      computeValue: ({ cardIndices, cards, sqrtProbabilities: p, totalProbability: total, poolEmbedding }) =>
+        total > 0 && cardIndices.length > 0
+          ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, cardIndices, p), poolEmbedding)) / sum(p) / cardIndices.length
           : 0,
     },
     {
@@ -328,23 +346,39 @@ export const ORACLES = Object.freeze(
       tooltip: 'A score of how well current picks in these colors synergize with each other.',
       perConsideredCard: false,
       weights: [
-        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-        [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-        [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+        [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
       ],
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked, cards, sqrtProbabilities: p, totalProbability: total, basics }) =>
+      computeValue: ({ picked, sqrtProbabilities: p, totalProbability: total, basics, poolEmbedding }) =>
         // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
         // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
         // average over the Pick Synergy of each picked card with the rest. There are two ordered
         // pairs for every distinct unordered pair so we multiply by 2.
-        total > 0 && picked.length + basics.length > 0
-          ? (2 * sum(picked.concat(basics).map((ci, i) => sumSynergy(ci, fst(picked.concat(basics), i), cards, p)))) /
-            (picked.length + basics.length - 1) /
-            sum(p)
+        total > 0 && picked.length + basics.length > 1
+          ? (2 * MAX_SCORE * dotProduct(poolEmbedding, poolEmbedding)) / (picked.length + basics.length - 1) / sum(p)
+          : 0,
+    },
+    {
+      title: 'External Synergy',
+      tooltip:
+        'A score of how cards picked so far synergize with the other cards in these colors that have been seen so far.',
+      perConsideredCard: false,
+      weights: [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      ],
+      // How much do the cards we've already picked in this combo synergize with each other?
+      // Helps us assess what colors we want to play.
+      // Tends to recommend moving into less heavily picked colors.
+      computeValue: ({ seen, cards, sqrtProbabilities: p, totalProbability: total, poolEmbedding }) =>
+        total > 0 && seen.length > 0
+          ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, seen, p), poolEmbedding)) / sum(p) / seen.length
           : 0,
     },
     {
@@ -490,8 +524,8 @@ const findBetterLands = (currentScore) => {
     newBotState.probabilities = calculateProbabilities(newBotState);
     newBotState.sqrtProbabilities = newBotState.probabilities.map((p) => p && Math.sqrt(p));
     newBotState.totalProbability = sum(newBotState.probabilities);
+    newBotState.poolEmbedding = sumEmbeddings(newBotState.cards, newBotState.picked, newBotState.sqrtProbabilities);
     const newScore = calculateScore(newBotState);
-    console.debug(newScore.score);
     if (newScore.score > result.score) {
       // We assume we won't get caught in a local maxima so it's safe to take first ascent.
       // return newScore;
@@ -514,13 +548,17 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   initialBotState.probabilities = calculateProbabilities(initialBotState);
   initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
   initialBotState.totalProbability = sum(initialBotState.probabilities);
+  initialBotState.poolEmbedding = sumEmbeddings(
+    initialBotState.cards,
+    initialBotState.picked,
+    initialBotState.sqrtProbabilities,
+  );
   let currentScore = calculateScore(initialBotState);
   let prevScore = { ...currentScore, score: -1 };
   while (prevScore.score < currentScore.score) {
     prevScore = currentScore;
     currentScore = findBetterLands(currentScore);
   }
-  console.log(currentScore);
   return currentScore;
 };
 
