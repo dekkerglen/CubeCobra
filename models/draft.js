@@ -58,7 +58,7 @@ const draftSchema = mongoose.Schema(
         if (this.isNew) {
           return CURRENT_SCHEMA_VERSION;
         }
-      return void 0; // eslint-disable-line
+        return void 0; // eslint-disable-line
       },
     },
     seats: [Seat],

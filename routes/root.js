@@ -473,18 +473,15 @@ router.get('/privacy', (req, res) => {
       },
       {
         label: '',
-        text:
-          'This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data. Our Privacy Policy for Cube Cobra is created with the help of the Free Privacy Policy Generator. We use your data to provide and improve the Service. By using the Service, you agree to the collection and use of information in accordance with this policy. Unless otherwise defined in this Privacy Policy, terms used in this Privacy Policy have the same meanings as in our Terms and Conditions, accessible from cubecobra.com/tos',
+        text: 'This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data. Our Privacy Policy for Cube Cobra is created with the help of the Free Privacy Policy Generator. We use your data to provide and improve the Service. By using the Service, you agree to the collection and use of information in accordance with this policy. Unless otherwise defined in this Privacy Policy, terms used in this Privacy Policy have the same meanings as in our Terms and Conditions, accessible from cubecobra.com/tos',
       },
       {
         label: 'Information Collection And Use',
-        text:
-          'We collect several different types of information for various purposes to provide and improve our Service to you.',
+        text: 'We collect several different types of information for various purposes to provide and improve our Service to you.',
       },
       {
         label: 'Types of Data Collected',
-        text:
-          'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: Email address, Cookies and Usage Data',
+        text: 'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: Email address, Cookies and Usage Data',
       },
       {
         label: '',
@@ -636,18 +633,15 @@ router.get('/ourstory', (req, res) => {
     content: [
       {
         label: 'About the Creator',
-        text:
-          "My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me. I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features. With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, as I believe that is the best route for the quality and longevity of the project.",
+        text: "My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me. I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features. With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, as I believe that is the best route for the quality and longevity of the project.",
       },
       {
         label: 'Project Goals',
-        text:
-          "The main goal of Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app. We want to create a platform that is easy to use, that still has advanced enough features that allow users a high degree of freedom to organize and analyze their cube in a way that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.",
+        text: "The main goal of Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app. We want to create a platform that is easy to use, that still has advanced enough features that allow users a high degree of freedom to organize and analyze their cube in a way that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.",
       },
       {
         label: 'Moving Forward',
-        text:
-          "Cube Cobra is an ongoing collaborative effort. We have a ton of feature requests, and passionate developers working through to constantly improve the platform. We're have several large, long-term features that are in the pipeline, that we're very excited about. Make sure to follow us on Twitter, and/or Discord to stay up to date on all Cube Cobra updates.",
+        text: "Cube Cobra is an ongoing collaborative effort. We have a ton of feature requests, and passionate developers working through to constantly improve the platform. We're have several large, long-term features that are in the pipeline, that we're very excited about. Make sure to follow us on Twitter, and/or Discord to stay up to date on all Cube Cobra updates.",
       },
     ],
   });
@@ -671,23 +665,19 @@ router.get('/faq', (req, res) => {
       },
       {
         label: 'Is Cube Cobra Open Source?',
-        text:
-          "Yes! Given the goals of Cube Cobra, we've felt the best way to give the community the tool that they want is to make it a collaborative project. For the community, by the community. If you're interested in contributing, feel free to reach out and we will help you get started.",
+        text: "Yes! Given the goals of Cube Cobra, we've felt the best way to give the community the tool that they want is to make it a collaborative project. For the community, by the community. If you're interested in contributing, feel free to reach out and we will help you get started.",
       },
       {
         label: 'I am not a developer, can I still help improve Cube Cobra?',
-        text:
-          'Yes! Even if you are not a developer, you can still get involved in helping Cube Cobra become a better platform for everyone! If you want to be more involved in the community, join the Discord linked under Contact. You can submit bug reports, make feature requests, and talk to the developers directly there.',
+        text: 'Yes! Even if you are not a developer, you can still get involved in helping Cube Cobra become a better platform for everyone! If you want to be more involved in the community, join the Discord linked under Contact. You can submit bug reports, make feature requests, and talk to the developers directly there.',
       },
       {
         label: "I'm having trouble building my cube, where can I go for help?",
-        text:
-          'Head on over to our Discord! You can find the link under our contact page! We have an avid cubing community that would be more than happy to help you build your cube!',
+        text: 'Head on over to our Discord! You can find the link under our contact page! We have an avid cubing community that would be more than happy to help you build your cube!',
       },
       {
         label: 'How can I put my lands into my guild sections?',
-        text:
-          'From your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
+        text: 'From your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
       },
     ],
   });

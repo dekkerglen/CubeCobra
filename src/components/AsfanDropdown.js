@@ -18,10 +18,10 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
     }
     return '';
   }, [draftFormat, cube]);
-  const toggleUseAsfans = useCallback(({ target }) => setDraftFormat(target.checked ? defaultFormatId : null), [
-    setDraftFormat,
-    defaultFormatId,
-  ]);
+  const toggleUseAsfans = useCallback(
+    ({ target }) => setDraftFormat(target.checked ? defaultFormatId : null),
+    [setDraftFormat, defaultFormatId],
+  );
 
   useEffect(() => {
     if (draftFormat !== null) {
