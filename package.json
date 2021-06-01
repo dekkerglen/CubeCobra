@@ -19,6 +19,7 @@
     "webpack-dev-server": "webpack-dev-server --config webpack.dev.js",
     "test-loud": "jest --detectOpenHandles  --coverage",
     "test": "npm run test-loud -- --silent",
+    "test:watch": "npm run webpack -- --watch & npm run test-loud -- --watch --verbose false",
     "nearley": "sh nearley/helper.sh",
     "build": "npm run nearley && node_modules/.bin/webpack --mode production --config webpack.prod.js --progress",
     "devstart": "npm run nearley && npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",

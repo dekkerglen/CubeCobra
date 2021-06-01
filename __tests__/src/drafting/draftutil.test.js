@@ -1,5 +1,5 @@
-import { getDraftBots, getDraftFormat, createDraft } from 'utils/draftutil';
-import { makeFilter } from 'filtering/FilterCards';
+const { getDraftFormat, createDraft } = require('../../../dist/drafting/createdraft'); // eslint-disable-line
+const { makeFilter } = require('../../../dist/filtering/FilterCards');
 
 const fixturesPath = 'fixtures';
 const cubefixture = require('../../../fixtures/examplecube');
@@ -7,29 +7,6 @@ const cubefixture = require('../../../fixtures/examplecube');
 const Draft = require('../../../models/draft');
 
 const carddb = require('../../../serverjs/cards');
-
-describe('getDraftBots', () => {
-  it('can get the correct number of draft bots', () => {
-    const params = {
-      seats: 5,
-    };
-    const result = getDraftBots(params);
-    expect(result.length).toBe(params.seats - 1);
-  });
-
-  it('can get bots with the correct properties', () => {
-    const allColors = ['W', 'U', 'B', 'R', 'G'];
-    const params = {
-      seats: 2,
-    };
-    const result = getDraftBots(params);
-
-    expect(result[0].length).toBe(2);
-    expect(allColors.includes(result[0][0])).toBe(true);
-    expect(allColors.includes(result[0][1])).toBe(true);
-    expect(result[0][0] === result[0][1]).toBe(false);
-  });
-});
 
 describe('getDraftFormat', () => {
   let exampleCube;
@@ -221,10 +198,12 @@ describe('createDraft', () => {
       bots = ['mockbot'];
       seats = 8;
       // cube only contains 65 cards, so 8 * 2 * 5 = 80, should run out if multiples = false
-      exampleCube.draft_formats[0].packs =
-        '[{ sealed: false, trash: 0, filters: ["*","*","*","*","*"] },{ sealed: false, trash: 0, filters: ["*","*","*","*","*"] }]';
-      format = getDraftFormat({ id: 0 }, exampleCube);
+      exampleCube.draft_formats[0].packs = [
+        { slots: ['*', '*', '*', '*', '*'], steps: null },
+        { slots: ['*', '*', '*', '*', '*'], steps: null },
+      ];
       expect(() => {
+        format = getDraftFormat({ id: 0 }, exampleCube);
         createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);
     });
@@ -236,22 +215,21 @@ describe('createDraft', () => {
       // cube only contains 65 cards, so 6 * 5 = 30 > 13 blue cards, should run out if multiples = false
       exampleCube.draft_formats[0].packs = [
         {
-          sealed: 0,
-          trash: 0,
-          filters: ['c>=u', 'c>=u', 'c:u', 'c:u', 'c:u'],
+          slots: ['c>=u', 'c>=u', 'c:u', 'c:u', 'c:u'],
+          steps: null,
         },
         {
-          trash: 0,
-          filters: ['*'],
+          slots: ['*', '*', '*', '*'],
+          steps: null,
         },
       ];
+      exampleCube.draft_formats[0].multiples = true;
       format = getDraftFormat({ id: 0 }, exampleCube);
-      format.multiples = true;
       expect(() => {
         createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).not.toThrow(/not enough cards/);
-      // note: because multiples true, cards not "used up" for next check
-      format.multiples = false;
+      exampleCube.draft_formats[0].multiples = false;
+      format = getDraftFormat({ id: 0 }, exampleCube);
       expect(() => {
         createDraft(format, cards, bots, seats, { username: 'user', _id: 0 });
       }).toThrow(/not enough cards/);

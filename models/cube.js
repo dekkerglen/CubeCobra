@@ -178,7 +178,7 @@ cubeSchema.index({
   schemaVersion: 1,
 });
 
-cubeSchema.pre('save', (next) => {
+cubeSchema.pre('save', function saveCubeHook(next) {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
   next();
 });
