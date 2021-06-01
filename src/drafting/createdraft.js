@@ -176,7 +176,6 @@ export const getDraftFormat = (params, cube) => {
       }
     }
   }
-  console.debug('returning', JSON.stringify(format, null, 2));
   return format;
 };
 

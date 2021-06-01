@@ -5,7 +5,6 @@ const cubefn = require('../../serverjs/cubefn');
 const util = require('../../serverjs/util');
 
 const cubefixture = require('../../fixtures/examplecube');
-const landsfixture = require('../../fixtures/examplelands');
 
 const Cube = require('../../models/cube');
 

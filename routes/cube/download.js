@@ -128,7 +128,6 @@ router.get('/mtgo/:id', async (req, res) => {
     }
     return exportToMtgo(res, cube.name, cube.cards, cube.maybe);
   } catch (err) {
-    console.error(err);
     return util.handleRouteError(req, res, err, '/404');
   }
 });
