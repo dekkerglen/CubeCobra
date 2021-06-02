@@ -24,10 +24,12 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
 
     const newCounts = basics.map(() => 0);
 
-    for (const col of newDeck) {
-      for (const cardIndex of col) {
-        if ((basicIds[cardIndex] ?? null) !== null) {
-          newCounts[basicIds[cardIndex]] += 1;
+    for (const row of newDeck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          if (basicIds[cardIndex]) {
+            newCounts[basicIds[cardIndex]] += 1;
+          }
         }
       }
     }
