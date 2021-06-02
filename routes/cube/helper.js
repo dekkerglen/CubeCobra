@@ -183,7 +183,8 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.charset = 'UTF-8';
   const main = {};
   for (const cardIndex of mainCards) {
-    const { name } = carddb.cardFromId(cards[cardIndex].cardID);
+    const cardID = cardIndex.cardID || cards[cardIndex].cardID;
+    const { name } = carddb.cardFromId(cardID);
     if (main[name]) {
       main[name] += 1;
     } else {

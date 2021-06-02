@@ -5,7 +5,6 @@ const cubefn = require('../../serverjs/cubefn');
 const util = require('../../serverjs/util');
 
 const cubefixture = require('../../fixtures/examplecube');
-const landsfixture = require('../../fixtures/examplelands');
 
 const Cube = require('../../models/cube');
 
@@ -145,58 +144,6 @@ test('generateShortId returns a valid short ID without profanity', async () => {
   expect(results[results.length - 1].value).toBe(false);
   Cube.find = initialCubeFind;
   util.hasProfanity = initialHasProfanity;
-});
-
-test('getBasics returns the expected set of basic lands', () => {
-  const basicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
-  const mockNameToId = {
-    plains: ['1d7dba1c-a702-43c0-8fca-e47bbad4a00f'],
-    mountain: ['42232ea6-e31d-46a6-9f94-b2ad2416d79b'],
-    forest: ['19e71532-3f79-4fec-974f-b0e85c7fe701'],
-    swamp: ['8365ab45-6d78-47ad-a6ed-282069b0fabc'],
-    island: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
-    wastes: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
-  };
-  const expectedDisplayImages = {
-    plains: 'https://img.scryfall.com/cards/normal/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
-    mountain: 'https://img.scryfall.com/cards/normal/front/4/2/42232ea6-e31d-46a6-9f94-b2ad2416d79b.jpg?1565989372',
-    forest: 'https://img.scryfall.com/cards/normal/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
-    swamp: 'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
-    island: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
-    wastes: 'https://img.scryfall.com/cards/normal/front/6/0/60682c00-c661-4a9d-8326-f3f014a04e3e.jpg?1562914528',
-  };
-  const mockCarddict = {};
-  const expected = {};
-  let exampleLand;
-  let expectedLandObject;
-  for (const name of basicLands) {
-    mockCarddict[mockNameToId[name.toLowerCase()]] = landsfixture.exampleBasics[name.toLowerCase()];
-    exampleLand = landsfixture.exampleBasics[name.toLowerCase()];
-    const details = JSON.parse(JSON.stringify(exampleLand));
-    expectedLandObject = {
-      // copy necessary because getBasics modifies carddb (bad)
-      type_line: details.type,
-      cmc: 0,
-      cardID: mockNameToId[name.toLowerCase()][0],
-      details,
-    };
-    expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
-    expected[name] = expectedLandObject;
-  }
-  const initialCarddict = carddb._carddict;
-  const initialNameToId = carddb.nameToId;
-
-  carddb._carddict = mockCarddict;
-  carddb.nameToId = mockNameToId;
-
-  const result = cubefn.getBasics(carddb);
-  expect(result).toEqual(expected);
-  for (const name of basicLands) {
-    expect(result[name].details).toEqual(expected[name].details);
-  }
-
-  carddb._carddict = initialCarddict;
-  carddb.nameToId = initialNameToId;
 });
 
 test('setCubeType correctly sets the type and card_count of its input cube', () => {

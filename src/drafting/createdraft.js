@@ -16,38 +16,30 @@ const compileFilter = (filterText) => {
     return null;
   }
 
-  let { filter, err } = makeFilter(filterText);
+  let tagfilterText = null;
   if (!operatorsRegex.test(filterText)) {
-    let tagfilterText = filterText;
     // if it contains spaces then wrap in quotes
+    tagfilterText = filterText;
     if (tagfilterText.indexOf(' ') >= 0 && !tagfilterText.startsWith('"')) {
       tagfilterText = `"${filterText}"`;
     }
     tagfilterText = `tag:${tagfilterText}`; // TODO: use tag instead of 'tag'
-    ({ filter, err } = makeFilter(tagfilterText));
   }
-
+  const { filter, err } = makeFilter(tagfilterText || filterText);
   if (err) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
+  console.log('filter compiled:', filter);
   return filter;
 };
 
-/* Takes the raw data for custom format, converts to JSON and creates
-   a data structure: 
-
-      [pack][card in pack][token,token...]
-*/
 export const parseDraftFormat = (format, splitter = ',') => {
-  for (let j = 0; j < format.length; j++) {
-    for (let k = 0; k < format[j].slots.length; k++) {
-      format[j].slots[k] = format[j].slots[k].split(splitter);
-      for (let m = 0; m < format[j].slots[k].length; m++) {
-        format[j].slots[k][m] = compileFilter(format[j].slots[k][m].trim());
-      }
-    }
-  }
-  return format;
+  const result = format.map((pack) => ({
+    ...pack,
+    slots: pack.slots.map((slot) => slot.split(splitter).map((txt) => compileFilter(txt.trim()))),
+  }));
+  console.log('parsedFormat', JSON.stringify(result));
+  return result;
 };
 
 // standard draft has no duplicates
@@ -228,6 +220,7 @@ export const createDraft = (format, cubeCards, seats, user, seed = false) => {
     cards: [],
     seed,
   };
+  console.debug('createDraft', JSON.stringify(format, null, 2));
 
   let nextCardFn = null;
   if (cubeCards.length === 0) {
