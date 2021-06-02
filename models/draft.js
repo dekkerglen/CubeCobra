@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const cardSchema = require('./shared/cardSchema');
-const stepsSchema = require('./shared/stepsSchema');
+// const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/draftMigrations').slice(-1)[0].version;
 
 // Details on each pack, how to draft and what's in it.
@@ -50,7 +50,7 @@ const draftSchema = mongoose.Schema(
     basics: {
       default: [],
       // type: [Number],
-      type: [{}]
+      type: [{}],
     },
     cards: [cardSchema],
     cube: String,

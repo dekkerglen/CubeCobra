@@ -53,7 +53,6 @@ const dedupeCardObjects = async (deck) => {
     return seat;
   });
   addBasics(cardsArray, cube.basics, deck);
-  console.log(cardsArray);
   deck.cards = cleanCards(cardsArray, false);
   return deck;
 };

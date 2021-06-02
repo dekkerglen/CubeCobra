@@ -10,7 +10,7 @@ const isInvalidStatus = (status) => !['Not Owned', 'Ordered', 'Owned', 'Premium 
 const isInvalidColors = (colors) => !colors || !Array.isArray(colors) || [].some((c) => !COLORS.includes(c));
 const isInvalidTags = (tags) => !tags || tags.some((t) => !t);
 
-const cleanCards = (collection, filter=true) => {
+const cleanCards = (collection, filter = true) => {
   if (filter) {
     collection = collection.filter((c) => c && !isInvalidCardId(c.cardID));
   }
