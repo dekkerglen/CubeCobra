@@ -134,7 +134,6 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
-    console.log('making pick for', seatIndex, 'as', cardIndices);
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
@@ -212,7 +211,6 @@ export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallb
 
   useEffect(() => {
     if (botDrafterState.turn && draftType === 'bot') {
-      console.log('in effect to make bot picks', botDrafterState);
       mutations.makePick({ cardIndices: calculateGridBotPick(botDrafterState), seatIndex: botIndex });
     }
   }, [draftType, botDrafterState, mutations, botIndex]);

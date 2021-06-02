@@ -98,7 +98,6 @@ const MUTATIONS = Object.freeze({
 const serializeFormat = (rawFormat) => {
   const format = { ...rawFormat };
   format.title = format.title.trim();
-  console.log(format);
   return JSON.stringify(format);
 };
 

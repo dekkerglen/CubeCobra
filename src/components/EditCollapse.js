@@ -80,7 +80,6 @@ const EditCollapse = ({ ...props }) => {
 
   const handleChange = useCallback(
     (event) => {
-      console.log(event.target.name);
       return {
         textarea: setPostContent,
         add: setAddValue,

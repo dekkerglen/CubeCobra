@@ -29,7 +29,6 @@ const compileFilter = (filterText) => {
   if (err) {
     throw new Error(`Invalid card filter: ${filterText}`);
   }
-  console.log('filter compiled:', filter);
   return filter;
 };
 
@@ -38,7 +37,6 @@ export const parseDraftFormat = (format, splitter = ',') => {
     ...pack,
     slots: pack.slots.map((slot) => slot.split(splitter).map((txt) => compileFilter(txt.trim()))),
   }));
-  console.log('parsedFormat', JSON.stringify(result));
   return result;
 };
 
