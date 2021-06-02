@@ -218,7 +218,6 @@ export const createDraft = (format, cubeCards, seats, user, seed = false) => {
     cards: [],
     seed,
   };
-  console.debug('createDraft', JSON.stringify(format, null, 2));
 
   let nextCardFn = null;
   if (cubeCards.length === 0) {
