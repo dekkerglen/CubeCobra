@@ -30,7 +30,6 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
   const [deck, setDeck] = useState(
     initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
-  console.debug(deck);
   const [sideboard, setSideboard] = useState(
     initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
@@ -46,12 +45,18 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
         return;
       }
 
-      const [sourceCards, setSource] = locationMap[source.type];
-      const [targetCards, setTarget] = locationMap[target.type];
+      if (source.type === target.type) {
+        const [cards, setSource] = locationMap[source.type];
 
-      const [card, newSourceCards] = removeCard(sourceCards, source.data);
-      setSource(newSourceCards);
-      setTarget(moveOrAddCard(targetCards, target.data, card));
+        setSource(moveOrAddCard(cards, target.data, source.data));
+      } else {
+        const [sourceCards, setSource] = locationMap[source.type];
+        const [targetCards, setTarget] = locationMap[target.type];
+
+        const [card, newSourceCards] = removeCard(sourceCards, source.data);
+        setSource(newSourceCards);
+        setTarget(moveOrAddCard(targetCards, target.data, card));
+      }
     },
     [locationMap],
   );
@@ -80,14 +85,14 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
 
   const addBasics = useCallback(
     (numBasics) => {
-      const toAdd = numBasics.map((count, index) => new Array(count).fill(basics[index])).flat();
+      const toAdd = numBasics.map((count, index) => new Array(count).fill(initialDeck.cards[basics[index]])).flat();
       const newDeck = [...deck];
       newDeck[1][0] = [].concat(newDeck[1][0], toAdd);
       setDeck(newDeck);
     },
-    [deck, basics],
+    [deck, basics, initialDeck],
   );
-  console.debug('initialDeck.cards', initialDeck.cards);
+
   const currentDeck = { ...initialDeck };
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
