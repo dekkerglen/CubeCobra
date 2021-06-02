@@ -571,7 +571,9 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
     const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
-    const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
+    const allVersions = allIds.map((versions) =>
+      versions.map((id) => carddb.cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
+    );
 
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
