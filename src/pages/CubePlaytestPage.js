@@ -122,7 +122,14 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
         });
         const json = await response.json();
         setDraftId(json.draft._id);
-        await allBotsDraft(json.draft);
+        const draft = await allBotsDraft(json.draft);
+
+        await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+          method: 'POST',
+          body: JSON.stringify(draft),
+          headers: { 'Content-Type': 'application/json' },
+        });
+
         submitDeckForm.current.submit();
       }
     },

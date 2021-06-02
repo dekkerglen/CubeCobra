@@ -87,8 +87,6 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
     [labels, characteristic, characteristics, getColor, groups],
   );
 
-  console.log(data);
-
   return (
     <>
       <Row>

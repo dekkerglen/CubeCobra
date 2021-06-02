@@ -30,8 +30,6 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
     ),
   );
 
-  console.log(exportData);
-
   return (
     <>
       <CSVLink data={exportData} filename="export.csv">
