@@ -21,7 +21,7 @@
     "test": "npm run test-loud -- --silent",
     "test:watch": "npm run webpack -- --watch & npm run test-loud -- --watch --verbose false",
     "nearley": "sh nearley/helper.sh",
-    "build": "set NODE_OPTIONS=--max_old_space_size=16000 && npm run nearley && node_modules/.bin/webpack --mode production --config webpack.prod.js --progress",
+    "build": "export NODE_OPTIONS=--max_old_space_size=16000 && npm run nearley && node_modules/.bin/webpack --mode production --config webpack.prod.js --progress",
     "devstart": "npm run nearley && npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
     "cards": "node --max-old-space-size=4096 force_update.js",
