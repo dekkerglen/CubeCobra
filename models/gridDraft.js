@@ -4,21 +4,23 @@ const cardSchema = require('./shared/cardSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
-const Seat = {
-  bot: Boolean,
-  name: String,
-  userid: String,
-  drafted: [[[Number]]], // organized draft picks
-  sideboard: [[[Number]]], // organized draft picks
-  pickorder: [Number],
-  pickedIndices: [Number],
-};
+// const Seat = {
+//   bot: Boolean,
+//   name: String,
+//   userid: String,
+//   drafted: [[[Number]]], // organized draft picks
+//   sideboard: [[[Number]]], // organized draft picks
+//   pickorder: [Number],
+//   pickedIndices: [Number],
+// };
+const Seat = {};
 
 // Cube schema
 const gridDraftSchema = mongoose.Schema({
   basics: {
     default: [],
-    type: [Number],
+    // type: [Number],
+    type: [{}],
   },
   cards: [cardSchema],
   cube: String,

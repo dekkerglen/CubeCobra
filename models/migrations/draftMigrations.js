@@ -24,7 +24,7 @@ const dedupeCardObjects = async (draft) => {
   if (!Array.isArray(cardsArray) || (cardsArray.length > 0 && (!cardsArray[0] || !cardsArray[0].cardID))) {
     throw new Error(`Could not correctly transform the cardsArray. Got ${JSON.stringify(cardsArray[0], null, 2)}`);
   }
-  cardsArray = cleanCards(cardsArray);
+  cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
     if (idx === -1) {
@@ -64,8 +64,10 @@ const dedupeCardObjects = async (draft) => {
     seat.pickorder = replaceNd(seat.pickorder);
     seat.bot = !!seat.bot;
     seat.trashorder = [];
+    delete seat.packbacklog;
     return seat;
   });
+  delete draft.unopenedPacks;
   return draft;
 };
 

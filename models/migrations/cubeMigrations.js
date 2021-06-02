@@ -17,10 +17,10 @@ const updateCubeDraftFormats = (cube) => {
     ];
   }
   if (cardsNeedsCleaning(cube.cards)) {
-    cube.cards = cleanCards(cube.cards);
+    cube.cards = cleanCards(cube.cards).map((card, index) => ({ ...card, index }));
   }
   if (cardsNeedsCleaning(cube.maybe)) {
-    cube.maybe = cleanCards(cube.maybe);
+    cube.maybe = cleanCards(cube.maybe).map((card, index) => ({ ...card, index }));
   }
 
   const newFormats = mapNonNull(cubeObject.draft_formats, (oldDraftFormat) => {
