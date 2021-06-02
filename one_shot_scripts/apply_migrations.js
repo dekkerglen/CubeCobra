@@ -85,4 +85,5 @@ const BATCH_SIZE = 500;
   }
   mongoose.disconnect();
   console.log('done');
+  process.exit();
 })();
