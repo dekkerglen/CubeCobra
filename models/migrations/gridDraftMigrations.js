@@ -31,7 +31,7 @@ const dedupeCardObjects = async (gridDraft) => {
       )}\n\tfrom ${JSON.stringify(gridDraftObject)}`,
     );
   }
-  cardsArray = cleanCards(cardsArray);
+  cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
 
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);

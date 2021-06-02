@@ -20,24 +20,18 @@ const dedupeCardObjects = async (deck) => {
     };
   }
 
-  let cardsArray = [];
+  const cardsArray = [];
   const replaceWithIndexNd = (pile) => {
-    if (Array.isArray(pile)) {
+    if (Array.isArray(pile) || !pile.cardID) {
       return mapNonNull(pile, replaceWithIndexNd);
     }
-    const index = cardsArray.length;
-    cardsArray.push({ ...pile, index });
-    return index;
-  };
-  const replaceWithIndex = (card) => {
-    const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
-    if (idx === -1) {
-      if (Number.isFinite(card)) return null;
-      throw new Error(
-        `card ${JSON.stringify(card)} could not be found in the cardsArray.\n${JSON.stringify(cardsArray)}.`,
-      );
+    const existingIndex = cardsArray.findIndex(({ cardID }) => cardID === pile.cardID);
+    if (existingIndex === -1) {
+      const index = cardsArray.length;
+      cardsArray.push({ ...pile, index });
+      return index;
     }
-    return idx;
+    return existingIndex;
   };
 
   const to3d = (collection) => {
@@ -51,16 +45,15 @@ const dedupeCardObjects = async (deck) => {
     pool[0][0] = collection.flatten();
     return pool;
   };
-  cardsArray = cleanCards(cardsArray);
 
   deck.seats = mapNonNull(deckObject.seats, (seat) => {
     seat.deck = to3d(replaceWithIndexNd(seat.deck));
     seat.sideboard = to3d(replaceWithIndexNd(seat.sideboard));
-    seat.pickorder = mapNonNull(seat.pickorder, replaceWithIndex).filter((c) => c !== null);
+    delete seat.pickorder;
     return seat;
   });
   addBasics(cardsArray, cube.basics, deck);
-  deck.cards = cardsArray;
+  deck.cards = cleanCards(cardsArray, false);
   return deck;
 };
 
