@@ -14,7 +14,7 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
-const { fromEntries } = require('../../serverjs/util');
+const { fromEntries } = require('../serverjs/util');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 const RELATED_LIMIT = 24;
