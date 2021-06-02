@@ -207,7 +207,7 @@ const createPacks = (draft, format, seats, nextCardFn) => {
 };
 
 // NOTE: format is an array with extra attributes, see getDraftFormat()
-export const createDraft = (format, cubeCards, seats, user, seed = false) => {
+export const createDraft = (format, cubeCards, seats, user, botsOnly = false, seed = false) => {
   if (!seed) {
     seed = Date.now().toString();
   }
@@ -270,7 +270,7 @@ export const createDraft = (format, cubeCards, seats, user, seed = false) => {
 
   // Need a better way to assign this for when there's more than one player, or the player isn't index 0
   draft.seats = draft.initial_state.map((_, seatIndex) => ({
-    bot: seatIndex !== 0,
+    bot: seatIndex !== 0 || botsOnly,
     name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
     userid: seatIndex === 0 ? user._id : null,
     drafted: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks

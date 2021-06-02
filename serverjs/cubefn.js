@@ -561,7 +561,7 @@ const methods = {
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
+    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, false, seed);
     return {
       seed,
       pack: draft.initial_state[0][0].map((cardIndex) => ({

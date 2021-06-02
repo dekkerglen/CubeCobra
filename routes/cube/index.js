@@ -1237,6 +1237,7 @@ router.post(
             : {
                 username: 'Anonymous',
               },
+          req.body.botsOnly,
         );
       } catch (err) {
         // This is a 4XX error, not a 5XX error
