@@ -1140,7 +1140,7 @@ router.post(
       deck.seats.push({
         userid: user._id,
         username: user.username,
-        pickorder: [],
+        pickorder: cardsArray.map((item, index) => index),
         name: `Sealed from ${cube.name}`,
         description: '',
         deck: pool,

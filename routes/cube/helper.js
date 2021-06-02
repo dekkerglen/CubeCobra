@@ -238,12 +238,11 @@ const addBasics = (cardsArray, basics, collection = null) => {
 
 const createPool = () => {
   const pool = [];
-  const row = [];
-  for (let j = 0; j < 8; j++) {
-    row.push([]);
-  }
   for (let i = 0; i < 2; i++) {
-    pool.push(row);
+    pool.push([]);
+    for (let j = 0; j < 8; j++) {
+      pool[i].push([]);
+    }
   }
   return pool;
 };

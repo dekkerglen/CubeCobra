@@ -296,6 +296,7 @@ async function build({ cards, picked, probabilities, sqrtProbabilities, basics, 
 }
 
 export async function buildDeck(cards, picked, basics) {
+  console.log(cards, picked, basics);
   const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked: picked.concat(...basics.map((ci) => new Array(20).fill(ci))),

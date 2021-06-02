@@ -69,10 +69,11 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    const main = deck.seats[0].pickorder;
+    let main = deck.seats[0].pickorder;
+    if (main.length <= 0) {
+      main = [...deck.seats[0].deck.flat(3)].concat(...deck.seats[0].sideboard.flat(3));
+    }
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
-    console.debug(newDeck);
-    console.debug(side);
     const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     setSideboard(newSide);
@@ -133,7 +134,13 @@ DeckbuilderNavbar.propTypes = {
     playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-    seats: PropTypes.arrayOf(PropTypes.shape({ pickorder: PropTypes.number.isRequired }).isRequired).isRequired,
+    seats: PropTypes.arrayOf(
+      PropTypes.shape({
+        pickorder: PropTypes.arrayOf(PropTypes.number).isRequired,
+        deck: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+        sideboard: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+      }).isRequired,
+    ).isRequired,
   }).isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
