@@ -14,6 +14,7 @@ const Deck = require('../models/deck');
 const Cube = require('../models/cube');
 const CardHistory = require('../models/cardHistory');
 const CardRating = require('../models/cardrating');
+const { fromEntries } = require('../../serverjs/util');
 
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 const RELATED_LIMIT = 24;
@@ -415,7 +416,7 @@ const run = async () => {
 
   winston.info(`Created list of ${ORACLE_COUNT} oracles`);
 
-  const oracleToIndex = Object.fromEntries(distinctOracles.map((item, index) => [item, index]));
+  const oracleToIndex = fromEntries(distinctOracles.map((item, index) => [item, index]));
 
   winston.info('creating correlation matrix...');
 
