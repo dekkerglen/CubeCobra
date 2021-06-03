@@ -17,6 +17,9 @@
 //   probabilities : { [str]: number },
 // }
 // getDrafterState : (Draft, int, int?) -> DrafterState
+
+import seedrandom from 'seedrandom';
+
 import {
   COLOR_COMBINATIONS,
   COLOR_INCLUSION_MAP,
@@ -313,9 +316,9 @@ export const ORACLES = Object.freeze(
       tooltip: 'The rating based on the Elo and current color commitments.',
       perConsideredCard: true,
       weights: [
-        [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
-        [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+        [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
       ],
       // What is the raw power level of this card? Used to assess how much we want to play this card.
       computeValue: ({ cardIndices, cards, probabilities }) =>
@@ -342,9 +345,9 @@ export const ORACLES = Object.freeze(
       tooltip: 'A score of how well current picks in these colors synergize with each other.',
       perConsideredCard: false,
       weights: [
+        [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-        [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-        [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
+        [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
       ],
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
@@ -382,9 +385,9 @@ export const ORACLES = Object.freeze(
       tooltip: 'A score of how well these colors fit in with the current picks.',
       perConsideredCard: false,
       weights: [
-        [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
-        [40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40],
-        [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60],
+        [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+        [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25],
+        [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
       ],
       // How good are the cards we've already picked in this color combo?
       // Used to select a color combination.
@@ -435,20 +438,29 @@ const getAvailableLands = (pool, basics, cards) => {
   return availableLands;
 };
 
-const getRandomLands = (availableLands) => {
+const getRandomLands = (availableLands, seed = 0) => {
+  const rng = seedrandom(seed);
   const currentLands = new Uint8Array(availableLands);
   let totalLands = currentLands.reduce((x, y) => x + y, 0);
   while (totalLands > 17) {
-    const availableDecreases = [];
-    for (let i = 0; i < 32; i++) {
-      if (currentLands[i] > 0) availableDecreases.push(i);
+    if (currentLands[0] > 0) {
+      currentLands[0] -= 1;
+      totalLands -= 1;
+    } else {
+      const availableDecreases = [];
+      for (let i = 0; i < 32; i++) {
+        if (currentLands[i] > 0) availableDecreases.push(i);
+      }
+      const trueDecreases = availableDecreases.filter(
+        (i) => !availableDecreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[i * 32 + j]),
+      );
+      // const maxCount = Math.max(...trueDecreases.map((i) => currentLands[i]));
+      // const maxes = trueDecreases.filter((i) => currentLands[i] === maxCount);
+      const index = Math.round(rng() * trueDecreases.length);
+      // Provide some decently random mixing to allow seed to provide decent randomness
+      totalLands -= 1;
+      currentLands[trueDecreases[index]] -= 1;
     }
-    const trueDecreases = availableDecreases.filter(
-      (i) => !availableDecreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[i * 32 + j]),
-    );
-    const index = Math.floor(Math.random() * trueDecreases.length);
-    totalLands -= 1;
-    currentLands[trueDecreases[index]] -= 1;
   }
   return currentLands;
 };
@@ -534,28 +546,35 @@ const findBetterLands = (currentScore) => {
 export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if ((cardIndices ?? null) === null) cardIndices = [];
   if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
-  const initialBotState = { ...drafterState, cardIndices };
-  initialBotState.availableLands = getAvailableLands(
-    [...drafterState.picked, ...cardIndices],
-    drafterState.basics,
-    drafterState.cards,
-  );
-  initialBotState.lands = getRandomLands(initialBotState.availableLands);
-  initialBotState.probabilities = calculateProbabilities(initialBotState);
-  initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
-  initialBotState.totalProbability = sum(initialBotState.probabilities);
-  initialBotState.poolEmbedding = sumEmbeddings(
-    initialBotState.cards,
-    initialBotState.picked,
-    initialBotState.sqrtProbabilities,
-  );
-  let currentScore = calculateScore(initialBotState);
-  let prevScore = { ...currentScore, score: -1 };
-  while (prevScore.score < currentScore.score) {
-    prevScore = currentScore;
-    currentScore = findBetterLands(currentScore);
+  let bestScore = { score: -5 };
+  for (let i = 0; i < 3; i++) {
+    const initialBotState = { ...drafterState, cardIndices };
+    initialBotState.availableLands = getAvailableLands(
+      [...drafterState.picked, ...cardIndices],
+      drafterState.basics,
+      drafterState.cards,
+    );
+    initialBotState.lands = getRandomLands(
+      initialBotState.availableLands,
+      drafterState.stepNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x),
+    );
+    initialBotState.probabilities = calculateProbabilities(initialBotState);
+    initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
+    initialBotState.totalProbability = sum(initialBotState.probabilities);
+    initialBotState.poolEmbedding = sumEmbeddings(
+      initialBotState.cards,
+      initialBotState.picked,
+      initialBotState.sqrtProbabilities,
+    );
+    let currentScore = calculateScore(initialBotState);
+    let prevScore = { ...currentScore, score: -1 };
+    while (prevScore.score < currentScore.score) {
+      prevScore = currentScore;
+      currentScore = findBetterLands(currentScore);
+    }
+    if (currentScore.score > bestScore.score) bestScore = currentScore;
   }
-  return currentScore;
+  return bestScore;
 };
 
 export const calculateBotPick = (drafterState, reverse = false) =>
