@@ -79,6 +79,11 @@ const MUTATIONS = Object.freeze({
   changeStepAction: ({ newFormat, packIndex, stepIndex, value }) => {
     newFormat.packs[packIndex].steps = cloneSteps({ newFormat, packIndex });
     newFormat.packs[packIndex].steps[stepIndex] = { ...newFormat.packs[packIndex].steps[stepIndex], action: value };
+
+    // undefined amount value is automatically set to 1 for initial change
+    if (value !== 'pass' && newFormat.packs[packIndex].steps[stepIndex].amount === null) {
+      newFormat.packs[packIndex].steps[stepIndex].amount = 1;
+    }
   },
 
   changeStepAmount: ({ newFormat, packIndex, stepIndex, value }) => {
