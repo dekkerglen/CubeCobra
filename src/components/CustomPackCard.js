@@ -174,9 +174,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
         </Card>
       </CardBody>
       <CardFooter>
-        <Button className="mr-2" color="success" onClick={mutations.addSlot} data-pack-index={packIndex}>
-          Add Card Slot
-        </Button>
         <Button color="success" onClick={mutations.duplicatePack} data-pack-index={packIndex}>
           Duplicate Pack
         </Button>
