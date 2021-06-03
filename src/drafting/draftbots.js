@@ -163,6 +163,10 @@ const REQUIRED_A_DIMS = 8;
 const REQUIRED_B_DIMS = 4;
 const MAX_CMC = 7;
 
+const colorlessMask = new Uint32Array(8);
+for (let i = 0; i < 8; i++) {
+  colorlessMask[i] = 0xffffffff;
+}
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
@@ -187,6 +191,20 @@ export const getCastingProbability = (card, lands) => {
         }
       }
       colors = Object.entries(colorSymbols);
+      if (colors.length === 0) {
+        const cmc = Math.min(cardCmc(card), MAX_CMC);
+        colors = [
+          [
+            colorlessMask,
+            LANDS_DIMS *
+              LANDS_DIMS *
+              LANDS_DIMS *
+              REQUIRED_B_DIMS *
+              (Math.min(cmc, REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * cmc),
+          ],
+        ];
+      }
+
       if (colors.length > 2) {
         const cmc = Math.min(cardCmc(card), MAX_CMC);
         const countAll = Math.min(
@@ -562,7 +580,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
     );
     initialBotState.lands = getRandomLands(
       initialBotState.availableLands,
-      drafterState.stepNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x, 1),
+      drafterState.pickNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x, 1),
     );
     let currentScore = { score: -1, botState: initialBotState };
     let prevScore = { ...currentScore, score: -2 };
