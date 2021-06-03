@@ -558,12 +558,33 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const name = JSON.parse(req.body.name);
     const description = JSON.parse(req.body.description);
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+    const cardsArray = [];
+    for (const card of deck.toObject().cards) {
+      const newCard = { ...card, details: carddb.cardFromId(card.cardID) };
+      if (eloOverrideDict[newCard.details.name_lower]) {
+        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
+      }
+      cardsArray.push(newCard);
+    }
+    const { colors } = await buildDeck(cardsArray, deck.toObject().seats[0].deck.flat(3), []);
+    const colorString =
+      colors.length === 0
+        ? 'C'
+        : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
+
     deck.seats[0].deck = newdeck.playerdeck;
     deck.seats[0].sideboard = newdeck.playersideboard;
     deck.seats[0].name = name;
     deck.seats[0].description = description;
+    deck.seats[0].username = `${deckOwner.username}: ${colorString}`;
 
-    await deck.save();
+    const result = await deck.save();
+    const test = await Deck.findById(result._id).lean();
 
     await addDeckCardAnalytics(cube, deck, carddb);
 
