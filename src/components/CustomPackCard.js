@@ -20,6 +20,7 @@ import {
 import PropTypes from 'prop-types';
 
 import useToggle from 'hooks/UseToggle';
+import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 
 const DEFAULT_STEP = Object.freeze([
   { action: 'pick', amount: 1 },
@@ -34,6 +35,15 @@ const ACTION_LABELS = Object.freeze({
   trashrandom: 'Randomly Trash',
 });
 
+const CollapsibleCardTitle = ({ children, isOpen, ...props }) => {
+  return (
+    <CardTitle {...props}>
+      {children}
+      <span style={{ float: 'right' }}>{isOpen ? <ChevronUpIcon size={24} /> : <ChevronDownIcon size={24} />}</span>
+    </CardTitle>
+  );
+};
+
 const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
@@ -47,7 +57,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
     [pack],
   );
   return (
-    <Card key={packIndex} className="mb-3">
+    <Card key={packIndex} className="mb-4 pack-outline">
       <CardHeader>
         <CardTitle className="mb-0">
           Pack {packIndex + 1} - {pack.slots.length} Cards
@@ -55,9 +65,11 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
         </CardTitle>
       </CardHeader>
       <CardBody className="p-1">
-        <Card key="slots" className="mb-2 mx-1">
+        <Card key="slots" className="mb-3 m-2">
           <CardHeader onClick={toggleSlotsOpen}>
-            <CardTitle className="mb-0">Card Slots</CardTitle>
+            <CollapsibleCardTitle isOpen={slotsOpen} className="mb-0">
+              Card Slots
+            </CollapsibleCardTitle>
           </CardHeader>
           <Collapse isOpen={slotsOpen}>
             <CardBody>
@@ -97,9 +109,11 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
             </CardFooter>
           </Collapse>
         </Card>
-        <Card key="steps" className="mb-2 mx-1">
+        <Card key="steps" className="m-2">
           <CardHeader onClick={toggleStepsOpen}>
-            <CardTitle className="mb-0">Steps for Drafting</CardTitle>
+            <CollapsibleCardTitle isOpen={stepsOpen} className="mb-0">
+              Steps for Drafting
+            </CollapsibleCardTitle>
           </CardHeader>
           <Collapse isOpen={stepsOpen}>
             <CardBody>
@@ -169,6 +183,11 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
       </CardFooter>
     </Card>
   );
+};
+
+CollapsibleCardTitle.propTypes = {
+  children: PropTypes.string.isRequired,
+  isOpen: PropTypes.bool.isRequired,
 };
 
 CustomPackCard.propTypes = {
