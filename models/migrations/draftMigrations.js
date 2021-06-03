@@ -28,7 +28,9 @@ const dedupeCardObjects = async (draft) => {
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
     if (idx === -1) {
-      throw new Error(`card ${JSON.stringify(card)} could not be found in the cardsArray.`);
+      cardsArray.push(card);
+      return cardsArray.length - 1;
+      // throw new Error(`card ${JSON.stringify(card)} could not be found in the cardsArray.`);
     }
     return idx;
   };
