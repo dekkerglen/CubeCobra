@@ -49,7 +49,6 @@ const dedupeCardObjects = async (deck) => {
   deck.seats = mapNonNull(deckObject.seats, (seat) => {
     seat.deck = to3d(replaceWithIndexNd(seat.deck));
     seat.sideboard = to3d(replaceWithIndexNd(seat.sideboard));
-    delete seat.pickorder;
     return seat;
   });
   addBasics(cardsArray, cube.basics, deck);
