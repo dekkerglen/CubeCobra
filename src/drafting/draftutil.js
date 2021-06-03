@@ -21,6 +21,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
   const numPacks = ourPacks.length;
   const ourSeat = draft.seats[seatNum];
   const stepEnd = toNullableInt(stepNumber);
+  const useFinal = stepNumber || pickNumber >= 0;
   const pickEnd = pickNumber === -1 ? ourSeat.pickorder.length + ourSeat.trashorder.length : parseInt(pickNumber, 10);
   const seen = [];
   let pickedNum = 0;
@@ -89,7 +90,8 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
       } // step amount
       if (done) break;
     } // step
-    if (done || curStepNumber >= (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd) break;
+    if (done || (useFinal && (curStepNumber >= (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd)))
+      break;
   } // pack
   const result = {
     cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
