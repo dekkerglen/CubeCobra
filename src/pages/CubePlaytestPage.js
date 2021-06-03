@@ -585,20 +585,24 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
-    draft_formats: PropTypes.shape({
-      title: PropTypes.string,
-      multiples: PropTypes.bool,
-      markdown: PropTypes.string.isRequired,
-      packs: PropTypes.arrayOf(
-        PropTypes.shape({
-          slots: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-          steps: PropTypes.shape({
-            action: PropTypes.oneOf(['pass', 'pick', 'trash', 'pickrandom', 'trashrandom']),
-            amount: PropTypes.number,
-          }),
-        }).isRequired,
-      ).isRequired,
-    }).isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string,
+        multiples: PropTypes.bool,
+        markdown: PropTypes.string.isRequired,
+        packs: PropTypes.arrayOf(
+          PropTypes.shape({
+            slots: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+            steps: PropTypes.arrayOf(
+              PropTypes.shape({
+                action: PropTypes.oneOf(['pass', 'pick', 'trash', 'pickrandom', 'trashrandom']),
+                amount: PropTypes.number,
+              }),
+            ),
+          }).isRequired,
+        ).isRequired,
+      }).isRequired,
+    ),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   user: UserPropType,
