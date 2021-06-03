@@ -26,7 +26,7 @@ const {
   addCardHtml,
 } = require('../../serverjs/cubefn.js');
 
-const { DEFAULT_BASICS, ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('./helper');
+const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED, rotateArrayLeft, createPool } = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -63,13 +63,14 @@ router.post(
     max: 100,
   }),
   body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('urlAlias', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+  body('shortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('urlAlias', `Custom URL may not be longer than 100 characters.`).isLength({
+  body('shortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
+    min: 1,
     max: 100,
   }),
-  body('urlAlias', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('shortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
@@ -90,9 +91,9 @@ router.post(
       });
     }
 
-    if (updatedCube.urlAlias && updatedCube.urlAlias.length > 0 && updatedCube.urlAlias !== cube.urlAlias) {
-      updatedCube.urlAlias = updatedCube.urlAlias.toLowerCase();
-      const taken = await Cube.findOne(buildIdQuery(updatedCube.urlAlias));
+    if (updatedCube.shortID !== cube.shortID) {
+      updatedCube.shortID = updatedCube.shortID.toLowerCase();
+      const taken = await Cube.findOne(buildIdQuery(updatedCube.shortID));
 
       if (taken) {
         return res.status(400).send({
@@ -101,9 +102,7 @@ router.post(
         });
       }
 
-      cube.urlAlias = updatedCube.urlAlias;
-    } else if (!updatedCube.urlAlias || updatedCube.urlAlias === '') {
-      cube.urlAlias = null;
+      cube.shortID = updatedCube.shortID;
     }
 
     cube.name = updatedCube.name;
@@ -411,12 +410,17 @@ router.get(
   }),
 );
 
-router.post('/redraft/:id', async (req, res) => {
+router.post('/redraft/:id/:seat', async (req, res) => {
   try {
+    // TODO: Handle gridDraft here.
     const srcDraft = await Draft.findById(req.params.id).lean();
-
+    const seat = parseInt(req.params.seat, 10);
     if (!srcDraft) {
       req.flash('danger', 'This deck is not able to be redrafted.');
+      return res.redirect(`/cube/deck/${req.params.id}`);
+    }
+    if (!Number.isInteger(seat) || seat < 0 || seat >= srcDraft.seats.length) {
+      req.flash('dange', 'Did not give a valid seat number to redraft as.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
@@ -429,32 +433,21 @@ router.post('/redraft/:id', async (req, res) => {
     let draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    draft.basics = (cube.basics || DEFAULT_BASICS).map((cardID) => {
-      const details = carddb.cardFromId(cardID);
-      return {
-        details,
-        cardID: details._id,
-        type_line: details.type,
-        cmc: 0,
-      };
-    });
-
+    rotateArrayLeft(draft.seats, seat);
+    draft.seats[seat].bot = null;
+    draft.basics = srcDraft.basics;
     draft.initial_state = srcDraft.initial_state.slice();
-    draft.unopenedPacks = srcDraft.initial_state.slice();
+    draft.cards = srcDraft.cards;
 
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].bot = [];
-      draft.seats[i].drafted = [];
-      draft.seats[i].sideboard = [];
+      draft.seats[i].drafted = createPool();
+      draft.seats[i].sideboard = createPool();
       draft.seats[i].pickorder = [];
-      draft.seats[i].packbacklog = [];
-
-      for (let j = 0; j < 16; j += 1) {
-        draft.seats[i].drafted.push([]);
-      }
-
-      draft.seats[i].packbacklog.push(draft.unopenedPacks[i].pop());
     }
+    draft.seats[0].bot = null;
+    draft.seats[0].userid = req.user ? req.user._id : null;
+    draft.seats[0].name = req.user ? req.user.username : 'Anonymous';
 
     await draft.save();
 
@@ -466,33 +459,10 @@ router.post('/redraft/:id', async (req, res) => {
 
     draft = await Draft.findById(draft._id).lean();
     // insert card details everywhere that needs them
-    for (const seat of draft.unopenedPacks) {
-      for (const pack of seat) {
-        for (const card of pack) {
-          card.details = carddb.cardFromId(card.cardID);
-          if (eloOverrideDict[card.details.name_lower]) {
-            card.details.elo = eloOverrideDict[card.details.name_lower];
-          }
-        }
-      }
-    }
-
-    for (const seat of draft.seats) {
-      for (const collection of [seat.drafted, seat.sideboard, seat.packbacklog]) {
-        for (const pack of collection) {
-          for (const card of pack) {
-            card.details = carddb.cardFromId(card.cardID);
-            if (eloOverrideDict[card.details.name_lower]) {
-              card.details.elo = eloOverrideDict[card.details.name_lower];
-            }
-          }
-        }
-      }
-      for (const card of seat.pickorder) {
-        card.details = carddb.cardFromId(card.cardID);
-        if (eloOverrideDict[card.details.name_lower]) {
-          card.details.elo = eloOverrideDict[card.details.name_lower];
-        }
+    for (const card of draft.cards) {
+      card.details = carddb.cardFromId(card.cardID);
+      if (eloOverrideDict[card.details.name_lower]) {
+        card.details.elo = eloOverrideDict[card.details.name_lower];
       }
     }
     return res.status(200).send({
@@ -601,7 +571,9 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const allDetails = req.body.map((cardID) => carddb.cardFromId(cardID));
     const allIds = allDetails.map(({ name }) => carddb.getIdsFromName(name) || []);
-    const allVersions = allIds.map((versions) => versions.map((id) => carddb.cardFromId(id)));
+    const allVersions = allIds.map((versions) =>
+      versions.map((id) => carddb.cardFromId(id)).sort((a, b) => -a.released_at.localeCompare(b.released_at)),
+    );
 
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
@@ -634,7 +606,7 @@ router.post(
       !src ||
       (src && typeof src.index !== 'number') ||
       (updated.cardID && typeof updated.cardID !== 'string') ||
-      (updated.cmc && typeof updated.cmc !== 'number') ||
+      (updated.cmc && (typeof updated.cmc !== 'number' || updated.cmc < 0)) ||
       (updated.status && typeof updated.status !== 'string') ||
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||
@@ -1115,10 +1087,7 @@ router.post('/submitdraft/:id', async (req, res) => {
   const draft = await Draft.findOne({
     _id: req.body._id,
   });
-
   draft.seats = req.body.seats;
-  draft.unopenedPacks = req.body.unopenedPacks;
-
   await draft.save();
 
   return res.status(200).send({

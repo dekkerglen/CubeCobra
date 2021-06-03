@@ -6,7 +6,7 @@ import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } fr
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import useQueryParam from 'hooks/useQueryParam';
-import { calculateAsfans } from 'utils/draftutil';
+import { calculateAsfans } from 'drafting/createdraft';
 import { SORTS, sortIntoGroups } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 

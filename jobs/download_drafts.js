@@ -6,19 +6,12 @@ const AWS = require('aws-sdk');
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
 const carddb = require('../serverjs/cards.js');
-const deckutils = require('../dist/utils/deckutils');
+const deckutils = require('../dist/drafting/deckutil');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
-const monthNames = ["january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
-];
-
-const date = new Date();
-const folder = `${monthNames[date.getMonth()]}${date.getDate()}`;
-
 const batchSize = 1000;
 
 let cardToInt;
@@ -30,8 +23,8 @@ const processDeck = async (deck, draft) => {
   }
 
   const seen = [];
-  index = 0;
-  const pickorder = deck.seats[0].pickorder;
+  let index = 0;
+  const { pickorder } = deck.seats[0];
   for (const card of pickorder) {
     // named import doesn't work for some reason
     // eslint-disable-next-line import/no-named-as-default-member
@@ -40,18 +33,20 @@ const processDeck = async (deck, draft) => {
     let pack;
     try {
       [cardsInPack, pick, pack] = deckutils.default.getPackAsSeen(draft.initial_state, index, deck, 0); // eslint-disable-line prefer-const
-    } catch(e) {
+    } catch (e) {
       console.warn(e);
       return null;
     }
     cardsInPack = cardsInPack.filter((c) => c && c.cardID);
-    if (cardsInPack.length == 0) {
+    if (cardsInPack.length === 0) {
       return null;
     }
+    // eslint-disable-next-line no-loop-func
     cardsInPack = cardsInPack.map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
     seen.push(...cardsInPack);
     const picked = deck.seats[0].pickorder
       .slice(0, index)
+      // eslint-disable-next-line no-loop-func
       .map((c) => cardToInt[carddb.cardFromId(c.cardID).name_lower]);
     const chosenCard = cardToInt[carddb.cardFromId(card.cardID).name_lower];
     const packs = draft.initial_state[0].length;
@@ -68,11 +63,11 @@ const processDeck = async (deck, draft) => {
 const writeToS3 = async (fileName, body) => {
   const params = {
     Bucket: 'cubecobra',
-    Key: `${folder}/${fileName}`,
+    Key: `${fileName}`,
     Body: JSON.stringify(body),
-  }
+  };
   await s3.upload(params).promise();
-}
+};
 
 (async () => {
   await carddb.initializeCardDb();
@@ -82,7 +77,7 @@ const writeToS3 = async (fileName, body) => {
   for (const card of carddb.allCards()) {
     intToCard[cardToInt[card.name_lower]] = card;
   }
-  
+
   await Promise.all([writeToS3('cardToInt.json', cardToInt), writeToS3('intToCard.json', intToCard)]);
 
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
@@ -98,28 +93,30 @@ const writeToS3 = async (fileName, body) => {
         if (i + j < count) {
           // eslint-disable-next-line no-await-in-loop
           const deck = await cursor.next();
-          if (deck &&
-              deck.seats &&
-              deck.seats[0] &&
-              deck.seats[0].deck &&
-              deck.seats[0].pickorder &&
-              deck.draft &&
-              deck.seats[0].sideboard &&
-              deck.seats[0].pickorder.length &&
-              !deck.cards &&
-              !deck.seats[0].bot) {
+          if (
+            deck &&
+            deck.seats &&
+            deck.seats[0] &&
+            deck.seats[0].deck &&
+            deck.seats[0].pickorder &&
+            deck.draft &&
+            deck.seats[0].sideboard &&
+            deck.seats[0].pickorder.length &&
+            !deck.cards &&
+            !deck.seats[0].bot
+          ) {
             decks.push(deck);
           }
         }
       }
-      draftIds = decks.map(({ draft }) => draft);
       // eslint-disable-next-line no-await-in-loop
       const drafts = await Draft.find({ _id: { $in: decks } }).lean();
       const draftsById = Object.fromEntries(drafts.map((draft) => [draft._id, draft]));
       const deckQs = decks.map((deck) => processDeck(deck, draftsById[deck.draft]));
       // eslint-disable-next-line no-await-in-loop
-      const processedDecks =  (await Promise.all(deckQs)).filter((d) => d);
+      const processedDecks = (await Promise.all(deckQs)).filter((d) => d);
       if (processedDecks.length > 0) {
+        // eslint-disable-next-line no-await-in-loop
         await writeToS3(`drafts/${counter}.json`, processedDecks);
         counter += 1;
       }

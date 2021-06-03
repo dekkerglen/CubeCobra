@@ -64,8 +64,7 @@ SortContextProvider.propTypes = {
   showOther: PropTypes.bool.isRequired,
 };
 
-SortContext.Wrapped = (Tag) => (props) => (
-  <SortContext.Consumer>{(value) => <Tag {...props} {...value} />}</SortContext.Consumer>
-);
+SortContext.Wrapped = (Tag) => (props) =>
+  <SortContext.Consumer>{(value) => <Tag {...props} {...value} />}</SortContext.Consumer>;
 
 export default SortContext;

@@ -84,14 +84,14 @@ router.get('/browse', async (req, res) => {
 router.post('/submit', ensureAuth, async (req, res) => {
   const { cards, packageName } = req.body;
 
-  if (packageName === 'Untitled Package') {
+  if (typeof packageName !== 'string' || packageName.length === 0) {
     return res.status(400).send({
       success: 'false',
       message: 'Please provide a name for your new package.',
     });
   }
 
-  if (cards.length < 2) {
+  if (!Array.isArray(cards) || cards.length < 2) {
     return res.status(400).send({
       success: 'false',
       message: 'Please provide more than one card for your package.',
@@ -221,6 +221,10 @@ router.get('/:id', async (req, res) => {
   return render(req, res, 'PackagePage', {
     pack,
   });
+});
+
+router.get('/', (req, res) => {
+  res.redirect('/packages/browse');
 });
 
 module.exports = router;

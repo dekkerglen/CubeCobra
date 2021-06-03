@@ -1083,6 +1083,10 @@ audio {
 	min-height: 20rem;
 }
 
+.monospaced {
+	font-family: "Fira Mono", monospace;
+}
+
 .card-header {
 	background-color: var(--header);
 }

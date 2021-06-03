@@ -168,7 +168,7 @@ export function isTouchDevice() {
 }
 
 export function getCubeId(cube) {
-  return cube.urlAlias || cube.shortID || cube._id;
+  return cube.shortID || cube._id;
 }
 
 export function getCubeDescription(cube) {
@@ -188,6 +188,10 @@ export function isInternalURL(to) {
   } catch {
     return false;
   }
+}
+export function toNullableInt(str) {
+  const val = parseInt(str, 10);
+  return Number.isInteger(val) ? val : null;
 }
 
 export function isSamePageURL(to) {
@@ -220,5 +224,6 @@ export default {
   getCubeId,
   getCubeDescription,
   isInternalURL,
+  toNullableInt,
   isSamePageURL,
 };

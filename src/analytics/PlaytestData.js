@@ -27,9 +27,10 @@ const renderPercent = (val) => {
 };
 
 const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
-  const cardDict = useMemo(() => fromEntries(allCards.map((card) => [card.details.name.toLowerCase(), card])), [
-    allCards,
-  ]);
+  const cardDict = useMemo(
+    () => fromEntries(allCards.map((card) => [card.details.name.toLowerCase(), card])),
+    [allCards],
+  );
 
   const data = useMemo(
     () =>

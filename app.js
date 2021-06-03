@@ -167,6 +167,16 @@ const apiLimiter = rateLimit({
 });
 app.use('/cube/api/cubeJSON', apiLimiter);
 
+// check for downtime
+
+if (process.env.DOWNTIME_ACTIVE === 'true') {
+  app.use((req, res) => {
+    return render(req, res, 'DownTimePage', {
+      title: 'Down for Maintenance',
+    });
+  });
+}
+
 // Route files; they manage their own CSRF protection
 app.use('', require('./routes/root'));
 
@@ -203,7 +213,10 @@ app.use((err, req, res, next) => {
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
 
-  const ratings = await CardRating.find({}, 'name elo').lean();
+  let ratings = [];
+  if (process.env.USE_S3 !== 'true') {
+    ratings = await CardRating.find({}, 'name elo embedding').lean();
+  }
   updatedb.updateCardbase(ratings);
 });
 

@@ -4,6 +4,7 @@ const https = require('https'); // eslint-disable-line import/no-extraneous-depe
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 const fetch = require('node-fetch');
+const AWS = require('aws-sdk');
 const { winston } = require('./cloudwatch');
 const cardutil = require('../dist/utils/Card.js');
 
@@ -769,7 +770,17 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   // create Elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
-    catalog.embeddingdict[rating.name] = rating.embedding;
+    if (rating.embedding && rating.embedding.length === 64) {
+      let norm = rating.embedding.reduce((acc, x) => acc + x * x, 0);
+      if (norm > 0) {
+        norm = Math.sqrt(norm);
+        catalog.embeddingdict[rating.name] = rating.embedding.map((x) => x / norm);
+      } else {
+        catalog.embeddingdict[rating.name] = new Array(64).fill(0);
+      }
+    } else {
+      catalog.embeddingdict[rating.name] = new Array(64).fill(0);
+    }
   }
 
   winston.info('Processing cards...');
@@ -794,13 +805,8 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   await writeCatalog(basePath);
 }
 
-async function updateCardbase(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
-  if (!fs.existsSync(basePath)) {
-    fs.mkdirSync(basePath);
-  }
-  winston.info('Updating cardbase, this might take a little while...');
-
-  winston.info('Downloading files...');
+const downloadFromScryfall = async (ratings = [], basePath = 'private', defaultPath = null, allPath = null) => {
+  winston.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
     await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
@@ -821,6 +827,42 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   }
 
   winston.info('Finished cardbase update...');
+};
+
+const downloadFromS3 = async (basePath = 'private') => {
+  winston.info('Downloading files from S3...');
+
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  });
+
+  await Promise.all(
+    Object.keys(carddb.fileToAttribute).map(async (file) => {
+      const res = await s3
+        .getObject({
+          Bucket: 'cubecobra',
+          Key: `cards/${file}`,
+        })
+        .promise();
+      await fs.writeFileSync(`${basePath}/${file}`, res.Body);
+    }),
+  );
+
+  winston.info('Finished downloading files from S3...');
+};
+
+async function updateCardbase(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
+  if (!fs.existsSync(basePath)) {
+    fs.mkdirSync(basePath);
+  }
+  winston.info('Updating cardbase, this might take a little while...');
+
+  if (process.env.USE_S3 === 'true') {
+    await downloadFromS3(basePath, defaultPath, allPath);
+  } else {
+    await downloadFromScryfall(ratings, basePath, defaultPath, allPath);
+  }
 }
 
 module.exports = {

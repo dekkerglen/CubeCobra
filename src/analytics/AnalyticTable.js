@@ -24,11 +24,10 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
 
   // some criteria cannot be applied to some cards
-  const cards = useMemo(() => allCards.filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row)), [
-    allCards,
-    column,
-    row,
-  ]);
+  const cards = useMemo(
+    () => allCards.filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row)),
+    [allCards, column, row],
+  );
   const [columnCounts, columnLabels] = useMemo(() => {
     const counts = sortWithTotal(cards, column).filter(([label, count]) => label === 'Total' || count > 0);
     return [fromEntries(counts), counts.map(([label]) => label)];

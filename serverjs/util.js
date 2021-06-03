@@ -165,6 +165,21 @@ function handleRouteError(req, res, err, reroute) {
   res.redirect(reroute);
 }
 
+function toNonNullArray(arr) {
+  if (!arr) return [];
+  if (!Array.isArray(arr)) return typeof arr === 'object' ? Object.values(arr) : [];
+  return arr;
+}
+
+function mapNonNull(arr, f) {
+  return toNonNullArray(arr).map(f);
+}
+
+function flatten(arr, n) {
+  if (n <= 1) return toNonNullArray(arr);
+  return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
+}
+
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -204,4 +219,7 @@ module.exports = {
   addMultipleNotifications,
   wrapAsyncApi,
   handleRouteError,
+  toNonNullArray,
+  flatten,
+  mapNonNull,
 };

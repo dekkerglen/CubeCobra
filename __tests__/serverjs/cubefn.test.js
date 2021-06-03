@@ -5,7 +5,6 @@ const cubefn = require('../../serverjs/cubefn');
 const util = require('../../serverjs/util');
 
 const cubefixture = require('../../fixtures/examplecube');
-const landsfixture = require('../../fixtures/examplelands');
 
 const Cube = require('../../models/cube');
 
@@ -22,17 +21,7 @@ afterEach(() => {
   carddb.unloadCardDb();
 });
 
-test('getCubeId returns urlAlias when defined', () => {
-  const testCube = {
-    urlAlias: 'a',
-    shortID: 'bbb',
-    _id: 'c',
-  };
-  const result = cubefn.getCubeId(testCube);
-  expect(result).toBe(testCube.urlAlias);
-});
-
-test('getCubeId returns shortId when urlAlias is not present', () => {
+test('getCubeId returns shortID when defined', () => {
   const testCube = {
     shortID: 'bbb',
     _id: 'c',
@@ -55,13 +44,10 @@ test('buildIdQuery returns a simple query when passed a 24-character alphanumeri
   expect(result._id).toBe(testId);
 });
 
-test('buildIdQuery returns a boolean query when passed a non-alphanumeric string', () => {
+test('buildIdQuery returns a shortID query when passed a non-alphanumeric string', () => {
   const testId = 'a1a-a1a1a1a1a1a1a1a1a1a1';
   const result = cubefn.buildIdQuery(testId);
-  const condition = result.$or;
-  expect(condition.length).toBe(2);
-  expect(condition[0].shortID).toBe(testId);
-  expect(condition[1].urlAlias).toBe(testId);
+  expect(result.shortID).toBe(testId);
 });
 
 test('cardsAreEquivalent returns true for two equivalent cards', () => {
@@ -115,13 +101,10 @@ test('legalityToInt returns the expected values', () => {
 });
 
 test('generateShortId returns a valid short ID', async () => {
-  const dummyModel = {
-    shortID: '1x',
-    urlAlias: 'a real alias',
-  };
+  const dummyModel = [{ shortID: '1x' }, { shortID: 'a2c' }, { shortID: 'custom_short-ID' }];
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
-      resolve([dummyModel]);
+      resolve(dummyModel);
     });
   });
   const queryMock = jest.fn();
@@ -129,14 +112,18 @@ test('generateShortId returns a valid short ID', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const result = await cubefn.generateShortId();
-  expect(result).toBe('1y');
+  // result is a base36 number
+  expect(result).toMatch(/[0-9a-z]+/g);
+  // result is unique
+  for (const cube of dummyModel) {
+    expect(result).not.toEqual(cube.shortID);
+  }
   Cube.find = initialCubeFind;
 });
 
-test('generateShortId returns a valid short ID with profanity', async () => {
+test('generateShortId returns a valid short ID without profanity', async () => {
   const dummyModel = {
     shortID: '1x',
-    urlAlias: 'a real alias',
   };
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
@@ -147,62 +134,16 @@ test('generateShortId returns a valid short ID with profanity', async () => {
   const initialCubeFind = Cube.find;
   Cube.find = queryMock;
   const initialHasProfanity = util.hasProfanity;
-  const mockHasProfanity = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+  const mockHasProfanity = jest.fn().mockReturnValueOnce(true).mockReturnValue(false);
   util.hasProfanity = mockHasProfanity;
-  const result = await cubefn.generateShortId();
-  expect(result).toBe('1z');
+  await cubefn.generateShortId();
+  // hasProfanity must be called at least once
+  expect(mockHasProfanity.mock.calls.length).toBeGreaterThan(0);
+  // the last profanity check must return false
+  const { results } = mockHasProfanity.mock;
+  expect(results[results.length - 1].value).toBe(false);
   Cube.find = initialCubeFind;
   util.hasProfanity = initialHasProfanity;
-});
-
-test('getBasics returns the expected set of basic lands', () => {
-  const basicLands = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
-  const mockNameToId = {
-    plains: ['1d7dba1c-a702-43c0-8fca-e47bbad4a00f'],
-    mountain: ['42232ea6-e31d-46a6-9f94-b2ad2416d79b'],
-    forest: ['19e71532-3f79-4fec-974f-b0e85c7fe701'],
-    swamp: ['8365ab45-6d78-47ad-a6ed-282069b0fabc'],
-    island: ['0c4eaecf-dd4c-45ab-9b50-2abe987d35d4'],
-  };
-  const expectedDisplayImages = {
-    plains: 'https://img.scryfall.com/cards/normal/front/1/d/1d7dba1c-a702-43c0-8fca-e47bbad4a00f.jpg?1565989378',
-    mountain: 'https://img.scryfall.com/cards/normal/front/4/2/42232ea6-e31d-46a6-9f94-b2ad2416d79b.jpg?1565989372',
-    forest: 'https://img.scryfall.com/cards/normal/front/1/9/19e71532-3f79-4fec-974f-b0e85c7fe701.jpg?1565989358',
-    swamp: 'https://img.scryfall.com/cards/normal/front/8/3/8365ab45-6d78-47ad-a6ed-282069b0fabc.jpg?1565989387',
-    island: 'https://img.scryfall.com/cards/normal/front/0/c/0c4eaecf-dd4c-45ab-9b50-2abe987d35d4.jpg?1565989364',
-  };
-  const mockCarddict = {};
-  const expected = {};
-  let exampleLand;
-  let expectedLandObject;
-  for (const name of basicLands) {
-    mockCarddict[mockNameToId[name.toLowerCase()]] = landsfixture.exampleBasics[name.toLowerCase()];
-    exampleLand = landsfixture.exampleBasics[name.toLowerCase()];
-    const details = JSON.parse(JSON.stringify(exampleLand));
-    expectedLandObject = {
-      // copy necessary because getBasics modifies carddb (bad)
-      type_line: details.type,
-      cmc: 0,
-      cardID: mockNameToId[name.toLowerCase()][0],
-      details,
-    };
-    expectedLandObject.details.image_normal = expectedDisplayImages[name.toLowerCase()];
-    expected[name] = expectedLandObject;
-  }
-  const initialCarddict = carddb._carddict;
-  const initialNameToId = carddb.nameToId;
-
-  carddb._carddict = mockCarddict;
-  carddb.nameToId = mockNameToId;
-
-  const result = cubefn.getBasics(carddb);
-  expect(result).toEqual(expected);
-  for (const name of basicLands) {
-    expect(result[name].details).toEqual(expected[name].details);
-  }
-
-  carddb._carddict = initialCarddict;
-  carddb.nameToId = initialNameToId;
 });
 
 test('setCubeType correctly sets the type and card_count of its input cube', () => {
@@ -260,13 +201,13 @@ describe('CSVtoCards', () => {
         '-',
       )},${expectedCard.colors.join('')},${expectedCard.set},${expectedCard.collector_number},${expectedCard.status},${
         expectedCard.finish
-      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(',')}"`,
+      },false,${expectedCard.imgUrl},"${expectedCard.tags.join(';')}"`,
       `"${expectedMaybe.name}",${expectedMaybe.cmc},${expectedMaybe.type_line.replace(
         '—',
         '-',
       )},${expectedMaybe.colors.join('')},${expectedMaybe.set},${expectedMaybe.collector_number},${
         expectedMaybe.status
-      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(',')}"`,
+      },${expectedMaybe.finish},true,undefined,"${expectedMaybe.tags.join(';')}"`,
     ];
     await carddb.initializeCardDb(fixturesPath, true);
     const { newCards, newMaybe, missing } = cubefn.CSVtoCards(cards.join('\n'), carddb);

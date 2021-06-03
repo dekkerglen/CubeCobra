@@ -451,12 +451,12 @@ router.get('/api/downloadcubes/:page/:key', async (req, res) => {
 
     let cubeQ;
     if (req.query.prevMax) {
-      cubeQ = Deck.find({ shortID: { $gt: req.query.prevMax } }, 'cards shortID')
+      cubeQ = Cube.find({ shortID: { $gt: req.query.prevMax } }, 'cards shortID')
         .sort({ shortID: 1 })
         .limit(cubePageSize)
         .lean();
     } else {
-      cubeQ = Deck.find({}, 'cards shortID')
+      cubeQ = Cube.find({}, 'cards shortID')
         .sort({ shortID: 1 })
         .skip(req.params.page * cubePageSize)
         .limit(cubePageSize)

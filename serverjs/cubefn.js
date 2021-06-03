@@ -7,52 +7,31 @@ const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
-const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 
 function getCubeId(cube) {
-  if (cube.urlAlias) return cube.urlAlias;
   if (cube.shortID) return cube.shortID;
   return cube._id;
 }
 
 function buildIdQuery(id) {
   if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
-    return {
-      _id: id,
-    };
+    return { _id: id };
   }
-  return {
-    $or: [
-      {
-        shortID: id.toLowerCase(),
-      },
-      {
-        urlAlias: id.toLowerCase(),
-      },
-    ],
-  };
+  return { shortID: id.toLowerCase() };
 }
 
 async function generateShortId() {
-  const cubes = await Cube.find({}, ['shortID', 'urlAlias']);
-
+  const cubes = await Cube.find({}, ['shortID']);
   const shortIds = cubes.map((cube) => cube.shortID);
-  const urlAliases = cubes.map((cube) => cube.urlAlias);
-
-  const ids = cubes.map((cube) => util.fromBase36(cube.shortID));
-  let max = Math.max(...ids);
-
-  if (max < 0) {
-    max = 0;
-  }
+  const space = shortIds.length * 2;
 
   let newId = '';
   let isGoodId = false;
   while (!isGoodId) {
-    max += 1;
-    newId = util.toBase36(max);
-
-    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId) && !urlAliases.includes(newId);
+    const rand = Math.floor(Math.random() * space);
+    newId = util.toBase36(rand);
+    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId);
   }
 
   return newId;
@@ -256,7 +235,7 @@ function CSVtoCards(csvString, carddb) {
         finish: finish || 'Non-foil',
         imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
         imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
-        tags: tags && tags.length > 0 ? tags.split(',') : [],
+        tags: tags && tags.length > 0 ? tags.split(';').map((t) => t.trim()) : [],
         notes: notes || '',
         rarity: rarity || null,
         colorCategory: colorCategory || null,
@@ -549,29 +528,6 @@ function cachePromise(key, callback) {
 }
 
 const methods = {
-  getBasics(carddb) {
-    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    const set = 'unh';
-    const res = {};
-    for (const name of names) {
-      let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
-      for (const option of options) {
-        const card = carddb.cardFromId(option);
-        if (!found && card.set.toLowerCase() === set) {
-          found = true;
-          res[name] = {
-            cardID: option,
-            type_line: card.type,
-            cmc: 0,
-            details: card,
-          };
-        }
-      }
-    }
-
-    return res;
-  },
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {
@@ -605,10 +561,13 @@ const methods = {
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
+    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, false, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0],
+      pack: draft.initial_state[0][0].map((cardIndex) => ({
+        ...draft.cards[cardIndex],
+        details: carddb.cardFromId(draft.cards[cardIndex].cardID),
+      })),
     };
   },
   newCardAnalytics,
@@ -617,8 +576,8 @@ const methods = {
     // Expected performance for pick.
     const expectedA = 1 / (1 + 10 ** (diff / 400));
     const expectedB = 1 - expectedA;
-    const adjustmentA = 2 * (1 - expectedA) * speed;
-    const adjustmentB = 2 * (0 - expectedB) * speed;
+    const adjustmentA = (1 - expectedA) * speed;
+    const adjustmentB = (0 - expectedB) * speed;
     return [adjustmentA, adjustmentB];
   },
   generateShortId,
