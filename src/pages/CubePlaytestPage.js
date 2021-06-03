@@ -431,7 +431,7 @@ const DEFAULT_FORMAT = {
 };
 const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
-  const [formats, setFormats] = useState(cube.draftFormats ?? []);
+  const [formats, setFormats] = useState(cube.draft_formats ?? []);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
@@ -585,12 +585,7 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
-    draftFormats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        markdown: PropTypes.string,
-      }),
-    ),
+    draft_formats: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   user: UserPropType,
