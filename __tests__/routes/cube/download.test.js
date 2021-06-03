@@ -39,10 +39,10 @@ afterAll(async () => {
 
 test('cubecobra text download', () => {
   return request(app)
-    .get('/cubecobra/' + cubeID)
+    .get(`/cubecobra/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.txt`)
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender [eld-1]');
@@ -52,10 +52,10 @@ test('cubecobra text download', () => {
 
 test('plaintext download', () => {
   return request(app)
-    .get('/plaintext/' + cubeID)
+    .get(`/plaintext/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.txt`)
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('Acclaimed Contender');
@@ -65,10 +65,10 @@ test('plaintext download', () => {
 
 test('MTGO download', () => {
   return request(app)
-    .get('/mtgo/' + cubeID)
+    .get(`/mtgo/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.txt')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.txt`)
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 Acclaimed Contender');
@@ -118,10 +118,10 @@ test('csv download', () => {
   };
 
   return request(app)
-    .get('/csv/' + cubeID)
+    .get(`/csv/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.csv')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.csv`)
     .expect((res) => {
       const parsed = Papa.parse(res.text.trim(), { header: true });
       expect(parsed.errors).toEqual([]);
@@ -134,14 +134,14 @@ test('csv download', () => {
 
 test('forge download', () => {
   return request(app)
-    .get('/forge/' + cubeID)
+    .get(`/forge/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.dck')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.dck`)
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('[metadata]');
-      expect(lines[1]).toEqual('Name=' + exampleCube.name);
+      expect(lines[1]).toEqual(`Name=${exampleCube.name}`);
       expect(lines[2]).toEqual('[Main]');
       expect(lines[3]).toEqual('1 Acclaimed Contender|ELD');
       // Extra lines expected for [metadata] and [Main] headings, and cube name
@@ -151,10 +151,10 @@ test('forge download', () => {
 
 test('xmage download', () => {
   return request(app)
-    .get('/xmage/' + cubeID)
+    .get(`/xmage/${cubeID}`)
     .expect(200)
     .expect('Content-Type', 'text/plain')
-    .expect('Content-disposition', 'attachment; filename=' + sanitizedCubeName + '.dck')
+    .expect('Content-disposition', `attachment; filename=${sanitizedCubeName}.dck`)
     .expect((res) => {
       const lines = splitText(res.text);
       expect(lines[0]).toEqual('1 [ELD:1] Acclaimed Contender');
