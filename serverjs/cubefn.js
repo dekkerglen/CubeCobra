@@ -325,7 +325,8 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
           );
           if (pickIndex === -1) {
             pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) - 1;
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
           }
           analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
         }
@@ -339,7 +340,8 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
           );
           if (pickIndex === -1) {
             pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) - 1;
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
           }
           analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
         }
@@ -368,7 +370,8 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
           );
           if (pickIndex === -1) {
             pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) - 1;
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
           }
           analytic.cards[pickIndex].mainboards += 1;
         }
@@ -382,7 +385,8 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
           );
           if (pickIndex === -1) {
             pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) - 1;
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
           }
           analytic.cards[pickIndex].sideboards += 1;
         }

@@ -583,11 +583,8 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     deck.seats[0].description = description;
     deck.seats[0].username = `${deckOwner.username}: ${colorString}`;
 
-    const result = await deck.save();
-    const test = await Deck.findById(result._id).lean();
-
+    await deck.save();
     await addDeckCardAnalytics(cube, deck, carddb);
-
     await cube.save();
 
     req.flash('success', 'Deck saved successfully');
