@@ -28,9 +28,9 @@ const gridDraftSchema = mongoose.Schema({
     type: String,
     enum: ['bot', '2playerlocal'],
   },
-  initial_state: [[Number]],
+  // initial_state: [[Number]],
+  initial_state: [[{}]],
   seats: [Seat],
-  unopenedPacks: [[Number]],
   schemaVersion: {
     type: Number,
     default() {

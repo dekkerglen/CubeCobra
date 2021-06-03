@@ -31,6 +31,7 @@ const dedupeCardObjects = async (gridDraft) => {
       )}\n\tfrom ${JSON.stringify(gridDraftObject)}`,
     );
   }
+  addBasics(cardsArray, cube.basics, gridDraft);
   cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
 
   const replaceWithIndex = (card) => {
@@ -42,8 +43,13 @@ const dedupeCardObjects = async (gridDraft) => {
     }
     return idx;
   };
-  const mapPack = (pack) => mapNonNull(pack, replaceWithIndex);
-  const mapPacks = (packs) => mapNonNull(packs, mapPack);
+  const replaceNd = (arrOrCard) => {
+    if (!arrOrCard) return arrOrCard;
+    if (Array.isArray(arrOrCard) || !arrOrCard.cardID) {
+      return mapNonNull(arrOrCard, replaceNd);
+    }
+    return replaceWithIndex(arrOrCard);
+  };
 
   const to3d = (collection) => {
     if (!collection || !Array.isArray(collection) || collection.length === 0) return createPool();
@@ -57,15 +63,13 @@ const dedupeCardObjects = async (gridDraft) => {
     return pool;
   };
 
-  addBasics(cardsArray, cube.basics, gridDraft);
   gridDraft.cards = cardsArray;
-  gridDraft.initial_state = mapPacks(gridDraftObject.initial_state);
-  gridDraft.unopenedPacks = mapPacks(gridDraftObject.unopenedPacks);
+  gridDraft.initial_state = replaceNd(gridDraftObject.initial_state);
   gridDraft.seats = mapNonNull(gridDraftObject.seats, (seat) => {
     seat.bot = !!seat.bot;
-    seat.drafted = to3d(mapPacks(seat.drafted));
-    seat.sideboard = to3d(mapPacks(seat.sideboard));
-    seat.pickorder = mapPack(seat.pickorder);
+    seat.drafted = to3d(replaceNd(seat.drafted));
+    seat.sideboard = to3d(replaceNd(seat.sideboard));
+    seat.pickorder = replaceNd(seat.pickorder);
     seat.pickedIndices = [];
     return seat;
   });
