@@ -89,7 +89,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
       } // step amount
       if (done) break;
     } // step
-    if (done) break;
+    if (done || curStepNumber >= (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd) break;
   } // pack
   const result = {
     cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
