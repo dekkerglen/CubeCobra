@@ -119,7 +119,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
             <CardBody>
               {steps.map((step, stepIndex) => (
                 // eslint-disable-next-line react/no-array-index-key
-                <InputGroup key={stepIndex}>
+                <InputGroup key={stepIndex} className="pb-1">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>{stepIndex + 1}</InputGroupText>
                   </InputGroupAddon>
