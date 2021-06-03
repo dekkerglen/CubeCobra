@@ -431,7 +431,7 @@ const DEFAULT_FORMAT = {
 };
 const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
-  const [formats, setFormats] = useState(cube.draftFormats ?? []);
+  const [formats, setFormats] = useState(cube.draft_formats ?? []);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
@@ -585,11 +585,23 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
-    draftFormats: PropTypes.arrayOf(
+    draft_formats: PropTypes.arrayOf(
       PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        markdown: PropTypes.string,
-      }),
+        title: PropTypes.string,
+        multiples: PropTypes.bool,
+        markdown: PropTypes.string.isRequired,
+        packs: PropTypes.arrayOf(
+          PropTypes.shape({
+            slots: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+            steps: PropTypes.arrayOf(
+              PropTypes.shape({
+                action: PropTypes.oneOf(['pass', 'pick', 'trash', 'pickrandom', 'trashrandom']),
+                amount: PropTypes.number,
+              }),
+            ),
+          }).isRequired,
+        ).isRequired,
+      }).isRequired,
     ),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
