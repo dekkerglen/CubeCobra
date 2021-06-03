@@ -943,7 +943,7 @@ router.get('/:id', async (req, res) => {
     let draft = null;
     if (deck.draft) {
       draft = await Draft.findById(deck.draft).lean();
-      if (draft) {
+      if (draft && draft.cards) {
         for (const card of draft.cards) {
           card.details = carddb.cardFromId(card.cardID);
           if (eloOverrideDict[card.details.name_lower]) {

@@ -30,7 +30,7 @@ const updateCubeDraftFormats = (cube) => {
       multiples: oldDraftFormat.multiples,
       html: oldDraftFormat.html,
       markdown: oldDraftFormat.markdown,
-      packs: oldDraftFormat.packs,
+      packs: JSON.parse(oldDraftFormat.packs),
     };
     if (!draftFormat.packs) {
       draftFormat.packs = [];
