@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
 
-// const cardSchema = require('./shared/cardSchema');
-// const stepsSchema = require('./shared/stepsSchema');
+const cardSchema = require('./shared/cardSchema');
+const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/cubeMigrations').slice(-1)[0].version;
-
-const cardSchema = {};
 
 // Cube schema
 const cubeSchema = mongoose.Schema({
@@ -83,21 +81,7 @@ const cubeSchema = mongoose.Schema({
   card_count: Number,
   type: String,
   draft_formats: {
-    type: [
-      /* {
-        title: String,
-        multiples: Boolean,
-        html: String,
-        markdown: String,
-        packs: [
-          {
-            slots: [String],
-            steps: stepsSchema,
-          },
-        ],
-      },
-      */
-    ],
+    type: [stepsSchema],
     default: [],
   },
   users_following: {
