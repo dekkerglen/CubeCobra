@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // const cardSchema = require('./shared/cardSchema');
-const stepsSchema = require('./shared/stepsSchema');
+// const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/cubeMigrations').slice(-1)[0].version;
 
 const cardSchema = {};

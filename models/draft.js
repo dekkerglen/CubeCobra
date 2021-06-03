@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./shared/cardSchema');
+// const cardSchema = require('./shared/cardSchema');
 // const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/draftMigrations').slice(-1)[0].version;
 
@@ -43,6 +43,8 @@ const Pack = {};
 //   trashorder: [Number], // cards this player trashed in order of when they were trashed
 // };
 const Seat = {};
+
+const cardSchema = {};
 
 // Cube schema
 const draftSchema = mongoose.Schema(
