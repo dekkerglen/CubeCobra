@@ -19,6 +19,7 @@
 // getDrafterState : (Draft, int, int?) -> DrafterState
 
 import seedrandom from 'seedrandom';
+import shuffleSeed from 'shuffle-seed';
 
 import {
   COLOR_COMBINATIONS,
@@ -454,12 +455,10 @@ const getRandomLands = (availableLands, seed = 0) => {
       const trueDecreases = availableDecreases.filter(
         (i) => !availableDecreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[i * 32 + j]),
       );
-      // const maxCount = Math.max(...trueDecreases.map((i) => currentLands[i]));
-      // const maxes = trueDecreases.filter((i) => currentLands[i] === maxCount);
-      const index = Math.round(rng() * trueDecreases.length);
+      const removal = shuffleSeed.shuffle(trueDecreases, rng())[0];
       // Provide some decently random mixing to allow seed to provide decent randomness
       totalLands -= 1;
-      currentLands[trueDecreases[index]] -= 1;
+      currentLands[removal] -= 1;
     }
   }
   return currentLands;
