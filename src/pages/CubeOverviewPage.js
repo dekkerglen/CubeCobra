@@ -200,7 +200,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   • <a href={`/cube/rss/${cubeState._id}`}>RSS</a>
                 </h6>
                 <p>
-                  <a href={`https://luckypaper.co/resources/cube-map/?cube=${cube.shortID}`}>
+                  <a href={`https://luckypaper.co/resources/cube-map/?cube=${cubeState._id}`}>
                     View in Cube Map <LinkExternalIcon size={16} />
                   </a>
                 </p>
