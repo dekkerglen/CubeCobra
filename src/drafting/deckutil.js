@@ -204,8 +204,7 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
     side = [...outOfColor];
   }
 
-  const distanceFunc = (c1, c2) =>
-    1 - (probabilities[c1] * probabilities[c2] * getSynergy(c1, c2, cards)) / MAX_SCORE;
+  const distanceFunc = (c1, c2) => 1 - (probabilities[c1] * probabilities[c2] * getSynergy(c1, c2, cards)) / MAX_SCORE;
   const NKernels = (n, total) => {
     let remaining = Math.min(total, nonlands.length);
     for (let i = 0; i < n; i++) {

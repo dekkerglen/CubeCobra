@@ -357,7 +357,7 @@ export const ORACLES = Object.freeze(
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked, probabilities: p, totalProbability: total, basics, poolEmbedding }) =>
+      computeValue: ({ picked, totalProbability: total, basics, poolEmbedding }) =>
         // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
         // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
@@ -575,7 +575,11 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if (!bestScore.oracleResults) {
     bestScore.botState.probabilities = calculateProbabilities(bestScore.botState);
     bestScore.botState.totalProbability = sum(bestScore.botState.probabilities);
-    bestScore.botState.poolEmbedding = sumEmbeddings(bestScore.botState.cards, bestScore.botState.picked, bestScore.botState.probabilities);
+    bestScore.botState.poolEmbedding = sumEmbeddings(
+      bestScore.botState.cards,
+      bestScore.botState.picked,
+      bestScore.botState.probabilities,
+    );
     bestScore = calculateScore(bestScore.botState);
   }
   const colorCounts = { W: 0, U: 0, B: 0, R: 0, G: 0 };
