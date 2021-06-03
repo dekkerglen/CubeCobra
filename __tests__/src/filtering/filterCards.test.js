@@ -69,6 +69,7 @@ describe('filter', () => {
       const expectedCastles = [
         {
           tags: ['New'],
+          finish: 'Non-foil',
           colors: ['W'],
           status: 'Not Owned',
           cmc: 0,
@@ -136,6 +137,7 @@ describe('filter', () => {
         },
         {
           tags: ['New'],
+          finish: 'Non-foil',
           colors: ['R'],
           status: 'Not Owned',
           cmc: 0,
@@ -202,6 +204,7 @@ describe('filter', () => {
         },
         {
           tags: ['New'],
+          finish: 'Non-foil',
           colors: ['G'],
           status: 'Not Owned',
           cmc: 0,
@@ -268,6 +271,7 @@ describe('filter', () => {
         },
         {
           tags: ['New'],
+          finish: 'Non-foil',
           colors: ['B'],
           status: 'Not Owned',
           cmc: 0,
@@ -334,6 +338,7 @@ describe('filter', () => {
         },
         {
           tags: ['New'],
+          finish: 'Non-foil',
           colors: ['U'],
           status: 'Not Owned',
           cmc: 0,
