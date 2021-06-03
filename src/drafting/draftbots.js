@@ -556,7 +556,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
     );
     initialBotState.lands = getRandomLands(
       initialBotState.availableLands,
-      drafterState.stepNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x),
+      drafterState.stepNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x, 1),
     );
     initialBotState.probabilities = calculateProbabilities(initialBotState);
     initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
