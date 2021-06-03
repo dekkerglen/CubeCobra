@@ -1,5 +1,6 @@
 import React, { useContext, useCallback, useMemo } from 'react';
 import {
+  Alert,
   Button,
   Col,
   FormGroup,
@@ -241,12 +242,15 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         </Button>
       </ModalBody>
       <ModalFooter>
+        {errorsInFormat &&
+          errorsInFormat.map((error, errorIndex) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <Alert key={errorIndex} color="danger">
+              {error}
+            </Alert>
+          ))}
         <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
           <Input type="hidden" name="serializedFormat" value={packsJson} />
-          {
-            // eslint-disable-next-line react/no-array-index-key
-            errorsInFormat && errorsInFormat.map((error, errorIndex) => <p key={errorIndex}>{error}</p>)
-          }
           <Input type="hidden" name="id" value={formatIndex} />
           <Button color={errorsInFormat ? 'error' : 'success'} type="submit" disabled={!!errorsInFormat}>
             Save
