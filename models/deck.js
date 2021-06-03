@@ -15,6 +15,7 @@ const SeatDeck = {
   },
   deck: [[[Number]]], // nesting is rows->columns->index in column
   sideboard: [[[Number]]], // same as deck.
+  pickorder: [Number],
 };
 
 // Deck schema
