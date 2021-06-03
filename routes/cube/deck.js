@@ -607,12 +607,13 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       }
       return newCard;
     });
-    const botNumber = 1;
+    let botNumber = 1;
     for (const seat of draft.seats) {
       // eslint-disable-next-line no-await-in-loop
       const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
+      console.debug(colors);
       const colorString =
-        colors.length > 0
+        colors.length === 0
           ? 'C'
           : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
       if (seat.bot) {
@@ -626,6 +627,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
           deck: newDeck,
           sideboard,
         });
+        botNumber += 1;
       } else {
         deck.seats.push({
           bot: seat.bot,

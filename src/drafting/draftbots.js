@@ -144,19 +144,17 @@ export const isPlayableLand = (colors, card) =>
   (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c))) ||
   colors.some((color) => cardType(card).toLowerCase().includes(BASICS_MAP[color.toLowerCase()].toLowerCase()));
 
+const t32 = new Uint32Array(1);
+const t8 = new Uint8Array(t32.buffer, 0, 4);
 const getMaskedSum = (x, m) => {
-  const x32 = new Uint32Array(x.buffer);
-  const m32 = new Uint32Array(m.buffer, m.byteOffset, 8);
-  const t32 = new Uint32Array(1);
-  t32[0] += x32[0] & m32[0]; // eslint-disable-line
-  t32[0] += x32[1] & m32[1]; // eslint-disable-line
-  t32[0] += x32[2] & m32[2]; // eslint-disable-line
-  t32[0] += x32[3] & m32[3]; // eslint-disable-line
-  t32[0] += x32[4] & m32[4]; // eslint-disable-line
-  t32[0] += x32[5] & m32[5]; // eslint-disable-line
-  t32[0] += x32[6] & m32[6]; // eslint-disable-line
-  t32[0] += x32[7] & m32[7]; // eslint-disable-line
-  const t8 = new Uint8Array(t32.buffer, 0, 4);
+  t32[0] = x[0] & m[0]; // eslint-disable-line
+  t32[0] += x[1] & m[1]; // eslint-disable-line
+  t32[0] += x[2] & m[2]; // eslint-disable-line
+  t32[0] += x[3] & m[3]; // eslint-disable-line
+  t32[0] += x[4] & m[4]; // eslint-disable-line
+  t32[0] += x[5] & m[5]; // eslint-disable-line
+  t32[0] += x[6] & m[6]; // eslint-disable-line
+  t32[0] += x[7] & m[7]; // eslint-disable-line
   return t8[0] + t8[1] + t8[2] + t8[3];
 };
 
@@ -168,7 +166,8 @@ const MAX_CMC = 7;
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
-  const name = cardName(card);
+  // const name = cardName(card);
+  const name = card.cardID;
   let colors = devotionsCache[name];
   if ((colors ?? null) === null) {
     colors = [];
@@ -195,21 +194,21 @@ export const getCastingProbability = (card, lands) => {
           colors.reduce((acc, [, count]) => acc + count, 0),
         );
         colors = colors.map(([combination, count]) => [
-          new Uint8Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[combination] * 32, 32),
+          new Uint32Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[combination] * 32, 8),
           LANDS_DIMS *
             LANDS_DIMS *
             LANDS_DIMS *
             REQUIRED_B_DIMS *
             (Math.min(count, REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * cmc),
         ]);
-        const maskAll = new Uint8Array(32);
+        const maskAll = new Uint32Array(8);
         for (const [arr] of colors) {
-          for (let i = 0; i < 32; i++) {
+          for (let i = 0; i < 8; i++) {
             maskAll[i] |= arr[i]; // eslint-disable-line
           }
         }
         colors.push([
-          maskAll,
+          maskAll.buffer,
           LANDS_DIMS * LANDS_DIMS * LANDS_DIMS * REQUIRED_B_DIMS * (countAll + REQUIRED_A_DIMS * cmc),
         ]);
       }
@@ -224,20 +223,20 @@ export const getCastingProbability = (card, lands) => {
           (Math.min(REQUIRED_B_DIMS - 1, colors[1][1]) +
             REQUIRED_B_DIMS *
               (Math.min(REQUIRED_A_DIMS - 1, colors[0][1]) + REQUIRED_A_DIMS * Math.min(MAX_CMC, cardCmc(card))));
-        const maskA = new Uint8Array(
+        const maskA = new Uint32Array(
           COLOR_COMBINATION_INTERSECTS.buffer,
           COLOR_COMBINATION_INDICES[colors[0][0]] * 32,
-          32,
+          8,
         );
-        const maskB = new Uint8Array(
+        const maskB = new Uint32Array(
           COLOR_COMBINATION_INTERSECTS.buffer,
           COLOR_COMBINATION_INDICES[colors[1][0]] * 32,
-          32,
+          8,
         );
-        const c0 = new Uint8Array(32);
-        const c1 = new Uint8Array(32);
-        const c2 = new Uint8Array(32);
-        for (let i = 0; i < 32; i++) {
+        const c0 = new Uint32Array(8);
+        const c1 = new Uint32Array(8);
+        const c2 = new Uint32Array(8);
+        for (let i = 0; i < 8; i++) {
           c0[i] = maskA[i] & ~maskB[i]; // eslint-disable-line
           c1[i] = ~maskA[i] & maskB[i]; // eslint-disable-line
           c2[i] = maskA[i] & maskB[i]; // eslint-disable-line
@@ -247,7 +246,7 @@ export const getCastingProbability = (card, lands) => {
       if (colors.length === 1) {
         colors = [
           [
-            new Uint8Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[colors[0][0]] * 32, 32),
+            new Uint32Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[colors[0][0]] * 32, 8),
             LANDS_DIMS *
               LANDS_DIMS *
               LANDS_DIMS *
@@ -276,24 +275,30 @@ export const getCastingProbability = (card, lands) => {
   return result;
 };
 
-const sum = (arr) => arr.reduce((acc, x) => acc + x, 0);
-
-const eloToValue = (elo) => Math.sqrt(10 ** (((elo ?? 1200) - 1200) / 800));
-
-const sumWeightedRatings = (idxs, cards, p, countLands = false) => {
-  idxs = idxs.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land') || countLands);
-  if (idxs.length === 0) return 0;
-  return idxs.length > 0
-    ? sum(idxs.map((ci) => Math.min(MAX_SCORE, p[ci] * eloToValue(cardElo(cards[ci]))))) / idxs.length
-    : 0;
+const sum = (arr) => {
+  let result = 0;
+  for (const x of arr) result += x;
+  return result;
 };
 
-const sumEmbeddings = (cards, picked, sqrtProbabilities) => {
+const eloToValue = (elo) => 10 ** (((elo ?? 1200) - 1200) / 800);
+
+const sumWeightedRatings = (idxs, cards, p) => {
+  if (idxs.length === 0) return 0;
+  let result = 0;
+  for (const ci of idxs) {
+    result += p[ci] * eloToValue(cardElo(cards[ci]));
+  }
+  return Math.min(MAX_SCORE, result / idxs.length);
+};
+
+const emptyEmbedding = new Float32Array(64);
+const sumEmbeddings = (cards, picked, probabilities) => {
   const result = new Float32Array(64);
   for (const ci of picked) {
-    const embedding = cards[ci]?.details?.embedding;
+    const embedding = cards[ci]?.details?.embedding ?? emptyEmbedding;
     for (let i = 0; i < 64; i++) {
-      result[i] += sqrtProbabilities[ci] * embedding?.[i];
+      result[i] += probabilities[ci] * embedding[i];
     }
   }
   return result;
@@ -322,8 +327,7 @@ export const ORACLES = Object.freeze(
         [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
       ],
       // What is the raw power level of this card? Used to assess how much we want to play this card.
-      computeValue: ({ cardIndices, cards, probabilities }) =>
-        sumWeightedRatings(cardIndices, cards, probabilities, true),
+      computeValue: ({ cardIndices, cards, probabilities }) => sumWeightedRatings(cardIndices, cards, probabilities),
     },
     {
       title: 'Pick Synergy',
@@ -336,9 +340,9 @@ export const ORACLES = Object.freeze(
       ],
       // How much does the card we're considering synergize with the cards we've picked?
       // Helps us assess how much we want to play this card.
-      computeValue: ({ cardIndices, cards, sqrtProbabilities: p, totalProbability: total, poolEmbedding }) =>
+      computeValue: ({ cardIndices, cards, probabilities: p, totalProbability: total, poolEmbedding }) =>
         total > 0 && cardIndices.length > 0
-          ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, cardIndices, p), poolEmbedding)) / sum(p) / cardIndices.length
+          ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, cardIndices, p), poolEmbedding)) / total / cardIndices.length
           : 0,
     },
     {
@@ -353,34 +357,34 @@ export const ORACLES = Object.freeze(
       // How much do the cards we've already picked in this combo synergize with each other?
       // Helps us assess what colors we want to play.
       // Tends to recommend sticking with colors we've been picking.
-      computeValue: ({ picked, sqrtProbabilities: p, totalProbability: total, basics, poolEmbedding }) =>
+      computeValue: ({ picked, probabilities: p, totalProbability: total, basics, poolEmbedding }) =>
         // The weighted sum of each pair's synergy divided by the total number of pairs is quadratic
         // in the ratio of playable cards. Then that ratio would be the dominant factor, dwarfing
         // the synergy values, which undermines our goal. Instead we can treat it as the weighted
         // average over the Pick Synergy of each picked card with the rest. There are two ordered
         // pairs for every distinct unordered pair so we multiply by 2.
         total > 0 && picked.length + basics.length > 1
-          ? (2 * MAX_SCORE * dotProduct(poolEmbedding, poolEmbedding)) / (picked.length + basics.length - 1) / sum(p)
+          ? (2 * MAX_SCORE * dotProduct(poolEmbedding, poolEmbedding)) / (picked.length + basics.length - 1) / total
           : 0,
     },
-    {
-      title: 'External Synergy',
-      tooltip:
-        'A score of how cards picked so far synergize with the other cards in these colors that have been seen so far.',
-      perConsideredCard: false,
-      weights: [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-      ],
-      // How much do the cards we've already picked in this combo synergize with each other?
-      // Helps us assess what colors we want to play.
-      // Tends to recommend moving into less heavily picked colors.
-      computeValue: ({ seen, cards, sqrtProbabilities: p, totalProbability: total, poolEmbedding }) =>
-        total > 0 && seen.length > 0
-          ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, seen, p), poolEmbedding)) / sum(p) / seen.length
-          : 0,
-    },
+    // {
+    //   title: 'External Synergy',
+    //   tooltip:
+    //     'A score of how cards picked so far synergize with the other cards in these colors that have been seen so far.',
+    //   perConsideredCard: false,
+    //   weights: [
+    //     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    //     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    //     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    //   ],
+    //   // How much do the cards we've already picked in this combo synergize with each other?
+    //   // Helps us assess what colors we want to play.
+    //   // Tends to recommend moving into less heavily picked colors.
+    //   computeValue: ({ seen, cards, probabilities: p, totalProbability: total, poolEmbedding }) =>
+    //     total > 0 && seen.length > 0
+    //       ? (MAX_SCORE * dotProduct(sumEmbeddings(cards, seen, p), poolEmbedding)) / sum(p) / seen.length
+    //       : 0,
+    // },
     {
       title: 'Colors',
       tooltip: 'A score of how well these colors fit in with the current picks.',
@@ -394,7 +398,7 @@ export const ORACLES = Object.freeze(
       // Used to select a color combination.
       // Tends to recommend what we've already picked before.
       computeValue: ({ picked, basics, probabilities, cards }) =>
-        sumWeightedRatings(picked.concat(basics), cards, probabilities),
+        sumWeightedRatings(picked, cards, probabilities) + sumWeightedRatings(basics, cards, probabilities),
     },
     {
       title: 'Openness',
@@ -412,19 +416,6 @@ export const ORACLES = Object.freeze(
   ].map((oracle) => ({ ...oracle, computeWeight: (drafterState) => calculateWeight(oracle.weights, drafterState) })),
 );
 export const ORACLES_BY_NAME = Object.freeze(fromEntries(ORACLES.map((oracle) => [oracle.title, oracle])));
-
-const getCombinationForLands = (lands) => {
-  const counts = fromEntries(COLORS.map((c) => [c, 0]));
-  for (const [comb, count] of Object.entries(lands)) {
-    for (const color of comb) {
-      counts[color] += count;
-    }
-  }
-  const combination = Object.entries(counts)
-    .filter(([, count]) => count >= 3)
-    .map(([c]) => c);
-  return COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(combination, comb));
-};
 
 const getAvailableLands = (pool, basics, cards) => {
   const availableLands = new Uint8Array(32);
@@ -465,34 +456,51 @@ const getRandomLands = (availableLands, seed = 0) => {
 };
 
 const calculateProbabilities = ({ cards, seen, picked, basics, lands }) => {
-  const seenSet = [...new Set(seen.concat(picked, basics))].map((ci) => [ci, cards[ci]]);
-  const seenProbs = seenSet.map(([ci, card]) => [ci, getCastingProbability(card, lands)]);
-  const res = cards.map(() => null);
-  for (const [ci, prob] of seenProbs) {
-    res[ci] = prob;
+  // const seenSet = [...new Set(seen.concat(picked, basics))].map((ci) => [ci, cards[ci]]);
+  const packedLands = new Uint32Array(lands.buffer);
+  const res = new Float32Array(cards.length);
+  for (const col of [seen, picked, basics]) {
+    for (const ci of col) {
+      res[ci] = res[ci] > 0 ? res[ci] : getCastingProbability(cards[ci], packedLands);
+    }
+  }
+  for (let i = 0; i < res.length; i++) {
+    if (res[i] < 0.2) res[i] **= 5;
+    else if (res[i] < 0.33) res[i] **= 3;
+    else if (res[i] < 0.5) res[i] **= 2;
   }
   return res;
 };
 
 const calculateScore = (botState) => {
-  const { picked, cards, probabilities, basics } = botState;
   const oracleResults = ORACLES.map(({ title, tooltip, computeWeight, computeValue }) => ({
     title,
     tooltip,
     weight: computeWeight(botState),
     value: computeValue(botState),
   }));
-  const nonlandProbability = picked
-    .concat(basics)
-    .filter((c) => !cardType(cards[c]).toLowerCase().includes('land'))
-    .reduce((acc, c) => acc + probabilities[c], 0);
   const score = oracleResults.reduce((acc, { weight, value }) => acc + weight * value, 0);
+  if (botState.cardIndices.length === 0) {
+    const nonlandProbability = sum(
+      botState.picked
+        .filter(
+          (ci) => !cardType(botState.cards[ci]).match(/land/i) && cardColorIdentity(botState.cards[ci]).length > 0,
+        )
+        .map((ci) => botState.probabilities[ci])
+        .sort((a, b) => a - b)
+        .slice(0, 23),
+    );
+    return {
+      score: score * nonlandProbability,
+      oracleResults,
+      nonlandProbability,
+      botState,
+    };
+  }
   return {
     score,
     oracleResults,
     botState,
-    colors: getCombinationForLands(botState.lands),
-    nonlandProbability,
   };
 };
 
@@ -504,15 +512,15 @@ const findTransitions = ({ botState: { lands, availableLands } }) => {
     if (lands[i] > 0) availableDecreases.push(i);
   }
   const trueIncreases = availableIncreases.filter(
-    (i) => !availableIncreases.some((j) => COLOR_COMBINATION_INCLUDES[i * 32 + j]),
+    (i) => !availableIncreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[j * 32 + i]),
   );
   const trueDecreases = availableDecreases.filter(
-    (i) => !availableDecreases.some((j) => COLOR_COMBINATION_INCLUDES[j * 32 + i]),
+    (i) => !availableDecreases.some((j) => i !== j && COLOR_COMBINATION_INCLUDES[i * 32 + j]),
   );
   const result = [];
   for (const increase of trueIncreases) {
     for (const decrease of trueDecreases) {
-      if (!COLOR_COMBINATION_INCLUDES[increase * 32 + decrease]) {
+      if (!COLOR_COMBINATION_INCLUDES[decrease * 32 + increase]) {
         result.push([increase, decrease]);
       }
     }
@@ -529,9 +537,8 @@ const findBetterLands = (currentScore) => {
     lands[decrease] -= 1;
     const newBotState = { ...botState, lands };
     newBotState.probabilities = calculateProbabilities(newBotState);
-    newBotState.sqrtProbabilities = newBotState.probabilities.map((p) => p && Math.sqrt(p));
     newBotState.totalProbability = sum(newBotState.probabilities);
-    newBotState.poolEmbedding = sumEmbeddings(newBotState.cards, newBotState.picked, newBotState.sqrtProbabilities);
+    newBotState.poolEmbedding = sumEmbeddings(newBotState.cards, newBotState.picked, newBotState.probabilities);
     const newScore = calculateScore(newBotState);
     if (newScore.score > result.score) {
       // We assume we won't get caught in a local maxima so it's safe to take first ascent.
@@ -546,7 +553,7 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
   if ((cardIndices ?? null) === null) cardIndices = [];
   if (!Array.isArray(cardIndices)) cardIndices = [cardIndices];
   let bestScore = { score: -5 };
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     const initialBotState = { ...drafterState, cardIndices };
     initialBotState.availableLands = getAvailableLands(
       [...drafterState.picked, ...cardIndices],
@@ -557,22 +564,29 @@ export const evaluateCardsOrPool = (cardIndices, drafterState) => {
       initialBotState.availableLands,
       drafterState.stepNumber + i * 5 + cardIndices.reduce((acc, x) => acc + acc * x, 1),
     );
-    initialBotState.probabilities = calculateProbabilities(initialBotState);
-    initialBotState.sqrtProbabilities = initialBotState.probabilities.map((p) => p && Math.sqrt(p));
-    initialBotState.totalProbability = sum(initialBotState.probabilities);
-    initialBotState.poolEmbedding = sumEmbeddings(
-      initialBotState.cards,
-      initialBotState.picked,
-      initialBotState.sqrtProbabilities,
-    );
-    let currentScore = calculateScore(initialBotState);
-    let prevScore = { ...currentScore, score: -1 };
+    let currentScore = { score: -1, botState: initialBotState };
+    let prevScore = { ...currentScore, score: -2 };
     while (prevScore.score < currentScore.score) {
       prevScore = currentScore;
       currentScore = findBetterLands(currentScore);
     }
     if (currentScore.score > bestScore.score) bestScore = currentScore;
   }
+  if (!bestScore.oracleResults) {
+    bestScore.botState.probabilities = calculateProbabilities(bestScore.botState);
+    bestScore.botState.totalProbability = sum(bestScore.botState.probabilities);
+    bestScore.botState.poolEmbedding = sumEmbeddings(bestScore.botState.cards, bestScore.botState.picked, bestScore.botState.probabilities);
+    bestScore = calculateScore(bestScore.botState);
+  }
+  const colorCounts = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  for (let i = 0; i < 32; i++) {
+    for (const color of COLOR_COMBINATIONS[i]) {
+      colorCounts[color] += bestScore.botState.lands[i];
+    }
+  }
+  bestScore.colors = Object.entries(colorCounts)
+    .filter(([, v]) => v > 2)
+    .map(([k]) => k);
   return bestScore;
 };
 

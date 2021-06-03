@@ -177,7 +177,7 @@ export const calculateBasicCounts = ({ picked, cards, basics }) => {
   return { lands: main, remainingLands, colors };
 };
 
-async function build({ cards, picked, probabilities, sqrtProbabilities, basics, lands: orginalLands }) {
+async function build({ cards, picked, probabilities, basics, lands: orginalLands }) {
   const landCount = Object.values(orginalLands).reduce((acc, x) => acc + x, 0);
   let nonlands = picked.filter(
     (card) => !cardType(cards[card]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[card]),
@@ -205,7 +205,7 @@ async function build({ cards, picked, probabilities, sqrtProbabilities, basics, 
   }
 
   const distanceFunc = (c1, c2) =>
-    1 - (Math.sqrt(probabilities[c1] * probabilities[c2]) * getSynergy(c1, c2, cards)) / MAX_SCORE;
+    1 - (probabilities[c1] * probabilities[c2] * getSynergy(c1, c2, cards)) / MAX_SCORE;
   const NKernels = (n, total) => {
     let remaining = Math.min(total, nonlands.length);
     for (let i = 0; i < n; i++) {
@@ -232,7 +232,6 @@ async function build({ cards, picked, probabilities, sqrtProbabilities, basics, 
         cards,
         cardIndices: [cardIndex],
         probabilities,
-        sqrtProbabilities,
         basics: [],
         picked: main,
         seen: [],
@@ -305,6 +304,7 @@ export async function buildDeck(cards, picked, basics) {
     pickNum: 15,
     numPacks: 3,
     packSize: 15,
+    stepNumber: 37,
   });
   return build(botEvaluation.botState);
 }
