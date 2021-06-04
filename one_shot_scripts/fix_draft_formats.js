@@ -23,7 +23,7 @@ const processCube = async (leanCube) => {
 
       // console.log(format.packs);
 
-      for (const pack of cube.draft_formats.packs) {
+      for (const pack of format.packs) {
         console.log(pack);
       }
     }
