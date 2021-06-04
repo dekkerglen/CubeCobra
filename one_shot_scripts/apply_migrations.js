@@ -61,7 +61,7 @@ const BATCH_SIZE = 500;
       return 1;
     };
 
-    await cursor.eachAsync(asyncMigrate);
+    await cursor.eachAsync(asyncMigrate, { parallel: 10 });
 
     console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
   }
