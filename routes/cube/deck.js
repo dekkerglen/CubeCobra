@@ -558,15 +558,33 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     const name = JSON.parse(req.body.name);
     const description = JSON.parse(req.body.description);
 
+    let eloOverrideDict = {};
+    if (cube.useCubeElo) {
+      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
+      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+    }
+    const cardsArray = [];
+    for (const card of deck.toObject().cards) {
+      const newCard = { ...card, details: carddb.cardFromId(card.cardID) };
+      if (eloOverrideDict[newCard.details.name_lower]) {
+        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
+      }
+      cardsArray.push(newCard);
+    }
+    const { colors } = await buildDeck(cardsArray, deck.toObject().seats[0].deck.flat(3), []);
+    const colorString =
+      colors.length === 0
+        ? 'C'
+        : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
+
     deck.seats[0].deck = newdeck.playerdeck;
     deck.seats[0].sideboard = newdeck.playersideboard;
     deck.seats[0].name = name;
     deck.seats[0].description = description;
+    deck.seats[0].username = `${deckOwner.username}: ${colorString}`;
 
     await deck.save();
-
     await addDeckCardAnalytics(cube, deck, carddb);
-
     await cube.save();
 
     req.flash('success', 'Deck saved successfully');
@@ -607,12 +625,12 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       }
       return newCard;
     });
-    const botNumber = 1;
+    let botNumber = 1;
     for (const seat of draft.seats) {
       // eslint-disable-next-line no-await-in-loop
       const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
       const colorString =
-        colors.length > 0
+        colors.length === 0
           ? 'C'
           : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
       if (seat.bot) {
@@ -626,6 +644,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
           deck: newDeck,
           sideboard,
         });
+        botNumber += 1;
       } else {
         deck.seats.push({
           bot: seat.bot,
