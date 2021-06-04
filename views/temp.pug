@@ -1,14 +1,10 @@
-p Tonight's release is quite small, we've added a few quality of life features and fixed several bugs that have affected many users. 
+p 
 p New Features:
 ul
-  li Hybrid mana symbols can be written reversed in markdown, {B/R} and {R/B} will both work, for example
-  li Added 'title' attribute to deck preview links, full name can be seen by hovering over the link
-  li Add option to disable draft notifications by cube
+  li Updated cubes to only have two IDs, a long canonical ID, and a customizable shortID.
+  li Clarified cube ID presentation on cube overview page
 
 p Bugfixes:
 ul
-  li Fixed an issue where CSV export would be corrupted
-  li Fixed an issue where editing a comment truncates it to 500 characters
-  li Fixed bot breakdown during draft
-  li Fixed an issue where viewing a decklist page without being logged in would cause a crash
-  li Fixed an issue where large drafts wouldn't be able to be completed succesfully
+  li Fixed an issue with adding a card while specifying versions when that card has multiple versions in the selected set
+  li Fixed memory leak with analytics aggregation, shoud regularly update automatically now 

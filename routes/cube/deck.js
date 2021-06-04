@@ -440,8 +440,10 @@ router.get('/decks/:id', async (req, res) => {
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
-    const index = parseInt(req.params.seat, 10);
+    const index = parseInt(req.params.index, 10);
     const base = await Deck.findById(req.params.id).lean();
+    const draft = await Draft.findById(base.draft).lean();
+
     if (!base) {
       req.flash('danger', 'Deck not found');
       return res.redirect('/404');
@@ -473,12 +475,11 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.cards = base.cards;
     deck.basics = base.basics;
 
-    const { colors: userColors } = await buildDeck(cardsArray, base.seats[index].pickorder, deck.basics);
+    const { colors: userColors } = await buildDeck(cardsArray, draft.seats[index].pickorder, deck.basics);
 
     deck.seats.push({
       userid: req.user._id,
       username: `${req.user.username}: ${userColors}`,
-      pickorder: base.seats[index].pickorder,
       name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
       description: 'This deck was rebuilt from another draft deck.',
       deck: base.seats[index].deck,
@@ -492,11 +493,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
           sideboard,
           colors,
           // eslint-disable-next-line no-await-in-loop
-        } = await buildDeck(deck.cards, base.seats[i].pickorder, deck.basics);
+        } = await buildDeck(cardsArray, draft.seats[i].pickorder, deck.basics);
         deck.seats.push({
           userid: null,
           username: `Bot ${botNumber}: ${colors.join(', ')}`,
-          pickorder: base.seats[i].pickorder,
           name: `Draft of ${cube.name}`,
           description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
           deck: builtDeck,
@@ -536,7 +536,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 
     return res.redirect(`/cube/deck/deckbuilder/${deck._id}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    return util.handleRouteError(req, res, err, `/404`);
   }
 });
 
@@ -638,7 +638,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
           bot: seat.bot,
           userid: seat.userid,
           username: `Bot ${botNumber}: ${colorString}`,
-          pickorder: seat.pickorder,
           name: `Draft of ${cube.name}`,
           description: '',
           deck: newDeck,
@@ -650,7 +649,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
           bot: seat.bot,
           userid: seat.userid,
           username: `${seat.name}: ${colorString}`,
-          pickorder: seat.pickorder,
           name: `Draft of ${cube.name}`,
           description: '',
           deck: seat.drafted,
@@ -727,7 +725,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
           bot: seat.bot,
           userid: seat.userid,
           username: `Bot ${botNumber}: ${colorString}`,
-          pickorder: seat.pickorder,
           name: `Draft of ${cube.name}`,
           description: '',
           deck: newDeck,
@@ -738,7 +735,6 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
           bot: seat.bot,
           userid: seat.userid,
           username: `${seat.name}: ${colorString}`,
-          pickorder: seat.pickorder,
           name: `Draft of ${cube.name}`,
           description: '',
           deck: seat.drafted,
@@ -906,7 +902,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       {
         userid: req.user._id,
         username: req.user.username,
-        pickorder: [],
         name: `${req.user.username}'s decklist upload on ${deck.date.toLocaleString('en-US')}`,
         deck: [added.slice(0, 8), added.slice(8, 16)],
         sideboard: createPool(),
