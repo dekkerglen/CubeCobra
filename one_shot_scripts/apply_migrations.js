@@ -48,7 +48,7 @@ const BATCH_SIZE = 500;
         try {
           await migrated.save();
           totalSuccesses += 1;
-          console.log(`Finished ${totalSuccesses}: ${migrated._id}`);
+          console.log(`Finished ${name} ${totalSuccesses}: ${migrated._id}`);
         } catch (e) {
           console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
           console.debug(e);
