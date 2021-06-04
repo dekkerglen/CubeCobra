@@ -22,8 +22,6 @@ const processCube = async (leanCube) => {
       format.packs = format.packs.map((pack) => {
         const translatedPack = JSON.parse(JSON.stringify(pack));
 
-        console.log(translatedPack);
-
         const slots = [];
 
         for (let i = 0; i < 50; i++) {
