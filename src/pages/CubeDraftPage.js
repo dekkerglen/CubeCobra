@@ -285,6 +285,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
     () => draft.seats.map((_, seatIndex) => getDrafterState({ draft, seatNumber: seatIndex })),
     [draft],
   );
+  console.debug(drafterStates[0]);
   const {
     step: { action },
     numPacks,
@@ -322,7 +323,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [doneDrafting, draft]);
 
   useEffect(() => {
-    if (action.match(/random/)) {
+    if (action.match(/random/) && !doneDrafting) {
       const cardIndices = drafterStates.map((state) => state.cardsInPack[Math.floor(rng() * state.cardsInPack.length)]);
       if (action.match(/pick/)) {
         mutations.pickCards({ cardIndices });
@@ -330,7 +331,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
         mutations.trashCards({ cardIndices });
       }
     }
-  }, [action, drafterStates, mutations, rng]);
+  }, [action, drafterStates, mutations, rng, doneDrafting]);
 
   const takeCard = useCallback(
     async (cardIndex, target) => {
