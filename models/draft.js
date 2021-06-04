@@ -74,6 +74,7 @@ draftSchema.index({
 draftSchema.pre('save', () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
 });
+
 const Draft = mongoose.model('Draft', draftSchema);
 Draft.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 

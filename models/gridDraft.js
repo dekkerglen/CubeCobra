@@ -48,6 +48,7 @@ gridDraftSchema.index({
 gridDraftSchema.pre('save', () => {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
 });
+
 const GridDraft = mongoose.model('GridDraft', gridDraftSchema);
 GridDraft.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 

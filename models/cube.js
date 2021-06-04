@@ -171,6 +171,7 @@ cubeSchema.index({
   owner: 1,
   numDecks: -1,
 });
+
 cubeSchema.index({
   schemaVersion: 1,
 });
