@@ -8,7 +8,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
 
-const BATCH_SIZE = 1;
+const BATCH_SIZE = 1024;
 
 const needsCleaning = (cube) => cube.draft_formats.length > 0;
 
@@ -34,11 +34,9 @@ const processCube = async (leanCube) => {
 
         return {
           slots,
-          steps: [],
+          steps: null,
         };
       });
-
-      // console.log(format.packs);
 
       for (const pack of format.packs) {
         console.log(pack);
