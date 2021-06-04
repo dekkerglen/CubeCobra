@@ -25,7 +25,7 @@ const processCube = async (leanCube) => {
         const slots = [];
 
         for (let i = 0; i < 50; i++) {
-          if (pack[`${i}`]) {
+          if (typeof pack[`${i}`] === 'string') {
             slots.push(pack[`${i}`]);
           }
         }
