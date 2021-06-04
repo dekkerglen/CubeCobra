@@ -34,32 +34,11 @@ export const getGridDrafterState = ({ gridDraft, seatNumber, stepNumber = null, 
     currentPicker = (currentPicker + 1) % 2;
     curStep += 1;
     if (currentPicker === seatNum) seen.push(...cardsInPack.filter((x) => x || x === 0));
-    console.debug(
-      'pickedIndices[...].length',
-      pickedIndices[currentPicker].length,
-      'pickedNums[...]',
-      pickedNums[currentPicker],
-      'useSteps',
-      useSteps,
-      'curStep',
-      curStep,
-      'endStep',
-      endStep,
-      'usePickNum',
-      usePickNum,
-      'curPickNum',
-      curPickNum,
-      'endPick',
-      endPick,
-      'currentPicker',
-      currentPicker,
-    );
     if (
       pickedIndices[currentPicker].length > pickedNums[currentPicker] &&
       !(useSteps && curStep >= endStep) &&
       !(usePickNum && curPickNum >= endPick)
     ) {
-      // console.debug('Processing second pick from pack', packNum);
       const firstPicked = pickedIndices[currentPicker][pickedNums[currentPicker]];
       const secondPicked = pickedIndices[currentPicker][pickedNums[currentPicker] + 1];
       pickedNums[currentPicker] += 2;
@@ -80,7 +59,6 @@ export const getGridDrafterState = ({ gridDraft, seatNumber, stepNumber = null, 
       break;
     }
   }
-  console.debug('currentPicker', currentPicker, 'packNum', packNum, 'numPacks', numPacks);
   return {
     // Note this currently includes all cards. Having this just include cards from open
     // packs would prevent cheating.
