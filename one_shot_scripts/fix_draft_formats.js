@@ -37,13 +37,9 @@ const processCube = async (leanCube) => {
           steps: null,
         };
       });
-
-      for (const pack of format.packs) {
-        console.log(pack);
-      }
     }
 
-    // await cube.save();
+    await cube.save();
   }
 };
 
