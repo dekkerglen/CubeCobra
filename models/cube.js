@@ -87,11 +87,9 @@ const cubeSchema = mongoose.Schema({
         multiples: Boolean,
         html: String,
         markdown: String,
-        packs: [
-          {
-            type: { slots: [String], steps: stepsSchema },
-          },
-        ],
+        packs: {
+          type: [{ slots: [String], steps: stepsSchema }],
+        },
       },
     ],
     default: [],
