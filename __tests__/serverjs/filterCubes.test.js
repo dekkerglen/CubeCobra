@@ -1,21 +1,8 @@
-const sinon = require('sinon');
 const carddb = require('../../serverjs/cards');
-const Card = require('../../models/card');
 const { makeFilter } = require('../../serverjs/filterCubes');
 const { arraysAreEqualSets } = require('../../dist/utils/Util');
 
-const TEST_IDS = ['123', '456', '7890'];
-
 describe('filterCubes', () => {
-  beforeEach(() => {
-    sinon.stub(Card, 'findOne');
-    Card.findOne.withArgs(sinon.match.any).returns({ cubes: TEST_IDS });
-  });
-
-  afterEach(() => {
-    Card.findOne.restore();
-  });
-
   it('correctly parses owner_name condition', async () => {
     const { err, filter } = await makeFilter('owner:dekkerglen', carddb);
 
