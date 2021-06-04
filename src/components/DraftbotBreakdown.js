@@ -29,10 +29,10 @@ const CARD_TRAIT = Object.freeze({
 });
 const TRAITS = Object.freeze([
   {
-    title: 'Casting Probability',
+    title: 'Usability Percent',
     tooltip:
-      'How likely we are to play this card on curve if we have enough lands. Applies as scaling to Rating and Pick Synergy.',
-    compute: ({ botState: { cardIndices, probabilities } }) => probabilities[cardIndices?.[0]],
+      'What percent of the rating of the card the bot thinks it can take advantage of. Based on the probability to cast the card on curve. Applies as scaling to Rating and Pick Synergy.',
+    compute: ({ botState: { cardIndices, probabilities } }) => probabilities[cardIndices?.[0]] * 100,
   },
   {
     title: 'Lands',
