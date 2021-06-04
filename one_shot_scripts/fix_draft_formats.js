@@ -20,13 +20,15 @@ const processCube = async (leanCube) => {
 
     for (const format of cube.draft_formats) {
       format.packs = format.packs.map((pack) => {
-        console.log(pack);
+        const translatedPack = JSON.parse(JSON.stringify(pack));
+
+        console.log(translatedPack);
 
         const slots = [];
 
         for (let i = 0; i < 50; i++) {
-          if (typeof pack[`${i}`] === 'string') {
-            slots.push(pack[`${i}`]);
+          if (typeof translatedPack[`${i}`] === 'string') {
+            slots.push(translatedPack[`${i}`]);
           }
         }
 
