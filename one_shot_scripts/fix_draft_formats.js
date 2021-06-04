@@ -20,6 +20,8 @@ const processCube = async (leanCube) => {
 
     for (const format of cube.draft_formats) {
       format.packs = format.packs.map((pack) => {
+        console.log(pack);
+
         const slots = [];
 
         for (const [key, value] of Object.entries(pack)) {
