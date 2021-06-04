@@ -126,7 +126,9 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
               <Nav navbar>
                 <NavItem>
                   <SampleHandModal
-                    deck={deck.seats[seatIndex].deck.map((col) => col.map((cardIndex) => deck.cards[cardIndex]))}
+                    deck={deck.seats[seatIndex].deck.map((row) =>
+                      row.map((col) => col.map((cardIndex) => deck.cards[cardIndex])),
+                    )}
                   />
                 </NavItem>
                 {user && deck.owner === user.id && (
