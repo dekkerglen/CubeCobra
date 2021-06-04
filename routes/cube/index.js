@@ -1012,10 +1012,10 @@ router.post(
 
       const packs = [];
       const cards = [];
-      for (let i = 0; i < packs; i++) {
+      for (let i = 0; i < numPacks; i++) {
         const pack = source.splice(0, 9);
         cards.push(...pack);
-        packs.push(pack.map((c) => c.index));
+        packs.push(pack.map(({ index }) => index));
       }
 
       gridDraft.initial_state = packs;
