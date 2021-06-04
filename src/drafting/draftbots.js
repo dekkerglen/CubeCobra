@@ -163,10 +163,6 @@ const REQUIRED_A_DIMS = 8;
 const REQUIRED_B_DIMS = 4;
 const MAX_CMC = 7;
 
-const colorlessMask = new Uint32Array(8);
-for (let i = 0; i < 8; i++) {
-  colorlessMask[i] = 0xffffffff;
-}
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
 export const getCastingProbability = (card, lands) => {
@@ -191,22 +187,9 @@ export const getCastingProbability = (card, lands) => {
         }
       }
       colors = Object.entries(colorSymbols);
-      if (colors.length === 0) {
-        const cmc = Math.min(cardCmc(card), MAX_CMC);
-        colors = [
-          [
-            colorlessMask,
-            LANDS_DIMS *
-              LANDS_DIMS *
-              LANDS_DIMS *
-              REQUIRED_B_DIMS *
-              (Math.min(cmc, REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * cmc),
-          ],
-        ];
-      }
+      const cmc = Math.min(cardCmc(card), MAX_CMC);
 
       if (colors.length > 2) {
-        const cmc = Math.min(cardCmc(card), MAX_CMC);
         const countAll = Math.min(
           REQUIRED_A_DIMS - 1,
           colors.reduce((acc, [, count]) => acc + count, 0),
@@ -239,8 +222,7 @@ export const getCastingProbability = (card, lands) => {
           LANDS_DIMS *
           LANDS_DIMS *
           (Math.min(REQUIRED_B_DIMS - 1, colors[1][1]) +
-            REQUIRED_B_DIMS *
-              (Math.min(REQUIRED_A_DIMS - 1, colors[0][1]) + REQUIRED_A_DIMS * Math.min(MAX_CMC, cardCmc(card))));
+            REQUIRED_B_DIMS * (Math.min(REQUIRED_A_DIMS - 1, colors[0][1]) + REQUIRED_A_DIMS * cmc));
         const maskA = new Uint32Array(
           COLOR_COMBINATION_INTERSECTS.buffer,
           COLOR_COMBINATION_INDICES[colors[0][0]] * 32,
@@ -283,13 +265,14 @@ export const getCastingProbability = (card, lands) => {
     const landCountAB = getMaskedSum(lands, maskAB);
     return probTable[offset + landCountA + LANDS_DIMS * (landCountB + LANDS_DIMS * landCountAB)];
   }
-  // This is a really poor approximation, it probably underestimates,
-  // but could easily overestimate as well.
-  const result = colors.reduce((acc, [mask, offset]) => {
+  // This is probably a really poor approximation for 3+ colors,
+  // it probably underestimates, but could easily overestimate as well.
+  let result = 1;
+  for (const [mask, offset] of colors) {
     const landCount = getMaskedSum(lands, mask);
     const prob = probTable[offset + landCount];
-    return acc * prob;
-  }, 1);
+    result *= prob;
+  }
   return result;
 };
 
