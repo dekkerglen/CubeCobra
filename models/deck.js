@@ -1,22 +1,25 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./shared/cardSchema');
+// const cardSchema = require('./shared/cardSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
-const SeatDeck = {
-  bot: [String], // null bot value means human player
-  userid: String,
-  username: String,
-  name: String,
-  description: {
-    type: String,
-    default: 'No description available.',
-  },
-  deck: [[[Number]]], // nesting is rows->columns->index in column
-  sideboard: [[[Number]]], // same as deck.
-  pickorder: [Number],
-};
+// const SeatDeck = {
+//   bot: [String], // null bot value means human player
+//   userid: String,
+//   username: String,
+//   name: String,
+//   description: {
+//     type: String,
+//     default: 'No description available.',
+//   },
+//   deck: [[[Number]]], // nesting is rows->columns->index in column
+//   sideboard: [[[Number]]], // same as deck.
+//   pickorder: [Number],
+// };
+
+const SeatDeck = {};
+const cardSchema = {};
 
 // Deck schema
 const deckSchema = mongoose.Schema(
