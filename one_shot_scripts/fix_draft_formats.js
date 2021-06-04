@@ -24,10 +24,9 @@ const processCube = async (leanCube) => {
 
         const slots = [];
 
-        for (const entry of Object.entries(pack)) {
-          console.log(entry);
-          if (entry.key !== 'slots' && entry.key !== 'steps') {
-            slots.push(entry.value);
+        for (let i = 0; i < 50; i++) {
+          if (pack[`${i}`]) {
+            slots.push(pack[`${i}`]);
           }
         }
 
