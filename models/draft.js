@@ -31,7 +31,7 @@ const Pack = {
   },
 };
 
-// data for each seat, human or bot
+// // data for each seat, human or bot
 const Seat = {
   bot: Boolean, // null bot value means human player
   name: String,

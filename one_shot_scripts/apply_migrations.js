@@ -24,15 +24,12 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
   $or: [{ schemaVersion: { $exists: false } }, { schemaVersion: { $lt: currentSchemaVersion } }],
 });
 
-const BATCH_SIZE = 500;
-
 (async () => {
   await carddb.initializeCardDb('private', true);
   await mongoose.connect(process.env.MONGODB_URL);
   for (const { name, model, migrate } of MIGRATABLE) {
+    console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
-    const count = await model.countDocuments(query);
-    console.log(`There are ${count} ${name}'s that need to be updated.`);
     const cursor = model.find(query).cursor();
     let totalSuccesses = 0;
 
@@ -48,6 +45,8 @@ const BATCH_SIZE = 500;
       if (migrated) {
         try {
           await migrated.save();
+          totalSuccesses += 1;
+          console.log(`Finished ${name} ${totalSuccesses}: ${migrated._id}`);
         } catch (e) {
           console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
           console.debug(e);
@@ -60,28 +59,9 @@ const BATCH_SIZE = 500;
       return 1;
     };
 
-    // batch them in 100
-    for (let i = 0; i < count; ) {
-      const maxIndex = Math.min(i + BATCH_SIZE, count);
-      const num = maxIndex - i;
-      const migrations = [];
-      for (; i < maxIndex; i++) {
-        let doc;
-        try {
-          doc = await cursor.next();
-        } catch (e) {
-          console.warn(`Could not load ${name} at index ${i}.`, e);
-        }
-        if (doc) {
-          migrations.push(asyncMigrate(doc));
-        }
-      }
-      const successes = (await Promise.all(migrations)).reduce((acc, x) => acc + x, 0);
-      totalSuccesses += successes;
-      console.log(
-        `Finished: ${i} of ${count} ${name}s. ${successes}/${num} were successful for a total of ${totalSuccesses} successfully migrated.`,
-      );
-    }
+    await cursor.eachAsync(asyncMigrate, { parallel: 10 });
+
+    console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
   }
   mongoose.disconnect();
   console.log('done');
