@@ -20,11 +20,14 @@ const processCube = async (leanCube) => {
 
     for (const format of cube.draft_formats) {
       format.packs = format.packs.map((pack) => {
+        console.log(pack);
+
         const slots = [];
 
-        for (const [key, value] of Object.entries(pack)) {
-          if (key !== 'slots' && key !== 'steps') {
-            slots.push(value);
+        for (const entry of Object.entries(pack)) {
+          console.log(entry);
+          if (entry.key !== 'slots' && entry.key !== 'steps') {
+            slots.push(entry.value);
           }
         }
 
