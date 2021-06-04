@@ -444,6 +444,7 @@ router.post('/redraft/:id/:seat', async (req, res) => {
       draft.seats[i].drafted = createPool();
       draft.seats[i].sideboard = createPool();
       draft.seats[i].pickorder = [];
+      draft.seats[i].trashorder = [];
     }
     draft.seats[0].bot = null;
     draft.seats[0].userid = req.user ? req.user._id : null;
