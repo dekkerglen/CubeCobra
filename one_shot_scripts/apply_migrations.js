@@ -14,8 +14,8 @@ const { applyPendingMigrationsPre } = require('../models/migrations/migrationMid
 const carddb = require('../serverjs/cards');
 
 const MIGRATABLE = Object.freeze([
-  { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
-  { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
+  // { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
+  // { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
   { name: 'Deck', model: Deck, migrate: applyPendingMigrationsPre(deckMigrations) },
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
 ]);
