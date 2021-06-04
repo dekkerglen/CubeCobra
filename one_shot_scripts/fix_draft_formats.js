@@ -8,7 +8,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
 
-const BATCH_SIZE = 1024;
+const BATCH_SIZE = 1;
 
 const needsCleaning = (cube) => cube.draft_formats.length > 0;
 
@@ -20,12 +20,10 @@ const processCube = async (leanCube) => {
 
     for (const format of cube.draft_formats) {
       format.packs = format.packs.map((pack) => {
-        console.log(pack);
-
         const slots = [];
 
         for (const [key, value] of Object.entries(pack)) {
-          if (key !== 'slots' || key !== 'steps') {
+          if (key !== 'slots' && key !== 'steps') {
             slots.push(value);
           }
         }
