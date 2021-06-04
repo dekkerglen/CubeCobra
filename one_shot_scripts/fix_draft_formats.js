@@ -19,9 +19,13 @@ const processCube = async (leanCube) => {
     console.debug(`Cleaning cube ${cube.name}: ${cube._id}`);
 
     for (const format of cube.draft_formats) {
-      format.packs = format.packs.map((pack) => ({ slots: pack }));
+      // format.packs = format.packs.map((pack) => ({ slots: pack }));
 
-      console.log(format.packs);
+      // console.log(format.packs);
+
+      for (const pack of cube.draft_formats.packs) {
+        console.log(pack);
+      }
     }
 
     // await cube.save();
