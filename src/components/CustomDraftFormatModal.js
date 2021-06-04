@@ -132,7 +132,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
   const useMutateFormat = (mutation) =>
     useCallback(
       (event) => {
-        const { target } = event;
+        const target = event.currentTarget;
         if (target) {
           const { value } = target;
           const packIndex = toNullableInt(target.getAttribute('data-pack-index'));
