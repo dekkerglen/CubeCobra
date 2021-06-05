@@ -124,23 +124,19 @@ const useMutatableDraft = (initialDraft) => {
     fromEntries(
       Object.entries(MUTATIONS).map(([name, mutation]) => [
         name,
+        ({ cardIndices, seatIndex, source, target }) =>
+          setDraft((oldDraft) => {
+            const newDraft = { ...oldDraft };
+            if ((seatIndex || seatIndex === 0) && !cardIndices) {
+              newDraft.seats = [...newDraft.seats];
+              newDraft.seats[seatIndex] = { ...newDraft.seats[seatIndex] };
+            } else {
+              newDraft.seats = newDraft.seats.map((seat) => ({ ...seat }));
+            }
+            mutation({ newDraft, cardIndices, seatIndex, source, target, cards });
+            return newDraft;
+          }),
         // eslint-disable-next-line
-      useCallback(
-          ({ cardIndices, seatIndex, source, target }) =>
-            setDraft((oldDraft) => {
-              const newDraft = { ...oldDraft };
-              if ((seatIndex || seatIndex === 0) && !cardIndices) {
-                newDraft.seats = [...newDraft.seats];
-                newDraft.seats[seatIndex] = { ...newDraft.seats[seatIndex] };
-              } else {
-                newDraft.seats = newDraft.seats.map((seat) => ({ ...seat }));
-              }
-              mutation({ newDraft, cardIndices, seatIndex, source, target, cards });
-              return newDraft;
-            }),
-          // eslint-disable-next-line
-        [mutation, setDraft, cards],
-        ),
       ]),
     ),
   );
