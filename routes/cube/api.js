@@ -1019,14 +1019,14 @@ router.post(
           analytic.cube = draft.cube;
         }
 
-        let pickIndex = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === req.body.pick.toLowerCase());
+        let pickIndex = analytic.cards.findIndex((card) => card.cardName === req.body.pick.toLowerCase());
         if (pickIndex === -1) {
-          pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick.toLowerCase(), ELO_BASE)) - 1;
+          pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick, ELO_BASE)) - 1;
         }
 
         const packIndeces = {};
         for (const packCard of req.body.pack) {
-          let index = analytic.cards.findIndex((card) => card.cardName.toLowerCase() === packCard.toLowerCase());
+          let index = analytic.cards.findIndex((card) => card.cardName === packCard.toLowerCase());
           if (index === -1) {
             index = analytic.cards.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE)) - 1;
           }
