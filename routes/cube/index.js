@@ -1257,7 +1257,7 @@ router.post(
         draft = await Draft.findById(draft._id).lean();
         // insert card details everywhere that needs them
         for (const card of draft.cards) {
-          card.details = carddb.cardFromId(card.cardId);
+          card.details = carddb.cardFromId(card.cardID);
         }
         return res.status(200).send({
           success: 'true',
