@@ -20,7 +20,7 @@ const DEFAULT_BASICS = [
 ];
 
 const ELO_BASE = 1200;
-const ELO_SPEED = 1 / 8;
+const ELO_SPEED = 1 / 128;
 const CUBE_ELO_SPEED = 4;
 
 const CARD_HEIGHT = 680;
