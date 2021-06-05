@@ -311,7 +311,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [draft]);
   useEffect(() => {
     if (doneDrafting) {
-        submitDeckForm.current?.submit?.(); // eslint-disable-line
+      submitDeckForm.current?.submit?.(); // eslint-disable-line
     }
   }, [doneDrafting]);
 
