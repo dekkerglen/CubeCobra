@@ -120,7 +120,9 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
           method: 'POST',
           body,
         });
+
         const json = await response.json();
+
         setDraftId(json.draft._id);
         const draft = await allBotsDraft(json.draft);
 
