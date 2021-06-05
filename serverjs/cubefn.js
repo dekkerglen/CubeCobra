@@ -321,7 +321,7 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
       for (const col of row) {
         for (const ci of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =
@@ -336,7 +336,7 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
       for (const col of row) {
         for (const ci of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =
@@ -366,7 +366,7 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
       for (const col of row) {
         for (const ci of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =
@@ -381,7 +381,7 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
       for (const col of row) {
         for (const ci of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =
