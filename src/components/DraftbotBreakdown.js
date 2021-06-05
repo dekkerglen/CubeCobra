@@ -65,7 +65,6 @@ export const DraftbotBreakdownTable = ({ drafterState }) => {
       })),
     [drafterState],
   );
-  console.debug(botEvaluations);
   const oracles = useMemo(
     () => botEvaluations[0].oracleResults.map(({ title, tooltip }) => ({ title, tooltip })),
     [botEvaluations],
