@@ -8,7 +8,7 @@ const CubeAnalytic = require('../models/cubeAnalytic');
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const analytic = await CubeAnalytic.findOne({ cube: '5d61aa23b8ec593ca4b76ca6' });
 
-    console.log(analytic.cards.map((card) => card.cardName));
+    console.log(analytic.cards.map((card) => card.cardName.toLowerCase()));
 
     console.log('done');
     process.exit();
