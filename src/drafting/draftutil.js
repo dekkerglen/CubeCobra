@@ -170,8 +170,8 @@ export const allBotsDraft = (draft) => {
       console.warn(errorStr);
       throw new Error(errorStr);
     }
-    const newDraft = draft;
-    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: newDraft, seatNumber }));
+    const constDraft = draft;
+    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: constDraft, seatNumber }));
     [
       {
         numPacks,
