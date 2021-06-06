@@ -285,7 +285,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   );
   const [action, doneDrafting] = useMemo(() => {
     const {
-      step: { actionInner },
+      step: { action: actionInner },
       numPacks,
       packNum,
     } = drafterStates[seatNum];
