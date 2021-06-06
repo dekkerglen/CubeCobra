@@ -316,7 +316,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [doneDrafting]);
 
   useEffect(() => {
-    if (action.match(/random/) && !doneDrafting) {
+    if (action && action.match(/random/) && !doneDrafting) {
       const cardIndices = drafterStates.map((state) => state.cardsInPack[Math.floor(rng() * state.cardsInPack.length)]);
       if (action.match(/pick/)) {
         mutations.pickCards({ cardIndices });
