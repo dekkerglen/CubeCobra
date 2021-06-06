@@ -316,7 +316,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   }, [doneDrafting]);
 
   useEffect(() => {
-    if (action && action.match(/random/) && !doneDrafting) {
+    if (action.match(/random/) && !doneDrafting) {
       const cardIndices = drafterStates.map((state) => state.cardsInPack[Math.floor(rng() * state.cardsInPack.length)]);
       if (action.match(/pick/)) {
         mutations.pickCards({ cardIndices });
@@ -330,7 +330,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const takeCard = useCallback(
     async (cardIndex, target) => {
       await sleep(0); // We have to suspend and free up the main thread at least once.
-      if (!action || action.match(/pick/)) {
+      if (action.match(/pick/)) {
         const cardIndices = makeBotPicks(cardIndex);
         mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });
       } else {
