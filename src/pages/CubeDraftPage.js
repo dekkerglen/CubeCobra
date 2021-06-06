@@ -330,7 +330,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const takeCard = useCallback(
     async (cardIndex, target) => {
       await sleep(0); // We have to suspend and free up the main thread at least once.
-      if (action.match(/pick/)) {
+      if (!action || action.match(/pick/)) {
         const cardIndices = makeBotPicks(cardIndex);
         mutations.pickCards({ cardIndices, seatIndex: target && seatNum, target });
       } else {
