@@ -159,9 +159,9 @@ const getMaskedSum = (x, m) => {
 };
 
 const LANDS_DIMS = 18;
-const REQUIRED_A_DIMS = 8;
+const REQUIRED_A_DIMS = 7;
 const REQUIRED_B_DIMS = 4;
-const MAX_CMC = 7;
+const MAX_CMC = 8;
 
 // TODO: Use learnings from draftbot optimization to make this much faster.
 const devotionsCache = {};
