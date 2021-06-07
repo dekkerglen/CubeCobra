@@ -74,7 +74,7 @@ const migratableDocsQuery = (currentSchemaVersion) => {
     };
 
     let batches = 0;
-    const done = false;
+    let done = false;
     while (!done) {
       const documents = await model
         .find(query)
