@@ -18,8 +18,7 @@ const Seat = {
 const gridDraftSchema = mongoose.Schema({
   basics: {
     default: [],
-    // type: [Number],
-    type: [{}],
+    type: [Number],
   },
   cards: [cardSchema],
   cube: String,
@@ -27,8 +26,7 @@ const gridDraftSchema = mongoose.Schema({
     type: String,
     enum: ['bot', '2playerlocal'],
   },
-  // initial_state: [[Number]],
-  initial_state: [[{}]],
+  initial_state: [[Number]],
   seats: [Seat],
   schemaVersion: {
     type: Number,

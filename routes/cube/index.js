@@ -1012,10 +1012,10 @@ router.post(
 
       const packs = [];
       const cards = [];
-      for (let i = 0; i < packs; i++) {
+      for (let i = 0; i < numPacks; i++) {
         const pack = source.splice(0, 9);
         cards.push(...pack);
-        packs.push(pack.map((c) => c.index));
+        packs.push(pack.map(({ index }) => index));
       }
 
       gridDraft.initial_state = packs;
@@ -1257,7 +1257,7 @@ router.post(
         draft = await Draft.findById(draft._id).lean();
         // insert card details everywhere that needs them
         for (const card of draft.cards) {
-          card.details = carddb.cardFromId(card.cardId);
+          card.details = carddb.cardFromId(card.cardID);
         }
         return res.status(200).send({
           success: 'true',

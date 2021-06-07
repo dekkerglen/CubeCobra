@@ -1,3 +1,5 @@
+import seedrandom from 'seedrandom';
+
 import { moveOrAddCard } from 'drafting/DraftLocation';
 import { calculateBotPick } from 'drafting/draftbots';
 import { cardType } from 'utils/Card';
@@ -129,10 +131,17 @@ export const allBotsDraft = (draft) => {
       step: { action },
     },
   ] = drafterStates;
+  const rng = seedrandom(draft.seed);
   while (numPacks > packNum) {
     const currentDraft = draft;
+    let picks;
+    if (action.match(/random/)) {
+      picks = drafterStates.map(({ cardsInPack }) => cardsInPack[Math.floor(rng() * cardsInPack.length)]);
+    }
     if (action.match(/pick/)) {
-      const picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, false));
+      if (!action.match(/random/)) {
+        picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, false));
+      }
       draft = {
         ...draft,
         seats: draft.seats.map(({ pickorder, drafted, ...seat }, seatIndex) => ({
@@ -146,7 +155,9 @@ export const allBotsDraft = (draft) => {
         })),
       };
     } else if (action.match(/trash/)) {
-      const picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, true));
+      if (!action.match(/random/)) {
+        picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, true));
+      }
       draft = {
         ...draft,
         seats: draft.seats.map(({ trashorder, ...seat }, seatIndex) => ({
@@ -159,8 +170,8 @@ export const allBotsDraft = (draft) => {
       console.warn(errorStr);
       throw new Error(errorStr);
     }
-    const newDraft = draft;
-    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: newDraft, seatNumber }));
+    const constDraft = draft;
+    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: constDraft, seatNumber }));
     [
       {
         numPacks,
