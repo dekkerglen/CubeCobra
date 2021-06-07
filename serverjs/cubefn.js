@@ -124,7 +124,9 @@ function setCubeType(cube, carddb) {
     .split(' ')
     .filter((keyword) => keyword.length > 0);
   cube.keywords.push(
-    ...cube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
+    ...(cube.tags || [])
+      .filter((tag) => tag && tag.length > 0)
+      .map((tag) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
   );
   cube.keywords.push(...cube.categories);
   cube.keywords = Array.from(new Set(cube.keywords));
