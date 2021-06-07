@@ -13,7 +13,8 @@ const gridDraftMigrations = require('../models/migrations/gridDraftMigrations');
 const { applyPendingMigrationsPre } = require('../models/migrations/migrationMiddleware');
 const carddb = require('../serverjs/cards');
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 1000;
+const SKIP = 1000;
 
 const MIGRATABLE = Object.freeze([
   // { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
@@ -38,9 +39,9 @@ const migratableDocsQuery = (currentSchemaVersion) => {
 
     const count = model.estimatedDocumentCount(query);
     // const cursor = model.find(query).cursor();
-    console.log(`Counted ${count} documents...`);
+    console.log(count);
 
-    let totalProcessed = 0;
+    let totalProcessed = SKIP;
 
     const asyncMigrate = async (doc) => {
       if (doc.schemaVersion === model.CURRENT_SCHEMA_VERSION) {
@@ -78,7 +79,7 @@ const migratableDocsQuery = (currentSchemaVersion) => {
     while (!done) {
       const documents = await model
         .find(query)
-        .skip(BATCH_SIZE * batches)
+        .skip(SKIP + BATCH_SIZE * batches)
         .limit(BATCH_SIZE);
       batches += 1;
 
