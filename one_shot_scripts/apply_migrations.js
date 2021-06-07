@@ -17,9 +17,9 @@ const BATCH_SIZE = 100;
 const SKIP = 1000;
 
 const MIGRATABLE = Object.freeze([
-  // { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
-  // { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
-  // { name: 'Deck', model: Deck, migrate: applyPendingMigrationsPre(deckMigrations) },
+  { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
+  { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
+  { name: 'Deck', model: Deck, migrate: applyPendingMigrationsPre(deckMigrations) },
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
 ]);
 
@@ -35,7 +35,7 @@ const migratableDocsQuery = (currentSchemaVersion) => {
   await mongoose.connect(process.env.MONGODB_URL);
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
-    const query = {}; // migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
+    const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
 
     const count = await model.estimatedDocumentCount(query);
     // const cursor = model.find(query).cursor();

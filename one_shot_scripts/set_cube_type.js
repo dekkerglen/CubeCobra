@@ -17,6 +17,7 @@ async function addVars(cube) {
   } catch (err) {
     console.error(err);
   }
+  return -1;
 }
 
 (async () => {
@@ -37,7 +38,9 @@ async function addVars(cube) {
             cubes.push(cube);
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
     }
     await Promise.all(cubes.map((cube) => addVars(cube)));
     console.log(`Finished: ${i} of ${count} cubes`);
