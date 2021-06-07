@@ -429,13 +429,7 @@ const run = async () => {
     .lean()
     .cursor();
   for (let i = 0; i < count; i += 1) {
-    await processCube(
-      await cursor.next(),
-      cardUseCount,
-      cardCountByCubeSize,
-      cubeCountBySize,
-      oracleToIndex,
-    );
+    await processCube(await cursor.next(), cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
     if ((i + 1) % 100 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
