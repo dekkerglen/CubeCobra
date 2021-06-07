@@ -20,9 +20,12 @@ const MIGRATABLE = Object.freeze([
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
 ]);
 
-const migratableDocsQuery = (currentSchemaVersion) => ({
-  $or: [{ schemaVersion: { $exists: false } }, { schemaVersion: { $lt: currentSchemaVersion } }],
-});
+const migratableDocsQuery = (currentSchemaVersion) => {
+  if (currentSchemaVersion === 1) {
+    return { schemaVersion: null };
+  }
+  return { schemaVersion: currentSchemaVersion };
+};
 
 (async () => {
   await carddb.initializeCardDb('private', true);
