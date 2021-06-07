@@ -110,7 +110,25 @@ function setCubeType(cube, carddb) {
   if (peasant) {
     cube.type += ' Peasant';
   }
-  cube.card_count = cube.cards.length;
+
+  if (cube.overrideCategory) {
+    cube.categories = [cube.categoryOverride.toLowerCase(), ...cube.categoryPrefixes.map((c) => c.toLowerCase())];
+  } else {
+    cube.categories = Array.from(new Set(`${cube.type}`.toLowerCase().split(' ')));
+  }
+
+  cube.cardOracles = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  cube.keywords = `${cube.type} ${cube.name} ${cube.owner_name}`
+    .replace(/[^\w\s]/gi, '')
+    .toLowerCase()
+    .split(' ')
+    .filter((keyword) => keyword.length > 0);
+  cube.keywords.push(
+    ...cube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
+  );
+  cube.keywords.push(...cube.categories);
+  cube.keywords = Array.from(new Set(cube.keywords));
+
   return cube;
 }
 

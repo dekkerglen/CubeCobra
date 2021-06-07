@@ -46,7 +46,6 @@ const cardHistorySchema = mongoose.Schema({
     spells: [String],
     other: [String],
   },
-  cubes: [String], // this is a list of cube ids
   history: {
     type: [
       {
