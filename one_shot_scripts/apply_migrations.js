@@ -34,8 +34,12 @@ const migratableDocsQuery = (currentSchemaVersion) => {
   await mongoose.connect(process.env.MONGODB_URL);
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
-    const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
-    const cursor = model.find({}).cursor();
+    const query = {}; // migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
+
+    const count = model.estimatedDocumentCount(query);
+    // const cursor = model.find(query).cursor();
+    console.log(`Counted ${count} documents...`);
+
     let totalProcessed = 0;
 
     const asyncMigrate = async (doc) => {
@@ -69,9 +73,25 @@ const migratableDocsQuery = (currentSchemaVersion) => {
       return 1;
     };
 
-    await cursor.eachAsync(asyncMigrate, { parallel: 100 });
+    let batches = 0;
+    const done = false;
+    while (!done) {
+      const documents = await model
+        .find(query)
+        .skip(BATCH_SIZE * batches)
+        .limit(BATCH_SIZE);
+      batches += 1;
 
-    console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
+      if (documents.length <= 0) {
+        done = true;
+      } else {
+        await Promise.all(documents.map(asyncMigrate));
+      }
+    }
+
+    // await cursor.eachAsync(asyncMigrate, { parallel: 100 });
+
+    console.log(`Finished: ${name}s. ${totalProcessed} were successful.`);
   }
   mongoose.disconnect();
   console.log('done');
