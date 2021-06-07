@@ -23,10 +23,11 @@ const MIGRATABLE = Object.freeze([
 ]);
 
 const migratableDocsQuery = (currentSchemaVersion) => {
+  return { schemaVersion: currentSchemaVersion };
   if (currentSchemaVersion === 1) {
     return { schemaVersion: null };
   }
-  return { schemaVersion: currentSchemaVersion };
+  return { schemaVersion: currentSchemaVersion - 1 };
 };
 
 (async () => {
@@ -67,7 +68,7 @@ const migratableDocsQuery = (currentSchemaVersion) => {
 
     console.log(documents.length);
 
-    await Promise.all(documents.map(asyncMigrate));
+    // await Promise.all(documents.map(asyncMigrate));
 
     // wait cursor.eachAsync(asyncMigrate, { parallel: 10 });
 
