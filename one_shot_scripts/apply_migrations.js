@@ -38,8 +38,8 @@ const migratableDocsQuery = (currentSchemaVersion) => {
     const query = {}; // migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
 
     const count = await model.estimatedDocumentCount(query);
-    const cursor = model.find(query).cursor();
-    console.log(count);
+    // const cursor = model.find(query).cursor();
+    console.log(`Found ${count} documents`);
 
     let totalProcessed = SKIP;
 
