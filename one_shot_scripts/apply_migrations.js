@@ -13,7 +13,7 @@ const gridDraftMigrations = require('../models/migrations/gridDraftMigrations');
 const { applyPendingMigrationsPre } = require('../models/migrations/migrationMiddleware');
 const carddb = require('../serverjs/cards');
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 100;
 const SKIP = 1000;
 
 const MIGRATABLE = Object.freeze([
