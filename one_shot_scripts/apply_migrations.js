@@ -36,11 +36,12 @@ const migratableDocsQuery = (currentSchemaVersion) => {
     console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
     const cursor = model.find({}).cursor();
-    let totalSuccesses = 0;
+    let totalProcessed = 0;
 
     const asyncMigrate = async (doc) => {
       if (doc.schemaVersion === model.CURRENT_SCHEMA_VERSION) {
-        console.log(`Skipping ${name} ${doc._id}`);
+        totalProcessed += 1;
+        console.log(`Skipping ${name} ${totalProcessed}: ${doc._id}`);
         return 0;
       }
       let migrated;
@@ -54,8 +55,8 @@ const migratableDocsQuery = (currentSchemaVersion) => {
       if (migrated) {
         try {
           await migrated.save();
-          totalSuccesses += 1;
-          console.log(`Finished ${name} ${totalSuccesses}: ${migrated._id}`);
+          totalProcessed += 1;
+          console.log(`Finished ${name} ${totalProcessed}: ${migrated._id}`);
         } catch (e) {
           console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
           console.debug(e);
