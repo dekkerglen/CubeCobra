@@ -13,6 +13,8 @@ const gridDraftMigrations = require('../models/migrations/gridDraftMigrations');
 const { applyPendingMigrationsPre } = require('../models/migrations/migrationMiddleware');
 const carddb = require('../serverjs/cards');
 
+const BATCH_SIZE = 100;
+
 const MIGRATABLE = Object.freeze([
   // { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
   // { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
@@ -33,7 +35,6 @@ const migratableDocsQuery = (currentSchemaVersion) => {
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
-    const cursor = model.find(query).cursor();
     let totalSuccesses = 0;
 
     const asyncMigrate = async (doc) => {
@@ -62,7 +63,13 @@ const migratableDocsQuery = (currentSchemaVersion) => {
       return 1;
     };
 
-    await cursor.eachAsync(asyncMigrate, { parallel: 10 });
+    const documents = await model.find(query).limit(BATCH_SIZE);
+
+    console.log(documents.length);
+
+    await Promise.all(documents.map(asyncMigrate));
+
+    // wait cursor.eachAsync(asyncMigrate, { parallel: 10 });
 
     console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
   }
