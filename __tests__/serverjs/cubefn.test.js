@@ -147,7 +147,7 @@ test('generateShortId returns a valid short ID without profanity', async () => {
 });
 
 test('setCubeType correctly sets the type of its input cube', () => {
-  expect.assertions(4);
+  expect.assertions(2);
   const exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
