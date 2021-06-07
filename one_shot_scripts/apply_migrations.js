@@ -23,7 +23,6 @@ const MIGRATABLE = Object.freeze([
 ]);
 
 const migratableDocsQuery = (currentSchemaVersion) => {
-  return { schemaVersion: currentSchemaVersion };
   if (currentSchemaVersion === 1) {
     return { schemaVersion: null };
   }
@@ -36,9 +35,14 @@ const migratableDocsQuery = (currentSchemaVersion) => {
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
+    const cursor = model.find({}).cursor();
     let totalSuccesses = 0;
 
     const asyncMigrate = async (doc) => {
+      if (doc.schemaVersion === model.CURRENT_SCHEMA_VERSION) {
+        console.log(`Skipping ${name} ${doc._id}`);
+        return 0;
+      }
       let migrated;
       try {
         migrated = await migrate(doc);
@@ -64,13 +68,7 @@ const migratableDocsQuery = (currentSchemaVersion) => {
       return 1;
     };
 
-    const documents = await model.find(query).limit(BATCH_SIZE);
-
-    console.log(documents.length);
-
-    // await Promise.all(documents.map(asyncMigrate));
-
-    // wait cursor.eachAsync(asyncMigrate, { parallel: 10 });
+    await cursor.eachAsync(asyncMigrate, { parallel: 100 });
 
     console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
   }
