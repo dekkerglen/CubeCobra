@@ -65,6 +65,7 @@ const convertedExampleCard = {
   colorcategory: 'm',
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleDoubleFacedCard = {
@@ -125,6 +126,7 @@ const convertedExampleDoubleFacedCard = {
   type: 'Creature — Human Werewolf',
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleDoubleFacedCardFlipFace = {
@@ -181,10 +183,10 @@ const convertedExampleDoubleFacedCardFlipFace = {
   image_normal: 'https://img.scryfall.com/cards/normal/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   image_small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
-
   colorcategory: 'g',
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleDoubleFacedPlaneswalkerCard = {
@@ -250,6 +252,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   tokens: ['e5ccae95-95c2-4d11-aa68-5c80ecf90fd2', 'd75f984f-2e11-4f52-b3b0-dd9d94a2dd74'],
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleAdventureCard = {
@@ -310,6 +313,7 @@ const convertedExampleAdventureCard = {
   type: 'Creature — Human Berserker',
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleAdventureCardAdventure = {
@@ -366,6 +370,7 @@ const convertedExampleAdventureCardAdventure = {
   type: 'Sorcery — Adventure',
   foil: true,
   nonfoil: true,
+  popularity: 0,
 };
 
 const convertedExampleNonFoilCard = {
@@ -427,6 +432,7 @@ const convertedExampleNonFoilCard = {
   colorcategory: 'u',
   foil: false,
   nonfoil: true,
+  popularity: 0,
 };
 
 const mockRatings = [
@@ -496,7 +502,7 @@ test('updateCardbase creates the expected files', () => {
   downloadMock.mockReturnValue(noopPromise);
   const initialDownloadDefaultCards = updatecards.downloadDefaultCards;
   updatecards.downloadDefaultCards = downloadMock;
-  return updatecards.updateCardbase(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.updateCardbase(mockRatings, [], 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
@@ -574,7 +580,7 @@ test('addLanguageMapping successfully adds a language mapping to the internal st
 
 test('initializeCatalog clears the updatecards structures', () => {
   expect.assertions(7);
-  return updatecards.saveAllCards(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.saveAllCards(mockRatings, [], 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     updatecards.initializeCatalog();
     expect(Object.keys(updatecards.catalog.dict).length).toBe(0);
     expect(updatecards.catalog.names.length).toBe(0);
@@ -588,7 +594,7 @@ test('initializeCatalog clears the updatecards structures', () => {
 
 test('saveAllCards creates the expected files', () => {
   expect.assertions(8);
-  return updatecards.saveAllCards(mockRatings, 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
+  return updatecards.saveAllCards(mockRatings, [], 'private-test', cardsFixturePath, emptyFixturePath).then(() => {
     expect(fs.existsSync('private-test/cardtree.json')).toBe(true);
     expect(fs.existsSync('private-test/imagedict.json')).toBe(true);
     expect(fs.existsSync('private-test/cardimages.json')).toBe(true);
