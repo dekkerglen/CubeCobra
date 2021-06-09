@@ -19,6 +19,7 @@ const { fromEntries } = require('../serverjs/util');
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 const RELATED_LIMIT = 24;
 let ORACLE_COUNT = 0;
+const MIN_PICKS = 100;
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
 
@@ -282,7 +283,7 @@ const processCard = async (
       : [0, 0];
   }
 
-  const cubes = cardUseCount[card.oracle_id];
+  currentDatapoint.cubes = currentDatapoint.total[0];
 
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
@@ -353,6 +354,8 @@ const processCard = async (
     data: currentDatapoint,
   });
 
+  cardHistory.inTopCards = cardHistory.current.picks > MIN_PICKS;
+
   await cardHistory.save();
 };
 
@@ -404,8 +407,6 @@ const run = async () => {
 
   const distinctOracles = carddb.allOracleIds();
   ORACLE_COUNT = distinctOracles.length;
-
-  console.log(distinctOracles[0]);
 
   winston.info(`Created list of ${ORACLE_COUNT} oracles`);
 

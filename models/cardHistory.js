@@ -55,12 +55,16 @@ const cardHistorySchema = mongoose.Schema({
     ],
     default: [],
   },
+  inTopCards: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-cardHistorySchema.index({ oracleId: 1, 'current.rating': 1 });
-cardHistorySchema.index({ oracleId: 1, 'current.elo': -1 });
-cardHistorySchema.index({ oracleId: 1, 'current.picks': -1 });
-cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1 });
+cardHistorySchema.index({ oracleId: 1, 'current.rating': 1, inTopCards: 1 });
+cardHistorySchema.index({ oracleId: 1, 'current.elo': -1, inTopCards: 1 });
+cardHistorySchema.index({ oracleId: 1, 'current.picks': -1, inTopCards: 1 });
+cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1, inTopCards: 1 });
 
 const CardHistory = mongoose.model('CardHistory', cardHistorySchema);
 
