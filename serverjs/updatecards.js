@@ -866,7 +866,7 @@ const downloadFromS3 = async (basePath = 'private') => {
   winston.info('Finished downloading files from S3...');
 };
 
-async function updateCardbase(ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(ratings, histories, basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
