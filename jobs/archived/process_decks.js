@@ -91,7 +91,7 @@ const processDeck = (deck, draft, analytic) => {
       for (const col of deck.seats[0].deck) {
         for (const current of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(current.cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =
@@ -103,7 +103,7 @@ const processDeck = (deck, draft, analytic) => {
       for (const col of deck.seats[0].sideboard) {
         for (const current of col) {
           let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
+            (card) => card.cardName === carddb.cardFromId(current.cardID).name.toLowerCase(),
           );
           if (pickIndex === -1) {
             pickIndex =

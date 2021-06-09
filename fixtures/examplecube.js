@@ -12,6 +12,7 @@ const exampleCube = {
       cardID: 'fb6b12e7-bb93-4eb6-bad1-b256a6ccff4e',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.089Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -21,6 +22,7 @@ const exampleCube = {
       cardID: 'c2089ec9-0665-448f-bfe9-d181de127814',
       type_line: 'Creature — Faerie',
       addedTmsp: '2019-09-28T20:58:35.092Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -30,6 +32,7 @@ const exampleCube = {
       cardID: '84128e98-87d6-4c2f-909b-9435a7833e63',
       type_line: 'Artifact',
       addedTmsp: '2019-09-28T20:58:35.093Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -39,6 +42,7 @@ const exampleCube = {
       cardID: 'c7d5e394-8e41-442e-ae97-a478a61e1b9d',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.093Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -48,6 +52,7 @@ const exampleCube = {
       cardID: 'ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1',
       type_line: 'Legendary Creature — Elf Noble',
       addedTmsp: '2019-09-28T20:58:35.093Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -57,6 +62,7 @@ const exampleCube = {
       cardID: 'a66f5ea7-ddbb-4b89-b812-77bd17972cf9',
       type_line: 'Creature — Giant',
       addedTmsp: '2019-09-28T20:58:35.094Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -66,6 +72,7 @@ const exampleCube = {
       cardID: 'fe0a63bb-dd94-429f-aa9b-21f3d1c53ae5',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.094Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -75,6 +82,7 @@ const exampleCube = {
       cardID: '09fd2d9c-1793-4beb-a3fb-7a869f660cd4',
       type_line: 'Creature — Giant',
       addedTmsp: '2019-09-28T20:58:35.094Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -84,6 +92,7 @@ const exampleCube = {
       cardID: 'c2089ec9-0665-448f-bfe9-d181de127814',
       type_line: 'Creature — Faerie Rogue',
       addedTmsp: '2019-09-28T20:58:35.095Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -93,6 +102,7 @@ const exampleCube = {
       cardID: '7f910495-8bd7-4134-a281-c16fd666d5cc',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.095Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -102,6 +112,7 @@ const exampleCube = {
       cardID: '8bb8512e-6913-4be6-8828-24cfcbec042e',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.096Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -111,6 +122,7 @@ const exampleCube = {
       cardID: 'e3c2c66c-f7f0-41d5-a805-a129aeaf1b75',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.100Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -120,6 +132,7 @@ const exampleCube = {
       cardID: '195383c1-4723-40b0-ba53-298dfd8e30d0',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.100Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -129,6 +142,7 @@ const exampleCube = {
       cardID: '0a8b9d37-e89c-44ad-bd1b-51cb06ec3e0b',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.101Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -138,6 +152,7 @@ const exampleCube = {
       cardID: 'dcb94950-3f3e-4876-84f8-d5e4d9cfecee',
       type_line: 'Creature — Human Noble',
       addedTmsp: '2019-09-28T20:58:35.102Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -147,6 +162,7 @@ const exampleCube = {
       cardID: '85929131-4df6-415c-b592-aefb2943c477',
       type_line: 'Creature — Troll',
       addedTmsp: '2019-09-28T20:58:35.103Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -156,6 +172,7 @@ const exampleCube = {
       cardID: 'ec1f1041-f667-4b73-b1f2-e5bcae84095e',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.103Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -165,6 +182,7 @@ const exampleCube = {
       cardID: '7f78a570-d776-42f2-a609-6da0156c8de7',
       type_line: 'Creature — Human Peasant',
       addedTmsp: '2019-09-28T20:58:35.104Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -174,6 +192,7 @@ const exampleCube = {
       cardID: '5dca90ef-1c17-4dcc-9fef-dab9ee92f590',
       type_line: 'Sorcery',
       addedTmsp: '2019-09-28T20:58:35.104Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -183,6 +202,7 @@ const exampleCube = {
       cardID: 'e76c0c83-3e87-474d-bc72-1677eed32cfa',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.104Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -192,6 +212,7 @@ const exampleCube = {
       cardID: 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6',
       type_line: 'Legendary Artifact — Equipment',
       addedTmsp: '2019-09-28T20:58:35.105Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -201,6 +222,7 @@ const exampleCube = {
       cardID: '6cc73d16-5ed7-4104-91f6-0997a2080e2e',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.105Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -210,6 +232,7 @@ const exampleCube = {
       cardID: 'bf4b9a8a-b42a-46fb-b0d0-9cf800f63c8a',
       type_line: 'Legendary Creature — Merfolk Wizard',
       addedTmsp: '2019-09-28T20:58:35.105Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -219,6 +242,7 @@ const exampleCube = {
       cardID: '3e26c10b-179f-4a6e-bc8d-3ec1d6783fb9',
       type_line: 'Sorcery',
       addedTmsp: '2019-09-28T20:58:35.106Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -228,6 +252,7 @@ const exampleCube = {
       cardID: 'b841bfa8-7c17-4df2-8466-780ab9a4a53a',
       type_line: 'Land',
       addedTmsp: '2019-09-28T20:58:35.106Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -237,6 +262,7 @@ const exampleCube = {
       cardID: 'e3435fd6-8f51-4d99-a278-4ddb088acfe1',
       type_line: 'Creature — Faerie Wizard',
       addedTmsp: '2019-09-28T20:58:35.106Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -246,6 +272,7 @@ const exampleCube = {
       cardID: '1ca29912-88b1-413f-ad9d-63d7d1b1ca16',
       type_line: 'Creature — Treefolk Druid',
       addedTmsp: '2019-09-28T20:58:35.107Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -255,6 +282,7 @@ const exampleCube = {
       cardID: 'e8bbece8-9620-44d9-b991-350fe952538a',
       type_line: 'Creature — Faerie',
       addedTmsp: '2019-09-28T20:58:35.107Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -264,6 +292,7 @@ const exampleCube = {
       cardID: '9a6bb435-1205-416a-a5a0-ca6d37b4dcb2',
       type_line: 'Creature — Troll Noble',
       addedTmsp: '2019-09-28T20:58:35.107Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -273,6 +302,7 @@ const exampleCube = {
       cardID: 'c52d66db-5570-48a1-99cf-e0417517747b',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.108Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -282,6 +312,7 @@ const exampleCube = {
       cardID: 'a12b16b0-f75f-42d8-9b24-947c1908e0f7',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.108Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -291,6 +322,7 @@ const exampleCube = {
       cardID: '06bd1ad2-fb5d-4aef-87d1-13a341c686fa',
       type_line: 'Creature — Human Berserker',
       addedTmsp: '2019-09-28T20:58:35.108Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -300,6 +332,7 @@ const exampleCube = {
       cardID: '6afc67d1-1018-4a15-ab5f-377fd11dcd3d',
       type_line: 'Artifact',
       addedTmsp: '2019-09-28T20:58:35.109Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -309,6 +342,7 @@ const exampleCube = {
       cardID: 'c5f6c745-e46a-42eb-8eca-b7b74ab1245e',
       type_line: 'Creature — Zombie Knight',
       addedTmsp: '2019-09-28T20:58:35.109Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -318,6 +352,7 @@ const exampleCube = {
       cardID: '62ddce0d-f22a-4fcd-9a4a-d71938750ba1',
       type_line: 'Legendary Creature — Human Wizard',
       addedTmsp: '2019-09-28T20:58:35.110Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -327,6 +362,7 @@ const exampleCube = {
       cardID: '194b7a1c-291a-470e-9a40-61b72a46793b',
       type_line: 'Creature — Human Warrior',
       addedTmsp: '2019-09-28T20:58:35.110Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -336,6 +372,7 @@ const exampleCube = {
       cardID: 'abef512f-8f1d-4257-b16f-c0eed58670ec',
       type_line: 'Legendary Planeswalker — Garruk',
       addedTmsp: '2019-09-28T20:58:35.110Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -345,6 +382,7 @@ const exampleCube = {
       cardID: '75754468-2850-42e6-ab22-61ff7b9d1214',
       type_line: 'Creature — Human Peasant',
       addedTmsp: '2019-09-28T20:58:35.111Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -354,6 +392,7 @@ const exampleCube = {
       cardID: '30377bf0-d9b1-4c14-8dde-f74b1e02d604',
       type_line: 'Creature — Bird',
       addedTmsp: '2019-09-28T20:58:35.111Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -363,6 +402,7 @@ const exampleCube = {
       cardID: '562f1c51-d245-4771-bf61-415297e4f9d5',
       type_line: 'Artifact',
       addedTmsp: '2019-09-28T20:58:35.111Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -372,6 +412,7 @@ const exampleCube = {
       cardID: 'd32d85d5-a6f0-4cc5-9fd6-6b329aae2e5b',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.112Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -381,6 +422,7 @@ const exampleCube = {
       cardID: 'c7093834-9627-4da2-9322-c03bfd5b3a71',
       type_line: 'Creature — Archon',
       addedTmsp: '2019-09-28T20:58:35.112Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -390,6 +432,7 @@ const exampleCube = {
       cardID: '663b3e6f-1099-4de8-a0a7-6f1919c38010',
       type_line: 'Creature — Faerie',
       addedTmsp: '2019-09-28T20:58:35.112Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -399,6 +442,7 @@ const exampleCube = {
       cardID: '7acbd812-b994-4e68-8f95-04222796e994',
       type_line: 'Creature — Faerie',
       addedTmsp: '2019-09-28T20:58:35.113Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -408,6 +452,7 @@ const exampleCube = {
       cardID: '0461867b-ec35-4d37-a398-5247e06c4afe',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.114Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -417,6 +462,7 @@ const exampleCube = {
       cardID: '0c3f372d-259d-4a31-9491-2d369b3f3f8b',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.116Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -426,6 +472,7 @@ const exampleCube = {
       cardID: 'b5bcf822-e129-45f6-9403-310ce9410f3b',
       type_line: 'Sorcery',
       addedTmsp: '2019-09-28T20:58:35.118Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -435,6 +482,7 @@ const exampleCube = {
       cardID: '9a7b0ead-5629-429d-bede-8154f3fae96d',
       type_line: 'Creature — Human Wizard',
       addedTmsp: '2019-09-28T20:58:35.118Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -444,6 +492,7 @@ const exampleCube = {
       cardID: '6da7cd39-1f8a-4f68-adb7-df2beac02263',
       type_line: 'Enchantment — Aura',
       addedTmsp: '2019-09-28T20:58:35.119Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -453,6 +502,7 @@ const exampleCube = {
       cardID: 'fa3ab467-be97-4b84-a73d-b03484d06b97',
       type_line: 'Legendary Creature — Human Noble',
       addedTmsp: '2019-09-28T20:58:35.119Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -462,6 +512,7 @@ const exampleCube = {
       cardID: '3287beea-747c-4cb6-aea5-051e85c5de8d',
       type_line: 'Creature — Serpent',
       addedTmsp: '2019-09-28T20:58:35.120Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -471,6 +522,7 @@ const exampleCube = {
       cardID: '99083707-2152-42c0-b5c3-b4f97ec20190',
       type_line: 'Creature — Unicorn',
       addedTmsp: '2019-09-28T20:58:35.120Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -480,6 +532,7 @@ const exampleCube = {
       cardID: '4ccdef9c-1e85-4358-8059-8972479f7556',
       type_line: 'Creature — Beast Noble',
       addedTmsp: '2019-09-28T20:58:35.120Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -489,6 +542,7 @@ const exampleCube = {
       cardID: '0b4399b6-e67f-40d8-8676-f5db7e04a6c9',
       type_line: 'Creature — Human Peasant',
       addedTmsp: '2019-09-28T20:58:35.121Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -498,6 +552,7 @@ const exampleCube = {
       cardID: 'ceb7308d-608c-4ede-9496-d795fc5bb271',
       type_line: 'Creature — Merfolk Wizard',
       addedTmsp: '2019-09-28T20:58:35.121Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -507,6 +562,7 @@ const exampleCube = {
       cardID: '0f7f1148-7b1b-4969-a2f8-428de1e2e8ff',
       type_line: 'Artifact',
       addedTmsp: '2019-09-28T20:58:35.122Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -516,6 +572,7 @@ const exampleCube = {
       cardID: 'a10c1407-d397-4caa-b7b7-e7d91ffd4ee9',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.122Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -525,6 +582,7 @@ const exampleCube = {
       cardID: 'e73d8a84-2c0d-423c-89c7-71de0af9e1ac',
       type_line: 'Creature — Zombie Knight',
       addedTmsp: '2019-09-28T20:58:35.122Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -534,6 +592,7 @@ const exampleCube = {
       cardID: '8a665794-513f-4f78-92c9-1844ec27c79c',
       type_line: 'Creature — Elf Knight',
       addedTmsp: '2019-09-28T20:58:35.123Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -543,6 +602,7 @@ const exampleCube = {
       cardID: '9173ffda-1d3b-4dab-8dcb-de44717de464',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.123Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -552,6 +612,7 @@ const exampleCube = {
       cardID: '3462a3d0-5552-49fa-9eb7-100960c55891',
       type_line: 'Legendary Planeswalker — Oko',
       addedTmsp: '2019-09-28T20:58:35.123Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -561,6 +622,7 @@ const exampleCube = {
       cardID: '4034e5ba-9974-43e3-bde7-8d9b4586c3a4',
       type_line: 'Instant',
       addedTmsp: '2019-09-28T20:58:35.124Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -570,6 +632,7 @@ const exampleCube = {
       cardID: '3fa16922-3583-4f5b-8805-509b95a8da49',
       type_line: 'Creature — Dragon',
       addedTmsp: '2019-09-28T20:58:35.124Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -579,6 +642,7 @@ const exampleCube = {
       cardID: '330cc452-4382-401d-9432-ac27ae6e27ad',
       type_line: 'Creature — Human Knight',
       addedTmsp: '2019-09-28T20:58:35.124Z',
+      finish: 'Non-foil',
     },
     {
       tags: ['New'],
@@ -588,6 +652,7 @@ const exampleCube = {
       cardID: '5d7585ab-a364-471c-8ef1-318e459b4020',
       type_line: 'Enchantment',
       addedTmsp: '2019-09-28T20:58:35.125Z',
+      finish: 'Non-foil',
     },
   ],
   tag_colors: [],

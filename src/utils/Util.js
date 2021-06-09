@@ -189,6 +189,10 @@ export function isInternalURL(to) {
     return false;
   }
 }
+export function toNullableInt(str) {
+  const val = parseInt(str, 10);
+  return Number.isInteger(val) ? val : null;
+}
 
 export function isSamePageURL(to) {
   try {
@@ -220,5 +224,6 @@ export default {
   getCubeId,
   getCubeDescription,
   isInternalURL,
+  toNullableInt,
   isSamePageURL,
 };

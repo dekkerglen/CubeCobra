@@ -38,7 +38,7 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import { csrfFetch } from 'utils/CSRF';
-import Draft, { init } from 'utils/Draft';
+import { allBotsDraft } from 'drafting/draftutil';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -120,10 +120,18 @@ const useBotsOnlyCallback = (botsOnly, cubeID) => {
           method: 'POST',
           body,
         });
+
         const json = await response.json();
-        init(json.draft);
-        setDraftId(Draft.id());
-        await Draft.allBotsDraft();
+
+        setDraftId(json.draft._id);
+        const draft = await allBotsDraft(json.draft);
+
+        await csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+          method: 'POST',
+          body: JSON.stringify(draft),
+          headers: { 'Content-Type': 'application/json' },
+        });
+
         submitDeckForm.current.submit();
       }
     },
@@ -264,12 +272,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         <CardBody>
           <LabelRow htmlFor="packs" label="Number of Packs">
             <Input type="select" name="packs" id="packs" defaultValue="3">
-              {rangeOptions(1, 11)}
+              {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="cards" label="Cards per Pack">
             <Input type="select" name="cards" id="cards" defaultValue="15">
-              {rangeOptions(1, 21)}
+              {rangeOptions(1, 25)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="seats" label="Total Seats">
@@ -318,12 +326,12 @@ const SealedCard = () => {
         <CardBody>
           <LabelRow htmlFor="packs-sealed" label="Number of Packs">
             <Input type="select" name="packs" id="packs-sealed" defaultValue="6">
-              {rangeOptions(1, 11)}
+              {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
           <LabelRow htmlFor="cards-sealed" label="Cards per Pack">
             <Input type="select" name="cards" id="cards-sealed" defaultValue="15">
-              {rangeOptions(5, 21)}
+              {rangeOptions(5, 25)}
             </Input>
           </LabelRow>
         </CardBody>
@@ -418,11 +426,14 @@ const SamplePackCard = (props) => {
 };
 
 const DEFAULT_FORMAT = {
-  packs: [['rarity:Mythic', 'tag:new', 'identity>1']],
+  title: 'Unnamed Format',
+  multiples: false,
+  markdown: '',
+  packs: [{ slots: ['rarity:Mythic', 'tag:new', 'identity>1'], steps: null }],
 };
-const CubePlaytestPage = ({ user, cube, decks, draftFormats, loginCallback }) => {
+const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
   const { alerts, addAlert } = useAlerts();
-  const [formats, setFormats] = useState(draftFormats);
+  const [formats, setFormats] = useState(cube.draft_formats ?? []);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
@@ -576,14 +587,26 @@ CubePlaytestPage.propTypes = {
     defaultDraftFormat: PropTypes.number,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
+    draft_formats: PropTypes.arrayOf(
+      PropTypes.shape({
+        title: PropTypes.string,
+        multiples: PropTypes.bool,
+        markdown: PropTypes.string.isRequired,
+        packs: PropTypes.arrayOf(
+          PropTypes.shape({
+            slots: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+            steps: PropTypes.arrayOf(
+              PropTypes.shape({
+                action: PropTypes.oneOf(['pass', 'pick', 'trash', 'pickrandom', 'trashrandom']),
+                amount: PropTypes.number,
+              }),
+            ),
+          }).isRequired,
+        ).isRequired,
+      }).isRequired,
+    ),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
-  draftFormats: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      markdown: PropTypes.string,
-    }),
-  ).isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };

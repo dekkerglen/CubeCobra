@@ -1,9 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
-
 import {
   Card,
   CardBody,
@@ -19,46 +15,39 @@ import {
   Badge,
 } from 'reactstrap';
 
-import Location from 'utils/DraftLocation';
-import { cardType, cardIsSpecialZoneType } from 'utils/Card';
-
+import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
-import FoilCardImage from 'components/FoilCardImage';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import FoilCardImage from 'components/FoilCardImage';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
-import CSRFForm from 'components/CSRFForm';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
+import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import { createSeen, addSeen, init, buildDeck } from 'utils/Draft';
-import { botRatingAndCombination } from 'utils/draftbots';
+import Location, { moveOrAddCard } from 'drafting/DraftLocation';
+import { calculateBotPickFromOptions } from 'drafting/draftbots';
+import { getDefaultPosition } from 'drafting/draftutil';
+import { getGridDrafterState } from 'drafting/griddraftutils';
+import RenderToRoot from 'utils/RenderToRoot';
+import { fromEntries, toNullableInt } from 'utils/Util';
 
-export const subtitle = (cards) => {
-  const numCards = cards.length;
-  const numLands = cards.filter((card) => cardType(card).includes('land')).length;
-  const numNonlands = cards.filter((card) => !cardType(card).includes('land') && !cardIsSpecialZoneType(card)).length;
-  const numCreatures = cards.filter((card) => cardType(card).includes('creature')).length;
-  const numNonCreatures = numNonlands - numCreatures;
-  return (
-    `${numCards} card${numCards === 1 ? '' : 's'}: ` +
-    `${numLands} land${numLands === 1 ? '' : 's'}, ` +
-    `${numNonlands} nonland: ` +
-    `${numCreatures} creature${numCreatures === 1 ? '' : 's'}, ` +
-    `${numNonCreatures} noncreature${numNonCreatures === 1 ? '' : 's'}`
-  );
-};
+const GRID_DRAFT_OPTIONS = [0, 1, 2]
+  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
+  .flat(1);
+export const calculateGridBotPick = calculateBotPickFromOptions(GRID_DRAFT_OPTIONS);
 
-const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
+const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
         <h4>
-          Pack {packNumber}, Pick {pickNumber}
+          Pack {packNumber + 1}, Pick {pickNumber + 1}
         </h4>
         <h4 className="mb-0">
           {turn && (
@@ -72,7 +61,19 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
         <Col xs="1" />
         {[0, 1, 2].map((col) => (
           <Col key={`col-btn-${col}`} xs="3" md="2">
-            <Button block outline color="success" onClick={() => pickCol(col)}>
+            <Button
+              block
+              outline
+              color="success"
+              onClick={() => {
+                makePick({
+                  seatIndex,
+                  cardIndices: [0, 1, 2]
+                    .map((row) => [pack[3 * row + col]?.index, 3 * row + col])
+                    .filter(([x]) => x || x === 0),
+                });
+              }}
+            >
               🡇
             </Button>
           </Col>
@@ -81,7 +82,19 @@ const Pack = ({ pack, packNumber, pickNumber, pickRow, pickCol, turn }) => (
       {[0, 1, 2].map((row) => (
         <Row key={`row-${row}`} className="justify-content-center">
           <Col className="my-2" xs="1">
-            <Button className="float-right h-100" outline color="success" onClick={() => pickRow(row)}>
+            <Button
+              className="float-right h-100"
+              outline
+              color="success"
+              onClick={() => {
+                makePick({
+                  seatIndex,
+                  cardIndices: [0, 1, 2]
+                    .map((col) => [pack[3 * row + col]?.index, 3 * row + col])
+                    .filter(([x]) => x || x === 0),
+                });
+              }}
+            >
               🡆
             </Button>
           </Col>
@@ -110,8 +123,8 @@ Pack.propTypes = {
   pack: PropTypes.arrayOf(CardPropType).isRequired,
   packNumber: PropTypes.number.isRequired,
   pickNumber: PropTypes.number.isRequired,
-  pickRow: PropTypes.func.isRequired,
-  pickCol: PropTypes.func.isRequired,
+  seatIndex: PropTypes.number.isRequired,
+  makePick: PropTypes.func.isRequired,
   turn: PropTypes.number,
 };
 
@@ -119,226 +132,88 @@ Pack.defaultProps = {
   turn: null,
 };
 
-const seen = createSeen();
-const picked = createSeen();
-
-const options = [];
-
-for (let index = 0; index < 3; index++) {
-  let mask = [];
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      if (i === index) {
-        mask.push(true);
-      } else {
-        mask.push(false);
-      }
+const MUTATIONS = {
+  makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
+    newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
+    newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
+    for (const [cardIndex] of cardIndices) {
+      const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].drafted);
+      newGridDraft.seats[seatIndex].drafted = moveOrAddCard(newGridDraft.seats[seatIndex].drafted, pos, cardIndex);
     }
-  }
-  options.push(mask);
+  },
+};
 
-  mask = [];
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      if (j === index) {
-        mask.push(true);
-      } else {
-        mask.push(false);
-      }
-    }
-  }
-  options.push(mask);
-}
+const useMutatableGridDraft = (initialGridDraft) => {
+  const { cards } = initialGridDraft;
+  const [gridDraft, setGridDraft] = useState(initialGridDraft);
+  const mutations = fromEntries(
+    Object.entries(MUTATIONS).map(([name, mutation]) => [
+      name,
+      // eslint-disable-next-line
+      useCallback(
+        ({ seatIndex, cardIndices }) =>
+          setGridDraft((oldGridDraft) => {
+            const newGridDraft = { ...oldGridDraft };
+            newGridDraft.seats = [...newGridDraft.seats];
+            newGridDraft.seats[seatIndex] = { ...newGridDraft.seats[seatIndex] };
+            mutation({ newGridDraft, seatIndex, cardIndices });
+            return newGridDraft;
+          }),
+        // eslint-disable-next-line
+        [mutation, setGridDraft, cards],
+      ),
+    ]),
+  );
+  return { gridDraft, mutations };
+};
 
-const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
-  useMemo(() => init(initialDraft), [initialDraft]);
-
-  const [pack, setPack] = useState(initialDraft.unopenedPacks[0]);
-  const [packNumber, setPackNumber] = useState(1);
-  const [pickNumber, setPickNumber] = useState(1);
-  const [picks, setPicks] = useState([[[], [], [], [], [], [], [], []]]);
-  const [botPicks, setBotPicks] = useState([[[], [], [], [], [], [], [], []]]);
-  const [pickOrder, setPickOrder] = useState([]);
-  const [botPickOrder, setBotPickOrder] = useState([]);
-  const [turn, setTurn] = useState(0);
-  const [finished, setFinished] = useState(false);
-
+export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
+  const { cards, draftType } = initialDraft;
+  const seatNum = toNullableInt(seatNumber) ?? 0;
+  const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
+  const drafterStates = useMemo(
+    () => [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx })),
+    [gridDraft],
+  );
+  const { turn, numPacks, packNum, pickNum, cardsInPack } = drafterStates[seatNum];
+  const doneDrafting = packNum >= numPacks;
+  const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
+  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
+  const picked = useMemo(
+    () =>
+      gridDraft.seats.map(({ drafted }) =>
+        drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
+      ),
+    [gridDraft, cards],
+  );
+  const botIndex = (seatNum + 1) % 2;
+  const botDrafterState = drafterStates[botIndex];
 
-  const makeBotPick = (tempPack) => {
-    const cardsSeen = tempPack.filter((card) => card);
-    addSeen(seen, cardsSeen);
-
-    const ratings = options.map((mask) => {
-      const cards = mask.map((include, index) => (include ? tempPack[index] : null)).filter((card) => card);
-
-      let rating = 0;
-
-      for (const card of cards) {
-        rating += botRatingAndCombination(
-          card,
-          picked,
-          seen,
-          [initialDraft.initial_state],
-          cardsSeen.length,
-          packNumber,
-        ).rating;
+  // The finish callback.
+  useEffect(() => {
+    (async () => {
+      const submitableGridDraft = {
+        ...gridDraft,
+        cards: gridDraft.cards.map(({ details: _, ...card }) => ({ ...card })),
+      };
+      await csrfFetch(`/cube/api/submitgriddraft/${gridDraft.cube}`, {
+        method: 'POST',
+        body: JSON.stringify(submitableGridDraft),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (doneDrafting) {
+        // eslint-disable-next-line
+        submitDeckForm.current?.submit?.();
       }
+    })();
+  }, [doneDrafting, gridDraft]);
 
-      return rating;
-    });
-
-    const mask = options[ratings.indexOf(Math.max(...ratings))];
-    const tempPicks = [];
-
-    for (let i = 0; i < 9; i++) {
-      if (mask[i] && tempPack[i]) {
-        tempPicks.push(tempPack[i]);
-        tempPack[i] = null;
-      }
+  useEffect(() => {
+    if (botDrafterState.turn && draftType === 'bot') {
+      mutations.makePick({ cardIndices: calculateGridBotPick(botDrafterState), seatIndex: botIndex });
     }
-
-    setBotPickOrder(botPickOrder.concat([tempPicks]));
-    addSeen(picked, tempPicks);
-
-    return [tempPack, tempPicks];
-  };
-
-  const nextPack = () => {
-    if (initialDraft.unopenedPacks.length < packNumber + 1) {
-      return [];
-    }
-
-    setPackNumber(packNumber + 1);
-
-    return initialDraft.unopenedPacks[packNumber];
-  };
-
-  const finish = async () => {
-    const updatedDraft = JSON.parse(JSON.stringify(initialDraft));
-
-    if (initialDraft.draftType === 'bot') {
-      const { deck, sideboard, colors } = await buildDeck(botPicks.flat(3), initialDraft.basics);
-
-      updatedDraft.seats[1].drafted = deck;
-      updatedDraft.seats[1].sideboard = sideboard;
-      updatedDraft.seats[1].pickorder = botPickOrder;
-      updatedDraft.seats[1].name = `Bot: ${colors.length > 0 ? colors.join(', ') : 'C'}`;
-    } else {
-      updatedDraft.seats[1].drafted = botPicks.flat();
-      updatedDraft.seats[1].sideboard = [];
-      updatedDraft.seats[1].pickorder = botPickOrder;
-      updatedDraft.seats[1].name = `Player Two`;
-    }
-
-    updatedDraft.seats[0].drafted = picks.flat();
-    updatedDraft.seats[0].sideboard = [];
-    updatedDraft.seats[0].pickorder = pickOrder;
-
-    await csrfFetch(`/cube/api/submitgriddraft/${initialDraft.cube}`, {
-      method: 'POST',
-      body: JSON.stringify(updatedDraft),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    submitDeckForm.current.submit();
-  };
-
-  const makePick = (mask) => {
-    let tempPack = JSON.parse(JSON.stringify(pack));
-    const tempPicks = turn === 0 ? JSON.parse(JSON.stringify(picks)) : JSON.parse(JSON.stringify(botPicks));
-    const newPicks = [];
-
-    for (let i = 0; i < 9; i++) {
-      if (mask[i] && tempPack[i]) {
-        const card = tempPack[i];
-        tempPack[i] = null;
-        tempPicks[0][Math.min(card.cmc || card.details.cmc || 0, 7)].push(card);
-        newPicks.push(card);
-      }
-    }
-
-    if (initialDraft.draftType === 'bot') {
-      if (packNumber % 2 === 1) {
-        const [, newBotPicks] = makeBotPick(tempPack);
-        tempPack = nextPack();
-        const [newPack, bot2] = makeBotPick(tempPack);
-        tempPack = newPack;
-
-        const tempBotPicks = JSON.parse(JSON.stringify(botPicks));
-
-        for (const pick of newBotPicks.concat(bot2)) {
-          tempBotPicks[0][Math.min(pick.cmc || pick.details.cmc || 0, 7)].push(pick);
-        }
-
-        setBotPicks(tempBotPicks);
-        setPickNumber(1);
-      } else {
-        tempPack = nextPack();
-        setPickNumber(2);
-      }
-    }
-
-    if (turn === 0) {
-      setPicks(tempPicks);
-      setPickOrder(pickOrder.concat([newPicks]));
-    } else {
-      setBotPicks(tempPicks);
-      setBotPickOrder(pickOrder.concat([newPicks]));
-    }
-
-    if (initialDraft.draftType === '2playerlocal') {
-      if (pickNumber === 1) {
-        setTurn((turn + 1) % 2);
-        setPickNumber(2);
-      }
-
-      if (pickNumber === 2) {
-        tempPack = nextPack();
-        setPickNumber(1);
-      }
-    }
-
-    if (tempPack.length > 0) {
-      setPack(tempPack);
-    } else {
-      setFinished(true);
-    }
-  };
-
-  const pickRow = (row) => {
-    const mask = [];
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        if (i === row) {
-          mask.push(true);
-        } else {
-          mask.push(false);
-        }
-      }
-    }
-    makePick(mask);
-  };
-
-  const pickCol = (col) => {
-    const mask = [];
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        if (j === col) {
-          mask.push(true);
-        } else {
-          mask.push(false);
-        }
-      }
-    }
-    makePick(mask);
-  };
-
-  if (finished) {
-    finish();
-  }
+  }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
@@ -362,25 +237,20 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
           </CSRFForm>
           <DndProvider>
             <ErrorBoundary>
-              {initialDraft.draftType === 'bot' ? (
-                <Pack pack={pack} packNumber={packNumber} pickNumber={pickNumber} pickRow={pickRow} pickCol={pickCol} />
-              ) : (
-                <Pack
-                  pack={pack}
-                  packNumber={packNumber}
-                  pickNumber={pickNumber}
-                  pickRow={pickRow}
-                  pickCol={pickCol}
-                  turn={turn + 1}
-                />
-              )}
+              <Pack
+                pack={pack}
+                packNumber={packNum}
+                pickNumber={pickNum}
+                seatIndex={turn ? 0 : 1}
+                makePick={mutations.makePick}
+              />
             </ErrorBoundary>
             <ErrorBoundary className="mt-3">
               <Card className="mt-3">
                 <DeckStacks
-                  cards={picks}
+                  cards={picked[0]}
                   title="Picks"
-                  subtitle={subtitle(picks.flat().flat())}
+                  subtitle={makeSubtitle(picked[0].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
                   onMoveCard={() => {}}
@@ -388,9 +258,9 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
               </Card>
               <Card className="my-3">
                 <DeckStacks
-                  cards={botPicks}
+                  cards={picked[1]}
                   title="Bot Picks"
-                  subtitle={subtitle(botPicks.flat().flat())}
+                  subtitle={makeSubtitle(picked[1].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
                   onMoveCard={() => {}}
@@ -407,20 +277,22 @@ const GridDraftPage = ({ user, cube, initialDraft, loginCallback }) => {
 GridDraftPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
+    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.array.isRequired,
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
-    synergies: PropTypes.array.isRequired,
-    basics: PropTypes.shape([]),
+    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired)).isRequired,
+    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
     cube: PropTypes.string.isRequired,
     draftType: PropTypes.string.isRequired,
   }).isRequired,
+  seatNumber: PropTypes.number,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 GridDraftPage.defaultProps = {
+  seatNumber: 0,
   user: null,
   loginCallback: '/',
 };

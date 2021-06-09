@@ -1,48 +1,8 @@
 const mongoose = require('mongoose');
 
-const Card = {
-  tags: [
-    {
-      type: String,
-      minlength: 1,
-    },
-  ],
-  finish: {
-    type: String,
-    default: 'Non-foil',
-  },
-  status: {
-    type: String,
-    default: 'Not Owned',
-  },
-  colors: {
-    type: [
-      {
-        type: String,
-      },
-    ],
-    default: null,
-  },
-  cmc: {
-    type: Number,
-    min: 0,
-    default: null,
-  },
-  cardID: String,
-  type_line: String,
-  rarity: {
-    type: String,
-    default: null,
-  },
-  addedTmsp: Date,
-  imgUrl: String,
-  imgBackUrl: String,
-  notes: String,
-  colorCategory: {
-    type: String,
-    default: null,
-  },
-};
+const cardSchema = require('./shared/cardSchema');
+const stepsSchema = require('./shared/stepsSchema');
+const CURRENT_SCHEMA_VERSION = require('./migrations/cubeMigrations').slice(-1)[0].version;
 
 // Cube schema
 const cubeSchema = mongoose.Schema({
@@ -83,16 +43,12 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
-  tags: {
-    type: [String],
-    default: [],
-  },
   cards: {
-    type: [Card],
+    type: [cardSchema],
     default: [],
   },
   maybe: {
-    type: [Card],
+    type: [cardSchema],
     default: [],
   },
   tag_colors: [
@@ -127,7 +83,9 @@ const cubeSchema = mongoose.Schema({
         multiples: Boolean,
         html: String,
         markdown: String,
-        packs: String,
+        packs: {
+          type: [{ slots: [String], steps: stepsSchema }],
+        },
       },
     ],
     default: [],
@@ -149,6 +107,15 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  schemaVersion: {
+    type: Number,
+    default() {
+      if (this.isNew) {
+        return CURRENT_SCHEMA_VERSION;
+      }
+      return void 0; // eslint-disable-line
+    },
+  },
   useCubeElo: {
     type: Boolean,
     default: false,
@@ -162,6 +129,23 @@ const cubeSchema = mongoose.Schema({
       '8365ab45-6d78-47ad-a6ed-282069b0fabc',
       '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
     ],
+  },
+  // These fields are just for indexing
+  tags: {
+    type: [String],
+    default: [],
+  },
+  cardOracles: {
+    type: [String],
+    default: [],
+  },
+  keywords: {
+    type: [String],
+    default: [],
+  },
+  categories: {
+    type: [String],
+    default: [],
   },
 });
 
@@ -190,7 +174,6 @@ cubeSchema.index({
 
 cubeSchema.index({
   isListed: 1,
-  owner: 1,
   card_count: 1,
   date_updated: -1,
 });
@@ -201,8 +184,56 @@ cubeSchema.index({
   numDecks: -1,
 });
 
-const Cube = mongoose.model('Cube', cubeSchema);
+cubeSchema.index({
+  schemaVersion: 1,
+});
 
+// these indexes are for searching
+
+cubeSchema.index({
+  isListed: 1,
+  tags: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  cardOracles: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  keywords: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  categories: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.pre('save', function saveCubeHook(next) {
+  this.schemaVersion = CURRENT_SCHEMA_VERSION;
+  this.card_count = this.cards.length;
+  next();
+});
+
+const Cube = mongoose.model('Cube', cubeSchema);
+Cube.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 Cube.LAYOUT_FIELDS =
   '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri shortID';
 Cube.PREVIEW_FIELDS =

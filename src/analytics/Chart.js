@@ -65,11 +65,10 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
     },
   };
 
-  const labels = useMemo(() => characteristics[characteristic].labels(cards, characteristic), [
-    characteristic,
-    characteristics,
-    cards,
-  ]);
+  const labels = useMemo(
+    () => characteristics[characteristic].labels(cards, characteristic),
+    [characteristic, characteristics, cards],
+  );
 
   const data = useMemo(
     () => ({
@@ -87,8 +86,6 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
     }),
     [labels, characteristic, characteristics, getColor, groups],
   );
-
-  console.log(data);
 
   return (
     <>

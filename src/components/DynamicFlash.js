@@ -8,15 +8,15 @@ const DynamicFlash = (props) => {
       const flashInput = document.getElementById('flash');
       const flashValue = flashInput ? flashInput.value : '[]';
       return JSON.parse(flashValue);
-    } else {
-      return [];
     }
+    return [];
   }, []);
 
   return (
     <div className="mt-3">
       {Object.keys(messages).map((type) =>
         messages[type].map((message, index) => (
+          // eslint-disable-next-line react/no-array-index-key
           <UncontrolledAlert key={type + index} color={type} {...props}>
             {message}
           </UncontrolledAlert>

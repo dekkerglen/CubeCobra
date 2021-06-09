@@ -64,7 +64,7 @@ function cardFromId(id, fields) {
     details = getPlaceholderCard(id);
   }
 
-  if (typeof fields === 'undefined') {
+  if (!fields) {
     return details;
   }
   if (!Array.isArray(fields)) {
@@ -133,8 +133,14 @@ function initializeCardDb(dataRoot, skipWatchers) {
 }
 
 function unloadCardDb() {
-  for (const attribute of Object.values(fileToAttribute)) {
+  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
     delete data[attribute];
+    try {
+      fs.unwatchFile(filename);
+    } catch (e) {
+      // This is likely just because we didn't register them.
+      winston.warn(null, { error: new Error(`Failed to unwatch file ${filename}.`) });
+    }
   }
   delete data.printedCardList;
 }

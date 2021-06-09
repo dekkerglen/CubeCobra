@@ -7,7 +7,7 @@ const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
-const { getDraftFormat, createDraft } = require('../dist/utils/draftutil.js');
+const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 
 function getCubeId(cube) {
   if (cube.shortID) return cube.shortID;
@@ -110,7 +110,27 @@ function setCubeType(cube, carddb) {
   if (peasant) {
     cube.type += ' Peasant';
   }
-  cube.card_count = cube.cards.length;
+
+  if (cube.overrideCategory) {
+    cube.categories = [cube.categoryOverride.toLowerCase(), ...cube.categoryPrefixes.map((c) => c.toLowerCase())];
+  } else {
+    cube.categories = Array.from(new Set(`${cube.type}`.toLowerCase().split(' ')));
+  }
+
+  cube.cardOracles = Array.from(new Set(cube.cards.map((card) => carddb.cardFromId(card.cardID).oracle_id)));
+  cube.keywords = `${cube.type} ${cube.name} ${cube.owner_name}`
+    .replace(/[^\w\s]/gi, '')
+    .toLowerCase()
+    .split(' ')
+    .filter((keyword) => keyword.length > 0);
+  cube.keywords.push(
+    ...(cube.tags || [])
+      .filter((tag) => tag && tag.length > 0)
+      .map((tag) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
+  );
+  cube.keywords.push(...cube.categories);
+  cube.keywords = Array.from(new Set(cube.keywords));
+
   return cube;
 }
 
@@ -235,7 +255,7 @@ function CSVtoCards(csvString, carddb) {
         finish: finish || 'Non-foil',
         imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
         imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
-        tags: tags && tags.length > 0 ? tags.split(',') : [],
+        tags: tags && tags.length > 0 ? tags.split(';').map((t) => t.trim()) : [],
         notes: notes || '',
         rarity: rarity || null,
         colorCategory: colorCategory || null,
@@ -317,28 +337,34 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
       analytic.cube = cube._id;
     }
 
-    for (const col of deck.seats[0].deck) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+    for (const row of deck.seats[0].deck) {
+      for (const col of row) {
+        for (const ci of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
+          }
+          analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
         }
-        analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
       }
     }
-    for (const col of deck.seats[0].sideboard) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+    for (const row of deck.seats[0].sideboard) {
+      for (const col of row) {
+        for (const ci of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
+          }
+          analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
         }
-        analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
       }
     }
 
@@ -356,28 +382,34 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
       analytic.cube = cube._id;
     }
 
-    for (const col of deck.seats[0].deck) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+    for (const row of deck.seats[0].deck) {
+      for (const col of row) {
+        for (const ci of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
+          }
+          analytic.cards[pickIndex].mainboards += 1;
         }
-        analytic.cards[pickIndex].mainboards += 1;
       }
     }
-    for (const col of deck.seats[0].sideboard) {
-      for (const current of col) {
-        let pickIndex = analytic.cards.findIndex(
-          (card) => card.cardName.toLowerCase() === carddb.cardFromId(current.cardID).name.toLowerCase(),
-        );
-        if (pickIndex === -1) {
-          pickIndex =
-            analytic.cards.push(newCardAnalytics(carddb.cardFromId(current.cardID).name.toLowerCase(), 1200)) - 1;
+    for (const row of deck.seats[0].sideboard) {
+      for (const col of row) {
+        for (const ci of col) {
+          let pickIndex = analytic.cards.findIndex(
+            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
+          );
+          if (pickIndex === -1) {
+            pickIndex =
+              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
+              1;
+          }
+          analytic.cards[pickIndex].sideboards += 1;
         }
-        analytic.cards[pickIndex].sideboards += 1;
       }
     }
     await analytic.save();
@@ -528,29 +560,6 @@ function cachePromise(key, callback) {
 }
 
 const methods = {
-  getBasics(carddb) {
-    const names = ['Plains', 'Mountain', 'Forest', 'Swamp', 'Island'];
-    const set = 'unh';
-    const res = {};
-    for (const name of names) {
-      let found = false;
-      const options = carddb.nameToId[name.toLowerCase()];
-      for (const option of options) {
-        const card = carddb.cardFromId(option);
-        if (!found && card.set.toLowerCase() === set) {
-          found = true;
-          res[name] = {
-            cardID: option,
-            type_line: card.type,
-            cmc: 0,
-            details: card,
-          };
-        }
-      }
-    }
-
-    return res;
-  },
   setCubeType,
   cardsAreEquivalent,
   sanitize(html) {
@@ -584,10 +593,13 @@ const methods = {
     cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
     const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = createDraft(format, cube.cards, 0, 1, { username: 'Anonymous' }, seed);
+    const draft = createDraft(format, cube.cards, 1, { username: 'Anonymous' }, false, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0],
+      pack: draft.initial_state[0][0].cards.map((cardIndex) => ({
+        ...draft.cards[cardIndex],
+        details: carddb.cardFromId(draft.cards[cardIndex].cardID),
+      })),
     };
   },
   newCardAnalytics,
@@ -596,8 +608,8 @@ const methods = {
     // Expected performance for pick.
     const expectedA = 1 / (1 + 10 ** (diff / 400));
     const expectedB = 1 - expectedA;
-    const adjustmentA = 2 * (1 - expectedA) * speed;
-    const adjustmentB = 2 * (0 - expectedB) * speed;
+    const adjustmentA = (1 - expectedA) * speed;
+    const adjustmentB = (0 - expectedB) * speed;
     return [adjustmentA, adjustmentB];
   },
   generateShortId,

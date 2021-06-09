@@ -7,7 +7,7 @@ const config = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules[\/\\](?!react-dnd|dnd-core)/,
+        exclude: /node_modules[/\\](?!react-dnd|dnd-core)/,
         use: {
           loader: 'babel-loader',
           options: {
@@ -18,6 +18,10 @@ const config = {
       {
         test: /\.(css|less)$/,
         use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.b64$/,
+        use: 'raw-loader',
       },
     ],
   },
@@ -176,12 +180,11 @@ const serverConfig = merge(config, {
     'pages/BrowsePackagesPage': './src/pages/BrowsePackagesPage.js',
     'pages/PackagePage': './src/pages/PackagePage.js',
     'utils/Card': './src/utils/Card.js',
-    'utils/draftutil': './src/utils/draftutil.js',
-    'utils/Draft': './src/utils/Draft.js',
+    'drafting/createdraft': './src/drafting/createdraft.js',
+    'drafting/deckutil': './src/drafting/deckutil.js',
     'filtering/FilterCards': './src/filtering/FilterCards.js',
     'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',
-    'utils/deckutils': './src/utils/deckutils.js',
     'markdown/parser': './src/markdown/parser.js',
   },
   output: {

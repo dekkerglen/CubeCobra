@@ -1,0 +1,18 @@
+{
+  "paths": [
+    "__tests__/**/*.js",
+    "config/**/*.js",
+    "fixtures/**/*.js",
+    "jobs/**/*.js",
+    "models/**/*.js",
+    "one_shot_scripts/**/*.js",
+    "public/js/**/*.js",
+    "routes/**/*.js",
+    "serverjs/**/*.js",
+    "src/**/*.js",
+    "*.js"
+  ],
+  "ignored": [],
+  "port": 5001,
+  "webpackConfig": "webpack.dev.js"
+}

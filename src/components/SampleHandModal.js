@@ -27,13 +27,16 @@ class SampleHandModal extends Component {
     const { deck } = this.props;
 
     const pool = [];
-    for (const col of deck) {
-      for (const card of col) {
-        pool.push(card);
+    for (const row of deck) {
+      for (const col of row) {
+        for (const card of col) {
+          if (card) pool.push(card);
+        }
       }
     }
+
     arrayShuffle(pool);
-    const hand = pool.splice(0, 7);
+    const hand = pool.splice(0, Math.min(7, pool.length));
 
     this.setState({
       hand,

@@ -1259,3 +1259,7 @@ thead th.corner[scope=col] {
 	justify-content: space-between;
 	align-items: baseline;
 }
+
+.pack-outline {
+	background-color: var(--bg-dark);
+}

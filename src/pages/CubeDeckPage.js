@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -16,10 +16,10 @@ import {
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
-  Spinner,
+  // Spinner,
 } from 'reactstrap';
 
-import CSRFForm from 'components/CSRFForm';
+// import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
@@ -31,9 +31,10 @@ import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
-import Draft, { init } from 'utils/Draft';
-import { csrfFetch } from 'utils/CSRF';
+// import { csrfFetch } from 'utils/CSRF';
+// import { allBotsDraft } from 'drafting/draftutil';
 import RenderToRoot from 'utils/RenderToRoot';
+import { DraftPropType } from 'proptypes/DraftbotPropTypes';
 
 const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
   const [seatIndex, setSeatIndex] = useQueryParam('seat', 0);
@@ -56,29 +57,36 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
     [isOpen],
   );
 
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
-  const submitDeckForm = useRef();
-  const [draftId, setDraftId] = useState('');
+  // const submitDeckForm = useRef();
+  // const [draftId, setDraftId] = useState('');
 
-  const haveBotsRedraft = useCallback(async () => {
-    if (!loading && draft) {
-      setLoading(true);
-      const response = await csrfFetch(`/cube/api/redraft/${draft._id}`, {
-        method: 'POST',
-      });
-      const json = await response.json();
-      init(json.draft);
-      setDraftId(Draft.id());
-      await Draft.allBotsDraft();
-      submitDeckForm.current.submit();
-    }
-  }, [draft, loading]);
+  // const haveBotsRedraft = useCallback(async () => {
+  //   if (!loading && draft) {
+  //     setLoading(true);
+  //     const response = await csrfFetch(`/cube/api/redraft/${draft._id}/${seatIndex}`, {
+  //       method: 'POST',
+  //     });
+  //     const json = await response.json();
+  //     setDraftId(json.draft._id);
+  //     const newDraft = await allBotsDraft(json.draft);
+
+  //     await csrfFetch(`/cube/api/submitdraft/${newDraft.cube}`, {
+  //       method: 'POST',
+  //       body: JSON.stringify(newDraft),
+  //       headers: { 'Content-Type': 'application/json' },
+  //     });
+
+  //     submitDeckForm.current.submit();
+  //   }
+  // }, [draft, loading, seatIndex]);
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
+          {/*
           <CSRFForm
             key="submitdeck"
             className="d-none"
@@ -89,6 +97,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
             <Input type="hidden" name="body" value={draftId} />
             <Input type="hidden" name="skipDeckbuilder" value="true" />
           </CSRFForm>
+          */}
           <Navbar expand="md" light className="usercontrols mb-3">
             <div className="view-style-select pr-2">
               <Label className="sr-only" for="viewSelect">
@@ -116,22 +125,26 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
-                  <SampleHandModal deck={deck.seats[seatIndex].deck} />
+                  <SampleHandModal
+                    deck={deck.seats[seatIndex].deck.map((row) =>
+                      row.map((col) => col.map((cardIndex) => deck.cards[cardIndex])),
+                    )}
+                  />
                 </NavItem>
                 {user && deck.owner === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
                 )}
-                {loading && <Spinner className="position-absolute" />}
+                {/* loading && <Spinner className="position-absolute" /> */}
                 {draft ? (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
-                      Rebuild/Redraft
+                      Rebuild/Redraft Seat
                     </DropdownToggle>
                     <DropdownMenu right>
-                      <DropdownItem href={`/cube/deck/redraft/${deck._id}`}>Redraft</DropdownItem>
-                      <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem>
+                      <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
+                      {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
                         Clone and Rebuild
                       </DropdownItem>
@@ -192,7 +205,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
 CubeDeckPage.propTypes = {
   cube: CubePropType.isRequired,
   deck: DeckPropType.isRequired,
-  draft: PropTypes.shape({ _id: PropTypes.string.isRequired }).isRequired,
+  draft: DraftPropType,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
@@ -200,6 +213,7 @@ CubeDeckPage.propTypes = {
 CubeDeckPage.defaultProps = {
   user: null,
   loginCallback: '/',
+  draft: null,
 };
 
 export default RenderToRoot(CubeDeckPage);
