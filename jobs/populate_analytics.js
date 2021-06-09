@@ -19,7 +19,6 @@ const { fromEntries } = require('../serverjs/util');
 const basics = ['mountain', 'forest', 'plains', 'island', 'swamp'];
 const RELATED_LIMIT = 24;
 let ORACLE_COUNT = 0;
-const MIN_PICKS = 100;
 
 const cardFromOracle = (oracle) => carddb.cardFromId(carddb.getVersionsByOracleId(oracle)[0]);
 
@@ -353,8 +352,6 @@ const processCard = async (
     date: currentDate,
     data: currentDatapoint,
   });
-
-  cardHistory.inTopCards = cardHistory.current.picks > MIN_PICKS;
 
   await cardHistory.save();
 };
