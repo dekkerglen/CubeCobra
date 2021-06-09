@@ -123,7 +123,6 @@ router.post(
     }
     cube.date_updated = Date.now();
     cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    setCubeType(cube, carddb);
 
     // cube category override
     if (cube.overrideCategory) {
@@ -163,6 +162,7 @@ router.post(
 
     // cube tags
     cube.tags = updatedCube.tags;
+    setCubeType(cube, carddb);
 
     await cube.save();
     return res.status(200).send({

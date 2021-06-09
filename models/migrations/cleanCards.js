@@ -7,7 +7,7 @@ const DEFAULT_STATUS = 'Not Owned';
 const isInvalidCardId = (id) => carddb.cardFromId(id).name === 'Invalid Card';
 const isInvalidFinish = (finish) => !['Foil', 'Non-foil'].includes(finish);
 const isInvalidStatus = (status) => !['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].includes(status);
-const isInvalidColors = (colors) => !colors || !Array.isArray(colors) || [].some((c) => !COLORS.includes(c));
+const isInvalidColors = (colors) => !colors || !Array.isArray(colors) || colors.some((c) => !COLORS.includes(c));
 const isInvalidTags = (tags) => !tags || tags.some((t) => !t);
 
 const cleanCards = (collection, filter = true) => {

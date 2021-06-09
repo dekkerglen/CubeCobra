@@ -101,7 +101,7 @@ const processDeck = async (deck, oracleToIndex, correlations) => {
   }
 };
 
-const processCube = async (cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex, cubesWithCard) => {
+const processCube = async (cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex) => {
   let cubeSizeDict = cardCountByCubeSize.size180;
   let cubeLegalityDict = cardCountByCubeSize.vintage;
 
@@ -173,10 +173,6 @@ const processCube = async (cube, cardUseCount, cardCountByCubeSize, cubeCountByS
     new Set(cube.cards.filter((c) => c).map((card) => carddb.cardFromId(card.cardID).oracle_id)),
   );
   uniqueOracleIds.forEach((oracleId) => {
-    if (oracleToIndex[oracleId]) {
-      cubesWithCard[oracleToIndex[oracleId]].push(cube._id);
-    }
-
     // total
     attemptIncrement(cardUseCount, oracleId);
 
@@ -265,7 +261,6 @@ const processCard = async (
   oracleToIndex,
   correlations,
   synergies,
-  cubesWithCard,
 ) => {
   const versions = carddb.getVersionsByOracleId(card.oracle_id);
 
@@ -287,8 +282,7 @@ const processCard = async (
       : [0, 0];
   }
 
-  const cubes = cubesWithCard[oracleToIndex[card.oracle_id]] || [];
-  currentDatapoint.cubes = cubes.length;
+  const cubes = cardUseCount[card.oracle_id];
 
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
@@ -350,7 +344,6 @@ const processCard = async (
     cardHistory.history = [];
   }
 
-  cardHistory.cubes = cubes.slice(0, 10000);
   cardHistory.current = currentDatapoint;
 
   cardHistory.cubedWith = cubedWith;
@@ -420,7 +413,6 @@ const run = async () => {
 
   winston.info('creating correlation matrix...');
 
-  const cubesWithCard = new Array(ORACLE_COUNT).fill([]);
   const correlations = new Int32Array(ORACLE_COUNT * ORACLE_COUNT).fill(0);
 
   winston.info('creating synergy matrix...');
@@ -437,14 +429,7 @@ const run = async () => {
     .lean()
     .cursor();
   for (let i = 0; i < count; i += 1) {
-    await processCube(
-      await cursor.next(),
-      cardUseCount,
-      cardCountByCubeSize,
-      cubeCountBySize,
-      oracleToIndex,
-      cubesWithCard,
-    );
+    await processCube(await cursor.next(), cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
     if ((i + 1) % 100 === 0) {
       winston.info(`Finished: ${i + 1} of ${count} cubes.`);
     }
@@ -483,7 +468,6 @@ const run = async () => {
       oracleToIndex,
       correlations,
       synergies,
-      cubesWithCard,
     );
     processed += 1;
     if (processed % 100 === 0) {

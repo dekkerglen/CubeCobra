@@ -146,15 +146,13 @@ test('generateShortId returns a valid short ID without profanity', async () => {
   util.hasProfanity = initialHasProfanity;
 });
 
-test('setCubeType correctly sets the type and card_count of its input cube', () => {
-  expect.assertions(4);
+test('setCubeType correctly sets the type of its input cube', () => {
+  expect.assertions(2);
   const exampleCube = JSON.parse(JSON.stringify(cubefixture.exampleCube));
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
     const result = cubefn.setCubeType(exampleCube, carddb);
-    expect(result.card_count).toBe(exampleCube.cards.length);
     expect(result.type).toBe('Standard');
-    expect(exampleCube.card_count).toBe(exampleCube.cards.length);
     expect(exampleCube.type).toBe('Standard');
   });
 });

@@ -13,7 +13,6 @@ const { render } = require('../serverjs/render');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
-const Deck = require('../models/deck');
 
 const { buildIdQuery } = require('../serverjs/cubefn.js');
 
@@ -428,126 +427,6 @@ router.get('/cardimageflip/:id', async (req, res) => {
     return res.redirect(card.image_flip);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
-  }
-});
-
-const cubePageSize = 100;
-
-router.get('/api/downloadcubes/:page/:key', async (req, res) => {
-  try {
-    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
-      return res.status(401).send({
-        success: 'false',
-      });
-    }
-
-    const count = await Cube.estimatedDocumentCount();
-    if (req.params.page * cubePageSize > count) {
-      return res.status(400).send({
-        message: 'Page exceeds collection size',
-        success: 'false',
-      });
-    }
-
-    let cubeQ;
-    if (req.query.prevMax) {
-      cubeQ = Cube.find({ shortID: { $gt: req.query.prevMax } }, 'cards shortID')
-        .sort({ shortID: 1 })
-        .limit(cubePageSize)
-        .lean();
-    } else {
-      cubeQ = Cube.find({}, 'cards shortID')
-        .sort({ shortID: 1 })
-        .skip(req.params.page * cubePageSize)
-        .limit(cubePageSize)
-        .lean();
-    }
-    const cubes = await cubeQ;
-
-    const prevMax = cubes[cubes.length - 1].shortID;
-    return res.status(200).send({
-      success: 'true',
-      prevMax,
-      pages: Math.ceil(count / cubePageSize),
-      cubes: cubes.map((cube) => cube.cards.map((card) => carddb.cardFromId(card.cardID).name_lower)),
-    });
-  } catch (err) {
-    return res.status(500).send({
-      message: err.message,
-      success: 'false',
-    });
-  }
-});
-
-const deckPageSize = 1000;
-
-router.get('/api/downloaddecks/:page/:key', async (req, res) => {
-  try {
-    if (req.params.key !== process.env.DOWNLOAD_API_KEY) {
-      return res.status(401).send({
-        success: 'false',
-      });
-    }
-
-    const count = await Deck.estimatedDocumentCount();
-    if (req.params.page * deckPageSize > count) {
-      return res.status(400).send({
-        message: 'Page exceeds collection size',
-        success: 'false',
-      });
-    }
-
-    let deckQ;
-    if (req.query.prevMax) {
-      deckQ = Deck.find({ date: { $gt: req.query.prevMax } }, 'seats date')
-        .sort({ date: 1 })
-        .limit(deckPageSize)
-        .lean();
-    } else {
-      deckQ = Deck.find({}, 'seats date')
-        .sort({ date: 1 })
-        .skip(req.params.page * deckPageSize)
-        .limit(deckPageSize)
-        .lean();
-    }
-    const decks = await deckQ;
-
-    const prevMax = decks[decks.length - 1].date;
-
-    return res.status(200).send({
-      success: 'true',
-      prevMax,
-      pages: Math.ceil(count / deckPageSize),
-      decks: decks.map((deck) => {
-        const main = [];
-        const side = [];
-
-        if (deck.seats[0] && deck.seats[0].deck) {
-          for (const col of deck.seats[0].deck) {
-            for (const card of col) {
-              if (card && card.cardID) {
-                main.push(carddb.cardFromId(card.cardID).name_lower);
-              }
-            }
-          }
-        }
-
-        if (deck.seats[0] && deck.seats[0].sideboard) {
-          for (const col of deck.seats[0].sideboard) {
-            for (const card of col) {
-              side.push(carddb.cardFromId(card.cardID).name_lower);
-            }
-          }
-        }
-
-        return { main, side };
-      }),
-    });
-  } catch (err) {
-    return res.status(500).send({
-      message: err.message,
-      success: 'false',
-    });
   }
 });
 

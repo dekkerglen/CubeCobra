@@ -13,6 +13,9 @@ const gridDraftMigrations = require('../models/migrations/gridDraftMigrations');
 const { applyPendingMigrationsPre } = require('../models/migrations/migrationMiddleware');
 const carddb = require('../serverjs/cards');
 
+const BATCH_SIZE = 100;
+const SKIP = 1000;
+
 const MIGRATABLE = Object.freeze([
   { name: 'GridDraft', model: GridDraft, migrate: applyPendingMigrationsPre(gridDraftMigrations) },
   { name: 'Cube', model: Cube, migrate: applyPendingMigrationsPre(cubeMigrations) },
@@ -20,9 +23,12 @@ const MIGRATABLE = Object.freeze([
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
 ]);
 
-const migratableDocsQuery = (currentSchemaVersion) => ({
-  $or: [{ schemaVersion: { $exists: false } }, { schemaVersion: { $lt: currentSchemaVersion } }],
-});
+const migratableDocsQuery = (currentSchemaVersion) => {
+  if (currentSchemaVersion === 1) {
+    return { schemaVersion: null };
+  }
+  return { schemaVersion: currentSchemaVersion - 1 };
+};
 
 (async () => {
   await carddb.initializeCardDb('private', true);
@@ -30,10 +36,19 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
-    const cursor = model.find(query).cursor();
-    let totalSuccesses = 0;
+
+    const count = await model.estimatedDocumentCount(query);
+    // const cursor = model.find(query).cursor();
+    console.log(`Found ${count} documents`);
+
+    let totalProcessed = SKIP;
 
     const asyncMigrate = async (doc) => {
+      if (doc.schemaVersion === model.CURRENT_SCHEMA_VERSION) {
+        totalProcessed += 1;
+        console.log(`Skipping ${name} ${totalProcessed}: ${doc._id}`);
+        return 0;
+      }
       let migrated;
       try {
         migrated = await migrate(doc);
@@ -45,8 +60,8 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
       if (migrated) {
         try {
           await migrated.save();
-          totalSuccesses += 1;
-          console.log(`Finished ${name} ${totalSuccesses}: ${migrated._id}`);
+          totalProcessed += 1;
+          console.log(`Finished ${name} ${totalProcessed}: ${migrated._id}`);
         } catch (e) {
           console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
           console.debug(e);
@@ -59,9 +74,25 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
       return 1;
     };
 
-    await cursor.eachAsync(asyncMigrate, { parallel: 10 });
+    let batches = 0;
+    let done = false;
+    while (!done) {
+      const documents = await model
+        .find(query)
+        .skip(SKIP + BATCH_SIZE * batches)
+        .limit(BATCH_SIZE);
+      batches += 1;
 
-    console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
+      if (documents.length <= 0) {
+        done = true;
+      } else {
+        await Promise.all(documents.map(asyncMigrate));
+      }
+    }
+
+    // await cursor.eachAsync(asyncMigrate, { parallel: 100 });
+
+    console.log(`Finished: ${name}s. ${totalProcessed} were successful.`);
   }
   mongoose.disconnect();
   console.log('done');

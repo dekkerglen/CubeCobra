@@ -27,21 +27,12 @@ const CUBE_PREVIEW_FIELDS =
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const userID = req.user ? req.user._id : '';
-
   const recentsq = Cube.find(
     {
-      $or: [
-        {
-          card_count: {
-            $gt: 200,
-          },
-          isListed: true,
-        },
-        {
-          owner: userID,
-        },
-      ],
+      card_count: {
+        $gt: 200,
+      },
+      isListed: true,
     },
     CUBE_PREVIEW_FIELDS,
   )
@@ -63,14 +54,7 @@ router.get('/explore', async (req, res) => {
 
   const draftedq = Cube.find(
     {
-      $or: [
-        {
-          isListed: true,
-        },
-        {
-          owner: userID,
-        },
-      ],
+      isListed: true,
     },
     CUBE_PREVIEW_FIELDS,
   )
@@ -314,15 +298,21 @@ router.get('/search/:query/:page', async (req, res) => {
         break;
     }
 
-    let {
-      filter: { query },
-    } = await makeFilter(req.params.query, carddb);
-    const listedQuery = { isListed: true };
-    if (query.$and) {
-      query.$and.push(listedQuery);
-    } else {
-      query = { $and: [{ isListed: true }, query] };
+    const query = await makeFilter(req.params.query, carddb);
+
+    if (query.error) {
+      req.flash('danger', `Invalid Search Syntax: ${query.error}`);
+
+      return render(req, res, 'SearchPage', {
+        query: req.params.query,
+        cubes: [],
+        count: 0,
+        perPage: 0,
+        page: 0,
+      });
     }
+
+    query.isListed = true;
 
     const count = await Cube.countDocuments(query);
 

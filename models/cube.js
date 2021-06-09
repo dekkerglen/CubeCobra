@@ -43,10 +43,6 @@ const cubeSchema = mongoose.Schema({
     type: [String],
     default: [],
   },
-  tags: {
-    type: [String],
-    default: [],
-  },
   cards: {
     type: [cardSchema],
     default: [],
@@ -134,6 +130,23 @@ const cubeSchema = mongoose.Schema({
       '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
     ],
   },
+  // These fields are just for indexing
+  tags: {
+    type: [String],
+    default: [],
+  },
+  cardOracles: {
+    type: [String],
+    default: [],
+  },
+  keywords: {
+    type: [String],
+    default: [],
+  },
+  categories: {
+    type: [String],
+    default: [],
+  },
 });
 
 cubeSchema.index({
@@ -161,7 +174,6 @@ cubeSchema.index({
 
 cubeSchema.index({
   isListed: 1,
-  owner: 1,
   card_count: 1,
   date_updated: -1,
 });
@@ -176,10 +188,50 @@ cubeSchema.index({
   schemaVersion: 1,
 });
 
+// these indexes are for searching
+
+cubeSchema.index({
+  isListed: 1,
+  tags: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  cardOracles: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  keywords: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
+cubeSchema.index({
+  isListed: 1,
+  categories: 1,
+  numDecks: -1,
+  name: 1,
+  date_updated: -1,
+  card_count: -1,
+});
+
 cubeSchema.pre('save', function saveCubeHook(next) {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
+  this.card_count = this.cards.length;
   next();
 });
+
 const Cube = mongoose.model('Cube', cubeSchema);
 Cube.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
 Cube.LAYOUT_FIELDS =
