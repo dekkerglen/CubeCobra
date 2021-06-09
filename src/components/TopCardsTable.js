@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import { Spinner, Table } from 'reactstrap';
 
 import Query from 'utils/Query';
-import { encodeName } from 'utils/Card';
 import withAutocard from 'components/WithAutocard';
 import Paginate from 'components/Paginate';
 import HeaderCell from 'components/HeaderCell';
@@ -16,7 +15,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
   const [data, setData] = useState(cards);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: Query.get('s') || 'elo',
+    key: Query.get('s') || 'Elo',
     direction: Query.get('d') || 'descending',
   });
 
@@ -71,6 +70,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
     );
   }
 
+  console.log(data);
   return (
     <>
       <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />
@@ -78,23 +78,27 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
         <thead>
           <tr>
             <th scope="col">Name</th>
-            <HeaderCell label="Elo" fieldName="elo" sortConfig={sortConfig} requestSort={updateSort} />
-            <HeaderCell label="Total Picks" fieldName="picks" sortConfig={sortConfig} requestSort={updateSort} />
-            <HeaderCell label="Cubes" fieldName="cubes" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="Elo" fieldName="Elo" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="Total Picks" fieldName="Pick Count" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="Cubes" fieldName="Cube Count" sortConfig={sortConfig} requestSort={updateSort} />
           </tr>
         </thead>
 
         <tbody>
-          {data.map((row) => (
-            <tr key={row[0]}>
+          {data.map((card) => (
+            <tr key={card._id}>
               <td>
-                <AutocardA front={row[1]} back={row[2] || undefined} href={`/tool/card/${encodeName(row[0])}`}>
-                  {row[0]}
+                <AutocardA
+                  front={card.image_normal}
+                  back={card.image_back || undefined}
+                  href={`/tool/card/${card._id}`}
+                >
+                  {card.name}
                 </AutocardA>
               </td>
-              <td>{row[4] === null ? '' : row[4].toFixed(0)}</td>
-              <td>{row[3] === null ? '' : row[3]}</td>
-              <td>{row[5] === null ? '' : row[5]}</td>
+              <td>{card.elo === null ? '' : card.elo.toFixed(0)}</td>
+              <td>{card.pickCount === null ? '' : card.pickCount}</td>
+              <td>{card.cubeCount === null ? '' : card.cubeCount}</td>
             </tr>
           ))}
         </tbody>

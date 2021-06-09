@@ -16,7 +16,6 @@ import {
   setElementOperation,
   setCountOperation,
   devotionOperation,
-  fetchedOperation,
 } from 'filtering/FuncOperations';
 import {
   cardCmc,
@@ -37,6 +36,9 @@ import {
   cardTix,
   cardNameLower,
   cardElo,
+  cardPopularity,
+  cardCubeCount,
+  cardPickCount,
   cardArtist,
   cardLoyalty,
   cardRarity,
@@ -85,6 +87,9 @@ condition -> (
   | isCondition
   | notCondition
   | eloCondition
+  | popularityCondition
+  | cubeCountCondition
+  | pickCountCondition
   | nameCondition
   | manaCostCondition
   | castableCostCondition
@@ -149,6 +154,12 @@ layoutCondition -> "layout"i  stringOpValue {% ([, valuePred]) => genericConditi
 
 eloCondition -> "elo"i integerOpValue {% ([, valuePred]) => genericCondition('elo', cardElo, valuePred) %}
 
+popularityCondition ->  ("pop"i | "popularity"i) integerOpValue {% ([, valuePred]) => genericCondition('popularity', cardPopularity, valuePred) %}
+
+cubeCountCondition -> ("cubes"i | "cubecount"i | "numcubes"i) integerOpValue {% ([, valuePred]) => genericCondition('cubecount', cardCubeCount, valuePred) %}
+
+pickCountCondition -> ("picks"i | "pickcount"i | "numpicks"i) integerOpValue {% ([, valuePred]) => genericCondition('pickcount', cardPickCount, valuePred) %}
+
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
   | stringValue {% ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
 
@@ -158,10 +169,6 @@ castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castabl
 
 devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) anyOperator integerValue {% ([, [color], op, value]) => genericCondition('parsed_cost', (c) => c, devotionOperation(op, color, value)) %}
   | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
-
-picksCondition -> "picks" fetchedIntegerOpValue  {% ([,valuePred]) => genericCondition('picks', (card) => card.details.picks, valuePred) %}
-
-cubesCondition -> "cubes" fetchedIntegerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
 
