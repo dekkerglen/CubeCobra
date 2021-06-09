@@ -653,7 +653,7 @@ export function cardGetLabels(card, sort, showOther) {
     else if (popularity < 20) ret = ['12-20%'];
     else if (popularity < 30) ret = ['20-30%'];
     else if (popularity < 50) ret = ['30-50%'];
-    else if (popularity < 100) ret = ['50-100%'];
+    else if (popularity <= 100) ret = ['50-100%'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }

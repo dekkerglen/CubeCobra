@@ -643,7 +643,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
-  newcard.popularity = Math.round(catalog.poplularitydict[card.oracle_id] * 1000.0) / 10 || 0;
+  newcard.popularity = catalog.poplularitydict[card.oracle_id] || 0;
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
