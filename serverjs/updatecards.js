@@ -92,6 +92,7 @@ function initializeCatalog() {
   catalog.english = {};
   catalog.elodict = {};
   catalog.embeddingdict = {};
+  catalog.poplularitydict = {};
 }
 
 initializeCatalog();
@@ -642,6 +643,7 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
   newcard.elo = catalog.elodict[name] || 1200;
+  newcard.popularity = catalog.poplularitydict[card.oracle_id] || 0;
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
@@ -765,7 +767,7 @@ function saveEnglishCard(card) {
   addCardToCatalog(convertCard(card));
 }
 
-async function saveAllCards(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
+async function saveAllCards(ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) {
   winston.info('Fetching Elo...');
   // create Elo dict
   for (const rating of ratings) {
@@ -781,6 +783,12 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
     } else {
       catalog.embeddingdict[rating.name] = new Array(64).fill(0);
     }
+  }
+
+  // poplulating the popularity dict
+  for (const history of histories) {
+    const percentage = history.current.total[1];
+    catalog.poplularitydict[history.oracleId] = percentage;
   }
 
   winston.info('Processing cards...');
@@ -805,7 +813,13 @@ async function saveAllCards(ratings = [], basePath = 'private', defaultPath = nu
   await writeCatalog(basePath);
 }
 
-const downloadFromScryfall = async (ratings = [], basePath = 'private', defaultPath = null, allPath = null) => {
+const downloadFromScryfall = async (
+  ratings = [],
+  histories = [],
+  basePath = 'private',
+  defaultPath = null,
+  allPath = null,
+) => {
   winston.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
@@ -819,7 +833,7 @@ const downloadFromScryfall = async (ratings = [], basePath = 'private', defaultP
 
   winston.info('Creating objects...');
   try {
-    await saveAllCards(ratings, basePath, defaultPath, allPath);
+    await saveAllCards(ratings, histories, basePath, defaultPath, allPath);
   } catch (error) {
     winston.error('Updating cardbase objects failed:');
     winston.error(error.message, error);
@@ -852,7 +866,7 @@ const downloadFromS3 = async (basePath = 'private') => {
   winston.info('Finished downloading files from S3...');
 };
 
-async function updateCardbase(ratings = [], basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(ratings, histories, basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
@@ -861,7 +875,7 @@ async function updateCardbase(ratings = [], basePath = 'private', defaultPath = 
   if (process.env.USE_S3 === 'true') {
     await downloadFromS3(basePath, defaultPath, allPath);
   } else {
-    await downloadFromScryfall(ratings, basePath, defaultPath, allPath);
+    await downloadFromScryfall(ratings, histories, basePath, defaultPath, allPath);
   }
 }
 

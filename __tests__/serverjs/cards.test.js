@@ -112,11 +112,13 @@ const _RankleMasterofFixtures = {
   set_name: 'Throne of Eldraine',
   released_at: '2019-10-04',
   prices: {
-    eur: 9.45,
-    tix: 2.74,
-    usd: 10.3,
-    usd_foil: 13.92,
+    eur: 8.28,
+    tix: 1.19,
+    usd: 7.93,
+    usd_foil: 18.07,
   },
+  foil: true,
+  nonfoil: true,
 };
 
 test('cardFromId returns a well-formed card object', () => {
