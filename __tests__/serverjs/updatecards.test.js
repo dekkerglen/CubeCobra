@@ -66,6 +66,8 @@ const convertedExampleCard = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleDoubleFacedCard = {
@@ -127,6 +129,8 @@ const convertedExampleDoubleFacedCard = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleDoubleFacedCardFlipFace = {
@@ -187,6 +191,8 @@ const convertedExampleDoubleFacedCardFlipFace = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleDoubleFacedPlaneswalkerCard = {
@@ -253,6 +259,8 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleAdventureCard = {
@@ -314,6 +322,8 @@ const convertedExampleAdventureCard = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleAdventureCardAdventure = {
@@ -371,6 +381,8 @@ const convertedExampleAdventureCardAdventure = {
   foil: true,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const convertedExampleNonFoilCard = {
@@ -433,6 +445,8 @@ const convertedExampleNonFoilCard = {
   foil: false,
   nonfoil: true,
   popularity: 0,
+  pickCount: 0,
+  cubeCount: 0,
 };
 
 const mockRatings = [
