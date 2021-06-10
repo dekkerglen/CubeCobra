@@ -75,14 +75,14 @@ const processDeck = async (deck, oracleToIndex, correlations) => {
     const deckCards = [];
     deck.seats[0].deck.forEach((row) =>
       row.forEach((col) => {
-        if(Array.isArray(col)) {
+        if (Array.isArray(col)) {
           col.forEach((ci) => {
             if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
               deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
             }
           });
         } else {
-          winston.info("Col is not an array:");
+          winston.info('Col is not an array:');
           winston.info(col);
         }
       }),
@@ -433,16 +433,18 @@ const run = async () => {
     .cursor();
   let i = 0;
 
-  await cubeCursor.eachAsync(async (cube) => {
+  await cubeCursor.eachAsync(
+    async (cube) => {
       await processCube(cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
-      i +=1 ;
+      i += 1;
       if ((i + 1) % 100 === 0) {
         winston.info(`Finished: ${i + 1} of ${cubeCount} cubes.`);
       }
     },
     {
-       parallel: 100 
-    });
+      parallel: 100,
+    },
+  );
 
   cubeCursor.close();
   winston.info('Finished: all cubes');
@@ -450,19 +452,21 @@ const run = async () => {
   // process all deck objects
   winston.info('Started: decks');
   const deckCount = await Deck.countDocuments();
-  const deckCursor = Deck.find({}, 'seats cards').lean().cursor();    
+  const deckCursor = Deck.find({}, 'seats cards').lean().cursor();
   i = 0;
 
-  await deckCursor.eachAsync(async (deck) => {
-    await processDeck(deck, oracleToIndex, correlations);
-    i +=1 ;
-    if ((i + 1) % 1000 === 0) {
-      winston.info(`Finished: ${i + 1} of ${deckCount} decks.`);
-    }
-  },
-  {
-     parallel: 100 
-  });
+  await deckCursor.eachAsync(
+    async (deck) => {
+      await processDeck(deck, oracleToIndex, correlations);
+      i += 1;
+      if ((i + 1) % 1000 === 0) {
+        winston.info(`Finished: ${i + 1} of ${deckCount} decks.`);
+      }
+    },
+    {
+      parallel: 100,
+    },
+  );
 
   deckCursor.close();
   winston.info('Finished: all decks');
