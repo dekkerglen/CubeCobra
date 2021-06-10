@@ -63,6 +63,7 @@ const catalog = {};
  *   // Hybrid looks like w-u
  *   parsed_cost: [String],
  *   colors: [Char]?,
+ *   produces: [Char]
  *   type: String,
  *   full_art: Boolean,
  *   language: String,
@@ -624,6 +625,10 @@ function convertCard(card, isExtra) {
   newcard.nonfoil = card.nonfoil;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
+  newcard.produces = card.can_produce;
+  if (newcard.produces && newcard.produces.length === 0) {
+    newcard.produces = null;
+  }
 
   newcard.promo =
     card.promo ||

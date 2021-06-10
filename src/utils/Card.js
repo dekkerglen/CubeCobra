@@ -199,6 +199,8 @@ export const cardDevotion = (card, color) => {
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
+export const cardProduces = (card) => card.details.produces;
+
 export const cardIsSpecialZoneType = (card) =>
   /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(cardType(card));
 
@@ -342,6 +344,7 @@ export default {
   cardImageFlip,
   cardTokens,
   cardDevotion,
+  cardProduces,
   cardLayout,
   cardIsSpecialZoneType,
   cardElo,

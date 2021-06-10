@@ -44,7 +44,8 @@ import {
   cardCost,
   cardLayout,
   cardDevotion,
-  cardLegalIn
+  cardLegalIn,
+  cardProduces,
 } from 'utils/Card';
 %} # %}
 
@@ -94,6 +95,7 @@ condition -> (
   | legalityCondition
   | layoutCondition
   | collectorNumberCondition
+  | producesCondition
 ) {% ([[condition]]) => condition %}
 
 @{%
@@ -164,6 +166,8 @@ picksCondition -> "picks" fetchedIntegerOpValue  {% ([,valuePred]) => genericCon
 cubesCondition -> "cubes" fetchedIntegerOpValue  {% ([,valuePred]) => genericCondition('cubes', (card) => card.details.cubes, valuePred) %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
+
+producesCondition -> ("produce"i | "produces"i | "tapsfor"i) manaCombinationOpValue {% ([, valuePred]) => genericCondition('produces', cardProduces, valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 

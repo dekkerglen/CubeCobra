@@ -77,6 +77,10 @@ colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) =>
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
   | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
 
+manaCombinationOpValue -> anyOperator manaCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
+  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+  | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+
 colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
   | ("=" | ":") "m"i {% ([op]) => { normalizeCombination(fieldValue).length > 1; } %}
@@ -105,6 +109,14 @@ comb4[A, B, C, D] -> null {% () => [] %}
     | $D comb3[$A, $B, $C]
     ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
+comb5[A, B, C, D, E] -> null {% () => [] %}
+  | ( $A comb3[$B, $C, $D, $E]
+    | $B comb3[$A, $C, $D, $E]
+    | $C comb3[$A, $B, $D, $E]
+    | $D comb3[$A, $B, $C, $E]
+    | $E comb3[$A, $B, $C, $D]
+    ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
+
 comb5NonEmpty[A, B, C, D, E] -> (
     $A comb4[$B, $C, $D, $E]
   | $B comb4[$A, $C, $D, $E]
@@ -113,8 +125,17 @@ comb5NonEmpty[A, B, C, D, E] -> (
   | $E comb4[$A, $B, $C, $D]
 ) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
 
-colorCombinationValue ->
-    ("c"i | "brown"i | "colorless"i) {% () => [] %}
+comb6NonEmpty[A, B, C, D, E, F] -> (
+    $A comb5[$B, $C, $D, $E, $F]
+  | $B comb5[$A, $C, $D, $E, $F]
+  | $C comb5[$A, $B, $D, $E, $F]
+  | $D comb5[$A, $B, $C, $E, $F]
+  | $E comb5[$A, $B, $C, $D, $F]
+  | $F comb5[$A, $B, $C, $D, $E]
+) {% ([[[a], rest]]) => [a, ...rest.map(([c]) => c)] %}
+
+colorCombinationValueInner ->
+    ("brown"i | "colorless"i) {% () => [] %}
   | "white"i {% () => ['w'] %}
   | "blue"i {% () => ['u'] %}
   | "black"i {% () => ['b'] %}
@@ -141,7 +162,15 @@ colorCombinationValue ->
   | "jeskai"i {% () => ['w', 'u', 'r'] %}
   | "sultai"i {% () => ['u', 'b', 'g'] %}
   | ("rainbow"i | "fivecolor"i) {% () => ['w', 'u', 'b', 'r', 'g'] %}
+
+colorCombinationValue ->
+    colorCombinationValueInner
+  | "c"i {% () => [] %}
   | comb5NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i] {% ([comb]) => comb.map((c) => c.toLowerCase()) %}
+
+manaCombinationValue ->
+    colorCombinationValueInner
+  | comb6NonEmpty["w"i, "u"i, "b"i, "r"i, "g"i, "c"i] {% ([comb]) => comb.map((c) => c.toLowerCase()) %}
 
 @builtin "string.ne"
 
