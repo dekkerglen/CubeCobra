@@ -669,6 +669,13 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         `/cube/deck/${deck._id}`,
         `${user.username} drafted your cube: ${cube.name}`,
       );
+    } else if (!cube.disableNotifications) {
+      await util.addNotification(
+        cubeOwner,
+        { user_from_name: 'Anonymous', user_from: '404' },
+        `/cube/deck/${deck._id}`,
+        `An anonymous user drafted your cube: ${cube.name}`,
+      );
     }
 
     cube.numDecks += 1;
