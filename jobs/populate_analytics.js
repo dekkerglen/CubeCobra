@@ -440,7 +440,7 @@ const run = async () => {
   // process all deck objects
   winston.info('Started: decks');
   count = await Deck.count();
-  cursor = Deck.find({}, 'seats').lean().cursor();
+  cursor = Deck.find({}, 'seats cards').lean().cursor();
   for (let i = 0; i < count; i += 1) {
     // eslint-disable-next-line no-await-in-loop
     await processDeck(await cursor.next(), oracleToIndex, correlations);
