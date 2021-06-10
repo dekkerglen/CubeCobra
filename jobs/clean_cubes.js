@@ -21,7 +21,11 @@ const DEFAULT_BASICS = [
 const BATCH_SIZE = 1024;
 
 const needsCleaning = (cube) =>
-  !cube.cards || !Array.isArray(cube.basics) || cardsNeedsCleaning(cube.cards) || cardsNeedsCleaning(cube.maybe);
+  !cube.cards ||
+  !Array.isArray(cube.basics) ||
+  cardsNeedsCleaning(cube.cards) ||
+  cardsNeedsCleaning(cube.maybe) ||
+  cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag);
 
 const processCube = async (leanCube) => {
   if (needsCleaning(leanCube)) {
@@ -40,6 +44,9 @@ const processCube = async (leanCube) => {
     }
     if (cardsNeedsCleaning(cube.maybe)) {
       cube.maybe = cleanCards(cube.maybe);
+    }
+    if (cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag)) {
+      cube.tags = cube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
     }
 
     await cube.save();
