@@ -429,31 +429,42 @@ const run = async () => {
 
   // process all cube objects
   winston.info('Started: cubes');
-  let count = await Cube.countDocuments();
-  let cursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
+  const cubeCount = await Cube.countDocuments();
+  const cubeCursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
     .lean()
     .cursor();
-  for (let i = 0; i < count; i += 1) {
-    await processCube(await cursor.next(), cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
-    if ((i + 1) % 100 === 0) {
-      winston.info(`Finished: ${i + 1} of ${count} cubes.`);
-    }
-  }
-  cursor.close();
+  let i = 0;
+
+  cubeCursor.eachAsync(async (cube) => {
+      await processCube(cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
+      if ((i + 1) % 100 === 0) {
+        winston.info(`Finished: ${i + 1} of ${cubeCount} cubes.`);
+      }
+    },
+    {
+       parallel: 100 
+    });
+
+  cubeCursor.close();
   winston.info('Finished: all cubes');
 
   // process all deck objects
   winston.info('Started: decks');
-  count = await Deck.count();
-  cursor = Deck.find({}, 'seats cards').lean().cursor();
-  for (let i = 0; i < count; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    await processDeck(await cursor.next(), oracleToIndex, correlations);
+  const deckCount = await Deck.count();
+  const deckCursor = Deck.find({}, 'seats cards').lean().cursor();    
+  let i = 0;
+
+  deckCursor.eachAsync(async (dec) => {
+    await processDeck(deck, oracleToIndex, correlations);
     if ((i + 1) % 1000 === 0) {
-      winston.info(`Finished: ${i + 1} of ${count} decks.`);
+      winston.info(`Finished: ${i + 1} of ${deckCount} decks.`);
     }
-  }
-  cursor.close();
+  },
+  {
+     parallel: 100 
+  });
+
+  deckCursor.close();
   winston.info('Finished: all decks');
 
   // save card models
