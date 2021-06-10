@@ -75,12 +75,15 @@ const processDeck = async (deck, oracleToIndex, correlations) => {
     const deckCards = [];
     deck.seats[0].deck.forEach((row) =>
       row.forEach((col) => {
-        if(col) {
+        if(Array.isArray(col)) {
           col.forEach((ci) => {
             if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
               deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
             }
           });
+        } else {
+          winston.info("Col is not an array:");
+          winston.info(col);
         }
       }),
     );
