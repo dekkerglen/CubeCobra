@@ -452,7 +452,7 @@ const run = async () => {
   winston.info('Started: decks');
   const deckCount = await Deck.count();
   const deckCursor = Deck.find({}, 'seats cards').lean().cursor();    
-  let i = 0;
+  i = 0;
 
   deckCursor.eachAsync(async (dec) => {
     await processDeck(deck, oracleToIndex, correlations);
