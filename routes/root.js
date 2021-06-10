@@ -319,8 +319,6 @@ router.get('/search/:query/:page', async (req, res) => {
       delete query.warnings;
     }
 
-    console.log(query);
-
     query.isListed = true;
 
     const count = await Cube.countDocuments(query);
