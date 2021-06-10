@@ -287,7 +287,7 @@ const processCard = async (
       : [0, 0];
   }
 
-  const cubes = cardUseCount[card.oracle_id];
+  currentDatapoint.cubes = currentDatapoint.total[0];
 
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
@@ -409,8 +409,6 @@ const run = async () => {
 
   const distinctOracles = carddb.allOracleIds();
   ORACLE_COUNT = distinctOracles.length;
-
-  console.log(distinctOracles[0]);
 
   winston.info(`Created list of ${ORACLE_COUNT} oracles`);
 

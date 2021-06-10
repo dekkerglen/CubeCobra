@@ -191,9 +191,15 @@ export const cardTokens = (card) => card.details.tokens;
 
 export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200);
 
-export const cardPopularity = (card) => card.details.popularity;
+export const cardPopularity = (card) => (card.details.popularity || 0).toFixed(0);
+
+export const cardCubeCount = (card) => card.details.cubeCount || 0;
+
+export const cardPickCount = (card) => card.details.pickCount || 0;
 
 export const cardLayout = (card) => card.details.layout;
+
+export const cardReleaseDate = (card) => card.details.released_at;
 
 export const cardDevotion = (card, color) => {
   let cost = cardCost(card);
@@ -348,6 +354,8 @@ export default {
   cardIsSpecialZoneType,
   cardElo,
   cardPopularity,
+  cardCubeCount,
+  cardPickCount,
   COLOR_COMBINATIONS,
   normalizeName,
   encodeName,

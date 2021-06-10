@@ -7,6 +7,10 @@ import {
   cardTix,
   cardType,
   cardCmc,
+  cardElo,
+  cardPickCount,
+  cardCubeCount,
+  cardReleaseDate,
   COLOR_COMBINATIONS,
   cardRarity,
   cardPopularity,
@@ -185,7 +189,27 @@ export const SORTS = [
   'Unsorted',
 ];
 
-export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price'];
+export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price', 'Elo', 'Release Date', 'Cube Count', 'Pick Count'];
+
+export const SortFunctions = {
+  Alphabetical: alphaCompare,
+  'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
+  Price: (a, b) => cardPrice(a) - cardPrice(b),
+  Elo: (a, b) => cardElo(a) - cardElo(b),
+  'Release Date': (a, b) => {
+    if (cardReleaseDate(a) > cardReleaseDate(b)) {
+      return 1;
+    }
+    if (cardReleaseDate(a) < cardReleaseDate(b)) {
+      return -1;
+    }
+    return 0;
+  },
+  'Cube Count': (a, b) => cardCubeCount(a) - cardCubeCount(b),
+  'Pick Count': (a, b) => cardPickCount(a) - cardPickCount(b),
+};
+
+export const SortFunctionsOnDetails = (sort) => (a, b) => SortFunctions[sort]({ details: a }, { details: b });
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
@@ -713,15 +737,9 @@ export function sortIntoGroups(cards, sort, showOther) {
   return fromEntries(sortGroupsOrdered(cards, sort, showOther));
 }
 
-const OrderSortMap = {
-  Alphabetical: alphaCompare,
-  'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
-  Price: (a, b) => cardPrice(a) - cardPrice(b),
-};
-
 export function sortDeep(cards, showOther, last, ...sorts) {
   if (sorts.length === 0) {
-    return [...cards].sort(OrderSortMap[last]);
+    return [...cards].sort(SortFunctions[last]);
   }
   const [first, ...rest] = sorts;
   const result = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
@@ -729,7 +747,7 @@ export function sortDeep(cards, showOther, last, ...sorts) {
     if (rest.length > 0) {
       labelGroup[1] = sortDeep(labelGroup[1], showOther, last, ...rest);
     } else {
-      labelGroup[1].sort(OrderSortMap[last]);
+      labelGroup[1].sort(SortFunctions[last]);
     }
   }
   return result;

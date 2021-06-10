@@ -3,10 +3,12 @@ require('dotenv').config();
 
 const express = require('express');
 
+const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card.js');
+const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort.js');
 const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
-const { filterUses, filterUsedFields, makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
+const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
@@ -22,43 +24,9 @@ const router = express.Router();
 const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
-/* Filter fields that need to be fetched from the database */
-const DB_FIELDS = ['picks', 'cubes'];
 
-async function matchingCards(filter) {
-  let cards = carddb.printedCardList; // all non-token, non-digital cards
-  const usesNonDbField = filterUsedFields(filter).some((field) => !DB_FIELDS.includes(field));
-  if (usesNonDbField) cards = filterCardsDetails(cards, filter);
-  // In the first pass, cards don't have picks or cube information, and so match all those filters.
-  // In the second pass, we add that information if needed.
-  if (DB_FIELDS.some((field) => filterUses(filter, field))) {
-    let dbFilter = {};
-    // if the filter uses *only* database fields, simply fetch the whole database without creating an ID query
-    if (usesNonDbField) {
-      const oracleIds = cards.map(({ oracle_id }) => oracle_id); // eslint-disable-line camelcase
-      dbFilter = { oracleId: { $in: oracleIds } };
-    }
-
-    const historyObjects = await CardHistory.find(dbFilter, 'oracleId current.picks current.cubes').lean();
-    const historyDict = new Map(historyObjects.map((h) => [h.oracleId, h]));
-
-    cards = cards.map((card) => {
-      const history = historyDict.get(card.oracle_id);
-      return {
-        ...card,
-        picks: history ? history.current.picks : undefined,
-        cubes: history ? history.current.cubes : undefined,
-        secondPass: true,
-      };
-    });
-    return filterCardsDetails(cards, filter);
-  }
-
-  return cards;
-}
-
-async function topCards(filter, sortField = 'elo', page = 0, direction = 'descending', minPicks = MIN_PICKS) {
-  let cards = await matchingCards(filter);
+const getAllMostReasonable = (filter) => {
+  const cards = filterCardsDetails(carddb.printedCardList, filter);
 
   const keys = new Set();
   const filtered = [];
@@ -68,117 +36,27 @@ async function topCards(filter, sortField = 'elo', page = 0, direction = 'descen
       keys.add(card.name_lower);
     }
   }
-  cards = filtered;
-
-  const oracleIdMap = new Map();
-  for (const card of cards) {
-    if (oracleIdMap.has(card.oracle_id)) {
-      oracleIdMap.get(card.oracle_id).push(card);
-    } else {
-      oracleIdMap.set(card.oracle_id, [card]);
-    }
-  }
-
-  const oracleIds = [...oracleIdMap.keys()];
-  const query = filter
-    ? { oracleId: { $in: oracleIds }, 'current.picks': { $gte: minPicks } }
-    : { 'current.picks': { $gte: minPicks } };
-  const selectedVersions = new Map(
-    [...oracleIdMap.entries()].map(([oracleId, versions]) => [
-      oracleId,
-      carddb.getFirstReasonable(versions.map(({ _id }) => _id)),
-    ]),
-  );
-
-  const sortName = `current.${sortField}`;
-  const sort = {};
-  sort[sortName] = direction === 'ascending' ? 1 : -1;
-
-  const dataQ = await CardHistory.find(query)
-    .sort(sort)
-    .skip(PAGE_SIZE * page)
-    .limit(PAGE_SIZE)
-    .lean();
-  const numResultsQ = CardHistory.countDocuments(query);
-
-  const [data, numResults] = await Promise.all([dataQ, numResultsQ]);
-
-  return {
-    numResults,
-    data: data
-      .filter(({ oracleId }) => selectedVersions.has(oracleId))
-      .map(({ oracleId, current }) => {
-        const { elo, picks, cubes } = current;
-        const version = selectedVersions.get(oracleId);
-        return [
-          version.name,
-          version.image_normal,
-          version.image_flip || null,
-          Number.isFinite(picks) ? picks : 0,
-          Number.isFinite(elo) ? elo : null,
-          Number.isFinite(cubes) ? cubes : 0,
-        ];
-      }),
-  };
-}
-
-// sorts: ['elo', 'date', 'price', 'alphabetical']
-// direction: ['ascending', 'descending']
-// distinct: ['names', 'printings']
-
-const sortFunctions = {
-  elo: (direction) => (a, b) => {
-    const factor = direction === 'ascending' ? 1 : -1;
-    if (a.elo > b.elo) {
-      return factor;
-    }
-    if (a.elo < b.elo) {
-      return -factor;
-    }
-    return 0;
-  },
-  date: (direction) => (a, b) => {
-    const factor = direction === 'ascending' ? 1 : -1;
-    if (a.released_at > b.released_at) {
-      return factor;
-    }
-    if (a.released_at < b.released_at) {
-      return -factor;
-    }
-    return 0;
-  },
-  price: (direction) => (a, b) => {
-    const factor = direction === 'ascending' ? 1 : -1;
-    if ((a.prices.usd || a.prices.usd_foil) > (b.prices.usd || b.prices.usd_foil)) {
-      return factor;
-    }
-    if ((a.prices.usd || a.prices.usd_foil) < (b.prices.usd || b.prices.usd_foil)) {
-      return -factor;
-    }
-    return 0;
-  },
-  alphabetical: (direction) => (a, b) => {
-    const factor = direction === 'descending' ? 1 : -1;
-    return a.name.localeCompare(b.name) * factor;
-  },
+  return filtered;
 };
 
-async function searchCards(filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') {
-  let cards = await matchingCards(filter);
+const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') => {
+  const cards = [];
 
   if (distinct === 'names') {
-    const keys = new Set();
-    const filtered = [];
-    for (const card of cards) {
-      if (!keys.has(card.name_lower)) {
-        filtered.push(carddb.getMostReasonableById(card._id));
-        keys.add(card.name_lower);
-      }
-    }
-    cards = filtered;
+    cards.push(...getAllMostReasonable(filter));
+  } else {
+    cards.push(...filterCardsDetails(carddb.printedCardList, filter));
   }
 
-  cards = cards.sort(sortFunctions[sort](direction));
+  if (ORDERED_SORTS.includes(sort)) {
+    cards.sort(SortFunctionsOnDetails(sort));
+  } else {
+    winston.info(`Sort function not found: ${sort}`);
+  }
+
+  if (direction === 'descending') {
+    cards.reverse();
+  }
 
   page = parseInt(page, 10);
 
@@ -186,11 +64,11 @@ async function searchCards(filter, sort = 'elo', page = 0, direction = 'descendi
     numResults: cards.length,
     data: cards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
   };
-}
+};
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(req.query.f);
+    const { err, filter } = makeFilter(`pickcount>=${MIN_PICKS} ${req.query.f}`);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -199,10 +77,11 @@ router.get('/api/topcards', async (req, res) => {
       });
       return;
     }
-    const results = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    const { data, numResults } = searchCards(filter, req.query.s, parseInt(req.query.p, 10), req.query.d);
     res.status(200).send({
       success: 'true',
-      ...results,
+      data,
+      numResults,
     });
   } catch (err) {
     req.logger.error(err);
@@ -225,10 +104,11 @@ router.get('/api/searchcards', async (req, res) => {
       });
       return;
     }
-    const results = await searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
+    const { data, numResults } = searchCards(filter, req.query.s, req.query.p, req.query.d, req.query.di);
     res.status(200).send({
       success: 'true',
-      ...results,
+      data,
+      numResults,
     });
   } catch (err) {
     req.logger.error(err);
@@ -242,8 +122,8 @@ router.get('/api/searchcards', async (req, res) => {
 
 router.get('/topcards', async (req, res) => {
   try {
-    const { filter } = makeFilter(req.query.f);
-    const { data, numResults } = await topCards(filter, req.query.s, req.query.p, req.query.d);
+    const { filter } = makeFilter(`pickcount>=${MIN_PICKS} ${req.query.f}`);
+    const { data, numResults } = await searchCards(filter, req.query.s, parseInt(req.query.p, 10), req.query.d);
 
     return render(
       req,
