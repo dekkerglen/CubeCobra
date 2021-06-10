@@ -435,7 +435,7 @@ const run = async () => {
     .cursor();
   let i = 0;
 
-  cubeCursor.eachAsync(async (cube) => {
+  await cubeCursor.eachAsync(async (cube) => {
       await processCube(cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
       if ((i + 1) % 100 === 0) {
         winston.info(`Finished: ${i + 1} of ${cubeCount} cubes.`);
@@ -450,11 +450,11 @@ const run = async () => {
 
   // process all deck objects
   winston.info('Started: decks');
-  const deckCount = await Deck.count();
+  const deckCount = await Deck.countDocuments();
   const deckCursor = Deck.find({}, 'seats cards').lean().cursor();    
   i = 0;
 
-  deckCursor.eachAsync(async (dec) => {
+  await deckCursor.eachAsync(async (dec) => {
     await processDeck(deck, oracleToIndex, correlations);
     if ((i + 1) % 1000 === 0) {
       winston.info(`Finished: ${i + 1} of ${deckCount} decks.`);
