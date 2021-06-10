@@ -485,12 +485,7 @@ const run = async () => {
 };
 
 (async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    await run();
-  } catch (error) {
-    winston.error(error, { error });
-  }
-
+  await mongoose.connect(process.env.MONGODB_URL);
+  await run();
   process.exit();
 })();
