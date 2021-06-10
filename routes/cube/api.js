@@ -161,7 +161,7 @@ router.post(
     }
 
     // cube tags
-    cube.tags = updatedCube.tags;
+    cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
     setCubeType(cube, carddb);
 
     await cube.save();

@@ -312,6 +312,15 @@ router.get('/search/:query/:page', async (req, res) => {
       });
     }
 
+    if (query.warnings) {
+      for (const warning of query.warnings) {
+        req.flash('danger', `Warning: ${warning}`);
+      }
+      delete query.warnings;
+    }
+
+    console.log(query);
+
     query.isListed = true;
 
     const count = await Cube.countDocuments(query);

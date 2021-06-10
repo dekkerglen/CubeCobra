@@ -10,7 +10,8 @@ import Advertisement from 'components/Advertisement';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const [name, setName] = useState('');
-  const [owner, setowner] = useState('');
+  const [owner, setOwner] = useState('');
+  const [tag, setTag] = useState('');
   const [decks, setDecks] = useState('');
   const [cards, setCards] = useState('');
   const [include, setInclude] = useState('');
@@ -50,7 +51,10 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
         setName(value);
         break;
       case 'owner':
-        setowner(value);
+        setOwner(value);
+        break;
+      case 'tag':
+        setTag(value);
         break;
       case 'decks':
         setDecks(value);
@@ -83,6 +87,9 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     }
     if (owner.length > 0) {
       queryText += `owner:"${owner}" `;
+    }
+    if (tag.length > 0) {
+      queryText += `tag:"${tag}" `;
     }
     if (decks.length > 0) {
       queryText += `decks${decksOp}${decks} `;
@@ -124,6 +131,13 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             humanName="Owner Name"
             placeholder={'Any text in the owner name, e.g. "TimFReilly"'}
             value={owner}
+            onChange={handleChange}
+          />
+          <TextField
+            name="tag"
+            humanName="Cube Tags"
+            placeholder={'Any tag on a cube, e.g. "2 player"'}
+            value={tag}
             onChange={handleChange}
           />
           <NumericField

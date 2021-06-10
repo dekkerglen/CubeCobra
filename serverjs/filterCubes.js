@@ -45,6 +45,8 @@ const nameToOracle = (name, carddb) => {
   }
 };
 
+const OPERATIONS = ['owner', 'keywords', 'decks', 'cards', 'category', 'card', 'tag'];
+
 async function makeFilter(filterText, carddb) {
   const query = {};
   const tokens = filterText.match(/(?:[^\s"]+|"[^"]*")+/g).map(parseToken);
@@ -59,6 +61,20 @@ async function makeFilter(filterText, carddb) {
     query.keywords = { $all: keywords };
   } else if (keywords.length === 1) {
     [query.keywords] = keywords;
+  }
+
+  // handle tags
+  const tags = tokens.map((token) => token.tag).filter((c) => c);
+
+  if (tags.length > 1) {
+    query.tags = { $all: tags.map((token) => token.token.toLowerCase()) };
+  }
+  if (tags.length === 1) {
+    if (tags[0].operator === ':' || tags[0].operator === '=') {
+      query.tags = tags[0].token.toLowerCase();
+    } else {
+      return { error: 'Invalid `tag` operator, please use = or :' };
+    }
   }
 
   // handles by user
@@ -151,6 +167,17 @@ async function makeFilter(filterText, carddb) {
   }
   if (oracles.length === 1) {
     [query.cardOracles] = oracles;
+  }
+
+  // handle warnings
+
+  const invalid = tokens.map((token) => Object.keys(token)[0]).filter((c) => c && !OPERATIONS.includes(c));
+
+  for (const warning of invalid) {
+    if (!query.warnings) {
+      query.warnings = [];
+    }
+    query.warnings.push(`Specifier "${warning}" is invalid, will be ignored.`);
   }
 
   return query;
