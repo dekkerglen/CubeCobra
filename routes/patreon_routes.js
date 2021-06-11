@@ -4,7 +4,6 @@ require('dotenv').config();
 const patreon = require('patreon');
 const express = require('express');
 
-const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
 
 const patreonAPI = patreon.patreon;
@@ -14,22 +13,29 @@ const patreonOAuthClient = patreonOAuth(process.env.CLIENT_ID, process.env.CLIEN
 
 const router = express.Router();
 
-router.get('/redirect', async (req, res) => {
-  try {
-    const oauthGrantCode = req.query.code;
+router.get('/redirect', (req, res) => {
+  const oauthGrantCode = req.query.code || 'asdf';
 
-    const tokensResponse = await patreonOAuthClient.getTokens(oauthGrantCode, process.env.PATREON_REDIRECT);
-    const patreonAPIClient = patreonAPI(tokensResponse.access_token);
-    const result = patreonAPIClient('/current_user');
-
-    return render(req, res, 'ErrorPage', {
-      requestId: req.uuid,
-      title: '404: Page not found',
-      details: result,
+  patreonOAuthClient
+    .getTokens(oauthGrantCode, process.env.PATREON_REDIRECT)
+    .then((tokensResponse) => {
+      const patreonAPIClient = patreonAPI(tokensResponse.access_token);
+      return patreonAPIClient('/current_user');
+    })
+    .then(({ rawJson }) => {
+      return render(req, res, 'ErrorPage', {
+        requestId: req.uuid,
+        title: '404: Page not found',
+        details: rawJson,
+      });
+    })
+    .catch((err) => {
+      return render(req, res, 'ErrorPage', {
+        error: err.statusText,
+        requestId: req.uuid,
+        title: 'There was an error linking your Patreon account.',
+      });
     });
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/user/account?nav=patreon`);
-  }
 });
 
 module.exports = router;
