@@ -636,6 +636,8 @@ router.get('/account', ensureAuth, (req, res) => {
     'UserAccountPage',
     {
       defaultNav: req.query.nav || 'profile',
+      patreonRedirectUri: process.env.PATREON_REDIRECT || '',
+      patreonClientId: process.env.PATREON_CLIENT_ID || '',
     },
     {
       title: 'Account',

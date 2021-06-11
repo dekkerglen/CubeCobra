@@ -33,7 +33,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import useQueryParam from 'hooks/useQueryParam';
 
-const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
+const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, patreonRedirectUri }) => {
   const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -112,6 +112,11 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
             <NavItem>
               <NavLink href="#" active={nav === 'display'} data-nav="display" onClick={handleClickNav}>
                 Display Preferences
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" active={nav === 'patreon'} data-nav="patreon" onClick={handleClickNav}>
+                Patreon Integration
               </NavLink>
             </NavItem>
           </Nav>
@@ -253,6 +258,24 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                 </CardBody>
               </Card>
             </TabPane>
+
+            <TabPane tabId="patreon">
+              <Card>
+                <CardBody>
+                  <p>Your account is currently not linked to your patreon account.</p>
+                  <Button
+                    block
+                    outline
+                    color="success"
+                    href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
+                      patreonRedirectUri,
+                    )}`}
+                  >
+                    Link Patreon Account
+                  </Button>
+                </CardBody>
+              </Card>
+            </TabPane>
           </TabContent>
         </Col>
       </Row>
@@ -264,6 +287,8 @@ UserAccountPage.propTypes = {
   user: UserPropType.isRequired,
   defaultNav: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
+  patreonClientId: PropTypes.string.isRequired,
+  patreonRedirectUri: PropTypes.string.isRequired,
 };
 
 UserAccountPage.defaultProps = {
