@@ -9,12 +9,12 @@ const { render } = require('../serverjs/render');
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
 
-const patreonOAuthClient = patreonOAuth(process.env.CLIENT_ID, process.env.CLIENT_SECRET);
+const patreonOAuthClient = patreonOAuth(process.env.PATREON_CLIENT_ID, process.env.PATREON_CLIENT_SECRET);
 
 const router = express.Router();
 
 router.get('/redirect', (req, res) => {
-  const oauthGrantCode = req.query.code || 'asdf';
+  const oauthGrantCode = req.query.code;
 
   patreonOAuthClient
     .getTokens(oauthGrantCode, process.env.PATREON_REDIRECT)
