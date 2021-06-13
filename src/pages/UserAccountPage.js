@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
+import PatronPropType from 'proptypes/PatronPropType';
 
 import {
   Button,
@@ -33,7 +34,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import useQueryParam from 'hooks/useQueryParam';
 
-const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, patreonRedirectUri }) => {
+const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron }) => {
   const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -261,19 +262,34 @@ const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, pat
 
             <TabPane tabId="patreon">
               <Card>
-                <CardBody>
-                  <p>Your account is currently not linked to your patreon account.</p>
-                  <Button
-                    block
-                    outline
-                    color="success"
-                    href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
-                      patreonRedirectUri,
-                    )}`}
-                  >
-                    Link Patreon Account
-                  </Button>
-                </CardBody>
+                {patron ? (
+                  <CardBody>
+                    {patron.active ? (
+                      <p>
+                        Your account is linked at the <b>{patron.level}</b> level.
+                      </p>
+                    ) : (
+                      <p>Your account is linked, but you are not an active patron.</p>
+                    )}
+                    <Button block outline color="danger" href="/patreon/unlink">
+                      Unlink Patreon Account
+                    </Button>
+                  </CardBody>
+                ) : (
+                  <CardBody>
+                    <p>Your account is currently not linked to your patreon account.</p>
+                    <Button
+                      block
+                      outline
+                      color="success"
+                      href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
+                        patreonRedirectUri,
+                      )}`}
+                    >
+                      Link Patreon Account
+                    </Button>
+                  </CardBody>
+                )}
               </Card>
             </TabPane>
           </TabContent>
@@ -289,10 +305,12 @@ UserAccountPage.propTypes = {
   loginCallback: PropTypes.string,
   patreonClientId: PropTypes.string.isRequired,
   patreonRedirectUri: PropTypes.string.isRequired,
+  patron: PatronPropType,
 };
 
 UserAccountPage.defaultProps = {
   loginCallback: '/',
+  patron: null,
 };
 
 export default RenderToRoot(UserAccountPage);
