@@ -7,6 +7,7 @@ const express = require('express');
 const { render } = require('../serverjs/render');
 const { ensureAuth, csrfProtection } = require('./middleware');
 const util = require('../serverjs/util.js');
+const { winston } = require('../serverjs/cloudwatch');
 
 const Patron = require('../models/patron');
 
@@ -27,6 +28,14 @@ router.get('/unlink', ensureAuth, async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, '/user/account?nav=patreon');
   }
+});
+
+router.post('/hook', async (req, res) => {
+  winston.info(req.body);
+
+  return res.status(200).send({
+    success: 'true',
+  });
 });
 
 router.get('/redirect', ensureAuth, (req, res) => {
