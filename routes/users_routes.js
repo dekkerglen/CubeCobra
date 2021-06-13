@@ -16,6 +16,7 @@ const PasswordReset = require('../models/passwordreset');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const Blog = require('../models/blog');
+const Patron = require('../models/patron');
 
 const router = express.Router();
 
@@ -629,7 +630,9 @@ router.get('/blog/:userid/:page', async (req, res) => {
 });
 
 // account page
-router.get('/account', ensureAuth, (req, res) => {
+router.get('/account', ensureAuth, async (req, res) => {
+  const patron = await Patron.findOne({ user: req.user.id, active: true });
+
   return render(
     req,
     res,
@@ -638,6 +641,7 @@ router.get('/account', ensureAuth, (req, res) => {
       defaultNav: req.query.nav || 'profile',
       patreonRedirectUri: process.env.PATREON_REDIRECT || '',
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
+      patron,
     },
     {
       title: 'Account',
