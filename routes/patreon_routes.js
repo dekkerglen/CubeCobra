@@ -39,7 +39,7 @@ router.post('/hook', async (req, res) => {
 
     const { included, data } = req.body;
 
-    const users = included.filter((item) => item.type === 'user');
+    const users = included.filter((item) => item.id === data.relationships.patron.id);
 
     if (users.length !== 1) {
       req.logger.info('Recieved a patreon hook with not exactly one user');
