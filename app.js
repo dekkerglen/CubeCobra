@@ -179,17 +179,17 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
 }
 
 // Route files; they manage their own CSRF protection
-app.use('', require('./routes/root'));
-
+app.use('/patreon', require('./routes/patreon_routes'));
+app.use('/dev', require('./routes/dev_routes'));
 app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
-app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));
-app.use('/patreon', require('./routes/patreon_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/packages', require('./routes/packages'));
+
+app.use('', require('./routes/root'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {

@@ -29,7 +29,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 });
 
 router.post('/hook', async (req, res) => {
-  winston.info(req.body);
+  req.logger.info(req.body);
 
   return res.status(200).send({
     success: 'true',
