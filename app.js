@@ -160,7 +160,7 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// set CORS header for cubeJSON requests (needs to be here to be included in rate limiter response)
+// set CORS header for cube json requests (needs to be here to be included in rate limiter response)
 app.use('/cube/api/cubeJSON', (req, res, next) => {
   res.set('Access-Control-Allow-Origin', '*');
   next();
@@ -168,8 +168,8 @@ app.use('/cube/api/cubeJSON', (req, res, next) => {
 
 // apply a rate limiter to the cube json endpoint
 const apiLimiter = rateLimit({
-  windowMs: 60000,
-  max: 1,
+  windowMs: 60 * 1000,
+  max: 100,
   message: '429: Too Many Requests',
 });
 app.use('/cube/api/cubeJSON', apiLimiter);
