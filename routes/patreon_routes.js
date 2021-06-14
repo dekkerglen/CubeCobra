@@ -5,7 +5,7 @@ const patreon = require('patreon');
 const express = require('express');
 
 const { render } = require('../serverjs/render');
-const { ensureAuth, csrfProtection } = require('./middleware');
+const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
 const { winston } = require('../serverjs/cloudwatch');
 
@@ -17,8 +17,6 @@ const patreonOAuth = patreon.oauth;
 const patreonOAuthClient = patreonOAuth(process.env.PATREON_CLIENT_ID, process.env.PATREON_CLIENT_SECRET);
 
 const router = express.Router();
-
-router.use(csrfProtection);
 
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
