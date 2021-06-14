@@ -193,16 +193,16 @@ export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallb
   // The finish callback.
   useEffect(() => {
     (async () => {
-      const submitableGridDraft = {
-        ...gridDraft,
-        cards: gridDraft.cards.map(({ details: _, ...card }) => ({ ...card })),
-      };
-      await csrfFetch(`/cube/api/submitgriddraft/${gridDraft.cube}`, {
-        method: 'POST',
-        body: JSON.stringify(submitableGridDraft),
-        headers: { 'Content-Type': 'application/json' },
-      });
       if (doneDrafting) {
+        const submitableGridDraft = {
+          ...gridDraft,
+          cards: gridDraft.cards.map(({ details: _, ...card }) => ({ ...card })),
+        };
+        await csrfFetch(`/cube/api/submitgriddraft/${gridDraft.cube}`, {
+          method: 'POST',
+          body: JSON.stringify(submitableGridDraft),
+          headers: { 'Content-Type': 'application/json' },
+        });
         // eslint-disable-next-line
         submitDeckForm.current?.submit?.();
       }
