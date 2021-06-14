@@ -302,16 +302,16 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const makeBotTrashPicks = useCallback((playerChose) => makeBotChoices(playerChose, true), [makeBotChoices]);
 
   useEffect(() => {
-    const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
-    csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
-      method: 'POST',
-      body: JSON.stringify(submitableDraft),
-      headers: { 'Content-Type': 'application/json' },
-    }).then(() => {
-      if (doneDrafting) {
+    if (doneDrafting) {
+      const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
+      csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+        method: 'POST',
+        body: JSON.stringify(submitableDraft),
+        headers: { 'Content-Type': 'application/json' },
+      }).then(() => {
         submitDeckForm.current?.submit?.(); // eslint-disable-line
-      }
-    });
+      });
+    }
   }, [doneDrafting, draft]);
 
   useEffect(() => {
