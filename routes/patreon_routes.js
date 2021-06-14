@@ -7,7 +7,6 @@ const express = require('express');
 const { render } = require('../serverjs/render');
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
-const { winston } = require('../serverjs/cloudwatch');
 
 const Patron = require('../models/patron');
 
