@@ -307,13 +307,12 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
       method: 'POST',
       body: JSON.stringify(submitableDraft),
       headers: { 'Content-Type': 'application/json' },
+    }).then(() => {
+      if (doneDrafting) {
+        submitDeckForm.current?.submit?.(); // eslint-disable-line
+      }
     });
-  }, [draft]);
-  useEffect(() => {
-    if (doneDrafting) {
-      submitDeckForm.current?.submit?.(); // eslint-disable-line
-    }
-  }, [doneDrafting]);
+  }, [doneDrafting, draft]);
 
   useEffect(() => {
     if (action.match(/random/) && !doneDrafting) {
