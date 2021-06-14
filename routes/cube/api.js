@@ -405,7 +405,6 @@ router.get(
     }
 
     res.contentType('application/json');
-    res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(JSON.stringify(cube));
   }),
 );
