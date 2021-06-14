@@ -7,7 +7,6 @@ const express = require('express');
 const { render } = require('../serverjs/render');
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
-const { winston } = require('../serverjs/cloudwatch');
 
 const Patron = require('../models/patron');
 
@@ -29,7 +28,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 });
 
 router.post('/hook', async (req, res) => {
-  winston.info(req.body);
+  req.logger.info(req.body);
 
   return res.status(200).send({
     success: 'true',
