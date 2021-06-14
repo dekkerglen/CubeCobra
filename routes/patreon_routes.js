@@ -28,11 +28,59 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 });
 
 router.post('/hook', async (req, res) => {
-  req.logger.info(req.body);
+  try {
+    req.logger.info(req.body);
 
-  return res.status(200).send({
-    success: 'true',
-  });
+    // if (!req.headers['X-Patreon-Signature'].equals(process.env.PATREON_HOOK_SECRET)) {
+    //  return res.status(401).send({
+    //    success: 'false',
+    //  });
+    // }
+
+    const { included, data } = req.body;
+
+    const users = included.filter((item) => item.type === 'user');
+
+    if (users.length !== 1) {
+      req.logger.info('Recieved a patreon hook with not exactly one user');
+      return res.status(500).send({
+        success: 'false',
+      });
+    }
+    const email = users[0].attributes.email.toLowerCase();
+
+    // if a patron with this email is already linked, we can't use it
+    const patron = await Patron.findOne({ email });
+
+    if (patron) {
+      if (req.headers['X-Patreon-Event'].equals('members:pledge:update')) {
+        // update patron level
+        const rewardId = data.relationships.reward.data.id;
+        const rewards = included.filter((item) => item.id === rewardId);
+
+        if (rewards.length === 0) {
+          patron.level = 'Patron';
+        } else {
+          patron.level = rewards[0].attributes.title;
+        }
+
+        patron.active = true;
+      } else if (req.headers['X-Patreon-Event'].equals('members:pledge:delete')) {
+        // set patron active to false
+        patron.active = false;
+      }
+      await patron.save();
+    }
+
+    return res.status(200).send({
+      success: 'false',
+    });
+  } catch (err) {
+    req.logger.error(err);
+    return res.status(500).send({
+      success: 'false',
+    });
+  }
 });
 
 router.get('/redirect', ensureAuth, (req, res) => {
