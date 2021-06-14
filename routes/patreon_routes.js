@@ -53,8 +53,7 @@ router.post('/hook', async (req, res) => {
     const patron = await Patron.findOne({ email });
 
     if (patron) {
-      if (req.headers['X-Patreon-Event'].equals('members:pledge:update')) {
-        // update patron level
+      if (req.headers['X-Patreon-Event'].equals('pledges:update')) {
         const rewardId = data.relationships.reward.data.id;
         const rewards = included.filter((item) => item.id === rewardId);
 
@@ -65,8 +64,7 @@ router.post('/hook', async (req, res) => {
         }
 
         patron.active = true;
-      } else if (req.headers['X-Patreon-Event'].equals('members:pledge:delete')) {
-        // set patron active to false
+      } else if (req.headers['X-Patreon-Event'].equals('pledges:delete')) {
         patron.active = false;
       }
       await patron.save();
