@@ -29,6 +29,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 
 router.post('/hook', async (req, res) => {
   try {
+    req.body.action = req.headers['X-Patreon-Event'];
     req.logger.info(req.body);
 
     // if (!req.headers['X-Patreon-Signature'].equals(process.env.PATREON_HOOK_SECRET)) {
@@ -37,9 +38,9 @@ router.post('/hook', async (req, res) => {
     //  });
     // }
 
-    const { included, data } = req.body;
+    const { included, data, action } = req.body;
 
-    const users = included.filter((item) => item.id === data.relationships.patron.id);
+    const users = included.filter((item) => item.id === data.relationships.patron.data.id);
 
     if (users.length !== 1) {
       req.logger.info('Recieved a patreon hook with not exactly one user');
@@ -53,7 +54,7 @@ router.post('/hook', async (req, res) => {
     const patron = await Patron.findOne({ email });
 
     if (patron) {
-      if (req.headers['X-Patreon-Event'].equals('pledges:update')) {
+      if (action.equals('pledges:update')) {
         const rewardId = data.relationships.reward.data.id;
         const rewards = included.filter((item) => item.id === rewardId);
 
@@ -64,7 +65,7 @@ router.post('/hook', async (req, res) => {
         }
 
         patron.active = true;
-      } else if (req.headers['X-Patreon-Event'].equals('pledges:delete')) {
+      } else if (action.equals('pledges:delete')) {
         patron.active = false;
       }
       await patron.save();
@@ -153,11 +154,10 @@ router.get('/redirect', ensureAuth, (req, res) => {
       return res.redirect('/user/account?nav=patreon');
     })
     .catch((err) => {
-      return render(req, res, 'ErrorPage', {
-        error: err.statusText,
-        requestId: req.uuid,
-        title: 'There was an error linking your Patreon account.',
-      });
+      req.logger.error(err);
+
+      req.flash('danger', `There was an error linking your Patreon account: ${err.statusText}`);
+      return res.redirect('/user/account?nav=patreon');
     });
 });
 
