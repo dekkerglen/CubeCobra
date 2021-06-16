@@ -67,8 +67,15 @@ router.post('/hook', async (req, res) => {
         patron.active = true;
       } else if (action.equals('pledges:delete')) {
         patron.active = false;
+      } else {
+        req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
+        return res.status(500).send({
+          success: 'false',
+        });
       }
       await patron.save();
+    } else {
+      req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
     }
 
     return res.status(200).send({
