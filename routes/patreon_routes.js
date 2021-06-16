@@ -4,7 +4,6 @@ require('dotenv').config();
 const patreon = require('patreon');
 const express = require('express');
 
-const { render } = require('../serverjs/render');
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
 
