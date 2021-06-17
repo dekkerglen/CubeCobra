@@ -92,10 +92,12 @@ router.post('/hook', async (req, res) => {
       }
 
       patron.active = true;
-      user.isPatron = true;
+      if (!user.roles.includes('Patron')) {
+        user.roles.push('Patron');
+      }
     } else if (action === 'pledges:delete') {
       patron.active = false;
-      user.isPatron = false;
+      user.roles = user.roles.filter((role) => role !== 'Patron');
     } else {
       req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
       return res.status(500).send({
@@ -190,7 +192,9 @@ router.get('/redirect', ensureAuth, (req, res) => {
       await newPatron.save();
 
       const user = await User.findById(req.user.id);
-      user.isPatron = true;
+      if (!user.roles.includes('Patron')) {
+        user.roles.push('Patron');
+      }
       await user.save();
 
       req.flash('success', `Your Patreon account has succesfully been linked.`);

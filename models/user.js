@@ -83,7 +83,7 @@ const UserSchema = mongoose.Schema({
     type: [
       {
         type: String,
-        enum: ['Admin', 'ContentCreator'],
+        enum: ['Admin', 'ContentCreator', 'Patron'],
       },
     ],
     default: [],
@@ -100,10 +100,6 @@ const UserSchema = mongoose.Schema({
   patron: {
     type: String,
     default: null,
-  },
-  isPatron: {
-    type: Boolean,
-    default: false,
   },
 });
 
