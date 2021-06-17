@@ -9,6 +9,7 @@ const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
 
 const Patron = require('../models/patron');
+const User = require('../models/user');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
@@ -61,8 +62,9 @@ router.post('/hook', async (req, res) => {
 
     // if a patron with this email is already linked, we can't use it
     const patron = await Patron.findOne({ email });
+    const user = await User.findById(patron.user);
 
-    if (patron) {
+    if (patron && user) {
       if (action === 'pledges:update') {
         const rewardId = data.relationships.reward.data.id;
         const rewards = included.filter((item) => item.id === rewardId);
@@ -74,8 +76,10 @@ router.post('/hook', async (req, res) => {
         }
 
         patron.active = true;
+        user.isPatron = true;
       } else if (action === 'pledges:delete') {
         patron.active = false;
+        user.isPatron = false;
       } else {
         req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
         return res.status(500).send({
@@ -83,6 +87,7 @@ router.post('/hook', async (req, res) => {
         });
       }
       await patron.save();
+      await user.save();
     } else {
       req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
     }
@@ -170,6 +175,10 @@ router.get('/redirect', ensureAuth, (req, res) => {
       newPatron.active = true;
 
       await newPatron.save();
+
+      const user = await User.findById(req.user.id);
+      user.isPatron = true;
+      await user.save();
 
       req.flash('success', `Your Patreon account has succesfully been linked.`);
       return res.redirect('/user/account?nav=patreon');

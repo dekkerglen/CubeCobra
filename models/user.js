@@ -101,6 +101,10 @@ const UserSchema = mongoose.Schema({
     type: String,
     default: null,
   },
+  isPatron: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 UserSchema.index({
