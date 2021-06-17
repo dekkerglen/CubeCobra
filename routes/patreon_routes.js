@@ -86,7 +86,7 @@ router.post('/hook', async (req, res) => {
       });
     }
 
-    if (action === 'pledges:update') {
+    if (action === 'pledges:update' || action === 'pledges:create') {
       const rewardId = data.relationships.reward.data.id;
       const rewards = included.filter((item) => item.id === rewardId);
 
