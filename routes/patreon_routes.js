@@ -29,8 +29,8 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 router.post('/hook', async (req, res) => {
   try {
     req.body.action = req.headers['X-Patreon-Event'];
+    req.body.signature = req.headers['X-Patreon-Signature'];
     req.logger.info(req.body);
-    req.logger.info(`Patreon signature: ${req.headers['X-Patreon-Signature']}`);
 
     // if (!req.headers['X-Patreon-Signature'].equals(process.env.PATREON_HOOK_SECRET)) {
     //  return res.status(401).send({
