@@ -19,7 +19,7 @@ const router = express.Router();
 
 const isValidPatreonSignature = (signature, body) => {
   const hmac = crypto.createHmac('md5', process.env.PATREON_HOOK_SECRET);
-  const data = hmac.update(body);
+  const data = hmac.update(JSON.stringify(body));
   const digest = data.digest('hex');
 
   const checksum = Buffer.from(signature, 'utf8');
