@@ -29,6 +29,11 @@ const isValidPatreonSignature = (signature, body) => {
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
     await Patron.deleteOne({ user: req.user.id });
+
+    const user = await User.findById(req.user.id);
+    user.roles = user.roles.filter((role) => role !== 'Patron');
+    await user.save();
+
     req.flash('success', `Patron account has been unlinked.`);
     return res.redirect('/user/account?nav=patreon');
   } catch (err) {
