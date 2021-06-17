@@ -31,6 +31,7 @@ router.post('/hook', async (req, res) => {
     req.body.action = req.headers['X-Patreon-Event'];
     req.body.signature = req.headers['X-Patreon-Signature'];
     req.logger.info(req.body);
+    req.logger.info(req.headers);
 
     // if (!req.headers['X-Patreon-Signature'].equals(process.env.PATREON_HOOK_SECRET)) {
     //  return res.status(401).send({
