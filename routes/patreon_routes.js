@@ -62,35 +62,48 @@ router.post('/hook', async (req, res) => {
 
     // if a patron with this email is already linked, we can't use it
     const patron = await Patron.findOne({ email });
+
+    if (!patron) {
+      req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
+
+      return res.status(200).send({
+        success: 'false',
+      });
+    }
+
     const user = await User.findById(patron.user);
 
-    if (patron && user) {
-      if (action === 'pledges:update') {
-        const rewardId = data.relationships.reward.data.id;
-        const rewards = included.filter((item) => item.id === rewardId);
+    if (!user) {
+      req.logger.info(`Recieved a patreon hook without a found user: "${patron.user}"`);
 
-        if (rewards.length === 0) {
-          patron.level = 'Patron';
-        } else {
-          patron.level = rewards[0].attributes.title;
-        }
-
-        patron.active = true;
-        user.isPatron = true;
-      } else if (action === 'pledges:delete') {
-        patron.active = false;
-        user.isPatron = false;
-      } else {
-        req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
-        return res.status(500).send({
-          success: 'false',
-        });
-      }
-      await patron.save();
-      await user.save();
-    } else {
-      req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
+      return res.status(200).send({
+        success: 'false',
+      });
     }
+
+    if (action === 'pledges:update') {
+      const rewardId = data.relationships.reward.data.id;
+      const rewards = included.filter((item) => item.id === rewardId);
+
+      if (rewards.length === 0) {
+        patron.level = 'Patron';
+      } else {
+        patron.level = rewards[0].attributes.title;
+      }
+
+      patron.active = true;
+      user.isPatron = true;
+    } else if (action === 'pledges:delete') {
+      patron.active = false;
+      user.isPatron = false;
+    } else {
+      req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
+      return res.status(500).send({
+        success: 'false',
+      });
+    }
+    await patron.save();
+    await user.save();
 
     return res.status(200).send({
       success: 'false',
