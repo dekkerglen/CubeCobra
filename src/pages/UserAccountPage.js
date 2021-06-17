@@ -264,7 +264,7 @@ const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, pat
               <Card>
                 {patron ? (
                   <CardBody>
-                    {user.isPatron ? (
+                    {user.roles.includes('Patron') ? (
                       <p>
                         Your account is linked at the <b>{patron.level}</b> level.
                       </p>

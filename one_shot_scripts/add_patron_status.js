@@ -12,7 +12,10 @@ const level = 'Cobra Hatchling';
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const user = await User.findOne({ username });
-    user.isPatron = true;
+
+    if (!user.roles.includes('Patron')) {
+      user.roles.push('Patron');
+    }
 
     const patron = await Patron.findOne({ user: user._id });
 
