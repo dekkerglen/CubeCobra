@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const patreon = require('patreon');
 const express = require('express');
+const crypto = require('crypto');
 
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util.js');
@@ -16,6 +17,18 @@ const patreonOAuthClient = patreonOAuth(process.env.PATREON_CLIENT_ID, process.e
 
 const router = express.Router();
 
+const isValidPatreonSignature = (signature, body) => {
+  const hmac = crypto.createHmac('md5', process.env.PATREON_HOOK_SECRET);
+  const data = hmac.update(body);
+  const digest = data.digest('hex');
+
+  const checksum = Buffer.from(signature, 'utf8');
+  if (checksum.length !== digest.length || !crypto.timingSafeEqual(digest, checksum)) {
+    return false;
+  }
+  return true;
+};
+
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
     await Patron.deleteOne({ user: req.user.id });
@@ -28,18 +41,17 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 
 router.post('/hook', async (req, res) => {
   try {
-    req.body.action = req.headers['x-patreon-event'];
-    req.body.signature = req.headers['x-patreon-signature'];
+    const action = req.headers['x-patreon-event'];
+    const signature = req.headers['x-patreon-signature'];
     req.logger.info(req.body);
-    req.logger.info(req.headers);
 
-    // if (!req.headers['X-Patreon-Signature'].equals(process.env.PATREON_HOOK_SECRET)) {
-    //  return res.status(401).send({
-    //    success: 'false',
-    //  });
-    // }
+    if (!isValidPatreonSignature(signature, req.body)) {
+      return res.status(401).send({
+        success: 'false',
+      });
+    }
 
-    const { included, data, action } = req.body;
+    const { included, data } = req.body;
 
     const users = included.filter((item) => item.id === data.relationships.patron.data.id);
 
@@ -124,6 +136,11 @@ router.get('/redirect', ensureAuth, (req, res) => {
       newPatron.email = email;
       newPatron.user = req.user.id;
 
+      if (!rawJson.included) {
+        req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
+        return res.redirect('/user/account?nav=patreon');
+      }
+
       const pledges = rawJson.included.filter((item) => item.type === 'pledge');
 
       if (pledges.length === 0) {
@@ -164,7 +181,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
     .catch((err) => {
       req.logger.error(err);
 
-      req.flash('danger', `There was an error linking your Patreon account: ${err.statusText}`);
+      req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
       return res.redirect('/user/account?nav=patreon');
     });
 });
