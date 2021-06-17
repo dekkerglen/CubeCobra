@@ -22,11 +22,7 @@ const isValidPatreonSignature = (signature, body) => {
   const data = hmac.update(JSON.stringify(body));
   const digest = data.digest('hex');
 
-  const checksum = Buffer.from(signature, 'utf8');
-  if (checksum.length !== digest.length || !crypto.timingSafeEqual(digest, checksum)) {
-    return false;
-  }
-  return true;
+  return digest === signature;
 };
 
 router.get('/unlink', ensureAuth, async (req, res) => {
