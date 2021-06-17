@@ -28,8 +28,8 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 
 router.post('/hook', async (req, res) => {
   try {
-    req.body.action = req.headers['X-Patreon-Event'];
-    req.body.signature = req.headers['X-Patreon-Signature'];
+    req.body.action = req.headers['x-patreon-event'];
+    req.body.signature = req.headers['x-patreon-signature'];
     req.logger.info(req.body);
     req.logger.info(req.headers);
 
