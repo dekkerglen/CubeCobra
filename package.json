@@ -63,6 +63,7 @@
     "connect-mongodb-session": "^2.2.0",
     "core-js": "^3.6.3",
     "core-js-pure": "^3.6.3",
+    "crypto": "^1.0.1",
     "css-loader": "^3.4.2",
     "csurf": "^1.10.0",
     "dotenv": "^8.2.0",
