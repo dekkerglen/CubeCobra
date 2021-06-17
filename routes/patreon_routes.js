@@ -55,7 +55,7 @@ router.post('/hook', async (req, res) => {
     const patron = await Patron.findOne({ email });
 
     if (patron) {
-      if (action.equals('pledges:update')) {
+      if (action === 'pledges:update') {
         const rewardId = data.relationships.reward.data.id;
         const rewards = included.filter((item) => item.id === rewardId);
 
@@ -66,7 +66,7 @@ router.post('/hook', async (req, res) => {
         }
 
         patron.active = true;
-      } else if (action.equals('pledges:delete')) {
+      } else if (action === 'pledges:delete') {
         patron.active = false;
       } else {
         req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
