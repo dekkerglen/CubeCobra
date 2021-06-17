@@ -12,6 +12,7 @@ const level = 'Cobra Hatchling';
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
     const user = await User.findOne({ username });
+    user.isPatron = true;
 
     const patron = await Patron.findOne({ user: user._id });
 
@@ -29,6 +30,8 @@ const level = 'Cobra Hatchling';
 
       await newPatron.save();
     }
+
+    await user.save();
 
     console.log('done');
     process.exit();

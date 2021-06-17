@@ -264,13 +264,16 @@ const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, pat
               <Card>
                 {patron ? (
                   <CardBody>
-                    {patron.active ? (
+                    {user.isPatron ? (
                       <p>
                         Your account is linked at the <b>{patron.level}</b> level.
                       </p>
                     ) : (
                       <p>Your account is linked, but you are not an active patron.</p>
                     )}
+                    <p>
+                      <i>More Patreon features are coming soon!</i>
+                    </p>
                     <Button block outline color="danger" href="/patreon/unlink">
                       Unlink Patreon Account
                     </Button>
