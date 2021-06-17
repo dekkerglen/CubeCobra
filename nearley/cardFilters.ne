@@ -94,8 +94,6 @@ condition -> (
   | manaCostCondition
   | castableCostCondition
   | devotionCondition
-  | picksCondition
-  | cubesCondition
   | legalityCondition
   | layoutCondition
   | collectorNumberCondition
