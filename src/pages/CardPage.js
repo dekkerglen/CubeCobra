@@ -791,13 +791,11 @@ CardPage.propTypes = {
       prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
-  cubes: PropTypes.arrayOf(PropTypes.shape([])),
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
-  cubes: [],
   user: null,
   loginCallback: '/',
 };
