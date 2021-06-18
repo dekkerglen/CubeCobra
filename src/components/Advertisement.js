@@ -37,11 +37,10 @@ const adOptions = [
   </>,
 
   <>
-    Become a{' '}
+    Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
     <strong>
-      <a href="/donate">supporter</a>
-    </strong>{' '}
-    of Cube Cobra to remove these messages and gain access to exclusive features!
+      <a href="/donate">Find out more.</a>
+    </strong>
   </>,
 ];
 
