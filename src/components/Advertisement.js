@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Col, Card, CardBody } from 'reactstrap';
 import UserPropType from 'proptypes/UserPropType';
 
+const AD_RATE = 2; // an ad appears with probability of 1/AD_RATE
+
 const adOptions = [
   <>
     Cube Cobra's hosting fees are covered completely by donations. If you enjoy the service Cube Cobra provides, please
@@ -43,11 +45,9 @@ const adOptions = [
   </>,
 ];
 
-const AD_RATE = 2; // an ad appears with probability of 1/AD_RATE
-
 const Advertisement = ({ user }) => {
   const [option] = useState(Math.floor(Math.random() * adOptions.length * AD_RATE));
-  if (user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   if (option < adOptions.length) {
     return (
       <Col xs="12" className="py-2">
