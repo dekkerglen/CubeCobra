@@ -15,7 +15,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const BrowseContentPage = ({ user, loginCallback, content }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <Row>
         <Col xs="12">

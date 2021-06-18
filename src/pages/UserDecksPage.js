@@ -22,7 +22,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
       canEdit={user && user.id === owner._id}
       activeLink="decks"
     >
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
       <Card>

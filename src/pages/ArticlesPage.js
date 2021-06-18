@@ -16,7 +16,7 @@ const PAGE_SIZE = 24;
 
 const ArticlesPage = ({ user, loginCallback, articles, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <h4>Articles</h4>
     <Row>

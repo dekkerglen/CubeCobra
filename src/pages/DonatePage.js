@@ -28,6 +28,7 @@ const ContactPage = ({ user, loginCallback }) => (
         </p>
         <h5>Patreon Rewards</h5>
         <ul>
+          <li>A totally ad-free browsing experience</li>
           <li>
             Access to exclusive <a href="https://discord.gg/Hn39bCU">Discord</a> channels available only to Patreon
             supporters
@@ -39,6 +40,11 @@ const ContactPage = ({ user, loginCallback }) => (
             Ability to submit high priority feature requests that will be prioritized by the developers (from $15/month)
           </li>
         </ul>
+        <p>
+          After becoming a patron, make sure to <a href="/user/account?nav=patreon">link your Cube Cobra account</a> to
+          gain access to these benefits. If you are experiencing issues with your Patreon subscription, feel free to
+          contact us on <a href="https://discord.gg/Hn39bCU">Discord</a>.
+        </p>
         <h5>Donation Links</h5>
         <Row>
           <Col xs="12" sm="4">

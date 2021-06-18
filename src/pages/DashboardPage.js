@@ -40,7 +40,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <Row className="mt-3">
         <Col xs="12" md="6">

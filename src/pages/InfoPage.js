@@ -11,7 +11,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const ContactPage = ({ user, title, content, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

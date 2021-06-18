@@ -16,7 +16,7 @@ const PER_PAGE = 30;
 
 const RecentDraftsPage = ({ user, decks, currentPage, totalPages, count, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Row className="my-3">
       <Col xs="12">

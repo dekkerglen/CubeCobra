@@ -19,7 +19,7 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
       canEdit={user && user.id === owner._id}
       activeLink="blog"
     >
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
 
       {pages > 1 && (

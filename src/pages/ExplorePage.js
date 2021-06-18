@@ -13,7 +13,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const ExplorePage = ({ user, recents, featured, drafted, recentlyDrafted, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeSearchNavBar />
+      <CubeSearchNavBar user={user} />
       <DynamicFlash />
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>

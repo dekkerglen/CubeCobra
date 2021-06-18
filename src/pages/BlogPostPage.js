@@ -10,7 +10,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const BlogPostPage = ({ post, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <BlogPost
       key={post._id}

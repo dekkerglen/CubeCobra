@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const Notifications = ({ user, notifications, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="mx-auto">
       <CardHeader>

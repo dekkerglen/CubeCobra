@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 
 import { Col, Card, CardBody } from 'reactstrap';
+import UserPropType from 'proptypes/UserPropType';
+
+const AD_RATE = 2; // an ad appears with probability of 1/AD_RATE
 
 const adOptions = [
   <>
@@ -32,10 +35,18 @@ const adOptions = [
       <a href="/donate">Find out more.</a>
     </strong>
   </>,
+
+  <>
+    Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
+    <strong>
+      <a href="/donate">Find out more.</a>
+    </strong>
+  </>,
 ];
 
-const Advertisement = () => {
-  const [option] = useState(Math.floor(Math.random() * adOptions.length * 2));
+const Advertisement = ({ user }) => {
+  const [option] = useState(Math.floor(Math.random() * adOptions.length * AD_RATE));
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   if (option < adOptions.length) {
     return (
       <Col xs="12" className="py-2">
@@ -46,6 +57,14 @@ const Advertisement = () => {
     );
   }
   return <></>;
+};
+
+Advertisement.propTypes = {
+  user: UserPropType,
+};
+
+Advertisement.defaultProps = {
+  user: null,
 };
 
 export default Advertisement;
