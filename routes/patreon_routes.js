@@ -200,6 +200,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }
+      user.patron = patron._id;
       await user.save();
 
       req.flash('success', `Your Patreon account has succesfully been linked.`);
