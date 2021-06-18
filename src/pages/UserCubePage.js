@@ -22,7 +22,7 @@ const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback 
       canEdit={user && user.id === owner._id}
       activeLink="view"
     >
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <Card>
         <CardHeader>

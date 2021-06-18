@@ -16,7 +16,7 @@ const PAGE_SIZE = 24;
 
 const VideosPage = ({ user, loginCallback, videos, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <h4>Videos</h4>
     <Row>

@@ -17,7 +17,7 @@ const DevBlog = ({ blogs, pages, userid, activePage, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <div className="mt-3">
         <h3 className="centered">Developer Blog</h3>
