@@ -32,6 +32,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     user.roles = user.roles.filter((role) => role !== 'Patron');
+    user.patron = undefined;
     await user.save();
 
     req.flash('success', `Patron account has been unlinked.`);
