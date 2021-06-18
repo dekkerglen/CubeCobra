@@ -14,7 +14,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const UserSocialPage = ({ user, followedCubes, followedUsers, followers, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Row className="my-3">
       <Col xs={6}>

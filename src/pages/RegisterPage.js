@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const RegisterPage = ({ user, username, email, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="mt-3">
       <CardHeader>

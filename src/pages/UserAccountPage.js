@@ -89,7 +89,7 @@ const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, pat
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <h2 className="mt-3">My Account </h2>
       <DynamicFlash />
       <Row className="mb-3">

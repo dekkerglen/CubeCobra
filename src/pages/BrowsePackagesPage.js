@@ -87,7 +87,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       {alerts.map(({ color, message }, index) => (
         <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>

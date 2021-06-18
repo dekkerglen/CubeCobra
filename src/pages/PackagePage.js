@@ -11,7 +11,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const PackagePage = ({ pack, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <CardPackage cardPackage={pack} user={user} refresh={() => window.location.reload()} />
   </MainLayout>
