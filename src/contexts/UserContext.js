@@ -1,5 +1,5 @@
 import React from 'react';
 
-const GroupModalContext = React.createContext();
+const UserContext = React.createContext();
 
-export default GroupModalContext;
+export default UserContext;

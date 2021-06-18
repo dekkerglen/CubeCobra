@@ -27,8 +27,6 @@ const truncateToLength = (len, s) => {
 };
 
 const DeckPreview = ({ deck, nextURL }) => {
-  console.log(deck);
-
   const user = useContext(UserContext);
   const canEdit = user.id === deck.owner || user.id === deck.cubeOwner;
 
