@@ -15,13 +15,7 @@ import Markdown from 'components/Markdown';
 
 const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <UserLayout
-      user={owner}
-      followers={followers}
-      following={following}
-      canEdit={user && user.id === owner._id}
-      activeLink="view"
-    >
+    <UserLayout user={owner} followers={followers} following={following} activeLink="view">
       <Advertisement user={user} />
       <DynamicFlash />
       <Card>

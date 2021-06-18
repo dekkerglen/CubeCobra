@@ -38,7 +38,7 @@ const AdminCommentsPage = ({ loginCallback, comments, count, page }) => {
           )}
         </CardHeader>
         {comments.map((comment) => (
-          <Comment comment={comment} userid={user && user.id} index={0} noReplies editComment={() => {}} />
+          <Comment comment={comment} index={0} noReplies editComment={() => {}} />
         ))}
       </Card>
     </MainLayout>

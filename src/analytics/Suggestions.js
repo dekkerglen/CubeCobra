@@ -24,7 +24,7 @@ import useToggle from 'hooks/UseToggle';
 const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
 
-const Suggestion = ({ card, index, cubes, cube }) => {
+const Suggestion = ({ card, index, cube }) => {
   return (
     <ListGroupItem>
       <h6>
@@ -34,7 +34,7 @@ const Suggestion = ({ card, index, cubes, cube }) => {
           front={card.details.image_normal}
           back={card.details.image_flip ?? undefined}
           href={`/tool/card/${encodeName(card.cardID)}`}
-          modalProps={{ card: card.details, cubes, hideAnalytics: false, cubeContext: cube._id }}
+          modalProps={{ card: card.details, hideAnalytics: false, cubeContext: cube._id }}
         >
           {card.details.name}
         </AddModal>
@@ -54,18 +54,9 @@ Suggestion.propTypes = {
   }).isRequired,
   cube: CubePropType.isRequired,
   index: PropTypes.number.isRequired,
-  cubes: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ),
 };
 
-Suggestion.defaultProps = {
-  cubes: [],
-};
-
-const Suggestions = ({ adds, cuts, loadState, cube, filter, cubes }) => {
+const Suggestions = ({ adds, cuts, loadState, cube, filter }) => {
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
@@ -123,7 +114,7 @@ const Suggestions = ({ adds, cuts, loadState, cube, filter, cubes }) => {
                       showBottom
                       pageWrap={(element) => <CardBody>{element}</CardBody>}
                       rows={filteredAdds.slice(0).map(([add, index]) => (
-                        <Suggestion key={add.cardID} index={index} card={add} cubes={cubes} cube={cube} />
+                        <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
                       ))}
                     />
                   ) : (
@@ -154,7 +145,7 @@ const Suggestions = ({ adds, cuts, loadState, cube, filter, cubes }) => {
                       showBottom
                       pageWrap={(element) => <CardBody>{element}</CardBody>}
                       rows={filteredCuts.slice(0).map(([card, index]) => (
-                        <Suggestion key={card.cardID} index={index} card={card} cubes={cubes} cube={cube} />
+                        <Suggestion key={card.cardID} index={index} card={card} cube={cube} />
                       ))}
                     />
                   ) : (
@@ -181,12 +172,10 @@ Suggestions.propTypes = {
     ),
   }).isRequired,
   filter: PropTypes.func,
-  cubes: PropTypes.arrayOf(PropTypes.shape({})),
 };
 
 Suggestions.defaultProps = {
   filter: null,
-  cubes: [],
 };
 
 export default Suggestions;

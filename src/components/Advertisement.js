@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 import { Col, Card, CardBody } from 'reactstrap';
-import UserPropType from 'proptypes/UserPropType';
+import UserContext from 'contexts/UserContext';
 
 const AD_RATE = 2; // an ad appears with probability of 1/AD_RATE
 
@@ -44,7 +44,9 @@ const adOptions = [
   </>,
 ];
 
-const Advertisement = ({ user }) => {
+const Advertisement = () => {
+  const user = useContext(UserContext);
+
   const [option] = useState(Math.floor(Math.random() * adOptions.length * AD_RATE));
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   if (option < adOptions.length) {
@@ -57,14 +59,6 @@ const Advertisement = ({ user }) => {
     );
   }
   return <></>;
-};
-
-Advertisement.propTypes = {
-  user: UserPropType,
-};
-
-Advertisement.defaultProps = {
-  user: null,
 };
 
 export default Advertisement;

@@ -1,9 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, FormGroup, Label, Input, Button } from 'reactstrap';
 
-import UserContext from 'contexts/UserContext';
 import Paginate from 'components/Paginate';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
@@ -11,10 +10,9 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
+import UserPropType from 'proptypes/UserPropType';
 
-const DevBlog = ({ blogs, pages, userid, activePage, loginCallback }) => {
-  const user = useContext(UserContext);
-
+const DevBlog = ({ blogs, pages, activePage, loginCallback, user }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
       <Advertisement user={user} />
@@ -45,9 +43,7 @@ const DevBlog = ({ blogs, pages, userid, activePage, loginCallback }) => {
           <Paginate count={parseInt(pages, 10)} active={parseInt(activePage, 10)} urlF={(i) => `/dev/blog/${i}`} />
         )}
         {blogs.length > 0 ? (
-          blogs.map((post) => (
-            <BlogPost key={post._id} post={post} canEdit={false} userid={userid} loggedIn={userid !== null} />
-          ))
+          blogs.map((post) => <BlogPost key={post._id} post={post} />)
         ) : (
           <h5>No developer blogs have been posted.</h5>
         )}
@@ -63,12 +59,13 @@ DevBlog.propTypes = {
   blogs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
-  userid: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
+  user: UserPropType,
 };
 
 DevBlog.defaultProps = {
   loginCallback: '/',
+  user: null,
 };
 
 export default RenderToRoot(DevBlog);

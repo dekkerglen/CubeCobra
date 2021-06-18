@@ -38,7 +38,6 @@ router.get('/blog/:id', async (req, res) => {
     blogs,
     pages: Math.ceil(count / PAGESIZE),
     activePage: req.params.id,
-    userid: req.user ? req.user._id : null,
   });
 });
 

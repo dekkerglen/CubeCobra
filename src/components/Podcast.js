@@ -1,4 +1,5 @@
 import React from 'react';
+
 import PropTypes from 'prop-types';
 import PodcastPropType from 'proptypes/PodcastPropType';
 
@@ -8,7 +9,7 @@ import AspectRatioBox from 'components/AspectRatioBox';
 
 import { CardBody, CardHeader, Row, Col } from 'reactstrap';
 
-const Podcast = ({ podcast, userid, episodes }) => {
+const Podcast = ({ podcast, episodes }) => {
   return (
     <>
       <CardHeader>
@@ -41,7 +42,7 @@ const Podcast = ({ podcast, userid, episodes }) => {
         )}
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="podcast" parent={podcast._id} userid={userid} collapse={false} />
+        <CommentsSection parentType="podcast" parent={podcast._id} collapse={false} />
       </div>
     </>
   );
@@ -49,11 +50,9 @@ const Podcast = ({ podcast, userid, episodes }) => {
 Podcast.propTypes = {
   podcast: PodcastPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})),
-  userid: PropTypes.string,
 };
 
 Podcast.defaultProps = {
-  userid: null,
   episodes: [],
 };
 

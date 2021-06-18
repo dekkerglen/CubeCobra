@@ -15,13 +15,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <UserLayout
-      user={owner}
-      followers={followers}
-      following={following}
-      canEdit={user && user.id === owner._id}
-      activeLink="decks"
-    >
+    <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
       <Advertisement user={user} />
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
@@ -32,12 +26,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
         {decks.length > 0 ? (
           <CardBody className="p-0">
             {decks.map((deck) => (
-              <DeckPreview
-                key={deck._id}
-                deck={deck}
-                canEdit={user && user.id === owner._id}
-                nextURL={`/user/decks/${owner._id}/${activePage}`}
-              />
+              <DeckPreview key={deck._id} deck={deck} nextURL={`/user/decks/${owner._id}/${activePage}`} />
             ))}
           </CardBody>
         ) : (

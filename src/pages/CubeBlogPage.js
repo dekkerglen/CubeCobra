@@ -101,7 +101,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="blog">
+      <CubeLayout cube={cube} activeLink="blog">
         <Navbar expand light className="usercontrols mb-3">
           <Collapse navbar>
             <Nav navbar>
@@ -116,16 +116,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
         <DynamicFlash />
         {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cube._id}/${i}`} />}
         {posts.length > 0 ? (
-          posts.map((post) => (
-            <BlogPost
-              key={post._id}
-              post={post}
-              canEdit={user && post.owner === user.id}
-              userid={user ? user.id : null}
-              loggedIn={user !== null}
-              onEdit={handleEdit}
-            />
-          ))
+          posts.map((post) => <BlogPost key={post._id} post={post} loggedIn={user !== null} onEdit={handleEdit} />)
         ) : (
           <h5>No blog posts for this cube.</h5>
         )}

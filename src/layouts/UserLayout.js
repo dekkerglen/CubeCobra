@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
+import UserContext from 'contexts/UserContext';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 
+import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
+
 const FollowersModalLink = withModal('a', FollowersModal);
 const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
-const UserLayout = ({ user, followers, following, canEdit, activeLink, children }) => {
+const UserLayout = ({ user, followers, following, activeLink, children }) => {
+  const activeUser = useContext(UserContext);
+  const canEdit = activeUser.id === user._id;
+
   const numFollowers = followers.length;
   const followersText = (
     <h6>
@@ -81,13 +86,11 @@ UserLayout.propTypes = {
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
-  canEdit: PropTypes.bool,
   activeLink: PropTypes.string.isRequired,
   children: PropTypes.node,
 };
 
 UserLayout.defaultProps = {
-  canEdit: false,
   children: false,
 };
 

@@ -535,7 +535,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       {
         owner: userid,
       },
-      '_id seats date cube',
+      '_id seats date cube owner cubeOwner',
     )
       .sort({
         date: -1,

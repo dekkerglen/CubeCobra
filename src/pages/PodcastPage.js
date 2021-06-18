@@ -33,7 +33,7 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
             </h5>
           </CardHeader>
         )}
-        <Podcast podcast={podcast} userid={user && user.id} episodes={episodes} />
+        <Podcast podcast={podcast} episodes={episodes} />
       </Card>
     </MainLayout>
   );

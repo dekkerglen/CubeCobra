@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { Collapse, Spinner } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import CommentList from 'components/PagedCommentList';
 import LinkButton from 'components/LinkButton';
 import CommentEntry from 'components/CommentEntry';
 import useToggle from 'hooks/UseToggle';
 import useComments from 'hooks/UseComments';
 
-const CommentsSection = ({ parent, parentType, collapse, userid }) => {
+const CommentsSection = ({ parent, parentType, collapse }) => {
+  const user = useContext(UserContext);
+  const userid = user && user.id;
+
   const [expanded, toggle] = useToggle(!collapse);
   const [replyExpanded, toggleReply] = useToggle(false);
   const [comments, addComment, loading, editComment] = useComments(parentType, parent);
@@ -48,7 +52,7 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
             </div>
           )}
           <Collapse isOpen={expanded}>
-            <CommentList comments={comments} userid={userid} editComment={editComment} />
+            <CommentList comments={comments} editComment={editComment} />
           </Collapse>
         </>
       )}
@@ -59,12 +63,10 @@ const CommentsSection = ({ parent, parentType, collapse, userid }) => {
 CommentsSection.propTypes = {
   parent: PropTypes.string.isRequired,
   parentType: PropTypes.string.isRequired,
-  userid: PropTypes.string,
   collapse: PropTypes.bool,
 };
 
 CommentsSection.defaultProps = {
-  userid: null,
   collapse: true,
 };
 
