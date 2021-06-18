@@ -1,17 +1,18 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import DraftSeatPropType from 'proptypes/DraftSeatPropType';
+import DeckPropType from 'proptypes/DeckPropType';
 
 import CommentsSection from 'components/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
-import CardPropType from 'proptypes/CardPropType';
-import DraftSeatPropType from 'proptypes/DraftSeatPropType';
-import DeckPropType from 'proptypes/DeckPropType';
 import { makeSubtitle } from 'utils/Card';
+
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
@@ -50,7 +51,7 @@ DeckStacksStatic.propTypes = {
   piles: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
 };
 
-const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
+const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
   const stackedDeck = seat.deck.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -146,7 +147,7 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
         <Markdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="deck" parent={deck._id} userid={userid} collapse={false} />
+        <CommentsSection parentType="deck" parent={deck._id} collapse={false} />
       </div>
     </Card>
   );
@@ -154,7 +155,6 @@ const DeckCard = ({ seat, userid, deck, seatIndex, draft, view }) => {
 
 DeckCard.propTypes = {
   seat: DraftSeatPropType.isRequired,
-  userid: PropTypes.string,
   view: PropTypes.string,
   draft: PropTypes.shape({ cards: PropTypes.arrayOf(CardPropType).isRequired }).isRequired,
   deck: DeckPropType.isRequired,
@@ -162,7 +162,6 @@ DeckCard.propTypes = {
 };
 
 DeckCard.defaultProps = {
-  userid: null,
   view: 'deck',
 };
 

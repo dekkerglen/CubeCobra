@@ -18,7 +18,6 @@ one_shot_scripts/validate_colors.js
 public/js/autocard.js
 public/js/index.js
 src/components/AutocompleteInput.js
-src/components/BlogPost.js
 src/components/ButtonLink.js
 src/components/CardModalForm.js
 src/components/CardModal.js

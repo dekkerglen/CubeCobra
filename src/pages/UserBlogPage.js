@@ -12,13 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback, pages, activePage }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <UserLayout
-      user={owner}
-      followers={followers}
-      following={following}
-      canEdit={user && user.id === owner._id}
-      activeLink="blog"
-    >
+    <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
       <Advertisement user={user} />
       <DynamicFlash />
 
@@ -26,17 +20,7 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
         <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
       )}
       {posts.length > 0 ? (
-        posts
-          .slice(0)
-          .map((post) => (
-            <BlogPost
-              key={post._id}
-              post={post}
-              canEdit={user && user.id === owner._id}
-              userid={user && user.id}
-              loggedIn
-            />
-          ))
+        posts.slice(0).map((post) => <BlogPost key={post._id} post={post} loggedIn />)
       ) : (
         <p>This user has no blog posts!</p>
       )}

@@ -270,13 +270,7 @@ const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
                 Played in {cardPopularity({ details: card })}%
                 <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
               </p>
-              <AddModal
-                color="success"
-                block
-                outline
-                className="mb-1 mr-2"
-                modalProps={{ card, cubes: user ? user.cubes : [], hideAnalytics: true }}
-              >
+              <AddModal color="success" block outline className="mb-1 mr-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
@@ -552,12 +546,7 @@ const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
               </TabPane>
               <TabPane tabId="5">
                 <div className="border-left border-bottom">
-                  <CommentsSection
-                    parentType="card"
-                    parent={card.oracle_id}
-                    userid={user && user.id}
-                    collapse={false}
-                  />
+                  <CommentsSection parentType="card" parent={card.oracle_id} collapse={false} />
                 </div>
               </TabPane>
             </TabContent>
@@ -802,13 +791,11 @@ CardPage.propTypes = {
       prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
-  cubes: PropTypes.arrayOf(PropTypes.shape([])),
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
-  cubes: [],
   user: null,
   loginCallback: '/',
 };

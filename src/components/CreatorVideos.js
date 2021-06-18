@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import UserPropType from 'proptypes/UserPropType';
+import React, { useState, useEffect, useContext } from 'react';
 
+import UserContext from 'contexts/UserContext';
 import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 import Loading from 'pages/Loading';
 import VideoPreview from 'components/VideoPreview';
@@ -10,7 +10,9 @@ import { csrfFetch } from 'utils/CSRF';
 
 const PAGE_SIZE = 24;
 
-const CreatorVideos = ({ user }) => {
+const CreatorVideos = () => {
+  const user = useContext(UserContext);
+
   const [videos, setVideos] = useState([]);
   const [page, setPage] = useQueryParam('page', 0);
   const [pages, setPages] = useState(0);
@@ -65,10 +67,6 @@ const CreatorVideos = ({ user }) => {
       )}
     </>
   );
-};
-
-CreatorVideos.propTypes = {
-  user: UserPropType.isRequired,
 };
 
 export default CreatorVideos;

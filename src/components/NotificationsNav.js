@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import UserPropType from 'proptypes/UserPropType';
+import React, { useState, useContext } from 'react';
+
+import UserContext from 'contexts/UserContext';
 
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
 import LinkButton from 'components/LinkButton';
 
-const NotificationsNav = ({ user }) => {
+const NotificationsNav = () => {
+  const user = useContext(UserContext);
+
   const [notifications, setNotifications] = useState(user.notifications);
 
   const clear = async () => {
@@ -60,16 +63,6 @@ const NotificationsNav = ({ user }) => {
       </DropdownMenu>
     </UncontrolledDropdown>
   );
-};
-
-NotificationsNav.propTypes = {
-  user: UserPropType,
-};
-
-NotificationsNav.defaultProps = {
-  user: {
-    notifications: [],
-  },
 };
 
 export default NotificationsNav;

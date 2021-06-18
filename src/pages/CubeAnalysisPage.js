@@ -231,7 +231,6 @@ const CubeAnalysisPage = ({
           cuts={cutCards}
           filter={filter}
           loadState={loadState}
-          cubes={user ? user.cubes : []}
         />
       ),
     },

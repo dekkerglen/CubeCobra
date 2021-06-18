@@ -607,7 +607,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube: cube._id,
       },
-      'date seats _id cube',
+      'date seats _id cube owner cubeOwner',
     )
       .sort({
         date: -1,

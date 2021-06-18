@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import UserPropType from 'proptypes/UserPropType';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 
 import Loading from 'pages/Loading';
+import UserContext from 'contexts/UserContext';
 import ArticlePreview from 'components/ArticlePreview';
 import Paginate from 'components/Paginate';
 import { csrfFetch } from 'utils/CSRF';
@@ -11,7 +11,9 @@ import useQueryParam from 'hooks/useQueryParam';
 
 const PAGE_SIZE = 24;
 
-const CreatorArticles = ({ user }) => {
+const CreatorArticles = () => {
+  const user = useContext(UserContext);
+
   const [articles, setArticles] = useState([]);
   const [page, setPage] = useQueryParam('page', '0');
   const [pages, setPages] = useState(0);
@@ -66,10 +68,6 @@ const CreatorArticles = ({ user }) => {
       )}
     </>
   );
-};
-
-CreatorArticles.propTypes = {
-  user: UserPropType.isRequired,
 };
 
 export default CreatorArticles;
