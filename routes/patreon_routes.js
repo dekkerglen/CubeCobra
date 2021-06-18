@@ -32,6 +32,7 @@ router.get('/unlink', ensureAuth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     user.roles = user.roles.filter((role) => role !== 'Patron');
+    user.patron = undefined;
     await user.save();
 
     req.flash('success', `Patron account has been unlinked.`);
@@ -200,6 +201,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }
+      user.patron = patron._id;
       await user.save();
 
       req.flash('success', `Your Patreon account has succesfully been linked.`);
