@@ -32,12 +32,8 @@ src/components/DraggableCard.js
 src/components/ErrorBoundary.js
 src/components/FilterCollapse.js
 src/components/GroupModal.js
-src/components/ImageFallback.js
-src/components/Notification.js
 src/components/TagColorsModal.js
-src/components/TextBadge.js
 src/components/WithAutocard.js
-src/components/WithLoading.js
 
 .git
 dist

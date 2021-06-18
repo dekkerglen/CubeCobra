@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
 
@@ -8,9 +9,21 @@ const TextBadge = ({ name, className, children, fill }) => (
       <InputGroupText className={fill ? `w-100` : ''}>{name}</InputGroupText>
     </InputGroupAddon>
     <InputGroupAddon className={fill ? 'w-50' : ''} addonType="append">
-      <InputGroupText className={(fill ? 'w-100 ' : '') + 'bg-white'}>{children}</InputGroupText>
+      <InputGroupText className={`${fill ? 'w-100 ' : ''}bg-white`}>{children}</InputGroupText>
     </InputGroupAddon>
   </InputGroup>
 );
+
+TextBadge.propTypes = {
+  name: PropTypes.string,
+  className: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+  fill: PropTypes.bool,
+};
+
+TextBadge.defaultProps = {
+  name: 'textBade',
+  fill: false,
+};
 
 export default TextBadge;
