@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import UserPropType from 'proptypes/UserPropType';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import Loading from 'pages/Loading';
 import PodcastPreview from 'components/PodcastPreview';
 import Paginate from 'components/Paginate';
@@ -11,7 +11,9 @@ import { csrfFetch } from 'utils/CSRF';
 
 const PAGE_SIZE = 24;
 
-const CreatorPodcasts = ({ user }) => {
+const CreatorPodcasts = () => {
+  const user = useContext(UserContext);
+
   const [podcasts, setPodcasts] = useState([]);
   const [page, setPage] = useQueryParam('page', 0);
   const [pages, setPages] = useState(0);
@@ -66,10 +68,6 @@ const CreatorPodcasts = ({ user }) => {
       )}
     </>
   );
-};
-
-CreatorPodcasts.propTypes = {
-  user: UserPropType.isRequired,
 };
 
 export default CreatorPodcasts;

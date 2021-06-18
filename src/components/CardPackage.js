@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';
 
+import UserContext from 'contexts/UserContext';
 import CardPackagePropType from 'proptypes/CardPackagePropType';
-import UserPropType from 'proptypes/UserPropType';
 import withAutocard from 'components/WithAutocard';
 import AddGroupToCubeModal from 'components/AddGroupToCubeModal';
 import withModal from 'components/WithModal';
@@ -18,7 +18,9 @@ import { csrfFetch } from 'utils/CSRF';
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 const AutocardA = withAutocard('a');
 
-const CardPackage = ({ cardPackage, user, refresh }) => {
+const CardPackage = ({ cardPackage, refresh }) => {
+  const user = useContext(UserContext);
+
   const voted = user ? cardPackage.voters.includes(user.id) : false;
 
   const toggleVote = async () => {
@@ -155,12 +157,10 @@ const CardPackage = ({ cardPackage, user, refresh }) => {
 
 CardPackage.propTypes = {
   cardPackage: CardPackagePropType.isRequired,
-  user: UserPropType,
   refresh: PropTypes.func,
 };
 
 CardPackage.defaultProps = {
-  user: null,
   refresh: () => {},
 };
 
