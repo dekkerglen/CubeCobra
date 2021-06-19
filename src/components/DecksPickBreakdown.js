@@ -32,20 +32,26 @@ export const usePickListAndDrafterState = ({ draft, seatIndex, defaultIndex }) =
     const drafterStates = [];
     let prevTrashedNum = 0;
     let prevPickedNum = 0;
-    let action = null;
     for (let pickNumber2 = 0; pickNumber2 <= numToTake; pickNumber2++) {
       const drafterState = getDrafterState({ draft, seatNumber: seatIndex, pickNumber: pickNumber2 });
-      const { packNum, pickedNum, trashedNum } = drafterState;
+      const { packNum, pickedNum, trashedNum, step } = drafterState;
       // This handles the case of empty packs which we'll hopefully never have to deal with.
       while (packNum >= takenCards.length) takenCards.push([]);
       // It should not be possible for both to increase across 1 pick number
       // If it did we'd have a problem since multiple cards would be marked as part of the same pick.
       if (trashedNum > prevTrashedNum) {
-        takenCards[packNum].push({ action, card: cards[trashorder[prevTrashedNum]], pickNumber: pickNumber2 - 1 });
+        takenCards[packNum].push({
+          action: step.action,
+          card: cards[trashorder[prevTrashedNum]],
+          pickNumber: pickNumber2 - 1,
+        });
       } else if (pickedNum > prevPickedNum) {
-        takenCards[packNum].push({ action, card: cards[pickorder[prevPickedNum]], pickNumber: pickNumber2 - 1 });
+        takenCards[packNum].push({
+          action: step.action,
+          card: cards[pickorder[prevPickedNum]],
+          pickNumber: pickNumber2 - 1,
+        });
       }
-      action = drafterState.step.action;
       prevTrashedNum = trashedNum;
       prevPickedNum = pickedNum;
       drafterStates.push(drafterState);
@@ -65,8 +71,12 @@ export const usePickListAndDrafterState = ({ draft, seatIndex, defaultIndex }) =
   return { picksList, drafterState, setPickNumberFromEvent };
 };
 
-const DecksPickBreakdownInternal = (props) => {
-  const { picksList, setPickNumberFromEvent, drafterState } = usePickListAndDrafterState(props);
+const DecksPickBreakdownInternal = ({ draft, seatIndex, defaultIndex }) => {
+  const { picksList, setPickNumberFromEvent, drafterState } = usePickListAndDrafterState({
+    draft,
+    seatIndex,
+    defaultIndex,
+  });
   const { cards, cardsInPack, pickNum, packNum } = drafterState;
   return (
     <Row>
@@ -110,11 +120,8 @@ const DecksPickBreakdownInternal = (props) => {
   );
 };
 DecksPickBreakdownInternal.propTypes = {
-  // eslint-disable-next-line
   draft: DraftPropType.isRequired,
-  // eslint-disable-next-line
   seatIndex: PropTypes.number.isRequired,
-  // eslint-disable-next-line
   defaultIndex: PropTypes.number,
 };
 DecksPickBreakdownInternal.defaultProps = {

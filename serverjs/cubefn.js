@@ -416,6 +416,92 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
   }
 };
 
+const saveDraftAnalytics = async (draft) => {
+  console.log(draft);
+
+  /*
+  const ratingQ = CardRating.findOne({
+    name: req.body.pick,
+  }).then((rating) => rating || new CardRating());
+
+  const packQ = CardRating.find({
+    name: {
+      $in: req.body.pack,
+    },
+  });
+
+  const [rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
+
+  if (draft) {
+    try {
+      let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
+
+      if (!analytic) {
+        analytic = new CubeAnalytic();
+        analytic.cube = draft.cube;
+      }
+
+      console.log(analytic);
+      console.log(draft);
+
+      let pickIndex = analytic.cards.findIndex((card) => card.cardName === req.body.pick.toLowerCase());
+      if (pickIndex === -1) {
+        pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick, ELO_BASE)) - 1;
+      }
+
+      const packIndeces = {};
+      for (const packCard of req.body.pack) {
+        let index = analytic.cards.findIndex((card) => card.cardName === packCard.toLowerCase());
+        if (index === -1) {
+          index = analytic.cards.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE)) - 1;
+        }
+        packIndeces[packCard] = index;
+
+        const adjustments = getEloAdjustment(analytic.cards[pickIndex].elo, analytic.cards[index].elo, CUBE_ELO_SPEED);
+        analytic.cards[pickIndex].elo += adjustments[0];
+        analytic.cards[index].elo += adjustments[1];
+
+        analytic.cards[index].passes += 1;
+      }
+
+      analytic.cards[pickIndex].picks += 1;
+
+      await analytic.save();
+    } catch (err) {
+      req.logger.error(err);
+    }
+
+    if (!rating.elo) {
+      rating.name = req.body.pick;
+      rating.elo = ELO_BASE;
+    }
+
+    if (!rating.picks) {
+      rating.picks = 0;
+    }
+    rating.picks += 1;
+
+    if (!Number.isFinite(rating.elo)) {
+      rating.elo = ELO_BASE;
+    }
+    // Update Elo.
+    for (const other of packRatings) {
+      if (!Number.isFinite(other.elo)) {
+        if (!Number.isFinite(other.value)) {
+          other.elo = ELO_BASE;
+        }
+      }
+
+      const adjustments = getEloAdjustment(rating.elo, other.elo, ELO_SPEED);
+
+      rating.elo += adjustments[0];
+      other.elo += adjustments[1];
+    }
+    await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
+  }
+  */
+};
+
 /*
 Forked from https://github.com/lukechilds/merge-images
 to support border radius for cards and width/height for custom card images.
@@ -631,6 +717,7 @@ const methods = {
   removeDeckCardAnalytics,
   addDeckCardAnalytics,
   cachePromise,
+  saveDraftAnalytics,
 };
 
 module.exports = methods;

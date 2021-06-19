@@ -36,41 +36,57 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
   let amount = 0;
   let packNum = 0;
   let offset = 0;
-  for (; packNum < numPacks; packNum++) {
-    let done = false;
+
+  // loop through each pack
+  while (packNum < numPacks) {
     const curPackNum = packNum;
+
+    let done = false;
     packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum].cards.slice());
     pickNum = 0;
     packSize = packsWithCards[seatNum].length;
     offset = 0;
-    const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
+    const steps = ourPacks[curPackNum].steps ?? defaultStepsForLength(ourPacks[curPackNum].cards.length);
     seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
+
+    // loop through each step of this pack
     for ({ action, amount } of steps) {
-      const negativeAmount = (amount ?? 1) < 0;
+      const passLeft = (curPackNum % 2 === 0) === (amount || 1) >= 0;
+
+      // repeat the action for the amount
       amount = Math.abs(amount ?? 1);
-      for (; amount > 0; amount--) {
-        if (curStepNumber >= (stepEnd ?? curStepNumber + 1)) {
+      while (amount > 0) {
+        amount -= 1;
+
+        // if we've reached the end of this step
+        if (curStepNumber > (stepEnd ?? curStepNumber + 1)) {
           done = true;
           break;
         }
+
+        // pass if we have a pass
         if (action === 'pass') {
-          // We have to build our own xor here
-          const passLeft = (packNum % 2 === 0) === !negativeAmount;
-          // We have to add numSeats - 1 because javascript does not handle negative modulo correctly.
           offset = (offset + (passLeft ? 1 : numSeats - 1)) % numSeats;
           seen.push(...packsWithCards[(seatNum + offset) % numSeats]);
+
+          // pick or trash if we have a pick or trash
         } else if (action.match(/pick|trash/)) {
+          // if we've hit the goal state in the middle of an action, end early
           if (pickedNum + trashedNum >= pickEnd) {
             done = true;
             break;
           }
+
+          // simulate the action
           for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
             const offsetSeatIndex = (seatIndex + offset) % numSeats;
             const takenCardIndex = action.match(/pick/)
               ? draft.seats[seatIndex].pickorder[pickedNum]
               : draft.seats[seatIndex].trashorder[trashedNum];
+
             const cardsInPackForSeat = packsWithCards[offsetSeatIndex];
             const indexToRemove = cardsInPackForSeat.indexOf(takenCardIndex);
+
             if (indexToRemove < 0) {
               console.error(
                 `Seat ${seatIndex} should have picked/trashed ${takenCardIndex} at pickNumber ${
@@ -81,22 +97,34 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
               packsWithCards[offsetSeatIndex].splice(indexToRemove, 1);
             }
           }
+
+          // increment corresponding counter
           if (action.match(/pick/)) {
             pickedNum += 1;
           } else {
             trashedNum += 1;
           }
+
           pickNum += 1;
         }
         curStepNumber += 1;
       } // step amount
-      if (done) break;
+      if (done) {
+        break;
+      }
     } // step
-    if (done || (useFinal && (curStepNumber >= (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd)))
+    if (done || (useFinal && (curStepNumber > (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd))) {
+      if (packsWithCards[seatNum].length === 0 && packNum + 1 < numPacks) {
+        packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum + 1].cards.slice());
+        seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
+      }
       break;
+    }
+    packNum += 1;
   } // pack
+
   const result = {
-    cards: cards.map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
+    cards, // .map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
     picked: ourSeat.pickorder.slice(0, pickedNum),
     trashed: ourSeat.trashorder.slice(0, trashedNum),
     seen,
