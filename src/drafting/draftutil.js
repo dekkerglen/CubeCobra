@@ -1,3 +1,4 @@
+/* eslint-disable no-loop-func */
 import seedrandom from 'seedrandom';
 
 import { moveOrAddCard } from 'drafting/DraftLocation';
@@ -39,19 +40,17 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
 
   // loop through each pack
   while (packNum < numPacks) {
-    const curPackNum = packNum;
-
     let done = false;
-    packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum].cards.slice());
+    packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[packNum].cards.slice());
     pickNum = 0;
     packSize = packsWithCards[seatNum].length;
     offset = 0;
-    const steps = ourPacks[curPackNum].steps ?? defaultStepsForLength(ourPacks[curPackNum].cards.length);
+    const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
     seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
 
     // loop through each step of this pack
     for ({ action, amount } of steps) {
-      const passLeft = (curPackNum % 2 === 0) === (amount || 1) >= 0;
+      const passLeft = (packNum % 2 === 0) === (amount || 1) >= 0;
 
       // repeat the action for the amount
       amount = Math.abs(amount ?? 1);
@@ -115,7 +114,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
     } // step
     if (done || (useFinal && (curStepNumber > (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd))) {
       if (!skipAutoPass && packsWithCards[seatNum].length === 0 && packNum + 1 < numPacks) {
-        packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum + 1].cards.slice());
+        packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[packNum + 1].cards.slice());
         seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
       }
       break;
