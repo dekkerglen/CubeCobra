@@ -11,7 +11,7 @@ const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 const { getDrafterState } = require('../dist/drafting/draftutil');
 
-const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED, rotateArrayLeft, createPool } = require('../routes/cube/helper');
+const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('../routes/cube/helper');
 
 function getCubeId(cube) {
   if (cube.shortID) return cube.shortID;
@@ -545,7 +545,6 @@ const saveDraftAnalytics = async (draft, seatNumber, carddb) => {
     await analytic.save();
     await Promise.all(cards.map((card) => card.save()));
   } catch (err) {
-    console.error(err);
     winston.error(err);
   }
 };
