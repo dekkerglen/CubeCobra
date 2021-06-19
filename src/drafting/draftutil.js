@@ -15,7 +15,7 @@ export const defaultStepsForLength = (length) =>
     .slice(0, length * 2 - 1) // Remove the final pass.
     .map((action) => ({ ...action }));
 
-export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber = null }) => {
+export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber = null }, skipAutoPass = false) => {
   const { cards, basics } = draft;
   const numSeats = draft.initial_state.length;
   const seatNum = parseInt(seatNumber, 10);
@@ -114,7 +114,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
       }
     } // step
     if (done || (useFinal && (curStepNumber > (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd))) {
-      if (packsWithCards[seatNum].length === 0 && packNum + 1 < numPacks) {
+      if (!skipAutoPass && packsWithCards[seatNum].length === 0 && packNum + 1 < numPacks) {
         packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[curPackNum + 1].cards.slice());
         seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
       }

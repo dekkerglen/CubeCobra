@@ -997,7 +997,7 @@ router.post('/submitdraft/:id', async (req, res) => {
   draft.seats = req.body.seats;
   await draft.save();
 
-  await saveDraftAnalytics(draft);
+  await saveDraftAnalytics(draft, 0, carddb);
 
   return res.status(200).send({
     success: 'true',
