@@ -7,6 +7,7 @@ import Advertisement from 'components/Advertisement';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
 
 const BlogPostPage = ({ post, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
@@ -17,9 +18,7 @@ const BlogPostPage = ({ post, user, loginCallback }) => (
 );
 
 BlogPostPage.propTypes = {
-  post: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  post: BlogPostPropType.isRequired,
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
