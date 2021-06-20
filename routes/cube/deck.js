@@ -14,7 +14,8 @@ const cardutil = require('../../dist/utils/Card.js');
 const frontutil = require('../../dist/utils/Util.js');
 const { ensureAuth } = require('../middleware');
 
-const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
+const { buildIdQuery, abbreviate } = require('../../serverjs/cubefn.js');
+const { addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/analytics.js');
 
 const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
 

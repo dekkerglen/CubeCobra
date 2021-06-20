@@ -12,7 +12,7 @@ const Draft = require('../../models/draft');
 const Cube = require('../../models/cube');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const carddb = require('../../serverjs/cards.js');
-const { newCardAnalytics, getEloAdjustment } = require('../../serverjs/cubefn');
+const { newCardAnalytics, getEloAdjustment } = require('../../serverjs/analytics');
 const { fromEntries } = require('../../serverjs/util');
 
 const ELO_BASE = 1200;

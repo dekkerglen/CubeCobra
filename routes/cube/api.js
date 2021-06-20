@@ -21,9 +21,10 @@ const {
   buildTagColors,
   cubeCardTags,
   maybeCards,
-  saveDraftAnalytics,
   addCardHtml,
 } = require('../../serverjs/cubefn.js');
+
+const { saveDraftAnalytics } = require('../../serverjs/analytics.js');
 
 const { rotateArrayLeft, createPool } = require('./helper');
 

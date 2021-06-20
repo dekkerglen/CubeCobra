@@ -29,9 +29,10 @@ const {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
-  addDeckCardAnalytics,
   cachePromise,
 } = require('../../serverjs/cubefn.js');
+
+const { addDeckCardAnalytics } = require('../../serverjs/analytics.js');
 
 const {
   CARD_HEIGHT,
