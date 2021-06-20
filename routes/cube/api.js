@@ -21,19 +21,17 @@ const {
   buildTagColors,
   cubeCardTags,
   maybeCards,
-  newCardAnalytics,
-  getEloAdjustment,
+  saveDraftAnalytics,
   addCardHtml,
 } = require('../../serverjs/cubefn.js');
 
-const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED, rotateArrayLeft, createPool } = require('./helper');
+const { rotateArrayLeft, createPool } = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const CardRating = require('../../models/cardrating');
 const Package = require('../../models/package');
 const Blog = require('../../models/blog');
 
@@ -992,103 +990,14 @@ router.post(
   }),
 );
 
-router.post(
-  '/draftpickcard/:id',
-  util.wrapAsyncApi(async (req, res) => {
-    const draftQ = Draft.findById({
-      _id: req.body.draft_id,
-    }).lean();
-    const ratingQ = CardRating.findOne({
-      name: req.body.pick,
-    }).then((rating) => rating || new CardRating());
-    const packQ = CardRating.find({
-      name: {
-        $in: req.body.pack,
-      },
-    });
-
-    const [draft, rating, packRatings] = await Promise.all([draftQ, ratingQ, packQ]);
-
-    if (draft) {
-      try {
-        let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
-
-        if (!analytic) {
-          analytic = new CubeAnalytic();
-          analytic.cube = draft.cube;
-        }
-
-        let pickIndex = analytic.cards.findIndex((card) => card.cardName === req.body.pick.toLowerCase());
-        if (pickIndex === -1) {
-          pickIndex = analytic.cards.push(newCardAnalytics(req.body.pick, ELO_BASE)) - 1;
-        }
-
-        const packIndeces = {};
-        for (const packCard of req.body.pack) {
-          let index = analytic.cards.findIndex((card) => card.cardName === packCard.toLowerCase());
-          if (index === -1) {
-            index = analytic.cards.push(newCardAnalytics(packCard.toLowerCase(), ELO_BASE)) - 1;
-          }
-          packIndeces[packCard] = index;
-
-          const adjustments = getEloAdjustment(
-            analytic.cards[pickIndex].elo,
-            analytic.cards[index].elo,
-            CUBE_ELO_SPEED,
-          );
-          analytic.cards[pickIndex].elo += adjustments[0];
-          analytic.cards[index].elo += adjustments[1];
-
-          analytic.cards[index].passes += 1;
-        }
-
-        analytic.cards[pickIndex].picks += 1;
-
-        await analytic.save();
-      } catch (err) {
-        req.logger.error(err);
-      }
-
-      if (!rating.elo) {
-        rating.name = req.body.pick;
-        rating.elo = ELO_BASE;
-      }
-
-      if (!rating.picks) {
-        rating.picks = 0;
-      }
-      rating.picks += 1;
-
-      if (!Number.isFinite(rating.elo)) {
-        rating.elo = ELO_BASE;
-      }
-      // Update Elo.
-      for (const other of packRatings) {
-        if (!Number.isFinite(other.elo)) {
-          if (!Number.isFinite(other.value)) {
-            other.elo = ELO_BASE;
-          }
-        }
-
-        const adjustments = getEloAdjustment(rating.elo, other.elo, ELO_SPEED);
-
-        rating.elo += adjustments[0];
-        other.elo += adjustments[1];
-      }
-      await Promise.all([rating.save(), packRatings.map((r) => r.save())]);
-    }
-    res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
-
 router.post('/submitdraft/:id', async (req, res) => {
   const draft = await Draft.findOne({
     _id: req.body._id,
   });
   draft.seats = req.body.seats;
   await draft.save();
+
+  await saveDraftAnalytics(draft, 0, carddb);
 
   return res.status(200).send({
     success: 'true',

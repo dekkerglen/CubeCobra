@@ -164,10 +164,10 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   );
   const instructions = useMemo(() => {
     if (action === 'pick') {
-      return `Pick ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Pick ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     if (action === 'trash') {
-      return `Trash ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Trash ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     return null;
   }, [action, amount]);

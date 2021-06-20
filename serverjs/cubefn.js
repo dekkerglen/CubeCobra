@@ -2,12 +2,16 @@ const NodeCache = require('node-cache');
 const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
+const { winston } = require('./cloudwatch');
 const CardRating = require('../models/cardrating');
 const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
+const { getDrafterState } = require('../dist/drafting/draftutil');
+
+const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('../routes/cube/helper');
 
 function getCubeId(cube) {
   if (cube.shortID) return cube.shortID;
@@ -316,6 +320,16 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
+const getEloAdjustment = (winner, loser, speed) => {
+  const diff = loser - winner;
+  // Expected performance for pick.
+  const expectedA = 1 / (1 + 10 ** (diff / 400));
+  const expectedB = 1 - expectedA;
+  const adjustmentA = (1 - expectedA) * speed;
+  const adjustmentB = (0 - expectedB) * speed;
+  return [adjustmentA, adjustmentB];
+};
+
 const newCardAnalytics = (cardName, elo) => {
   return {
     cardName,
@@ -413,6 +427,125 @@ const addDeckCardAnalytics = async (cube, deck, carddb) => {
       }
     }
     await analytic.save();
+  }
+};
+
+const saveDraftAnalytics = async (draft, seatNumber, carddb) => {
+  try {
+    // first get all the card rating objects we need
+    const cards = await CardRating.find(
+      {
+        name: {
+          $in: draft.cards.map(({ cardID }) => carddb.cardFromId(cardID).name),
+        },
+      },
+      'elo picks name',
+    );
+
+    const nameToCardAnalytic = {};
+    for (const analytic of cards) {
+      nameToCardAnalytic[analytic.name] = analytic;
+    }
+
+    // fetch the cube analytic
+    let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
+
+    if (!analytic) {
+      analytic = new CubeAnalytic();
+      analytic.cube = draft.cube;
+    }
+
+    const { pickorder, trashorder } = draft.seats[seatNumber];
+    const numToTake = pickorder.length + trashorder.length;
+    let prevPickedNum = 0;
+    for (let pickNumber = 0; pickNumber <= numToTake; pickNumber++) {
+      const { cardsInPack, pickedNum } = getDrafterState({ draft, seatNumber, pickNumber }, true);
+      let pickedIndex = -1;
+
+      if (pickedNum > prevPickedNum) {
+        pickedIndex = pickorder[prevPickedNum];
+      }
+      prevPickedNum = pickedNum;
+
+      if (pickedIndex !== -1) {
+        const pickedCard = carddb.cardFromId(draft.cards[pickedIndex].cardID);
+        const packCards = cardsInPack.map((index) => carddb.cardFromId(draft.cards[index].cardID));
+
+        // update the local values of the cubeAnalytic
+        let pickIndex = analytic.cards.findIndex((card) => card.cardName === pickedCard.name_lower);
+        if (pickIndex === -1) {
+          pickIndex = analytic.cards.push(newCardAnalytics(pickedCard.name_lower, ELO_BASE)) - 1;
+        }
+
+        analytic.cards[pickIndex].picks += 1;
+
+        for (const packCard of packCards) {
+          let index = analytic.cards.findIndex((card) => card.cardName === packCard.name_lower);
+          if (index === -1) {
+            index = analytic.cards.push(newCardAnalytics(packCard.name_lower, ELO_BASE)) - 1;
+          }
+
+          const adjustments = getEloAdjustment(
+            analytic.cards[pickIndex].elo,
+            analytic.cards[index].elo,
+            CUBE_ELO_SPEED,
+          );
+          analytic.cards[pickIndex].elo += adjustments[0];
+          analytic.cards[index].elo += adjustments[1];
+
+          analytic.cards[index].passes += 1;
+        }
+
+        // update the local values of the cardAnalytics.
+
+        // ensure we have valid analytics for all these cards
+        if (!nameToCardAnalytic[pickedCard.name]) {
+          nameToCardAnalytic[pickedCard.name] = new CardRating();
+        }
+        if (!nameToCardAnalytic[pickedCard.name].elo) {
+          nameToCardAnalytic[pickedCard.name].name = pickedCard.name;
+          nameToCardAnalytic[pickedCard.name].elo = ELO_BASE;
+        } else if (!Number.isFinite(nameToCardAnalytic[pickedCard.name].elo)) {
+          nameToCardAnalytic[pickedCard.name].elo = ELO_BASE;
+        }
+        if (!nameToCardAnalytic[pickedCard.name].picks) {
+          nameToCardAnalytic[pickedCard.name].picks = 0;
+        }
+        nameToCardAnalytic[pickedCard.name].picks += 1;
+
+        for (const packCard of packCards) {
+          if (!nameToCardAnalytic[packCard.name]) {
+            nameToCardAnalytic[packCard.name] = new CardRating();
+          }
+          if (!nameToCardAnalytic[packCard.name].elo) {
+            nameToCardAnalytic[packCard.name].name = packCard.name;
+            nameToCardAnalytic[packCard.name].elo = ELO_BASE;
+          }
+          if (!nameToCardAnalytic[packCard.name].picks) {
+            nameToCardAnalytic[packCard.name].picks = 0;
+          }
+
+          if (!Number.isFinite(nameToCardAnalytic[packCard.name].elo)) {
+            nameToCardAnalytic[packCard.name].elo = ELO_BASE;
+          }
+
+          // update the elos
+          const adjustments = getEloAdjustment(
+            nameToCardAnalytic[pickedCard.name].elo,
+            nameToCardAnalytic[packCard.name].elo,
+            ELO_SPEED,
+          );
+
+          nameToCardAnalytic[pickedCard.name].elo += adjustments[0];
+          nameToCardAnalytic[packCard.name].elo += adjustments[1];
+        }
+      }
+    }
+    // save our docs
+    await analytic.save();
+    await Promise.all(cards.map((card) => card.save()));
+  } catch (err) {
+    winston.error(err);
   }
 };
 
@@ -603,15 +736,7 @@ const methods = {
     };
   },
   newCardAnalytics,
-  getEloAdjustment: (winner, loser, speed) => {
-    const diff = loser - winner;
-    // Expected performance for pick.
-    const expectedA = 1 / (1 + 10 ** (diff / 400));
-    const expectedB = 1 - expectedA;
-    const adjustmentA = (1 - expectedA) * speed;
-    const adjustmentB = (0 - expectedB) * speed;
-    return [adjustmentA, adjustmentB];
-  },
+  getEloAdjustment,
   generateShortId,
   buildIdQuery,
   getCubeId,
@@ -631,6 +756,7 @@ const methods = {
   removeDeckCardAnalytics,
   addDeckCardAnalytics,
   cachePromise,
+  saveDraftAnalytics,
 };
 
 module.exports = methods;
