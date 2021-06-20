@@ -191,7 +191,7 @@ export const cardTokens = (card) => card.details.tokens;
 
 export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200);
 
-export const cardPopularity = (card) => parseFloat(card.details.popularity || 0).toFixed(0);
+export const cardPopularity = (card) => parseFloat(card.details.popularity || 0).toFixed(2);
 
 export const cardCubeCount = (card) => card.details.cubeCount || 0;
 
