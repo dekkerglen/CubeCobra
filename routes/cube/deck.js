@@ -394,7 +394,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       {
         cube: cube._id,
       },
-      '_id seats date cube',
+      '_id seats date cube owner cubeOwner',
     )
       .sort({
         date: -1,
@@ -669,6 +669,13 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         `/cube/deck/${deck._id}`,
         `${user.username} drafted your cube: ${cube.name}`,
       );
+    } else if (!cube.disableNotifications) {
+      await util.addNotification(
+        cubeOwner,
+        { user_from_name: 'Anonymous', user_from: '404' },
+        `/cube/deck/${deck._id}`,
+        `An anonymous user drafted your cube: ${cube.name}`,
+      );
     }
 
     cube.numDecks += 1;
@@ -842,7 +849,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
-    // list of cardids
+    const cardList = [];
+
     const added = [];
     for (let i = 0; i < 16; i += 1) {
       added.push([]);
@@ -868,7 +876,10 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           const inCube = cube.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
           if (inCube) {
             selected = {
-              ...inCube,
+              finish: inCube.finish,
+              imgBackUrl: inCube.imgBackUrl,
+              imgUrl: inCube.imgUrl,
+              cardID: inCube.cardID,
               details: carddb.cardFromId(inCube.cardID),
             };
           } else {
@@ -887,12 +898,14 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
-          added[column].push(selected);
+          added[column].push(cardList.length);
+          cardList.push(selected);
         }
       }
     }
 
     const deck = new Deck();
+    deck.cards = cardList;
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.cube = cube._id;

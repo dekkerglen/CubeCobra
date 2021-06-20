@@ -7,10 +7,12 @@ import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
 import SelectField from 'components/SelectField';
 import Advertisement from 'components/Advertisement';
+import UserPropType from 'proptypes/UserPropType';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const [name, setName] = useState('');
-  const [owner, setowner] = useState('');
+  const [owner, setOwner] = useState('');
+  const [tag, setTag] = useState('');
   const [decks, setDecks] = useState('');
   const [cards, setCards] = useState('');
   const [include, setInclude] = useState('');
@@ -50,7 +52,10 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
         setName(value);
         break;
       case 'owner':
-        setowner(value);
+        setOwner(value);
+        break;
+      case 'tag':
+        setTag(value);
         break;
       case 'decks':
         setDecks(value);
@@ -83,6 +88,9 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     }
     if (owner.length > 0) {
       queryText += `owner:"${owner}" `;
+    }
+    if (tag.length > 0) {
+      queryText += `tag:"${tag}" `;
     }
     if (decks.length > 0) {
       queryText += `decks${decksOp}${decks} `;
@@ -124,6 +132,13 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             humanName="Owner Name"
             placeholder={'Any text in the owner name, e.g. "TimFReilly"'}
             value={owner}
+            onChange={handleChange}
+          />
+          <TextField
+            name="tag"
+            humanName="Cube Tags"
+            placeholder={'Any tag on a cube, e.g. "2 player"'}
+            value={tag}
             onChange={handleChange}
           />
           <NumericField
@@ -176,7 +191,7 @@ AdvancedSearchModal.propTypes = {
   toggle: PropTypes.func.isRequired,
 };
 
-const CubeSearchNavBar = ({ query, order, title }) => {
+const CubeSearchNavBar = ({ query, order, title, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queryText, setQuery] = useState(query || '');
   const toggle = () => setIsOpen((open) => !open);
@@ -207,7 +222,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
 
   return (
     <div className="usercontrols">
-      <Advertisement />
+      <Advertisement user={user} />
       {title && (
         <CardBody className="pb-0">
           <h3>{title}</h3>
@@ -245,12 +260,14 @@ CubeSearchNavBar.propTypes = {
   query: PropTypes.string,
   order: PropTypes.string,
   title: PropTypes.string,
+  user: UserPropType,
 };
 
 CubeSearchNavBar.defaultProps = {
   title: null,
   query: '',
   order: 'date',
+  user: null,
 };
 
 export default CubeSearchNavBar;

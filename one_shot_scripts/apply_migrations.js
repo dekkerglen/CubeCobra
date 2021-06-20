@@ -20,9 +20,12 @@ const MIGRATABLE = Object.freeze([
   { name: 'Draft', model: Draft, migrate: applyPendingMigrationsPre(draftMigrations) },
 ]);
 
-const migratableDocsQuery = (currentSchemaVersion) => ({
-  $or: [{ schemaVersion: { $exists: false } }, { schemaVersion: { $lt: currentSchemaVersion } }],
-});
+const migratableDocsQuery = (currentSchemaVersion) => {
+  if (currentSchemaVersion === 1) {
+    return { schemaVersion: null };
+  }
+  return { schemaVersion: currentSchemaVersion - 1 };
+};
 
 (async () => {
   await carddb.initializeCardDb('private', true);
@@ -30,10 +33,19 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
   for (const { name, model, migrate } of MIGRATABLE) {
     console.log(`Starting ${name}...`);
     const query = migratableDocsQuery(model.CURRENT_SCHEMA_VERSION);
+
+    const count = await model.estimatedDocumentCount(query);
     const cursor = model.find(query).cursor();
-    let totalSuccesses = 0;
+    console.log(`Found ${count} documents`);
+
+    let totalProcessed = 0;
 
     const asyncMigrate = async (doc) => {
+      if (doc.schemaVersion === model.CURRENT_SCHEMA_VERSION) {
+        totalProcessed += 1;
+        console.log(`Skipping ${name} ${totalProcessed}: ${doc._id}`);
+        return 0;
+      }
       let migrated;
       try {
         migrated = await migrate(doc);
@@ -45,8 +57,8 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
       if (migrated) {
         try {
           await migrated.save();
-          totalSuccesses += 1;
-          console.log(`Finished ${name} ${totalSuccesses}: ${migrated._id}`);
+          totalProcessed += 1;
+          console.log(`Finished ${name} ${totalProcessed}: ${migrated._id}`);
         } catch (e) {
           console.error(`Failed to save migrated ${name} with id ${doc._id}.`);
           console.debug(e);
@@ -59,9 +71,9 @@ const migratableDocsQuery = (currentSchemaVersion) => ({
       return 1;
     };
 
-    await cursor.eachAsync(asyncMigrate, { parallel: 10 });
+    await cursor.eachAsync(asyncMigrate, { parallel: 100 });
 
-    console.log(`Finished: ${name}s. ${totalSuccesses} were successful.`);
+    console.log(`Finished: ${name}s. ${totalProcessed} were successful.`);
   }
   mongoose.disconnect();
   console.log('done');

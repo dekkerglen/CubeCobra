@@ -188,7 +188,6 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
               <DeckCard
                 seat={deck.seats[seatIndex]}
                 deckid={deck._id}
-                userid={user ? user.id : null}
                 deck={deck}
                 seatIndex={`${seatIndex}`}
                 draft={draft}

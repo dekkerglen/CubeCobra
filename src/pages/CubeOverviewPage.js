@@ -89,7 +89,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
   };
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cubeState} canEdit={user && cubeState.owner === user.id} activeLink="overview">
+      <CubeLayout cube={cubeState} activeLink="overview">
         {user && cubeState.owner === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
@@ -261,9 +261,11 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                 <CardFooter>
                   <div className="autocard-tags">
                     {cubeState.tags.map((tag) => (
-                      <span key={tag} className="tag">
-                        {tag}
-                      </span>
+                      <a href={`/search/tag:"${tag}"/0`}>
+                        <span key={tag} className="tag">
+                          {tag}
+                        </span>
+                      </a>
                     ))}
                   </div>
                 </CardFooter>
@@ -271,17 +273,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
             </Card>
           </Col>
         </Row>
-        <div className="mb-3">
-          {post && (
-            <BlogPost
-              key={post._id}
-              post={post}
-              canEdit={false}
-              userid={user ? user.id : null}
-              loggedIn={user !== null}
-            />
-          )}
-        </div>
+        <div className="mb-3">{post && <BlogPost key={post._id} post={post} loggedIn={user !== null} />}</div>
       </CubeLayout>
     </MainLayout>
   );

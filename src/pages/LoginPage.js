@@ -12,7 +12,7 @@ import Advertisement from 'components/Advertisement';
 
 const LoginPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

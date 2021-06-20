@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
 import TimeAgo from 'react-timeago';
@@ -17,6 +17,7 @@ import {
   Input,
 } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import LinkButton from 'components/LinkButton';
 import CommentContextMenu from 'components/CommentContextMenu';
 import CSRFForm from 'components/CSRFForm';
@@ -27,7 +28,10 @@ import Markdown from 'components/Markdown';
 
 const maxDepth = 4;
 
-const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
+const Comment = ({ comment, index, depth, noReplies, editComment }) => {
+  const user = useContext(UserContext);
+  const userid = user && user.id;
+
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
   const [comments, addComment, , editChildComment] = useComments('comment', comment._id);
@@ -208,7 +212,6 @@ const Comment = ({ comment, index, depth, userid, noReplies, editComment }) => {
                       comment={item}
                       index={index + comments.length - pos}
                       depth={depth + 1}
-                      userid={userid}
                       editComment={editChildComment}
                     />
                   ))}
@@ -230,14 +233,12 @@ Comment.propTypes = {
   comment: CommentPropType.isRequired,
   index: PropTypes.number.isRequired,
   depth: PropTypes.number,
-  userid: PropTypes.string,
   noReplies: PropTypes.bool,
   editComment: PropTypes.func.isRequired,
 };
 
 Comment.defaultProps = {
   depth: 0,
-  userid: null,
   noReplies: false,
 };
 

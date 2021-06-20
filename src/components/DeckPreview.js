@@ -1,8 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import TimeAgo from 'react-timeago';
+import React, { useCallback, useMemo, useState, useContext } from 'react';
+
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 
+import TimeAgo from 'react-timeago';
+
+import UserContext from 'contexts/UserContext';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 
@@ -23,7 +26,10 @@ const truncateToLength = (len, s) => {
   return s.length > len ? `${s.slice(0, len - 3)}...` : s;
 };
 
-const DeckPreview = ({ deck, canEdit, nextURL }) => {
+const DeckPreview = ({ deck, nextURL }) => {
+  const user = useContext(UserContext);
+  const canEdit = user.id === deck.owner || user.id === deck.cubeOwner;
+
   const { date } = deck;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -100,7 +106,6 @@ const DeckPreview = ({ deck, canEdit, nextURL }) => {
 
 DeckPreview.propTypes = {
   deck: DeckPropType.isRequired,
-  canEdit: PropTypes.bool.isRequired,
   nextURL: PropTypes.string,
 };
 

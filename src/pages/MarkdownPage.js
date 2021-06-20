@@ -12,7 +12,7 @@ import Markdown from 'components/Markdown';
 
 const MarkdownPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

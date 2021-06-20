@@ -41,7 +41,7 @@ const CommentPage = ({ comment, user, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
@@ -49,9 +49,9 @@ const CommentPage = ({ comment, user, loginCallback }) => {
             {`Responding to this ${translateType[content.parentType]}`}
           </a>
         </CardHeader>
-        <Comment comment={content} userid={user && user.id} index={0} noReplies editComment={setContent} />
+        <Comment comment={content} index={0} noReplies editComment={setContent} />
         <div className="border-top">
-          <CommentsSection parentType="comment" parent={content._id} userid={user && user.id} />
+          <CommentsSection parentType="comment" parent={content._id} />
         </div>
       </Card>
     </MainLayout>

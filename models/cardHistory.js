@@ -46,7 +46,6 @@ const cardHistorySchema = mongoose.Schema({
     spells: [String],
     other: [String],
   },
-  cubes: [String], // this is a list of cube ids
   history: {
     type: [
       {
@@ -57,11 +56,6 @@ const cardHistorySchema = mongoose.Schema({
     default: [],
   },
 });
-
-cardHistorySchema.index({ oracleId: 1, 'current.rating': 1 });
-cardHistorySchema.index({ oracleId: 1, 'current.elo': -1 });
-cardHistorySchema.index({ oracleId: 1, 'current.picks': -1 });
-cardHistorySchema.index({ oracleId: 1, 'current.cubes': -1 });
 
 const CardHistory = mongoose.model('CardHistory', cardHistorySchema);
 

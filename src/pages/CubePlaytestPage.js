@@ -375,7 +375,7 @@ const GridCard = () => {
   );
 };
 
-const DecksCard = ({ decks, userID, ...props }) => {
+const DecksCard = ({ decks, ...props }) => {
   const { cubeID } = useContext(CubeContext);
   return (
     <Card {...props}>
@@ -384,7 +384,7 @@ const DecksCard = ({ decks, userID, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} canEdit={userID === deck.seats[0].userid} />
+          <DeckPreview key={deck._id} deck={deck} />
         ))}
       </CardBody>
       <CardFooter>
@@ -396,7 +396,6 @@ const DecksCard = ({ decks, userID, ...props }) => {
 
 DecksCard.propTypes = {
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
-  userID: PropTypes.string.isRequired,
 };
 
 const SamplePackCard = (props) => {
@@ -527,7 +526,7 @@ const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
   );
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="playtest">
+      <CubeLayout cube={cube} activeLink="playtest">
         {user && cube.owner === user.id ? (
           <Navbar light expand className="usercontrols mb-3">
             <Nav navbar>
@@ -565,7 +564,7 @@ const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
             <GridCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <DecksCard decks={decks} userID={user && user.id} className="mb-3" />}
+            {decks.length !== 0 && <DecksCard decks={decks} className="mb-3" />}
             <SamplePackCard className="mb-3" />
           </Col>
         </Row>

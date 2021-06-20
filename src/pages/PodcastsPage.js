@@ -16,7 +16,7 @@ const PAGE_SIZE = 24;
 
 const PodcastsPage = ({ user, loginCallback, podcasts, episodes, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

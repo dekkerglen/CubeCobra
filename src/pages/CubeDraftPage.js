@@ -164,10 +164,10 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   );
   const instructions = useMemo(() => {
     if (action === 'pick') {
-      return `Pick ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Pick ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     if (action === 'trash') {
-      return `Trash ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Trash ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     return null;
   }, [action, amount]);
@@ -302,18 +302,17 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const makeBotTrashPicks = useCallback((playerChose) => makeBotChoices(playerChose, true), [makeBotChoices]);
 
   useEffect(() => {
-    const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
-    csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
-      method: 'POST',
-      body: JSON.stringify(submitableDraft),
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }, [draft]);
-  useEffect(() => {
     if (doneDrafting) {
-      submitDeckForm.current?.submit?.(); // eslint-disable-line
+      const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
+      csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+        method: 'POST',
+        body: JSON.stringify(submitableDraft),
+        headers: { 'Content-Type': 'application/json' },
+      }).then(() => {
+        submitDeckForm.current?.submit?.(); // eslint-disable-line
+      });
     }
-  }, [doneDrafting]);
+  }, [doneDrafting, draft]);
 
   useEffect(() => {
     if (action.match(/random/) && !doneDrafting) {

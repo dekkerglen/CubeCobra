@@ -1263,3 +1263,7 @@ thead th.corner[scope=col] {
 .pack-outline {
 	background-color: var(--bg-dark);
 }
+
+.bg-advert {
+	background-color: var(--bg-advert);
+}

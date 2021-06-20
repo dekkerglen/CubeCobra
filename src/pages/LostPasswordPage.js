@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const LostPassword = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement />
+    <Advertisement user={user} />
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

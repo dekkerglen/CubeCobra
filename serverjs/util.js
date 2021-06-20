@@ -160,9 +160,9 @@ function wrapAsyncApi(route) {
 }
 
 function handleRouteError(req, res, err, reroute) {
-  req.logger.error(err);
   req.flash('danger', err.message);
   res.redirect(reroute);
+  req.logger.error(err);
 }
 
 function toNonNullArray(arr) {

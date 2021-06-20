@@ -17,7 +17,7 @@ const SearchPage = ({ user, cubes, query, count, perPage, page, order, loginCall
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeSearchNavBar query={query} order={order} title="Cube Search" />
+      <CubeSearchNavBar query={query} order={order} title="Cube Search" user={user} />
       <br />
       <DynamicFlash />
       {(cubes && cubes.length) > 0 ? (

@@ -44,7 +44,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Tab from 'components/Tab';
 
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo, cardPopularity, cardCubeCount } from 'utils/Card';
 import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
 import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
@@ -267,16 +267,10 @@ const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
             )}
             <CardBody className="breakdown p-1">
               <p>
-                Played in {Math.round(data.current.total[1] * 1000.0) / 10}%
-                <span className="percent">{data.current.total[0]}</span> Cubes total.
+                Played in {cardPopularity({ details: card })}%
+                <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
               </p>
-              <AddModal
-                color="success"
-                block
-                outline
-                className="mb-1 mr-2"
-                modalProps={{ card, cubes: user ? user.cubes : [], hideAnalytics: true }}
-              >
+              <AddModal color="success" block outline className="mb-1 mr-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
@@ -552,12 +546,7 @@ const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
               </TabPane>
               <TabPane tabId="5">
                 <div className="border-left border-bottom">
-                  <CommentsSection
-                    parentType="card"
-                    parent={card.oracle_id}
-                    userid={user && user.id}
-                    collapse={false}
-                  />
+                  <CommentsSection parentType="card" parent={card.oracle_id} collapse={false} />
                 </div>
               </TabPane>
             </TabContent>
@@ -802,13 +791,11 @@ CardPage.propTypes = {
       prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
-  cubes: PropTypes.arrayOf(PropTypes.shape([])),
   user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
-  cubes: [],
   user: null,
   loginCallback: '/',
 };

@@ -15,7 +15,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const ArticlePage = ({ user, loginCallback, article }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+      <Advertisement user={user} />
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === article.owner && article.status !== 'published' && (
@@ -28,7 +28,7 @@ const ArticlePage = ({ user, loginCallback, article }) => {
             </h5>
           </CardHeader>
         )}
-        <Article article={article} userid={user && user.id} />
+        <Article article={article} />
       </Card>
     </MainLayout>
   );

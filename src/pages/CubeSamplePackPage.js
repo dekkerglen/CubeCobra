@@ -16,7 +16,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const SamplePackPage = ({ user, seed, pack, cube, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cube} canEdit={user && cube.owner === user.id} activeLink="playtest">
+      <CubeLayout cube={cube} activeLink="playtest">
         <DynamicFlash />
         <div className="container" />
         <br />
