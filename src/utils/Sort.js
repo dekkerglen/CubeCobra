@@ -669,7 +669,7 @@ export function cardGetLabels(card, sort, showOther) {
   } else if (sort === 'Unsorted') {
     ret = ['All'];
   } else if (sort === 'Popularity') {
-    const popularity = cardPopularity(card) * 100;
+    const popularity = cardPopularity(card);
     if (popularity < 1) ret = ['0–1%'];
     else if (popularity < 2) ret = ['1–2%'];
     else if (popularity < 5) ret = ['3–5%'];
