@@ -11,7 +11,9 @@ const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
 const { getDrafterState } = require('../dist/drafting/draftutil');
 
-const { ELO_BASE, ELO_SPEED, CUBE_ELO_SPEED } = require('../routes/cube/helper');
+const ELO_BASE = 1200;
+const ELO_SPEED = 1 / 128;
+const CUBE_ELO_SPEED = 4;
 
 function getCubeId(cube) {
   if (cube.shortID) return cube.shortID;
@@ -757,6 +759,9 @@ const methods = {
   addDeckCardAnalytics,
   cachePromise,
   saveDraftAnalytics,
+  ELO_BASE,
+  ELO_SPEED,
+  CUBE_ELO_SPEED,
 };
 
 module.exports = methods;

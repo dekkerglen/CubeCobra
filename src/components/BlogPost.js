@@ -19,7 +19,7 @@ const BlogPost = ({ post, onEdit, noScroll }) => {
 
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
 
-  const canEdit = user && user.id === post.user;
+  const canEdit = user && user.id === post.owner;
 
   return (
     <Card className="shadowed rounded-0 mb-3">
