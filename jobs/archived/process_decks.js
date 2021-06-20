@@ -12,11 +12,8 @@ const Draft = require('../../models/draft');
 const Cube = require('../../models/cube');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const carddb = require('../../serverjs/cards.js');
-const { newCardAnalytics, getEloAdjustment } = require('../../serverjs/cubefn');
+const { newCardAnalytics, getEloAdjustment, ELO_BASE, CUBE_ELO_SPEED } = require('../../serverjs/cubefn');
 const { fromEntries } = require('../../serverjs/util');
-
-const ELO_BASE = 1200;
-const CUBE_ELO_SPEED = 10;
 
 const getPackAsSeen = (initialState, index, deck) => {
   const cardsInPack = [];

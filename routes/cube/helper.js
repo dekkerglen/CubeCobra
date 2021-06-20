@@ -19,10 +19,6 @@ const DEFAULT_BASICS = [
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
 
-const ELO_BASE = 1200;
-const ELO_SPEED = 1 / 128;
-const CUBE_ELO_SPEED = 4;
-
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
@@ -270,10 +266,7 @@ module.exports = {
   CARD_HEIGHT,
   CARD_WIDTH,
   CSV_HEADER,
-  CUBE_ELO_SPEED,
   DEFAULT_BASICS,
-  ELO_BASE,
-  ELO_SPEED,
   addBasics,
   bulkUpload,
   createPool,
