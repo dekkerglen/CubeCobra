@@ -175,22 +175,26 @@ router.get('/redirect', ensureAuth, (req, res) => {
         return res.redirect('/user/account?nav=patreon');
       }
 
-      const rewardId = pledges[0].relationships.reward.data.id;
-
-      const rewards = rawJson.included.filter((item) => item.id === rewardId);
-
-      if (rewards.length > 1) {
-        req.flash(
-          'danger',
-          `The server response from Patreon was malformed, too many reward objects. Please contact us for more information.`,
-        );
-        return res.redirect('/user/account?nav=patreon');
-      }
-
-      if (rewards.length === 0) {
+      if (!pledges[0].relationships.reward) {
         newPatron.level = 'Patron';
       } else {
-        newPatron.level = rewards[0].attributes.title;
+        const rewardId = pledges[0].relationships.reward.data.id;
+
+        const rewards = rawJson.included.filter((item) => item.id === rewardId);
+
+        if (rewards.length > 1) {
+          req.flash(
+            'danger',
+            `The server response from Patreon was malformed, too many reward objects. Please contact us for more information.`,
+          );
+          return res.redirect('/user/account?nav=patreon');
+        }
+
+        if (rewards.length === 0) {
+          newPatron.level = 'Patron';
+        } else {
+          newPatron.level = rewards[0].attributes.title;
+        }
       }
 
       newPatron.active = true;
