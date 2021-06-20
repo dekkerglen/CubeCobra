@@ -42,7 +42,12 @@ async function addVars(cube) {
         console.error(err);
       }
     }
-    await Promise.all(cubes.map((cube) => addVars(cube)));
+    try {
+      await Promise.all(cubes.map((cube) => addVars(cube)));
+    } catch (err) {
+      console.error(err);
+    }
+
     console.log(`Finished: ${i} of ${count} cubes`);
   }
   mongoose.disconnect();
