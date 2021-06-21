@@ -38,56 +38,58 @@ const Advertisment = ({
   railCollisionWhitelist,
 }) => {
   useEffect(() => {
-    if (format === 'sticky-stack') {
-      window.nitroAds.createAd(placementId, {
-        format,
-        demo: true,
-        refreshLimit,
-        refreshTime,
-        mediaQuery: mediaTypes[media],
-        sizes: sizeTypes[size],
-        report: {
-          enabled,
-          wording,
-          position,
-        },
-        stickyStackLimit,
-        stickyStackSpace,
-        stickyStackOffset,
-      });
-    } else if (format === 'rail') {
-      window.nitroAds.createAd(placementId, {
-        format,
-        rail,
-        railOffsetTop,
-        railOffsetBottom,
-        railCollisionWhitelist,
-        demo: true,
-        refreshLimit,
-        refreshTime,
-        mediaQuery: mediaTypes[media],
-        sizes: sizeTypes[size],
-        report: {
-          enabled,
-          wording,
-          position,
-        },
-      });
-    } else {
-      // format === display
-      window.nitroAds.createAd(placementId, {
-        format: 'display',
-        demo: true,
-        refreshLimit,
-        refreshTime,
-        mediaQuery: mediaTypes[media],
-        sizes: sizeTypes[size],
-        report: {
-          enabled,
-          wording,
-          position,
-        },
-      });
+    if (window.nitroAds) {
+      if (format === 'sticky-stack') {
+        window.nitroAds.createAd(placementId, {
+          format,
+          demo: true,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+          stickyStackLimit,
+          stickyStackSpace,
+          stickyStackOffset,
+        });
+      } else if (format === 'rail') {
+        window.nitroAds.createAd(placementId, {
+          format,
+          rail,
+          railOffsetTop,
+          railOffsetBottom,
+          railCollisionWhitelist,
+          demo: true,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
+      } else {
+        // format === display
+        window.nitroAds.createAd(placementId, {
+          format: 'display',
+          demo: true,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
+      }
     }
   });
 
