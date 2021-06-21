@@ -32,7 +32,7 @@ const getAllMostReasonable = (filter) => {
   const filtered = [];
   for (const card of cards) {
     if (!keys.has(card.name_lower)) {
-      filtered.push(carddb.getMostReasonableById(card._id));
+      filtered.push(carddb.getMostReasonableById(card._id, 'recent', filter));
       keys.add(card.name_lower);
     }
   }
