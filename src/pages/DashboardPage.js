@@ -10,7 +10,7 @@ import ArticlePreview from 'components/ArticlePreview';
 import DeckPreview from 'components/DeckPreview';
 import VideoPreview from 'components/VideoPreview';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -41,7 +41,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       <Row className="mt-3">
         <Col xs="12" md="6">

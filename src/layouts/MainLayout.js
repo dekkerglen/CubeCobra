@@ -20,6 +20,7 @@ import LoginModal from 'components/LoginModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 import withModal from 'components/WithModal';
 import NotificationsNav from 'components/NotificationsNav';
+import SideBanner from 'components/SideBanner';
 import ThemeContext from 'contexts/ThemeContext';
 import UserContext from 'contexts/UserContext';
 import useToggle from 'hooks/UseToggle';
@@ -153,10 +154,16 @@ const MainLayout = ({ user, children, loginCallback }) => {
             </Collapse>
           </Container>
         </Navbar>
-        <Container fluid="xl" className="flex-grow">
+        <Container fluid="xl" className="flex-grow main-content">
           <ThemeContext.Provider value={user?.theme ?? 'default'}>
             <ErrorBoundary>{children}</ErrorBoundary>
           </ThemeContext.Provider>
+          <div className="ad-left d-none d-lg-block">
+            <SideBanner placementId="left-banner" />
+          </div>
+          <div className="ad-right d-none d-lg-block">
+            <SideBanner placementId="right-banner" />
+          </div>
         </Container>
         <Footer />
       </div>

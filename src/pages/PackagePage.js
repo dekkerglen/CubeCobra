@@ -4,14 +4,14 @@ import UserPropType from 'proptypes/UserPropType';
 import CardPackagePropType from 'proptypes/CardPackagePropType';
 
 import CardPackage from 'components/CardPackage';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const PackagePage = ({ pack, user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <CardPackage cardPackage={pack} user={user} refresh={() => window.location.reload()} />
   </MainLayout>

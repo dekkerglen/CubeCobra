@@ -5,14 +5,14 @@ import UserPropType from 'proptypes/UserPropType';
 import { Card, CardHeader } from 'reactstrap';
 
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import Accordion from 'components/Accordion';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const ContactPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

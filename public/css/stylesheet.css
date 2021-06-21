@@ -1267,3 +1267,31 @@ thead th.corner[scope=col] {
 .bg-advert {
 	background-color: var(--bg-advert);
 }
+.main-content {
+	position:relative;
+}
+
+
+.ad-right {
+	text-align: center;
+	float: right;
+	width: 160px;
+	position:absolute;
+	right:-170px;
+	top:10px;
+	height: 100%
+}
+  
+.ad-left {
+	text-align: center;
+	float: right;
+	width: 160px;
+	position:absolute;
+	left:-170px;
+	top:10px;
+	height: 100%
+}
+  
+.advertisement-div {
+	height: 100%
+}

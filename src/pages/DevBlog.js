@@ -8,14 +8,14 @@ import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import UserPropType from 'proptypes/UserPropType';
 
 const DevBlog = ({ blogs, pages, activePage, loginCallback, user }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       <div className="mt-3">
         <h3 className="centered">Developer Blog</h3>
