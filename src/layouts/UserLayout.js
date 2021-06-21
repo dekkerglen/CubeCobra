@@ -15,7 +15,7 @@ const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
 const UserLayout = ({ user, followers, following, activeLink, children }) => {
   const activeUser = useContext(UserContext);
-  const canEdit = activeUser.id === user._id;
+  const canEdit = activeUser && activeUser.id === user._id;
 
   const numFollowers = followers.length;
   const followersText = (
