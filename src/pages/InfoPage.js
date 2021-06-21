@@ -39,6 +39,7 @@ const ContactPage = ({ user, title, content, loginCallback }) => (
             </Row>
           ),
         )}
+        <span data-ccpa-link="1" />
       </CardBody>
     </Card>
   </MainLayout>
