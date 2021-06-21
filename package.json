@@ -110,6 +110,7 @@
     "react-dnd-html5-backend": "^8.0.3",
     "react-dnd-touch-backend": "^10.0.2",
     "react-dom": "^16.13.1",
+    "react-infinite-scroll-component": "^6.1.0",
     "react-latex": "^2.0.0",
     "react-leaf-carousel": "^2.0.0",
     "react-markdown": "^5.0.2",

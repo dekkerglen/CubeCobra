@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import UserPropType from 'proptypes/UserPropType';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-import BlogPost from 'components/BlogPost';
 import CubePreview from 'components/CubePreview';
 import ArticlePreview from 'components/ArticlePreview';
 import DeckPreview from 'components/DeckPreview';
@@ -16,6 +16,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import withModal from 'components/WithModal';
 import CreateCubeModal from 'components/CreateCubeModal';
+import Feed from 'components/Feed';
 
 import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 import CubesCard from 'components/CubesCard';
@@ -110,13 +111,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
       <Row>
         <Col xs="12" md="8">
           <h5 className="mt-3">Feed</h5>
-          {posts.length > 0 ? (
-            posts.map((post) => <BlogPost key={post._id} post={post} />)
-          ) : (
-            <p>
-              No posts to show. <a href="/explore">Find some cubes</a> to follow!
-            </p>
-          )}
+          <Feed items={posts} />
         </Col>
         <Col className="d-none d-md-block mt-3" md="4">
           <Row>
@@ -147,7 +142,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
 };
 
 DashboardPage.propTypes = {
-  posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  posts: BlogPostPropType.isRequired,
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   user: UserPropType,

@@ -12,9 +12,11 @@ const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCard
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
+const { ensureAuth } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
+const Blog = require('../models/blog');
 
 const { buildIdQuery } = require('../serverjs/cubefn.js');
 
@@ -320,6 +322,36 @@ router.get('/searchcards', async (req, res) => {
       title: 'Search Cards',
     },
   );
+});
+
+router.get('/getfeeditems/:skip', ensureAuth, async (req, res) => {
+  const items = await Blog.find({
+    $or: [
+      {
+        cube: {
+          $in: req.user.followed_cubes,
+        },
+      },
+      {
+        owner: {
+          $in: req.user.followed_users,
+        },
+      },
+      {
+        dev: 'true',
+      },
+    ],
+  })
+    .sort({
+      date: -1,
+    })
+    .skip(parseInt(req.params.skip, 10))
+    .limit(5);
+
+  return res.status(200).send({
+    success: 'true',
+    items,
+  });
 });
 
 module.exports = router;

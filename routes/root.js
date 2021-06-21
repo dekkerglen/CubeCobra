@@ -13,7 +13,7 @@ const PodcastEpisode = require('../models/podcastEpisode');
 const carddb = require('../serverjs/cards');
 const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
-const { csrfProtection } = require('./middleware');
+const { csrfProtection, ensureAuth } = require('./middleware');
 const { getCubeId } = require('../serverjs/cubefn');
 
 const router = express.Router();
@@ -98,16 +98,11 @@ router.get('/random', async (req, res) => {
   res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(randCube))}`);
 });
 
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const { user } = req;
-    if (!user) {
-      return res.redirect('/landing');
-    }
-
     const cubesq = Cube.find(
       {
-        owner: user._id,
+        owner: req.user._id,
       },
       CUBE_PREVIEW_FIELDS,
     )
@@ -119,12 +114,12 @@ router.get('/dashboard', async (req, res) => {
       $or: [
         {
           cube: {
-            $in: user.followed_cubes,
+            $in: req.user.followed_cubes,
           },
         },
         {
           owner: {
-            $in: user.followed_users,
+            $in: req.user.followed_users,
           },
         },
         {
@@ -191,7 +186,7 @@ router.get('/dashboard', async (req, res) => {
     content.splice(10);
 
     const decks = await Deck.find({
-      cubeOwner: user._id,
+      cubeOwner: req.user._id,
     })
       .sort({
         date: -1,
