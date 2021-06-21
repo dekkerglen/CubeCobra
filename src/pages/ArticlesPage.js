@@ -8,7 +8,7 @@ import { Row, Col } from 'reactstrap';
 import DynamicFlash from 'components/DynamicFlash';
 import ArticlePreview from 'components/ArticlePreview';
 import Paginate from 'components/Paginate';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -16,7 +16,7 @@ const PAGE_SIZE = 24;
 
 const ArticlesPage = ({ user, loginCallback, articles, count, page }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <h4>Articles</h4>
     <Row>

@@ -5,14 +5,14 @@ import UserPropType from 'proptypes/UserPropType';
 import { Card, CardBody, FormGroup, Label, Input, Button, Col, Row, CardHeader } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const RegisterPage = ({ user, username, email, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <Card className="mt-3">
       <CardHeader>

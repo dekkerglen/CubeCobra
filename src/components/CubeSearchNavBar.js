@@ -6,7 +6,7 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader, Navbar, Input, Card
 import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
 import SelectField from 'components/SelectField';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import UserPropType from 'proptypes/UserPropType';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
@@ -222,7 +222,7 @@ const CubeSearchNavBar = ({ query, order, title, user }) => {
 
   return (
     <div className="usercontrols">
-      <Advertisement user={user} />
+      <Banner user={user} />
       {title && (
         <CardBody className="pb-0">
           <h3>{title}</h3>

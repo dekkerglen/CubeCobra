@@ -5,14 +5,14 @@ import UserPropType from 'proptypes/UserPropType';
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
 import Notification from 'components/Notification';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const Notifications = ({ user, notifications, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <Card className="mx-auto">
       <CardHeader>

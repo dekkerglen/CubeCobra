@@ -7,7 +7,7 @@ import { Row, Col } from 'reactstrap';
 import DynamicFlash from 'components/DynamicFlash';
 import ArticlePreview from 'components/ArticlePreview';
 import VideoPreview from 'components/VideoPreview';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -15,7 +15,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 const BrowseContentPage = ({ user, loginCallback, content }) => {
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       <Row>
         <Col xs="12">

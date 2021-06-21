@@ -9,14 +9,14 @@ import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
 import UserLayout from 'layouts/UserLayout';
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
       <Card>

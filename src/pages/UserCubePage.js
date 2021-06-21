@@ -8,7 +8,7 @@ import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import CubePreview from 'components/CubePreview';
 import UserLayout from 'layouts/UserLayout';
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Markdown from 'components/Markdown';
@@ -16,7 +16,7 @@ import Markdown from 'components/Markdown';
 const UserCubePage = ({ user, owner, followers, following, cubes, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
     <UserLayout user={owner} followers={followers} following={following} activeLink="view">
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       <Card>
         <CardHeader>

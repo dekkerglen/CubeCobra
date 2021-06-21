@@ -27,7 +27,7 @@ import Query from 'utils/Query';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -89,7 +89,7 @@ const UserAccountPage = ({ user, defaultNav, loginCallback, patreonClientId, pat
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+      <Banner user={user} />
       <h2 className="mt-3">My Account </h2>
       <DynamicFlash />
       <Row className="mb-3">

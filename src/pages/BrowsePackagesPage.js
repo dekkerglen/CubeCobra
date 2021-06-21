@@ -23,7 +23,7 @@ import { csrfFetch } from 'utils/CSRF';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import useQueryParam from 'hooks/useQueryParam';
 import Tab from 'components/Tab';
 import CreatePackageModal from 'components/CreatePackageModal';
@@ -87,7 +87,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+      <Banner user={user} />
       <DynamicFlash />
       {alerts.map(({ color, message }, index) => (
         <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>

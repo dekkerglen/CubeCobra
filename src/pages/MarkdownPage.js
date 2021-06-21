@@ -5,14 +5,14 @@ import UserPropType from 'proptypes/UserPropType';
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Markdown from 'components/Markdown';
 
 const MarkdownPage = ({ user, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

@@ -2,19 +2,11 @@ import React, { useState, useContext } from 'react';
 
 import { Col, Card, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
+import Advertisment from 'components/Advertisment';
 
-const AD_RATE = 2; // an ad appears with probability of 1/AD_RATE
+const BANNER_RATE = 10; // an alternate message appears with probability of 1/BANNER_RATE
 
-const adOptions = [
-  <>
-    Cube Cobra's hosting fees are covered completely by donations. If you enjoy the service Cube Cobra provides, please
-    consider{' '}
-    <strong>
-      <a href="https://www.patreon.com/cubecobra">donating</a>
-    </strong>
-    .
-  </>,
-
+const options = [
   <>
     Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
     <strong>
@@ -24,7 +16,6 @@ const adOptions = [
       !
     </strong>
   </>,
-
   <>
     Want to showcase your cube? You can feature it as a reward for{' '}
     <strong>
@@ -35,7 +26,6 @@ const adOptions = [
       <a href="/donate">Find out more.</a>
     </strong>
   </>,
-
   <>
     Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
     <strong>
@@ -44,21 +34,26 @@ const adOptions = [
   </>,
 ];
 
-const Advertisement = () => {
+const Banner = () => {
   const user = useContext(UserContext);
 
-  const [option] = useState(Math.floor(Math.random() * adOptions.length * AD_RATE));
+  const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
-  if (option < adOptions.length) {
+  if (option < options.length) {
     return (
       <Col xs="12" className="py-2">
         <Card>
-          <CardBody className="bg-advert">{adOptions[option]}</CardBody>
+          <CardBody className="bg-advert">{options[option]}</CardBody>
         </Card>
       </Col>
     );
   }
-  return <></>;
+  return (
+    <div className="py-2">
+      <Advertisment placementId="banner" size="desktop" media="banner" demo />
+      <Advertisment placementId="banner" size="mobile" media="mobile" demo />
+    </div>
+  );
 };
 
-export default Advertisement;
+export default Banner;

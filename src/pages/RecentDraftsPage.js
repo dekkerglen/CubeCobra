@@ -6,7 +6,7 @@ import UserPropType from 'proptypes/UserPropType';
 import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -16,7 +16,7 @@ const PER_PAGE = 30;
 
 const RecentDraftsPage = ({ user, decks, currentPage, totalPages, count, loginCallback }) => (
   <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+    <Banner user={user} />
     <DynamicFlash />
     <Row className="my-3">
       <Col xs="12">
