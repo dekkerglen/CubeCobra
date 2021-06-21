@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, FormGroup, Label, Input, Button, Col, Row, CardHeader } from 'reactstrap';
 
@@ -10,9 +9,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const RegisterPage = ({ user, username, email, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const RegisterPage = ({ username, email, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Card className="mt-3">
       <CardHeader>
@@ -70,14 +69,12 @@ const RegisterPage = ({ user, username, email, loginCallback }) => (
 );
 
 RegisterPage.propTypes = {
-  user: UserPropType,
   email: PropTypes.string,
   username: PropTypes.string,
   loginCallback: PropTypes.string,
 };
 
 RegisterPage.defaultProps = {
-  user: null,
   loginCallback: '/',
   email: '',
   username: '',

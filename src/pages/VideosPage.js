@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import { Row, Col } from 'reactstrap';
@@ -14,9 +13,9 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const PAGE_SIZE = 24;
 
-const VideosPage = ({ user, loginCallback, videos, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const VideosPage = ({ loginCallback, videos, count, page }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <h4>Videos</h4>
     <Row>
@@ -33,7 +32,6 @@ const VideosPage = ({ user, loginCallback, videos, count, page }) => (
 );
 
 VideosPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   videos: PropTypes.arrayOf(VideoPropType).isRequired,
   count: PropTypes.number.isRequired,
@@ -41,7 +39,6 @@ VideosPage.propTypes = {
 };
 
 VideosPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

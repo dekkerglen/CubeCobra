@@ -14,7 +14,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDecksPage = ({ user, cube, decks, pages, activePage, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <CubeLayout cube={cube} activeLink="playtest">
       <div className="my-3">

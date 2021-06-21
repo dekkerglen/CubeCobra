@@ -88,7 +88,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
     });
   };
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cubeState} activeLink="overview">
         {user && cubeState.owner === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">

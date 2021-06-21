@@ -50,7 +50,7 @@ const CubeComparePage = ({
   }));
   const filteredCards = filter ? cards.filter(filter) : cards;
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <SortContextProvider defaultSorts={defaultSorts}>
         <DisplayContextProvider>
           <TagContextProvider

@@ -18,7 +18,7 @@ const AdminDashboardPage = ({
   videosInReview,
   podcastsInReview,
 }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>

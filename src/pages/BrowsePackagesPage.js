@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Spinner,
@@ -20,6 +19,7 @@ import {
 
 import { csrfFetch } from 'utils/CSRF';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -41,7 +41,8 @@ const tabTypes = {
   '2': 'yourpackages',
 };
 
-const BrowsePackagesPage = ({ user, loginCallback }) => {
+const BrowsePackagesPage = ({ loginCallback }) => {
+  const user = useContext(UserContext);
   const [alerts, setAlerts] = useState([]);
   const [page, setPage] = useQueryParam('p', 0);
   const [filter, setFilter] = useQueryParam('f', '');
@@ -86,8 +87,8 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
   }, [filter, page, sort, sortDirection, selectedTab, refresh, setRefresh]);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Banner user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       {alerts.map(({ color, message }, index) => (
         <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
@@ -191,9 +192,7 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
               <Spinner className="position-absolute" />
             </div>
           ) : (
-            packages.map((pack) => (
-              <CardPackage key={pack._id} cardPackage={pack} user={user} refresh={() => setRefresh(true)} />
-            ))
+            packages.map((pack) => <CardPackage key={pack._id} cardPackage={pack} refresh={() => setRefresh(true)} />)
           )}
           {total / PAGE_SIZE > 1 && (
             <Paginate count={Math.ceil(total / PAGE_SIZE)} active={page} onClick={(i) => setPage(i)} />
@@ -205,12 +204,10 @@ const BrowsePackagesPage = ({ user, loginCallback }) => {
 };
 
 BrowsePackagesPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 BrowsePackagesPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

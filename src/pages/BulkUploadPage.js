@@ -114,7 +114,7 @@ BulkUploadPageRaw.propTypes = {
 };
 
 const BulkUploadPage = ({ user, cubeID, added, loginCallback, ...props }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <ChangelistContextProvider
       cubeID={cubeID}

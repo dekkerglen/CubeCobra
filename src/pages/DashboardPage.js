@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
+import UserContext from 'contexts/UserContext';
 import CubePreview from 'components/CubePreview';
 import ArticlePreview from 'components/ArticlePreview';
 import DeckPreview from 'components/DeckPreview';
@@ -23,7 +23,8 @@ import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, featured }) => {
+const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }) => {
+  const user = useContext(UserContext);
   // where featured cubes are positioned on the screen
   let featuredPosition;
   if (!user.hide_featured) {
@@ -40,8 +41,8 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
   }
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Banner user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <Row className="mt-3">
         <Col xs="12" md="6">
@@ -145,14 +146,12 @@ DashboardPage.propTypes = {
   posts: PropTypes.arrayOf(BlogPostPropType).isRequired,
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
-  user: UserPropType,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,
   featured: PropTypes.arrayOf(CubePropType),
 };
 
 DashboardPage.defaultProps = {
-  user: null,
   loginCallback: '/',
   featured: [],
 };

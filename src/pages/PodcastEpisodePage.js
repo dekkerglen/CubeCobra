@@ -15,7 +15,7 @@ import TimeAgo from 'react-timeago';
 
 const PodcastEpisodePage = ({ user, loginCallback, episode }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
         <CardHeader>

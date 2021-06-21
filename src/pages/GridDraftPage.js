@@ -216,7 +216,7 @@ export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallb
   }, [draftType, botDrafterState, mutations, botIndex]);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           <Navbar expand="xs" light className="usercontrols">

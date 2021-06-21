@@ -100,7 +100,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
   const handleNew = useCallback(() => handleEdit(-1), [handleEdit]);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="blog">
         <Navbar expand light className="usercontrols mb-3">
           <Collapse navbar>

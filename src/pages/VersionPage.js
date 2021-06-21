@@ -9,7 +9,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const VersionPage = ({ user, version, host, loginCallback }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card className="my-3">
         <CardHeader>
           <h4>Deployment Details</h4>

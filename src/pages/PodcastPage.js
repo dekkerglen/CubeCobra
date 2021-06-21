@@ -13,7 +13,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === podcast.owner && (

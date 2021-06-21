@@ -21,7 +21,7 @@ const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
   };
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <div className="usercontrols pt-3 mb-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">

@@ -525,7 +525,7 @@ const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
     />
   );
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         {user && cube.owner === user.id ? (
           <Navbar light expand className="usercontrols mb-3">

@@ -290,7 +290,7 @@ const CubeAnalysisPage = ({
   }));
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
         <TagContextProvider
           cubeID={cube._id}

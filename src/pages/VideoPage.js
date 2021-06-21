@@ -13,7 +13,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const VideoPage = ({ user, loginCallback, video }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === video.owner && video.status !== 'published' && (

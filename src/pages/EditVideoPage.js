@@ -62,7 +62,7 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
   const hasChanges = video.body !== body || video.url !== url || video.title !== title || video.imagename !== imageName;
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card>
         <CardBody>
           <Row>

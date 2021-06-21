@@ -238,7 +238,7 @@ const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
   });
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mt-2">
         <CardHeader>

@@ -10,7 +10,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const AdminDashboardPage = ({ user, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CSRFForm method="POST" action="/content/submitapplication" autoComplete="off">

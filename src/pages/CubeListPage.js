@@ -156,7 +156,7 @@ const CubeListPage = ({
   defaultShowUnsorted,
   loginCallback,
 }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <CubeLayout cube={cube} activeLink="list">
       <CubeListPageRaw
         defaultShowTagColors={defaultShowTagColors}

@@ -21,7 +21,7 @@ const EditPodcastPage = ({ user, loginCallback, podcast }) => {
   const hasChanges = podcast.rss !== rss;
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card>
         <CardBody>
           <Row>

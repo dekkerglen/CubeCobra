@@ -13,8 +13,8 @@ import TimeAgo from 'react-timeago';
 
 const PAGE_SIZE = 24;
 
-const CommentReportsPage = ({ user, loginCallback, reports, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const CommentReportsPage = ({ user, loginCallback, reports, count, page, nitroPayEnabled }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

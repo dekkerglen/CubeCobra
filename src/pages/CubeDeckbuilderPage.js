@@ -101,7 +101,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
   const [description, setDescription] = useState(initialDeck.seats[0].description);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar

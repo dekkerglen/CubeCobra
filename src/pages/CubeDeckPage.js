@@ -83,7 +83,7 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
   // }, [draft, loading, seatIndex]);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           {/*

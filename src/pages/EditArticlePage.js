@@ -62,7 +62,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
     article.body !== body || article.title !== title || article.imagename !== imageName || article.short !== short;
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card>
         <CardBody>
           <Row>

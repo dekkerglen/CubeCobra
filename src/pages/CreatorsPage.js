@@ -13,11 +13,11 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CreatorsPage = ({ user, loginCallback }) => {
+const CreatorsPage = ({ loginCallback }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card className="pb-3">
         <CardHeader>
           <h5>Content Creator Dashboard</h5>
@@ -36,13 +36,13 @@ const CreatorsPage = ({ user, loginCallback }) => {
         <DynamicFlash />
         <TabContent activeTab={tab}>
           <TabPane tabId="0">
-            <CreatorArticles user={user} />
+            <CreatorArticles />
           </TabPane>
           <TabPane tabId="1">
-            <CreatorPodcasts user={user} />
+            <CreatorPodcasts />
           </TabPane>
           <TabPane tabId="2">
-            <CreatorVideos user={user} />
+            <CreatorVideos />
           </TabPane>
         </TabContent>
       </Card>
@@ -51,12 +51,10 @@ const CreatorsPage = ({ user, loginCallback }) => {
 };
 
 CreatorsPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CreatorsPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

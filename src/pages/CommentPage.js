@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -36,12 +35,12 @@ const translateLink = {
   package: (id) => `/packages/${id}`,
 };
 
-const CommentPage = ({ comment, user, loginCallback }) => {
+const CommentPage = ({ comment, loginCallback }) => {
   const [content, setContent] = useState(comment);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Banner user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
@@ -60,12 +59,10 @@ const CommentPage = ({ comment, user, loginCallback }) => {
 
 CommentPage.propTypes = {
   comment: CommentPropType.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CommentPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

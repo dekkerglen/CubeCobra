@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
+
+import AdsContext from 'contexts/AdsContext';
 
 const mediaTypes = {
   desktop: '(min-width: 1025px)',
@@ -37,12 +39,14 @@ const Advertisment = ({
   railOffsetBottom,
   railCollisionWhitelist,
 }) => {
+  const adsEnabled = useContext(AdsContext);
+
   useEffect(() => {
     if (window.nitroAds) {
       if (format === 'sticky-stack') {
         window.nitroAds.createAd(placementId, {
           format,
-          demo: true,
+          demo: !adsEnabled,
           refreshLimit,
           refreshTime,
           mediaQuery: mediaTypes[media],
@@ -63,7 +67,7 @@ const Advertisment = ({
           railOffsetTop,
           railOffsetBottom,
           railCollisionWhitelist,
-          demo: true,
+          demo: !adsEnabled,
           refreshLimit,
           refreshTime,
           mediaQuery: mediaTypes[media],
@@ -78,7 +82,7 @@ const Advertisment = ({
         // format === display
         window.nitroAds.createAd(placementId, {
           format: 'display',
-          demo: true,
+          demo: !adsEnabled,
           refreshLimit,
           refreshTime,
           mediaQuery: mediaTypes[media],
@@ -128,7 +132,7 @@ Advertisment.defaultProps = {
   rail: 'left',
   railOffsetTop: 200,
   railOffsetBottom: 0,
-  railCollisionWhitelist: ['navbar', 'react-root', '.rail-left', '.rail-right'],
+  railCollisionWhitelist: [],
 };
 
 export default Advertisment;

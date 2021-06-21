@@ -12,7 +12,7 @@ const ErrorPage = ({ user, title, error, requestId, loginCallback, details }) =>
   console.log(details);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

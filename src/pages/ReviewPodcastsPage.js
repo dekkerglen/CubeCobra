@@ -15,7 +15,7 @@ import PodcastPreview from 'components/PodcastPreview';
 const PAGE_SIZE = 24;
 
 const ReviewPodcastsPage = ({ user, loginCallback, podcasts, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

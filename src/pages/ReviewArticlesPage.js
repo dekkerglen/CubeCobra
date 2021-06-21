@@ -15,7 +15,7 @@ import ArticlePreview from 'components/ArticlePreview';
 const PAGE_SIZE = 24;
 
 const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>

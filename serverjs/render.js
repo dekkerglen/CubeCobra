@@ -117,6 +117,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       : null;
 
     reactProps.loginCallback = req.baseUrl + req.path;
+    reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
 
     if (!options.metadata) {
       options.metadata = [];

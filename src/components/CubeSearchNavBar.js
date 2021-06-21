@@ -191,7 +191,7 @@ AdvancedSearchModal.propTypes = {
   toggle: PropTypes.func.isRequired,
 };
 
-const CubeSearchNavBar = ({ query, order, title, user }) => {
+const CubeSearchNavBar = ({ query, order, title }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [queryText, setQuery] = useState(query || '');
   const toggle = () => setIsOpen((open) => !open);
@@ -222,7 +222,7 @@ const CubeSearchNavBar = ({ query, order, title, user }) => {
 
   return (
     <div className="usercontrols">
-      <Banner user={user} />
+      <Banner />
       {title && (
         <CardBody className="pb-0">
           <h3>{title}</h3>
@@ -260,14 +260,12 @@ CubeSearchNavBar.propTypes = {
   query: PropTypes.string,
   order: PropTypes.string,
   title: PropTypes.string,
-  user: UserPropType,
 };
 
 CubeSearchNavBar.defaultProps = {
   title: null,
   query: '',
   order: 'date',
-  user: null,
 };
 
 export default CubeSearchNavBar;

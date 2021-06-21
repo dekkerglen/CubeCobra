@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Button, CardFooter } from 'reactstrap';
 import DynamicFlash from 'components/DynamicFlash';
@@ -10,8 +9,8 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const back = () => (window.history.length > 1 ? window.history.back() : window.close());
 
-const LeaveWarningPage = ({ user, url, loginCallback }) => (
-  <MainLayout user={user} loginCallback={loginCallback}>
+const LeaveWarningPage = ({ url, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
@@ -36,13 +35,11 @@ const LeaveWarningPage = ({ user, url, loginCallback }) => (
 );
 
 LeaveWarningPage.propTypes = {
-  user: UserPropType,
   url: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
 };
 
 LeaveWarningPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 
