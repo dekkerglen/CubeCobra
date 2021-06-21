@@ -6,42 +6,31 @@ import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-class DeckDeleteModal extends React.Component {
-  constructor(props) {
-    super(props);
-    this.deckID = props.deckID;
-    this.cubeID = props.cubeID;
-    this.nextURL = props.nextURL;
-    this.confirm = this.confirm.bind(this);
-  }
-
-  async confirm() {
-    const response = await csrfFetch(`/cube/deck/deletedeck/${this.deckID}`, {
+const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
+  const confirm = async () => {
+    const response = await csrfFetch(`/cube/deck/deletedeck/${deckID}`, {
       method: 'DELETE',
       headers: {},
     });
 
     if (!response.ok) {
       console.log(response);
-    } else if (this.nextURL) {
-      window.location.href = this.nextURL;
+    } else if (nextURL) {
+      window.location.href = nextURL;
     } else {
-      window.location.href = `/cube/playtest/${this.cubeID}`;
+      window.location.href = `/cube/playtest/${cubeID}`;
     }
-  }
+  };
 
-  render() {
-    const { isOpen, toggle } = this.props;
-    return (
-      <ConfirmDeleteModal
-        toggle={toggle}
-        delete={this.confirm}
-        isOpen={isOpen}
-        text="Are you sure you wish to delete this deck? This action cannot be undone."
-      />
-    );
-  }
-}
+  return (
+    <ConfirmDeleteModal
+      toggle={toggle}
+      submitDelete={confirm}
+      isOpen={isOpen}
+      text="Are you sure you wish to delete this deck? This action cannot be undone."
+    />
+  );
+};
 
 DeckDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,

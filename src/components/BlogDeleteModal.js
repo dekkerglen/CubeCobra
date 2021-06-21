@@ -6,15 +6,9 @@ import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-class BlogDeleteModal extends React.Component {
-  constructor(props) {
-    super(props);
-    this.postID = props.postID;
-    this.confirm = this.confirm.bind(this);
-  }
-
-  async confirm() {
-    const response = await csrfFetch(`/cube/blog/remove/${this.postID}`, {
+const BlogDeleteModal = ({ isOpen, toggle, postID }) => {
+  const confirm = async () => {
+    const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
       method: 'DELETE',
       headers: {},
     });
@@ -24,20 +18,17 @@ class BlogDeleteModal extends React.Component {
     } else {
       window.location.href = '';
     }
-  }
+  };
 
-  render() {
-    const { isOpen, toggle } = this.props;
-    return (
-      <ConfirmDeleteModal
-        toggle={toggle}
-        delete={this.confirm}
-        isOpen={isOpen}
-        text="Are you sure you wish to delete this post? This action cannot be undone."
-      />
-    );
-  }
-}
+  return (
+    <ConfirmDeleteModal
+      toggle={toggle}
+      submitDelete={confirm}
+      isOpen={isOpen}
+      text="Are you sure you wish to delete this post? This action cannot be undone."
+    />
+  );
+};
 
 BlogDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,
