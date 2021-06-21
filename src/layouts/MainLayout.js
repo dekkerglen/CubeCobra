@@ -35,7 +35,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
     <UserContext.Provider value={user}>
       <div className="flex-container flex-vertical viewport">
         <Navbar color="dark" expand="md" dark>
-          <Container>
+          <Container fluid="xl">
             <div className="d-flex flex-nowrap w-100 header-banner">
               <div className="overflow-hidden mr-auto">
                 <a href="/">
@@ -151,7 +151,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
             </Collapse>
           </Container>
         </Navbar>
-        <Container className="flex-grow">
+        <Container fluid="xl" className="flex-grow">
           <ThemeContext.Provider value={user?.theme ?? 'default'}>
             <ErrorBoundary>{children}</ErrorBoundary>
           </ThemeContext.Provider>
