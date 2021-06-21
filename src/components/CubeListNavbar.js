@@ -288,7 +288,7 @@ const CubeListNavbar = ({
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
-  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
+  const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
   const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
@@ -420,6 +420,9 @@ const CubeListNavbar = ({
                 </DropdownItem>
                 <DropdownItem onClick={toggleShowMaybeboard}>
                   {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
+                </DropdownItem>
+                <DropdownItem onClick={() => changeSort({ showOther: !showOther })}>
+                  {showOther ? 'Hide Unsorted Cards' : 'Show Unsorted Cards'}
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
