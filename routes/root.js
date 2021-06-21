@@ -689,4 +689,8 @@ router.get('/leave', (req, res) => {
   });
 });
 
+router.get('/ads.txt', (req, res) => {
+  res.redirect(301, 'https://api.nitropay.com/v1/ads-860.txt');
+});
+
 module.exports = router;
