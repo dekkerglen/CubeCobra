@@ -27,7 +27,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
     for (const row of newDeck) {
       for (const col of row) {
         for (const cardIndex of col) {
-          if (basicIds[cardIndex]) {
+          if (basicIds[cardIndex] || basicIds[cardIndex] === 0) {
             newCounts[basicIds[cardIndex]] += 1;
           }
         }
