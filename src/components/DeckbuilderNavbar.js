@@ -12,12 +12,12 @@ import { buildDeck } from 'drafting/deckutil';
 import BasicsModal from 'components/BasicsModal';
 import withModal from 'components/WithModal';
 
+const DeleteDeckModalLink = withModal(NavLink, DeckDeleteModal);
 const BasicsModalLink = withModal(NavLink, BasicsModal);
 
 const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setSideboard, setDeck, ...props }) => {
   const { basics } = deck;
   const [isOpen, setIsOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const toggleNavbar = useCallback(
     (event) => {
@@ -37,14 +37,6 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
     },
     [saveForm],
   );
-
-  const openDeleteModal = useCallback(() => {
-    setDeleteModalOpen(true);
-  }, [setDeleteModalOpen]);
-
-  const toggleDeleteModal = useCallback(() => {
-    setDeleteModalOpen(!deleteModalOpen);
-  }, [deleteModalOpen, setDeleteModalOpen]);
 
   const stripped = useMemo(() => {
     const res = JSON.parse(JSON.stringify(deck));
@@ -96,10 +88,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
             </CSRFForm>
           </NavItem>
           <NavItem>
-            <NavLink href="#" onClick={openDeleteModal}>
-              Delete Deck
-            </NavLink>
-            <DeckDeleteModal toggle={toggleDeleteModal} isOpen={deleteModalOpen} deckID={deck._id} cubeID={deck.cube} />
+            <DeleteDeckModalLink modalProps={{ deckID: deck._id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
           </NavItem>
           <NavItem>
             <BasicsModalLink
