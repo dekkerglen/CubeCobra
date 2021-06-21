@@ -155,6 +155,7 @@ cubeSchema.index({
 
 cubeSchema.index({
   isListed: 1,
+  date_updated: -1,
 });
 
 cubeSchema.index({
