@@ -142,7 +142,7 @@ const DashboardPage = ({ posts, cubes, decks, user, loginCallback, content, feat
 };
 
 DashboardPage.propTypes = {
-  posts: BlogPostPropType.isRequired,
+  posts: PropTypes.arrayOf(BlogPostPropType).isRequired,
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   user: UserPropType,
