@@ -346,7 +346,7 @@ const CubeListNavbar = ({
   const enc = encodeURIComponent;
   const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(
     tertiary,
-  )}&quaternary=${enc(quaternary)}`;
+  )}&quaternary=${enc(quaternary)}&showother=${enc(showOther)}`;
   const filterString = filter?.stringify ?? '';
   const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
 
@@ -443,13 +443,21 @@ const CubeListNavbar = ({
                   </>
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
-                <DropdownItem href={`/cube/download/plaintext/${cubeID}`}>Card Names (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/plaintext/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
+                  Card Names (.txt)
+                </DropdownItem>
                 <DropdownItem href={`/cube/download/csv/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
                   Comma-Separated (.csv)
                 </DropdownItem>
-                <DropdownItem href={`/cube/download/forge/${cubeID}`}>Forge (.dck)</DropdownItem>
-                <DropdownItem href={`/cube/download/mtgo/${cubeID}`}>MTGO (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/xmage/${cubeID}`}>XMage (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/forge/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
+                  Forge (.dck)
+                </DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
+                  MTGO (.txt)
+                </DropdownItem>
+                <DropdownItem href={`/cube/download/xmage/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
+                  XMage (.dck)
+                </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
           </Nav>

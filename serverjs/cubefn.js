@@ -137,6 +137,8 @@ function setCubeType(cube, carddb) {
   cube.keywords.push(...cube.categories);
   cube.keywords = Array.from(new Set(cube.keywords));
 
+  cube.card_count = cube.cards.length;
+
   return cube;
 }
 
