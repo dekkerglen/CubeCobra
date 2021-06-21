@@ -110,11 +110,17 @@ const MainLayout = ({ user, children, loginCallback }) => {
                           Your Cubes
                         </DropdownToggle>
                         <DropdownMenu right>
-                          {user.cubes.map((item) => (
-                            <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
-                              {item.name}
-                            </DropdownItem>
-                          ))}
+                          <>
+                            {user.cubes.map((item) => (
+                              <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
+                                {item.name}
+                              </DropdownItem>
+                            ))}
+                            <DropdownItem divider />
+                            <CreateCubeModalLink>
+                              <b>Create A New Cube</b>
+                            </CreateCubeModalLink>
+                          </>
                         </DropdownMenu>
                       </UncontrolledDropdown>
                     )}
