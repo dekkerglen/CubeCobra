@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apm-server
+  labels:
+    app: apm-server
+spec:
+  ports:
+  - port: 8200
+  selector:
+    app: apm-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apm-server
+  labels:
+    app: apm-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apm-server
+  template:
+    metadata:
+      labels:
+        app: apm-server
+    spec:
+      containers:
+      - name: apm-server
+        image: docker.elastic.co/apm/apm-server:7.6.2
+        env:
+          - name: ELASTICSEARCH_HOSTS
+            value: http://elasticsearch-external:9200/
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        ports:
+        - containerPort: 8200

@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: cubecobra-mongodb
+  name: cubecobra-mongodb
+spec:
+  ports:
+  - name: "27017"
+    port: 27017
+    targetPort: 27017
+  - name: "27018"
+    port: 27018
+    targetPort: 27018
+  - name: "27019"
+    port: 27019
+    targetPort: 27019
+  selector:
+    io.kompose.service: cubecobra-mongodb
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: cubecobra-mongodb
+  name: cubecobra-mongodb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      io.kompose.service: cubecobra-mongodb
+  template:
+    metadata:
+      labels:
+        io.kompose.service: cubecobra-mongodb
+    spec:
+      containers:
+      - image: mongo
+        name: cubecobra-mongodb
+        ports:
+        - containerPort: 27017
+        - containerPort: 27018
+        - containerPort: 27019
+        resources: {}
+        volumeMounts:
+        - mountPath: /data/db
+          name: cubecobra-mongodb-claim
+      restartPolicy: Always
+      volumes:
+      - name: cubecobra-mongodb-claim
+        persistentVolumeClaim:
+          claimName: cubecobra-mongodb-claim
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: cubecobra-mongodb-claim
+  name: cubecobra-mongodb-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: do-block-storage
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: cubecobra
+  name: cubecobra
+spec:
+  ports:
+    - port: 80
+      targetPort: 5000
+  selector:
+    io.kompose.service: cubecobra
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: cubecobra
+  name: cubecobra
+spec:
+  replicas: 1
+  strategy: {}
+  selector:
+    matchLabels:
+      io.kompose.service: cubecobra
+  template:
+    metadata:
+      labels:
+        io.kompose.service: cubecobra
+    spec:
+      containers:
+        - image: "docker.pkg.github.com/ruler501/cubecobra/cubecobra:566bdf63"
+          imagePullPolicy: Always
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: TCG_PLAYER_PRIVATE_KEY
+              valueFrom:
+                  secretKeyRef:
+                    name: cubecobrasecrets
+                    key: TCG_PLAYER_PRIVATE_KEY
+            - name: TCG_PLAYER_PUBLIC_KEY
+              valueFrom:
+                  secretKeyRef:
+                    name: cubecobrasecrets
+                    key: TCG_PLAYER_PUBLIC_KEY
+            - name: SESSION_SECRET
+              valueFrom:
+                  secretKeyRef:
+                    name: cubecobrasecrets
+                    key: SESSION_SECRET
+            - name: DBNAME
+              value: "nodecube"
+            - name: SESSION
+              valueFrom:
+                  secretKeyRef:
+                    name: cubecobrasecrets
+                    key: SESSION
+            - name: FLASKROOT
+              value: "http://cubecobra-recommender"
+            - name: PORT
+              value: "5000"
+            - name: HOST
+              value: "http://cubecobra"
+            - name: CUBECOBRA_VERSION
+              value: "3.6.0"
+            - name: ELASTICSEARCH_URL
+              value: "http://elasticsearch-external:9200/"
+            - name: APM_SERVER_URL
+              value: "http://apm-server:8200/"
+            - name: MONGODB_URL
+              value: "mongodb://cubecobra-mongodb:27017/nodecube"
+            - name: LISTEN_ADDR
+              value: "0.0.0.0"
+          args:
+            - bash
+            - -c
+            - node force_update.js && node app.js
+          name: cubecobra
+          ports:
+            - containerPort: 5000
+              name: cubecobra-http
+          resources:
+            limits:
+              cpu: 2000m
+            requests:
+              cpu: 400m
+          readinessProbe:
+            httpGet:
+              path: /version
+              port: cubecobra-http
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /version
+              port: 5000
+            failureThreshold: 30
+            periodSeconds: 10
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+status: {}

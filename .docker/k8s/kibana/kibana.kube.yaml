@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: kube-logging
+  labels:
+    app: kibana
+spec:
+  ports:
+  - port: 5601
+  selector:
+    app: kibana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: kube-logging
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:7.6.2
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        env:
+          - name: ELASTICSEARCH_HOSTS
+            value: http://elasticsearch:9200
+          - name: SERVER_HOST
+            value: "0.0.0.0"
+        ports:
+        - containerPort: 5601
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata: 
+  name: kibana-ingress
+  namespace: kube-logging
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # type of authentication
+    nginx.ingress.kubernetes.io/auth-type: basic
+    # name of the secret that contains the user/password definitions
+    nginx.ingress.kubernetes.io/auth-secret: kibana-secrets
+    # message to display with an appropriate context why the authentication is required
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+spec:
+  tls:
+    - hosts:
+        - kibana.ruler501.com
+      secretName: kibana-ruler501-tls
+  rules:
+    - host: kibana.ruler501.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kibana
+              servicePort: 5601

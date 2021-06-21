@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: cubecobra-recommender
+  name: cubecobra-recommender
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+  selector:
+    service: cubecobra-recommender
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: cubecobra-recommender
+  name: cubecobra-recommender
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      service: cubecobra-recommender
+  template:
+    metadata:
+      labels:
+        service: cubecobra-recommender
+    spec:
+      containers:
+        - name: cubecobra-recommender
+          image: docker.pkg.github.com/ruler501/cubecobrarecommender/cubecobrarecommender:90f8c141
+          ports:
+          - containerPort: 8000
+          command: [/bin/sh, -c]
+          args:
+            - gunicorn web:app --bind=0.0.0.0
+          imagePullPolicy: Always
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+status: {}

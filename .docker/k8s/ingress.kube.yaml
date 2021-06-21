@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: custom-servers-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - cubecobra.ruler501.com
+      secretName: ruler501-tls
+    - host: cubecobra.ruler501.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: cubecobra
+              servicePort: 80

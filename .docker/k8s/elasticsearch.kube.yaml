@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: kube-logging
+  labels:
+    app: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  clusterIP: None
+  ports:
+    - port: 9200
+      name: rest
+    - port: 9300
+      name: inter-node
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: kube-logging
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: elasticsearch
+  serviceName: elasticsearch
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: elasticsearch
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+        - env:
+            - name: MINIMUM_MASTER_NODES
+              value: "1"
+            - name: cluster.name
+              value: k8s-logs
+            - name: node.name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: discovery.type
+              value: single-node
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+          image: elasticsearch:7.6.2
+          imagePullPolicy: IfNotPresent
+          name: elasticsearch
+          ports:
+            - containerPort: 9200
+              name: rest
+              protocol: TCP
+            - containerPort: 9300
+              name: inter-node
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 1000m
+            requests:
+              cpu: 100m
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /usr/share/elasticsearch/data
+              name: elasticsearch
+      dnsPolicy: ClusterFirst
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: elasticsearch
+              mountPath: /usr/share/elasticsearch/data
+        - name: increase-vm-max-map
+          image: busybox
+          command: ["sysctl", "-w", "vm.max_map_count=262144"]
+          securityContext:
+            privileged: true
+        - name: increase-fd-ulimit
+          image: busybox
+          command: ["sh", "-c", "ulimit -n 65536"]
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch
+        labels:
+          app: elasticsearch
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: do-block-storage
+        resources:
+          requests:
+            storage: 10Gi
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch-external
+spec:
+  type: ExternalName
+  externalName: elasticsearch.kube-logging.svc.cluster.local
+  ports:
+  - port: 9200
+    name: rest
+  - port: 80
+    name: http
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch
+spec:
+  type: ExternalName
+  externalName: elasticsearch.kube-logging.svc.cluster.local
+  ports:
+  - port: 9200
+    name: rest
+  - port: 80
+    name: http
