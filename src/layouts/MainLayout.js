@@ -117,9 +117,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
                               </DropdownItem>
                             ))}
                             <DropdownItem divider />
-                            <CreateCubeModalLink>
-                              <b>Create A New Cube</b>
-                            </CreateCubeModalLink>
+                            <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
                           </>
                         </DropdownMenu>
                       </UncontrolledDropdown>
