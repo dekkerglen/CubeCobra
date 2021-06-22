@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import CardPackagePropType from 'proptypes/CardPackagePropType';
 
 import CardPackage from 'components/CardPackage';

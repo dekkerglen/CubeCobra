@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Input, Button } from 'reactstrap';
 
@@ -9,7 +8,7 @@ import CSRFForm from 'components/CSRFForm';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const AdminDashboardPage = ({ user, loginCallback }) => (
+const AdminDashboardPage = ({ loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -44,12 +43,10 @@ const AdminDashboardPage = ({ user, loginCallback }) => (
 );
 
 AdminDashboardPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 AdminDashboardPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

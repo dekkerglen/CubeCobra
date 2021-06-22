@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -30,13 +30,14 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
-// import { csrfFetch } from 'utils/CSRF';
-// import { allBotsDraft } from 'drafting/draftutil';
+
+import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
 import { DraftPropType } from 'proptypes/DraftbotPropTypes';
 
-const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
+const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
+  const user = useContext(UserContext);
+
   const [seatIndex, setSeatIndex] = useQueryParam('seat', 0);
   const [view, setView] = useQueryParam('view', 'deck');
 
@@ -57,47 +58,10 @@ const CubeDeckPage = ({ user, cube, deck, draft, loginCallback }) => {
     [isOpen],
   );
 
-  // const [loading, setLoading] = useState(false);
-
-  // const submitDeckForm = useRef();
-  // const [draftId, setDraftId] = useState('');
-
-  // const haveBotsRedraft = useCallback(async () => {
-  //   if (!loading && draft) {
-  //     setLoading(true);
-  //     const response = await csrfFetch(`/cube/api/redraft/${draft._id}/${seatIndex}`, {
-  //       method: 'POST',
-  //     });
-  //     const json = await response.json();
-  //     setDraftId(json.draft._id);
-  //     const newDraft = await allBotsDraft(json.draft);
-
-  //     await csrfFetch(`/cube/api/submitdraft/${newDraft.cube}`, {
-  //       method: 'POST',
-  //       body: JSON.stringify(newDraft),
-  //       headers: { 'Content-Type': 'application/json' },
-  //     });
-
-  //     submitDeckForm.current.submit();
-  //   }
-  // }, [draft, loading, seatIndex]);
-
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
-          {/*
-          <CSRFForm
-            key="submitdeck"
-            className="d-none"
-            innerRef={submitDeckForm}
-            method="POST"
-            action={`/cube/deck/submitdeck/${cube._id}`}
-          >
-            <Input type="hidden" name="body" value={draftId} />
-            <Input type="hidden" name="skipDeckbuilder" value="true" />
-          </CSRFForm>
-          */}
           <Navbar expand="md" light className="usercontrols mb-3">
             <div className="view-style-select pr-2">
               <Label className="sr-only" for="viewSelect">
@@ -205,12 +169,10 @@ CubeDeckPage.propTypes = {
   cube: CubePropType.isRequired,
   deck: DeckPropType.isRequired,
   draft: DraftPropType,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeDeckPage.defaultProps = {
-  user: null,
   loginCallback: '/',
   draft: null,
 };

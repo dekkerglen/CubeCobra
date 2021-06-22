@@ -1,7 +1,6 @@
 import React, { useContext, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -79,7 +78,7 @@ EditBlogModal.defaultProps = {
   post: null,
 };
 
-const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) => {
+const CubeBlogPage = ({ cube, pages, activePage, posts, loginCallback }) => {
   const [editPostIndex, setEditPostIndex] = useState(-1);
   const [editOpen, setEditOpen] = useState(false);
   const [editMarkdown, setEditMarkdown] = useState('');
@@ -116,7 +115,7 @@ const CubeBlogPage = ({ user, cube, pages, activePage, posts, loginCallback }) =
         <DynamicFlash />
         {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cube._id}/${i}`} />}
         {posts.length > 0 ? (
-          posts.map((post) => <BlogPost key={post._id} post={post} loggedIn={user !== null} onEdit={handleEdit} />)
+          posts.map((post) => <BlogPost key={post._id} post={post} onEdit={handleEdit} />)
         ) : (
           <h5>No blog posts for this cube.</h5>
         )}
@@ -142,12 +141,10 @@ CubeBlogPage.propTypes = {
       markdown: PropTypes.string,
     }),
   ).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeBlogPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

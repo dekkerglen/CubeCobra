@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import {
@@ -18,6 +17,7 @@ import {
   Button,
 } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import VideoPreview from 'components/VideoPreview';
 import Tab from 'components/Tab';
@@ -28,7 +28,9 @@ import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import useQueryParam from 'hooks/useQueryParam';
 
-const EditVideoPage = ({ user, loginCallback, video }) => {
+const EditVideoPage = ({ loginCallback, video }) => {
+  const user = useContext(UserContext);
+
   const [tab, setTab] = useQueryParam('tab', '0');
   const [body, setBody] = useState(video.body);
   const [short, setShort] = useState(video.short);
@@ -267,13 +269,11 @@ const EditVideoPage = ({ user, loginCallback, video }) => {
 };
 
 EditVideoPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   video: VideoPropType.isRequired,
 };
 
 EditVideoPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

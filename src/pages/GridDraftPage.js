@@ -27,7 +27,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
@@ -167,7 +166,7 @@ const useMutatableGridDraft = (initialGridDraft) => {
   return { gridDraft, mutations };
 };
 
-export const GridDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
+export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
   const { cards, draftType } = initialDraft;
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
@@ -287,13 +286,11 @@ GridDraftPage.propTypes = {
     draftType: PropTypes.string.isRequired,
   }).isRequired,
   seatNumber: PropTypes.number,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 GridDraftPage.defaultProps = {
   seatNumber: 0,
-  user: null,
   loginCallback: '/',
 };
 

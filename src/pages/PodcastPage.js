@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import PodcastPropType from 'proptypes/PodcastPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Podcast from 'components/Podcast';
 import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
+const PodcastPage = ({ loginCallback, podcast, episodes }) => {
+  const user = useContext(UserContext);
+
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
@@ -40,14 +42,12 @@ const PodcastPage = ({ user, loginCallback, podcast, episodes }) => {
 };
 
 PodcastPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   podcast: PodcastPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 PodcastPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

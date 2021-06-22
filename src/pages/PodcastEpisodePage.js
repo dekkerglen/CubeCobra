@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PodcastPropType from 'proptypes/PodcastPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { CardHeader, Card, Row, Col, CardBody } from 'reactstrap';
 
@@ -13,7 +12,7 @@ import CommentsSection from 'components/CommentsSection';
 import ReactAudioPlayer from 'react-audio-player';
 import TimeAgo from 'react-timeago';
 
-const PodcastEpisodePage = ({ user, loginCallback, episode }) => {
+const PodcastEpisodePage = ({ loginCallback, episode }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
@@ -48,13 +47,11 @@ const PodcastEpisodePage = ({ user, loginCallback, episode }) => {
 };
 
 PodcastEpisodePage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   episode: PodcastPropType.isRequired,
 };
 
 PodcastEpisodePage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

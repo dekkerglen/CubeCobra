@@ -22,7 +22,6 @@ import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 import {
   cardCmc,
@@ -43,7 +42,6 @@ import { fromEntries } from 'utils/Util';
 import { getLabels, cardIsLabel } from 'utils/Sort';
 
 const CubeAnalysisPage = ({
-  user,
   cube,
   cubeID,
   defaultFilterText,
@@ -353,7 +351,6 @@ CubeAnalysisPage.propTypes = {
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
   defaultShowTagColors: PropTypes.bool,
-  user: UserPropType,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
@@ -363,7 +360,6 @@ CubeAnalysisPage.defaultProps = {
   defaultTab: 0,
   defaultFormatId: null,
   defaultShowTagColors: true,
-  user: null,
   loginCallback: '/',
 };
 

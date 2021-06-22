@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -13,7 +12,7 @@ import TimeAgo from 'react-timeago';
 
 const PAGE_SIZE = 24;
 
-const CommentReportsPage = ({ user, loginCallback, reports, count, page, nitroPayEnabled }) => (
+const CommentReportsPage = ({ loginCallback, reports, count, page }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
@@ -72,7 +71,6 @@ const CommentReportsPage = ({ user, loginCallback, reports, count, page, nitroPa
 );
 
 CommentReportsPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   reports: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   count: PropTypes.number.isRequired,
@@ -80,7 +78,6 @@ CommentReportsPage.propTypes = {
 };
 
 CommentReportsPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

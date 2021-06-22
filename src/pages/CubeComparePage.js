@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import Query from 'utils/Query';
 
@@ -30,7 +29,6 @@ const deduplicateTags = (tagColors) => {
 };
 
 const CubeComparePage = ({
-  user,
   cards,
   cube,
   cubeB,
@@ -95,12 +93,10 @@ CubeComparePage.propTypes = {
   ).isRequired,
   defaultShowTagColors: PropTypes.bool.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeComparePage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

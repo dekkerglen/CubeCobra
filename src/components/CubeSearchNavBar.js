@@ -7,7 +7,6 @@ import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
 import SelectField from 'components/SelectField';
 import Banner from 'components/Banner';
-import UserPropType from 'proptypes/UserPropType';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const [name, setName] = useState('');

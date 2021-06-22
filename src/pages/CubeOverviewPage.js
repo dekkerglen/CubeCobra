@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -25,6 +24,7 @@ import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
 
+import UserContext from 'contexts/UserContext';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import CubeOverviewModal from 'components/CubeOverviewModal';
@@ -48,7 +48,9 @@ const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
 
-const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, user, loginCallback }) => {
+const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
+  const user = useContext(UserContext);
+
   const [alerts, setAlerts] = useState([]);
   const [cubeState, setCubeState] = useState(cube);
   const [followedState, setFollowedState] = useState(followed);
@@ -292,7 +294,6 @@ CubeOverview.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ),
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
@@ -301,7 +302,6 @@ CubeOverview.defaultProps = {
   priceOwned: null,
   pricePurchase: null,
   followers: [],
-  user: null,
   loginCallback: '/',
 };
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
@@ -10,7 +9,6 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const AdminDashboardPage = ({
-  user,
   loginCallback,
   commentReportCount,
   applicationCount,
@@ -49,7 +47,6 @@ const AdminDashboardPage = ({
 );
 
 AdminDashboardPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   commentReportCount: PropTypes.number.isRequired,
   applicationCount: PropTypes.number.isRequired,
@@ -59,7 +56,6 @@ AdminDashboardPage.propTypes = {
 };
 
 AdminDashboardPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

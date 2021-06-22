@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col } from 'reactstrap';
 
@@ -13,7 +12,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const SamplePackPage = ({ user, seed, pack, cube, loginCallback }) => {
+const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -59,11 +58,9 @@ SamplePackPage.propTypes = {
   seed: PropTypes.string.isRequired,
   pack: PropTypes.arrayOf(CardPropType).isRequired,
   cube: CubePropType.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 SamplePackPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

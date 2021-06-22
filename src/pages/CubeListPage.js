@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import LocalStorage from 'utils/LocalStorage';
 import Query from 'utils/Query';
@@ -144,7 +143,6 @@ CubeListPageRaw.propTypes = {
 };
 
 const CubeListPage = ({
-  user,
   cube,
   defaultShowTagColors,
   defaultFilterText,
@@ -192,12 +190,10 @@ CubeListPage.propTypes = {
   defaultTertiarySort: PropTypes.string.isRequired,
   defaultQuaternarySort: PropTypes.string.isRequired,
   defaultShowUnsorted: PropTypes.bool.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeListPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

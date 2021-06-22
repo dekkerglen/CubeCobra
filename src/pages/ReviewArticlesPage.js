@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ArticlePropType from 'proptypes/ArticlePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -14,7 +13,7 @@ import ArticlePreview from 'components/ArticlePreview';
 
 const PAGE_SIZE = 24;
 
-const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
+const ReviewArticlesPage = ({ loginCallback, articles, count, page }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
@@ -59,7 +58,6 @@ const ReviewArticlesPage = ({ user, loginCallback, articles, count, page }) => (
 );
 
 ReviewArticlesPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   articles: PropTypes.arrayOf(ArticlePropType).isRequired,
   count: PropTypes.number.isRequired,
@@ -67,7 +65,6 @@ ReviewArticlesPage.propTypes = {
 };
 
 ReviewArticlesPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

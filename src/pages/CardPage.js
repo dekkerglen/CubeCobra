@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import CardPricePropType from 'proptypes/CardPricePropType';
 import CardDataPointPropType from 'proptypes/CardDataPointPropType';
 
@@ -214,7 +213,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ user, card, data, versions, related, loginCallback }) => {
+const CardPage = ({ card, data, versions, related, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
@@ -791,12 +790,10 @@ CardPage.propTypes = {
       prices: CardPricePropType.isRequired,
     }).isRequired,
   ).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 
