@@ -10,8 +10,8 @@ const RenderToRoot = (Element) => {
   const reactProps = typeof window !== 'undefined' ? window.reactProps : {};
   const element = (
     <ErrorBoundary className="mt-3">
-      <AdsContext.Provider value={reactProps.nitroPayEnabled}>
-        <UserContext.Provider value={reactProps.user}>
+      <AdsContext.Provider value={reactProps ? reactProps.nitroPayEnabled : null}>
+        <UserContext.Provider value={reactProps ? reactProps.user : null}>
           <Element {...reactProps} />
         </UserContext.Provider>
       </AdsContext.Provider>
