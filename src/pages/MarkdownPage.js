@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -10,9 +9,9 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Markdown from 'components/Markdown';
 
-const MarkdownPage = ({ user, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const MarkdownPage = ({ loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
@@ -711,12 +710,10 @@ const MarkdownPage = ({ user, loginCallback }) => (
 );
 
 MarkdownPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 MarkdownPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

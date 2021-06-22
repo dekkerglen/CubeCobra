@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col } from 'reactstrap';
 
@@ -12,10 +11,10 @@ import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const BrowseContentPage = ({ user, loginCallback, content }) => {
+const BrowseContentPage = ({ loginCallback, content }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Banner user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <Row>
         <Col xs="12">
@@ -38,13 +37,11 @@ const BrowseContentPage = ({ user, loginCallback, content }) => {
 };
 
 BrowseContentPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 BrowseContentPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

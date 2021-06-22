@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
@@ -10,9 +9,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const Notifications = ({ user, notifications, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const Notifications = ({ notifications, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Card className="mx-auto">
       <CardHeader>
@@ -41,12 +40,10 @@ Notifications.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 Notifications.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

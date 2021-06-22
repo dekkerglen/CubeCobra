@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
@@ -12,12 +11,12 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const SearchPage = ({ user, cubes, query, count, perPage, page, order, loginCallback }) => {
+const SearchPage = ({ cubes, query, count, perPage, page, order, loginCallback }) => {
   const pages = Math.ceil(count / perPage);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeSearchNavBar query={query} order={order} title="Cube Search" user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <CubeSearchNavBar query={query} order={order} title="Cube Search" />
       <br />
       <DynamicFlash />
       {(cubes && cubes.length) > 0 ? (
@@ -61,7 +60,6 @@ SearchPage.propTypes = {
   perPage: PropTypes.number,
   page: PropTypes.number,
   order: PropTypes.string,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
@@ -71,7 +69,6 @@ SearchPage.defaultProps = {
   perPage: 0,
   page: 0,
   order: 'date',
-  user: null,
   loginCallback: '/',
 };
 

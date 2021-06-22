@@ -1,19 +1,21 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Video from 'components/Video';
 import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const VideoPage = ({ user, loginCallback, video }) => {
+const VideoPage = ({ loginCallback, video }) => {
+  const user = useContext(UserContext);
+
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === video.owner && video.status !== 'published' && (
@@ -33,13 +35,11 @@ const VideoPage = ({ user, loginCallback, video }) => {
 };
 
 VideoPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   video: VideoPropType.isRequired,
 };
 
 VideoPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

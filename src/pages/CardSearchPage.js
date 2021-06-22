@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -27,7 +26,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { ORDERED_SORTS } from 'utils/Sort';
 
-const CardSearchPage = ({ user, loginCallback }) => {
+const CardSearchPage = ({ loginCallback }) => {
   const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -96,7 +95,7 @@ const CardSearchPage = ({ user, loginCallback }) => {
   };
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <div className="usercontrols pt-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
@@ -197,12 +196,10 @@ const CardSearchPage = ({ user, loginCallback }) => {
 };
 
 CardSearchPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardSearchPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

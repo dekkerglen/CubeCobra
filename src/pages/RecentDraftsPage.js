@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
@@ -14,9 +13,9 @@ import { Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
 
 const PER_PAGE = 30;
 
-const RecentDraftsPage = ({ user, decks, currentPage, totalPages, count, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const RecentDraftsPage = ({ decks, currentPage, totalPages, count, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Row className="my-3">
       <Col xs="12">
@@ -60,12 +59,10 @@ RecentDraftsPage.propTypes = {
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   count: PropTypes.number.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 RecentDraftsPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

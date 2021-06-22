@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PodcastPropType from 'proptypes/PodcastPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -14,8 +13,8 @@ import PodcastPreview from 'components/PodcastPreview';
 
 const PAGE_SIZE = 24;
 
-const ReviewPodcastsPage = ({ user, loginCallback, podcasts, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const ReviewPodcastsPage = ({ loginCallback, podcasts, count, page }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
@@ -59,7 +58,6 @@ const ReviewPodcastsPage = ({ user, loginCallback, podcasts, count, page }) => (
 );
 
 ReviewPodcastsPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   podcasts: PropTypes.arrayOf(PodcastPropType).isRequired,
   count: PropTypes.number.isRequired,
@@ -67,7 +65,6 @@ ReviewPodcastsPage.propTypes = {
 };
 
 ReviewPodcastsPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

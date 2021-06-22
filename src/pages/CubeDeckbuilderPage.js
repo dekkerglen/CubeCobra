@@ -14,7 +14,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 import { makeSubtitle } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -25,7 +24,7 @@ const oppositeLocation = {
   [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
 };
 
-const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
+const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const { basics } = initialDeck;
   const [deck, setDeck] = useState(
     initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
@@ -101,7 +100,7 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
   const [description, setDescription] = useState(initialDeck.seats[0].description);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <DeckbuilderNavbar
@@ -169,11 +168,9 @@ const CubeDeckbuilderPage = ({ user, cube, initialDeck, loginCallback }) => {
 CubeDeckbuilderPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 CubeDeckbuilderPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

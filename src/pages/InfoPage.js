@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col, Card, CardHeader, CardBody, Table } from 'reactstrap';
 
@@ -9,9 +8,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ContactPage = ({ user, title, content, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Banner user={user} />
+const ContactPage = ({ title, content, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
@@ -46,7 +45,6 @@ const ContactPage = ({ user, title, content, loginCallback }) => (
 );
 
 ContactPage.propTypes = {
-  user: UserPropType,
   title: PropTypes.string.isRequired,
   content: PropTypes.arrayOf(
     PropTypes.shape({
@@ -58,7 +56,6 @@ ContactPage.propTypes = {
 };
 
 ContactPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

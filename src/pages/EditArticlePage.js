@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import ArticlePropType from 'proptypes/ArticlePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Spinner,
@@ -18,6 +17,7 @@ import {
   Button,
 } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ArticlePreview from 'components/ArticlePreview';
 import Tab from 'components/Tab';
@@ -28,7 +28,9 @@ import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import useQueryParam from 'hooks/useQueryParam';
 
-const EditArticlePage = ({ user, loginCallback, article }) => {
+const EditArticlePage = ({ loginCallback, article }) => {
+  const user = useContext(UserContext);
+
   const [tab, setTab] = useQueryParam('tab', '0');
   const [body, setBody] = useState(article.body);
   const [title, setTitle] = useState(article.title);
@@ -62,7 +64,7 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
     article.body !== body || article.title !== title || article.imagename !== imageName || article.short !== short;
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card>
         <CardBody>
           <Row>
@@ -254,13 +256,11 @@ const EditArticlePage = ({ user, loginCallback, article }) => {
 };
 
 EditArticlePage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   article: ArticlePropType.isRequired,
 };
 
 EditArticlePage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

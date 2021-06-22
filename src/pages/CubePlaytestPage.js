@@ -1,7 +1,6 @@
 import React, { useContext, useCallback, useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -29,6 +28,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
+import UserContext from 'contexts/UserContext';
 import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import DeckPreview from 'components/DeckPreview';
@@ -430,7 +430,9 @@ const DEFAULT_FORMAT = {
   markdown: '',
   packs: [{ slots: ['rarity:Mythic', 'tag:new', 'identity>1'], steps: null }],
 };
-const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
+const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
+  const user = useContext(UserContext);
+
   const { alerts, addAlert } = useAlerts();
   const [formats, setFormats] = useState(cube.draft_formats ?? []);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -525,7 +527,7 @@ const CubePlaytestPage = ({ user, cube, decks, loginCallback }) => {
     />
   );
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         {user && cube.owner === user.id ? (
           <Navbar light expand className="usercontrols mb-3">
@@ -606,12 +608,10 @@ CubePlaytestPage.propTypes = {
     ),
   }).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubePlaytestPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

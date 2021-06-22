@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -13,10 +12,10 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
     <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
-      <Banner user={user} />
+      <Banner />
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
       <Card>
@@ -39,7 +38,6 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
 );
 
 UserDecksPage.propTypes = {
-  user: UserPropType,
   owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
@@ -53,7 +51,6 @@ UserDecksPage.propTypes = {
 };
 
 UserDecksPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

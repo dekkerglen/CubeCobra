@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
@@ -13,8 +12,8 @@ import TimeAgo from 'react-timeago';
 
 const PAGE_SIZE = 24;
 
-const AdminDashboardPage = ({ user, loginCallback, applications, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const AdminDashboardPage = ({ loginCallback, applications, count, page }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
@@ -75,7 +74,6 @@ const AdminDashboardPage = ({ user, loginCallback, applications, count, page }) 
 );
 
 AdminDashboardPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   applications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   count: PropTypes.number.isRequired,
@@ -83,7 +81,6 @@ AdminDashboardPage.propTypes = {
 };
 
 AdminDashboardPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

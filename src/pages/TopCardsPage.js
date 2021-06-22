@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import CardDetailsPropType from 'proptypes/CardDetailsPropType';
 
 import DynamicFlash from 'components/DynamicFlash';
@@ -12,7 +11,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';
 
-const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
+const TopCardsPage = ({ data, numResults, loginCallback }) => {
   const [filter, setFilter] = useQueryParam('f', '');
   const [count, setCount] = useState(numResults);
 
@@ -21,7 +20,7 @@ const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
   };
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <div className="usercontrols pt-3 mb-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
@@ -56,12 +55,10 @@ const TopCardsPage = ({ user, data, numResults, loginCallback }) => {
 TopCardsPage.propTypes = {
   data: PropTypes.arrayOf(CardDetailsPropType).isRequired,
   numResults: PropTypes.number.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 TopCardsPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 
