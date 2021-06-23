@@ -31,19 +31,13 @@ const Feed = ({ items }) => {
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
+        const ids = new Set(feedItems.map((item) => item._id));
         const newFeedItems = [...feedItems];
         for (const item of json.items) {
-          let found = false;
-          for (const existingItem of feedItems) {
-            if (existingItem._id === item._id) {
-              found = true;
-            }
-          }
-          if (!found) {
+          if (!ids.has(item._id)) {
             newFeedItems.push(item);
           }
         }
-        newFeedItems.push(...json.items);
         setFeedItems(newFeedItems);
       }
     }
