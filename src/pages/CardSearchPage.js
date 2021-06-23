@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Card,
@@ -25,15 +24,16 @@ import CardImage from 'components/CardImage';
 import FilterCollapse from 'components/FilterCollapse';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import { ORDERED_SORTS } from 'utils/Sort';
 
-const CardSearchPage = ({ user, loginCallback }) => {
+const CardSearchPage = ({ loginCallback }) => {
   const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState(Query.get('f') || '');
   const [count, setCount] = useState(Query.get('m') || '');
   const [distinct, setDistinct] = useState(Query.get('di') || 'names');
-  const [sort, setSort] = useState(Query.get('s') || 'elo');
+  const [sort, setSort] = useState(Query.get('s') || 'Elo');
   const [direction, setDirection] = useState(Query.get('d') || 'descending');
 
   useEffect(() => {
@@ -95,7 +95,7 @@ const CardSearchPage = ({ user, loginCallback }) => {
   };
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <div className="usercontrols pt-3">
         <Row className="pb-3 mr-1">
           <Col xs="6">
@@ -126,10 +126,9 @@ const CardSearchPage = ({ user, loginCallback }) => {
                 <InputGroupText>Sort: </InputGroupText>
               </InputGroupAddon>
               <CustomInput type="select" value={sort} onChange={(event) => updateSort(event.target.value)}>
-                <option value="elo">Elo</option>
-                <option value="date">Release Date</option>
-                <option value="price">Price</option>
-                <option value="alphabetical">Alphabetical</option>
+                {ORDERED_SORTS.map((s) => (
+                  <option value={s}>{s}</option>
+                ))}
               </CustomInput>
             </InputGroup>
           </Col>
@@ -197,12 +196,10 @@ const CardSearchPage = ({ user, loginCallback }) => {
 };
 
 CardSearchPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CardSearchPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

@@ -19,10 +19,6 @@ const DEFAULT_BASICS = [
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
 
-const ELO_BASE = 1200;
-const ELO_SPEED = 1 / 128;
-const CUBE_ELO_SPEED = 4;
-
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
@@ -182,7 +178,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
   const main = {};
-  for (const cardIndex of mainCards) {
+  for (const cardIndex of mainCards.flat()) {
     const cardID = cardIndex.cardID || cards[cardIndex].cardID;
     const { name } = carddb.cardFromId(cardID);
     if (main[name]) {
@@ -198,7 +194,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.write('\r\n\r\n');
 
   const side = {};
-  for (const cardIndex of sideCards) {
+  for (const cardIndex of sideCards.flat()) {
     const { name } = carddb.cardFromId(cards[cardIndex].cardID);
     if (side[name]) {
       side[name] += 1;
@@ -270,10 +266,7 @@ module.exports = {
   CARD_HEIGHT,
   CARD_WIDTH,
   CSV_HEADER,
-  CUBE_ELO_SPEED,
   DEFAULT_BASICS,
-  ELO_BASE,
-  ELO_SPEED,
   addBasics,
   bulkUpload,
   createPool,

@@ -83,7 +83,7 @@ const UserSchema = mongoose.Schema({
     type: [
       {
         type: String,
-        enum: ['Admin', 'ContentCreator'],
+        enum: ['Admin', 'ContentCreator', 'Patron'],
       },
     ],
     default: [],
@@ -97,6 +97,10 @@ const UserSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  patron: {
+    type: String,
+    default: null,
+  },
 });
 
 UserSchema.index({
@@ -105,6 +109,10 @@ UserSchema.index({
 
 UserSchema.index({
   email: 1,
+});
+
+UserSchema.index({
+  patron: 1,
 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -160,10 +160,16 @@ require('./config/passport')(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
+// set CORS header for cube json requests (needs to be here to be included in rate limiter response)
+app.use('/cube/api/cubeJSON', (req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 // apply a rate limiter to the cube json endpoint
 const apiLimiter = rateLimit({
-  windowMs: 60000,
-  max: 1,
+  windowMs: 60 * 1000,
+  max: 100,
   message: '429: Too Many Requests',
 });
 app.use('/cube/api/cubeJSON', apiLimiter);
@@ -179,16 +185,17 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
 }
 
 // Route files; they manage their own CSRF protection
-app.use('', require('./routes/root'));
-
+app.use('/patreon', require('./routes/patreon_routes'));
+app.use('/dev', require('./routes/dev_routes'));
 app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
-app.use('/dev', require('./routes/dev_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/packages', require('./routes/packages'));
+
+app.use('', require('./routes/root'));
 
 app.use((req, res) => {
   return render(req, res, 'ErrorPage', {
@@ -218,7 +225,7 @@ schedule.scheduleJob('0 10 * * *', async () => {
   let histories = [];
   if (process.env.USE_S3 !== 'true') {
     ratings = await CardRating.find({}, 'name elo embedding').lean();
-    histories = await CardHistory.find({}, 'oracleId current.total').lean();
+    histories = await CardHistory.find({}, 'oracleId current.total current.picks').lean();
   }
   updatedb.updateCardbase(ratings, histories);
 });

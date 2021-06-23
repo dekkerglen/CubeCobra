@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import ArticlePropType from 'proptypes/ArticlePropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Article from 'components/Article';
 import ButtonLink from 'components/ButtonLink';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ArticlePage = ({ user, loginCallback, article }) => {
+const ArticlePage = ({ loginCallback, article }) => {
+  const user = useContext(UserContext);
+
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <Card className="mb-3">
         {user && user.id === article.owner && article.status !== 'published' && (
@@ -28,20 +30,18 @@ const ArticlePage = ({ user, loginCallback, article }) => {
             </h5>
           </CardHeader>
         )}
-        <Article article={article} userid={user && user.id} />
+        <Article article={article} />
       </Card>
     </MainLayout>
   );
 };
 
 ArticlePage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   article: ArticlePropType.isRequired,
 };
 
 ArticlePage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

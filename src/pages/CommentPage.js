@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
@@ -10,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import CommentsSection from 'components/CommentsSection';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 
 const translateType = {
   comment: 'Comment',
@@ -36,12 +35,12 @@ const translateLink = {
   package: (id) => `/packages/${id}`,
 };
 
-const CommentPage = ({ comment, user, loginCallback }) => {
+const CommentPage = ({ comment, loginCallback }) => {
   const [content, setContent] = useState(comment);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
@@ -49,9 +48,9 @@ const CommentPage = ({ comment, user, loginCallback }) => {
             {`Responding to this ${translateType[content.parentType]}`}
           </a>
         </CardHeader>
-        <Comment comment={content} userid={user && user.id} index={0} noReplies editComment={setContent} />
+        <Comment comment={content} index={0} noReplies editComment={setContent} />
         <div className="border-top">
-          <CommentsSection parentType="comment" parent={content._id} userid={user && user.id} />
+          <CommentsSection parentType="comment" parent={content._id} />
         </div>
       </Card>
     </MainLayout>
@@ -60,12 +59,10 @@ const CommentPage = ({ comment, user, loginCallback }) => {
 
 CommentPage.propTypes = {
   comment: CommentPropType.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CommentPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

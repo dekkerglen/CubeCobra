@@ -107,7 +107,7 @@ router.get('/articles', async (req, res) => {
 });
 
 router.get('/articles/:page', async (req, res) => {
-  const count = await Article.countDocuments();
+  const count = await Article.countDocuments({ status: 'published' });
   const articles = await Article.find({ status: 'published' })
     .sort({ date: -1 })
     .skip(req.params.page * PAGE_SIZE)
@@ -122,7 +122,7 @@ router.get('/podcasts', async (req, res) => {
 });
 
 router.get('/podcasts/:page', async (req, res) => {
-  const count = await PodcastEpisode.countDocuments();
+  const count = await PodcastEpisode.countDocuments({ status: 'published' });
   const episodes = await PodcastEpisode.find()
     .sort({ date: -1 })
     .skip(req.params.page * PAGE_SIZE)
@@ -139,7 +139,7 @@ router.get('/videos', async (req, res) => {
 });
 
 router.get('/videos/:page', async (req, res) => {
-  const count = await Video.countDocuments();
+  const count = await Video.countDocuments({ status: 'published' });
   const videos = await Video.find({ status: 'published' })
     .sort({ date: -1 })
     .skip(req.params.page * PAGE_SIZE)

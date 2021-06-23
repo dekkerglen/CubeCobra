@@ -184,12 +184,23 @@ function getIdsFromName(name) {
 }
 
 // Printing = 'recent' or 'first'
-function getMostReasonable(cardName, printing = 'recent') {
+function getMostReasonable(cardName, printing = 'recent', filter = null) {
   let ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
     // eslint-disable-next-line no-use-before-define
     return getMostReasonableById(cardName, printing);
+  }
+
+  if (filter) {
+    ids = ids
+      .map((id) => ({ details: cardFromId(id) }))
+      .filter(filter)
+      .map((card) => card.details._id);
+  }
+
+  if (ids.length === 0) {
+    return null;
   }
 
   // Ids are stored in reverse chronological order, so reverse if we want first printing.
@@ -200,13 +211,13 @@ function getMostReasonable(cardName, printing = 'recent') {
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
-function getMostReasonableById(id, printing = 'recent') {
+function getMostReasonableById(id, printing = 'recent', filter = null) {
   const card = cardFromId(id);
   if (card.error) {
     winston.info(`Error finding most reasonable for id ${id}`);
     return null;
   }
-  return getMostReasonable(card.name, printing);
+  return getMostReasonable(card.name, printing, filter);
 }
 
 function getFirstReasonable(ids) {

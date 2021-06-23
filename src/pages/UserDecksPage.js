@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader } from 'reactstrap';
 
@@ -9,20 +8,14 @@ import DeckPreview from 'components/DeckPreview';
 import Paginate from 'components/Paginate';
 import UserLayout from 'layouts/UserLayout';
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ user, owner, followers, following, decks, pages, activePage, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <UserLayout
-      user={owner}
-      followers={followers}
-      following={following}
-      canEdit={user && user.id === owner._id}
-      activeLink="decks"
-    >
-      <Advertisement />
+const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
+      <Banner />
       <DynamicFlash />
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
       <Card>
@@ -32,12 +25,7 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
         {decks.length > 0 ? (
           <CardBody className="p-0">
             {decks.map((deck) => (
-              <DeckPreview
-                key={deck._id}
-                deck={deck}
-                canEdit={user && user.id === owner._id}
-                nextURL={`/user/decks/${owner._id}/${activePage}`}
-              />
+              <DeckPreview key={deck._id} deck={deck} nextURL={`/user/decks/${owner._id}/${activePage}`} />
             ))}
           </CardBody>
         ) : (
@@ -50,7 +38,6 @@ const UserDecksPage = ({ user, owner, followers, following, decks, pages, active
 );
 
 UserDecksPage.propTypes = {
-  user: UserPropType,
   owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
@@ -64,7 +51,6 @@ UserDecksPage.propTypes = {
 };
 
 UserDecksPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

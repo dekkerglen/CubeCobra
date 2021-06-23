@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Button,
@@ -25,6 +24,7 @@ import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
 
+import UserContext from 'contexts/UserContext';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import CubeOverviewModal from 'components/CubeOverviewModal';
@@ -48,7 +48,9 @@ const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
 
-const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, user, loginCallback }) => {
+const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
+  const user = useContext(UserContext);
+
   const [alerts, setAlerts] = useState([]);
   const [cubeState, setCubeState] = useState(cube);
   const [followedState, setFollowedState] = useState(followed);
@@ -88,8 +90,8 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
     });
   };
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <CubeLayout cube={cubeState} canEdit={user && cubeState.owner === user.id} activeLink="overview">
+    <MainLayout loginCallback={loginCallback}>
+      <CubeLayout cube={cubeState} activeLink="overview">
         {user && cubeState.owner === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
@@ -261,9 +263,11 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                 <CardFooter>
                   <div className="autocard-tags">
                     {cubeState.tags.map((tag) => (
-                      <span key={tag} className="tag">
-                        {tag}
-                      </span>
+                      <a href={`/search/tag:"${tag}"/0`}>
+                        <span key={tag} className="tag">
+                          {tag}
+                        </span>
+                      </a>
                     ))}
                   </div>
                 </CardFooter>
@@ -271,17 +275,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
             </Card>
           </Col>
         </Row>
-        <div className="mb-3">
-          {post && (
-            <BlogPost
-              key={post._id}
-              post={post}
-              canEdit={false}
-              userid={user ? user.id : null}
-              loggedIn={user !== null}
-            />
-          )}
-        </div>
+        <div className="mb-3">{post && <BlogPost key={post._id} post={post} loggedIn={user !== null} />}</div>
       </CubeLayout>
     </MainLayout>
   );
@@ -300,7 +294,6 @@ CubeOverview.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ),
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
@@ -309,7 +302,6 @@ CubeOverview.defaultProps = {
   priceOwned: null,
   pricePurchase: null,
   followers: [],
-  user: null,
   loginCallback: '/',
 };
 

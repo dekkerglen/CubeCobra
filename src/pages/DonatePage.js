@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
 
@@ -8,8 +7,8 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ContactPage = ({ user, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const ContactPage = ({ loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
@@ -28,6 +27,7 @@ const ContactPage = ({ user, loginCallback }) => (
         </p>
         <h5>Patreon Rewards</h5>
         <ul>
+          <li>A totally ad-free browsing experience</li>
           <li>
             Access to exclusive <a href="https://discord.gg/Hn39bCU">Discord</a> channels available only to Patreon
             supporters
@@ -39,6 +39,11 @@ const ContactPage = ({ user, loginCallback }) => (
             Ability to submit high priority feature requests that will be prioritized by the developers (from $15/month)
           </li>
         </ul>
+        <p>
+          After becoming a patron, make sure to <a href="/user/account?nav=patreon">link your Cube Cobra account</a> to
+          gain access to these benefits. If you are experiencing issues with your Patreon subscription, feel free to
+          contact us on <a href="https://discord.gg/Hn39bCU">Discord</a>.
+        </p>
         <h5>Donation Links</h5>
         <Row>
           <Col xs="12" sm="4">
@@ -88,12 +93,10 @@ const ContactPage = ({ user, loginCallback }) => (
 );
 
 ContactPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 ContactPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

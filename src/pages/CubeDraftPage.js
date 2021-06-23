@@ -30,7 +30,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
-import UserPropType from 'proptypes/UserPropType';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { calculateBotPick } from 'drafting/draftbots';
@@ -164,10 +163,10 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
   );
   const instructions = useMemo(() => {
     if (action === 'pick') {
-      return `Pick ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Pick ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     if (action === 'trash') {
-      return `Trash ${amount} More Card${amount > 1 ? 's' : ''}.`;
+      return `Trash ${amount + 1} More Card${amount + 1 > 1 ? 's' : ''}.`;
     }
     return null;
   }, [action, amount]);
@@ -272,7 +271,7 @@ CubeDraftPlayerUI.propTypes = {
   takeCard: PropTypes.func.isRequired,
   moveCard: PropTypes.func.isRequired,
 };
-const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) => {
+const CubeDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
   const { seed } = initialDraft;
   const [seatNum] = useState(() => toNullableInt(seatNumber) ?? 0);
   const { draft, mutations } = useMutatableDraft(initialDraft);
@@ -302,18 +301,17 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
   const makeBotTrashPicks = useCallback((playerChose) => makeBotChoices(playerChose, true), [makeBotChoices]);
 
   useEffect(() => {
-    const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
-    csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
-      method: 'POST',
-      body: JSON.stringify(submitableDraft),
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }, [draft]);
-  useEffect(() => {
     if (doneDrafting) {
-      submitDeckForm.current?.submit?.(); // eslint-disable-line
+      const submitableDraft = { ...draft, cards: draft.cards.map(({ details: _, ...card }) => ({ ...card })) };
+      csrfFetch(`/cube/api/submitdraft/${draft.cube}`, {
+        method: 'POST',
+        body: JSON.stringify(submitableDraft),
+        headers: { 'Content-Type': 'application/json' },
+      }).then(() => {
+        submitDeckForm.current?.submit?.(); // eslint-disable-line
+      });
     }
-  }, [doneDrafting]);
+  }, [doneDrafting, draft]);
 
   useEffect(() => {
     if (action.match(/random/) && !doneDrafting) {
@@ -343,7 +341,7 @@ const CubeDraftPage = ({ user, cube, initialDraft, seatNumber, loginCallback }) 
 
   const moveCard = useCallback((args) => mutations.moveCard({ ...args, seatIndex: seatNum }), [mutations, seatNum]);
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider>
           <CubeDraftPlayerUI
@@ -370,13 +368,11 @@ CubeDraftPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDraft: DraftPropType.isRequired,
   seatNumber: PropTypes.number,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 CubeDraftPage.defaultProps = {
   seatNumber: 0,
-  user: null,
   loginCallback: '/',
 };
 

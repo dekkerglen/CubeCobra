@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
+import PatronPropType from 'proptypes/PatronPropType';
 
 import {
   Button,
@@ -24,16 +24,18 @@ import {
 
 import Query from 'utils/Query';
 
+import UserContext from 'contexts/UserContext';
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import useQueryParam from 'hooks/useQueryParam';
 
-const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
+const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron }) => {
+  const user = useContext(UserContext);
   const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -87,8 +89,8 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
   }, [nav]);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <h2 className="mt-3">My Account </h2>
       <DynamicFlash />
       <Row className="mb-3">
@@ -112,6 +114,11 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
             <NavItem>
               <NavLink href="#" active={nav === 'display'} data-nav="display" onClick={handleClickNav}>
                 Display Preferences
+              </NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="#" active={nav === 'patreon'} data-nav="patreon" onClick={handleClickNav}>
+                Patreon Integration
               </NavLink>
             </NavItem>
           </Nav>
@@ -253,6 +260,42 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
                 </CardBody>
               </Card>
             </TabPane>
+
+            <TabPane tabId="patreon">
+              <Card>
+                {patron ? (
+                  <CardBody>
+                    {user.roles.includes('Patron') ? (
+                      <p>
+                        Your account is linked at the <b>{patron.level}</b> level.
+                      </p>
+                    ) : (
+                      <p>Your account is linked, but you are not an active patron.</p>
+                    )}
+                    <p>
+                      <i>More Patreon features are coming soon!</i>
+                    </p>
+                    <Button block outline color="danger" href="/patreon/unlink">
+                      Unlink Patreon Account
+                    </Button>
+                  </CardBody>
+                ) : (
+                  <CardBody>
+                    <p>Your account is currently not linked to your patreon account.</p>
+                    <Button
+                      block
+                      outline
+                      color="success"
+                      href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
+                        patreonRedirectUri,
+                      )}`}
+                    >
+                      Link Patreon Account
+                    </Button>
+                  </CardBody>
+                )}
+              </Card>
+            </TabPane>
           </TabContent>
         </Col>
       </Row>
@@ -261,13 +304,16 @@ const UserAccountPage = ({ user, defaultNav, loginCallback }) => {
 };
 
 UserAccountPage.propTypes = {
-  user: UserPropType.isRequired,
   defaultNav: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
+  patreonClientId: PropTypes.string.isRequired,
+  patreonRedirectUri: PropTypes.string.isRequired,
+  patron: PatronPropType,
 };
 
 UserAccountPage.defaultProps = {
   loginCallback: '/',
+  patron: null,
 };
 
 export default RenderToRoot(UserAccountPage);

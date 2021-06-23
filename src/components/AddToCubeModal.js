@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
+
+import UserContext from 'contexts/UserContext';
 import ImageFallback from 'components/ImageFallback';
 import { csrfFetch } from 'utils/CSRF';
+
 import {
   Modal,
   ModalHeader,
@@ -16,7 +18,10 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext, cubes }) => {
+const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) => {
+  const user = useContext(UserContext);
+  const cubes = user ? user.cubes : [];
+
   let def = cubeContext;
   if (cubes.length > 0) {
     def = cubes.map((cube) => cube._id).includes(cubeContext) ? cubeContext : cubes[0]._id;
@@ -156,7 +161,6 @@ AddToCubeModal.propTypes = {
   hideAnalytics: PropTypes.bool,
   toggle: PropTypes.func.isRequired,
   cubeContext: PropTypes.string,
-  cubes: PropTypes.arrayOf(CubePropType).isRequired,
 };
 
 AddToCubeModal.defaultProps = {

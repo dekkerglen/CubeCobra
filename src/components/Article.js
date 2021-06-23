@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import ArticlePropType from 'proptypes/ArticlePropType';
 
 import Markdown from 'components/Markdown';
@@ -8,7 +7,7 @@ import TimeAgo from 'react-timeago';
 
 import { CardBody, CardHeader } from 'reactstrap';
 
-const Article = ({ article, userid }) => {
+const Article = ({ article }) => {
   return (
     <>
       <CardHeader>
@@ -23,18 +22,13 @@ const Article = ({ article, userid }) => {
         <Markdown markdown={article.body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="article" parent={article._id} userid={userid} collapse={false} />
+        <CommentsSection parentType="article" parent={article._id} collapse={false} />
       </div>
     </>
   );
 };
 Article.propTypes = {
   article: ArticlePropType.isRequired,
-  userid: PropTypes.string,
-};
-
-Article.defaultProps = {
-  userid: null,
 };
 
 export default Article;

@@ -6,11 +6,12 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader, Navbar, Input, Card
 import TextField from 'components/TextField';
 import NumericField from 'components/NumericField';
 import SelectField from 'components/SelectField';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
-  const [name, setName] = useState('');
-  const [owner, setowner] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [owner, setOwner] = useState('');
+  const [tag, setTag] = useState('');
   const [decks, setDecks] = useState('');
   const [cards, setCards] = useState('');
   const [include, setInclude] = useState('');
@@ -46,11 +47,14 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     const key = target.name;
 
     switch (key) {
-      case 'name':
-        setName(value);
+      case 'keyword':
+        setKeyword(value);
         break;
       case 'owner':
-        setowner(value);
+        setOwner(value);
+        break;
+      case 'tag':
+        setTag(value);
         break;
       case 'decks':
         setDecks(value);
@@ -78,11 +82,14 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const submit = () => {
     let queryText = '';
 
-    if (name.length > 0) {
-      queryText += `name:"${name}" `;
+    if (keyword.length > 0) {
+      queryText += `"${keyword}" `;
     }
     if (owner.length > 0) {
       queryText += `owner:"${owner}" `;
+    }
+    if (tag.length > 0) {
+      queryText += `tag:"${tag}" `;
     }
     if (decks.length > 0) {
       queryText += `decks${decksOp}${decks} `;
@@ -113,10 +120,10 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
         <ModalHeader toggle={toggle}>Advanced Search</ModalHeader>
         <ModalBody>
           <TextField
-            name="name"
-            humanName="Cube Name"
-            placeholder={'Any text in the name, e.g. "Innistrad"'}
-            value={name}
+            name="keyword"
+            humanName="Keywords"
+            placeholder={'Any text in the name or tags, e.g. "Innistrad"'}
+            value={keyword}
             onChange={handleChange}
           />
           <TextField
@@ -124,6 +131,13 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
             humanName="Owner Name"
             placeholder={'Any text in the owner name, e.g. "TimFReilly"'}
             value={owner}
+            onChange={handleChange}
+          />
+          <TextField
+            name="tag"
+            humanName="Cube Tags"
+            placeholder={'Any tag on a cube, e.g. "2 player"'}
+            value={tag}
             onChange={handleChange}
           />
           <NumericField
@@ -207,7 +221,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
 
   return (
     <div className="usercontrols">
-      <Advertisement />
+      <Banner />
       {title && (
         <CardBody className="pb-0">
           <h3>{title}</h3>

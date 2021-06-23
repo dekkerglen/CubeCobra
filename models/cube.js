@@ -155,6 +155,7 @@ cubeSchema.index({
 
 cubeSchema.index({
   isListed: 1,
+  date_updated: -1,
 });
 
 cubeSchema.index({
@@ -228,7 +229,9 @@ cubeSchema.index({
 
 cubeSchema.pre('save', function saveCubeHook(next) {
   this.schemaVersion = CURRENT_SCHEMA_VERSION;
-  this.card_count = this.cards.length;
+  if (this.cards) {
+    this.card_count = this.cards.length;
+  }
   next();
 });
 

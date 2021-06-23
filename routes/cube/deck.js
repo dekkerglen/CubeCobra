@@ -394,7 +394,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       {
         cube: cube._id,
       },
-      '_id seats date cube',
+      '_id seats date cube owner cubeOwner',
     )
       .sort({
         date: -1,
@@ -442,7 +442,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
     const index = parseInt(req.params.index, 10);
     const base = await Deck.findById(req.params.id).lean();
-    const draft = await Draft.findById(base.draft).lean();
 
     if (!base) {
       req.flash('danger', 'Deck not found');
@@ -475,34 +474,24 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     deck.cards = base.cards;
     deck.basics = base.basics;
 
-    const { colors: userColors } = await buildDeck(cardsArray, draft.seats[index].pickorder, deck.basics);
-
     deck.seats.push({
       userid: req.user._id,
-      username: `${req.user.username}: ${userColors}`,
+      username: base.seats[index].username,
       name: `${req.user.username}'s rebuild from ${cube.name} on ${deck.date.toLocaleString('en-US')}`,
       description: 'This deck was rebuilt from another draft deck.',
       deck: base.seats[index].deck,
       sideboard: base.seats[index].sideboard,
     });
-    let botNumber = 1;
     for (let i = 0; i < base.seats.length; i++) {
       if (i !== index) {
-        const {
-          deck: builtDeck,
-          sideboard,
-          colors,
-          // eslint-disable-next-line no-await-in-loop
-        } = await buildDeck(cardsArray, draft.seats[i].pickorder, deck.basics);
         deck.seats.push({
           userid: null,
-          username: `Bot ${botNumber}: ${colors.join(', ')}`,
+          username: base.seats[i].username,
           name: `Draft of ${cube.name}`,
-          description: `This deck was built by a bot with preference for ${colors.join(', ')}`,
-          deck: builtDeck,
-          sideboard,
+          description: base.seats[i].description,
+          deck: base.seats[i].deck,
+          sideboard: base.seats[i].sideboard,
         });
-        botNumber += 1;
       }
     }
 
@@ -668,6 +657,13 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
         user,
         `/cube/deck/${deck._id}`,
         `${user.username} drafted your cube: ${cube.name}`,
+      );
+    } else if (!cube.disableNotifications) {
+      await util.addNotification(
+        cubeOwner,
+        { user_from_name: 'Anonymous', user_from: '404' },
+        `/cube/deck/${deck._id}`,
+        `An anonymous user drafted your cube: ${cube.name}`,
       );
     }
 
@@ -842,7 +838,8 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
-    // list of cardids
+    const cardList = [];
+
     const added = [];
     for (let i = 0; i < 16; i += 1) {
       added.push([]);
@@ -868,7 +865,10 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           const inCube = cube.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
           if (inCube) {
             selected = {
-              ...inCube,
+              finish: inCube.finish,
+              imgBackUrl: inCube.imgBackUrl,
+              imgUrl: inCube.imgUrl,
+              cardID: inCube.cardID,
               details: carddb.cardFromId(inCube.cardID),
             };
           } else {
@@ -887,12 +887,14 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
           if (!selected.details.type.toLowerCase().includes('creature')) {
             column += 8;
           }
-          added[column].push(selected);
+          added[column].push(cardList.length);
+          cardList.push(selected);
         }
       }
     }
 
     const deck = new Deck();
+    deck.cards = cardList;
     deck.date = Date.now();
     deck.cubename = cube.name;
     deck.cube = cube._id;

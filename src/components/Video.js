@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import Markdown from 'components/Markdown';
@@ -10,7 +9,7 @@ import ReactPlayer from 'react-player';
 
 import { CardBody, CardHeader } from 'reactstrap';
 
-const Video = ({ video, userid }) => {
+const Video = ({ video }) => {
   return (
     <>
       <CardHeader>
@@ -30,18 +29,13 @@ const Video = ({ video, userid }) => {
         <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="video" parent={video._id} userid={userid} collapse={false} />
+        <CommentsSection parentType="video" parent={video._id} collapse={false} />
       </div>
     </>
   );
 };
 Video.propTypes = {
   video: VideoPropType.isRequired,
-  userid: PropTypes.string,
-};
-
-Video.defaultProps = {
-  userid: null,
 };
 
 export default Video;

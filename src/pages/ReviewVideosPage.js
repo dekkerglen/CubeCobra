@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import VideoPropType from 'proptypes/VideoPropType';
 
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
@@ -14,8 +13,8 @@ import VideoPreview from 'components/VideoPreview';
 
 const PAGE_SIZE = 24;
 
-const ReviewVideosPage = ({ user, loginCallback, videos, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const ReviewVideosPage = ({ loginCallback, videos, count, page }) => (
+  <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
@@ -59,7 +58,6 @@ const ReviewVideosPage = ({ user, loginCallback, videos, count, page }) => (
 );
 
 ReviewVideosPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   videos: PropTypes.arrayOf(VideoPropType).isRequired,
   count: PropTypes.number.isRequired,
@@ -67,7 +65,6 @@ ReviewVideosPage.propTypes = {
 };
 
 ReviewVideosPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

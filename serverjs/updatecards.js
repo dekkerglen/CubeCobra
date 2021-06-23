@@ -92,7 +92,7 @@ function initializeCatalog() {
   catalog.english = {};
   catalog.elodict = {};
   catalog.embeddingdict = {};
-  catalog.poplularitydict = {};
+  catalog.historyDict = {};
 }
 
 initializeCatalog();
@@ -642,8 +642,20 @@ function convertCard(card, isExtra) {
     eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
+
   newcard.elo = catalog.elodict[name] || 1200;
-  newcard.popularity = catalog.poplularitydict[card.oracle_id] || 0;
+
+  if (catalog.historyDict[card.oracle_id]) {
+    newcard.popularity = catalog.historyDict[card.oracle_id].total[1] || 0;
+    newcard.popularity = newcard.popularity.toFixed(4) * 100;
+    newcard.cubeCount = catalog.historyDict[card.oracle_id].total[0] || 0;
+    newcard.pickCount = catalog.historyDict[card.oracle_id].picks || 0;
+  } else {
+    newcard.popularity = 0;
+    newcard.cubeCount = 0;
+    newcard.pickCount = 0;
+  }
+
   newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
@@ -787,8 +799,7 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
 
   // poplulating the popularity dict
   for (const history of histories) {
-    const percentage = history.current.total[1];
-    catalog.poplularitydict[history.oracleId] = percentage;
+    catalog.historyDict[history.oracleId] = history.current;
   }
 
   winston.info('Processing cards...');

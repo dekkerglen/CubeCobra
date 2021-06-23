@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import PodcastPropType from 'proptypes/PodcastPropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Nav, CardBody, Card, TabContent, TabPane, Input, FormGroup, Row, Col, Label, Button } from 'reactstrap';
 
@@ -14,14 +13,14 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import CSRFForm from 'components/CSRFForm';
 
-const EditPodcastPage = ({ user, loginCallback, podcast }) => {
+const EditPodcastPage = ({ loginCallback, podcast }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
   const [rss, setRss] = useState(podcast.rss);
 
   const hasChanges = podcast.rss !== rss;
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card>
         <CardBody>
           <Row>
@@ -106,13 +105,11 @@ const EditPodcastPage = ({ user, loginCallback, podcast }) => {
 };
 
 EditPodcastPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   podcast: PodcastPropType.isRequired,
 };
 
 EditPodcastPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

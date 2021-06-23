@@ -39,6 +39,7 @@ const LandingPage = ({ numusers, numcubes, numdrafts }) => {
             <LoginModalButton modalProps={{ loginCallback: '/' }} className="landing-btn mb-3" color="success" outline>
               Login
             </LoginModalButton>
+            <span data-ccpa-link="1" />
           </div>
           <Footer />
         </Col>

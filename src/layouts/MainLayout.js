@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import {
   Container,
@@ -15,11 +14,13 @@ import {
   DropdownMenu,
 } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import ErrorBoundary from 'components/ErrorBoundary';
 import LoginModal from 'components/LoginModal';
 import CreateCubeModal from 'components/CreateCubeModal';
 import withModal from 'components/WithModal';
 import NotificationsNav from 'components/NotificationsNav';
+import SideBanner from 'components/SideBanner';
 import ThemeContext from 'contexts/ThemeContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
@@ -27,13 +28,14 @@ import Footer from 'layouts/Footer';
 const LoginModalLink = withModal(NavLink, LoginModal);
 const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 
-const MainLayout = ({ user, children, loginCallback }) => {
+const MainLayout = ({ children, loginCallback }) => {
+  const user = useContext(UserContext);
   const [expanded, toggle] = useToggle(false);
 
   return (
     <div className="flex-container flex-vertical viewport">
       <Navbar color="dark" expand="md" dark>
-        <Container>
+        <Container fluid="xl">
           <div className="d-flex flex-nowrap w-100 header-banner">
             <div className="overflow-hidden mr-auto">
               <a href="/">
@@ -101,7 +103,7 @@ const MainLayout = ({ user, children, loginCallback }) => {
               </UncontrolledDropdown>
               {user ? (
                 <>
-                  <NotificationsNav user={user} />
+                  <NotificationsNav />
                   {user.cubes && user.cubes.length > 0 && (
                     <UncontrolledDropdown nav inNavbar>
                       <DropdownToggle nav caret>
@@ -113,6 +115,8 @@ const MainLayout = ({ user, children, loginCallback }) => {
                             {item.name}
                           </DropdownItem>
                         ))}
+                        <DropdownItem divider />
+                        <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
                       </DropdownMenu>
                     </UncontrolledDropdown>
                   )}
@@ -149,10 +153,16 @@ const MainLayout = ({ user, children, loginCallback }) => {
           </Collapse>
         </Container>
       </Navbar>
-      <Container className="flex-grow">
+      <Container fluid="xl" className="flex-grow main-content">
         <ThemeContext.Provider value={user?.theme ?? 'default'}>
           <ErrorBoundary>{children}</ErrorBoundary>
         </ThemeContext.Provider>
+        <div className="ad-left d-none d-lg-block">
+          <SideBanner placementId="left-banner" />
+        </div>
+        <div className="ad-right d-none d-lg-block">
+          <SideBanner placementId="right-banner" />
+        </div>
       </Container>
       <Footer />
     </div>
@@ -161,12 +171,10 @@ const MainLayout = ({ user, children, loginCallback }) => {
 
 MainLayout.propTypes = {
   children: PropTypes.node.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 MainLayout.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

@@ -1,13 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import UserContext from 'contexts/UserContext';
+import AdsContext from 'contexts/AdsContext';
+
 import ErrorBoundary from 'components/ErrorBoundary';
 
 const RenderToRoot = (Element) => {
   const reactProps = typeof window !== 'undefined' ? window.reactProps : {};
   const element = (
     <ErrorBoundary className="mt-3">
-      <Element {...reactProps} />
+      <AdsContext.Provider value={reactProps ? reactProps.nitroPayEnabled : null}>
+        <UserContext.Provider value={reactProps ? reactProps.user : null}>
+          <Element {...reactProps} />
+        </UserContext.Provider>
+      </AdsContext.Provider>
     </ErrorBoundary>
   );
   if (typeof document !== 'undefined') {

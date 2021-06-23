@@ -75,11 +75,16 @@ const processDeck = async (deck, oracleToIndex, correlations) => {
     const deckCards = [];
     deck.seats[0].deck.forEach((row) =>
       row.forEach((col) => {
-        col.forEach((ci) => {
-          if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
-            deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
-          }
-        });
+        if (Array.isArray(col)) {
+          col.forEach((ci) => {
+            if ((ci || ci === 0) && cards[ci] && cards[ci].cardID) {
+              deckCards.push(carddb.cardFromId(cards[ci].cardID).oracle_id);
+            }
+          });
+        } else {
+          winston.info('Col is not an array:');
+          winston.info(col);
+        }
       }),
     );
 
@@ -282,7 +287,7 @@ const processCard = async (
       : [0, 0];
   }
 
-  const cubes = cardUseCount[card.oracle_id];
+  currentDatapoint.cubes = currentDatapoint.total[0];
 
   currentDatapoint.prices = versions.map((id) => {
     const versionPrice = { version: id };
@@ -405,8 +410,6 @@ const run = async () => {
   const distinctOracles = carddb.allOracleIds();
   ORACLE_COUNT = distinctOracles.length;
 
-  console.log(distinctOracles[0]);
-
   winston.info(`Created list of ${ORACLE_COUNT} oracles`);
 
   const oracleToIndex = fromEntries(distinctOracles.map((item, index) => [item, index]));
@@ -424,31 +427,48 @@ const run = async () => {
 
   // process all cube objects
   winston.info('Started: cubes');
-  let count = await Cube.countDocuments();
-  let cursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
+  const cubeCount = await Cube.countDocuments();
+  const cubeCursor = Cube.find({}, 'card_count overrideCategory categoryOverride categoryPrefixes type cards')
     .lean()
     .cursor();
-  for (let i = 0; i < count; i += 1) {
-    await processCube(await cursor.next(), cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
-    if ((i + 1) % 100 === 0) {
-      winston.info(`Finished: ${i + 1} of ${count} cubes.`);
-    }
-  }
-  cursor.close();
+  let i = 0;
+
+  await cubeCursor.eachAsync(
+    async (cube) => {
+      await processCube(cube, cardUseCount, cardCountByCubeSize, cubeCountBySize, oracleToIndex);
+      i += 1;
+      if ((i + 1) % 100 === 0) {
+        winston.info(`Finished: ${i + 1} of ${cubeCount} cubes.`);
+      }
+    },
+    {
+      parallel: 100,
+    },
+  );
+
+  cubeCursor.close();
   winston.info('Finished: all cubes');
 
   // process all deck objects
   winston.info('Started: decks');
-  count = await Deck.count();
-  cursor = Deck.find({}, 'seats').lean().cursor();
-  for (let i = 0; i < count; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    await processDeck(await cursor.next(), oracleToIndex, correlations);
-    if ((i + 1) % 1000 === 0) {
-      winston.info(`Finished: ${i + 1} of ${count} decks.`);
-    }
-  }
-  cursor.close();
+  const deckCount = await Deck.countDocuments();
+  const deckCursor = Deck.find({}, 'seats cards').lean().cursor();
+  i = 0;
+
+  await deckCursor.eachAsync(
+    async (deck) => {
+      await processDeck(deck, oracleToIndex, correlations);
+      i += 1;
+      if ((i + 1) % 1000 === 0) {
+        winston.info(`Finished: ${i + 1} of ${deckCount} decks.`);
+      }
+    },
+    {
+      parallel: 100,
+    },
+  );
+
+  deckCursor.close();
   winston.info('Finished: all decks');
 
   // save card models
@@ -485,12 +505,7 @@ const run = async () => {
 };
 
 (async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    await run();
-  } catch (error) {
-    winston.error(error, { error });
-  }
-
+  await mongoose.connect(process.env.MONGODB_URL);
+  await run();
   process.exit();
 })();

@@ -7,8 +7,13 @@ import {
   cardTix,
   cardType,
   cardCmc,
+  cardElo,
+  cardPickCount,
+  cardCubeCount,
+  cardReleaseDate,
   COLOR_COMBINATIONS,
   cardRarity,
+  cardPopularity,
 } from 'utils/Card';
 
 const COLOR_MAP = {
@@ -160,6 +165,7 @@ export const SORTS = [
   'Legality',
   'Loyalty',
   'Manacost Type',
+  'Popularity',
   'Power',
   'Price USD',
   'Price USD Foil',
@@ -181,10 +187,29 @@ export const SORTS = [
   'Devotion to Red',
   'Devotion to Green',
   'Unsorted',
-  'Popularity (Cube Inclusion Percentage)',
 ];
 
-export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price'];
+export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price', 'Elo', 'Release Date', 'Cube Count', 'Pick Count'];
+
+export const SortFunctions = {
+  Alphabetical: alphaCompare,
+  'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
+  Price: (a, b) => cardPrice(a) - cardPrice(b),
+  Elo: (a, b) => cardElo(a) - cardElo(b),
+  'Release Date': (a, b) => {
+    if (cardReleaseDate(a) > cardReleaseDate(b)) {
+      return 1;
+    }
+    if (cardReleaseDate(a) < cardReleaseDate(b)) {
+      return -1;
+    }
+    return 0;
+  },
+  'Cube Count': (a, b) => cardCubeCount(a) - cardCubeCount(b),
+  'Pick Count': (a, b) => cardPickCount(a) - cardPickCount(b),
+};
+
+export const SortFunctionsOnDetails = (sort) => (a, b) => SortFunctions[sort]({ details: a }, { details: b });
 
 const allDevotions = (cube, color) => {
   const counts = new Set();
@@ -315,8 +340,8 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
-  } else if (sort === 'Popularity (Cube Inclusion Percentage)') {
-    ret = ['0-1%', '1-2%', '3-5%', '5-8', '8-12%', '12-20%', '20-30%', '30-50%', '50-100%'];
+  } else if (sort === 'Popularity') {
+    ret = ['0–1%', '1–2%', '3–5%', '5–8', '8–12%', '12–20%', '20–30%', '30–50%', '50–100%'];
   } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
@@ -643,17 +668,17 @@ export function cardGetLabels(card, sort, showOther) {
     ret = [cardDevotion(card, 'g').toString()];
   } else if (sort === 'Unsorted') {
     ret = ['All'];
-  } else if (sort === 'Popularity (Cube Inclusion Percentage)') {
-    const popularity = card.details.popularity * 100;
-    if (popularity < 1) ret = ['0-1%'];
-    else if (popularity < 2) ret = ['1-2%'];
-    else if (popularity < 5) ret = ['3-5%'];
-    else if (popularity < 8) ret = ['5-8%'];
-    else if (popularity < 12) ret = ['8-12%'];
-    else if (popularity < 20) ret = ['12-20%'];
-    else if (popularity < 30) ret = ['20-30%'];
-    else if (popularity < 50) ret = ['30-50%'];
-    else if (popularity <= 100) ret = ['50-100%'];
+  } else if (sort === 'Popularity') {
+    const popularity = cardPopularity(card);
+    if (popularity < 1) ret = ['0–1%'];
+    else if (popularity < 2) ret = ['1–2%'];
+    else if (popularity < 5) ret = ['3–5%'];
+    else if (popularity < 8) ret = ['5–8%'];
+    else if (popularity < 12) ret = ['8–12%'];
+    else if (popularity < 20) ret = ['12–20%'];
+    else if (popularity < 30) ret = ['20–30%'];
+    else if (popularity < 50) ret = ['30–50%'];
+    else if (popularity <= 100) ret = ['50–100%'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
@@ -712,15 +737,9 @@ export function sortIntoGroups(cards, sort, showOther) {
   return fromEntries(sortGroupsOrdered(cards, sort, showOther));
 }
 
-const OrderSortMap = {
-  Alphabetical: alphaCompare,
-  'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
-  Price: (a, b) => cardPrice(a) - cardPrice(b),
-};
-
 export function sortDeep(cards, showOther, last, ...sorts) {
   if (sorts.length === 0) {
-    return [...cards].sort(OrderSortMap[last]);
+    return [...cards].sort(SortFunctions[last]);
   }
   const [first, ...rest] = sorts;
   const result = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
@@ -728,7 +747,7 @@ export function sortDeep(cards, showOther, last, ...sorts) {
     if (rest.length > 0) {
       labelGroup[1] = sortDeep(labelGroup[1], showOther, last, ...rest);
     } else {
-      labelGroup[1].sort(OrderSortMap[last]);
+      labelGroup[1].sort(SortFunctions[last]);
     }
   }
   return result;
@@ -742,7 +761,7 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(
+export function sortForDownload(
   cards,
   primary = 'Color Category',
   secondary = 'Types-Multicolor',
