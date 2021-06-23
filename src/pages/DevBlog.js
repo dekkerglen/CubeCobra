@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { Card, CardBody, FormGroup, Label, Input, Button } from 'reactstrap';
 
+import UserContext from 'contexts/UserContext';
 import Paginate from 'components/Paginate';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
-import UserPropType from 'proptypes/UserPropType';
 
-const DevBlog = ({ blogs, pages, activePage, loginCallback, user }) => {
+const DevBlog = ({ blogs, pages, activePage, loginCallback }) => {
+  const user = useContext(UserContext);
+
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
-      <Advertisement user={user} />
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
       <DynamicFlash />
       <div className="mt-3">
         <h3 className="centered">Developer Blog</h3>
@@ -60,12 +62,10 @@ DevBlog.propTypes = {
   pages: PropTypes.number.isRequired,
   activePage: PropTypes.number.isRequired,
   loginCallback: PropTypes.string,
-  user: UserPropType,
 };
 
 DevBlog.defaultProps = {
   loginCallback: '/',
-  user: null,
 };
 
 export default RenderToRoot(DevBlog);

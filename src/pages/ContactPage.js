@@ -1,17 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
 
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ContactPage = ({ user, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+const ContactPage = ({ loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
@@ -56,12 +55,10 @@ const ContactPage = ({ user, loginCallback }) => (
 );
 
 ContactPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 ContactPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

@@ -761,7 +761,7 @@ export function countGroup(group) {
   return group.length;
 }
 
-export function sortForCSVDownload(
+export function sortForDownload(
   cards,
   primary = 'Color Category',
   secondary = 'Types-Multicolor',

@@ -81,7 +81,7 @@ const BlogPost = ({ post, onEdit, noScroll }) => {
 };
 
 BlogPost.propTypes = {
-  post: BlogPostPropType.isRequired,
+  post: PropTypes.arrayOf(BlogPostPropType).isRequired,
   onEdit: PropTypes.func.isRequired,
   noScroll: PropTypes.bool,
 };

@@ -1,19 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import UserLayout from 'layouts/UserLayout';
 import BlogPost from 'components/BlogPost';
 import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback, pages, activePage }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
+const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages, activePage }) => (
+  <MainLayout loginCallback={loginCallback}>
     <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
-      <Advertisement user={user} />
+      <Banner />
       <DynamicFlash />
 
       {pages > 1 && (
@@ -33,7 +32,6 @@ const UserBlogPage = ({ user, followers, following, posts, owner, loginCallback,
 );
 
 UserBlogPage.propTypes = {
-  user: UserPropType,
   owner: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
@@ -47,7 +45,6 @@ UserBlogPage.propTypes = {
 };
 
 UserBlogPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

@@ -1,15 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const VersionPage = ({ user, version, host, loginCallback }) => {
+const VersionPage = ({ version, host, loginCallback }) => {
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <Card className="my-3">
         <CardHeader>
           <h4>Deployment Details</h4>
@@ -36,12 +35,10 @@ const VersionPage = ({ user, version, host, loginCallback }) => {
 VersionPage.propTypes = {
   version: PropTypes.string.isRequired,
   host: PropTypes.string.isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 VersionPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

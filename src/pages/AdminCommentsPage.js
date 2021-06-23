@@ -1,10 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
 
 import { Card, CardHeader } from 'reactstrap';
 
-import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
 import MainLayout from 'layouts/MainLayout';
@@ -14,10 +13,8 @@ import Comment from 'components/Comment';
 const PAGE_SIZE = 24;
 
 const AdminCommentsPage = ({ loginCallback, comments, count, page }) => {
-  const user = useContext(UserContext);
-
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>

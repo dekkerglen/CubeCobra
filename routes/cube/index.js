@@ -723,7 +723,13 @@ router.get('/samplepack/:id', (req, res) => {
 router.get('/samplepack/:id/:seed', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    const pack = await generatePack(req.params.id, carddb, req.params.seed);
+    let pack;
+    try {
+      pack = await generatePack(req.params.id, carddb, req.params.seed);
+    } catch (err) {
+      req.flash('danger', err.message);
+      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    }
 
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
     const height = Math.ceil(pack.pack.length / width);

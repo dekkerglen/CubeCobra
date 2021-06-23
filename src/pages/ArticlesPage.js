@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 import ArticlePropType from 'proptypes/ArticlePropType';
 
 import { Row, Col } from 'reactstrap';
@@ -8,15 +7,15 @@ import { Row, Col } from 'reactstrap';
 import DynamicFlash from 'components/DynamicFlash';
 import ArticlePreview from 'components/ArticlePreview';
 import Paginate from 'components/Paginate';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const PAGE_SIZE = 24;
 
-const ArticlesPage = ({ user, loginCallback, articles, count, page }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+const ArticlesPage = ({ loginCallback, articles, count, page }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <h4>Articles</h4>
     <Row>
@@ -37,7 +36,6 @@ const ArticlesPage = ({ user, loginCallback, articles, count, page }) => (
 );
 
 ArticlesPage.propTypes = {
-  user: UserPropType,
   loginCallback: PropTypes.string,
   articles: PropTypes.arrayOf(ArticlePropType).isRequired,
   count: PropTypes.number.isRequired,
@@ -45,7 +43,6 @@ ArticlesPage.propTypes = {
 };
 
 ArticlesPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 

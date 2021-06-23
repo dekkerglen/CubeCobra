@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
@@ -8,11 +7,11 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ErrorPage = ({ user, title, error, requestId, loginCallback, details }) => {
+const ErrorPage = ({ title, error, requestId, loginCallback, details }) => {
   console.log(details);
 
   return (
-    <MainLayout loginCallback={loginCallback} user={user}>
+    <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
@@ -41,7 +40,6 @@ const ErrorPage = ({ user, title, error, requestId, loginCallback, details }) =>
 };
 
 ErrorPage.propTypes = {
-  user: UserPropType,
   title: PropTypes.string.isRequired,
   requestId: PropTypes.string,
   error: PropTypes.string,
@@ -50,7 +48,6 @@ ErrorPage.propTypes = {
 };
 
 ErrorPage.defaultProps = {
-  user: null,
   loginCallback: '/',
   requestId: null,
   error: null,

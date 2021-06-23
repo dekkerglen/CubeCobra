@@ -1,20 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
-import UserPropType from 'proptypes/UserPropType';
 
 import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import CubePreview from 'components/CubePreview';
 import UserPreview from 'components/UserPreview';
-import Advertisement from 'components/Advertisement';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserSocialPage = ({ user, followedCubes, followedUsers, followers, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback} user={user}>
-    <Advertisement user={user} />
+const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback }) => (
+  <MainLayout loginCallback={loginCallback}>
+    <Banner />
     <DynamicFlash />
     <Row className="my-3">
       <Col xs={6}>
@@ -91,12 +90,10 @@ UserSocialPage.propTypes = {
       _id: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  user: UserPropType,
   loginCallback: PropTypes.string,
 };
 
 UserSocialPage.defaultProps = {
-  user: null,
   loginCallback: '/',
 };
 
