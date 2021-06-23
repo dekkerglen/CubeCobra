@@ -178,7 +178,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
   const main = {};
-  for (const cardIndex of mainCards) {
+  for (const cardIndex of mainCards.flat()) {
     const cardID = cardIndex.cardID || cards[cardIndex].cardID;
     const { name } = carddb.cardFromId(cardID);
     if (main[name]) {
@@ -194,7 +194,7 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
   res.write('\r\n\r\n');
 
   const side = {};
-  for (const cardIndex of sideCards) {
+  for (const cardIndex of sideCards.flat()) {
     const { name } = carddb.cardFromId(cards[cardIndex].cardID);
     if (side[name]) {
       side[name] += 1;
