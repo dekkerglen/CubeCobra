@@ -9,7 +9,7 @@ import SelectField from 'components/SelectField';
 import Banner from 'components/Banner';
 
 const AdvancedSearchModal = ({ isOpen, toggle }) => {
-  const [name, setName] = useState('');
+  const [keyword, setKeyword] = useState('');
   const [owner, setOwner] = useState('');
   const [tag, setTag] = useState('');
   const [decks, setDecks] = useState('');
@@ -47,8 +47,8 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     const key = target.name;
 
     switch (key) {
-      case 'name':
-        setName(value);
+      case 'keyword':
+        setKeyword(value);
         break;
       case 'owner':
         setOwner(value);
@@ -82,8 +82,8 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
   const submit = () => {
     let queryText = '';
 
-    if (name.length > 0) {
-      queryText += `name:"${name}" `;
+    if (keyword.length > 0) {
+      queryText += `"${keyword}" `;
     }
     if (owner.length > 0) {
       queryText += `owner:"${owner}" `;
@@ -120,10 +120,10 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
         <ModalHeader toggle={toggle}>Advanced Search</ModalHeader>
         <ModalBody>
           <TextField
-            name="name"
-            humanName="Cube Name"
-            placeholder={'Any text in the name, e.g. "Innistrad"'}
-            value={name}
+            name="keyword"
+            humanName="Keywords"
+            placeholder={'Any text in the name or tags, e.g. "Innistrad"'}
+            value={keyword}
             onChange={handleChange}
           />
           <TextField
