@@ -107,7 +107,7 @@ Advertisment.propTypes = {
   format: PropTypes.string,
   refreshLimit: PropTypes.number,
   refreshTime: PropTypes.number,
-  position: PropTypes.number,
+  position: PropTypes.string,
   wording: PropTypes.string,
   enabled: PropTypes.bool,
   stickyStackLimit: PropTypes.number,
@@ -116,7 +116,7 @@ Advertisment.propTypes = {
   rail: PropTypes.string,
   railOffsetTop: PropTypes.number,
   railOffsetBottom: PropTypes.number,
-  railCollisionWhitelist: PropTypes.arrayOf(),
+  railCollisionWhitelist: PropTypes.arrayOf(PropTypes.string),
 };
 
 Advertisment.defaultProps = {
