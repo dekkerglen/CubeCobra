@@ -45,7 +45,7 @@ const getPackages = async (req, res, filter) => {
 
     const packages = await Package.find(filter)
       .sort(sort)
-      .skip(req.params.page * PAGE_SIZE)
+      .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .lean();
     return res.status(200).send({

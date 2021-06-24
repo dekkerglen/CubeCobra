@@ -147,8 +147,6 @@ router.get('/:id/:page', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id), Cube.LAYOUT_FIELDS).lean();
 
-    const page = parseInt(req.params.page, 10) || 0;
-
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -163,7 +161,7 @@ router.get('/:id/:page', async (req, res) => {
       .sort({
         date: -1,
       })
-      .skip(page * 10)
+      .skip(Math.max(req.params.page, 0) * 10)
       .limit(10)
       .lean();
     const [blogs, count] = await Promise.all([blogsQ, countQ]);

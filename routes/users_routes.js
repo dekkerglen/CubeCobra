@@ -527,8 +527,6 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const { userid } = req.params;
     const pagesize = 30;
 
-    const page = parseInt(req.params.page, 10);
-
     const userQ = User.findById(userid, '_id username users_following').lean();
 
     const decksQ = Deck.find(
@@ -540,7 +538,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       .sort({
         date: -1,
       })
-      .skip(pagesize * page)
+      .skip(pagesize * Math.max(req.params.page, 0))
       .limit(pagesize)
       .lean();
     const numDecksQ = Deck.countDocuments({
@@ -590,7 +588,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
       .sort({
         date: -1,
       })
-      .skip(req.params.page * pagesize)
+      .skip(Math.max(req.params.page, 0) * pagesize)
       .limit(pagesize)
       .lean();
 
@@ -618,7 +616,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
         followers,
         following: req.user && req.user.followed_users.includes(user.id),
         pages: Math.ceil(numBlogs / pagesize),
-        activePage: req.params.page,
+        activePage: Math.max(req.params.page, 0),
       },
       {
         title: user.username,
