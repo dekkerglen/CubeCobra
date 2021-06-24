@@ -381,8 +381,6 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
     const { cubeid } = req.params;
     const pagesize = 30;
 
-    const page = parseInt(req.params.page, 10);
-
     const cube = await Cube.findOne(buildIdQuery(cubeid), Cube.LAYOUT_FIELDS).lean();
 
     if (!cube) {
@@ -399,7 +397,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
       .sort({
         date: -1,
       })
-      .skip(pagesize * page)
+      .skip(pagesize * Math.max(req.params.page, 0))
       .limit(pagesize)
       .lean()
       .exec();
@@ -417,7 +415,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         cube,
         decks,
         pages: Math.ceil(numDecks / pagesize),
-        activePage: page,
+        activePage: Math.max(req.params.page, 0),
       },
       {
         title: `${abbreviate(cube.name)} - Draft Decks`,

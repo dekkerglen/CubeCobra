@@ -270,7 +270,7 @@ router.get('/search', async (req, res) => {
 router.get('/search/:query/:page', async (req, res) => {
   try {
     const perPage = 36;
-    const page = Math.max(0, req.params.page);
+    const page = Math.max(0, Math.max(req.params.page, 0));
 
     const { order } = req.query;
 

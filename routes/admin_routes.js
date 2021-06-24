@@ -50,11 +50,11 @@ router.get('/comments/:page', ensureAdmin, async (req, res) => {
   const count = await Comment.countDocuments();
   const comments = await Comment.find()
     .sort({ timePosted: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'AdminCommentsPage', { comments, count, page: req.params.page });
+  return render(req, res, 'AdminCommentsPage', { comments, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/reviewarticles', async (req, res) => {
@@ -73,33 +73,33 @@ router.get('/reviewarticles/:page', ensureAdmin, async (req, res) => {
   const count = await Article.countDocuments({ status: 'inReview' });
   const articles = await Article.find({ status: 'inReview' })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'ReviewArticlesPage', { articles, count, page: req.params.page });
+  return render(req, res, 'ReviewArticlesPage', { articles, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/reviewvideos/:page', ensureAdmin, async (req, res) => {
   const count = await Video.countDocuments({ status: 'inReview' });
   const videos = await Video.find({ status: 'inReview' })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'ReviewVideosPage', { videos, count, page: req.params.page });
+  return render(req, res, 'ReviewVideosPage', { videos, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/reviewpodcasts/:page', ensureAdmin, async (req, res) => {
   const count = await Podcast.countDocuments({ status: 'inReview' });
   const podcasts = await Podcast.find({ status: 'inReview' })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'ReviewPodcastsPage', { podcasts, count, page: req.params.page });
+  return render(req, res, 'ReviewPodcastsPage', { podcasts, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/commentreports', async (req, res) => {
@@ -110,11 +110,11 @@ router.get('/commentreports/:page', ensureAdmin, async (req, res) => {
   const count = await Report.countDocuments();
   const reports = await Report.find()
     .sort({ timePosted: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'CommentReportsPage', { reports, count, page: req.params.page });
+  return render(req, res, 'CommentReportsPage', { reports, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/applications', async (req, res) => {
@@ -125,11 +125,11 @@ router.get('/applications/:page', ensureAdmin, async (req, res) => {
   const count = await Application.countDocuments();
   const applications = await Application.find()
     .sort({ timePosted: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'ApplicationsPage', { applications, count, page: req.params.page });
+  return render(req, res, 'ApplicationsPage', { applications, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/publisharticle/:id', ensureAdmin, async (req, res) => {
