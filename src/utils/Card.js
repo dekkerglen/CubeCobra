@@ -193,9 +193,9 @@ export const cardElo = (card) => (card.details ? card.details.elo || 1200 : 1200
 
 export const cardPopularity = (card) => parseFloat(card.details.popularity || 0).toFixed(2);
 
-export const cardCubeCount = (card) => card.details.cubeCount || 0;
+export const cardCubeCount = (card) => (card.details ? card.details.cubeCount || 0 : 0);
 
-export const cardPickCount = (card) => card.details.pickCount || 0;
+export const cardPickCount = (card) => (card.details ? card.details.pickCount || 0 : 0);
 
 export const cardLayout = (card) => card.details.layout;
 
