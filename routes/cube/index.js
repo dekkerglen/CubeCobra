@@ -765,7 +765,13 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     req.params.seed = req.params.seed.replace('.png', '');
 
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
-      const pack = await generatePack(req.params.id, carddb, req.params.seed);
+      let pack;
+      try {
+        pack = await generatePack(req.params.id, carddb, req.params.seed);
+      } catch (err) {
+        req.flash('danger', err.message);
+        return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      }
 
       const imgScale = 0.9;
       // Try to make it roughly 5 times as wide as it is tall in cards.
