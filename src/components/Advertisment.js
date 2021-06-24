@@ -146,7 +146,7 @@ Advertisment.defaultProps = {
   rail: 'left',
   railOffsetTop: 200,
   railOffsetBottom: 0,
-  railCollisionWhitelist: [],
+  railCollisionWhitelist: ['*'],
 };
 
 export default Advertisment;
