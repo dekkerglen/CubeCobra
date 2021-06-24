@@ -4,7 +4,7 @@ import { Col, Card, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
 import Advertisment from 'components/Advertisment';
 
-const BANNER_RATE = 10; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE = 1; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options = [
   <>
@@ -30,6 +30,12 @@ const options = [
     Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
     <strong>
       <a href="/donate">Find out more.</a>
+    </strong>
+  </>,
+  <>
+    Interested in advertising on Cube Cobra?{' '}
+    <strong>
+      <a href="/contact">Contact us!</a>
     </strong>
   </>,
 ];

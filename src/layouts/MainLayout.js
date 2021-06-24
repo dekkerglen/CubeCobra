@@ -21,6 +21,7 @@ import CreateCubeModal from 'components/CreateCubeModal';
 import withModal from 'components/WithModal';
 import NotificationsNav from 'components/NotificationsNav';
 import SideBanner from 'components/SideBanner';
+import MobileBanner from 'components/MobileBanner';
 import ThemeContext from 'contexts/ThemeContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
@@ -157,11 +158,14 @@ const MainLayout = ({ children, loginCallback }) => {
         <ThemeContext.Provider value={user?.theme ?? 'default'}>
           <ErrorBoundary>{children}</ErrorBoundary>
         </ThemeContext.Provider>
+        <div className="d-lg-none">
+          <MobileBanner placementId="mobile-banner" />
+        </div>
         <div className="ad-left d-none d-lg-block">
-          <SideBanner placementId="left-banner" />
+          <SideBanner placementId="left-rail" side="left" />
         </div>
         <div className="ad-right d-none d-lg-block">
-          <SideBanner placementId="right-banner" />
+          <SideBanner placementId="right-rail" side="right" />
         </div>
       </Container>
       <Footer />

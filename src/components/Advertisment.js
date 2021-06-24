@@ -19,7 +19,7 @@ const sizeTypes = {
   mobile: [['320', '50']],
 };
 
-// const formats = ['display', 'sticky-stack', 'rail'];
+// const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
 
 const Advertisment = ({
   placementId,
@@ -67,6 +67,20 @@ const Advertisment = ({
           railOffsetTop,
           railOffsetBottom,
           railCollisionWhitelist,
+          demo: !adsEnabled,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
+      } else if (format === 'anchor') {
+        window.nitroAds.createAd(placementId, {
+          format,
           demo: !adsEnabled,
           refreshLimit,
           refreshTime,
