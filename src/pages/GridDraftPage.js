@@ -133,6 +133,8 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
+    console.log({ newGridDraft, seatIndex, cardIndices });
+
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
@@ -171,13 +173,16 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
-  const drafterStates = useMemo(
-    () => [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx })),
-    [gridDraft],
-  );
-  const { turn, numPacks, packNum, pickNum, cardsInPack } = drafterStates[seatNum];
+  const drafterStates = useMemo(() => {
+    console.log(gridDraft);
+    return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
+  }, [gridDraft]);
+  const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
+  console.log(seatNum);
+  const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
+
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picked = useMemo(
     () =>
@@ -242,13 +247,14 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
                 pickNumber={pickNum}
                 seatIndex={turn ? 0 : 1}
                 makePick={mutations.makePick}
+                turn={turn ? 1 : 2}
               />
             </ErrorBoundary>
             <ErrorBoundary className="mt-3">
               <Card className="mt-3">
                 <DeckStacks
                   cards={picked[0]}
-                  title="Picks"
+                  title={draftType === 'bot' ? 'Picks' : "Player One's Picks"}
                   subtitle={makeSubtitle(picked[0].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
@@ -258,7 +264,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
               <Card className="my-3">
                 <DeckStacks
                   cards={picked[1]}
-                  title="Bot Picks"
+                  title={draftType === 'bot' ? 'Bot Picks' : "Player Two's Picks"}
                   subtitle={makeSubtitle(picked[1].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
