@@ -415,7 +415,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         cube,
         decks,
         pages: Math.ceil(numDecks / pagesize),
-        activePage: page,
+        activePage: Math.max(req.params.page, 0),
       },
       {
         title: `${abbreviate(cube.name)} - Draft Decks`,

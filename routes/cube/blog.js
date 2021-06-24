@@ -174,7 +174,7 @@ router.get('/:id/:page', async (req, res) => {
         cube,
         posts: blogs,
         pages: Math.ceil(count / 10),
-        activePage: page,
+        activePage: Math.max(req.params.page, 0),
       },
       {
         title: `${abbreviate(cube.name)} - Blog`,

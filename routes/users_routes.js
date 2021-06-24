@@ -565,7 +565,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
       following: req.user && req.user.followed_users.includes(user.id),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
-      activePage: page,
+      activePage: Math.max(req.params.page, 0),
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
