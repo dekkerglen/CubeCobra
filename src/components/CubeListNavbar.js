@@ -42,6 +42,8 @@ import SortCollapse from 'components/SortCollapse';
 import SortContext from 'contexts/SortContext';
 import TagColorsModal from 'components/TagColorsModal';
 import withModal from 'components/WithModal';
+import { QuestionIcon } from '@primer/octicons-react';
+import Tooltip from 'components/Tooltip';
 
 const PasteBulkModal = ({ isOpen, toggle }) => {
   const { cubeID } = useContext(CubeContext);
@@ -454,13 +456,23 @@ const CubeListNavbar = ({
                 <DropdownItem href={`/cube/download/xmage/${cubeID}?${urlSegment}`}>XMage (.dck)</DropdownItem>
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
-                  <FormGroup check>
+                  <FormGroup check style={{ display: 'flex' }}>
                     <Input type="checkbox" checked={isSortUsed} /> Use Sort
+                    <Tooltip text="Order export using current sort options." wrapperTag="span" className="ml-auto mr-0">
+                      <QuestionIcon size={16} />
+                    </Tooltip>
                   </FormGroup>
                 </DropdownItem>
                 <DropdownItem toggle={false} onClick={() => setIsFilterUsed((is) => !is)}>
-                  <FormGroup check>
+                  <FormGroup check style={{ display: 'flex' }}>
                     <Input type="checkbox" checked={isFilterUsed} /> Use Filter
+                    <Tooltip
+                      text="Include in export only cards matching current filter."
+                      wrapperTag="span"
+                      className="ml-auto mr-0"
+                    >
+                      <QuestionIcon size={16} />
+                    </Tooltip>
                   </FormGroup>
                 </DropdownItem>
               </DropdownMenu>
