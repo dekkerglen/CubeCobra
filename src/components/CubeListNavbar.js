@@ -28,6 +28,7 @@ import {
   NavbarToggler,
   Row,
   UncontrolledDropdown,
+  FormGroup,
 } from 'reactstrap';
 
 import CardModalContext from 'contexts/CardModalContext';
@@ -285,6 +286,8 @@ const CubeListNavbar = ({
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
   const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
+  const [isSortUsed, setIsSortUsed] = useState(true);
+  const [isFilterUsed, setIsFilterUsed] = useState(true);
 
   const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
   const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
@@ -349,6 +352,7 @@ const CubeListNavbar = ({
   )}&quaternary=${enc(quaternary)}&showother=${enc(showOther)}`;
   const filterString = filter?.stringify ?? '';
   const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
+  const urlSegment = `${isSortUsed ? sortUrlSegment : ''}${isFilterUsed ? filterUrlSegment : ''}`;
 
   return (
     <div className={`usercontrols${className ? ` ${className}` : ''}`}>
@@ -443,20 +447,21 @@ const CubeListNavbar = ({
                   </>
                 )}
                 <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
-                <DropdownItem href={`/cube/download/plaintext/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
-                  Card Names (.txt)
+                <DropdownItem href={`/cube/download/plaintext/${cubeID}?${urlSegment}`}>Card Names (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/csv/${cubeID}?${urlSegment}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem href={`/cube/download/forge/${cubeID}?${urlSegment}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cubeID}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/xmage/${cubeID}?${urlSegment}`}>XMage (.dck)</DropdownItem>
+                <DropdownItem divider />
+                <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
+                  <FormGroup check>
+                    <Input type="checkbox" checked={isSortUsed} /> Use Sort
+                  </FormGroup>
                 </DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
-                  Comma-Separated (.csv)
-                </DropdownItem>
-                <DropdownItem href={`/cube/download/forge/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
-                  Forge (.dck)
-                </DropdownItem>
-                <DropdownItem href={`/cube/download/mtgo/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
-                  MTGO (.txt)
-                </DropdownItem>
-                <DropdownItem href={`/cube/download/xmage/${cubeID}?${sortUrlSegment}${filterUrlSegment}`}>
-                  XMage (.dck)
+                <DropdownItem toggle={false} onClick={() => setIsFilterUsed((is) => !is)}>
+                  <FormGroup check>
+                    <Input type="checkbox" checked={isFilterUsed} /> Use Filter
+                  </FormGroup>
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
