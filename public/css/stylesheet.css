@@ -1299,3 +1299,7 @@ thead th.corner[scope=col] {
 .qr-code-area {
 	background-color: #FFFFFF !important
 }
+
+div.advertisement-div > div {
+	height: 100% !important
+  }

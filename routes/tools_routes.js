@@ -348,7 +348,7 @@ router.get('/getfeeditems/:skip', ensureAuth, async (req, res) => {
       date: -1,
     })
     .skip(parseInt(req.params.skip, 10))
-    .limit(10);
+    .limit(5);
 
   return res.status(200).send({
     success: 'true',
