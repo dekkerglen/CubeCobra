@@ -1,7 +1,8 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import AdsContext from 'contexts/AdsContext';
+import { useResizeDetector } from 'react-resize-detector';
 
 const mediaTypes = {
   desktop: '(min-width: 1025px)',
@@ -21,7 +22,9 @@ const sizeTypes = {
 
 // const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
 
-const Advertisment = ({
+const COOLDOWN = 5 * 1000; /* ms */
+
+const ResponsiveAd = ({
   placementId,
   refreshLimit,
   refreshTime,
@@ -39,10 +42,24 @@ const Advertisment = ({
   railOffsetBottom,
   railCollisionWhitelist,
 }) => {
+  const [lastUpdated, setLastUpdated] = useState(null);
   const adsEnabled = useContext(AdsContext);
+  const { width, height, ref } = useResizeDetector();
 
   useEffect(() => {
     if (window.nitroAds) {
+      if (!height) {
+        // if we don't have a height yet, we don't want to do anything
+        return;
+      }
+
+      console.log(width, height);
+      if (lastUpdated !== null && new Date() - lastUpdated < COOLDOWN) {
+        console.log(`skipping update, the delta was ${new Date() - lastUpdated}`);
+        return;
+      }
+
+      setLastUpdated(new Date());
       if (format === 'sticky-stack') {
         window.nitroAds.createAd(placementId, {
           format,
@@ -109,12 +126,33 @@ const Advertisment = ({
         });
       }
     }
-  });
+  }, [
+    lastUpdated,
+    format,
+    placementId,
+    adsEnabled,
+    refreshLimit,
+    refreshTime,
+    media,
+    size,
+    enabled,
+    wording,
+    position,
+    stickyStackLimit,
+    stickyStackSpace,
+    stickyStackOffset,
+    rail,
+    railOffsetTop,
+    railOffsetBottom,
+    railCollisionWhitelist,
+    width,
+    height,
+  ]);
 
-  return <div className="advertisement-div" id={placementId} />;
+  return <div ref={ref} className="advertisement-div" id={placementId} />;
 };
 
-Advertisment.propTypes = {
+ResponsiveAd.propTypes = {
   placementId: PropTypes.string.isRequired,
   media: PropTypes.string.isRequired,
   size: PropTypes.string.isRequired,
@@ -133,7 +171,7 @@ Advertisment.propTypes = {
   railCollisionWhitelist: PropTypes.arrayOf(PropTypes.string),
 };
 
-Advertisment.defaultProps = {
+ResponsiveAd.defaultProps = {
   refreshLimit: 10,
   refreshTime: 90,
   position: 'fixed-bottom-right',
@@ -149,4 +187,4 @@ Advertisment.defaultProps = {
   railCollisionWhitelist: ['*'],
 };
 
-export default Advertisment;
+export default ResponsiveAd;

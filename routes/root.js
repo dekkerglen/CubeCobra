@@ -130,7 +130,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       .sort({
         date: -1,
       })
-      .limit(10);
+      .limit(20);
 
     const featuredq = Cube.find(
       {
