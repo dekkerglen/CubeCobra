@@ -19,7 +19,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
+import { LinkExternalIcon, QuestionIcon, ShareAndroidIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
@@ -41,12 +41,14 @@ import RenderToRoot from 'utils/RenderToRoot';
 import DeleteCubeModal from 'components/DeleteCubeModal';
 import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
 import CubeIdModal from 'components/CubeIdModal';
+import QRCodeModal from 'components/QRCodeModal';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
+const QRCodeModalLink = withModal('a', QRCodeModal);
 
 const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
   const user = useContext(UserContext);
@@ -150,7 +152,19 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
           <Col md="4" className="mb-3">
             <Card>
               <CardHeader>
-                <h3>{cubeState.name}</h3>
+                <Row>
+                  <Col>
+                    <h3>{cubeState.name}</h3>
+                  </Col>
+                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
+                    <QRCodeModalLink
+                      href="#"
+                      modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, title: `Link to ${cube.name}` }}
+                    >
+                      QR Code <ShareAndroidIcon size={16} />
+                    </QRCodeModalLink>
+                  </div>
+                </Row>
                 <Row>
                   <Col>
                     <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
