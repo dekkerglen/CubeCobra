@@ -110,11 +110,11 @@ router.get('/articles/:page', async (req, res) => {
   const count = await Article.countDocuments({ status: 'published' });
   const articles = await Article.find({ status: 'published' })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'ArticlesPage', { articles, count, page: req.params.page });
+  return render(req, res, 'ArticlesPage', { articles, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/podcasts', async (req, res) => {
@@ -125,13 +125,13 @@ router.get('/podcasts/:page', async (req, res) => {
   const count = await PodcastEpisode.countDocuments({ status: 'published' });
   const episodes = await PodcastEpisode.find()
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
   const podcasts = await Podcast.find({ status: 'published' }).sort({ date: -1 }).lean();
 
-  return render(req, res, 'PodcastsPage', { podcasts, count, episodes, page: req.params.page });
+  return render(req, res, 'PodcastsPage', { podcasts, count, episodes, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/videos', async (req, res) => {
@@ -142,11 +142,11 @@ router.get('/videos/:page', async (req, res) => {
   const count = await Video.countDocuments({ status: 'published' });
   const videos = await Video.find({ status: 'published' })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
-  return render(req, res, 'VideosPage', { videos, count, page: req.params.page });
+  return render(req, res, 'VideosPage', { videos, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/article/:id', async (req, res) => {
@@ -582,7 +582,7 @@ router.get('/api/articles/:user/:page', ensureContentCreator, async (req, res) =
   const numResults = await Article.countDocuments({ owner: req.user.id });
   const articles = await Article.find({ owner: req.user.id })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
@@ -597,7 +597,7 @@ router.get('/api/podcasts/:user/:page', ensureContentCreator, async (req, res) =
   const numResults = await Podcast.countDocuments({ owner: req.user.id });
   const podcasts = await Podcast.find({ owner: req.user.id })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 
@@ -612,7 +612,7 @@ router.get('/api/videos/:user/:page', ensureContentCreator, async (req, res) => 
   const numResults = await Video.countDocuments({ owner: req.user.id });
   const videos = await Video.find({ owner: req.user.id })
     .sort({ date: -1 })
-    .skip(req.params.page * PAGE_SIZE)
+    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
     .limit(PAGE_SIZE)
     .lean();
 

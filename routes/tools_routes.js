@@ -199,7 +199,9 @@ router.get('/card/:id', async (req, res) => {
       {
         card,
         data,
-        versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+        versions: carddb.oracleToId[card.oracle_id]
+          .filter((cid) => cid !== card._id)
+          .map((cardid) => carddb.cardFromId(cardid)),
         related,
       },
       {
