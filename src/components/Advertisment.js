@@ -2,6 +2,7 @@ import React, { useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import AdsContext from 'contexts/AdsContext';
+import { useResizeDetector } from 'react-resize-detector';
 
 const mediaTypes = {
   desktop: '(min-width: 1025px)',
@@ -40,6 +41,8 @@ const Advertisment = ({
   railCollisionWhitelist,
 }) => {
   const adsEnabled = useContext(AdsContext);
+  const { width, height, ref } = useResizeDetector();
+  console.log(width, height);
 
   useEffect(() => {
     if (window.nitroAds) {
@@ -111,7 +114,7 @@ const Advertisment = ({
     }
   });
 
-  return <div className="advertisement-div" id={placementId} />;
+  return <div ref={ref} className="advertisement-div" id={placementId} />;
 };
 
 Advertisment.propTypes = {
