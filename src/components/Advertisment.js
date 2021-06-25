@@ -19,7 +19,7 @@ const sizeTypes = {
   mobile: [['320', '50']],
 };
 
-// const formats = ['display', 'sticky-stack', 'rail'];
+// const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
 
 const Advertisment = ({
   placementId,
@@ -78,6 +78,20 @@ const Advertisment = ({
             position,
           },
         });
+      } else if (format === 'anchor') {
+        window.nitroAds.createAd(placementId, {
+          format,
+          demo: !adsEnabled,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
       } else {
         // format === display
         window.nitroAds.createAd(placementId, {
@@ -107,7 +121,7 @@ Advertisment.propTypes = {
   format: PropTypes.string,
   refreshLimit: PropTypes.number,
   refreshTime: PropTypes.number,
-  position: PropTypes.number,
+  position: PropTypes.string,
   wording: PropTypes.string,
   enabled: PropTypes.bool,
   stickyStackLimit: PropTypes.number,
@@ -116,7 +130,7 @@ Advertisment.propTypes = {
   rail: PropTypes.string,
   railOffsetTop: PropTypes.number,
   railOffsetBottom: PropTypes.number,
-  railCollisionWhitelist: PropTypes.arrayOf(),
+  railCollisionWhitelist: PropTypes.arrayOf(PropTypes.string),
 };
 
 Advertisment.defaultProps = {
@@ -132,7 +146,7 @@ Advertisment.defaultProps = {
   rail: 'left',
   railOffsetTop: 200,
   railOffsetBottom: 0,
-  railCollisionWhitelist: [],
+  railCollisionWhitelist: ['*'],
 };
 
 export default Advertisment;

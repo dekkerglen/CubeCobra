@@ -15,7 +15,7 @@ const ImageFallback = ({ src, fallbackSrc, innerRef, ...props }) => {
 ImageFallback.propTypes = {
   src: PropTypes.string.isRequired,
   fallbackSrc: PropTypes.string.isRequired,
-  innerRef: PropTypes.symbol,
+  innerRef: PropTypes.shape({}),
 };
 
 ImageFallback.defaultProps = {
