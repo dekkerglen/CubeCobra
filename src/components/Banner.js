@@ -4,7 +4,7 @@ import { Col, Card, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
 import Advertisment from 'components/Advertisment';
 
-const BANNER_RATE = 1; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE = 5; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options = [
   <>
