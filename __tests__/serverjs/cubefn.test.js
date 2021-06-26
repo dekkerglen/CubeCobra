@@ -2,7 +2,6 @@ const sinon = require('sinon');
 
 const carddb = require('../../serverjs/cards');
 const cubefn = require('../../serverjs/cubefn');
-const util = require('../../serverjs/util');
 
 const cubefixture = require('../../fixtures/examplecube');
 
