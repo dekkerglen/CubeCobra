@@ -244,13 +244,12 @@ router.get('/cardimage/:id', async (req, res) => {
     // if id is not a scryfall ID, error
     const card = carddb.cardFromId(id);
     if (card.error) {
-      req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return res.redirect('/content/default_card.png');
     }
 
     return res.redirect(card.image_normal);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return res.redirect('/content/default_card.png');
   }
 });
 

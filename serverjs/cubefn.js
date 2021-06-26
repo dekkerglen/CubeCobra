@@ -28,16 +28,17 @@ function buildIdQuery(id) {
 }
 
 async function generateShortId() {
-  const cubes = await Cube.find({}, ['shortID']);
-  const shortIds = cubes.map((cube) => cube.shortID);
-  const space = shortIds.length * 2;
+  const numCubes = await Cube.estimatedDocumentCount();
+  const space = numCubes * 100;
 
   let newId = '';
   let isGoodId = false;
   while (!isGoodId) {
     const rand = Math.floor(Math.random() * space);
     newId = util.toBase36(rand);
-    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId);
+    // eslint-disable-next-line no-await-in-loop
+    const taken = await Cube.exists({ shortID: newId });
+    isGoodId = !util.hasProfanity(newId) && !taken;
   }
 
   return newId;
