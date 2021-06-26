@@ -51,7 +51,6 @@ function intToLegality(val) {
 }
 
 function legalityToInt(legality) {
-  p;
   let res;
   FORMATS.forEach((format, index) => {
     if (legality === format) res = index;
