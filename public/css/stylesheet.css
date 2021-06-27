@@ -1303,3 +1303,7 @@ thead th.corner[scope=col] {
 div.advertisement-div > div {
 	height: 100% !important
   }
+
+.modal-dialog {
+	padding-bottom: 60px;
+}
