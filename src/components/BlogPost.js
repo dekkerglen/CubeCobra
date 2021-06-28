@@ -16,7 +16,6 @@ import Markdown from 'components/Markdown';
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
-  const [editMarkdown, setEditMarkdown] = useState('');
 
   const html = post.html === 'undefined' ? null : post.html;
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
@@ -81,13 +80,7 @@ const BlogPost = ({ post, noScroll }) => {
           <CommentsSection parentType="blog" parent={post._id} collapse={false} />
         </div>
       </Card>
-      <EditBlogModal
-        isOpen={editOpen}
-        toggle={() => setEditOpen((open) => !open)}
-        post={post}
-        markdown={editMarkdown}
-        setMarkdown={setEditMarkdown}
-      />
+      <EditBlogModal isOpen={editOpen} toggle={() => setEditOpen((open) => !open)} post={post} cubeID={post.cube} />
     </>
   );
 };

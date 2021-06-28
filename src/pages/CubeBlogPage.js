@@ -37,7 +37,7 @@ const CubeBlogPage = ({ cube, pages, activePage, posts, loginCallback }) => {
           <h5>No blog posts for this cube.</h5>
         )}
         {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/blog/${cube._id}/${i}`} />}
-        <EditBlogModal toggle={() => setNewEditOpen((open) => !open)} isOpen={isNewEditOpen} />
+        <EditBlogModal toggle={() => setNewEditOpen((open) => !open)} isOpen={isNewEditOpen} cubeID={cube._id} />
       </CubeLayout>
     </MainLayout>
   );

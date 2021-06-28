@@ -1,5 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
-import CubeContext from 'contexts/CubeContext';
+import React, { useCallback, useState } from 'react';
 import { findUserLinks } from 'markdown/parser';
 import { Button, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import CSRFForm from 'components/CSRFForm';
@@ -7,8 +6,7 @@ import TextEntry from 'components/TextEntry';
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-const EditBlogModal = ({ isOpen, toggle, post }) => {
-  const { cubeID } = useContext(CubeContext);
+const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
   const [mentions, setMentions] = useState('');
   const [markdown, setMarkdown] = useState(post ? post.markdown : '');
   const handleMentions = useCallback(() => {
@@ -46,6 +44,7 @@ EditBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   post: BlogPostPropType,
+  cubeID: PropTypes.string.isRequired,
 };
 
 EditBlogModal.defaultProps = {
