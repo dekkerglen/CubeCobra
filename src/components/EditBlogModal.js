@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { findUserLinks } from 'markdown/parser';
 import { Button, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import CSRFForm from 'components/CSRFForm';
@@ -9,9 +9,9 @@ import BlogPostPropType from 'proptypes/BlogPostPropType';
 const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
   const [mentions, setMentions] = useState('');
   const [markdown, setMarkdown] = useState(post ? post.markdown : '');
-  const handleMentions = useCallback(() => {
+  const handleMentions = () => {
     setMentions(findUserLinks(markdown).join(';'));
-  }, [markdown]);
+  };
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">

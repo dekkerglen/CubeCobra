@@ -289,7 +289,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
             </Card>
           </Col>
         </Row>
-        <div className="mb-3">{post && <BlogPost key={post._id} post={post} loggedIn={user !== null} />}</div>
+        <div className="mb-3">{post && <BlogPost key={post._id} post={post} />}</div>
       </CubeLayout>
     </MainLayout>
   );
