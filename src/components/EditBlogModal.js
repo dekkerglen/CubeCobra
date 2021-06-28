@@ -51,7 +51,7 @@ EditBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   post: BlogPostPropType,
-  cubeID: PropTypes.string.isRequired,
+  cubeID: PropTypes.string.isRequired, // usually equal to post._id, needs to be a separate prop for new posts
 };
 
 EditBlogModal.defaultProps = {
