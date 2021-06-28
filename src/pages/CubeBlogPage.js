@@ -22,7 +22,7 @@ const CubeBlogPage = ({ cube, pages, activePage, posts, loginCallback }) => {
           <Collapse navbar>
             <Nav navbar>
               <NavItem>
-                <NavLink tag="button" onClick={() => setNewEditOpen(true)}>
+                <NavLink onClick={() => setNewEditOpen(true)} href="#">
                   Create new blog post
                 </NavLink>
               </NavItem>

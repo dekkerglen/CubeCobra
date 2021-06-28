@@ -21,8 +21,15 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
         </ModalHeader>
         <ModalBody>
           <Label>Title:</Label>
-          <Input maxLength="200" name="title" type="text" defaultValue={post ? post.title : ''} />
-          <Label>Body:</Label>
+          <Input
+            required
+            minLength={5}
+            maxLength={200}
+            name="title"
+            type="text"
+            defaultValue={post ? post.title : ''}
+          />
+          <Label className="mt-3">Body:</Label>
           {post && <Input type="hidden" name="id" value={post._id} />}
           <TextEntry name="markdown" value={markdown} onChange={(e) => setMarkdown(e.target.value)} maxLength={10000} />
           <Input name="mentions" type="hidden" value={mentions} />
