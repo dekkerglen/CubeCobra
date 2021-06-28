@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
@@ -9,16 +9,16 @@ import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
 
 import UserContext from 'contexts/UserContext';
 import BlogContextMenu from 'components/BlogContextMenu';
+import EditBlogModal from 'components/EditBlogModal';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 
-const BlogPost = ({ post, onEdit, noScroll }) => {
+const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
+  const [editOpen, setEditOpen] = useState(false);
 
   const html = post.html === 'undefined' ? null : post.html;
-
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-
   const canEdit = user && user.id === post.owner;
 
   return (
@@ -27,7 +27,17 @@ const BlogPost = ({ post, onEdit, noScroll }) => {
         <h5 className="card-title">
           <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
           <div className="float-sm-right">
-            {canEdit && <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={onEdit} />}
+            {canEdit && (
+              <>
+                <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={() => setEditOpen(true)} />
+                <EditBlogModal
+                  isOpen={editOpen}
+                  toggle={() => setEditOpen((open) => !open)}
+                  post={post}
+                  cubeID={post.cube}
+                />
+              </>
+            )}
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
@@ -82,7 +92,6 @@ const BlogPost = ({ post, onEdit, noScroll }) => {
 
 BlogPost.propTypes = {
   post: PropTypes.arrayOf(BlogPostPropType).isRequired,
-  onEdit: PropTypes.func.isRequired,
   noScroll: PropTypes.bool,
 };
 
