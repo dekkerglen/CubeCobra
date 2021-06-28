@@ -1,0 +1,55 @@
+import React, { useCallback, useContext, useState } from 'react';
+import CubeContext from 'contexts/CubeContext';
+import { findUserLinks } from 'markdown/parser';
+import { Button, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import CSRFForm from 'components/CSRFForm';
+import TextEntry from 'components/TextEntry';
+import PropTypes from 'prop-types';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
+
+const EditBlogModal = ({ isOpen, toggle, post }) => {
+  const { cubeID } = useContext(CubeContext);
+  const [mentions, setMentions] = useState('');
+  const [markdown, setMarkdown] = useState(post ? post.markdown : '');
+  const handleMentions = useCallback(() => {
+    setMentions(findUserLinks(markdown).join(';'));
+  }, [markdown]);
+
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
+      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} onSubmit={handleMentions}>
+        <ModalHeader toggle={toggle} id="blogEditTitle">
+          Edit Blog Post
+        </ModalHeader>
+        <ModalBody>
+          <Label>Title:</Label>
+          <Input maxLength="200" name="title" type="text" defaultValue={post ? post.title : ''} />
+          <Label>Body:</Label>
+          {post && <Input type="hidden" name="id" value={post._id} />}
+          <TextEntry name="markdown" value={markdown} onChange={(e) => setMarkdown(e.target.value)} maxLength={10000} />
+          <Input name="mentions" type="hidden" value={mentions} />
+        </ModalBody>
+        <ModalFooter>
+          <Button color="success" type="submit">
+            Save
+          </Button>
+          <Button color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+EditBlogModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  post: BlogPostPropType,
+};
+
+EditBlogModal.defaultProps = {
+  post: null,
+};
+
+export default EditBlogModal;
