@@ -5,20 +5,20 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import QRCode from 'react-qr-code';
 
-const saveAsPng = (cubeName) => {
+const saveQRImage = (cubeName) => {
   const svg = document.getElementById('qr-code');
-  const a = document.createElement('a');
-
   const data = new XMLSerializer().serializeToString(svg);
   const svgBlob = new Blob([data], { type: 'image/svg+xml' });
+
+  const a = document.createElement('a');
   a.href = window.URL.createObjectURL(svgBlob);
-  a.download = `${cubeName}.svg`;
+  a.download = `QR-${cubeName.replace(/\s/g, '_')}.svg`;
   a.click();
 };
 
-const QRCodeModal = ({ isOpen, toggle, link, title }) => (
+const QRCodeModal = ({ isOpen, toggle, link, cubeName }) => (
   <Modal size="md" isOpen={isOpen} toggle={toggle}>
-    <ModalHeader toggle={toggle}>{title}</ModalHeader>
+    <ModalHeader toggle={toggle}>Link to {cubeName}</ModalHeader>
     <ModalBody>
       <div className="centered">
         <div className="p-3 qr-code-area">
@@ -27,7 +27,7 @@ const QRCodeModal = ({ isOpen, toggle, link, title }) => (
       </div>
     </ModalBody>
     <ModalFooter>
-      <Button color="success" onClick={() => saveAsPng('qr-code')}>
+      <Button color="success" onClick={() => saveQRImage(cubeName)}>
         Download
       </Button>
       <Button color="secondary" onClick={toggle}>
@@ -41,7 +41,7 @@ QRCodeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   link: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
+  cubeName: PropTypes.string.isRequired,
 };
 
 export default QRCodeModal;

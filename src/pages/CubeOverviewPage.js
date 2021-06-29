@@ -208,7 +208,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   • <a href={`/cube/rss/${cubeState._id}`}>RSS</a> •{' '}
                   <QRCodeModalLink
                     href="#"
-                    modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, title: `Link to ${cube.name}` }}
+                    modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, cubeName: cube.name }}
                   >
                     QR Code
                   </QRCodeModalLink>
