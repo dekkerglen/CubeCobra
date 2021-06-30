@@ -19,7 +19,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon, QuestionIcon, ShareAndroidIcon } from '@primer/octicons-react';
+import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
@@ -156,14 +156,6 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   <Col>
                     <h3>{cubeState.name}</h3>
                   </Col>
-                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
-                    <QRCodeModalLink
-                      href="#"
-                      modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, title: `Link to ${cube.name}` }}
-                    >
-                      QR Code <ShareAndroidIcon size={16} />
-                    </QRCodeModalLink>
-                  </div>
                 </Row>
                 <Row>
                   <Col>
@@ -213,7 +205,13 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     Designed by
                     <a href={`/user/view/${cubeState.owner}`}> {cubeState.owner_name}</a>
                   </i>{' '}
-                  • <a href={`/cube/rss/${cubeState._id}`}>RSS</a>
+                  • <a href={`/cube/rss/${cubeState._id}`}>RSS</a> •{' '}
+                  <QRCodeModalLink
+                    href="#"
+                    modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, cubeName: cube.name }}
+                  >
+                    QR Code
+                  </QRCodeModalLink>
                 </h6>
                 <p>
                   <a href={`https://luckypaper.co/resources/cube-map/?cube=${cubeState._id}`}>
