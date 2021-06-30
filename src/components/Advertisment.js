@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import AdsContext from 'contexts/AdsContext';
@@ -40,9 +40,11 @@ const Advertisment = ({
   railCollisionWhitelist,
 }) => {
   const adsEnabled = useContext(AdsContext);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (window.nitroAds) {
+    if (!loaded && window.nitroAds) {
+      setLoaded(true);
       if (format === 'sticky-stack') {
         window.nitroAds.createAd(placementId, {
           format,
@@ -109,7 +111,26 @@ const Advertisment = ({
         });
       }
     }
-  });
+  }, [
+    loaded,
+    format,
+    placementId,
+    adsEnabled,
+    refreshLimit,
+    refreshTime,
+    media,
+    size,
+    enabled,
+    wording,
+    position,
+    stickyStackLimit,
+    stickyStackSpace,
+    stickyStackOffset,
+    rail,
+    railOffsetTop,
+    railOffsetBottom,
+    railCollisionWhitelist,
+  ]);
 
   return <div className="advertisement-div" id={placementId} />;
 };
