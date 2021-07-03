@@ -1,7 +1,8 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import AdsContext from 'contexts/AdsContext';
+import useMount from 'hooks/UseMount';
 
 const mediaTypes = {
   desktop: '(min-width: 1025px)',
@@ -41,7 +42,7 @@ const Advertisment = ({
 }) => {
   const adsEnabled = useContext(AdsContext);
 
-  useEffect(() => {
+  useMount(() => {
     if (window.nitroAds) {
       if (format === 'sticky-stack') {
         window.nitroAds.createAd(placementId, {
