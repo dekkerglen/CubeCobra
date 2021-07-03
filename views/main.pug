@@ -50,6 +50,9 @@ html(lang='en')
 				#autocardTags.row.no-gutters.p-1
 		include dynamic_flash
 		#react-root !{reactHTML}
+		noscript
+			div.centered
+				p.mt-3.mx-2 Cube Cobra requires javascript to work. To use the site, please enable javascript in your browser.
 		
 		if node_env === 'production'
 			script(src='https://code.jquery.com/jquery-3.4.1.slim.min.js', integrity='sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n', crossorigin='anonymous')
