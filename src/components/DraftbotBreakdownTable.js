@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { SortableTable, compareStrings } from 'components/SortableTable';
+import { SortableTable } from 'components/SortableTable';
 import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
-import { fromEntries } from 'utils/Util';
 import { addCardContext, scores } from 'drafting/heuristics';
 import CardPropType from 'proptypes/CardPropType';
 
 const DraftbotBreakdownTable = ({ drafterState, cards }) => {
+  console.log(drafterState);
+
   const botEvaluations = useMemo(() => {
     addCardContext(cards);
     return drafterState.cardsInPack.map((index) => {
@@ -15,9 +16,9 @@ const DraftbotBreakdownTable = ({ drafterState, cards }) => {
       return {
         name: card.details.name,
         ...scores({
-          card: card.details._id,
-          picked: [],
-          seen: [],
+          card: card.cardID,
+          picked: drafterState.picked.map((idx) => drafterState.cards[idx].cardID),
+          seen: drafterState.seen.map((idx) => drafterState.cards[idx].cardID),
         }),
       };
     });
@@ -27,11 +28,8 @@ const DraftbotBreakdownTable = ({ drafterState, cards }) => {
     key,
     title: key,
     heading: true,
-    sortable: false,
+    sortable: true,
   }));
-
-  console.log(columnProps);
-  console.log(botEvaluations);
 
   return (
     <>
