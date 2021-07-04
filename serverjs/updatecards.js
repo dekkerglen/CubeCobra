@@ -683,6 +683,7 @@ function convertCard(card, isExtra) {
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
   newcard.layout = card.layout;
+  newcard.produced_mana = card.produced_mana || [];
 
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;

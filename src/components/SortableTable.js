@@ -22,7 +22,7 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
   const exportData = data.map((row) =>
     fromEntries(
       Object.entries(row).map(([key, value]) => {
-        if (value.exportValue) {
+        if (value && value.exportValue) {
           return [key, value.exportValue];
         }
         return [key, value];

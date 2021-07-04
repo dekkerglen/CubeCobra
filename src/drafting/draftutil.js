@@ -87,7 +87,7 @@ export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber
             const indexToRemove = cardsInPackForSeat.indexOf(takenCardIndex);
 
             if (indexToRemove < 0) {
-              console.error(
+              throw new Error(
                 `Seat ${seatIndex} should have picked/trashed ${takenCardIndex} at pickNumber ${
                   pickedNum + trashedNum
                 }, but the pack contains only [${packsWithCards[offsetSeatIndex].join(', ')}].`,

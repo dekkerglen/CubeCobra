@@ -20,7 +20,7 @@ import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
 import DndProvider from 'components/DndProvider';
-import { DraftbotBreakdownTable } from 'components/DraftbotBreakdown';
+// import { DraftbotBreakdownTable } from 'components/DraftbotBreakdown';
 import DraggableCard from 'components/DraggableCard';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -29,6 +29,7 @@ import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
+import DraftbotBreakdownTable from 'components/DraftbotBreakdownTable';
 import { DrafterStatePropType, DraftPropType } from 'proptypes/DraftbotPropTypes';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
@@ -241,7 +242,7 @@ const CubeDraftPlayerUI = ({ drafterState, drafted, takeCard, moveCard }) => {
                     <h4 className="mb-0">Draftbot Breakdown</h4>
                   </CardHeader>
                   <CardBody>
-                    <DraftbotBreakdownTable drafterState={drafterState} />
+                    <DraftbotBreakdownTable drafterState={drafterState} cards={cards} />
                   </CardBody>
                 </Card>
               </ErrorBoundary>
