@@ -29,7 +29,10 @@
     "run-daily-jobs": "sh jobs/definition/daily.sh",
     "run-weekly-jobs": "sh jobs/definition/weekly.sh",
     "run-monthly-jobs": "sh jobs/definition/monthly.sh",
-    "run-constantly-jobs": "sh jobs/definition/constantly.sh"
+    "run-constantly-jobs": "sh jobs/definition/constantly.sh",
+    "train": "node --max-old-space-size=32768 serverjs/draftbots/train.js",
+    "predict": "node serverjs/draftbots/predict.js",
+    "pre-process": "node --max-old-space-size=32768 serverjs/draftbots/preprocess.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -43,6 +46,7 @@
     "@babel/preset-react": "^7.9.4",
     "@primer/octicons-react": "^11.0.0",
     "@react-mock/fetch": "^0.3.0",
+    "@tensorflow/tfjs-node": "^3.7.0",
     "@testing-library/jest-dom": "^5.5.0",
     "@testing-library/react": "^10.0.4",
     "JSONStream": "^1.3.5",

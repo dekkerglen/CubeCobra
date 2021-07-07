@@ -69,19 +69,17 @@ const heuristics = {
     // how for along the draft is
     return picked.length / 45;
   },
-  cardElo: ({ card, seen, picked }) => {
+  cardElo: ({ card, seen }) => {
     // overall strength of card, normalized for what we have seen
     let lowest = cardContext[idToOracle[card]].elo;
     let highest = cardContext[idToOracle[card]].elo;
 
-    for (const list of [seen, picked]) {
-      for (const item of list) {
-        if (cardContext[idToOracle[item]].elo > highest) {
-          highest = cardContext[idToOracle[item]].elo;
-        }
-        if (cardContext[idToOracle[item]].elo < lowest) {
-          lowest = cardContext[idToOracle[item]].elo;
-        }
+    for (const item of seen) {
+      if (cardContext[idToOracle[item]].elo > highest) {
+        highest = cardContext[idToOracle[item]].elo;
+      }
+      if (cardContext[idToOracle[item]].elo < lowest) {
+        lowest = cardContext[idToOracle[item]].elo;
       }
     }
 
@@ -257,12 +255,47 @@ const heuristics = {
       picked.filter((id) => overlap(cost, cardContext[idToOracle[id]].produced_mana).length > 0).length / picked.length
     );
   },
-  colorOpenness: () => {
+  colorOpenness: ({ card, seen }) => {
     // how open this color is
     // for each card seen, take the elo, and add it to that color
     // then the openness for a color, is the sum of elo in that color divided by the highest openness
     // most open color will always be 1
-    return 0;
+
+    const cardColor = cardContext[idToOracle[card]].color_identity.map((c) => c.toUpperCase());
+
+    if (cardColor.length === 0) {
+      return 1;
+    }
+
+    const colors = {
+      W: 0,
+      U: 0,
+      B: 0,
+      R: 0,
+      G: 0,
+    };
+
+    for (const item of seen) {
+      const color = cardContext[idToOracle[item]].color_identity.map((c) => c.toUpperCase());
+      for (const pip of color) {
+        if (colors[pip] || colors[pip] === 0) {
+          colors[pip] += 1;
+        }
+      }
+    }
+
+    let highest = colors.W;
+    const used = [];
+    for (const [pip, amount] of Object.entries(colors)) {
+      if (amount > highest) {
+        highest = amount;
+      }
+      if (cardColor.includes(pip)) {
+        used.push(amount);
+      }
+    }
+
+    return average(used) / highest;
   },
 };
 
@@ -285,3 +318,9 @@ export const addCardContext = (cards) => {
 export const scores = (params) => {
   return mapEntries(heuristics, ([name, func]) => [name, func(params)]);
 };
+
+export const scoresArray = (params) => {
+  return Object.entries(heuristics).map(([, func]) => func(params));
+};
+
+export const numberOfHeuristics = Object.entries(heuristics).length;
