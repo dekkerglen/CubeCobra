@@ -12,7 +12,7 @@ const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCard
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
-const { ensureAuth } = require('./middleware');
+const { ensureAuth, csrfProtection } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
@@ -21,6 +21,8 @@ const Blog = require('../models/blog');
 const { buildIdQuery } = require('../serverjs/cubefn.js');
 
 const router = express.Router();
+
+router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
