@@ -67,7 +67,7 @@ export const nameStringOperation = (op, value) => {
   const strOp = stringOperation(op, value);
   return (fieldValue, card) => {
     let expandedValue = fieldValue
-      .replace(new RegExp(card.details.name, 'g'), NAME_PLACEHOLDER)
+      .replace(new RegExp(card.details.name.replace('+', '\\+'), 'g'), NAME_PLACEHOLDER)
       .replace(NAME_ALIAS, NAME_PLACEHOLDER);
     const shorthand = getShorthand(card.details);
     if (shorthand) {
