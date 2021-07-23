@@ -551,3 +551,13 @@ MigrationBackup/
 
 # End of https://www.gitignore.io/api/node,komodoedit,webstorm+all,visualstudio,visualstudiocode
 push-docker.ps1
+fixtures/cardimages.json
+fixtures/carddict.json
+fixtures/cardimages.json
+fixtures/cards_small.json
+fixtures/cards_small.json
+fixtures/cards_small_converted.json
+fixtures/cardimages.json
+fixtures/carddict.json
+package.json
+package-lock.json

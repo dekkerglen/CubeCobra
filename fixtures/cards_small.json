@@ -43,7 +43,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -70,6 +70,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -94,17 +95,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4131,
+    "edhrec_rank": 4138,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.08",
-      "usd_foil": "0.23",
-      "eur": "0.04",
-      "eur_foil": "0.10",
+      "usd": "0.07",
+      "usd_foil": "0.11",
+      "eur": "0.07",
+      "eur_foil": "0.21",
       "tix": "0.03"
     },
     "related_uris": {
@@ -175,7 +176,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -183,7 +184,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -202,6 +203,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -226,17 +228,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4308,
+    "edhrec_rank": 4240,
     "preview": {
       "source": "William Jensen",
       "source_uri": "https://twitter.com/HueyJensen/status/1174420655242010624",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.22",
-      "usd_foil": "0.34",
-      "eur": "0.19",
-      "eur_foil": "0.25",
+      "usd": "0.11",
+      "usd_foil": "0.28",
+      "eur": "0.11",
+      "eur_foil": "0.19",
       "tix": "0.03"
     },
     "related_uris": {
@@ -289,7 +291,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -297,7 +299,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -316,6 +318,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -339,12 +342,12 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 770,
+    "edhrec_rank": 656,
     "prices": {
-      "usd": "0.54",
-      "usd_foil": "0.85",
-      "eur": "0.21",
-      "eur_foil": "0.15",
+      "usd": "0.74",
+      "usd_foil": "0.79",
+      "eur": "0.13",
+      "eur_foil": "0.34",
       "tix": "0.03"
     },
     "related_uris": {
@@ -397,7 +400,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -424,6 +427,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -448,17 +452,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9742,
+    "edhrec_rank": 9550,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.09",
-      "usd_foil": "0.14",
-      "eur": "0.02",
-      "eur_foil": "0.10",
+      "usd": "0.05",
+      "usd_foil": "0.16",
+      "eur": "0.14",
+      "eur_foil": "0.15",
       "tix": "0.03"
     },
     "related_uris": {
@@ -509,7 +513,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -517,7 +521,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -536,6 +540,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -560,17 +565,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9848,
+    "edhrec_rank": 9828,
     "preview": {
       "source": "Mark Rosewater",
       "source_uri": "https://mobile.twitter.com/maro254/status/1172198040263741441",
       "previewed_at": "2019-09-12"
     },
     "prices": {
-      "usd": "0.16",
-      "usd_foil": "0.27",
-      "eur": "0.10",
-      "eur_foil": "0.39",
+      "usd": "0.09",
+      "usd_foil": "0.25",
+      "eur": "0.13",
+      "eur_foil": "0.30",
       "tix": "0.03"
     },
     "related_uris": {
@@ -641,7 +646,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -668,6 +673,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -692,17 +698,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3058,
+    "edhrec_rank": 2944,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169279011639443457",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.40",
-      "usd_foil": "0.36",
-      "eur": "0.18",
-      "eur_foil": "0.10",
+      "usd": "0.30",
+      "usd_foil": "0.42",
+      "eur": "0.14",
+      "eur_foil": "0.30",
       "tix": "0.02"
     },
     "related_uris": {
@@ -749,7 +755,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -776,6 +782,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -800,18 +807,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 74,
+    "edhrec_rank": 60,
     "preview": {
       "source": "Face to Face Games",
       "source_uri": "http://magic.facetofacegames.com/exclusive-throne-of-eldraine-spoiler-fabled-passage/",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "9.27",
-      "usd_foil": "11.88",
-      "eur": "6.23",
-      "eur_foil": "6.00",
-      "tix": "1.90"
+      "usd": "7.04",
+      "usd_foil": "10.38",
+      "eur": "4.88",
+      "eur_foil": "7.00",
+      "tix": "1.51"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473206",
@@ -864,7 +871,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -891,6 +898,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -915,18 +923,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 375,
+    "edhrec_rank": 327,
     "preview": {
       "source": "Amanda Yeo",
       "source_uri": "https://twitter.com/amandamyeo/status/1173867462036611072",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "1.08",
+      "usd": "1.22",
       "usd_foil": "2.18",
-      "eur": "0.58",
-      "eur_foil": "2.00",
-      "tix": "0.52"
+      "eur": "0.86",
+      "eur_foil": "1.90",
+      "tix": "0.56"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473204",
@@ -977,7 +985,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1004,6 +1012,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1028,18 +1037,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 383,
+    "edhrec_rank": 314,
     "preview": {
       "source": "Stopgame",
       "source_uri": "https://youtu.be/ymiqozyqUuE",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "3.50",
-      "usd_foil": "4.91",
-      "eur": "2.43",
-      "eur_foil": "2.10",
-      "tix": "2.09"
+      "usd": "4.15",
+      "usd_foil": "6.69",
+      "eur": "2.81",
+      "eur_foil": "4.45",
+      "tix": "3.00"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473203",
@@ -1090,7 +1099,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1117,6 +1126,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1141,18 +1151,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 514,
+    "edhrec_rank": 440,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/colors-costs-tempo-building-better-castle-2019-09-17",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "7.13",
-      "usd_foil": "9.11",
-      "eur": "3.20",
-      "eur_foil": "2.72",
-      "tix": "1.41"
+      "usd": "7.38",
+      "usd_foil": "7.83",
+      "eur": "3.21",
+      "eur_foil": "6.99",
+      "tix": "1.59"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473202",
@@ -1203,7 +1213,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1230,6 +1240,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1254,18 +1265,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 878,
+    "edhrec_rank": 795,
     "preview": {
       "source": "Hareruya",
       "source_uri": "https://article.hareruyamtg.com/article/31458/?lang=en",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "0.26",
-      "usd_foil": "0.97",
-      "eur": "0.30",
-      "eur_foil": "0.99",
-      "tix": "0.06"
+      "usd": "0.25",
+      "usd_foil": "0.75",
+      "eur": "0.26",
+      "eur_foil": "1.50",
+      "tix": "0.17"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473201",
@@ -1334,7 +1345,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1361,6 +1372,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1385,18 +1397,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 745,
+    "edhrec_rank": 692,
     "preview": {
       "source": "ESPN Brazil",
       "source_uri": "https://es.pn/2LDfNEd",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "2.46",
-      "usd_foil": "2.44",
-      "eur": "2.34",
-      "eur_foil": "5.00",
-      "tix": "0.36"
+      "usd": "1.94",
+      "usd_foil": "2.53",
+      "eur": "2.11",
+      "eur_foil": "3.95",
+      "tix": "0.31"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473200",
@@ -1448,7 +1460,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1475,6 +1487,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1499,18 +1512,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1435,
+    "edhrec_rank": 1268,
     "preview": {
       "source": "Anoa",
       "source_uri": "http://mtg.anoad.com/?p=7533",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "2.15",
-      "usd_foil": "4.67",
-      "eur": "2.76",
-      "eur_foil": "4.50",
-      "tix": "1.06"
+      "usd": "1.75",
+      "usd_foil": "3.82",
+      "eur": "2.52",
+      "eur_foil": "3.90",
+      "tix": "1.10"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473197",
@@ -1556,7 +1569,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1583,6 +1596,7 @@
     "promo": false,
     "reprint": true,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1606,7 +1620,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5033,
+    "edhrec_rank": 5397,
     "preview": {
       "source": "Geektenango",
       "source_uri": "https://www.facebook.com/geektenango/videos/2277811855673952",
@@ -1614,10 +1628,10 @@
     },
     "prices": {
       "usd": "0.21",
-      "usd_foil": "0.32",
-      "eur": "0.36",
-      "eur_foil": "0.75",
-      "tix": "0.02"
+      "usd_foil": "0.26",
+      "eur": "0.24",
+      "eur_foil": "0.34",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473195",
@@ -1673,7 +1687,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1700,6 +1714,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1724,17 +1739,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2641,
+    "edhrec_rank": 2466,
     "preview": {
       "source": "Bigweb",
       "source_uri": "https://mtg.bigweb.co.jp/article/preview/ELD",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.48",
-      "usd_foil": "0.66",
-      "eur": "0.23",
-      "eur_foil": "0.35",
+      "usd": "0.39",
+      "usd_foil": "0.54",
+      "eur": "0.31",
+      "eur_foil": "0.60",
       "tix": "0.02"
     },
     "related_uris": {
@@ -1821,7 +1836,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1848,6 +1863,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1871,17 +1887,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3177,
+    "edhrec_rank": 2936,
     "preview": {
       "source": "Gaby Spartz",
       "source_uri": "https://www.youtube.com/watch?v=OCPU11hC2Dc",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "1.81",
-      "usd_foil": "2.07",
-      "eur": "2.35",
-      "eur_foil": "1.15",
+      "usd": "1.68",
+      "usd_foil": "2.21",
+      "eur": "1.29",
+      "eur_foil": "2.49",
       "tix": "0.02"
     },
     "related_uris": {
@@ -1938,7 +1954,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -1965,6 +1981,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -1988,17 +2005,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7075,
+    "edhrec_rank": 7056,
     "preview": {
       "source": "Tasca Do Magique",
       "source_uri": "https://www.youtube.com/watch?v=rGagRu_HW2w",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.23",
-      "usd_foil": "0.24",
-      "eur": "0.20",
-      "eur_foil": "0.19",
+      "usd": "0.17",
+      "usd_foil": "0.23",
+      "eur": "0.13",
+      "eur_foil": "0.30",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2062,7 +2079,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2089,6 +2106,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2113,17 +2131,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 433,
+    "edhrec_rank": 399,
     "preview": {
       "source": "cafe.daum.net",
       "source_uri": "http://cafe.daum.net/magin/9Uu6/4718",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "2.56",
-      "usd_foil": "3.17",
-      "eur": "0.77",
-      "eur_foil": "0.80",
+      "usd": "2.01",
+      "usd_foil": "2.81",
+      "eur": "1.08",
+      "eur_foil": "3.99",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2176,7 +2194,7 @@
     "keywords": [],
     "legalities": {
       "standard": "banned",
-      "future": "banned",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2184,7 +2202,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2203,6 +2221,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2227,17 +2246,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2475,
+    "edhrec_rank": 2259,
     "preview": {
       "source": "Brainstorm Brewery",
       "source_uri": "https://www.youtube.com/watch?v=S44bJNc42GM",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "0.45",
-      "usd_foil": "0.67",
-      "eur": "0.29",
-      "eur_foil": "0.75",
+      "usd": "0.50",
+      "usd_foil": "0.52",
+      "eur": "0.32",
+      "eur_foil": "0.60",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2308,7 +2327,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2335,6 +2354,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2359,17 +2379,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5284,
+    "edhrec_rank": 5176,
     "preview": {
       "source": "Destructoid",
       "source_uri": "https://www.destructoid.com/check-out-magic-the-gathering-s-doom-foretold-our-exclusive-throne-of-eldraine-card-reveal-565657.phtml",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "0.39",
-      "usd_foil": "0.46",
-      "eur": "0.25",
-      "eur_foil": "0.30",
+      "usd": "0.28",
+      "usd_foil": "0.47",
+      "eur": "0.05",
+      "eur_foil": "0.99",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2422,7 +2442,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2449,6 +2469,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2472,7 +2493,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1764,
+    "edhrec_rank": 1693,
     "preview": {
       "source": "Commanderin",
       "source_uri": "https://www.youtube.com/watch?v=oQaCw2LbsCg",
@@ -2480,10 +2501,10 @@
     },
     "prices": {
       "usd": "0.43",
-      "usd_foil": "0.59",
-      "eur": "0.36",
+      "usd_foil": "0.51",
+      "eur": "0.31",
       "eur_foil": "0.75",
-      "tix": "0.02"
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473148",
@@ -2535,7 +2556,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2562,6 +2583,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2588,17 +2610,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4056,
+    "edhrec_rank": 3907,
     "preview": {
-      "source": "IGN España",
+      "source": "IGN",
       "source_uri": "https://es.ign.com/magic-the-gathering/155533/news/magic-una-carta-una-carta-del-nuevo-set-el-trono-de-eldraine-en-exclusiva",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "0.22",
-      "usd_foil": "0.72",
-      "eur": "0.30",
-      "eur_foil": "0.35",
+      "usd": "0.21",
+      "usd_foil": "0.75",
+      "eur": "0.33",
+      "eur_foil": "0.75",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2654,7 +2676,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2681,6 +2703,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2704,17 +2727,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4516,
+    "edhrec_rank": 4546,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/wildborn-preserver-2019-09-10",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.17",
-      "usd_foil": "0.42",
-      "eur": "0.09",
-      "eur_foil": "0.24",
+      "usd": "0.20",
+      "usd_foil": "0.35",
+      "eur": "0.22",
+      "eur_foil": "1.03",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2769,7 +2792,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2796,6 +2819,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2819,17 +2843,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8748,
+    "edhrec_rank": 7092,
     "preview": {
       "source": "NOT A WOLF",
       "source_uri": "https://twitter.com/SICKOFWOLVES/status/1171097721458946049",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "0.24",
-      "usd_foil": "0.33",
-      "eur": "0.34",
-      "eur_foil": "0.18",
+      "usd": "0.22",
+      "usd_foil": "0.32",
+      "eur": "0.29",
+      "eur_foil": "1.99",
       "tix": "0.02"
     },
     "related_uris": {
@@ -2880,7 +2904,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -2888,7 +2912,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -2907,6 +2931,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -2931,18 +2956,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 233,
+    "edhrec_rank": 176,
     "preview": {
       "source": "The Vorthos Cast",
       "source_uri": "https://twitter.com/TheVorthosCast/status/1174687113389989888",
       "previewed_at": "2019-09-19"
     },
     "prices": {
-      "usd": "2.86",
-      "usd_foil": "3.24",
-      "eur": "0.67",
-      "eur_foil": "0.60",
-      "tix": "0.02"
+      "usd": "1.70",
+      "usd_foil": "1.95",
+      "eur": "0.70",
+      "eur_foil": "1.50",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473134",
@@ -2998,7 +3023,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3025,6 +3050,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3051,18 +3077,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2522,
+    "edhrec_rank": 2365,
     "preview": {
       "source": "Sean Plott (Day9TV)",
       "source_uri": "https://twitter.com/day9tv/status/1171090892201086976?s=21",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "12.19",
-      "usd_foil": "14.70",
-      "eur": "12.35",
-      "eur_foil": "15.00",
-      "tix": "2.21"
+      "usd": "9.81",
+      "usd_foil": "13.02",
+      "eur": "10.83",
+      "eur_foil": "15.50",
+      "tix": "1.83"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473133",
@@ -3112,7 +3138,7 @@
     "keywords": [],
     "legalities": {
       "standard": "banned",
-      "future": "banned",
+      "future": "not_legal",
       "historic": "banned",
       "gladiator": "legal",
       "pioneer": "banned",
@@ -3139,6 +3165,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3162,18 +3189,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3505,
+    "edhrec_rank": 3332,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "1.37",
-      "usd_foil": "1.98",
-      "eur": "1.62",
-      "eur_foil": "3.99",
-      "tix": "0.68"
+      "usd": "1.29",
+      "usd_foil": "2.09",
+      "eur": "1.52",
+      "eur_foil": "3.35",
+      "tix": "0.39"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473131",
@@ -3226,7 +3253,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3253,6 +3280,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3279,18 +3307,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 302,
+    "edhrec_rank": 264,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/building-great-henge-2019-09-18",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "47.07",
-      "usd_foil": "56.44",
-      "eur": "25.99",
-      "eur_foil": "40.00",
-      "tix": "2.36"
+      "usd": "36.95",
+      "usd_foil": "52.69",
+      "eur": "26.27",
+      "eur_foil": "38.00",
+      "tix": "3.06"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473123",
@@ -3369,7 +3397,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3396,6 +3424,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3419,18 +3448,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2778,
+    "edhrec_rank": 2207,
     "preview": {
       "source": "Kotaku",
       "source_uri": "https://www.kotaku.com.au/2019/09/magic-the-gathering-throne-of-eldraine-exclusive-reveal-gilded-goose-golden-egg/",
       "previewed_at": "2019-09-03"
     },
     "prices": {
-      "usd": "1.85",
-      "usd_foil": "2.62",
-      "eur": "1.91",
-      "eur_foil": "3.99",
-      "tix": "0.17"
+      "usd": "4.98",
+      "usd_foil": "5.29",
+      "eur": "2.24",
+      "eur_foil": "2.99",
+      "tix": "0.46"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473122",
@@ -3503,7 +3532,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3530,6 +3559,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3553,18 +3583,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6947,
+    "edhrec_rank": 5597,
     "preview": {
       "source": "Kanister",
       "source_uri": "https://www.twitch.tv/videos/479450583",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.26",
-      "usd_foil": "0.34",
-      "eur": "0.09",
-      "eur_foil": "0.23",
-      "tix": "0.02"
+      "usd": "1.86",
+      "usd_foil": "4.47",
+      "eur": "0.32",
+      "eur_foil": "0.10",
+      "tix": "0.13"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473114",
@@ -3616,7 +3646,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3643,6 +3673,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3670,17 +3701,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 688,
+    "edhrec_rank": 622,
     "preview": {
       "source": "ZiggyD Gaming",
       "source_uri": "https://twitter.com/ZiggyDStarcraft/status/1173553765070209024",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "0.43",
-      "usd_foil": "2.99",
-      "eur": "0.38",
-      "eur_foil": "1.92",
+      "usd": "0.72",
+      "usd_foil": "2.25",
+      "eur": "0.45",
+      "eur_foil": "2.99",
       "tix": "0.15"
     },
     "related_uris": {
@@ -3731,7 +3762,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3758,6 +3789,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3781,7 +3813,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7638,
+    "edhrec_rank": 7800,
     "preview": {
       "source": "John Rolf",
       "source_uri": "https://twitter.com/JRolfMTG/status/1172624112335958024?s=19",
@@ -3790,8 +3822,8 @@
     "prices": {
       "usd": "0.13",
       "usd_foil": "0.20",
-      "eur": "0.13",
-      "eur_foil": "0.22",
+      "eur": "0.07",
+      "eur_foil": "0.33",
       "tix": "0.02"
     },
     "related_uris": {
@@ -3847,7 +3879,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3874,6 +3906,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -3897,18 +3930,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5370,
+    "edhrec_rank": 5009,
     "preview": {
       "source": "J-E Depraz",
       "source_uri": "https://twitter.com/JEDepraz/status/1171392737356197893",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "4.79",
-      "usd_foil": "4.87",
-      "eur": "4.76",
-      "eur_foil": "6.95",
-      "tix": "0.95"
+      "usd": "5.95",
+      "usd_foil": "7.15",
+      "eur": "5.45",
+      "eur_foil": "5.00",
+      "tix": "0.39"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473100",
@@ -3962,7 +3995,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -3989,6 +4022,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4012,17 +4046,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5940,
+    "edhrec_rank": 5790,
     "preview": {
       "source": "Sjow",
       "source_uri": "https://twitter.com/LiquidSjow/status/1171861699420413953",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "0.24",
-      "usd_foil": "0.31",
-      "eur": "0.12",
-      "eur_foil": "0.42",
+      "usd": "0.22",
+      "usd_foil": "0.33",
+      "eur": "0.11",
+      "eur_foil": "1.00",
       "tix": "0.02"
     },
     "related_uris": {
@@ -4075,7 +4109,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4083,7 +4117,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4102,6 +4136,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4126,18 +4161,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3928,
+    "edhrec_rank": 3738,
     "preview": {
       "source": "CoolStuffInc",
       "source_uri": "https://www.coolstuffinc.com/a/aliaintrazi-09182019-watch-it-burn-preview-for-throne-of-eldraine",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.47",
-      "usd_foil": "0.67",
-      "eur": "0.23",
-      "eur_foil": "0.75",
-      "tix": "0.06"
+      "usd": "0.52",
+      "usd_foil": "0.70",
+      "eur": "0.36",
+      "eur_foil": "0.57",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473090",
@@ -4190,7 +4225,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4217,6 +4252,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4241,17 +4277,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4420,
+    "edhrec_rank": 4186,
     "preview": {
       "source": "Matthew Nass",
       "source_uri": "https://twitter.com/MatthewLNass/status/1172527368600076289",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "0.45",
-      "usd_foil": "0.70",
-      "eur": "0.32",
-      "eur_foil": "0.48",
+      "usd": "0.43",
+      "usd_foil": "0.57",
+      "eur": "0.20",
+      "eur_foil": "0.80",
       "tix": "0.02"
     },
     "related_uris": {
@@ -4302,7 +4338,7 @@
     "keywords": [],
     "legalities": {
       "standard": "banned",
-      "future": "banned",
+      "future": "not_legal",
       "historic": "banned",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4310,7 +4346,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -4329,6 +4365,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4353,18 +4390,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3476,
+    "edhrec_rank": 3363,
     "preview": {
       "source": "Vandal",
       "source_uri": "https://vandal.elespanol.com/noticia/1350726991/os-desvelamos-una-carta-exclusiva-para-la-nueva-ampliacion-de-magic-the-gathering/",
       "previewed_at": "2019-09-14"
     },
     "prices": {
-      "usd": "0.20",
-      "usd_foil": "0.57",
-      "eur": "0.23",
-      "eur_foil": "0.19",
-      "tix": "0.09"
+      "usd": "0.19",
+      "usd_foil": "0.53",
+      "eur": "0.18",
+      "eur_foil": "0.64",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473087",
@@ -4394,12 +4431,12 @@
     "highres_image": true,
     "image_status": "highres_scan",
     "image_uris": {
-      "small": "https://c1.scryfall.com/file/scryfall-cards/small/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1572490356",
-      "normal": "https://c1.scryfall.com/file/scryfall-cards/normal/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1572490356",
-      "large": "https://c1.scryfall.com/file/scryfall-cards/large/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1572490356",
-      "png": "https://c1.scryfall.com/file/scryfall-cards/png/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.png?1572490356",
-      "art_crop": "https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1572490356",
-      "border_crop": "https://c1.scryfall.com/file/scryfall-cards/border_crop/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1572490356"
+      "small": "https://c1.scryfall.com/file/scryfall-cards/small/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1626162176",
+      "normal": "https://c1.scryfall.com/file/scryfall-cards/normal/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1626162176",
+      "large": "https://c1.scryfall.com/file/scryfall-cards/large/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1626162176",
+      "png": "https://c1.scryfall.com/file/scryfall-cards/png/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.png?1626162176",
+      "art_crop": "https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1626162176",
+      "border_crop": "https://c1.scryfall.com/file/scryfall-cards/border_crop/front/c/5/c52d66db-5570-48a1-99cf-e0417517747b.jpg?1626162176"
     },
     "mana_cost": "{R}",
     "cmc": 1,
@@ -4415,12 +4452,11 @@
     ],
     "keywords": [
       "First strike",
-      "Haste",
-      "Equip"
+      "Haste"
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4447,6 +4483,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4471,18 +4508,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3284,
+    "edhrec_rank": 3096,
     "preview": {
       "source": "Javier Domínguez",
       "source_uri": "https://twitter.com/JavierDmagic/status/1171904308041977862",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "0.16",
-      "usd_foil": "0.62",
-      "eur": "0.14",
-      "eur_foil": "1.49",
-      "tix": "0.17"
+      "usd": "0.24",
+      "usd_foil": "0.70",
+      "eur": "0.19",
+      "eur_foil": "0.50",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473086",
@@ -4535,7 +4572,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4562,6 +4599,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4588,18 +4626,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1288,
+    "edhrec_rank": 1136,
     "preview": {
       "source": "Martin Jůza",
       "source_uri": "https://twitter.com/MartinJuza/status/1171095982068686848",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "7.79",
-      "usd_foil": "14.03",
-      "eur": "7.33",
+      "usd": "7.43",
+      "usd_foil": "13.64",
+      "eur": "7.16",
       "eur_foil": "9.00",
-      "tix": "3.13"
+      "tix": "1.09"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473082",
@@ -4649,7 +4687,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4676,6 +4714,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4700,17 +4739,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9454,
+    "edhrec_rank": 9571,
     "preview": {
       "source": "The Masters of Modern",
       "source_uri": "https://twitter.com/theMMcast/status/1171115818630828033",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "0.20",
-      "usd_foil": "0.31",
-      "eur": "0.17",
-      "eur_foil": "0.18",
+      "usd": "0.19",
+      "usd_foil": "0.29",
+      "eur": "0.09",
+      "eur_foil": "0.47",
       "tix": "0.02"
     },
     "related_uris": {
@@ -4761,7 +4800,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4788,6 +4827,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4811,18 +4851,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 765,
+    "edhrec_rank": 585,
     "preview": {
       "source": "Brian Kibler",
       "source_uri": "https://twitter.com/bmkibler/status/1171093966801866754",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "2.00",
-      "usd_foil": "3.53",
-      "eur": "0.53",
-      "eur_foil": "1.30",
-      "tix": "0.13"
+      "usd": "2.50",
+      "usd_foil": "3.70",
+      "eur": "1.17",
+      "eur_foil": "1.47",
+      "tix": "0.32"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473072",
@@ -4877,7 +4917,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -4904,6 +4944,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -4930,18 +4971,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1551,
+    "edhrec_rank": 1363,
     "preview": {
       "source": "TCGplayer",
       "source_uri": "https://twitter.com/MTGatTCGplayer/status/1169119200381689856",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "7.93",
-      "usd_foil": "18.07",
-      "eur": "8.28",
-      "eur_foil": "9.74",
-      "tix": "1.19"
+      "usd": "5.55",
+      "usd_foil": "15.23",
+      "eur": "6.81",
+      "eur_foil": "10.92",
+      "tix": "1.27"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473063",
@@ -4993,7 +5034,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5020,6 +5061,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5043,17 +5085,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8212,
+    "edhrec_rank": 8228,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://www.twitch.tv/videos/480556742",
       "previewed_at": "2019-09-12"
     },
     "prices": {
-      "usd": "0.21",
-      "usd_foil": "0.32",
-      "eur": "0.20",
-      "eur_foil": "0.25",
+      "usd": "0.16",
+      "usd_foil": "0.34",
+      "eur": "0.09",
+      "eur_foil": "0.50",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5127,7 +5169,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5154,6 +5196,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5177,18 +5220,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3119,
+    "edhrec_rank": 2922,
     "preview": {
       "source": "Noxious",
       "source_uri": "https://www.youtube.com/watch?v=VYL28w0hmwg",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.43",
-      "usd_foil": "0.52",
-      "eur": "0.18",
-      "eur_foil": "0.80",
-      "tix": "0.02"
+      "usd": "0.39",
+      "usd_foil": "0.49",
+      "eur": "0.36",
+      "eur_foil": "0.30",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473046",
@@ -5238,7 +5281,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5265,6 +5308,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5291,17 +5335,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3782,
+    "edhrec_rank": 3684,
     "preview": {
       "source": "Brian Braun-Duin",
       "source_uri": "https://twitter.com/BraunDuinIt/status/1173693988697542657",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "1.00",
-      "usd_foil": "1.36",
-      "eur": "0.77",
-      "eur_foil": "1.00",
+      "usd": "0.98",
+      "usd_foil": "1.54",
+      "eur": "0.60",
+      "eur_foil": "0.99",
       "tix": "0.03"
     },
     "related_uris": {
@@ -5356,7 +5400,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5383,6 +5427,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5407,17 +5452,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5520,
+    "edhrec_rank": 5550,
     "preview": {
       "source": "Malditos Nerds",
       "source_uri": "https://twitter.com/MalditosNerdsVX/status/1173676142269816833",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "0.18",
-      "usd_foil": "0.34",
-      "eur": "0.22",
-      "eur_foil": "0.23",
+      "usd": "0.20",
+      "usd_foil": "0.28",
+      "eur": "0.16",
+      "eur_foil": "0.83",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5470,7 +5515,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5497,6 +5542,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5524,17 +5570,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 960,
+    "edhrec_rank": 822,
     "preview": {
       "source": "Good Luck High Five",
       "source_uri": "https://youtu.be/qhWhI57on0Q",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "3.46",
-      "usd_foil": "3.05",
-      "eur": "1.64",
-      "eur_foil": "2.99",
+      "usd": "3.14",
+      "usd_foil": "3.19",
+      "eur": "1.53",
+      "eur_foil": "1.80",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5590,7 +5636,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5617,6 +5663,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5640,17 +5687,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7025,
+    "edhrec_rank": 6967,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "0.21",
-      "usd_foil": "0.59",
-      "eur": "0.21",
-      "eur_foil": "0.30",
+      "usd": "0.12",
+      "usd_foil": "0.56",
+      "eur": "0.19",
+      "eur_foil": "0.25",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5719,7 +5766,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5746,6 +5793,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5770,17 +5818,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3773,
+    "edhrec_rank": 3566,
     "preview": {
       "source": "Giga",
       "source_uri": "https://www.giga.de/artikel/magic-the-gathering-exklusive-preview-karte-zu-throne-of-eldraine/",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "0.32",
-      "usd_foil": "0.35",
-      "eur": "0.16",
-      "eur_foil": "0.25",
+      "usd": "0.24",
+      "usd_foil": "0.29",
+      "eur": "0.13",
+      "eur_foil": "0.49",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5831,7 +5879,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5858,6 +5906,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5882,17 +5931,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 632,
+    "edhrec_rank": 624,
     "preview": {
       "source": "MTGGoldfish",
       "source_uri": "https://www.mtggoldfish.com/articles/mirrormade-exclusive-throne-of-eldraine-preview",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "2.32",
-      "usd_foil": "2.46",
-      "eur": "0.45",
-      "eur_foil": "0.99",
+      "usd": "2.27",
+      "usd_foil": "2.56",
+      "eur": "0.71",
+      "eur_foil": "0.90",
       "tix": "0.02"
     },
     "related_uris": {
@@ -5946,7 +5995,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -5973,6 +6022,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -5996,7 +6046,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1474,
+    "edhrec_rank": 1302,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1169142807564640257/photo/1",
@@ -6004,9 +6054,9 @@
     },
     "prices": {
       "usd": "0.90",
-      "usd_foil": "1.54",
-      "eur": "0.17",
-      "eur_foil": "0.75",
+      "usd_foil": "1.98",
+      "eur": "0.30",
+      "eur_foil": "0.67",
       "tix": "0.02"
     },
     "related_uris": {
@@ -6057,7 +6107,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6084,6 +6134,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6110,18 +6161,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1542,
+    "edhrec_rank": 1454,
     "preview": {
       "source": "Brad Nelson",
       "source_uri": "https://twitter.com/fffreakmtg/status/1172525989802283009",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "4.48",
-      "usd_foil": "4.46",
-      "eur": "1.49",
-      "eur_foil": "1.95",
-      "tix": "0.03"
+      "usd": "3.29",
+      "usd_foil": "4.70",
+      "eur": "1.37",
+      "eur_foil": "2.75",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473013",
@@ -6173,7 +6224,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6200,6 +6251,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6227,18 +6279,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1811,
+    "edhrec_rank": 1712,
     "preview": {
       "source": "The Command Zone",
       "source_uri": "https://www.youtube.com/watch?v=RYzy2drIllM&feature=youtu.be",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "0.82",
-      "usd_foil": "0.92",
-      "eur": "0.45",
-      "eur_foil": "1.19",
-      "tix": "0.03"
+      "usd": "0.59",
+      "usd_foil": "0.87",
+      "eur": "0.32",
+      "eur_foil": "1.46",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473010",
@@ -6290,7 +6342,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6317,6 +6369,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6340,17 +6393,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1561,
+    "edhrec_rank": 1464,
     "preview": {
       "source": "PCGamesN",
       "source_uri": "https://www.pcgamesn.com/magic-the-gathering-arena/throne-of-eldraine-folio-of-fancies",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "0.60",
-      "usd_foil": "0.67",
-      "eur": "0.18",
-      "eur_foil": "0.15",
+      "usd": "0.66",
+      "usd_foil": "0.77",
+      "eur": "0.13",
+      "eur_foil": "0.20",
       "tix": "0.02"
     },
     "related_uris": {
@@ -6405,7 +6458,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6432,6 +6485,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6458,18 +6512,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1008,
+    "edhrec_rank": 955,
     "preview": {
       "source": "NGA",
       "source_uri": "https://bbs.nga.cn/read.php?&tid=18485267&rand=293",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "1.98",
-      "usd_foil": "2.99",
-      "eur": "1.34",
-      "eur_foil": "3.99",
-      "tix": "0.31"
+      "usd": "5.78",
+      "usd_foil": "10.67",
+      "eur": "1.92",
+      "eur_foil": "4.13",
+      "tix": "1.33"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473005",
@@ -6539,7 +6593,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6566,6 +6620,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6590,17 +6645,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5269,
+    "edhrec_rank": 5349,
     "preview": {
       "source": "GameSpot",
       "source_uri": "https://www.gamespot.com/articles/new-magic-the-gathering-throne-of-eldraine-cards-p/1100-6469732/",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.44",
-      "usd_foil": "0.45",
-      "eur": "0.23",
-      "eur_foil": "0.54",
+      "usd": "0.41",
+      "usd_foil": "0.43",
+      "eur": "0.18",
+      "eur_foil": "0.46",
       "tix": "0.02"
     },
     "related_uris": {
@@ -6655,7 +6710,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6682,6 +6737,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6709,18 +6765,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4624,
+    "edhrec_rank": 4519,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/singing-eldraine-2019-09-16",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "0.46",
-      "usd_foil": "0.62",
-      "eur": "0.20",
-      "eur_foil": "0.36",
-      "tix": "0.02"
+      "usd": "0.30",
+      "usd_foil": "0.56",
+      "eur": "0.24",
+      "eur_foil": "0.34",
+      "tix": "0.01"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472982",
@@ -6775,7 +6831,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6802,6 +6858,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6826,18 +6883,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1443,
+    "edhrec_rank": 1307,
     "preview": {
       "source": "LadyLavinias",
       "source_uri": "https://twitter.com/LadyLavinias/status/1174775658695864322",
       "previewed_at": "2019-09-19"
     },
     "prices": {
-      "usd": "1.10",
-      "usd_foil": "1.37",
-      "eur": "0.47",
-      "eur_foil": "0.79",
-      "tix": "0.07"
+      "usd": "1.30",
+      "usd_foil": "1.41",
+      "eur": "0.61",
+      "eur_foil": "1.75",
+      "tix": "0.17"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472980",
@@ -6909,7 +6966,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -6936,6 +6993,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -6960,18 +7018,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5260,
+    "edhrec_rank": 5087,
     "preview": {
       "source": "Jess Estephan",
       "source_uri": "https://twitter.com/jesstephan/status/1171786180666544130?s=20",
       "previewed_at": "2019-09-11"
     },
     "prices": {
-      "usd": "0.75",
-      "usd_foil": "0.78",
-      "eur": "0.32",
-      "eur_foil": "0.80",
-      "tix": "0.03"
+      "usd": "0.57",
+      "usd_foil": "0.75",
+      "eur": "0.42",
+      "eur_foil": "0.50",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472979",
@@ -7021,7 +7079,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7048,6 +7106,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7071,17 +7130,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": true,
-    "edhrec_rank": 5724,
+    "edhrec_rank": 5913,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/happily-ever-after-2019-09-19",
       "previewed_at": "2019-09-19"
     },
     "prices": {
-      "usd": "0.19",
-      "usd_foil": "0.20",
-      "eur": "0.13",
-      "eur_foil": "0.25",
+      "usd": "0.17",
+      "usd_foil": "0.23",
+      "eur": "0.03",
+      "eur_foil": "0.09",
       "tix": "0.02"
     },
     "related_uris": {
@@ -7150,7 +7209,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7177,6 +7236,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7203,17 +7263,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4012,
+    "edhrec_rank": 4013,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.facebook.com/channelfireball/videos/366428504287148/",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "1.18",
-      "usd_foil": "1.35",
-      "eur": "0.91",
-      "eur_foil": "2.83",
+      "usd": "1.02",
+      "usd_foil": "1.51",
+      "eur": "0.60",
+      "eur_foil": "0.75",
       "tix": "0.02"
     },
     "related_uris": {
@@ -7268,7 +7328,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7295,6 +7355,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7318,18 +7379,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1933,
+    "edhrec_rank": 1748,
     "preview": {
       "source": "Reid Duke",
       "source_uri": "https://www.twitch.tv/videos/479548512",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "1.80",
-      "usd_foil": "2.73",
-      "eur": "1.42",
-      "eur_foil": "2.49",
-      "tix": "0.77"
+      "usd": "1.73",
+      "usd_foil": "2.78",
+      "eur": "1.41",
+      "eur_foil": "2.91",
+      "tix": "0.72"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472970",
@@ -7381,7 +7442,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7408,6 +7469,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7431,17 +7493,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3960,
+    "edhrec_rank": 3962,
     "preview": {
       "source": "Rei Sato",
       "source_uri": "https://www.twitch.tv/videos/482593745",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.30",
-      "usd_foil": "0.38",
-      "eur": "0.11",
-      "eur_foil": "0.15",
+      "usd": "0.29",
+      "usd_foil": "0.34",
+      "eur": "0.18",
+      "eur_foil": "0.71",
       "tix": "0.02"
     },
     "related_uris": {
@@ -7481,7 +7543,7 @@
     },
     "mana_cost": "{G/W}{G/W}{G/W}{G/W} // {G/W}{G/W}{G/W}{G/W}",
     "cmc": 4,
-    "type_line": "Creature — Elf Knight // Sorcery — Adventure",
+    "type_line": "Creature — Elf Knight Ranger // Sorcery — Adventure",
     "power": "2",
     "toughness": "2",
     "colors": [
@@ -7498,7 +7560,7 @@
         "object": "card_face",
         "name": "Oakhame Ranger",
         "mana_cost": "{G/W}{G/W}{G/W}{G/W}",
-        "type_line": "Creature — Elf Knight",
+        "type_line": "Creature — Elf Knight Ranger",
         "oracle_text": "{T}: Creatures you control get +1/+1 until end of turn.",
         "power": "2",
         "toughness": "2",
@@ -7522,7 +7584,7 @@
         "id": "8a665794-513f-4f78-92c9-1844ec27c79c",
         "component": "combo_piece",
         "name": "Oakhame Ranger // Bring Back",
-        "type_line": "Creature — Elf Knight // Sorcery — Adventure",
+        "type_line": "Creature — Elf Knight Ranger // Sorcery — Adventure",
         "uri": "https://api.scryfall.com/cards/8a665794-513f-4f78-92c9-1844ec27c79c"
       },
       {
@@ -7536,7 +7598,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7563,6 +7625,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7587,18 +7650,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10541,
+    "edhrec_rank": 10678,
     "preview": {
       "source": "Formação Fireball",
       "source_uri": "https://www.youtube.com/watch?v=rPJLKVyOnIE",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "0.07",
-      "usd_foil": "0.13",
-      "eur": "0.05",
-      "eur_foil": "0.09",
-      "tix": "0.04"
+      "usd": "0.08",
+      "usd_foil": "0.12",
+      "eur": "0.10",
+      "eur_foil": "0.15",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473174",
@@ -7673,7 +7736,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7700,6 +7763,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7724,7 +7788,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10071,
+    "edhrec_rank": 9898,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -7732,9 +7796,9 @@
     },
     "prices": {
       "usd": "0.01",
-      "usd_foil": "0.05",
-      "eur": "0.01",
-      "eur_foil": "0.05",
+      "usd_foil": "0.06",
+      "eur": "0.10",
+      "eur_foil": "0.09",
       "tix": "0.03"
     },
     "related_uris": {
@@ -7817,7 +7881,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7844,6 +7908,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -7868,17 +7933,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7035,
+    "edhrec_rank": 7114,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.02",
-      "usd_foil": "0.12",
-      "eur": "0.02",
-      "eur_foil": "0.42",
+      "usd": "0.03",
+      "usd_foil": "0.10",
+      "eur": "0.24",
+      "eur_foil": "0.19",
       "tix": "0.03"
     },
     "related_uris": {
@@ -7972,7 +8037,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -7999,6 +8064,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8023,18 +8089,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8532,
+    "edhrec_rank": 8371,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169022264182038531",
       "previewed_at": "2019-09-03"
     },
     "prices": {
-      "usd": "0.18",
-      "usd_foil": "0.44",
-      "eur": "0.13",
-      "eur_foil": "0.60",
-      "tix": "0.07"
+      "usd": "0.25",
+      "usd_foil": "0.48",
+      "eur": "0.19",
+      "eur_foil": "0.13",
+      "tix": "0.09"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473127",
@@ -8109,7 +8175,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8136,6 +8202,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8160,17 +8227,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 13047,
+    "edhrec_rank": 12854,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174052806459707393?s=21",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.02",
-      "usd_foil": "0.11",
-      "eur": "0.02",
-      "eur_foil": "0.05",
+      "usd": "0.01",
+      "usd_foil": "0.08",
+      "eur": "0.01",
+      "eur_foil": "0.02",
       "tix": "0.03"
     },
     "related_uris": {
@@ -8264,7 +8331,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8291,6 +8358,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8315,18 +8383,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6550,
+    "edhrec_rank": 6469,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/wizards_magic/status/1168992065994334208",
       "previewed_at": "2019-09-03"
     },
     "prices": {
-      "usd": "0.10",
-      "usd_foil": "0.12",
-      "eur": "0.02",
-      "eur_foil": "0.15",
-      "tix": "0.04"
+      "usd": "0.08",
+      "usd_foil": "0.11",
+      "eur": "0.15",
+      "eur_foil": "0.05",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473117",
@@ -8419,7 +8487,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8446,6 +8514,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8470,18 +8539,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 10845,
+    "edhrec_rank": 9293,
     "preview": {
       "source": "CNEWS",
       "source_uri": "https://www.cnews.fr/vie-numerique/2019-09-10/magic-gathering-revisite-les-contes-de-fees-avec-le-trone-deldraine-876392",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.03",
+      "usd": "0.01",
       "usd_foil": "0.07",
-      "eur": "0.02",
-      "eur_foil": "0.05",
-      "tix": "0.04"
+      "eur": "0.04",
+      "eur_foil": "0.09",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473112",
@@ -8555,7 +8624,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8582,6 +8651,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8605,16 +8675,16 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 1261,
+    "edhrec_rank": 1133,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/feature/throne-eldraine-mechanics-2019-09-04",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.11",
-      "usd_foil": "0.36",
-      "eur": "0.23",
+      "usd": "0.10",
+      "usd_foil": "0.31",
+      "eur": "0.09",
       "eur_foil": "0.30",
       "tix": "0.03"
     },
@@ -8690,7 +8760,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8717,6 +8787,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8740,12 +8811,12 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7632,
+    "edhrec_rank": 7424,
     "prices": {
-      "usd": "0.05",
-      "usd_foil": "0.18",
-      "eur": "0.03",
-      "eur_foil": "0.25",
+      "usd": "0.04",
+      "usd_foil": "0.16",
+      "eur": "0.26",
+      "eur_foil": "0.30",
       "tix": "0.03"
     },
     "related_uris": {
@@ -8821,7 +8892,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8848,6 +8919,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -8872,18 +8944,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4968,
+    "edhrec_rank": 4749,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
       "previewed_at": "2019-09-12"
     },
     "prices": {
-      "usd": "0.10",
-      "usd_foil": "0.20",
-      "eur": "0.36",
-      "eur_foil": "0.03",
-      "tix": "0.04"
+      "usd": "0.05",
+      "usd_foil": "0.17",
+      "eur": "0.02",
+      "eur_foil": "0.15",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473093",
@@ -8958,7 +9030,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -8966,7 +9038,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -8985,6 +9057,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9009,17 +9082,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4381,
+    "edhrec_rank": 4246,
     "preview": {
       "source": "ChannelFireball",
       "source_uri": "https://www.youtube.com/watch?v=lKBtbDYICcU&t=2m21s",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.10",
-      "usd_foil": "0.22",
-      "eur": "0.09",
-      "eur_foil": "0.20",
+      "usd": "0.09",
+      "usd_foil": "0.21",
+      "eur": "0.04",
+      "eur_foil": "0.35",
       "tix": "0.03"
     },
     "related_uris": {
@@ -9095,7 +9168,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9122,6 +9195,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9146,18 +9220,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4690,
+    "edhrec_rank": 4179,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventuring-standard-and-limited-2019-09-13",
       "previewed_at": "2019-09-13"
     },
     "prices": {
-      "usd": "0.83",
-      "usd_foil": "1.79",
-      "eur": "0.75",
-      "eur_foil": "2.47",
-      "tix": "8.46"
+      "usd": "1.18",
+      "usd_foil": "2.80",
+      "eur": "0.89",
+      "eur_foil": "1.99",
+      "tix": "8.21"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473077",
@@ -9234,7 +9308,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9261,6 +9335,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9285,7 +9360,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4480,
+    "edhrec_rank": 4562,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
@@ -9294,9 +9369,9 @@
     "prices": {
       "usd": "0.02",
       "usd_foil": "0.14",
-      "eur": "0.08",
-      "eur_foil": "0.30",
-      "tix": "0.03"
+      "eur": "0.05",
+      "eur_foil": "0.25",
+      "tix": "0.04"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473067",
@@ -9370,7 +9445,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9397,6 +9472,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9420,11 +9496,11 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11529,
+    "edhrec_rank": 11727,
     "prices": {
-      "usd": "0.02",
-      "usd_foil": "0.11",
-      "eur": "0.14",
+      "usd": "0.05",
+      "usd_foil": "0.08",
+      "eur": "0.04",
       "eur_foil": "0.02",
       "tix": "0.03"
     },
@@ -9502,7 +9578,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9529,6 +9605,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9552,17 +9629,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3718,
+    "edhrec_rank": 3603,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.10",
-      "usd_foil": "0.23",
-      "eur": "0.15",
-      "eur_foil": "0.25",
+      "usd": "0.08",
+      "usd_foil": "0.19",
+      "eur": "0.12",
+      "eur_foil": "0.20",
       "tix": "0.03"
     },
     "related_uris": {
@@ -9639,7 +9716,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9666,6 +9743,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9689,18 +9767,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 847,
+    "edhrec_rank": 756,
     "preview": {
       "source": "Star City Games",
       "source_uri": "https://twitter.com/StarCityGames/status/1171077240102313988",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "1.16",
-      "usd_foil": "1.89",
-      "eur": "1.64",
-      "eur_foil": "2.79",
-      "tix": "0.64"
+      "usd": "1.23",
+      "usd_foil": "1.45",
+      "eur": "1.48",
+      "eur_foil": "1.95",
+      "tix": "0.66"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473059",
@@ -9776,7 +9854,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9803,6 +9881,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9826,17 +9905,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3780,
+    "edhrec_rank": 3607,
     "preview": {
       "source": "IGN",
       "source_uri": "https://uk.ign.com/articles/2019/09/04/magic-the-gathering-throne-of-eldraine-4-new-cards-revealed-ser-konrad-the-grim-order-of-midnight-smitten-swordmaster-foulmire-knight",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.12",
-      "usd_foil": "0.29",
-      "eur": "0.15",
-      "eur_foil": "0.36",
+      "usd": "0.10",
+      "usd_foil": "0.21",
+      "eur": "0.12",
+      "eur_foil": "0.13",
       "tix": "0.03"
     },
     "related_uris": {
@@ -9911,7 +9990,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -9938,6 +10017,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -9961,12 +10041,12 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9638,
+    "edhrec_rank": 9768,
     "prices": {
-      "usd": "0.03",
-      "usd_foil": "0.12",
-      "eur": "0.02",
-      "eur_foil": "0.15",
+      "usd": "0.02",
+      "usd_foil": "0.10",
+      "eur": "0.17",
+      "eur_foil": "0.05",
       "tix": "0.03"
     },
     "related_uris": {
@@ -10044,7 +10124,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10071,6 +10151,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10095,13 +10176,13 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 6650,
+    "edhrec_rank": 6545,
     "prices": {
-      "usd": "0.13",
-      "usd_foil": "0.23",
-      "eur": "0.03",
-      "eur_foil": "0.25",
-      "tix": "0.04"
+      "usd": "0.10",
+      "usd_foil": "0.27",
+      "eur": "0.09",
+      "eur_foil": "0.45",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473015",
@@ -10177,7 +10258,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10185,7 +10266,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -10204,6 +10285,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10227,17 +10309,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5294,
+    "edhrec_rank": 5292,
     "preview": {
       "source": "Star City Games",
       "source_uri": "http://www.starcitygames.com/articles/39065_How-To-Approach-Hypnotic-Sprite-In-Throne-Of-Eldraine-Standard.html",
       "previewed_at": "2019-09-10"
     },
     "prices": {
-      "usd": "0.16",
-      "usd_foil": "0.15",
-      "eur": "0.13",
-      "eur_foil": "0.05",
+      "usd": "0.10",
+      "usd_foil": "0.17",
+      "eur": "0.10",
+      "eur_foil": "0.23",
       "tix": "0.03"
     },
     "related_uris": {
@@ -10314,7 +10396,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10322,7 +10404,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -10341,6 +10423,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10364,18 +10447,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 9270,
+    "edhrec_rank": 9390,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "0.25",
-      "usd_foil": "0.59",
-      "eur": "0.22",
-      "eur_foil": "0.41",
-      "tix": "0.03"
+      "usd": "0.18",
+      "usd_foil": "0.52",
+      "eur": "0.18",
+      "eur_foil": "0.70",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473006",
@@ -10452,7 +10535,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10479,6 +10562,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10502,18 +10586,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2943,
+    "edhrec_rank": 2739,
     "preview": {
       "source": "/r/MagicArena",
       "source_uri": "https://www.reddit.com/r/MagicArena/comments/d60peu/eld_brazen_borrower_official_rmagicarena_spoiler/",
       "previewed_at": "2019-09-18"
     },
     "prices": {
-      "usd": "12.51",
-      "usd_foil": "17.07",
-      "eur": "12.28",
-      "eur_foil": "21.90",
-      "tix": "29.26"
+      "usd": "19.84",
+      "usd_foil": "21.52",
+      "eur": "15.52",
+      "eur_foil": "24.45",
+      "tix": "27.07"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473001",
@@ -10590,7 +10674,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10617,6 +10701,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10641,17 +10726,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 8055,
+    "edhrec_rank": 8186,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169291126970314752",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.04",
+      "usd": "0.03",
       "usd_foil": "0.16",
-      "eur": "0.02",
-      "eur_foil": "0.05",
+      "eur": "0.03",
+      "eur_foil": "0.14",
       "tix": "0.03"
     },
     "related_uris": {
@@ -10727,7 +10812,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10754,6 +10839,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10778,17 +10864,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11965,
+    "edhrec_rank": 12032,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
       "previewed_at": "2019-09-16"
     },
     "prices": {
-      "usd": "0.01",
-      "usd_foil": "0.03",
-      "eur": "0.05",
-      "eur_foil": "0.10",
+      "usd": "0.03",
+      "usd_foil": "0.05",
+      "eur": "0.01",
+      "eur_foil": "0.03",
       "tix": "0.02"
     },
     "related_uris": {
@@ -10864,7 +10950,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -10891,6 +10977,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -10915,7 +11002,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7881,
+    "edhrec_rank": 7846,
     "preview": {
       "source": "Eric Froehlich",
       "source_uri": "https://twitter.com/efropoker/status/1174065513636474880",
@@ -10923,10 +11010,10 @@
     },
     "prices": {
       "usd": "0.09",
-      "usd_foil": "0.20",
-      "eur": "0.06",
+      "usd_foil": "0.19",
+      "eur": "0.08",
       "eur_foil": "0.10",
-      "tix": "0.04"
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472990",
@@ -11002,7 +11089,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11010,7 +11097,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "not_legal",
+      "penny": "legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -11029,6 +11116,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11052,18 +11140,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4266,
+    "edhrec_rank": 4067,
     "preview": {
       "source": "Tolarian Community College",
       "source_uri": "https://www.youtube.com/watch?v=d4Zm4JzNiVs",
       "previewed_at": "2019-09-17"
     },
     "prices": {
-      "usd": "1.15",
-      "usd_foil": "1.00",
-      "eur": "1.25",
-      "eur_foil": "2.50",
-      "tix": "0.06"
+      "usd": "0.82",
+      "usd_foil": "1.08",
+      "eur": "0.69",
+      "eur_foil": "1.50",
+      "tix": "0.02"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472988",
@@ -11157,7 +11245,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11184,6 +11272,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11207,7 +11296,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 11525,
+    "edhrec_rank": 11314,
     "preview": {
       "source": "Nizzahon Magic",
       "source_uri": "https://www.youtube.com/watch?v=v7HGSn0P1J4",
@@ -11215,9 +11304,9 @@
     },
     "prices": {
       "usd": "0.02",
-      "usd_foil": "0.11",
-      "eur": "0.01",
-      "eur_foil": "0.49",
+      "usd_foil": "0.10",
+      "eur": "0.02",
+      "eur_foil": "0.02",
       "tix": "0.04"
     },
     "related_uris": {
@@ -11293,7 +11382,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11301,7 +11390,7 @@
       "legacy": "legal",
       "pauper": "not_legal",
       "vintage": "legal",
-      "penny": "legal",
+      "penny": "not_legal",
       "commander": "legal",
       "brawl": "legal",
       "duel": "legal",
@@ -11320,6 +11409,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11344,7 +11434,7 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 4663,
+    "edhrec_rank": 4307,
     "preview": {
       "source": "Amaz",
       "source_uri": "https://twitter.com/Amaz/status/1171122126486757381",
@@ -11352,10 +11442,10 @@
     },
     "prices": {
       "usd": "0.32",
-      "usd_foil": "0.42",
-      "eur": "0.35",
-      "eur_foil": "0.50",
-      "tix": "0.06"
+      "usd_foil": "0.35",
+      "eur": "0.30",
+      "eur_foil": "0.35",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472976",
@@ -11432,7 +11522,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11459,6 +11549,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11483,18 +11574,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7864,
+    "edhrec_rank": 7833,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/making-magic/eldraine-or-shine-2019-09-09",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "0.08",
-      "usd_foil": "0.08",
-      "eur": "0.09",
-      "eur_foil": "0.16",
-      "tix": "0.03"
+      "usd": "0.07",
+      "usd_foil": "0.13",
+      "eur": "0.02",
+      "eur_foil": "0.25",
+      "tix": "0.04"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=472973",
@@ -11571,7 +11662,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11598,6 +11689,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11622,17 +11714,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 7751,
+    "edhrec_rank": 7951,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/adventure-adventure-2019-09-12",
       "previewed_at": "2019-09-12"
     },
     "prices": {
-      "usd": "0.06",
-      "usd_foil": "0.10",
+      "usd": "0.03",
+      "usd_foil": "0.07",
       "eur": "0.02",
-      "eur_foil": "0.13",
+      "eur_foil": "0.15",
       "tix": "0.03"
     },
     "related_uris": {
@@ -11686,7 +11778,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11713,6 +11805,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11736,18 +11829,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 3460,
+    "edhrec_rank": 3413,
     "preview": {
       "source": "RiotPixels",
       "source_uri": "http://riotpixels.com/magicheskij-vestnik-vypusk-s-eksklyuzivami/",
       "previewed_at": "2019-09-09"
     },
     "prices": {
-      "usd": "2.68",
-      "usd_foil": "4.18",
-      "eur": "3.78",
-      "eur_foil": "5.00",
-      "tix": "0.50"
+      "usd": "2.14",
+      "usd_foil": "4.14",
+      "eur": "2.88",
+      "eur_foil": "4.85",
+      "tix": "0.03"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473161",
@@ -11818,7 +11911,7 @@
     ],
     "legalities": {
       "standard": "banned",
-      "future": "banned",
+      "future": "not_legal",
       "historic": "banned",
       "gladiator": "banned",
       "pioneer": "banned",
@@ -11845,6 +11938,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -11868,18 +11962,18 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 843,
+    "edhrec_rank": 741,
     "preview": {
       "source": "Card Kingdom",
       "source_uri": "https://twitter.com/Card_Kingdom/status/1168967403805511680",
       "previewed_at": "2019-09-03"
     },
     "prices": {
-      "usd": "16.29",
-      "usd_foil": "28.77",
-      "eur": "10.99",
-      "eur_foil": "21.00",
-      "tix": "1.87"
+      "usd": "14.20",
+      "usd_foil": "25.07",
+      "eur": "12.55",
+      "eur_foil": "24.99",
+      "tix": "1.44"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=473159",
@@ -11941,24 +12035,24 @@
       },
       {
         "object": "related_card",
-        "id": "88452ed7-1065-41c3-94a6-dc41108c45c1",
-        "component": "token",
-        "name": "Wolf",
-        "type_line": "Token Creature — Wolf",
-        "uri": "https://api.scryfall.com/cards/88452ed7-1065-41c3-94a6-dc41108c45c1"
-      },
-      {
-        "object": "related_card",
         "id": "d6c65749-1774-4b36-891e-abf762c95cec",
         "component": "combo_piece",
         "name": "Garruk, Cursed Huntsman Emblem",
         "type_line": "Emblem",
         "uri": "https://api.scryfall.com/cards/d6c65749-1774-4b36-891e-abf762c95cec"
+      },
+      {
+        "object": "related_card",
+        "id": "88452ed7-1065-41c3-94a6-dc41108c45c1",
+        "component": "token",
+        "name": "Wolf",
+        "type_line": "Token Creature — Wolf",
+        "uri": "https://api.scryfall.com/cards/88452ed7-1065-41c3-94a6-dc41108c45c1"
       }
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -11985,6 +12079,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -12008,17 +12103,17 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 2231,
+    "edhrec_rank": 2015,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://twitter.com/MTG_Arena/status/1169264113412972544",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "3.03",
-      "usd_foil": "3.02",
-      "eur": "2.19",
-      "eur_foil": "3.25",
+      "usd": "4.65",
+      "usd_foil": "3.86",
+      "eur": "2.72",
+      "eur_foil": "2.49",
       "tix": "0.09"
     },
     "related_uris": {
@@ -12072,7 +12167,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -12099,6 +12194,7 @@
     "promo": false,
     "reprint": true,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -12133,9 +12229,9 @@
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "0.43",
+      "usd": "0.30",
       "usd_foil": null,
-      "eur": "0.40",
+      "eur": "0.20",
       "eur_foil": null,
       "tix": null
     },
@@ -12183,7 +12279,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -12210,6 +12306,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -12236,18 +12333,18 @@
     "promo_types": [
       "brawldeck"
     ],
-    "edhrec_rank": 1799,
+    "edhrec_rank": 1546,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/inside-throne-eldraine-brawl-decks-2019-09-04",
       "previewed_at": "2019-09-04"
     },
     "prices": {
-      "usd": "4.29",
+      "usd": "5.50",
       "usd_foil": null,
-      "eur": "1.87",
+      "eur": "7.32",
       "eur_foil": null,
-      "tix": "3.82"
+      "tix": "1.42"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476050",
@@ -12300,7 +12397,7 @@
     ],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -12327,6 +12424,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "a90a7b2f-9dd8-4fc7-9f7d-8ea2797ec782",
     "set": "eld",
     "set_name": "Throne of Eldraine",
     "set_type": "expansion",
@@ -12354,18 +12452,18 @@
     "promo_types": [
       "brawldeck"
     ],
-    "edhrec_rank": 8,
+    "edhrec_rank": 7,
     "preview": {
       "source": "Wizards of the Coast",
       "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/new-era-brawl-2019-07-22",
       "previewed_at": "2019-07-22"
     },
     "prices": {
-      "usd": "2.36",
+      "usd": "1.56",
       "usd_foil": null,
-      "eur": "1.62",
+      "eur": "1.35",
       "eur_foil": null,
-      "tix": "1.48"
+      "tix": "1.79"
     },
     "related_uris": {
       "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=476049",
@@ -12412,7 +12510,7 @@
     "keywords": [],
     "legalities": {
       "standard": "legal",
-      "future": "legal",
+      "future": "not_legal",
       "historic": "legal",
       "gladiator": "legal",
       "pioneer": "legal",
@@ -12439,6 +12537,7 @@
     "promo": false,
     "reprint": false,
     "variation": false,
+    "set_id": "fe0dad85-54bc-4151-9200-d68da84dd0f2",
     "set": "xln",
     "set_name": "Ixalan",
     "set_type": "expansion",
@@ -12462,12 +12561,12 @@
     "textless": false,
     "booster": true,
     "story_spotlight": false,
-    "edhrec_rank": 5033,
+    "edhrec_rank": 5397,
     "prices": {
-      "usd": "0.28",
-      "usd_foil": "1.26",
-      "eur": "0.20",
-      "eur_foil": "1.49",
+      "usd": "0.24",
+      "usd_foil": "1.32",
+      "eur": "0.30",
+      "eur_foil": "1.50",
       "tix": "0.02"
     },
     "related_uris": {
