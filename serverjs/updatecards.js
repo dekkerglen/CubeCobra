@@ -22,6 +22,7 @@ const catalog = {};
  *   nonfoil: Boolean,
  *   collector_number: String,
  *   released_at: Date,
+ *   reprint: Boolean,
  *   promo: Boolean,
  *   prices: {
  *     usd: Float?,
@@ -625,6 +626,7 @@ function convertCard(card, isExtra) {
   newcard.nonfoil = card.nonfoil;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
+  newcard.reprint = card.reprint;
 
   newcard.promo =
     card.promo ||

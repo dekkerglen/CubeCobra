@@ -126,6 +126,7 @@ describe('filter', () => {
             embedding: [],
             layout: 'normal',
             released_at: '2019-10-04',
+            reprint: false,
             set_name: 'Throne of Eldraine',
             prices: {
               eur: 2.34,
@@ -201,6 +202,7 @@ describe('filter', () => {
               usd_foil: 0.97,
             },
             released_at: '2019-10-04',
+            reprint: false,
             set_name: 'Throne of Eldraine',
             foil: true,
             nonfoil: true,
@@ -265,6 +267,7 @@ describe('filter', () => {
             layout: 'normal',
             set_name: 'Throne of Eldraine',
             released_at: '2019-10-04',
+            reprint: false,
             prices: {
               eur: 3.2,
               tix: 1.41,
@@ -334,6 +337,7 @@ describe('filter', () => {
             layout: 'normal',
             set_name: 'Throne of Eldraine',
             released_at: '2019-10-04',
+            reprint: false,
             prices: {
               eur: 2.43,
               tix: 2.09,
@@ -403,6 +407,7 @@ describe('filter', () => {
             layout: 'normal',
             set_name: 'Throne of Eldraine',
             released_at: '2019-10-04',
+            reprint: false,
             prices: {
               eur: 0.58,
               tix: 0.52,

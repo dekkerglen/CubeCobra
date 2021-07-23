@@ -9,6 +9,7 @@ const placeholderCard = {
   set: '',
   collector_number: '',
   promo: false,
+  reprint: false,
   digital: false,
   full_name: 'Invalid Card',
   name: 'Invalid Card',
@@ -111,6 +112,7 @@ const _RankleMasterofFixtures = {
   layout: 'normal',
   set_name: 'Throne of Eldraine',
   released_at: '2019-10-04',
+  reprint: false,
   prices: {
     eur: 8.28,
     tix: 1.19,
