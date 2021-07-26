@@ -75,7 +75,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
 
 async function bulkUpload(req, res, list, cube) {
   const lines = list.match(/[^\r\n]+/g);
-  let missing = '';
+  let missing = [];
   const added = [];
   let changelog = '';
   if (lines) {
@@ -125,7 +125,7 @@ async function bulkUpload(req, res, list, cube) {
             changelog += addCardHtml(details);
           }
         } else {
-          missing += `${item}\n`;
+          missing.push(item);
         }
       }
     }

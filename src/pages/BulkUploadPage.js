@@ -60,7 +60,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
           </p>
           <Row>
             <Col>
-              {missing.split('\n').map((card, index) => (
+              {missing.map((card, index) => (
                 <Fragment key={/* eslint-disable-line react/no-array-index-key */ index}>
                   {card}
                   <br />
