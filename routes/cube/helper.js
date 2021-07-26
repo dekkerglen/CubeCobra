@@ -74,58 +74,58 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
 }
 
 async function bulkUpload(req, res, list, cube) {
-  const cards = list.match(/[^\r\n]+/g);
+  const lines = list.match(/[^\r\n]+/g);
   let missing = '';
   const added = [];
   let changelog = '';
-  if (cards) {
-    if ((cards[0].match(/,/g) || []).length > 3) {
-      let newCards = [];
-      let newMaybe = [];
+  if (lines) {
+    if ((lines[0].match(/,/g) || []).length > 3) {
+      // upload is in CSV format
+      let newCards;
+      let newMaybe;
       ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
       changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
       added.concat(newCards, newMaybe);
     } else {
-      for (const itemUntrimmed of cards) {
+      // upload is in TXT format
+      for (const itemUntrimmed of lines) {
         const item = itemUntrimmed.trim();
-        const numericMatch = item.match(/([0-9]+)x? (.*)/);
-        if (numericMatch) {
-          let count = parseInt(numericMatch[1], 10);
-          if (!Number.isInteger(count)) {
-            count = 1;
-          }
-          for (let j = 0; j < count; j += 1) {
-            cards.push(numericMatch[2]);
+        // separate counts and sets from the name
+        //                              |    count?   |name|     (set)?      |
+        const splitLine = item.match(/^(?:([0-9]+)x? )?(.*?)(?: \(([^)(]+)\))?$/);
+        const name = splitLine[2];
+        const set = splitLine[3];
+        let count = parseInt(splitLine[1], 10);
+        if (!Number.isInteger(count)) {
+          count = 1;
+        }
+
+        let selectedId;
+        if (set) {
+          const potentialIds = carddb.getIdsFromName(name);
+          if (potentialIds && potentialIds.length > 0) {
+            const matchingItem = potentialIds.find(
+              (id) => carddb.cardFromId(id).set.toLowerCase() === set.toLowerCase(),
+            );
+            // if no sets match, just take the first ID ¯\_(ツ)_/¯
+            selectedId = matchingItem || potentialIds[0];
           }
         } else {
-          let selected = null;
-          if (/(.*)( \((.*)\))/.test(item)) {
-            // has set info
-            const name = item.substring(0, item.indexOf('('));
-            const potentialIds = carddb.getIdsFromName(name);
-            if (potentialIds && potentialIds.length > 0) {
-              const set = item.toLowerCase().substring(item.indexOf('(') + 1, item.indexOf(')'));
-              // if we've found a match, and it DOES need to be parsed with cubecobra syntax
-              const matching = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === set);
-              selected = matching || potentialIds[0];
-            }
-          } else {
-            // does not have set info
-            const selectedCard = carddb.getMostReasonable(item, cube.defaultPrinting);
-            selected = selectedCard ? selectedCard._id : null;
+          const selectedCard = carddb.getMostReasonable(name, cube.defaultPrinting);
+          selectedId = selectedCard ? selectedCard._id : null;
+        }
+
+        if (selectedId) {
+          const details = carddb.cardFromId(selectedId);
+          if (!details.error) {
+            util.addCardToCube(cube, details);
+            added.push(details);
+            changelog += addCardHtml(details);
           }
-          if (selected) {
-            const details = carddb.cardFromId(selected);
-            if (!details.error) {
-              util.addCardToCube(cube, details);
-              added.push(details);
-              changelog += addCardHtml(details);
-            }
-          } else {
-            missing += `${item}\n`;
-          }
+        } else {
+          missing += `${item}\n`;
         }
       }
     }
