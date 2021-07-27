@@ -697,6 +697,10 @@ function cachePromise(key, callback) {
   return newPromise;
 }
 
+function canSeeCube(cube, user) {
+  return cube && (!cube.isPrivate || (user && user._id === cube.owner));
+}
+
 const methods = {
   setCubeType,
   cardsAreEquivalent,
@@ -762,6 +766,7 @@ const methods = {
   addDeckCardAnalytics,
   cachePromise,
   saveDraftAnalytics,
+  canSeeCube,
   ELO_BASE,
   ELO_SPEED,
   CUBE_ELO_SPEED,

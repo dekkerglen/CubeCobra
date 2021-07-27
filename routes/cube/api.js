@@ -23,6 +23,7 @@ const {
   maybeCards,
   saveDraftAnalytics,
   addCardHtml,
+  canSeeCube,
 } = require('../../serverjs/cubefn.js');
 
 const { rotateArrayLeft, createPool } = require('./helper');
@@ -250,6 +251,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!canSeeCube(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not found',
+      });
+    }
+
     const cardnames = [];
     for (const card of cube.cards) {
       util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
@@ -267,6 +275,12 @@ router.get(
   '/cubecardtags/:id',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!canSeeCube(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
     const tags = cubeCardTags(cube);
 
     return res.status(200).send({
@@ -326,6 +340,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!canSeeCube(cube, req.user)) {
+      return req.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
+
     const tagColors = buildTagColors(cube);
     const tags = tagColors.map((item) => item.tag);
 
@@ -333,6 +354,13 @@ router.get(
     const cubeB = await Cube.findOne(buildIdQuery(req.query.b_id)).lean();
 
     if (cubeB) {
+      if (!canSeeCube(cubeB, req.user)) {
+        return res.status(404).send({
+          success: 'false',
+          message: 'Not Found',
+        });
+      }
+
       const bTagColors = buildTagColors(cubeB);
       for (const bTag of bTagColors) {
         if (!tags.includes(bTag.tag)) {
@@ -343,7 +371,7 @@ router.get(
 
     const showTagColors = req.user ? !req.user.hide_tag_colors : true;
 
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
       tagColors,
       showTagColors,
@@ -361,6 +389,12 @@ router.get(
     cardname = cardutil.normalizeName(cardname);
 
     const cube = await Cube.findOne(buildIdQuery(cubeid)).lean();
+    if (!canSeeCube(cube, req.user)) {
+      return req.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
 
     for (const card of cube.cards) {
       if (carddb.cardFromId(card.cardID).name_lower === cardname) {
@@ -382,7 +416,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.status)) {
       return res.status(404).send('Cube not found.');
     }
 
@@ -398,7 +432,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       return res.status(404).send('Cube not found.');
     }
 
@@ -422,7 +456,7 @@ router.post('/redraft/:id/:seat', async (req, res) => {
     }
 
     const cube = await Cube.findById(srcDraft.cube);
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -505,6 +539,13 @@ router.get(
   '/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id), 'defaultPrinting').lean();
+    if (!canSeeCube(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
+
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card) {
       return res.status(200).send({
@@ -1046,7 +1087,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const { id } = req.params;
     const result = await Cube.findOne(buildIdQuery(id), 'date_updated').lean();
-    if (!result) {
+    if (!canSeeCube(result, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'No such cube.',

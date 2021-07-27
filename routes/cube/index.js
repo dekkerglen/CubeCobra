@@ -31,6 +31,7 @@ const {
   generateSamplepackImage,
   addDeckCardAnalytics,
   cachePromise,
+  canSeeCube,
 } = require('../../serverjs/cubefn.js');
 
 const {
@@ -306,7 +307,7 @@ router.get('/overview/:id', async (req, res) => {
   try {
     const cubeID = req.params.id;
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
@@ -416,7 +417,7 @@ router.get('/rss/:id', async (req, res) => {
     const split = req.params.id.split(';');
     const cubeID = split[0];
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -470,11 +471,11 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
-    if (!cubeA) {
+    if (!canSeeCube(cubeA, req.user)) {
       req.flash('danger', `Base cube not found: ${idA}`);
       return res.redirect('/404');
     }
-    if (!cubeB) {
+    if (!canSeeCube(cubeB, req.user)) {
       req.flash('danger', `Comparison cube not found: ${idB}`);
       return res.redirect('/404');
     }
@@ -542,7 +543,7 @@ router.get('/list/:id', async (req, res) => {
     const fields =
       'cards maybe card_count name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
@@ -598,7 +599,7 @@ router.get('/playtest/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
@@ -642,7 +643,7 @@ router.get('/analysis/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
@@ -1001,7 +1002,7 @@ router.post(
 
       const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats cards owner basics').lean();
 
-      if (!cube) {
+      if (!canSeeCube(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
@@ -1093,7 +1094,7 @@ router.post(
         '_id name basics cards owner numDecks disableNotifications',
       );
 
-      if (!cube) {
+      if (!canSeeCube(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
@@ -1208,7 +1209,7 @@ router.post(
         '_id name draft_formats cards basics useCubeElo',
       ).lean();
 
-      if (!cube) {
+      if (!canSeeCube(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
@@ -1295,7 +1296,7 @@ router.get('/griddraft/:id', async (req, res) => {
 
     const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
@@ -1353,7 +1354,7 @@ router.get('/draft/:id', async (req, res) => {
 
     const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
 
-    if (!cube) {
+    if (!canSeeCube(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
