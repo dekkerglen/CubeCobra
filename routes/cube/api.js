@@ -105,7 +105,6 @@ router.post(
     }
 
     cube.name = updatedCube.name;
-    cube.isListed = updatedCube.isListed;
     cube.privatePrices = updatedCube.privatePrices;
     cube.overrideCategory = updatedCube.overrideCategory;
 
@@ -173,11 +172,11 @@ router.post(
 router.post(
   '/settings/:id',
   ensureAuth,
-  body('isListed').toBoolean(),
   body('privatePrices').toBoolean(),
   body('disableNotifications').toBoolean(),
   body('defaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
   body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
+  body('visibility', 'Visibility must be valid').isIn(['public', 'unlisted', 'private']),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
@@ -196,17 +195,28 @@ router.post(
     }
 
     const update = req.body;
-    for (const field of [
-      'isListed',
-      'privatePrices',
-      'defaultStatus',
-      'defaultPrinting',
-      'disableNotifications',
-      'useCubeElo',
-    ]) {
+    for (const field of ['privatePrices', 'defaultStatus', 'defaultPrinting', 'disableNotifications', 'useCubeElo']) {
       if (update[field] !== undefined) {
         cube[field] = update[field];
       }
+    }
+
+    // convert visibility value to indicators
+    switch (req.body.visibility) {
+      case 'private':
+        cube.isListed = false;
+        cube.isPrivate = true;
+        break;
+      case 'unlisted':
+        cube.isListed = false;
+        cube.isPrivate = false;
+        break;
+      case 'public':
+        cube.isListed = true;
+        cube.isPrivate = false;
+        break;
+      default:
+        break; // can't occur due to the validation above
     }
 
     await cube.save();

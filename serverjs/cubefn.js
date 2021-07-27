@@ -698,7 +698,7 @@ function cachePromise(key, callback) {
 }
 
 function canSeeCube(cube, user) {
-  return cube && (!cube.isPrivate || (user && user._id === cube.owner));
+  return cube && (!cube.isPrivate || (user && user._id.equals(cube.owner)));
 }
 
 const methods = {
