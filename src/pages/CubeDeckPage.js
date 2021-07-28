@@ -33,7 +33,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
-import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import DraftPropType from 'proptypes/DraftPropType';
 
 const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   const user = useContext(UserContext);

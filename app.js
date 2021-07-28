@@ -15,12 +15,14 @@ const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
+const socketio = require('socket.io');
 const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards.js');
 const carddb = require('./serverjs/cards.js');
 const CardRating = require('./models/cardrating');
 const CardHistory = require('./models/cardHistory');
 const { render } = require('./serverjs/render');
+const { setup } = require('./serverjs/socketio');
 
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
@@ -193,6 +195,7 @@ app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
 app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
+app.use('/multiplayer', require('./routes/multiplayer'));
 app.use('/packages', require('./routes/packages'));
 
 app.use('', require('./routes/root'));
@@ -232,7 +235,9 @@ schedule.scheduleJob('0 10 * * *', async () => {
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(() => {
-  http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1', () => {
-    winston.info(`Server started on port ${process.env.PORT || 5000}...`);
-  });
+  const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
+  winston.info(`Server started on port ${process.env.PORT || 5000}...`);
+
+  // init socket io
+  setup(socketio(server));
 });

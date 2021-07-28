@@ -6,7 +6,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
 import { getCardColorClass } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
-import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import DraftPropType from 'proptypes/DraftPropType';
 import { cardName, encodeName } from 'utils/Card';
 import { getDrafterState } from 'drafting/draftutil';
 import { toNullableInt } from 'utils/Util';
