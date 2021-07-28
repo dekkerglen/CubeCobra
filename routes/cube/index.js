@@ -849,7 +849,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     });
 
     const added = [];
-    let missing = '';
+    const missing = [];
     let changelog = '';
     for (const card of cards) {
       const potentialIds = carddb.allVersions(card);
@@ -863,10 +863,10 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
           util.addCardToCube(cube, details, card.tags);
           changelog += addCardHtml(details);
         } else {
-          missing += `${card.name}\n`;
+          missing.push(card.name);
         }
       } else {
-        missing += `${card.name}\n`;
+        missing.push(card.name);
       }
     }
 
@@ -942,7 +942,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     const lines = items.match(/[^\r\n]+/g);
     if (lines) {
       let changelog = '';
-      let missing = '';
+      let missing = [];
       const added = [];
       let newCards = [];
       let newMaybe = [];
