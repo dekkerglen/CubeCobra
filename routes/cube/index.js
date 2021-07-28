@@ -731,11 +731,14 @@ router.get('/samplepack/:id', (req, res) => {
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
   try {
-    // TODO guard
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/playtest/404');
+    }
     let pack;
     try {
-      pack = await generatePack(req.params.id, carddb, req.params.seed);
+      pack = await generatePack(cube, carddb, req.params.seed);
     } catch (err) {
       req.flash('danger', err.message);
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -773,11 +776,15 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
-    // TODO guard
+    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/playtest/404');
+    }
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
-        pack = await generatePack(req.params.id, carddb, req.params.seed);
+        pack = await generatePack(cube, carddb, req.params.seed);
       } catch (err) {
         req.flash('danger', err.message);
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);

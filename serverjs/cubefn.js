@@ -729,8 +729,7 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  generatePack: async (cubeId, carddb, seed) => {
-    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
+  generatePack: async (cube, carddb, seed) => {
     if (!seed) {
       seed = Date.now().toString();
     }

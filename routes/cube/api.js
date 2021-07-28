@@ -1107,8 +1107,14 @@ router.post('/submitgriddraft/:id', async (req, res) => {
 router.get(
   '/p1p1/:id',
   util.wrapAsyncApi(async (req, res) => {
-    // TODO guard p1p1
-    const result = await generatePack(req.params.id, carddb, false);
+    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    const result = await generatePack(cube, carddb, false);
 
     return res.status(200).send({
       seed: result.seed,
@@ -1120,7 +1126,14 @@ router.get(
 router.get(
   '/p1p1/:id/:seed',
   util.wrapAsyncApi(async (req, res) => {
-    const result = await generatePack(req.params.id, carddb, req.params.seed);
+    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    const result = await generatePack(cube, carddb, req.params.seed);
 
     return res.status(200).send({
       seed: req.params.seed,
