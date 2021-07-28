@@ -697,8 +697,10 @@ function cachePromise(key, callback) {
   return newPromise;
 }
 
-function canSeeCube(cube, user) {
-  return cube && (!cube.isPrivate || (user && user._id.equals(cube.owner)));
+function isCubeViewable(cube, user) {
+  if (!cube) return false;
+  if (!cube.isPrivate) return true;
+  return user && (user.id === cube.owner || util.isAdmin(user));
 }
 
 const methods = {
@@ -766,7 +768,7 @@ const methods = {
   addDeckCardAnalytics,
   cachePromise,
   saveDraftAnalytics,
-  canSeeCube,
+  isCubeViewable,
   ELO_BASE,
   ELO_SPEED,
   CUBE_ELO_SPEED,

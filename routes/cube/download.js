@@ -9,7 +9,7 @@ const filterutil = require('../../dist/filtering/FilterCards.js');
 const carddb = require('../../serverjs/cards.js');
 const util = require('../../serverjs/util.js');
 
-const { buildIdQuery, canSeeCube } = require('../../serverjs/cubefn.js');
+const { buildIdQuery, isCubeViewable } = require('../../serverjs/cubefn.js');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper.js');
 
 // Bring in models
@@ -41,7 +41,7 @@ const sortCardsByQuery = (req, cards) => {
 router.get('/cubecobra/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -69,7 +69,7 @@ router.get('/csv/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -104,7 +104,7 @@ router.get('/forge/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!canSeeCube(req.user)) {
+    if (!isCubeViewable(req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -134,7 +134,7 @@ router.get('/forge/:id', async (req, res) => {
 router.get('/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    if (!canSeeCube(req.user)) {
+    if (!isCubeViewable(req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -155,7 +155,7 @@ router.get('/mtgo/:id', async (req, res) => {
 router.get('/xmage/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }
@@ -182,7 +182,7 @@ router.get('/xmage/:id', async (req, res) => {
 router.get('/plaintext/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', `Cube ID ${req.params.id} not found/`);
       return res.redirect('/404');
     }

@@ -19,7 +19,7 @@ const {
   abbreviate,
   addDeckCardAnalytics,
   removeDeckCardAnalytics,
-  canSeeCube,
+  isCubeViewable,
 } = require('../../serverjs/cubefn.js');
 
 const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
@@ -343,7 +343,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       buildIdQuery(deck.cube),
       `${Cube.LAYOUT_FIELDS} isListed isPrivate basics useCubeElo`,
     ).lean();
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
@@ -392,7 +392,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     const cube = await Cube.findOne(buildIdQuery(cubeid), Cube.LAYOUT_FIELDS).lean();
 
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
@@ -600,7 +600,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
     const cube = await Cube.findOne(buildIdQuery(draft.cube));
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/playtest/404');
     }
@@ -704,7 +704,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
     const cube = await Cube.findOne(buildIdQuery(draft.cube));
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/playtest/404');
     }
@@ -813,7 +813,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     }
 
     const cube = await Cube.findById(srcDraft.cube);
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -844,7 +844,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!canSeeCube(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
     }
