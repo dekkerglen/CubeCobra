@@ -308,7 +308,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     const deck = await Deck.findById(req.params.id);
     const deckOwner = (await User.findById(deck.seats[0].userid)) || {};
 
-    if (!deckOwner._id.equals(req.user._id) && !deck.cubeOwner === req.user._id) {
+    if (!deckOwner._id.equals(req.user._id) && !req.user._id.equals(deck.cubeOwner)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -455,6 +455,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
     const cube = await Cube.findById(base.cube);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect(`/cube/deck/${base._id}`);
+    }
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
