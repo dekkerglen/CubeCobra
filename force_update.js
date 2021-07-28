@@ -13,8 +13,8 @@ const CardHistory = require('./models/cardHistory');
     let ratings = [];
     let histories = [];
     if (process.env.USE_S3 !== 'true') {
-      ratings = []; // await CardRating.find({}, 'name elo embedding').lean();
-      histories = []; // await CardHistory.find({}, 'oracleId current.total current.picks').lean());
+      ratings = await CardRating.find({}, 'name elo embedding').lean();
+      histories = await CardHistory.find({}, 'oracleId current.total current.picks').lean());
     }
     await updatedb.updateCardbase(ratings, histories);
   } catch (error) {
