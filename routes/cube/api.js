@@ -1146,7 +1146,7 @@ router.get(
   '/date_updated/:id',
   util.wrapAsyncApi(async (req, res) => {
     const { id } = req.params;
-    const result = await Cube.findOne(buildIdQuery(id), 'date_updated').lean();
+    const result = await Cube.findOne(buildIdQuery(id), 'date_updated isPrivate owner').lean();
     if (!isCubeViewable(result, req.user)) {
       return res.status(404).send({
         success: 'false',

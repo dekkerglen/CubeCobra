@@ -146,7 +146,7 @@ router.get(
         message: 'Blog post not found',
       });
     }
-    const cube = await Cube.findById(blog.cube);
+    const cube = await Cube.findById(blog.cube).lean();
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -169,7 +169,7 @@ router.get('/:id', (req, res) => {
 
 router.get('/:id/:page', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), `${Cube.LAYOUT_FIELDS} isPrivate owner`).lean();
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

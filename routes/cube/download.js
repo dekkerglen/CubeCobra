@@ -70,7 +70,7 @@ router.get('/csv/:id', async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
     if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      req.flash('danger', `Cube ID ${req.params.id} not found`);
       return res.redirect('/404');
     }
 
@@ -135,7 +135,7 @@ router.get('/mtgo/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!isCubeViewable(req.user)) {
-      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      req.flash('danger', `Cube ID ${req.params.id} not found`);
       return res.redirect('/404');
     }
 
@@ -156,7 +156,7 @@ router.get('/xmage/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      req.flash('danger', `Cube ID ${req.params.id} not found`);
       return res.redirect('/404');
     }
 
@@ -183,7 +183,7 @@ router.get('/plaintext/:id', async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      req.flash('danger', `Cube ID ${req.params.id} not found`);
       return res.redirect('/404');
     }
 

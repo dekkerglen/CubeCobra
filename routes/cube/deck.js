@@ -341,7 +341,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
 
     const cube = await Cube.findOne(
       buildIdQuery(deck.cube),
-      `${Cube.LAYOUT_FIELDS} isListed isPrivate basics useCubeElo`,
+      `${Cube.LAYOUT_FIELDS} basics useCubeElo isPrivate owner`,
     ).lean();
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -390,7 +390,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
     const { cubeid } = req.params;
     const pagesize = 30;
 
-    const cube = await Cube.findOne(buildIdQuery(cubeid), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeid), `${Cube.LAYOUT_FIELDS} isPrivate owner`).lean();
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

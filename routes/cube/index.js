@@ -243,7 +243,7 @@ router.post(
   '/unfollow/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findById(buildIdQuery(req.params.id), 'users_following');
+    const cube = await Cube.findById(buildIdQuery(req.params.id), 'users_following isPrivate owner');
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.status(404).send({
@@ -426,7 +426,7 @@ router.get('/rss/:id', async (req, res) => {
     const cubeID = split[0];
     const cube = await Cube.findOne(buildIdQuery(cubeID)).lean();
     if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      req.flash('danger', `Cube ID ${req.params.id} not found`);
       return res.redirect('/404');
     }
     const blogs = await Blog.find({
@@ -549,7 +549,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 router.get('/list/:id', async (req, res) => {
   try {
     const fields =
-      'cards maybe card_count name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID';
+      'cards maybe card_count name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID isPrivate';
     const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -951,7 +951,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     const items = req.files.document.data.toString('utf8'); // the uploaded file object
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
     // We need a copy of cards we can mutate to be able to populate details for the comparison.
-    const { cards } = await Cube.findOne(buildIdQuery(req.params.id), 'cards').lean();
+    const { cards } = await Cube.findOne(buildIdQuery(req.params.id), 'cards isPrivate owner').lean();
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -1020,7 +1020,10 @@ router.post(
 
       const numCards = numPacks * 9;
 
-      const cube = await Cube.findOne(buildIdQuery(req.params.id), '_id name draft_formats cards owner basics').lean();
+      const cube = await Cube.findOne(
+        buildIdQuery(req.params.id),
+        '_id name draft_formats cards owner basics isPrivate',
+      ).lean();
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Cube not found');
@@ -1226,7 +1229,7 @@ router.post(
     try {
       const cube = await Cube.findOne(
         buildIdQuery(req.params.id),
-        '_id name draft_formats cards basics useCubeElo isPrivate',
+        '_id name draft_formats cards basics useCubeElo isPrivate owner',
       ).lean();
 
       if (!isCubeViewable(cube, req.user)) {
