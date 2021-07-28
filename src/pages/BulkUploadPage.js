@@ -105,7 +105,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
 
 BulkUploadPageRaw.propTypes = {
   cubeID: PropTypes.string.isRequired,
-  missing: PropTypes.string.isRequired,
+  missing: PropTypes.arrayOf(PropTypes.string).isRequired,
   blogpost: PropTypes.shape({
     title: PropTypes.string.isRequired,
     html: PropTypes.string.isRequired,
