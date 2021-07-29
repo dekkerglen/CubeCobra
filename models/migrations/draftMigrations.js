@@ -2,6 +2,7 @@ const { cleanCards } = require('./cleanCards');
 const Cube = require('../cube');
 const { addBasics, createPool } = require('../../routes/cube/helper');
 const { flatten, mapNonNull, toNonNullArray } = require('../../serverjs/util');
+const { cardsAreEquivalent } = require('../../src/utils/Card');
 
 const dedupeCardObjects = async (draft) => {
   if (!draft) return null;
@@ -26,7 +27,7 @@ const dedupeCardObjects = async (draft) => {
   }
   cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
   const replaceWithIndex = (card) => {
-    const idx = cardsArray.findIndex((card2) => card && card2 && card.cardID === card2.cardID);
+    const idx = cardsArray.findIndex((card2) => card && card2 && cardsAreEquivalent(card, card2));
     if (idx === -1) {
       cardsArray.push(card);
       return cardsArray.length - 1;
