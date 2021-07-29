@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 import CardPropType from 'proptypes/CardPropType';
 
+import { cardsAreEquivalent } from 'utils/Card';
+
 import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
@@ -46,7 +48,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
         for (const column of row) {
           column.forEach((card, index) => {
             if (!Number.isFinite(card)) {
-              column[index] = deck.cards.findIndex((deckCard) => deckCard.cardID === card.cardID);
+              column[index] = deck.cards.findIndex((deckCard) => cardsAreEquivalent(deckCard, card));
             }
           });
         }
