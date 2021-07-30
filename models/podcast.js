@@ -6,7 +6,7 @@ const podcastSchema = mongoose.Schema({
   description: String,
   url: String,
   rss: String,
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   image: String,
   date: Date,
   username: {

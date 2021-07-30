@@ -16,7 +16,7 @@ const cubeSchema = mongoose.Schema({
     unique: true,
   },
   owner: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   isListed: {
@@ -91,7 +91,7 @@ const cubeSchema = mongoose.Schema({
     default: [],
   },
   users_following: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   defaultStatus: {

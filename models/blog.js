@@ -4,9 +4,9 @@ const mongoose = require('mongoose');
 const blogSchema = mongoose.Schema({
   title: String,
   body: String,
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   date: Date,
-  cube: String,
+  cube: mongoose.Schema.Types.ObjectId,
   html: String,
   markdown: String,
   dev: String,

@@ -35,7 +35,7 @@ const Pack = {
 const Seat = {
   bot: Boolean, // null bot value means human player
   name: String,
-  userid: String,
+  userid: mongoose.Schema.Types.ObjectId,
   drafted: [[[Number]]], // organized draft picks
   sideboard: [[[Number]]], // organized draft picks
   pickorder: [Number], // cards this player picked in order of when they were picked
@@ -50,7 +50,7 @@ const draftSchema = mongoose.Schema(
       type: [Number],
     },
     cards: [cardSchema],
-    cube: String,
+    cube: mongoose.Schema.Types.ObjectId,
     initial_state: [[Pack]],
     schemaVersion: {
       type: Number,

@@ -5,7 +5,7 @@ const articleSchema = mongoose.Schema({
   title: String,
   body: String,
   short: String,
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   date: Date,
   image: String,
   imagename: String,

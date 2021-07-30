@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const packageSchema = mongoose.Schema({
   title: String,
   date: Date,
-  userid: String,
+  userid: mongoose.Schema.Types.ObjectId,
   username: String,
   approved: {
     type: Boolean,
@@ -20,7 +20,7 @@ const packageSchema = mongoose.Schema({
     default: 0,
   },
   voters: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   keywords: {
