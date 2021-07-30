@@ -110,7 +110,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
     if (!other.users_following.some((id) => id.equals(user._id))) {
       other.users_following.push(user._id);
     }
-    if (!user.followed_users.includes((id) => id.equals(other._id))) {
+    if (!user.followed_users.some((id) => id.equals(other._id))) {
       user.followed_users.push(other._id);
     }
 
