@@ -29,33 +29,39 @@ const Id = (x, obj) => {
   if (!x || x === '') return null;
   if (!/^[0-9a-fA-F]{24}/.test(x)) {
     console.error(`Cannot convert value ${x} to Id`, obj);
-    return x; // preserve the string rather than losing data. we can fix these later
+    return x;
   }
   return mongoose.Types.ObjectId(x);
 };
 
 const convertProps = (paths) => (obj) => {
-  let id;
   for (const path of paths) {
     if (Array.isArray(obj[path])) {
-      id = [];
       for (let i = 0; i < obj[path].length; i++) {
-        id[i] = Id(id[i], obj);
+        obj[path][i] = Id(obj[path][i], obj);
       }
     } else {
-      id = Id(obj[path], obj);
+      obj[path] = Id(obj[path], obj);
     }
     obj.markModified(path);
   }
 };
 
-const processGridDraft = (g) => {
+const processDraft = (g) => {
   g.cube = Id(g.cube);
   for (const seat of g.seats) {
     seat.userid = Id(seat.userid, g);
   }
   g.markModified('cube');
   g.markModified('seats');
+};
+
+const processDeck = (d) => {
+  convertProps(['cube', 'cubeOwner', 'owner', 'draft'])(d);
+  for (const seat of d.seats) {
+    seat.userid = Id(seat.userid, d);
+  }
+  d.markModified('seats');
 };
 
 const processUser = (u) => {
@@ -77,9 +83,9 @@ const processors = {
   comment: [Comment, convertProps(['parent', 'owner'])],
   cube: [Cube, convertProps(['owner', 'users_following'])],
   cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
-  deck: [Deck, convertProps(['cube', 'cubeOwner', 'owner', 'draft'])],
-  draft: [Draft, convertProps(['cube'])],
-  gridDraft: [GridDraft, processGridDraft],
+  deck: [Deck, processDeck],
+  draft: [Draft, processDraft],
+  gridDraft: [GridDraft, processDraft],
   package: [Package, convertProps(['userid', 'voters'])],
   patron: [Patron, convertProps(['user'])],
   podcast: [Podcast, convertProps(['owner'])],

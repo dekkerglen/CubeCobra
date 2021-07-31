@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const packageSchema = mongoose.Schema({
   title: String,
   date: Date,

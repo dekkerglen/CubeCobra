@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const podcastSchema = mongoose.Schema({
   title: String,
   description: String,

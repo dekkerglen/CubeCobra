@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const videoSchema = mongoose.Schema({
   title: String,
   body: String,

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Deck schema
 const reportSchema = mongoose.Schema({
   commentid: mongoose.Schema.Types.ObjectId,
   info: String,

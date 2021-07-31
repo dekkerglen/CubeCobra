@@ -14,7 +14,6 @@ const Seat = {
   pickedIndices: [Number],
 };
 
-// Cube schema
 const gridDraftSchema = mongoose.Schema({
   basics: {
     default: [],

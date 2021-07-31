@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const cubeAnalyticSchema = mongoose.Schema({
   cube: {
     type: mongoose.Schema.Types.ObjectId,

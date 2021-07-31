@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Cube schema
 const cardRatingSchema = mongoose.Schema({
   value: Number,
   elo: Number,

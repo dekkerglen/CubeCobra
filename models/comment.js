@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Deck schema
 const commentSchema = mongoose.Schema({
   parent: mongoose.Schema.Types.ObjectId,
   parentType: {
