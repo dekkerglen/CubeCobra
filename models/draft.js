@@ -42,7 +42,6 @@ const Seat = {
   trashorder: [Number], // cards this player trashed in order of when they were trashed
 };
 
-// Cube schema
 const draftSchema = mongoose.Schema(
   {
     basics: {
