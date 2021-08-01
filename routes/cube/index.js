@@ -244,7 +244,7 @@ router.post(
 
     const { user } = req;
     cube.users_following = cube.users_following.filter((id) => !req.user._id.equals(id));
-    user.followed_cubes = user.followed_cubes.filter((id) => !req.user._id.equals(id));
+    user.followed_cubes = user.followed_cubes.filter((id) => !cube._id.equals(id));
 
     await Promise.all([user.save(), cube.save()]);
 

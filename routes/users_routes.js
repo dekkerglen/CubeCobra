@@ -562,7 +562,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     return render(req, res, 'UserDecksPage', {
       owner: user,
       followers,
-      following: req.user && req.user.followed_users.includes(user._id),
+      following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: Math.max(req.params.page, 0),
