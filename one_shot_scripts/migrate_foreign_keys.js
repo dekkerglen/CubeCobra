@@ -80,7 +80,7 @@ const processors = {
   application: [Application, convertProps(['userid'])],
   article: [Article, convertProps(['owner'])],
   blog: [Blog, convertProps(['owner', 'cube'])],
-  comment: [Comment, convertProps(['parent', 'owner'])],
+  comment: [Comment, convertProps(['owner'])],
   cube: [Cube, convertProps(['owner', 'users_following'])],
   cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
   deck: [Deck, processDeck],

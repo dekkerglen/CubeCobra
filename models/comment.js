@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const commentSchema = mongoose.Schema({
-  parent: mongoose.Schema.Types.ObjectId,
+  parent: String, // either a Mongo ObjectId or a card's Scryfall ID
   parentType: {
     type: String,
     enum: ['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'],
