@@ -211,7 +211,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       if (newPatron.level === 'Patron') {
         req.flash(
           'warning',
-          "Your pledge isn't tied to any support tiers. Please choose an eligible tier on Patreon to get access to all your rewards.",
+          "Your pledge isn't tied to any support tiers. Choose an eligible tier on Patreon to get access to all your rewards.",
         );
       }
       req.flash('success', `Your Patreon account has successfully been linked.`);
