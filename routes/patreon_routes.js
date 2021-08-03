@@ -175,7 +175,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
         return res.redirect('/user/account?nav=patreon');
       }
 
-      if (!pledges[0].relationships.reward) {
+      if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
         newPatron.level = 'Patron';
       } else {
         const rewardId = pledges[0].relationships.reward.data.id;
@@ -208,7 +208,13 @@ router.get('/redirect', ensureAuth, (req, res) => {
       user.patron = newPatron._id;
       await user.save();
 
-      req.flash('success', `Your Patreon account has succesfully been linked.`);
+      if (newPatron.level === 'Patron') {
+        req.flash(
+          'warning',
+          "Your pledge isn't tied to any support tiers. Please choose an eligible tier on Patreon to get access to all your rewards.",
+        );
+      }
+      req.flash('success', `Your Patreon account has successfully been linked.`);
       return res.redirect('/user/account?nav=patreon');
     })
     .catch((err) => {
