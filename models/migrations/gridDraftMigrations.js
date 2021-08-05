@@ -2,7 +2,7 @@ const Cube = require('../cube');
 const { addBasics, createPool } = require('../../routes/cube/helper');
 const { flatten, mapNonNull } = require('../../serverjs/util');
 const { cleanCards } = require('./cleanCards');
-const { cardsAreEquivalent } = require('../../src/utils/Card');
+const { cardsAreEquivalent } = require('../../dist/utils/Card');
 
 const dedupeCardObjects = async (gridDraft) => {
   if (!gridDraft) return null;
