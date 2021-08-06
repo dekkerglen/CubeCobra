@@ -222,6 +222,7 @@ export const CARD_CATEGORY_DETECTORS = {
   promo: (details) => details.promo,
   reprint: (details) => details.reprint,
   firstprint: (details) => !details.reprint,
+  firstprinting: (details) => !details.reprint,
   digital: (details) => details.digital,
   reasonable: (details) =>
     !details.promo &&
