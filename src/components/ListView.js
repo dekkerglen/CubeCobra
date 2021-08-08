@@ -221,12 +221,14 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
       const { target } = event;
       const { name, value, tagName } = target;
 
+      const _value = name === 'cmc' ? parseFloat(value) : value;
+
       // <select>s handled in handleChange above.
       if (tagName.toLowerCase() !== 'select') {
         try {
           // Note: We can use this logic on all but the colors field, which is a select anyway so this path is irrelevant.
           await syncCard({
-            [name]: value,
+            [name]: _value,
           });
         } catch (err) {
           // FIXME: Display in UI.
