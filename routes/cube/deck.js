@@ -586,7 +586,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
-    const cube = await Cube.findOne(draft.cube);
+    const cube = await Cube.findById(draft.cube);
     // TODO: Should have guards on if the objects aren't found in the DB.
 
     const deck = new Deck();

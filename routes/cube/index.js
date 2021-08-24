@@ -1351,7 +1351,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findOne(draft.cube).lean();
+    const cube = await Cube.findById(draft.cube).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
