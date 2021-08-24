@@ -44,7 +44,13 @@ import RenderToRoot from 'utils/RenderToRoot';
 import Tab from 'components/Tab';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo, cardPopularity, cardCubeCount } from 'utils/Card';
-import { getTCGLink, getCardMarketLink, getCardHoarderLink, getCardKingdomLink } from 'utils/Affiliate';
+import {
+  getTCGLink,
+  getCardMarketLink,
+  getCardHoarderLink,
+  getCardKingdomLink,
+  nameToDashedUrlComponent,
+} from 'utils/Affiliate';
 import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
@@ -523,7 +529,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                         outline
                         color="success"
                         block
-                        href={`https://edhrec.com/cards/${card.name}`}
+                        href={`https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}`}
                         target="_blank"
                       >
                         View on EDHRec
