@@ -22,12 +22,6 @@ const CardRating = require('./models/cardrating');
 const CardHistory = require('./models/cardHistory');
 const { render } = require('./serverjs/render');
 
-// polyfill for comparison to ObjectIds until database migration finishes
-// eslint-disable-next-line no-extend-native
-String.prototype.equals = function equals(other) {
-  return this.toString() === other.toString();
-};
-
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
   useCreateIndex: true,
