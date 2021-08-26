@@ -104,11 +104,13 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
           },
         });
         if (!response.ok) {
-          let json = {};
+          let message;
           try {
-            json = await response.json();
-          } catch (e) { /* no-op */ }
-          const message = json?.message || `status ${response.status}`;
+            const json = await response.json();
+            message = json.message;
+          } catch {
+            message = `status ${response.status}`;
+          }
           addAlert('danger', `Failed to update ${card.details.name} (${message})`);
           return;
         }
