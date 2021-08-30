@@ -34,6 +34,8 @@ const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const Package = require('../../models/package');
 const Blog = require('../../models/blog');
+const FeaturedCubes = require('../../models/featuredCubes');
+const Patron = require('../../models/patron');
 
 const router = express.Router();
 
@@ -1055,6 +1057,85 @@ router.get(
     return res.status(200).send({
       success: 'true',
       date_updated: result.date_updated.valueOf(),
+    });
+  }),
+);
+
+router.post(
+  '/queuefeatured/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube.owner.equals(req.user._id)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    const patron = await Patron.findOne({ user: req.user._id }).lean();
+    if (!patron.active || !['Coiling Oracle', 'Lotus Cobra'].includes(patron.level)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Insufficient Patreon status for featuring a cube',
+      });
+    }
+
+    const featured = await FeaturedCubes.findOne();
+    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+    if (currentIndex === 0 || currentIndex === 1) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cannot change currently featured cube',
+      });
+    }
+
+    let message;
+    if (currentIndex === -1) {
+      featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
+      message = 'Successfully added cube to queue';
+    } else {
+      featured.queue[currentIndex].cubeID = cube._id;
+      message = 'Successfully replaced cube in queue';
+    }
+
+    await featured.save();
+    return res.send({ success: 'true', message });
+  }),
+);
+
+router.delete(
+  '/unqueuefeatured/:id',
+  ensureAuth,
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!cube.owner.equals(req.user._id)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    const featured = FeaturedCubes.findOne();
+    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.params._id));
+    if (index === -1) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Nothing to remove',
+      });
+    }
+    if (index === 0 || index === 1) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cannot remove currently featured cube',
+      });
+    }
+
+    featured.queue.splice(index, 1);
+    await featured.save();
+    return res.send({
+      success: 'true',
+      message: 'Successfully removed cube from queue',
     });
   }),
 );

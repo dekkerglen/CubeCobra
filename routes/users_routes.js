@@ -17,6 +17,7 @@ const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const Patron = require('../models/patron');
+const FeaturedCubes = require('../models/featuredCubes');
 
 const router = express.Router();
 
@@ -630,6 +631,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
 // account page
 router.get('/account', ensureAuth, async (req, res) => {
   const patron = await Patron.findOne({ user: req.user.id });
+  const featured = await FeaturedCubes.findOne();
 
   return render(
     req,
@@ -640,6 +642,7 @@ router.get('/account', ensureAuth, async (req, res) => {
       patreonRedirectUri: process.env.PATREON_REDIRECT || '',
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
       patron,
+      featured: featured.queue.find((f) => f.ownerID.equals(req.user._id)),
     },
     {
       title: 'Account',
