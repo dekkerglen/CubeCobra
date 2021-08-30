@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const featuredCubesSchema = mongoose.Schema({
-  queue: [mongoose.Schema.Types.ObjectId],
+  queue: [
+    {
+      cubeID: mongoose.Schema.Types.ObjectId,
+      ownerID: mongoose.Schema.Types.ObjectId,
+    },
+  ],
   lastRotation: Date,
   daysBetweenRotations: {
     type: Number,

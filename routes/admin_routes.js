@@ -5,7 +5,6 @@ const express = require('express');
 const mailer = require('nodemailer');
 const path = require('path');
 const Email = require('email-templates');
-const mongoose = require('mongoose');
 const parser = require('../dist/markdown/parser');
 const { ensureRole, csrfProtection } = require('./middleware');
 
@@ -19,6 +18,7 @@ const Podcast = require('../models/podcast');
 const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../models/cube');
 const { render } = require('../serverjs/render');
+const { buildIdQuery } = require('../serverjs/cubefn.js');
 const util = require('../serverjs/util.js');
 
 const ensureAdmin = ensureRole('Admin');
@@ -643,11 +643,11 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 
   // ensure queue is returned in correct order
   const sorted = [];
-  for (const id of featured.queue) {
+  for (const cube of featured.queue) {
     // the queue shouldn't be long enough to care about the O(n^2) complexity of this
-    const cube = cubes.find((c) => c._id.equals(id));
-    if (!cube) req.flash('danger', `Non-existent cube ${id} set as featured`);
-    else sorted.push(cube);
+    const found = cubes.find((c) => c._id.equals(cube.cubeID));
+    if (!found) req.flash('danger', `Non-existent cube ${cube.cubeID} set as featured`);
+    else sorted.push(found);
   }
 
   return render(req, res, 'FeaturedCubesQueuePage', {
@@ -667,18 +667,18 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const old1 = featured.queue.shift();
   const old2 = featured.queue.shift();
   const [new1, new2] = featured.queue;
+  featured.queue.push(old1);
+  featured.queue.push(old2);
 
-  const removeOld = await Cube.updateMany({ _id: { $in: [old1, old2] } }, { isFeatured: false });
+  const removeOld = await Cube.updateMany({ _id: { $in: [old1.cubeID, old2.cubeID] } }, { isFeatured: false });
   if (removeOld.n !== 2) req.flash('danger', `Expected to match 2 featured cubes, ${removeOld.n} matched instead`);
   if (removeOld.nModified !== 2)
     req.flash('danger', `Expected to remove 2 cubes, ${removeOld.nModified} removed instead`);
 
-  const addNew = await Cube.updateMany({ _id: { $in: [new1, new2] } }, { isFeatured: true });
+  const addNew = await Cube.updateMany({ _id: { $in: [new1.cubeID, new2.cubeID] } }, { isFeatured: true });
   if (addNew.n !== 2) req.flash('danger', `Expected to match 2 cubes to feature, ${addNew.n} matched instead`);
   if (addNew.nModified !== 2) req.flash('danger', `Expected to add 2 cubes, ${addNew.nModified} added instead`);
 
-  featured.queue.push(old1);
-  featured.queue.push(old2);
   featured.lastUpdated = new Date();
   await featured.save();
 
@@ -705,26 +705,30 @@ router.post(
 );
 
 router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    req.flash('danger', 'Invalid ID passed as parameter');
-    return res.redirect('/admin/featuredcubes');
-  }
-
+  const cube = await Cube.find(buildIdQuery(req.params.id)).lean();
   const featured = await FeaturedCubes.findOne();
-  const index = featured.queue.findIndex((id) => id.equals(req.params.id));
+  const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
   if (index !== -1) {
     req.flash('danger', 'Cube is already in queue');
     return res.redirect('/admin/featuredcubes');
   }
 
-  featured.queue.push(mongoose.Types.ObjectId(req.params.id));
+  featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
   await featured.save();
+
+  const user = await User.findById(cube.owner);
+  await util.addNotification(
+    user,
+    req.user,
+    '/user/account?nav=patreon',
+    'An admin added your cube to the featured cubes queue',
+  );
   return res.redirect('/admin/featuredcubes');
 });
 
 router.delete('/featuredcubes/:id', ensureAdmin, async (req, res) => {
   const featured = await FeaturedCubes.findOne();
-  const index = featured.queue.findIndex((id) => id.equals(req.params.id));
+  const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
   if (index === -1) {
     req.flash('danger', 'Cube not found in queue');
     return res.redirect('/admin/featuredcubes');
@@ -733,9 +737,16 @@ router.delete('/featuredcubes/:id', ensureAdmin, async (req, res) => {
     req.flash('danger', 'Cannot remove currently featured cube from queue');
     return res.redirect('/admin/featuredcubes');
   }
-
-  featured.queue.splice(index, 1);
+  const [removed] = featured.queue.splice(index, 1);
   await featured.save();
+
+  const user = User.findById(removed.userID);
+  await util.addNotification(
+    user,
+    req.user,
+    '/user/account?nav=patreon',
+    'An admin removed your cube from the featured cubes queue.',
+  );
   return res.redirect('/admin/featuredcubes');
 });
 
