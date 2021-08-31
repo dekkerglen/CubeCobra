@@ -855,7 +855,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
-  const update = await fq.updateFeatured((featured) => {
+  const update = await fq.updateFeatured(async (featured) => {
     const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
     if (currentIndex === 0 || currentIndex === 1) {
       throw new Error('Cannot change currently featured cube');
@@ -879,7 +879,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
   const redirect = '/user/account?nav=patreon';
 
-  const update = await fq.updateFeatured((featured) => {
+  const update = await fq.updateFeatured(async (featured) => {
     const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
     if (index === -1) {
       throw new Error('Nothing to remove');

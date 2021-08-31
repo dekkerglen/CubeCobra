@@ -665,7 +665,7 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
     req.flash('danger', message);
   }
 
-  if (rotate.status === 'false') {
+  if (rotate.success === 'false') {
     req.flash('danger', 'Featured Cube rotation failed!');
     return res.redirect('/admin/featuredcubes');
   }
@@ -699,7 +699,7 @@ router.post(
       });
     }
 
-    await fq.updateFeatured((featured) => {
+    await fq.updateFeatured(async (featured) => {
       featured.daysBetweenRotations = days;
     });
     return res.send({ success: 'true', period: days });
@@ -712,7 +712,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return res.redirect('/admin/featuredcubes');
   }
   const cube = await Cube.findOne(buildIdQuery(req.body.cubeId)).lean();
-  const update = await fq.updateFeatured((featured) => {
+  const update = await fq.updateFeatured(async (featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
     if (index !== -1) {
       throw new Error('Cube is already in queue');
@@ -741,7 +741,7 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
     return res.redirect('/admin/featuredcubes');
   }
 
-  const update = await fq.updateFeatured((featured) => {
+  const update = await fq.updateFeatured(async (featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(req.body.cubeId));
     if (index === -1) {
       throw new Error('Cube not found in queue');

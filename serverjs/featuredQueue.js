@@ -2,6 +2,7 @@ const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../models/cube');
 const Patron = require('../models/patron');
 
+// fn must be awaitable
 async function updateFeatured(fn) {
   let replaced = null;
   let ret;
@@ -10,7 +11,8 @@ async function updateFeatured(fn) {
     const featured = await FeaturedCubes.findOne({ singleton: true }).lean();
     const stamp = featured.timestamp;
     try {
-      ret = fn(featured);
+      // eslint-disable-next-line no-await-in-loop
+      ret = await fn(featured);
     } catch (e) {
       return { ok: false, message: e.message };
     }

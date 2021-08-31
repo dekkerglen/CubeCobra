@@ -17,7 +17,7 @@ const featuredCubesSchema = mongoose.Schema({
     default: 14,
   },
 
-  // logical timestamp used for concurrency control (see util.updateFeatured)
+  // logical timestamp used for concurrency control (see fq.updateFeatured)
   timestamp: {
     type: Number,
     default: 0,
