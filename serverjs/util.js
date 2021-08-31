@@ -183,15 +183,21 @@ function flatten(arr, n) {
 
 async function updateFeatured(fn) {
   let replaced = null;
+  let ret;
   while (!replaced) {
     // eslint-disable-next-line no-await-in-loop
     const featured = await FeaturedCubes.findOne({ singleton: true }).lean();
     const stamp = featured.timestamp;
-    const edited = fn(featured);
-    edited.timestamp = (stamp + 1) % 10_000_000; // arbitrary constant to avoid overflowing safe integer range
+    try {
+      ret = fn(featured);
+    } catch (e) {
+      return { ok: false, message: e.message };
+    }
+    featured.timestamp = (stamp + 1) % 100_000_000; // arbitrary constant to avoid overflowing safe integer range
     // eslint-disable-next-line no-await-in-loop
-    replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, edited);
+    replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, featured);
   }
+  return { ok: true, return: ret };
 }
 
 module.exports = {

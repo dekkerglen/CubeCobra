@@ -1080,27 +1080,24 @@ router.post(
       });
     }
 
-    let message;
-    try {
-      await util.updateFeatured((featured) => {
-        const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
-        if (currentIndex === 0 || currentIndex === 1) {
-          throw new Error('Cannot change currently featured cube');
-        }
-        if (currentIndex === -1) {
-          featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
-          message = 'Successfully added cube to queue';
-        } else {
-          featured.queue[currentIndex].cubeID = cube._id;
-          message = 'Successfully replaced cube in queue';
-        }
-        return featured;
-      });
-    } catch (e) {
-      return res.status(400).send({ success: 'false', message: e.message });
-    }
+    const update = await util.updateFeatured((featured) => {
+      const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+      if (currentIndex === 0 || currentIndex === 1) {
+        throw new Error('Cannot change currently featured cube');
+      }
+      let message;
+      if (currentIndex === -1) {
+        featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
+        message = 'Successfully added cube to queue';
+      } else {
+        featured.queue[currentIndex].cubeID = cube._id;
+        message = 'Successfully replaced cube in queue';
+      }
+      return message;
+    });
 
-    return res.send({ success: 'true', message });
+    if (!update.ok) return res.status(400).send({ success: 'false', message: update.message });
+    return res.send({ success: 'true', message: update.return });
   }),
 );
 
@@ -1116,22 +1113,18 @@ router.delete(
       });
     }
 
-    try {
-      await util.updateFeatured((featured) => {
-        const index = featured.queue.findIndex((f) => f.ownerID.equals(req.params._id));
-        if (index === -1) {
-          throw new Error('Nothing to remove');
-        }
-        if (index === 0 || index === 1) {
-          throw new Error('Cannot remove currently featured cube');
-        }
-        featured.queue.splice(index, 1);
-        return featured;
-      });
-    } catch (e) {
-      return res.status(400).send({ success: false, message: e.message });
-    }
+    const update = await util.updateFeatured((featured) => {
+      const index = featured.queue.findIndex((f) => f.ownerID.equals(req.params._id));
+      if (index === -1) {
+        throw new Error('Nothing to remove');
+      }
+      if (index === 0 || index === 1) {
+        throw new Error('Cannot remove currently featured cube');
+      }
+      featured.queue.splice(index, 1);
+    });
 
+    if (!update.ok) return res.status(400).send({ success: false, message: update.message });
     return res.send({
       success: 'true',
       message: 'Successfully removed cube from queue',

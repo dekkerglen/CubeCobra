@@ -658,28 +658,24 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 });
 
 router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
-  let old1;
-  let old2;
-  let new1;
-  let new2;
-  try {
-    await util.updateFeatured((featured) => {
-      if (featured.queue.length < 4) {
-        throw new Error(`Not enough cubes in queue to rotate (need 4, have ${featured.queue.length}`);
-      }
+  const update = await util.updateFeatured((featured) => {
+    if (featured.queue.length < 4) {
+      throw new Error(`Not enough cubes in queue to rotate (need 4, have ${featured.queue.length}`);
+    }
+    const old1 = featured.queue.shift();
+    const old2 = featured.queue.shift();
+    const [new1, new2] = featured.queue;
+    featured.queue.push(old1);
+    featured.queue.push(old2);
+    featured.lastUpdated = new Date();
+    return [old1, old2, new1, new2];
+  });
 
-      old1 = featured.queue.shift();
-      old2 = featured.queue.shift();
-      [new1, new2] = featured.queue;
-      featured.queue.push(old1);
-      featured.queue.push(old2);
-      featured.lastUpdated = new Date();
-      return featured;
-    });
-  } catch (e) {
-    req.flash('danger', e.message);
+  if (!update.ok) {
+    req.flash('danger', update.message);
     return res.redirect('/admin/featuredcubes');
   }
+  const [old1, old2, new1, new2] = update.return;
 
   const removeOld = await Cube.updateMany({ _id: { $in: [old1.cubeID, old2.cubeID] } }, { isFeatured: false });
   if (removeOld.n !== 2) req.flash('danger', `Expected to match 2 featured cubes, ${removeOld.n} matched instead`);
@@ -707,7 +703,6 @@ router.post(
 
     await util.updateFeatured((featured) => {
       featured.daysBetweenRotations = days;
-      return featured;
     });
     return res.send({ success: 'true' });
   }),
@@ -715,17 +710,16 @@ router.post(
 
 router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
   const cube = await Cube.find(buildIdQuery(req.params.id)).lean();
-  try {
-    await util.updateFeatured((featured) => {
-      const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
-      if (index !== -1) {
-        throw new Error('Cube is already in queue');
-      }
-      featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
-      return featured;
-    });
-  } catch (e) {
-    req.flash('danger', e.message);
+  const update = await util.updateFeatured((featured) => {
+    const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
+    if (index !== -1) {
+      throw new Error('Cube is already in queue');
+    }
+    featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
+  });
+
+  if (!update.ok) {
+    req.flash('danger', update.message);
     return res.redirect('/admin/featuredcubes');
   }
 
@@ -740,24 +734,22 @@ router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
 });
 
 router.delete('/featuredcubes/:id', ensureAdmin, async (req, res) => {
-  let removed;
-  try {
-    await util.updateFeatured((featured) => {
-      const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
-      if (index === -1) {
-        throw new Error('Cube not found in queue');
-      }
-      if (index < 2) {
-        throw new Error('Cannot remove currently featured cube from queue');
-      }
-      [removed] = featured.queue.splice(index, 1);
-      return featured;
-    });
-  } catch (e) {
-    req.flash('danger', e.message);
+  const update = await util.updateFeatured((featured) => {
+    const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
+    if (index === -1) {
+      throw new Error('Cube not found in queue');
+    }
+    if (index < 2) {
+      throw new Error('Cannot remove currently featured cube from queue');
+    }
+    return featured.queue.splice(index, 1);
+  });
+  if (!update.ok) {
+    req.flash('danger', update.message);
     return res.redirect('/featuredcubes');
   }
 
+  const [removed] = update.return;
   const user = User.findById(removed.userID);
   await util.addNotification(
     user,
