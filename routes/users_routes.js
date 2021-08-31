@@ -7,6 +7,7 @@ const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util.js');
+const fq = require('../serverjs/featuredQueue');
 const carddb = require('../serverjs/cards.js');
 const { render } = require('../serverjs/render');
 const { buildIdQuery } = require('../serverjs/cubefn');
@@ -849,12 +850,12 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   }
 
   const patron = await Patron.findOne({ user: req.user._id }).lean();
-  if (!patron || !patron.active || !['Coiling Oracle', 'Lotus Cobra'].includes(patron.level)) {
+  if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return res.redirect(redirect);
   }
 
-  const update = await util.updateFeatured((featured) => {
+  const update = await fq.updateFeatured((featured) => {
     const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
     if (currentIndex === 0 || currentIndex === 1) {
       throw new Error('Cannot change currently featured cube');
@@ -878,7 +879,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
   const redirect = '/user/account?nav=patreon';
 
-  const update = await util.updateFeatured((featured) => {
+  const update = await fq.updateFeatured((featured) => {
     const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
     if (index === -1) {
       throw new Error('Nothing to remove');
