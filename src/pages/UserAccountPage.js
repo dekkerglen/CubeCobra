@@ -20,6 +20,11 @@ import {
   InputGroupAddon,
   InputGroupText,
   CustomInput,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  CardHeader,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -33,19 +38,88 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import useQueryParam from 'hooks/useQueryParam';
+import useMount from 'hooks/UseMount';
+import withModal from 'components/WithModal';
+import CubePreview from 'components/CubePreview';
+import CubePropType from 'proptypes/CubePropType';
 
-const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron }) => {
+const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
+  return (
+    <Modal isOpen={isOpen} toggle={toggle}>
+      <CSRFForm method="POST" action="/user/queuefeatured">
+        <ModalHeader toggle={toggle}>Select Cube</ModalHeader>
+        <ModalBody>
+          <CustomInput type="select" id="featuredCube" name="cubeId">
+            {cubes.map((cube) => (
+              <option value={cube.id}>{cube.name}</option>
+            ))}
+          </CustomInput>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="submit" color="success">
+            Submit
+          </Button>
+          <Button type="button" color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+};
+
+AddFeaturedModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  cubes: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+};
+
+const RemoveFeaturedModal = ({ isOpen, toggle }) => {
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} size="xs">
+      <ModalHeader toggle={toggle}>Removing featured cube</ModalHeader>
+      <ModalBody>
+        <p>You are about to remove your cube from the featured cubes queue. Do you wish to proceed?</p>
+        <CSRFForm method="POST" action="/user/unqueuefeatured">
+          <Button type="submit" block color="danger" outline>
+            Yes, remove my cube.
+          </Button>
+        </CSRFForm>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="secondary" onClick={toggle}>
+          Close
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+};
+
+RemoveFeaturedModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+};
+
+const AddFeaturedButton = withModal(Button, AddFeaturedModal);
+const RemoveFeaturedButton = withModal(Button, RemoveFeaturedModal);
+
+const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron, featured }) => {
   const user = useContext(UserContext);
   const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState('');
   const [imageDict, setImageDict] = useState({});
   const [markdown, setMarkdown] = useState(user?.about ?? '');
 
-  useEffect(() => {
+  useMount(() => {
     fetch('/cube/api/imagedict')
       .then((response) => response.json())
       .then((json) => setImageDict(json.dict));
-  }, []);
+  });
 
   const handleClickNav = useCallback(
     (event) => {
@@ -272,7 +346,59 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     ) : (
                       <p>Your account is linked, but you are not an active patron.</p>
                     )}
-                    <p>
+                    <Card className="my-3">
+                      <CardHeader>
+                        <h5>Featured Cube</h5>
+                      </CardHeader>
+                      <CardBody>
+                        {' '}
+                        {/* ternaries are impossible to avoid in jsx */
+                        /* eslint-disable-next-line no-nested-ternary */}
+                        {['Coiling Oracle', 'Lotus Cobra'].includes(patron.level) ? (
+                          featured ? (
+                            <Row>
+                              <Col xs={12} lg={5} className="p-0">
+                                <CubePreview cube={featured?.cube} />
+                              </Col>
+                              <Col xs={12} lg={7} className="mt-4 mt-lg-0">
+                                <h6>
+                                  Current position in&nbsp;queue:{' '}
+                                  <span className="text-muted">{featured?.position}</span>
+                                </h6>
+                                <AddFeaturedButton
+                                  className="mt-3"
+                                  block
+                                  outline
+                                  color="success"
+                                  modalProps={{ cubes: user.cubes }}
+                                >
+                                  Replace in&nbsp;queue
+                                </AddFeaturedButton>
+                                <RemoveFeaturedButton className="mt-2" block outline color="danger">
+                                  Remove from&nbsp;queue
+                                </RemoveFeaturedButton>
+                              </Col>
+                            </Row>
+                          ) : (
+                            <>
+                              <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
+                              <AddFeaturedButton block outline color="success" modalProps={{ cubes: user.cubes }}>
+                                Add cube to queue
+                              </AddFeaturedButton>
+                            </>
+                          )
+                        ) : (
+                          <p>
+                            Patrons subscribed at the <b>Coiling Oracle</b> level and above get to feature their cube as
+                            a reward for their generous support. If you'd like to have your cube featured as well,{' '}
+                            <a href="https://patreon.com/cubecobra" target="_blank" rel="noopener noreferrer">
+                              upgrade your membership level.
+                            </a>
+                          </p>
+                        )}
+                      </CardBody>
+                    </Card>
+                    <p className="text-center">
                       <i>More Patreon features are coming soon!</i>
                     </p>
                     <Button block outline color="danger" href="/patreon/unlink">
@@ -309,11 +435,16 @@ UserAccountPage.propTypes = {
   patreonClientId: PropTypes.string.isRequired,
   patreonRedirectUri: PropTypes.string.isRequired,
   patron: PatronPropType,
+  featured: PropTypes.shape({
+    cube: CubePropType,
+    position: PropTypes.number,
+  }),
 };
 
 UserAccountPage.defaultProps = {
   loginCallback: '/',
   patron: null,
+  featured: null,
 };
 
 export default RenderToRoot(UserAccountPage);
