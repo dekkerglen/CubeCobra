@@ -631,7 +631,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
 // account page
 router.get('/account', ensureAuth, async (req, res) => {
   const patron = await Patron.findOne({ user: req.user.id });
-  const featured = await FeaturedCubes.findOne();
+  const featured = await FeaturedCubes.getSingleton();
 
   return render(
     req,

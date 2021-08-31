@@ -34,7 +34,6 @@ const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const Package = require('../../models/package');
 const Blog = require('../../models/blog');
-const FeaturedCubes = require('../../models/featuredCubes');
 const Patron = require('../../models/patron');
 
 const router = express.Router();
@@ -1081,25 +1080,26 @@ router.post(
       });
     }
 
-    const featured = await FeaturedCubes.findOne();
-    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
-    if (currentIndex === 0 || currentIndex === 1) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cannot change currently featured cube',
-      });
-    }
-
     let message;
-    if (currentIndex === -1) {
-      featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
-      message = 'Successfully added cube to queue';
-    } else {
-      featured.queue[currentIndex].cubeID = cube._id;
-      message = 'Successfully replaced cube in queue';
+    try {
+      await util.updateFeatured((featured) => {
+        const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+        if (currentIndex === 0 || currentIndex === 1) {
+          throw new Error('Cannot change currently featured cube');
+        }
+        if (currentIndex === -1) {
+          featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
+          message = 'Successfully added cube to queue';
+        } else {
+          featured.queue[currentIndex].cubeID = cube._id;
+          message = 'Successfully replaced cube in queue';
+        }
+        return featured;
+      });
+    } catch (e) {
+      return res.status(400).send({ success: 'false', message: e.message });
     }
 
-    await featured.save();
     return res.send({ success: 'true', message });
   }),
 );
@@ -1116,23 +1116,22 @@ router.delete(
       });
     }
 
-    const featured = FeaturedCubes.findOne();
-    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.params._id));
-    if (index === -1) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Nothing to remove',
+    try {
+      await util.updateFeatured((featured) => {
+        const index = featured.queue.findIndex((f) => f.ownerID.equals(req.params._id));
+        if (index === -1) {
+          throw new Error('Nothing to remove');
+        }
+        if (index === 0 || index === 1) {
+          throw new Error('Cannot remove currently featured cube');
+        }
+        featured.queue.splice(index, 1);
+        return featured;
       });
-    }
-    if (index === 0 || index === 1) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cannot remove currently featured cube',
-      });
+    } catch (e) {
+      return res.status(400).send({ success: false, message: e.message });
     }
 
-    featured.queue.splice(index, 1);
-    await featured.save();
     return res.send({
       success: 'true',
       message: 'Successfully removed cube from queue',

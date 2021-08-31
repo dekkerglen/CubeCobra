@@ -1,5 +1,6 @@
 const shuffleSeed = require('shuffle-seed');
 const { winston } = require('./cloudwatch');
+const FeaturedCubes = require('../models/featuredCubes');
 
 function hasProfanity(text) {
   if (!text) return false;
@@ -180,6 +181,19 @@ function flatten(arr, n) {
   return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
 }
 
+async function updateFeatured(fn) {
+  let replaced = null;
+  while (!replaced) {
+    // eslint-disable-next-line no-await-in-loop
+    const featured = await FeaturedCubes.findOne({ singleton: true }).lean();
+    const stamp = featured.timestamp;
+    const edited = fn(featured);
+    edited.timestamp = (stamp + 1) % 10_000_000; // arbitrary constant to avoid overflowing safe integer range
+    // eslint-disable-next-line no-await-in-loop
+    replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, edited);
+  }
+}
+
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -222,4 +236,5 @@ module.exports = {
   toNonNullArray,
   flatten,
   mapNonNull,
+  updateFeatured,
 };

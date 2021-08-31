@@ -638,7 +638,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedCubes.findOne().lean();
+  const featured = await FeaturedCubes.getSingleton();
   const cubes = await Cube.find({ _id: { $in: featured.queue } }).lean();
 
   // ensure queue is returned in correct order
@@ -658,17 +658,28 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 });
 
 router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedCubes.findOne();
-  if (featured.queue.length < 4) {
-    req.flash('danger', `Not enough cubes in queue to rotate (need 4, have ${featured.queue.length}`);
+  let old1;
+  let old2;
+  let new1;
+  let new2;
+  try {
+    await util.updateFeatured((featured) => {
+      if (featured.queue.length < 4) {
+        throw new Error(`Not enough cubes in queue to rotate (need 4, have ${featured.queue.length}`);
+      }
+
+      old1 = featured.queue.shift();
+      old2 = featured.queue.shift();
+      [new1, new2] = featured.queue;
+      featured.queue.push(old1);
+      featured.queue.push(old2);
+      featured.lastUpdated = new Date();
+      return featured;
+    });
+  } catch (e) {
+    req.flash('danger', e.message);
     return res.redirect('/admin/featuredcubes');
   }
-
-  const old1 = featured.queue.shift();
-  const old2 = featured.queue.shift();
-  const [new1, new2] = featured.queue;
-  featured.queue.push(old1);
-  featured.queue.push(old2);
 
   const removeOld = await Cube.updateMany({ _id: { $in: [old1.cubeID, old2.cubeID] } }, { isFeatured: false });
   if (removeOld.n !== 2) req.flash('danger', `Expected to match 2 featured cubes, ${removeOld.n} matched instead`);
@@ -678,9 +689,6 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const addNew = await Cube.updateMany({ _id: { $in: [new1.cubeID, new2.cubeID] } }, { isFeatured: true });
   if (addNew.n !== 2) req.flash('danger', `Expected to match 2 cubes to feature, ${addNew.n} matched instead`);
   if (addNew.nModified !== 2) req.flash('danger', `Expected to add 2 cubes, ${addNew.nModified} added instead`);
-
-  featured.lastUpdated = new Date();
-  await featured.save();
 
   return res.redirect('/admin/featuredcubes');
 });
@@ -697,24 +705,29 @@ router.post(
       });
     }
 
-    const featured = await FeaturedCubes.findOne();
-    featured.daysBetweenRotations = days;
-    await featured.save();
+    await util.updateFeatured((featured) => {
+      featured.daysBetweenRotations = days;
+      return featured;
+    });
     return res.send({ success: 'true' });
   }),
 );
 
 router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
   const cube = await Cube.find(buildIdQuery(req.params.id)).lean();
-  const featured = await FeaturedCubes.findOne();
-  const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
-  if (index !== -1) {
-    req.flash('danger', 'Cube is already in queue');
+  try {
+    await util.updateFeatured((featured) => {
+      const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
+      if (index !== -1) {
+        throw new Error('Cube is already in queue');
+      }
+      featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
+      return featured;
+    });
+  } catch (e) {
+    req.flash('danger', e.message);
     return res.redirect('/admin/featuredcubes');
   }
-
-  featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
-  await featured.save();
 
   const user = await User.findById(cube.owner);
   await util.addNotification(
@@ -727,18 +740,23 @@ router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
 });
 
 router.delete('/featuredcubes/:id', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedCubes.findOne();
-  const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
-  if (index === -1) {
-    req.flash('danger', 'Cube not found in queue');
-    return res.redirect('/admin/featuredcubes');
+  let removed;
+  try {
+    await util.updateFeatured((featured) => {
+      const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
+      if (index === -1) {
+        throw new Error('Cube not found in queue');
+      }
+      if (index < 2) {
+        throw new Error('Cannot remove currently featured cube from queue');
+      }
+      [removed] = featured.queue.splice(index, 1);
+      return featured;
+    });
+  } catch (e) {
+    req.flash('danger', e.message);
+    return res.redirect('/featuredcubes');
   }
-  if (index < 2) {
-    req.flash('danger', 'Cannot remove currently featured cube from queue');
-    return res.redirect('/admin/featuredcubes');
-  }
-  const [removed] = featured.queue.splice(index, 1);
-  await featured.save();
 
   const user = User.findById(removed.userID);
   await util.addNotification(

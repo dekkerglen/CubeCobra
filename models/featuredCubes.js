@@ -13,6 +13,10 @@ const featuredCubesSchema = mongoose.Schema({
     default: 14,
   },
 
+  timestamp: {
+    type: Number,
+    unique: true,
+  },
   singleton: {
     type: Boolean,
     default: true,
@@ -21,5 +25,8 @@ const featuredCubesSchema = mongoose.Schema({
 });
 
 const FeaturedCubes = mongoose.model('FeaturedCubes', featuredCubesSchema);
+FeaturedCubes.getSingleton = function getSingleton() {
+  return FeaturedCubes.findOne({ singleton: true }).lean();
+};
 
 module.exports = FeaturedCubes;
