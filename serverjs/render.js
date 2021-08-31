@@ -35,6 +35,7 @@ if (NODE_ENV === 'production') {
   pages.EditVideoPage = require('../dist/pages/EditVideoPage').default;
   pages.ErrorPage = require('../dist/pages/ErrorPage').default;
   pages.ExplorePage = require('../dist/pages/ExplorePage').default;
+  pages.FeaturedCubesQueuePage = require('../dist/pages/FeaturedCubesQueuePage').default;
   pages.FiltersPage = require('../dist/pages/FiltersPage').default;
   pages.GridDraftPage = require('../dist/pages/GridDraftPage').default;
   pages.InfoPage = require('../dist/pages/InfoPage').default;

@@ -28,7 +28,7 @@ function canBeFeatured(patron) {
 async function rotateFeatured() {
   const update = await updateFeatured(async (featured) => {
     if (featured.queue.length < 4) {
-      throw new Error(`Not enough cubes in queue to rotate (need 4, have ${featured.queue.length}`);
+      throw new Error(`Not enough cubes in queue to rotate (need 4, have ${featured.queue.length})`);
     }
     const old1 = featured.queue.shift();
     const old2 = featured.queue.shift();
