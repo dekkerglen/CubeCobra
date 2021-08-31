@@ -705,7 +705,7 @@ router.post(
   }),
 );
 
-router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
+router.post('/featuredcubes/queue/:id', ensureAdmin, async (req, res) => {
   const cube = await Cube.find(buildIdQuery(req.params.id)).lean();
   const update = await fq.updateFeatured((featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
@@ -730,11 +730,7 @@ router.post('/featuredcubes/:id', ensureAdmin, async (req, res) => {
   return res.redirect('/admin/featuredcubes');
 });
 
-router.post('/unqueuefeatured', ensureAdmin, async (req, res) => {
-  if (!req.body.cubeId) {
-    req.flash('danger', 'Cube ID not sent');
-    return res.redirect('/admin/featuredcubes');
-  }
+router.post('/featuredcubes/unqueue/:id', ensureAdmin, async (req, res) => {
   const update = await fq.updateFeatured((featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(req.params.id));
     if (index === -1) {
@@ -751,7 +747,7 @@ router.post('/unqueuefeatured', ensureAdmin, async (req, res) => {
   }
 
   const [removed] = update.return;
-  const user = User.findById(removed.userID);
+  const user = User.findById(removed.ownerID);
   await util.addNotification(
     user,
     req.user,
