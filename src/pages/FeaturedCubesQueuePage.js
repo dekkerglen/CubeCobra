@@ -10,10 +10,12 @@ import {
   CardBody,
   CardHeader,
   Col,
+  FormGroup,
   Input,
   InputGroup,
   InputGroupAddon,
   InputGroupText,
+  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -119,28 +121,76 @@ RotateModal.propTypes = {
   toggle: PropTypes.func.isRequired,
 };
 
+const MoveModal = ({ isOpen, toggle, cube, index }) => (
+  <Modal isOpen={isOpen} toggle={toggle} size="xs">
+    <ModalHeader toggle={toggle}>Move Cube</ModalHeader>
+    <ModalBody>
+      <FormGroup>
+        <Label for="move-cube-name">Cube name</Label>
+        <Input id="move-cube-name" value={cube?.name} readonly />
+      </FormGroup>
+      <CSRFForm method="POST" action="/admin/featuredcubes/move" id="move-cube-form">
+        <Input id="move-cube-from" type="hidden" name="from" value={index + 1} />
+        <Input type="hidden" name="cubeId" value={cube?._id} />
+        <FormGroup>
+          <Label for="move-cube-to">New position in queue</Label>
+          <Input id="move-cube-to" type="number" name="to" placeholder={index + 1} />
+        </FormGroup>
+      </CSRFForm>
+    </ModalBody>
+    <ModalFooter>
+      <Button color="success" form="move-cube-form" type="submit">
+        Submit
+      </Button>
+      <Button color="secondary" onClick={toggle}>
+        Close
+      </Button>
+    </ModalFooter>
+  </Modal>
+);
+
+MoveModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggle: PropTypes.func.isRequired,
+  cube: CubePropType,
+  index: PropTypes.number,
+};
+MoveModal.defaultProps = {
+  cube: null,
+  index: 0,
+};
+
 const SetRotationButton = withModal(Button, SetRotationModal);
 const AddCubeButton = withModal(Button, AddCubeModal);
 const RotateButton = withModal(Button, RotateModal);
 
-const QueueItem = ({ cube, index }) => (
+const QueueItem = ({ cube, index, onMove }) => (
   <Col xs={12} md={6} className="mb-3">
     <Card className={index < 2 ? 'border-primary' : ''}>
       <CardBody>
-        <Row>
+        <Row className="align-items-center">
           <Col xs={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <h5>{index + 1}</h5>
           </Col>
-          <Col xs={6}>
+          <Col xs={9} md={6}>
             <CubePreview cube={cube} />
           </Col>
-          <Col style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
-              <input type="hidden" name="cubeId" value={cube._id} />
-              <Button type="submit" color="danger" outline>
-                Remove
-              </Button>
-            </CSRFForm>
+          <Col>
+            <Row className="justify-content-end pt-3">
+              <Col xs={4} md={12}>
+                <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
+                  <input type="hidden" name="cubeId" value={cube._id} />
+                  <Button type="submit" color="danger" outline disabled={index < 2}>
+                    Remove
+                  </Button>
+                </CSRFForm>
+              </Col>
+              <Col xs={4} md={12}>
+                <Button className="mt-md-2" onClick={() => onMove(cube, index)} disabled={index < 2}>
+                  Move
+                </Button>
+              </Col>
+            </Row>
           </Col>
         </Row>
       </CardBody>
@@ -151,11 +201,22 @@ const QueueItem = ({ cube, index }) => (
 QueueItem.propTypes = {
   cube: CubePropType.isRequired,
   index: PropTypes.number.isRequired,
+  onMove: PropTypes.func.isRequired,
 };
 
 const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, loginCallback }) => {
   const [alerts, setAlerts] = useState([]);
   const [rotationPeriod, setRotationPeriod] = useState(daysBetweenRotations);
+  const [isMoveModalOpen, setMoveModalOpen] = useState(false);
+  const [moveModalCube, setMoveModalCube] = useState(null);
+  const [moveModalIndex, setMoveModalIndex] = useState(0);
+  const toggleMoveModal = () => setMoveModalOpen((o) => !o);
+
+  const handleMoveOpen = (cube, index) => {
+    setMoveModalCube(cube);
+    setMoveModalIndex(index);
+    setMoveModalOpen(true);
+  };
 
   const addAlert = (color, message) => {
     setAlerts([...alerts, { color, message }]);
@@ -218,11 +279,12 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
           </Row>
           <Row>
             {cubes.map((cube, index) => (
-              <QueueItem cube={cube} index={index} />
+              <QueueItem cube={cube} index={index} onMove={handleMoveOpen} />
             ))}
           </Row>
         </CardBody>
       </Card>
+      <MoveModal isOpen={isMoveModalOpen} toggle={toggleMoveModal} cube={moveModalCube} index={moveModalIndex} />
     </MainLayout>
   );
 };

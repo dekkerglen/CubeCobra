@@ -2,11 +2,12 @@
 require('dotenv').config();
 
 const express = require('express');
+const { body } = require('express-validator');
 const mailer = require('nodemailer');
 const path = require('path');
 const Email = require('email-templates');
 const parser = require('../dist/markdown/parser');
-const { ensureRole, csrfProtection } = require('./middleware');
+const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
 const User = require('../models/user');
 const Report = require('../models/report');
@@ -766,5 +767,34 @@ router.post('/featuredcubes/unqueue', ensureAdmin, async (req, res) => {
   );
   return res.redirect('/admin/featuredcubes');
 });
+
+router.post(
+  '/featuredcubes/move',
+  ensureAdmin,
+  body('cubeId', 'Cube ID must be sent').not().isEmpty(),
+  body('from', 'Cannot move currently featured cube').isInt({ gt: 2 }).toInt(),
+  body('to', 'Cannot move cube to featured position').isInt({ gt: 2 }).toInt(),
+  flashValidationErrors,
+  async (req, res) => {
+    if (!req.validated) return res.redirect('/admin/featuredcubes');
+    let { from, to } = req.body;
+    // indices are sent in human-readable form (indexing from 1)
+    from -= 1;
+    to -= 1;
+
+    const update = await fq.updateFeatured(async (featured) => {
+      if (featured.queue.length <= from || !featured.queue[from].cubeID.equals(req.body.cubeId))
+        throw new Error('Cube is not at expected position in queue');
+      if (featured.queue.length <= to) throw new Error('Target position is higher than cube length');
+      const [spliced] = featured.queue.splice(from, 1);
+      featured.queue.splice(to, 0, spliced);
+    });
+
+    if (!update.ok) req.flash('danger', update.message);
+    else req.flash('success', 'Successfully moved cube');
+
+    return res.redirect('/admin/featuredcubes');
+  },
+);
 
 module.exports = router;

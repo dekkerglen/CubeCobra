@@ -2,7 +2,7 @@ const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../models/cube');
 const Patron = require('../models/patron');
 
-// fn must be awaitable
+// the return value of fn must be awaitable
 async function updateFeatured(fn) {
   let replaced = null;
   let ret;
