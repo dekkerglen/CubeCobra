@@ -713,6 +713,11 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return res.redirect('/admin/featuredcubes');
   }
   const cube = await Cube.findOne(buildIdQuery(req.body.cubeId)).lean();
+  if (!cube) {
+    req.flash('danger', 'Cube does not exist');
+    return res.redirect('/admin/featuredcubes');
+  }
+
   const update = await fq.updateFeatured(async (featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
     if (index !== -1) {

@@ -7,7 +7,7 @@ const MS_PER_DAY = 1000 * 3600 * 24;
 
 (async () => {
   console.log('Checking rotation of featured cubes');
-  const featured = FeaturedCubes.getSingleton();
+  const featured = await FeaturedCubes.getSingleton();
   const msTimeDiff = Date.now() - featured.lastRotation.getTime();
   const daysTimeDiff = msTimeDiff / MS_PER_DAY;
   if (daysTimeDiff >= featured.daysBetweenRotations) {
