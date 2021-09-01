@@ -736,7 +736,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     user,
     req.user,
     '/user/account?nav=patreon',
-    'An admin added your cube to the featured cubes queue',
+    'An admin added your cube to the featured cubes queue.',
   );
   return res.redirect('/admin/featuredcubes');
 });

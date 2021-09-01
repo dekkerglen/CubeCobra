@@ -77,7 +77,7 @@ const AddCubeModal = ({ isOpen, toggle }) => (
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Cube ID</InputGroupText>
           </InputGroupAddon>
-          <Input type="text" name="cubeId" />
+          <Input type="text" name="cubeId" placeholder="Short or long ID of the cube." />
         </InputGroup>
       </ModalBody>
       <ModalFooter>
