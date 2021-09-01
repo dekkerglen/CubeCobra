@@ -354,39 +354,36 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         {' '}
                         {/* ternaries are impossible to avoid in jsx */
                         /* eslint-disable-next-line no-nested-ternary */}
-                        {['Coiling Oracle', 'Lotus Cobra'].includes(patron.level) ? (
-                          featured ? (
-                            <Row>
-                              <Col xs={12} lg={5} className="p-0">
-                                <CubePreview cube={featured?.cube} />
-                              </Col>
-                              <Col xs={12} lg={7} className="mt-4 mt-lg-0">
-                                <h6>
-                                  Current position in&nbsp;queue:{' '}
-                                  <span className="text-muted">{featured?.position}</span>
-                                </h6>
-                                <AddFeaturedButton
-                                  className="mt-3"
-                                  block
-                                  outline
-                                  color="success"
-                                  modalProps={{ cubes: user.cubes }}
-                                >
-                                  Replace in&nbsp;queue
-                                </AddFeaturedButton>
-                                <RemoveFeaturedButton className="mt-2" block outline color="danger">
-                                  Remove from&nbsp;queue
-                                </RemoveFeaturedButton>
-                              </Col>
-                            </Row>
-                          ) : (
-                            <>
-                              <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
-                              <AddFeaturedButton block outline color="success" modalProps={{ cubes: user.cubes }}>
-                                Add cube to queue
+                        {featured ? (
+                          <Row>
+                            <Col xs={12} lg={5} className="p-0">
+                              <CubePreview cube={featured?.cube} />
+                            </Col>
+                            <Col xs={12} lg={7} className="mt-4 mt-lg-0">
+                              <h6>
+                                Current position in&nbsp;queue: <span className="text-muted">{featured?.position}</span>
+                              </h6>
+                              <AddFeaturedButton
+                                className="mt-3"
+                                block
+                                outline
+                                color="success"
+                                modalProps={{ cubes: user.cubes }}
+                              >
+                                Replace in&nbsp;queue
                               </AddFeaturedButton>
-                            </>
-                          )
+                              <RemoveFeaturedButton className="mt-2" block outline color="danger">
+                                Remove from&nbsp;queue
+                              </RemoveFeaturedButton>
+                            </Col>
+                          </Row>
+                        ) : ['Coiling Oracle', 'Lotus Cobra'].includes(patron.level) ? (
+                          <>
+                            <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
+                            <AddFeaturedButton block outline color="success" modalProps={{ cubes: user.cubes }}>
+                              Add cube to queue
+                            </AddFeaturedButton>
+                          </>
                         ) : (
                           <p>
                             Patrons subscribed at the <b>Coiling Oracle</b> level and above get to feature their cube as
