@@ -10,7 +10,10 @@ const featuredCubesSchema = mongoose.Schema({
     },
   ],
   // time when the queue was last rotated.
-  lastRotation: Date,
+  lastRotation: {
+    type: Date,
+    default: new Date(), // only used for the singleton creation below
+  },
   // how many days should pass between each rotation
   daysBetweenRotations: {
     type: Number,
@@ -41,6 +44,7 @@ FeaturedCubes.getSingleton = function getSingleton() {
 FeaturedCubes.on('index', async () => {
   // startup method that creates the singleton if it doesn't exist
   // runs only after indices are built to guarantee atomicity
+  mongoose.set('useFindAndModify', false);
   const query = { singleton: true };
   const options = { upsert: true, setDefaultsOnInsert: true };
   await FeaturedCubes.findOneAndUpdate(query, {}, options);

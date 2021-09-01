@@ -125,7 +125,7 @@ const RotateButton = withModal(Button, RotateModal);
 
 const QueueItem = ({ cube, index }) => (
   <Col xs={12} md={6} className="mb-3">
-    <Card>
+    <Card className={index < 2 ? 'border-primary' : ''}>
       <CardBody>
         <Row>
           <Col xs={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -205,7 +205,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
                   </span>
                 </SetRotationButton>
               </h6>
-              <h6>Last updated: {lastRotation}</h6>
+              <h6>Last rotation: {lastRotation.toLocaleDateString()}</h6>
             </Col>
             <Col className="mb-4">
               <AddCubeButton outline color="success" className="mr-md-4 mb-xs-2 mb-md-0">
