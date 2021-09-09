@@ -122,7 +122,7 @@ const writeToS3 = async (fileName, body) => {
       }
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
-    mongoose.disconnect();
+    await mongoose.disconnect();
     console.log('done');
     process.exit();
   });
