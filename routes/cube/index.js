@@ -183,6 +183,14 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
     let message = '';
     const { id, serializedFormat } = req.body;
     const format = JSON.parse(serializedFormat);
+
+    format.defaultSeats = Number.parseInt(format.defaultSeats, 10);
+    if (Number.isNaN(format.defaultSeats)) format.defaultSeats = 8;
+    if (format.defaultSeats < 2 || format.defaultSeats > 16) {
+      req.flash('danger', 'Default seat count must be between 2 and 16');
+      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    }
+
     if (id === '-1') {
       if (!cube.draft_formats) {
         cube.draft_formats = [];
@@ -196,9 +204,9 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
 
     await cube.save();
     req.flash('success', message);
-    return res.redirect(`/cube/playtest/${req.params.id}`);
+    return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
+    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
   }
 });
 

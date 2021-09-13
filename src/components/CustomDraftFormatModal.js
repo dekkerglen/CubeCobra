@@ -99,6 +99,10 @@ const MUTATIONS = Object.freeze({
     newFormat.packs[packIndex].steps.splice(stepIndex, 1);
     if (newFormat.packs[packIndex].steps.length === 0) newFormat.packs[packIndex].steps = null;
   },
+
+  changeDefaultSeatCount: ({ newFormat, value }) => {
+    newFormat.defaultSeats = value;
+  },
 });
 
 const serializeFormat = (rawFormat) => {
@@ -183,6 +187,16 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               value={format.title}
               onChange={mutations.changeTitle}
             />
+            <FormGroup className="mt-3">
+              <Label>
+                Default seat count
+                <Input
+                  type="number"
+                  defaultValue={format.defaultSeats ?? 8}
+                  onChange={mutations.changeDefaultSeatCount}
+                />
+              </Label>
+            </FormGroup>
           </Col>
           <Col>
             <FormGroup tag="fieldset">
