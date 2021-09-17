@@ -342,7 +342,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     // add details to cards
@@ -449,7 +451,9 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     const cardsArray = [];
@@ -548,7 +552,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
     const cardsArray = [];
     for (const card of deck.toObject().cards) {
@@ -603,7 +609,9 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
     const cards = draft.cards.map((c) => {
       const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
@@ -697,7 +705,9 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
     const cards = draft.cards.map((c) => {
       const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
@@ -944,7 +954,9 @@ router.get('/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     for (const card of deck.cards) {
