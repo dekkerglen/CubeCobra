@@ -302,7 +302,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     const deck = await Deck.findById(req.params.id);
     const deckOwner = (await User.findById(deck.seats[0].userid)) || {};
 
-    if (!deckOwner._id.equals(req.user._id) && !deck.cubeOwner === req.user._id) {
+    if (!req.user._id.equals(deckOwner._id) && !req.user._id.equals(deck.cubeOwner)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
