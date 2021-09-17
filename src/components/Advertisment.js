@@ -1,7 +1,8 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import AdsContext from 'contexts/AdsContext';
+import useMount from 'hooks/UseMount';
 
 const mediaTypes = {
   desktop: '(min-width: 1025px)',
@@ -19,7 +20,7 @@ const sizeTypes = {
   mobile: [['320', '50']],
 };
 
-// const formats = ['display', 'sticky-stack', 'rail'];
+// const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
 
 const Advertisment = ({
   placementId,
@@ -41,7 +42,7 @@ const Advertisment = ({
 }) => {
   const adsEnabled = useContext(AdsContext);
 
-  useEffect(() => {
+  useMount(() => {
     if (window.nitroAds) {
       if (format === 'sticky-stack') {
         window.nitroAds.createAd(placementId, {
@@ -67,6 +68,20 @@ const Advertisment = ({
           railOffsetTop,
           railOffsetBottom,
           railCollisionWhitelist,
+          demo: !adsEnabled,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          sizes: sizeTypes[size],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
+      } else if (format === 'anchor') {
+        window.nitroAds.createAd(placementId, {
+          format,
           demo: !adsEnabled,
           refreshLimit,
           refreshTime,
@@ -107,7 +122,7 @@ Advertisment.propTypes = {
   format: PropTypes.string,
   refreshLimit: PropTypes.number,
   refreshTime: PropTypes.number,
-  position: PropTypes.number,
+  position: PropTypes.string,
   wording: PropTypes.string,
   enabled: PropTypes.bool,
   stickyStackLimit: PropTypes.number,
@@ -116,7 +131,7 @@ Advertisment.propTypes = {
   rail: PropTypes.string,
   railOffsetTop: PropTypes.number,
   railOffsetBottom: PropTypes.number,
-  railCollisionWhitelist: PropTypes.arrayOf(),
+  railCollisionWhitelist: PropTypes.arrayOf(PropTypes.string),
 };
 
 Advertisment.defaultProps = {
@@ -132,7 +147,7 @@ Advertisment.defaultProps = {
   rail: 'left',
   railOffsetTop: 200,
   railOffsetBottom: 0,
-  railCollisionWhitelist: [],
+  railCollisionWhitelist: ['*'],
 };
 
 export default Advertisment;

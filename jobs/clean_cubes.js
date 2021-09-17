@@ -7,8 +7,10 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
+const User = require('../models/user');
 const { cardsNeedsCleaning, cleanCards } = require('../models/migrations/cleanCards');
 const carddb = require('../serverjs/cards');
+const util = require('../serverjs/util');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -27,15 +29,19 @@ const needsCleaning = (cube) =>
   cardsNeedsCleaning(cube.maybe) ||
   cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag);
 
-const processCube = async (leanCube) => {
+const processCube = async (leanCube, admin) => {
   if (needsCleaning(leanCube)) {
     const cube = await Cube.findById(leanCube._id);
 
     console.debug(`Cleaning cube ${cube.name}: ${cube._id}`);
-
     if (!cube.cards) {
       cube.cards = [];
     }
+    if (!cube.maybe) {
+      cube.maybe = [];
+    }
+    const oldCardCount = cube.cards.length;
+    const oldMaybeCount = cube.cards.length;
     if (!Array.isArray(cube.basics)) {
       cube.basics = DEFAULT_BASICS;
     }
@@ -48,8 +54,32 @@ const processCube = async (leanCube) => {
     if (cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag)) {
       cube.tags = cube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
     }
-
     await cube.save();
+
+    const cardDiff = cube.cards.length - oldCardCount;
+    const maybeDiff = cube.maybe.length - oldMaybeCount;
+    if (!cardDiff && !maybeDiff) return;
+
+    const owner = await User.findById(cube.owner);
+    if (cardDiff)
+      await util.addNotification(
+        owner,
+        admin,
+        `/cube/list/${cube.id}`,
+        `${cardDiff} invalid card${cardDiff === 1 ? ' was' : 's were'} automatically removed from your cube ${
+          cube.name
+        }`,
+      );
+
+    if (maybeDiff)
+      await util.addNotification(
+        owner,
+        admin,
+        `/cube/list/${cube.id}`,
+        `${maybeDiff} invalid card${maybeDiff === 1 ? ' was' : 's were'} automatically removed from your cube ${
+          cube.name
+        }`,
+      );
   }
 };
 
@@ -61,6 +91,7 @@ try {
     // process all cube objects
     console.log('Started');
     const count = await Cube.countDocuments();
+    const admin = await User.findOne({ roles: 'Admin' }).lean();
     const cursor = Cube.find().lean().cursor();
 
     // batch them by batchSize
@@ -70,7 +101,7 @@ try {
       for (; i < nextBound; i++) {
         const cube = await cursor.next();
         if (cube) {
-          cubes.push(processCube(cube));
+          cubes.push(processCube(cube, admin));
         }
       }
 
@@ -79,7 +110,7 @@ try {
       console.log(`Finished: ${i} of ${count} cubes`);
     }
 
-    mongoose.disconnect();
+    await mongoose.disconnect();
     console.log('done');
     process.exit();
   })();

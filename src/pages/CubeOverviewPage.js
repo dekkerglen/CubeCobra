@@ -41,12 +41,14 @@ import RenderToRoot from 'utils/RenderToRoot';
 import DeleteCubeModal from 'components/DeleteCubeModal';
 import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
 import CubeIdModal from 'components/CubeIdModal';
+import QRCodeModal from 'components/QRCodeModal';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
+const QRCodeModalLink = withModal('a', QRCodeModal);
 
 const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
   const user = useContext(UserContext);
@@ -150,7 +152,11 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
           <Col md="4" className="mb-3">
             <Card>
               <CardHeader>
-                <h3>{cubeState.name}</h3>
+                <Row>
+                  <Col>
+                    <h3>{cubeState.name}</h3>
+                  </Col>
+                </Row>
                 <Row>
                   <Col>
                     <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
@@ -199,7 +205,13 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     Designed by
                     <a href={`/user/view/${cubeState.owner}`}> {cubeState.owner_name}</a>
                   </i>{' '}
-                  • <a href={`/cube/rss/${cubeState._id}`}>RSS</a>
+                  • <a href={`/cube/rss/${cubeState._id}`}>RSS</a> •{' '}
+                  <QRCodeModalLink
+                    href="#"
+                    modalProps={{ link: `https://cubecobra.com/c/${cube._id}`, cubeName: cube.name }}
+                  >
+                    QR Code
+                  </QRCodeModalLink>
                 </h6>
                 <p>
                   <a href={`https://luckypaper.co/resources/cube-map/?cube=${cubeState._id}`}>
@@ -275,7 +287,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
             </Card>
           </Col>
         </Row>
-        <div className="mb-3">{post && <BlogPost key={post._id} post={post} loggedIn={user !== null} />}</div>
+        <div className="mb-3">{post && <BlogPost key={post._id} post={post} />}</div>
       </CubeLayout>
     </MainLayout>
   );

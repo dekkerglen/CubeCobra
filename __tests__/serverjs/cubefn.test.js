@@ -2,7 +2,6 @@ const sinon = require('sinon');
 
 const carddb = require('../../serverjs/cards');
 const cubefn = require('../../serverjs/cubefn');
-const util = require('../../serverjs/util');
 
 const cubefixture = require('../../fixtures/examplecube');
 
@@ -101,49 +100,32 @@ test('legalityToInt returns the expected values', () => {
 });
 
 test('generateShortId returns a valid short ID', async () => {
-  const dummyModel = [{ shortID: '1x' }, { shortID: 'a2c' }, { shortID: 'custom_short-ID' }];
   const queryMockPromise = new Promise((resolve) => {
     process.nextTick(() => {
-      resolve(dummyModel);
+      resolve(3);
     });
   });
   const queryMock = jest.fn();
   queryMock.mockReturnValue(queryMockPromise);
   const initialCubeFind = Cube.find;
-  Cube.find = queryMock;
+  Cube.estimatedDocumentCount = queryMock;
+
+  const queryMockPromise2 = new Promise((resolve) => {
+    process.nextTick(() => {
+      resolve(false);
+    });
+  });
+  const queryMock2 = jest.fn();
+  queryMock2.mockReturnValue(queryMockPromise2);
+  const initialExists = Cube.find;
+  Cube.exists = queryMock2;
+
   const result = await cubefn.generateShortId();
   // result is a base36 number
   expect(result).toMatch(/[0-9a-z]+/g);
-  // result is unique
-  for (const cube of dummyModel) {
-    expect(result).not.toEqual(cube.shortID);
-  }
-  Cube.find = initialCubeFind;
-});
 
-test('generateShortId returns a valid short ID without profanity', async () => {
-  const dummyModel = {
-    shortID: '1x',
-  };
-  const queryMockPromise = new Promise((resolve) => {
-    process.nextTick(() => {
-      resolve([dummyModel]);
-    });
-  });
-  const queryMock = jest.fn().mockReturnValue(queryMockPromise);
-  const initialCubeFind = Cube.find;
-  Cube.find = queryMock;
-  const initialHasProfanity = util.hasProfanity;
-  const mockHasProfanity = jest.fn().mockReturnValueOnce(true).mockReturnValue(false);
-  util.hasProfanity = mockHasProfanity;
-  await cubefn.generateShortId();
-  // hasProfanity must be called at least once
-  expect(mockHasProfanity.mock.calls.length).toBeGreaterThan(0);
-  // the last profanity check must return false
-  const { results } = mockHasProfanity.mock;
-  expect(results[results.length - 1].value).toBe(false);
   Cube.find = initialCubeFind;
-  util.hasProfanity = initialHasProfanity;
+  Cube.exists = initialExists;
 });
 
 test('setCubeType correctly sets the type of its input cube', () => {
@@ -230,7 +212,7 @@ describe('CSVtoCards', () => {
     expectSame(newCards[0], expectedCard);
     expect(newMaybe.length).toBe(1);
     expectSame(newMaybe[0], expectedMaybe);
-    expect(missing).toBe('');
+    expect(missing).toEqual([]);
   });
 });
 

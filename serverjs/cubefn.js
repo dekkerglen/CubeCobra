@@ -28,16 +28,17 @@ function buildIdQuery(id) {
 }
 
 async function generateShortId() {
-  const cubes = await Cube.find({}, ['shortID']);
-  const shortIds = cubes.map((cube) => cube.shortID);
-  const space = shortIds.length * 2;
+  const numCubes = await Cube.estimatedDocumentCount();
+  const space = numCubes * 100;
 
   let newId = '';
   let isGoodId = false;
   while (!isGoodId) {
     const rand = Math.floor(Math.random() * space);
     newId = util.toBase36(rand);
-    isGoodId = !util.hasProfanity(newId) && !shortIds.includes(newId);
+    // eslint-disable-next-line no-await-in-loop
+    const taken = await Cube.exists({ shortID: newId });
+    isGoodId = !util.hasProfanity(newId) && !taken;
   }
 
   return newId;
@@ -230,7 +231,7 @@ async function getCardElo(cardname, round) {
 function CSVtoCards(csvString, carddb) {
   let { data } = Papa.parse(csvString.trim(), { header: true });
   data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
-  let missing = '';
+  const missing = [];
   const newCards = [];
   const newMaybe = [];
   for (const {
@@ -282,13 +283,13 @@ function CSVtoCards(csvString, carddb) {
         const nonPromo = potentialIds.find(carddb.reasonableId);
         const first = potentialIds[0];
         card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
-        if (maybeboard === 'true') {
+        if (maybeboard.toLowerCase() === 'true') {
           newMaybe.push(card);
         } else {
           newCards.push(card);
         }
       } else {
-        missing += `${card.name}\n`;
+        missing.push(card.name);
       }
     }
   }

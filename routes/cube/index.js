@@ -765,7 +765,13 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     req.params.seed = req.params.seed.replace('.png', '');
 
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
-      const pack = await generatePack(req.params.id, carddb, req.params.seed);
+      let pack;
+      try {
+        pack = await generatePack(req.params.id, carddb, req.params.seed);
+      } catch (err) {
+        req.flash('danger', err.message);
+        return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      }
 
       const imgScale = 0.9;
       // Try to make it roughly 5 times as wide as it is tall in cards.
@@ -843,7 +849,7 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
     });
 
     const added = [];
-    let missing = '';
+    const missing = [];
     let changelog = '';
     for (const card of cards) {
       const potentialIds = carddb.allVersions(card);
@@ -857,10 +863,10 @@ router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashVal
           util.addCardToCube(cube, details, card.tags);
           changelog += addCardHtml(details);
         } else {
-          missing += `${card.name}\n`;
+          missing.push(card.name);
         }
       } else {
-        missing += `${card.name}\n`;
+        missing.push(card.name);
       }
     }
 
@@ -936,7 +942,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     const lines = items.match(/[^\r\n]+/g);
     if (lines) {
       let changelog = '';
-      let missing = '';
+      let missing = [];
       const added = [];
       let newCards = [];
       let newMaybe = [];
@@ -1218,7 +1224,9 @@ router.post(
       let eloOverrideDict = {};
       if (cube.useCubeElo) {
         const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+        if (analytic) {
+          eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+        }
       }
 
       // insert card details everywhere that needs them

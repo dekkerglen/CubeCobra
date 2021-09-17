@@ -2,6 +2,8 @@ const fs = require('fs');
 const winston = require('winston');
 const util = require('./util.js');
 
+const { SortFunctions, ORDERED_SORTS } = require('../dist/utils/Sort.js');
+
 let data = {
   cardtree: {},
   imagedict: {},
@@ -34,6 +36,7 @@ function getPlaceholderCard(_id) {
     set: '',
     collector_number: '',
     promo: false,
+    reprint: false,
     digital: false,
     full_name: 'Invalid Card',
     name: 'Invalid Card',
@@ -203,11 +206,20 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
     return null;
   }
 
+  // sort chronologically by default
+  const cards = ids.map((id) => ({
+    details: cardFromId(id),
+  }));
+  cards.sort(SortFunctions[ORDERED_SORTS['Release Date']]);
+
+  ids = cards.map((card) => card.details._id);
+
   // Ids are stored in reverse chronological order, so reverse if we want first printing.
   if (printing !== 'recent') {
     ids = [...ids];
     ids.reverse();
   }
+
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 

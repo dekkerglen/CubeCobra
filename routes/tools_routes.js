@@ -12,7 +12,7 @@ const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCard
 const generateMeta = require('../serverjs/meta.js');
 const util = require('../serverjs/util.js');
 const { render } = require('../serverjs/render');
-const { ensureAuth } = require('./middleware');
+const { ensureAuth, csrfProtection } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
@@ -21,6 +21,8 @@ const Blog = require('../models/blog');
 const { buildIdQuery } = require('../serverjs/cubefn.js');
 
 const router = express.Router();
+
+router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top Cards list. */
 const MIN_PICKS = 100;
@@ -199,7 +201,9 @@ router.get('/card/:id', async (req, res) => {
       {
         card,
         data,
-        versions: data.versions.map((cardid) => carddb.cardFromId(cardid)),
+        versions: carddb.oracleToId[card.oracle_id]
+          .filter((cid) => cid !== card._id)
+          .map((cardid) => carddb.cardFromId(cardid)),
         related,
       },
       {
@@ -242,13 +246,12 @@ router.get('/cardimage/:id', async (req, res) => {
     // if id is not a scryfall ID, error
     const card = carddb.cardFromId(id);
     if (card.error) {
-      req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return res.redirect('/content/default_card.png');
     }
 
     return res.redirect(card.image_normal);
   } catch (err) {
-    return util.handleRouteError(req, res, err, '/404');
+    return res.redirect('/content/default_card.png');
   }
 });
 

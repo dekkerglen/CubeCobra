@@ -3,12 +3,15 @@ import PropTypes from 'prop-types';
 
 import { UncontrolledTooltip } from 'reactstrap';
 
-const Tooltip = ({ text, children, ...props }) => {
+const Tooltip = ({ text, children, wrapperTag, tooltipProps, ...props }) => {
   const divRef = useRef();
+  const Tag = wrapperTag || 'div';
   return (
     <>
-      <div ref={divRef}>{children}</div>
-      <UncontrolledTooltip placement="top" boundariesElement="window" trigger="hover" target={divRef} {...props}>
+      <Tag ref={divRef} {...props}>
+        {children}
+      </Tag>
+      <UncontrolledTooltip placement="top" boundariesElement="window" trigger="hover" target={divRef} {...tooltipProps}>
         {text}
       </UncontrolledTooltip>
     </>
@@ -18,6 +21,13 @@ const Tooltip = ({ text, children, ...props }) => {
 Tooltip.propTypes = {
   text: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
+  wrapperTag: PropTypes.oneOfType([PropTypes.node, PropTypes.string]),
+  tooltipProps: PropTypes.shape({}),
+};
+
+Tooltip.defaultProps = {
+  wrapperTag: 'div',
+  tooltipProps: {},
 };
 
 export default Tooltip;
