@@ -1309,7 +1309,9 @@ router.get('/griddraft/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     // insert card details everywhere that needs them
@@ -1367,7 +1369,9 @@ router.get('/draft/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     // insert card details everywhere that needs them
