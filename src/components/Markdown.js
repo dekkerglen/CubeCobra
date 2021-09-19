@@ -111,11 +111,11 @@ const renderCardImage = (node) => {
   const idURL = encodeURIComponent(node.id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
-
+  const tag = node.inParagraph ? 'span' : 'div';
   return (
-    <Col className="card-image" xs="6" md="4" lg="3">
+    <Col className="card-image d-block" xs="6" md="4" lg="3" tag={tag}>
       <a href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
-        <FoilCardImage autocard card={{ details }} className="clickable" />
+        <FoilCardImage autocard card={{ details }} className="clickable" wrapperTag={tag} />
       </a>
     </Col>
   );
@@ -123,7 +123,11 @@ const renderCardImage = (node) => {
 
 const renderCentering = (node) => <div className="centered-markdown">{node.children}</div>;
 
-const renderCardrow = (node) => <Row className="cardRow">{node.children}</Row>;
+const renderCardrow = (node) => (
+  <Row className="cardRow" tag={node.inParagraph ? 'span' : 'div'}>
+    {node.children}
+  </Row>
+);
 
 const RENDERERS = {
   // overridden defaults
