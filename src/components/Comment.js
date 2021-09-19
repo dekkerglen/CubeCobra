@@ -148,9 +148,9 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               )}
             </div>
             <Collapse isOpen={!isEdit}>
-              <p className="mb-0">
+              <div className="mb-0">
                 <Markdown markdown={comment.content} limited />
-              </p>
+              </div>
             </Collapse>
             <CommentEntry
               submit={(res) => {

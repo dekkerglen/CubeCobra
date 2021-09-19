@@ -125,7 +125,12 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Sort: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" value={sort} onChange={(event) => updateSort(event.target.value)}>
+              <CustomInput
+                id="card-sort-input"
+                type="select"
+                value={sort}
+                onChange={(event) => updateSort(event.target.value)}
+              >
                 {ORDERED_SORTS.map((s) => (
                   <option value={s}>{s}</option>
                 ))}
@@ -137,7 +142,12 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Direction: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" value={direction} onChange={(event) => updateDirection(event.target.value)}>
+              <CustomInput
+                id="card-direction-input"
+                type="select"
+                value={direction}
+                onChange={(event) => updateDirection(event.target.value)}
+              >
                 <option value="ascending">Ascending</option>
                 <option value="descending">Descending</option>
               </CustomInput>
@@ -148,7 +158,12 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Distinct: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" value={distinct} onChange={(event) => updateDistinct(event.target.value)}>
+              <CustomInput
+                id="card-distinct-input"
+                type="select"
+                value={distinct}
+                onChange={(event) => updateDistinct(event.target.value)}
+              >
                 <option value="names">Names</option>
                 <option value="printings">Printings</option>
               </CustomInput>
