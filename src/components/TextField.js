@@ -15,9 +15,13 @@ const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) 
 TextField.propTypes = {
   name: PropTypes.string.isRequired,
   humanName: PropTypes.string.isRequired,
-  placeholder: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
   value: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
+};
+
+TextField.defaultProps = {
+  placeholder: undefined,
 };
 
 export default TextField;

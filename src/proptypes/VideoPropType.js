@@ -4,7 +4,7 @@ const VideoPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   body: PropTypes.string.isRequired,
-  date: PropTypes.string.isRequired,
+  date: PropTypes.instanceOf(Date).isRequired,
   status: PropTypes.string.isRequired,
   owner: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
