@@ -124,9 +124,16 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Cube: </InputGroupText>
           </InputGroupAddon>
-          <CustomInput type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
+          <CustomInput
+            id="selected-cube-input"
+            type="select"
+            value={selectedCube}
+            onChange={(event) => setSelectedCube(event.target.value)}
+          >
             {cubes.map((cube) => (
-              <option value={cube._id}>{cube.name}</option>
+              <option key={cube._id} value={cube._id}>
+                {cube.name}
+              </option>
             ))}
           </CustomInput>
         </InputGroup>

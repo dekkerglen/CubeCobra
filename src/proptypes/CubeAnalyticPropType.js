@@ -1,22 +1,18 @@
 import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
 
-const CubePropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
-  shortID: PropTypes.string,
-  name: PropTypes.string,
-  card_count: PropTypes.number,
-  cards: PropTypes.arrayOf(CardPropType),
-  type: PropTypes.string,
-  overrideCategory: PropTypes.bool,
-  categoryOverride: PropTypes.string,
-  categoryPrefixes: PropTypes.arrayOf(PropTypes.string),
-  image_name: PropTypes.string,
-  image_artist: PropTypes.string,
-  image_uri: PropTypes.string,
-  owner: PropTypes.string,
-  owner_name: PropTypes.string,
-  disableNotifications: PropTypes.bool,
+const CubeAnalyticPropType = PropTypes.shape({
+  cube: PropTypes.string.isRequired,
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      cardName: PropTypes.string,
+      picks: PropTypes.number,
+      passes: PropTypes.number,
+      elo: PropTypes.number,
+      mainboards: PropTypes.number,
+      sideboards: PropTypes.number,
+    }),
+  ).isRequired,
+  useCubeElo: PropTypes.bool,
 });
 
-export default CubePropType;
+export default CubeAnalyticPropType;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPricePropType from 'proptypes/CardPricePropType';
-import CardDataPointPropType from 'proptypes/CardDataPointPropType';
+import CardHistoryPropType, { HistoryPropType } from 'proptypes/CardHistoryPropType';
 
 import {
   Card,
@@ -152,7 +152,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
 };
 
 Graph.propTypes = {
-  data: PropTypes.arrayOf(CardDataPointPropType).isRequired,
+  data: HistoryPropType.isRequired,
   yFunc: PropTypes.func.isRequired,
   unit: PropTypes.string.isRequired,
   yRange: PropTypes.arrayOf(PropTypes.number),
@@ -357,9 +357,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   <hr />
                   <div className="my-0">
                     {card.oracle_text.split('\n').map((text) => (
-                      <p key={`oracle-text-${text}`}>
-                        <Markdown markdown={text} />
-                      </p>
+                      <Markdown markdown={text} key={text} />
                     ))}
                   </div>
                   <Row>
@@ -746,15 +744,12 @@ CardPage.propTypes = {
     oracle_id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
-    loyalty: PropTypes.string.isRequired,
-    power: PropTypes.string.isRequired,
-    toughness: PropTypes.shape({}).isRequired,
+    loyalty: PropTypes.string,
+    power: PropTypes.string,
+    toughness: PropTypes.string,
     prices: CardPricePropType.isRequired,
   }).isRequired,
-  data: PropTypes.shape({
-    history: PropTypes.arrayOf(CardDataPointPropType).isRequired,
-    current: CardDataPointPropType,
-  }).isRequired,
+  data: CardHistoryPropType.isRequired,
   related: PropTypes.shape({
     top: PropTypes.arrayOf(
       PropTypes.shape({

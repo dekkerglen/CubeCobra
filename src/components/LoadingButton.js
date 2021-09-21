@@ -7,6 +7,7 @@ const LoadingButton = ({ onClick, loading, ...props }) => {
 
   const handleClick = useCallback(
     async (event) => {
+      if (!onClick) return;
       setLoading(true);
       await onClick(event);
       setLoading(false);
@@ -26,11 +27,12 @@ const LoadingButton = ({ onClick, loading, ...props }) => {
   );
 };
 LoadingButton.propTypes = {
-  onClick: PropTypes.func.isRequired,
+  onClick: PropTypes.func,
   loading: PropTypes.bool,
 };
 LoadingButton.defaultProps = {
   loading: null,
+  onClick: null,
 };
 
 export default LoadingButton;
