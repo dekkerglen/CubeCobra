@@ -3,7 +3,7 @@ import syntax from 'markdown/cardlink/micromark-cardlink';
 import { fromMarkdown } from 'markdown/cardlink/mdast-cardlink';
 import { add } from 'markdown/utils';
 
-function oncard(node) {
+function oncard(node, index, parent) {
   if (node.value[0] === '!') {
     node.value = node.value.substring(1);
     node.type = 'cardimage';
@@ -17,6 +17,10 @@ function oncard(node) {
   if (node.value[0] === '!' && node.type !== 'cardimage') {
     node.value = node.value.substring(1);
     node.type = 'cardimage';
+  }
+
+  if (node.type === 'cardimage' && (parent.type === 'paragraph' || parent.inParagraph)) {
+    node.inParagraph = true;
   }
 
   [node.name, node.id] = node.value.split('|');

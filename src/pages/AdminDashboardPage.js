@@ -41,6 +41,9 @@ const AdminDashboardPage = ({
         <ButtonLink href="/admin/reviewpodcasts" block outline color="success">
           {`Review Podcasts (${podcastsInReview})`}
         </ButtonLink>
+        <ButtonLink href="/admin/featuredcubes" block outline color="success">
+          Featured Cubes Queue
+        </ButtonLink>
       </CardBody>
     </Card>
   </MainLayout>

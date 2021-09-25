@@ -104,7 +104,14 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
           },
         });
         if (!response.ok) {
-          addAlert('danger', `Failed to update ${card.details.name} (status ${response.statusCode})`);
+          let message;
+          try {
+            const json = await response.json();
+            message = json.message;
+          } catch {
+            message = `status ${response.status}`;
+          }
+          addAlert('danger', `Failed to update ${card.details.name} (${message})`);
           return;
         }
 
@@ -217,7 +224,8 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
   const handleBlur = useCallback(
     async (event) => {
       const { target } = event;
-      const { name, value, tagName } = target;
+      const { name, tagName } = target;
+      const value = name === 'cmc' ? parseFloat(target.value) : target.value;
 
       // <select>s handled in handleChange above.
       if (tagName.toLowerCase() !== 'select') {

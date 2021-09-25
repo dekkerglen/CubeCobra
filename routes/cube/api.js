@@ -452,7 +452,9 @@ router.post('/redraft/:id/:seat', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     draft = await Draft.findById(draft._id).lean();
@@ -604,7 +606,7 @@ router.post(
       !src ||
       (src && typeof src.index !== 'number') ||
       (updated.cardID && typeof updated.cardID !== 'string') ||
-      (updated.cmc && (typeof updated.cmc !== 'number' || updated.cmc < 0)) ||
+      (updated.cmc && (typeof updated.cmc !== 'number' || updated.cmc < 0 || !Number.isInteger(updated.cmc * 2))) ||
       (updated.status && typeof updated.status !== 'string') ||
       (updated.type_line && typeof updated.type_line !== 'string') ||
       (updated.colors && !Array.isArray(updated.colors)) ||

@@ -487,8 +487,7 @@ const ContactPage = ({ loginCallback }) => (
       </Accordion>
       <Accordion title="Tags">
         <p>
-          You can use <code>t:</code>, <code>tag:</code>, or <code>tags:</code> to filter cards by tag or tag count when
-          in a cube.
+          You can use <code>tag:</code> or <code>tags:</code> to filter cards by tag or tag count when in a cube.
         </p>
         <p>
           <strong>Examples:</strong>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 import InfiniteScroll from 'react-infinite-scroll-component';
 
@@ -59,7 +60,7 @@ const Feed = ({ items }) => {
 };
 
 Feed.propTypes = {
-  items: BlogPostPropType.isRequired,
+  items: PropTypes.arrayOf(BlogPostPropType).isRequired,
 };
 
 export default Feed;

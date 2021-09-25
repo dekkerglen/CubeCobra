@@ -220,6 +220,9 @@ export const CARD_CATEGORY_DETECTORS = {
     details.colors.length > 1 && details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
   phyrexian: (details) => details.parsed_cost.some((symbol) => symbol.includes('-p')),
   promo: (details) => details.promo,
+  reprint: (details) => details.reprint,
+  firstprint: (details) => !details.reprint,
+  firstprinting: (details) => !details.reprint,
   digital: (details) => details.digital,
   reasonable: (details) =>
     !details.promo &&
@@ -278,7 +281,7 @@ export const CARD_CATEGORY_DETECTORS = {
   battleland: (details) => LandCategories.TANGO.includes(details.name),
 
   // Others from Scryfall:
-  //   reserved, reprint, new, old, hires,
+  //   reserved, new, old, hires,
   //   spotlight, unique, masterpiece,
   //   funny,
   //   booster, datestamped, prerelease, planeswalker_deck,
