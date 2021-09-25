@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 
-// Deck schema
 const commentSchema = mongoose.Schema({
-  parent: String,
+  parent: String, // either a Mongo ObjectId or a card's Scryfall ID
   parentType: {
     type: String,
     enum: ['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'],
   },
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   ownerName: String,
   content: String,
   timePosted: Date,

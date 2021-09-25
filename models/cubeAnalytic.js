@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const cubeAnalyticSchema = mongoose.Schema({
   cube: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   cards: {

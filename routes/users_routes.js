@@ -110,11 +110,11 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (!other.users_following.includes(user.id)) {
-      other.users_following.push(user.id);
+    if (!other.users_following.some((id) => id.equals(user._id))) {
+      other.users_following.push(user._id);
     }
-    if (!user.followed_users.includes(other.id)) {
-      user.followed_users.push(other.id);
+    if (!user.followed_users.some((id) => id.equals(other._id))) {
+      user.followed_users.push(other._id);
     }
 
     await util.addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
@@ -141,7 +141,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
     }
 
     other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
-    user.followed_users = user.followed_users.filter((id) => id !== req.params.id);
+    user.followed_users = user.followed_users.filter((id) => !id.equals(req.params.id));
 
     await Promise.all([user.save(), other.save()]);
 
@@ -500,7 +500,7 @@ router.get('/view/:id', async (req, res) => {
 
     const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
 
-    const following = req.user && user.users_following ? user.users_following.includes(req.user.id) : false;
+    const following = req.user && user.users_following && user.users_following.some((id) => id.equals(req.user._id));
     delete user.users_following;
 
     return render(req, res, 'UserCubePage', {
@@ -565,7 +565,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     return render(req, res, 'UserDecksPage', {
       owner: user,
       followers,
-      following: req.user && req.user.followed_users.includes(user.id),
+      following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: Math.max(req.params.page, 0),
@@ -617,7 +617,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
         posts,
         canEdit: req.user && req.user._id.equals(user._id),
         followers,
-        following: req.user && req.user.followed_users.includes(user.id),
+        following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
         pages: Math.ceil(numBlogs / pagesize),
         activePage: Math.max(req.params.page, 0),
       },
@@ -789,7 +789,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
 
 router.post('/changedisplay', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
 
     user.theme = req.body.theme;
     user.hide_featured = req.body.hideFeatured === 'on';

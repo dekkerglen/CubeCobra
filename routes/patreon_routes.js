@@ -28,9 +28,9 @@ const isValidPatreonSignature = (signature, body) => {
 
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
-    await Patron.deleteOne({ user: req.user.id });
+    await Patron.deleteOne({ user: req.user._id });
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     user.roles = user.roles.filter((role) => role !== 'Patron');
     user.patron = undefined;
     await user.save();
@@ -156,7 +156,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
 
       const newPatron = new Patron();
       newPatron.email = email;
-      newPatron.user = req.user.id;
+      newPatron.user = req.user._id;
 
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
@@ -201,7 +201,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
 
       await newPatron.save();
 
-      const user = await User.findById(req.user.id);
+      const user = await User.findById(req.user._id);
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }

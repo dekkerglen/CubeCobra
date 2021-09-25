@@ -91,7 +91,7 @@ router.post('/add', ensureAuth, async (req, res) => {
     let cube = new Cube();
     cube.shortID = shortID;
     cube.name = req.body.name;
-    cube.owner = req.user.id;
+    cube.owner = req.user._id;
     cube.cards = [];
     cube.articles = [];
     const details = carddb.cardFromId(carddb.nameToId['doubling cube'][0]);
@@ -137,7 +137,7 @@ router.get('/clone/:id', async (req, res) => {
     let cube = new Cube();
     cube.shortID = shortID;
     cube.name = `Clone of ${source.name}`;
-    cube.owner = req.user.id;
+    cube.owner = req.user._id;
     cube.cards = source.cards;
     cube.articles = [];
     cube.image_uri = source.image_uri;
@@ -223,11 +223,11 @@ router.post(
       });
     }
 
-    if (!cube.users_following.includes(user.id)) {
-      cube.users_following.push(user.id);
+    if (!cube.users_following.some((id) => id.equals(user._id))) {
+      cube.users_following.push(user._id);
     }
-    if (!user.followed_cubes.includes(cube.id)) {
-      user.followed_cubes.push(cube.id);
+    if (!user.followed_cubes.some((id) => id.equals(cube._id))) {
+      user.followed_cubes.push(cube._id);
     }
 
     await Promise.all([user.save(), cube.save()]);
@@ -252,7 +252,7 @@ router.post(
 
     const { user } = req;
     cube.users_following = cube.users_following.filter((id) => !req.user._id.equals(id));
-    user.followed_cubes = user.followed_cubes.filter((id) => id !== req.params.id);
+    user.followed_cubes = user.followed_cubes.filter((id) => !cube._id.equals(id));
 
     await Promise.all([user.save(), cube.save()]);
 
@@ -399,7 +399,7 @@ router.get('/overview/:id', async (req, res) => {
       {
         cube,
         post: blogs ? blogs[0] : null,
-        followed: req.user && cube.users_following ? cube.users_following.includes(req.user.id) : false,
+        followed: req.user && cube.users_following && cube.users_following.some((id) => req.user._id.equals(id)),
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
         pricePurchase: !cube.privatePrices ? totalPricePurchase : null,
@@ -1301,7 +1301,7 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
+    const cube = await Cube.findById(draft.cube).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1361,7 +1361,7 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findOne(buildIdQuery(draft.cube)).lean();
+    const cube = await Cube.findById(draft.cube).lean();
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -1728,7 +1728,7 @@ router.post(
     const cube = await Cube.findOne(buildIdQuery(cubeid));
     if (
       !cube ||
-      cube.owner !== req.user.id ||
+      !req.user._id.equals(cube.owner) ||
       !Number.isInteger(formatId) ||
       formatId >= cube.draft_formats.length ||
       formatId < -1

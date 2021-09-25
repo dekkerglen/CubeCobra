@@ -333,7 +333,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
+    const cube = await Cube.findById(deck.cube, `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -514,7 +514,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (baseUser && !baseUser._id.equals(user.id)) {
+    if (baseUser && !baseUser._id.equals(user._id)) {
       await util.addNotification(
         baseUser,
         user,
@@ -592,7 +592,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+    const cube = await Cube.findById(draft.cube);
     // TODO: Should have guards on if the objects aren't found in the DB.
 
     const deck = new Deck();
@@ -667,7 +667,7 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     } else if (!cube.disableNotifications) {
       await util.addNotification(
         cubeOwner,
-        { user_from_name: 'Anonymous', user_from: '404' },
+        {},
         `/cube/deck/${deck._id}`,
         `An anonymous user drafted your cube: ${cube.name}`,
       );
@@ -691,7 +691,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await GridDraft.findById(draftid).lean();
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+    const cube = await Cube.findById(draft.cube);
 
     const deck = new Deck();
     deck.cube = draft.cube;
@@ -946,7 +946,7 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findById(deck.cube, Cube.LAYOUT_FIELDS).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
