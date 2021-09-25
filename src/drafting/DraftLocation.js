@@ -56,7 +56,6 @@ export const moveOrAddCard = (cards, target, source) => {
     card = source;
   }
 
-  console.log(target);
   const [targetRow, targetCol, targetIndex] = target;
   if (newCards[targetRow].length < 1 + targetCol) {
     newCards[targetRow] = newCards[targetRow].concat(new Array(1 + targetCol - newCards[targetRow].length).fill([]));

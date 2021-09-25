@@ -3,8 +3,22 @@ import seedrandom from 'seedrandom';
 
 import { moveOrAddCard } from 'drafting/DraftLocation';
 import { calculateBotPick } from 'drafting/draftbots';
-import { cardType } from 'utils/Card';
+import { cardType, cardCmc } from 'utils/Card';
 import { cmcColumn, toNullableInt } from 'utils/Util';
+
+export const setupPicks = (rows, cols) => {
+  const res = [];
+  for (let i = 0; i < rows; i++) {
+    const row = [];
+    for (let j = 0; j < cols; j++) {
+      row.push([]);
+    }
+    res.push(row);
+  }
+  return res;
+};
+
+export const getCardCol = (draft, cardIndex) => Math.min(7, cardCmc(draft.cards[cardIndex]));
 
 export const defaultStepsForLength = (length) =>
   new Array(length)

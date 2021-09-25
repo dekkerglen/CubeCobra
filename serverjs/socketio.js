@@ -1,5 +1,5 @@
 const { eventEmitter } = require('./redis');
-const { seatRef, getCurrentPackCards } = require('./multiplayerDrafting');
+const { seatRef, seatsRef, draftRef, getCurrentPackCards, draftPlayersRef } = require('./multiplayerDrafting');
 
 const setup = (io) => {
   io.on('connection', (socket) => {
@@ -17,25 +17,42 @@ const setup = (io) => {
       });
     });
 
+    socket.on('joinLobby', ({ draftId }) => {
+      const onDraftUpdate = async (data) => {
+        socket.emit('draft', data);
+      };
+
+      const onSeatsUpdate = async (data) => {
+        socket.emit('seats', data);
+      };
+
+      const onPlayersUpdate = async (data) => {
+        socket.emit('players', data);
+      };
+
+      eventEmitter.on(seatsRef(draftId), onSeatsUpdate);
+      eventEmitter.on(draftRef(draftId), onDraftUpdate);
+      eventEmitter.on(draftPlayersRef(draftId), onPlayersUpdate);
+
+      socket.on('disconnect', () => {
+        eventEmitter.removeListener(seatsRef(draftId), onSeatsUpdate);
+        eventEmitter.removeListener(draftRef(draftId), onDraftUpdate);
+        eventEmitter.removeListener(draftPlayersRef(draftId), onPlayersUpdate);
+      });
+    });
+
     socket.on('joinDraft', ({ draftId, seat }) => {
-      const roomId = `draft${draftId}seat${seat}`;
-      socket.join(roomId);
-
-      // display a welcome message to the user who have joined a room
-      socket.emit('message', `You joined ${roomId}`);
-
-      // this fires when the seat queue has had changes, like a new pack pushed to it
-      const onUpdate = async (data) => {
+      const onSeatUpdate = async (data) => {
         if (data.length > 0) {
           const pack = data[data.length - 1];
-          socket.emit('pack', await getCurrentPackCards(pack));
+          socket.emit('seat', await getCurrentPackCards(pack));
         }
       };
 
-      eventEmitter.on(seatRef(draftId, seat), onUpdate);
+      eventEmitter.on(seatRef(draftId, seat), onSeatUpdate);
 
       socket.on('disconnect', () => {
-        eventEmitter.removeListener(seatRef(draftId, seat), onUpdate);
+        eventEmitter.removeListener(seatRef(draftId, seat), onSeatUpdate);
       });
     });
   });

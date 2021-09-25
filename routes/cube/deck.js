@@ -13,6 +13,7 @@ const generateMeta = require('../../serverjs/meta.js');
 const cardutil = require('../../dist/utils/Card.js');
 const frontutil = require('../../dist/utils/Util.js');
 const { ensureAuth } = require('../middleware');
+const { createDeckFromDraft } = require('../../serverjs/deckUtil');
 
 const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
 
@@ -586,89 +587,10 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
     // TODO: Should have guards on if the objects aren't found in the DB.
 
-    const deck = new Deck();
-    deck.cube = draft.cube;
-    deck.cubeOwner = cube.owner;
-    deck.date = Date.now();
-    deck.draft = draft._id;
-    deck.cubename = cube.name;
-    deck.seats = [];
-    deck.owner = draft.seats[0].userid;
-    deck.cards = draft.cards;
-    deck.basics = draft.basics;
+    const deck = await createDeckFromDraft(draft);
 
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-    }
-    const cards = draft.cards.map((c) => {
-      const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
-      if (eloOverrideDict[newCard.details.name_lower]) {
-        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
-      }
-      return newCard;
-    });
-    let botNumber = 1;
-    for (const seat of draft.seats) {
-      // eslint-disable-next-line no-await-in-loop
-      const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
-      const colorString =
-        colors.length === 0
-          ? 'C'
-          : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
-      if (seat.bot) {
-        deck.seats.push({
-          bot: seat.bot,
-          userid: seat.userid,
-          username: `Bot ${botNumber}: ${colorString}`,
-          name: `Draft of ${cube.name}`,
-          description: '',
-          deck: newDeck,
-          sideboard,
-        });
-        botNumber += 1;
-      } else {
-        deck.seats.push({
-          bot: seat.bot,
-          userid: seat.userid,
-          username: `${seat.name}: ${colorString}`,
-          name: `Draft of ${cube.name}`,
-          description: '',
-          deck: seat.drafted,
-          sideboard: seat.sideboard ? seat.sideboard : [],
-        });
-      }
-    }
-
-    const userq = User.findById(deck.seats[0].userid);
-    const cubeOwnerq = User.findById(cube.owner);
-
-    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
-
-    if (user && !cube.disableNotifications) {
-      await util.addNotification(
-        cubeOwner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} drafted your cube: ${cube.name}`,
-      );
-    } else if (!cube.disableNotifications) {
-      await util.addNotification(
-        cubeOwner,
-        { user_from_name: 'Anonymous', user_from: '404' },
-        `/cube/deck/${deck._id}`,
-        `An anonymous user drafted your cube: ${cube.name}`,
-      );
-    }
-
-    cube.numDecks += 1;
-    await addDeckCardAnalytics(cube, deck, carddb);
-
-    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
       return res.redirect(`/cube/deck/${deck._id}`);
     }

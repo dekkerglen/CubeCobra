@@ -915,6 +915,10 @@ router.get('/c/:id', (req, res) => {
   res.redirect(`/cube/list/${req.params.id}`);
 });
 
+router.get('/d/:id', (req, res) => {
+  res.redirect(`/cube/draft/${req.params.id}`);
+});
+
 router.get('/leave', (req, res) => {
   return render(req, res, 'LeaveWarningPage', {
     url: req.query.url,

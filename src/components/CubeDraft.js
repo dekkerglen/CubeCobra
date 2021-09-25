@@ -5,26 +5,13 @@ import useMount from 'hooks/UseMount';
 import Pack from 'components/Pack';
 import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
-import { makeSubtitle, cardCmc } from 'utils/Card';
+import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
+import { setupPicks, getCardCol } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
 import { Card } from 'reactstrap';
-
-const setupPicks = (rows, cols) => {
-  const res = [];
-  for (let i = 0; i < rows; i++) {
-    const row = [];
-    for (let j = 0; j < cols; j++) {
-      row.push([]);
-    }
-    res.push(row);
-  }
-  return res;
-};
-
-const getCardCol = (draft, cardIndex) => Math.min(7, cardCmc(draft.cards[cardIndex]));
 
 const fetchPicks = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpicks', {
@@ -32,7 +19,7 @@ const fetchPicks = async (draft, seat) => {
     seat,
   });
   const json = await res.json();
-  const picks = setupPicks(1, 8);
+  const picks = setupPicks(2, 8);
 
   for (const index of json.picks) {
     picks[0][getCardCol(draft, index)].push(index);
@@ -50,17 +37,32 @@ const fetchPack = async (draft, seat) => {
   return json.pack;
 };
 
+let staticPicks;
+
 const CubeDraft = ({ draft, seat, socket }) => {
   const [pack, setPack] = React.useState([]);
-  const [picks, setPicks] = React.useState(setupPicks(1, 8));
+  const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
+
+  staticPicks = picks;
 
   useMount(() => {
     const run = async () => {
-      socket.on('message', (data) => {
-        console.log(data);
+      socket.emit('joinDraft', { draftId: draft._id, seat });
+
+      socket.on('draft', async (data) => {
+        if (data.finished === 'true') {
+          const res = await callApi('/multiplayer/editdeckbydraft', {
+            draftId: draft._id,
+            seat,
+            drafted: staticPicks,
+            sideboard: setupPicks(1, 8),
+          });
+          const json = await res.json();
+          window.open(`/cube/deck/deckbuilder/${json.deck}`);
+        }
       });
-      socket.on('pack', (data) => {
+      socket.on('seat', (data) => {
         setPack(data);
         setLoading(false);
       });
@@ -79,13 +81,6 @@ const CubeDraft = ({ draft, seat, socket }) => {
     await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
   };
 
-  const start = async () => {
-    await callApi('/multiplayer/startdraft', {
-      draft: draft._id,
-      seat,
-    });
-  };
-
   const onMoveCard = async (source, target) => {
     if (source.equals(target)) {
       return;
@@ -99,7 +94,7 @@ const CubeDraft = ({ draft, seat, socket }) => {
       }
     } else if (source.type === DraftLocation.PICKS) {
       if (target.type === DraftLocation.PICKS) {
-        setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+        setPicks(moveOrAddCard(picks, target.data, source.data));
       } else {
         console.error("Can't move cards from picks back to pack.");
       }
@@ -141,6 +136,7 @@ CubeDraft.propTypes = {
   draft: DraftPropType.isRequired,
   socket: PropTypes.shape({
     on: PropTypes.func.isRequired,
+    emit: PropTypes.func.isRequired,
   }).isRequired,
 };
 

@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import CubePropType from 'proptypes/CubePropType';
 import CubeDraft from 'components/CubeDraft';
+import CubeDraftError from 'components/CubeDraftError';
 import CubeDraftStaging from 'components/CubeDraftStaging';
 import DraftPropType from 'proptypes/DraftPropType';
 import RenderToRoot from 'utils/RenderToRoot';
 import useMount from 'hooks/UseMount';
 import socketIOClient from 'socket.io-client';
 import { callApi } from 'utils/CSRF';
+import UserContext from 'contexts/UserContext';
 
 import { Spinner } from 'reactstrap';
 
 const socket = socketIOClient('localhost:8080', { rejectUnauthorized: false });
 
-const CubeDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
+const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
+  const user = useContext(UserContext);
   const [state, setState] = useState('loading');
+  const [message, setMessage] = useState('');
 
   const start = async () => {
     await callApi('/multiplayer/startdraft', { draft: initialDraft._id });
@@ -27,14 +31,28 @@ const CubeDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
 
   useMount(() => {
     const run = async () => {
-      socket.emit('joinDraft', { draftId: initialDraft._id, seat: seatNumber });
-
-      const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
-      const json = await res.json();
-      if (json.initialized) {
-        setState('drafting');
+      if (!user) {
+        setState('error');
+        setMessage('Please log in to join this draft.');
       } else {
-        setState('staging');
+        const res = await callApi('/multiplayer/joinlobby', { draft: initialDraft._id });
+        const json = await res.json();
+        if (!json.success === 'true') {
+          console.log('erroring');
+          setState('error');
+          setMessage(json.message);
+          return;
+        }
+
+        const res2 = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
+        const json2 = await res2.json();
+        if (json2.initialized) {
+          setState('drafting');
+        } else {
+          setState('staging');
+        }
+
+        socket.emit('joinLobby', { draftId: initialDraft._id });
       }
     };
     run();
@@ -49,10 +67,9 @@ const CubeDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
               <Spinner className="position-absolute" />
             </div>
           )}
-          {state === 'staging' && (
-            <CubeDraftStaging draft={initialDraft} seat={seatNumber} start={start} socket={socket} />
-          )}
-          {state === 'drafting' && <CubeDraft draft={initialDraft} seat={seatNumber} socket={socket} />}
+          {state === 'staging' && <CubeDraftStaging draft={initialDraft} start={start} socket={socket} />}
+          {state === 'drafting' && <CubeDraft draft={initialDraft} socket={socket} />}
+          {state === 'error' && <CubeDraftError message={message} />}
         </DisplayContextProvider>
       </CubeLayout>
     </MainLayout>
@@ -62,12 +79,10 @@ const CubeDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
 CubeDraftPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDraft: DraftPropType.isRequired,
-  seatNumber: PropTypes.number,
   loginCallback: PropTypes.string,
 };
 
 CubeDraftPage.defaultProps = {
-  seatNumber: 0,
   loginCallback: '/',
 };
 
