@@ -126,6 +126,7 @@ try {
               func(doc);
               await doc.save();
             } catch (e) {
+              console.error(`Failed doc ${doc._id}`);
               console.error(e);
               failed.push([doc._id, name]);
             } 
