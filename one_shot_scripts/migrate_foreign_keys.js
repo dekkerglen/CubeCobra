@@ -141,6 +141,7 @@ try {
     console.log('done');
     console.log('Failed:');
     console.log(failed);
+    console.log(`Total: ${failed.length}`);
     process.exit();
   })();
 } catch (err) {
