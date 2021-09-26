@@ -83,16 +83,16 @@ const processors = {
   // comment: [Comment, convertProps(['owner'])],
   // cube: [Cube, convertProps(['owner', 'users_following'])],
   // cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
-  deck: [Deck, processDeck],
-  draft: [Draft, processDraft],
-  gridDraft: [GridDraft, processDraft],
-  package: [Package, convertProps(['userid', 'voters'])],
-  patron: [Patron, convertProps(['user'])],
-  podcast: [Podcast, convertProps(['owner'])],
-  podcastEpisode: [PodcastEpisode, convertProps(['owner', 'podcast'])],
-  report: [Report, convertProps(['commentid', 'reportee'])],
-  user: [User, processUser],
-  video: [Video, convertProps(['owner'])],
+  deck: [Deck, processDeck, 'cube cubeOwner owner draft seats'],
+  draft: [Draft, processDraft, 'seats cube'],
+  gridDraft: [GridDraft, processDraft, 'seats cube'],
+  package: [Package, convertProps(['userid', 'voters']), 'userid voters'],
+  patron: [Patron, convertProps(['user']), 'user'],
+  podcast: [Podcast, convertProps(['owner']), 'owner'],
+  podcastEpisode: [PodcastEpisode, convertProps(['owner', 'podcast']), 'owner podcast'],
+  report: [Report, convertProps(['commentid', 'reportee']), 'commentid reportee'],
+  user: [User, processUser, 'followed_cubes followed_users users_following patron notifications old_notifications'],
+  video: [Video, convertProps(['owner']), 'owner'],
 };
 
 try {
@@ -102,12 +102,12 @@ try {
     // process all cube objects
     console.log('Started');
 
-    for (const [name, value] of Object.entries(processors)) {
+    for (const [name, value, fields] of Object.entries(processors)) {
       console.log(`Running processor ${name}`);
       const [Model, func] = value;
 
       const count = await Model.countDocuments();
-      const cursor = Model.find().cursor();
+      const cursor = Model.find({}, fields).cursor();
 
       // batch them by batchSize
       for (let i = 0; i < count; i += batchSize) {
