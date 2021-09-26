@@ -101,7 +101,7 @@ try {
 
     // process all cube objects
     console.log('Started');
-
+    const failed = [];
     for (const [name, value] of Object.entries(processors)) {
       console.log(`Running processor ${name}`);
       const [Model, func] = value;
@@ -122,8 +122,13 @@ try {
         }
         await Promise.all(
           items.map(async (doc) => {
-            func(doc);
-            await doc.save();
+            try {
+              func(doc);
+              await doc.save();
+            } catch (e) {
+              console.error(e);
+              failed.push([doc._id, name]);
+            } 
           }),
         );
         console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} ${name} documents`);
@@ -133,6 +138,8 @@ try {
 
     await mongoose.disconnect();
     console.log('done');
+    console.log('Failed:');
+    console.log(failed);
     process.exit();
   })();
 } catch (err) {
