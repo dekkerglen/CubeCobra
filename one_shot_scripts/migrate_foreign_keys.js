@@ -83,7 +83,7 @@ const processors = {
   // comment: [Comment, convertProps(['owner'])],
   // cube: [Cube, convertProps(['owner', 'users_following'])],
   // cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
-  deck: [Deck, processDeck, 'cube cubeOwner owner draft seats'],
+  // deck: [Deck, processDeck, 'cube cubeOwner owner draft seats'],
   draft: [Draft, processDraft, 'seats cube'],
   gridDraft: [GridDraft, processDraft, 'seats cube'],
   package: [Package, convertProps(['userid', 'voters']), 'userid voters'],
