@@ -47,6 +47,7 @@ const convertProps = (paths) => (obj) => {
   }
 };
 
+/*
 const processDraft = (g) => {
   g.cube = Id(g.cube);
   for (const seat of g.seats) {
@@ -75,6 +76,7 @@ const processUser = (u) => {
   u.markModified('notifications');
   u.markModified('old_notifications');
 };
+*/
 
 const processors = {
   // application: [Application, convertProps(['userid'])],
