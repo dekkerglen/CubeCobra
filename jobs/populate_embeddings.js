@@ -52,7 +52,7 @@ const updateEmbeddings = async (names, embeddings) => {
       }
     }
 
-    mongoose.disconnect();
+    await mongoose.disconnect();
     console.log('done');
     process.exit();
   });

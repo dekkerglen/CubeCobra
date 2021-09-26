@@ -19,7 +19,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages
         <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
       )}
       {posts.length > 0 ? (
-        posts.slice(0).map((post) => <BlogPost key={post._id} post={post} loggedIn />)
+        posts.slice(0).map((post) => <BlogPost key={post._id} post={post} />)
       ) : (
         <p>This user has no blog posts!</p>
       )}

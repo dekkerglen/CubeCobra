@@ -49,7 +49,7 @@ try {
         await Draft.deleteMany({ _id: { $in: toDelete } });
       }
     }
-    mongoose.disconnect();
+    await mongoose.disconnect();
     process.exit(0);
   })();
 } catch (err) {

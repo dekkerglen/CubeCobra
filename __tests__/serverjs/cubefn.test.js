@@ -212,7 +212,7 @@ describe('CSVtoCards', () => {
     expectSame(newCards[0], expectedCard);
     expect(newMaybe.length).toBe(1);
     expectSame(newMaybe[0], expectedMaybe);
-    expect(missing).toBe('');
+    expect(missing).toEqual([]);
   });
 });
 

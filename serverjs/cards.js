@@ -36,6 +36,7 @@ function getPlaceholderCard(_id) {
     set: '',
     collector_number: '',
     promo: false,
+    reprint: false,
     digital: false,
     full_name: 'Invalid Card',
     name: 'Invalid Card',

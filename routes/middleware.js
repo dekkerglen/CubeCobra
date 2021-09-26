@@ -17,7 +17,7 @@ const ensureRole = (role) => (req, res, next) => {
     return res.redirect('/user/login');
   }
 
-  return User.findById(req.user.id, (err, user) => {
+  return User.findById(req.user._id, (err, user) => {
     if (user.roles && user.roles.includes(role)) {
       return next();
     }

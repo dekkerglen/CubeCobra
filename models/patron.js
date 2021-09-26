@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const patronSchema = mongoose.Schema({
   user: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
     unique: true,
   },

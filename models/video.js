@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const videoSchema = mongoose.Schema({
   title: String,
   body: String,
   short: String,
   url: String,
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   date: Date,
   image: String,
   imagename: String,

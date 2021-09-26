@@ -215,10 +215,10 @@ const Maybeboard = ({ filter, ...props }) => {
           </Row>
         </Form>
       )}
-      {maybeboard.length === 0 ? (
+      {filteredMaybeboard.length === 0 ? (
         <h5 className="mt-3">
           No cards in maybeboard
-          {filter && filter.length > 0 ? ' matching filter.' : '.'}
+          {filter ? ' matching filter.' : '.'}
         </h5>
       ) : (
         <TableView className="mt-3" cards={filteredMaybeboard} rowTag={MaybeboardListItem} noGroupModal {...props} />
@@ -229,7 +229,11 @@ const Maybeboard = ({ filter, ...props }) => {
 };
 
 Maybeboard.propTypes = {
-  filter: PropTypes.arrayOf(PropTypes.array).isRequired,
+  filter: PropTypes.func,
+};
+
+Maybeboard.defaultProps = {
+  filter: null,
 };
 
 export default Maybeboard;
