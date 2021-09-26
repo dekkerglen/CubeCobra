@@ -83,7 +83,7 @@ const processors = {
   // comment: [Comment, convertProps(['owner'])],
   // cube: [Cube, convertProps(['owner', 'users_following'])],
   // cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
-  // deck: [Deck, processDeck],
+  deck: [Deck, processDeck],
   draft: [Draft, processDraft],
   gridDraft: [GridDraft, processDraft],
   package: [Package, convertProps(['userid', 'voters'])],
@@ -122,8 +122,12 @@ try {
         }
         await Promise.all(
           items.map(async (doc) => {
-            func(doc);
-            await doc.save();
+            try {
+              func(doc);
+              await doc.save();
+            } catch (err) {
+              console.log(`could not migrate ${doc._id}`);
+            }
           }),
         );
         console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} ${name} documents`);
