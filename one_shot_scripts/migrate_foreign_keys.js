@@ -102,9 +102,9 @@ try {
     // process all cube objects
     console.log('Started');
 
-    for (const [name, value, fields] of Object.entries(processors)) {
+    for (const [name, value] of Object.entries(processors)) {
       console.log(`Running processor ${name}`);
-      const [Model, func] = value;
+      const [Model, func, fields] = value;
 
       const count = await Model.countDocuments();
       const cursor = Model.find({}, fields).cursor();
@@ -122,12 +122,8 @@ try {
         }
         await Promise.all(
           items.map(async (doc) => {
-            try {
-              func(doc);
-              await doc.save();
-            } catch (err) {
-              console.log(`could not migrate ${doc._id}`);
-            }
+            func(doc);
+            await doc.save();
           }),
         );
         console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} ${name} documents`);
