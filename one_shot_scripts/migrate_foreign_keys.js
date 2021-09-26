@@ -77,13 +77,13 @@ const processUser = (u) => {
 };
 
 const processors = {
-  application: [Application, convertProps(['userid'])],
-  article: [Article, convertProps(['owner'])],
-  blog: [Blog, convertProps(['owner', 'cube'])],
-  comment: [Comment, convertProps(['owner'])],
-  cube: [Cube, convertProps(['owner', 'users_following'])],
-  cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
-  deck: [Deck, processDeck],
+  // application: [Application, convertProps(['userid'])],
+  // article: [Article, convertProps(['owner'])],
+  // blog: [Blog, convertProps(['owner', 'cube'])],
+  // comment: [Comment, convertProps(['owner'])],
+  // cube: [Cube, convertProps(['owner', 'users_following'])],
+  // cubeAnalytic: [CubeAnalytic, convertProps(['cube'])],
+  // deck: [Deck, processDeck],
   draft: [Draft, processDraft],
   gridDraft: [GridDraft, processDraft],
   package: [Package, convertProps(['userid', 'voters'])],
