@@ -11,6 +11,7 @@ import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
 import { makeSubtitle } from 'utils/Card';
+import Username from 'components/Username';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
@@ -91,7 +92,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
           <h4 className="mb-0 mr-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <a href={`/user/view/${seat.userid}`}>{seat.username}</a> : 'Anonymous'}
+              Drafted by {seat.userid ? <Username userId={seat.userid} defaultName={seat.username} /> : 'Anonymous'}
             </h6>
           )}
         </CardTitle>

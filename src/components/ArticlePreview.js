@@ -4,6 +4,7 @@ import ArticlePropType from 'proptypes/ArticlePropType';
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 import TimeAgo from 'react-timeago';
+import Username from 'components/Username';
 
 const ArticlePreview = ({ article }) => {
   const [hover, setHover] = useState(false);
@@ -40,10 +41,7 @@ const ArticlePreview = ({ article }) => {
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-left">
-          Written by{' '}
-          <a data-sublink href={`/user/view/${article.owner}`}>
-            {article.username}
-          </a>
+          Written by <Username userId={article.owner} defaultName={article.username} />
         </small>
         <small className="float-right">
           <TimeAgo date={article.date} />

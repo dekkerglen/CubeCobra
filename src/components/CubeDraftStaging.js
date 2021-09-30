@@ -7,6 +7,7 @@ import { callApi } from 'utils/CSRF';
 import UserContext from 'contexts/UserContext';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import { ClippyIcon, LockIcon } from '@primer/octicons-react';
+import Username from 'components/Username';
 
 import {
   Button,
@@ -63,7 +64,7 @@ const CubeDraft = ({ draft, socket, start }) => {
 
   const editableRows = draft.seats.map((seat, i) => {
     return {
-      element: <div className="tag-color-row clickable pb-3">{seats[i] || 'Bot'}</div>,
+      element: <div className="tag-color-row clickable pb-3">{<Username userId={seats[i]} /> || 'Bot'}</div>,
       key: i,
     };
   });

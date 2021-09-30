@@ -3,6 +3,7 @@ import PodcastPropType from 'proptypes/PodcastPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
+import Username from 'components/Username';
 
 const PodcastPreview = ({ podcast }) => {
   const [hover, setHover] = useState(false);
@@ -32,10 +33,7 @@ const PodcastPreview = ({ podcast }) => {
         <h5 className="text-muted text-ellipsis my-0">{podcast.title}</h5>
         <small>
           <em className="text-muted text-ellipsis">
-            By{' '}
-            <a data-sublink href={`/user/view/${podcast.owner}`}>
-              {podcast.username}
-            </a>
+            By <Username userId={podcast.owner} defaultName={podcast.username} />
           </em>
         </small>
       </div>

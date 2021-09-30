@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.post('/getUser', async (req, res) => {
+router.post('/userfromid', async (req, res) => {
   const { userId } = req.body;
   const user = await getUserFromId(userId);
 

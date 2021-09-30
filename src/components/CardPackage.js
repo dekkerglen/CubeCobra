@@ -11,6 +11,8 @@ import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import CommentsSection from 'components/CommentsSection';
 
+import Username from 'components/Username';
+
 import { CardHeader, Card, CardBody, Row, Col, Button } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
@@ -75,7 +77,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
               <a href={`/packages/${cardPackage._id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
-              <a href={`/user/view/${cardPackage.userid}`}>{cardPackage.username}</a>
+              <Username userId={cardPackage.userid} defaultName={cardPackage.username} />
               {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>

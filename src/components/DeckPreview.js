@@ -8,6 +8,7 @@ import TimeAgo from 'react-timeago';
 import UserContext from 'contexts/UserContext';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
+import Username from 'components/Username';
 
 /** 2020-11-17 struesdell:
  *  Pulled constants out of component render so that they are defined only once
@@ -94,7 +95,7 @@ const DeckPreview = ({ deck, nextURL }) => {
         </a>{' '}
         by{' '}
         {deck.seats[0].userid ? (
-          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
+          <Username userId={deck.seats[0].userid} defaultName={deck.seats[0].username} />
         ) : (
           'Anonymous'
         )}{' '}

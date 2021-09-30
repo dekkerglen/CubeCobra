@@ -3,6 +3,7 @@ import VideoPropType from 'proptypes/VideoPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
+import Username from 'components/Username';
 import TimeAgo from 'react-timeago';
 
 const VideoPreview = ({ video }) => {
@@ -40,10 +41,7 @@ const VideoPreview = ({ video }) => {
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-left">
-          By{' '}
-          <a data-sublink href={`/user/view/${video.owner}`}>
-            {video.username}
-          </a>
+          By <Username userId={video.owner} defaultName={video.username} />
         </small>
         <small className="float-right">
           <TimeAgo date={video.date} />

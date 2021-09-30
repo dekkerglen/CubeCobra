@@ -8,12 +8,14 @@ const CardPackage = ({ userId, defaultName }) => {
   useEffect(() => {
     const getData = async () => {
       // Default options are marked with *
-      const response = await csrfFetch(`/api/private/${userId}`, {
+      const response = await csrfFetch(`/api/private/userfromid/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: JSON.stringify({
+          userId,
+        }),
       });
       const val = await response.json();
       return val;
