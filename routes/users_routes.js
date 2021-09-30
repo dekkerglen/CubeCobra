@@ -7,8 +7,10 @@ const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util.js');
+const fq = require('../serverjs/featuredQueue');
 const carddb = require('../serverjs/cards.js');
 const { render } = require('../serverjs/render');
+const { buildIdQuery } = require('../serverjs/cubefn');
 
 // Bring in models
 const User = require('../models/user');
@@ -17,6 +19,7 @@ const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const Blog = require('../models/blog');
 const Patron = require('../models/patron');
+const FeaturedCubes = require('../models/featuredCubes');
 
 const router = express.Router();
 
@@ -107,11 +110,11 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (!other.users_following.includes(user.id)) {
-      other.users_following.push(user.id);
+    if (!other.users_following.some((id) => id.equals(user._id))) {
+      other.users_following.push(user._id);
     }
-    if (!user.followed_users.includes(other.id)) {
-      user.followed_users.push(other.id);
+    if (!user.followed_users.some((id) => id.equals(other._id))) {
+      user.followed_users.push(other._id);
     }
 
     await util.addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
@@ -138,7 +141,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
     }
 
     other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
-    user.followed_users = user.followed_users.filter((id) => id !== req.params.id);
+    user.followed_users = user.followed_users.filter((id) => !id.equals(req.params.id));
 
     await Promise.all([user.save(), other.save()]);
 
@@ -497,7 +500,7 @@ router.get('/view/:id', async (req, res) => {
 
     const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
 
-    const following = req.user && user.users_following ? user.users_following.includes(req.user.id) : false;
+    const following = req.user && user.users_following && user.users_following.some((id) => id.equals(req.user._id));
     delete user.users_following;
 
     return render(req, res, 'UserCubePage', {
@@ -562,7 +565,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     return render(req, res, 'UserDecksPage', {
       owner: user,
       followers,
-      following: req.user && req.user.followed_users.includes(user.id),
+      following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
       decks: decks || [],
       pages: Math.ceil(numDecks / pagesize),
       activePage: Math.max(req.params.page, 0),
@@ -614,7 +617,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
         posts,
         canEdit: req.user && req.user._id.equals(user._id),
         followers,
-        following: req.user && req.user.followed_users.includes(user.id),
+        following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
         pages: Math.ceil(numBlogs / pagesize),
         activePage: Math.max(req.params.page, 0),
       },
@@ -629,7 +632,14 @@ router.get('/blog/:userid/:page', async (req, res) => {
 
 // account page
 router.get('/account', ensureAuth, async (req, res) => {
-  const patron = await Patron.findOne({ user: req.user.id });
+  const patron = await Patron.findOne({ user: req.user._id });
+  const featured = await FeaturedCubes.getSingleton();
+  const i = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+  let myFeatured;
+  if (i !== -1) {
+    const cube = await Cube.findById(featured.queue[i].cubeID).lean();
+    myFeatured = { cube, position: i + 1 };
+  }
 
   return render(
     req,
@@ -640,6 +650,7 @@ router.get('/account', ensureAuth, async (req, res) => {
       patreonRedirectUri: process.env.PATREON_REDIRECT || '',
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
       patron,
+      featured: myFeatured,
     },
     {
       title: 'Account',
@@ -778,7 +789,7 @@ router.post('/updateemail', ensureAuth, (req, res) => {
 
 router.post('/changedisplay', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
 
     user.theme = req.body.theme;
     user.hide_featured = req.body.hideFeatured === 'on';
@@ -823,6 +834,65 @@ router.get('/social', ensureAuth, async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, '/');
   }
+});
+
+router.post('/queuefeatured', ensureAuth, async (req, res) => {
+  const redirect = '/user/account?nav=patreon';
+  if (!req.body.cubeId) {
+    req.flash('danger', 'Cube ID not sent');
+    return res.redirect(redirect);
+  }
+
+  const cube = await Cube.findOne(buildIdQuery(req.body.cubeId)).lean();
+  if (!req.user._id.equals(cube.owner)) {
+    req.flash('danger', 'Only an owner of a cube can add it to the queue');
+    return res.redirect(redirect);
+  }
+
+  const patron = await Patron.findOne({ user: req.user._id }).lean();
+  if (!fq.canBeFeatured(patron)) {
+    req.flash('danger', 'Insufficient Patreon status for featuring a cube');
+    return res.redirect(redirect);
+  }
+
+  const update = await fq.updateFeatured(async (featured) => {
+    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+    if (currentIndex === 0 || currentIndex === 1) {
+      throw new Error('Cannot change currently featured cube');
+    }
+    let message;
+    if (currentIndex === -1) {
+      featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
+      message = 'Successfully added cube to queue';
+    } else {
+      featured.queue[currentIndex].cubeID = cube._id;
+      message = 'Successfully replaced cube in queue';
+    }
+    return message;
+  });
+
+  if (!update.ok) req.flash('danger', update.message);
+  else req.flash('success', update.return);
+  return res.redirect('/user/account?nav=patreon');
+});
+
+router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
+  const redirect = '/user/account?nav=patreon';
+
+  const update = await fq.updateFeatured(async (featured) => {
+    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+    if (index === -1) {
+      throw new Error('Nothing to remove');
+    }
+    if (index === 0 || index === 1) {
+      throw new Error('Cannot remove currently featured cube');
+    }
+    featured.queue.splice(index, 1);
+  });
+
+  if (!update.ok) req.flash('danger', update.message);
+  else req.flash('success', 'Successfully removed cube from queue');
+  return res.redirect(redirect);
 });
 
 module.exports = router;

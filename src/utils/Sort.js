@@ -341,7 +341,7 @@ function getLabelsRaw(cube, sort, showOther) {
   } else if (sort === 'Unsorted') {
     ret = ['All'];
   } else if (sort === 'Popularity') {
-    ret = ['0–1%', '1–2%', '3–5%', '5–8', '8–12%', '12–20%', '20–30%', '30–50%', '50–100%'];
+    ret = ['0–1%', '1–2%', '3–5%', '5–8%', '8–12%', '12–20%', '20–30%', '30–50%', '50–100%'];
   } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {

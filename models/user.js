@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// User schema
 const UserSchema = mongoose.Schema({
   username: {
     type: String,
@@ -31,21 +30,21 @@ const UserSchema = mongoose.Schema({
     default: false,
   },
   followed_cubes: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   followed_users: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   users_following: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   notifications: {
     type: [
       {
-        user_from: String,
+        user_from: mongoose.Schema.Types.ObjectId,
         user_from_name: String,
         url: String,
         date: Date,
@@ -57,7 +56,7 @@ const UserSchema = mongoose.Schema({
   old_notifications: {
     type: [
       {
-        user_from: String,
+        user_from: mongoose.Schema.Types.ObjectId,
         user_from_name: String,
         url: String,
         date: Date,
@@ -97,7 +96,7 @@ const UserSchema = mongoose.Schema({
     default: false,
   },
   patron: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     default: null,
   },
 });

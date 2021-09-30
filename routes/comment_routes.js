@@ -75,7 +75,7 @@ router.post(
   '/:type/:parent',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const poster = await User.findById(req.user.id);
+    const poster = await User.findById(req.user._id);
 
     if (
       !['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(
@@ -143,7 +143,7 @@ router.post(
 
     const comment = await Comment.findById(newComment._id);
 
-    if (comment.owner !== req.user.id) {
+    if (!comment.owner.equals(req.user._id)) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
@@ -188,7 +188,7 @@ router.post(
     report.commentid = commentid;
     report.info = info;
     report.reason = reason;
-    report.reportee = req.user ? req.user.id : null;
+    report.reportee = req.user ? req.user._id : null;
     report.timePosted = Date.now() - 1000;
     await report.save();
 

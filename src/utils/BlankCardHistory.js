@@ -16,13 +16,14 @@ function getBlankCardHistory(id) {
       size540: [0, 0],
       size720: [0, 0],
       pauper: [0, 0],
+      peasant: [0, 0],
       legacy: [0, 0],
       modern: [0, 0],
       standard: [0, 0],
       vintage: [0, 0],
       cubes: 0,
       prices: cardVersions.map((cardId) => {
-        return { ...carddb.cardFromId(cardId), version: carddb.cardFromId(cardId)._id };
+        return { ...carddb.cardFromId(cardId).prices, version: carddb.cardFromId(cardId)._id };
       }),
     },
     cubedWith: {
@@ -43,6 +44,7 @@ function getBlankCardHistory(id) {
           size540: [0, 0],
           size720: [0, 0],
           pauper: [0, 0],
+          peasant: [0, 0],
           legacy: [0, 0],
           modern: [0, 0],
           standard: [0, 0],

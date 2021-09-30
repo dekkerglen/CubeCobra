@@ -303,7 +303,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
     const deck = await Deck.findById(req.params.id);
     const deckOwner = (await User.findById(deck.seats[0].userid)) || {};
 
-    if (!deckOwner._id.equals(req.user._id) && !deck.cubeOwner === req.user._id) {
+    if (!req.user._id.equals(deckOwner._id) && !req.user._id.equals(deck.cubeOwner)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -334,7 +334,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
+    const cube = await Cube.findById(deck.cube, `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -343,7 +343,9 @@ router.get('/deckbuilder/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     // add details to cards
@@ -450,7 +452,9 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     const cardsArray = [];
@@ -511,7 +515,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (baseUser && !baseUser._id.equals(user.id)) {
+    if (baseUser && !baseUser._id.equals(user._id)) {
       await util.addNotification(
         baseUser,
         user,
@@ -549,7 +553,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
     const cardsArray = [];
     for (const card of deck.toObject().cards) {
@@ -584,10 +590,8 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
 router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
   try {
-    // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
-    // TODO: Should have guards on if the objects aren't found in the DB.
 
     const deck = await createDeckFromDraft(draft);
 
@@ -605,7 +609,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await GridDraft.findById(draftid).lean();
-    const cube = await Cube.findOne(buildIdQuery(draft.cube));
+    const cube = await Cube.findById(draft.cube);
 
     const deck = new Deck();
     deck.cube = draft.cube;
@@ -619,7 +623,9 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
     const cards = draft.cards.map((c) => {
       const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
@@ -858,7 +864,7 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findOne(buildIdQuery(deck.cube), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findById(deck.cube, Cube.LAYOUT_FIELDS).lean();
     if (!cube) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
@@ -866,7 +872,9 @@ router.get('/:id', async (req, res) => {
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      if (analytic) {
+        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
+      }
     }
 
     for (const card of deck.cards) {

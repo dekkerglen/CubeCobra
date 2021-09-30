@@ -457,7 +457,7 @@ const CubeListNavbar = ({
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isSortUsed} /> Use Sort
+                    <Input type="checkbox" checked={isSortUsed} onChange={() => {}} /> Use Sort
                     <Tooltip text="Order export using current sort options." wrapperTag="span" className="ml-auto mr-0">
                       <QuestionIcon size={16} />
                     </Tooltip>
@@ -465,7 +465,7 @@ const CubeListNavbar = ({
                 </DropdownItem>
                 <DropdownItem toggle={false} onClick={() => setIsFilterUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isFilterUsed} /> Use Filter
+                    <Input type="checkbox" checked={isFilterUsed} onChange={() => {}} /> Use Filter
                     <Tooltip
                       text="Include in export only cards matching current filter."
                       wrapperTag="span"
@@ -521,7 +521,7 @@ CubeListNavbar.propTypes = {
   sorts: PropTypes.arrayOf(PropTypes.string),
   setSorts: PropTypes.func.isRequired,
   defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
-  cubeDefaultShowUnsorted: PropTypes.bool.isRequired,
+  cubeDefaultShowUnsorted: PropTypes.bool,
   defaultFilterText: PropTypes.string.isRequired,
   filter: PropTypes.func,
   setFilter: PropTypes.func.isRequired,
@@ -533,6 +533,7 @@ CubeListNavbar.defaultProps = {
   sorts: null,
   filter: null,
   className: null,
+  cubeDefaultShowUnsorted: false,
 };
 
 export default CubeListNavbar;

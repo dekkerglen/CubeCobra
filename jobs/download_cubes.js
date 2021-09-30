@@ -82,7 +82,7 @@ try {
 
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} cubes`);
     }
-    mongoose.disconnect();
+    await mongoose.disconnect();
 
     const params = {
       Bucket: 'cubecobra',

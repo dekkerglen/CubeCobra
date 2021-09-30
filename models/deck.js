@@ -6,7 +6,7 @@ const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[
 // data for each seat, human or bot
 const SeatDeck = {
   bot: [String], // null bot value means human player
-  userid: String,
+  userid: mongoose.Schema.Types.ObjectId,
   username: String,
   name: String,
   description: {
@@ -21,13 +21,13 @@ const SeatDeck = {
 // Deck schema
 const deckSchema = mongoose.Schema(
   {
-    cube: String,
-    cubeOwner: String,
-    owner: String,
+    cube: mongoose.Schema.Types.ObjectId,
+    cubeOwner: mongoose.Schema.Types.ObjectId,
+    owner: mongoose.Schema.Types.ObjectId,
     date: Date,
     draft: {
-      type: String,
-      default: '',
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
     },
     cubename: {
       type: String,
