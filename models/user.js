@@ -30,7 +30,6 @@ const UserSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  edit_token: String,
   followed_cubes: {
     type: [String],
     default: [],
@@ -115,4 +114,9 @@ UserSchema.index({
   patron: 1,
 });
 
-module.exports = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', UserSchema);
+
+User.PUBLIC_FIELDS =
+  'username username_lower about hide_tag_colors followed_cubes image_name image artist patron roles';
+
+module.exports = User;

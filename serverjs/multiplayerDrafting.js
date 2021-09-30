@@ -16,6 +16,7 @@ const {
   hset,
   exists,
 } = require('./redis');
+
 const { setupPicks, getCardCol } = require('../dist/drafting/draftutil');
 const { createDeckFromDraft } = require('./deckUtil');
 

@@ -12,6 +12,7 @@ import BlogContextMenu from 'components/BlogContextMenu';
 import EditBlogModal from 'components/EditBlogModal';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
+import Username from 'components/Username';
 
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
@@ -41,7 +42,7 @@ const BlogPost = ({ post, noScroll }) => {
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <a href={`/user/view/${post.owner}`}>{post.dev === 'true' ? 'Dekkaru' : post.username}</a>
+          <Username userId={post.owner} defaultName={post.username} />
           {' posted to '}
           {post.dev === 'true' ? (
             <a href="/dev/blog/0">Developer Blog</a>
