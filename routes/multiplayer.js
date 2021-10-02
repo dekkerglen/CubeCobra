@@ -68,8 +68,6 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
   const seatOrder = await getLobbySeatOrder(draftid);
   const seatToPlayer = fromEntries(Object.entries(seatOrder).map(([player, seat]) => [parseInt(seat, 10), player]));
 
-  console.log(seatToPlayer);
-
   for (let i = 0; i < draft.seats.length; i++) {
     if (seatToPlayer[i]) {
       const user = await getUserFromId(seatToPlayer[i]);
@@ -183,9 +181,6 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       const deck = await Deck.findOne({ draft: draftId });
 
-      console.log(seat);
-      console.log(deck.seats[seat]);
-
       if (!deck.seats[seat].userid.equals(req.user.id)) {
         return res.status(401).send({
           success: 'false',
@@ -201,14 +196,12 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
       });
     } catch (err) {
       req.logger.error(err);
-      if (retry === 2) {
-        return res.status(500).send({
-          success: 'false',
-          error: err,
-        });
-      }
     }
   }
+
+  return res.status(500).send({
+    success: 'false',
+  });
 });
 
 router.post('/joinlobby', ensureAuth, async (req, res) => {

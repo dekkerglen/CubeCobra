@@ -350,12 +350,6 @@ router.get('/contact', (req, res) => {
   return render(req, res, 'ContactPage');
 });
 
-router.get('/redispoc/:id', (req, res) => {
-  return render(req, res, 'RedisPocPage', {
-    room: req.params.id,
-  });
-});
-
 router.get('/tos', (req, res) => {
   return render(req, res, 'InfoPage', {
     title: 'Terms and Conditions',

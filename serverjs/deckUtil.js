@@ -1,4 +1,4 @@
-const { buildIdQuery, addDeckCardAnalytics } = require('./cubefn.js');
+const { addDeckCardAnalytics } = require('./cubefn.js');
 const { fromEntries, addNotification } = require('./util.js');
 const carddb = require('./cards.js');
 const { buildDeck } = require('../dist/drafting/deckutil.js');

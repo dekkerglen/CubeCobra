@@ -141,7 +141,6 @@ const CubeDraft = ({ draft, socket }) => {
 };
 
 CubeDraft.propTypes = {
-  seat: PropTypes.number.isRequired,
   draft: DraftPropType.isRequired,
   socket: PropTypes.shape({
     on: PropTypes.func.isRequired,

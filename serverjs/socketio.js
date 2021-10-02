@@ -3,20 +3,6 @@ const { seatRef, lobbyOrderRef, lobbyPlayersRef, draftRef, getCurrentPackCards }
 
 const setup = (io) => {
   io.on('connection', (socket) => {
-    socket.on('joinRoom', (room) => {
-      socket.join(room);
-
-      // display a welcome message to the user who have joined a room
-      socket.emit('message', `You joined ${room}`);
-
-      // displays a joined room message to all other room users except that particular user
-      socket.broadcast.to(room).emit('message', 'Another user joined');
-
-      eventEmitter.on(room, (data) => {
-        socket.emit('message', data);
-      });
-    });
-
     socket.on('joinLobby', ({ draftId }) => {
       const onDraftUpdate = async (data) => {
         socket.emit('draft', data);
