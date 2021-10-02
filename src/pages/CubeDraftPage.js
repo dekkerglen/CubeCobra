@@ -25,8 +25,6 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
 
   const start = async () => {
     await callApi('/multiplayer/startdraft', { draft: initialDraft._id });
-
-    setState('drafting');
   };
 
   useMount(() => {
@@ -35,18 +33,19 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
         setState('error');
         setMessage('Please log in to join this draft.');
       } else {
-        const res = await callApi('/multiplayer/joinlobby', { draft: initialDraft._id });
-        const json = await res.json();
-        if (!json.success === 'true') {
-          console.log('erroring');
-          setState('error');
-          setMessage(json.message);
-          return;
-        }
+        socket.on('draft', async (data) => {
+          setState(data.state);
+        });
 
-        const res2 = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
-        const json2 = await res2.json();
-        if (json2.initialized) {
+        const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
+        const json = await res.json();
+        if (json.initialized) {
+          if (!json.seats[user.id]) {
+            setState('error');
+            setMessage('The draft has already started, and you are not in this draft.');
+            return;
+          }
+
           setState('drafting');
         } else {
           setState('staging');

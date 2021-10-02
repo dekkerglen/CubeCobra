@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { csrfFetch } from 'utils/CSRF';
 
-const CardPackage = ({ userId, defaultName }) => {
+import { Spinner } from 'reactstrap';
+
+const CardPackage = ({ userId, defaultName, nolink }) => {
   const [name, setName] = useState(defaultName);
 
   useEffect(() => {
@@ -22,21 +24,26 @@ const CardPackage = ({ userId, defaultName }) => {
     };
 
     getData().then((result) => {
-      console.log(result);
       setName(result.user.username);
     });
   }, [userId]);
 
-  return <a href={`/user/view/${userId}`}>{name}</a>;
+  if (nolink) {
+    return <>{name || <Spinner className="position-absolute" size="sm" />}</>;
+  }
+
+  return <a href={`/user/view/${userId}`}>{name || <Spinner className="position-absolute" size="sm" />}</a>;
 };
 
 CardPackage.propTypes = {
   userId: PropTypes.string.isRequired,
   defaultName: PropTypes.string,
+  nolink: PropTypes.bool,
 };
 
 CardPackage.defaultProps = {
-  defaultName: 'Cube Cobra User',
+  defaultName: null,
+  nolink: false,
 };
 
 export default CardPackage;

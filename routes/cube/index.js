@@ -16,6 +16,7 @@ const { render } = require('../../serverjs/render');
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('../middleware');
 const util = require('../../serverjs/util.js');
 const generateMeta = require('../../serverjs/meta.js');
+const { createLobby } = require('../../serverjs/multiplayerDrafting.js');
 
 const {
   generatePack,
@@ -1274,6 +1275,8 @@ router.post(
       draft.cards = populated.cards;
 
       await draft.save();
+
+      await createLobby(draft, req.user);
 
       if (req.body.botsOnly) {
         draft = await Draft.findById(draft._id).lean();

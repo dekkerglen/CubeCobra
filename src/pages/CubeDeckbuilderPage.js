@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
@@ -16,6 +16,7 @@ import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { makeSubtitle } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
@@ -24,14 +25,22 @@ const oppositeLocation = {
   [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
 };
 
+const getMatchingSeat = (seats, userid) =>
+  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
+
 const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
-  const { basics } = initialDeck;
+  const user = useContext(UserContext);
+  const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
-    initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
   const [sideboard, setSideboard] = useState(
-    initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].sideboard.map((row) =>
+      row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex])),
+    ),
   );
+
+  const { basics } = initialDeck;
 
   const locationMap = {
     [DraftLocation.DECK]: [deck, setDeck],
@@ -96,8 +105,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
 
-  const [name, setName] = useState(initialDeck.seats[0].name);
-  const [description, setDescription] = useState(initialDeck.seats[0].description);
+  const [name, setName] = useState(initialDeck.seats[seat].name);
+  const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
   return (
     <MainLayout loginCallback={loginCallback}>

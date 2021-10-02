@@ -14,11 +14,19 @@ const {
   hincrby,
   del,
   hset,
-  exists,
 } = require('./redis');
 
 const { setupPicks, getCardCol } = require('../dist/drafting/draftutil');
 const { createDeckFromDraft } = require('./deckUtil');
+
+// returns a reference to a draft's metadata hash
+const lobbyRef = (draftId) => `lobby:${draftId}`;
+
+// returns a reference to a draft's metadata hash
+const lobbyPlayersRef = (draftId) => `lobbylist:${draftId}`;
+
+// returns a reference to a draft's metadata hash
+const lobbyOrderRef = (draftId) => `lobbyorder:${draftId}`;
 
 // returns a reference to a draft's metadata hash
 const draftRef = (draftId) => `draft:${draftId}`;
@@ -107,65 +115,12 @@ const openPack = async (draftId) => {
   }
 };
 
-const init = async (draft) => {
-  const key = seatsRef(draft._id);
-  if (!(await exists(key))) {
-    await hmset(seatsRef(draft._id), ['0', draft.seats[0].userid]);
-  }
-};
-
-const getSeatsForDraft = async (draft) => {
-  const key = seatsRef(draft._id);
-  const seats = await hgetall(key);
-  return seats;
-};
-
-const setup = async (draft) => {
-  // check if the draft is already setup
-  const initialized = await hget(draftRef(draft.id), 'initialized');
-
-  if (!initialized) {
-    // setup the draft metadata
-    await hmset(draftRef(draft._id), [
-      'seats',
-      draft.seats.length,
-      'currentPack',
-      0,
-      'totalPacks',
-      draft.initial_state[0].length,
-      'initialized',
-      true,
-      'finished',
-      false,
-    ]);
-
-    // create a pack contents for each pack
-    for (let i = 0; i < draft.initial_state.length; i++) {
-      for (let j = 0; j < draft.initial_state[i].length; j++) {
-        const pack = packRef(draft._id, i, j);
-        await rpush(pack, draft.initial_state[i][j].cards);
-        await expire(pack, 60 * 60 * 24 * 2); // 2 days
-      }
-    }
-
-    // save which seats are bot seats
-    for (let i = 0; i < draft.seats.length; i++) {
-      if (draft.seats[i].bot) {
-        await lpush(draftBotSeatsRef(draft._id), i);
-      }
-    }
-
-    // open the first pack
-    await openPack(draft._id);
-  }
-};
-
 const makePick = async (draftId, seat, pick, nextSeat) => {
   // get reference to pack and to the cards picked from it
   const packReference = await getPlayerPackReference(draftId, seat);
 
   if (!packReference) {
-    throw new Error(`Seat ${seat} has no pack`);
+    return; // no pack to pick from
   }
 
   const packCards = await getCurrentPackCards(packReference);
@@ -187,10 +142,40 @@ const isPackDone = async (draftId) => {
   for (let i = 0; i < seats; i++) {
     // get reference to the pack and to the cards picked from it
     const pack = packRef(draftId, i, currentPack - 1);
-
     const packCards = await getCurrentPackCards(pack);
+
     if (packCards.length > 0) {
       return false;
+    }
+  }
+
+  return true;
+};
+
+const getDraftBotsSeats = async (draftId) => {
+  const indexes = await lrange(draftBotSeatsRef(draftId), 0, -1);
+  return indexes.map((i) => parseInt(i, 10));
+};
+
+// if all human seats have nothing to pick from, but the draft is not over
+const packNeedsBotPicks = async (draftId) => {
+  if (await isPackDone(draftId)) {
+    return false;
+  }
+
+  const { seats } = await getDraftMetaData(draftId);
+  const bots = await getDraftBotsSeats(draftId);
+
+  for (let i = 0; i < seats; i++) {
+    if (!bots.includes(i)) {
+      const packReference = await getPlayerPackReference(draftId, i);
+
+      if (packReference) {
+        const packCards = await getCurrentPackCards(packReference);
+        if (packCards.length > 0) {
+          return false;
+        }
+      }
     }
   }
 
@@ -200,11 +185,6 @@ const isPackDone = async (draftId) => {
 const getPlayerPicks = async (draftId, seat) => {
   const userPicks = await lrange(userPicksRef(draftId, seat), 0, -1);
   return userPicks;
-};
-
-const getDraftBotsSeats = async (draftId) => {
-  const indexes = await lrange(draftBotSeatsRef(draftId), 0, -1);
-  return indexes.map((i) => parseInt(i, 10));
 };
 
 const cleanUp = async (draftId) => {
@@ -249,32 +229,85 @@ const finishDraft = async (draftId, draft) => {
   return deck;
 };
 
-const getPlayerList = async (draftId) => {
-  const players = await lrange(draftPlayersRef(draftId), 0, -1);
-  return players;
+const createLobby = async (draft, hostUser) => {
+  const lobbylist = lobbyPlayersRef(draft._id);
+  const lobbyorder = lobbyOrderRef(draft._id);
+  const lobby = lobbyRef(draft._id);
+
+  await hmset(lobby, ['seats', `${draft.seats.length}`, 'host', `${hostUser._id}`]);
+  await hmset(lobbyorder, [`${hostUser._id}`, '0']);
+  await rpush(lobbylist, `${hostUser._id}`);
 };
 
-const addPlayerToDraft = async (draftId, userId) => {
-  await rpush(draftPlayersRef(draftId), userId);
+const getLobbySeatOrder = async (draftId) => hgetall(lobbyOrderRef(draftId));
+const getLobbyPlayers = async (draftId) => lrange(lobbyPlayersRef(draftId), 0, -1);
+const getLobbyMetadata = async (draftId) => hgetall(lobbyRef(draftId));
+const updateLobbySeatOrder = (draftid, order) => hmset(lobbyOrderRef(draftid), Object.entries(order).flat());
 
-  const seats = (await getSeatsForDraft(draftId)) || {};
-  if (!seats[userId]) {
+const addPlayerToLobby = async (userId, draftId) => {
+  await rpush(lobbyPlayersRef(draftId), userId);
+
+  const seatOrder = await getLobbySeatOrder(draftId);
+  if (!seatOrder[userId]) {
     let i = 0;
     while (
-      Object.entries(seats)
+      Object.entries(seatOrder)
         .map(([, val]) => val)
-        .includes(i)
+        .includes(`${i}`)
     ) {
       i += 1;
     }
-    await hset(seatsRef(draftId), userId, i);
+    await hset(lobbyOrderRef(draftId), `${userId}`, `${i}`);
+  }
+};
+
+const setup = async (draft) => {
+  // check if the draft is already setup
+  const initialized = await hget(draftRef(draft.id), 'initialized');
+
+  if (!initialized) {
+    // setup the draft metadata
+    await hmset(draftRef(draft._id), [
+      'seats',
+      draft.seats.length,
+      'currentPack',
+      0,
+      'totalPacks',
+      draft.initial_state[0].length,
+      'initialized',
+      true,
+      'finished',
+      false,
+      'state',
+      'drafting',
+    ]);
+
+    // create a pack contents for each pack
+    for (let i = 0; i < draft.initial_state.length; i++) {
+      for (let j = 0; j < draft.initial_state[i].length; j++) {
+        const pack = packRef(draft._id, i, j);
+        await rpush(pack, draft.initial_state[i][j].cards);
+        await expire(pack, 60 * 60 * 24 * 2); // 2 days
+      }
+    }
+
+    const seats = await getLobbySeatOrder(draft._id);
+    const playerSeats = Object.entries(seats).map(([, val]) => val);
+
+    // save which seats are bot seats
+    for (let i = 0; i < draft.seats.length; i++) {
+      if (!playerSeats.includes(`${i}`)) {
+        await lpush(draftBotSeatsRef(draft._id), i);
+      }
+    }
+
+    // open the first pack
+    await openPack(draft._id);
   }
 };
 
 module.exports = {
-  init,
   setup,
-  getSeatsForDraft,
   getDraftMetaData,
   openPack,
   getPlayerPack,
@@ -287,7 +320,14 @@ module.exports = {
   seatsRef,
   draftRef,
   getCurrentPackCards,
-  addPlayerToDraft,
-  getPlayerList,
   draftPlayersRef,
+  createLobby,
+  getLobbyPlayers,
+  getLobbySeatOrder,
+  getLobbyMetadata,
+  addPlayerToLobby,
+  lobbyPlayersRef,
+  lobbyOrderRef,
+  updateLobbySeatOrder,
+  packNeedsBotPicks,
 };

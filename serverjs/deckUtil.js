@@ -11,7 +11,7 @@ const CubeAnalytic = require('../models/cubeAnalytic');
 const User = require('../models/user');
 
 const createDeckFromDraft = async (draft) => {
-  const cube = await Cube.findOne(buildIdQuery(draft.cube));
+  const cube = await Cube.findById(draft.cube);
 
   const deck = new Deck();
   deck.cube = draft.cube;
@@ -42,6 +42,7 @@ const createDeckFromDraft = async (draft) => {
     const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
     const colorString =
       colors.length === 0 ? 'C' : COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors)).join('');
+
     if (seat.bot) {
       deck.seats.push({
         bot: seat.bot,

@@ -2,12 +2,14 @@
 // Load Environment Variables
 require('dotenv').config();
 const express = require('express');
+const { fromEntries } = require('../serverjs/util');
 const { lpush } = require('../serverjs/redis');
+const { getUserFromId } = require('../serverjs/cache.js');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const {
-  init,
   setup,
-  getSeatsForDraft,
+  getLobbyPlayers,
+  getLobbySeatOrder,
   getDraftMetaData,
   openPack,
   getPlayerPack,
@@ -16,8 +18,10 @@ const {
   makePick,
   isPackDone,
   finishDraft,
-  getPlayerList,
-  addPlayerToDraft,
+  getLobbyMetadata,
+  addPlayerToLobby,
+  updateLobbySeatOrder,
+  packNeedsBotPicks,
 } = require('../serverjs/multiplayerDrafting');
 
 const Draft = require('../models/draft');
@@ -35,39 +39,48 @@ router.post('/publishmessage', ensureAuth, async (req, res) => {
   });
 });
 
-router.post('/initdraft', ensureAuth, async (req, res) => {
-  const draft = await Draft.findById(req.body.draft);
+router.post('/getlobbyseats', ensureAuth, async (req, res) => {
+  const { draft } = req.body;
 
-  if (draft.seats[0].userid !== req.user.id) {
-    return res.status(401).send({
-      success: 'false',
-    });
-  }
-
-  await init(draft);
+  const players = await getLobbyPlayers(draft);
+  const seats = await getLobbySeatOrder(draft);
 
   return res.status(200).send({
     success: 'true',
-  });
-});
-
-router.post('/getdraftseats', ensureAuth, async (req, res) => {
-  const draft = await Draft.findById(req.body.draft);
-
-  return res.status(200).send({
-    success: 'true',
-    seats: await getSeatsForDraft(draft),
+    players,
+    seats,
   });
 });
 
 router.post('/startdraft', ensureAuth, async (req, res) => {
-  const draft = await Draft.findById(req.body.draft);
+  const draftid = req.body.draft;
 
-  if (draft.seats[0].userid !== req.user.id) {
+  const metadata = await getLobbyMetadata(draftid);
+
+  if (metadata.host !== req.user.id) {
     return res.status(401).send({
       success: 'false',
     });
   }
+
+  const draft = await Draft.findById(draftid);
+
+  const seatOrder = await getLobbySeatOrder(draftid);
+  const seatToPlayer = fromEntries(Object.entries(seatOrder).map(([player, seat]) => [parseInt(seat, 10), player]));
+
+  console.log(seatToPlayer);
+
+  for (let i = 0; i < draft.seats.length; i++) {
+    if (seatToPlayer[i]) {
+      const user = await getUserFromId(seatToPlayer[i]);
+
+      draft.seats[i].userid = seatToPlayer[i];
+      draft.seats[i].bot = false;
+      draft.seats[i].name = user.username;
+    }
+  }
+
+  await draft.save();
 
   await setup(draft);
 
@@ -77,7 +90,8 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
 });
 
 router.post('/draftpick', ensureAuth, async (req, res) => {
-  const { draft, seat, pick } = req.body;
+  const { draft, pick } = req.body;
+  const seat = parseInt(req.body.seat, 10);
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draft);
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
@@ -85,7 +99,7 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
 
   await makePick(draft, seat, pick, nextSeat);
 
-  if (seat === 0) {
+  while (await packNeedsBotPicks(draft)) {
     // make bot picks
     const botSeats = await getDraftBotsSeats(draft);
     for (const index of botSeats) {
@@ -152,31 +166,55 @@ router.post('/isdraftinitialized', ensureAuth, async (req, res) => {
   return res.status(200).send({
     success: 'true',
     initialized,
+    seats: await getLobbySeatOrder(draft),
   });
 });
 
 router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
-  const { draftId, seat, drafted, sideboard } = req.body;
-  const deck = await Deck.findOne({ draft: draftId });
+  const { draftId, drafted, sideboard } = req.body;
+  const seat = parseInt(req.body.seat, 10);
 
-  if (deck.seats[seat].userid !== req.user.id) {
-    return res.status(401).send({
-      success: 'false',
-    });
+  for (let retry = 0; retry < 3; retry += 1) {
+    try {
+      if (retry > 0) {
+        // add jitter
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+      }
+
+      const deck = await Deck.findOne({ draft: draftId });
+
+      console.log(seat);
+      console.log(deck.seats[seat]);
+
+      if (!deck.seats[seat].userid.equals(req.user.id)) {
+        return res.status(401).send({
+          success: 'false',
+        });
+      }
+
+      deck.seats[seat].deck = drafted;
+      deck.seats[seat].sideboard = sideboard;
+      await deck.save();
+      return res.status(200).send({
+        success: 'true',
+        deck: deck._id,
+      });
+    } catch (err) {
+      req.logger.error(err);
+      if (retry === 2) {
+        return res.status(500).send({
+          success: 'false',
+          error: err,
+        });
+      }
+    }
   }
-
-  deck.seats[seat].deck = drafted;
-  deck.seats[seat].sideboard = sideboard;
-  await deck.save();
-  return res.status(200).send({
-    success: 'true',
-    deck: deck._id,
-  });
 });
 
 router.post('/joinlobby', ensureAuth, async (req, res) => {
   const draftid = req.body.draft;
-  const draft = await Draft.findById(draftid).lean();
+
+  const lobbyMetadata = await getLobbyMetadata(draftid);
 
   if (!req.user) {
     return res.status(200).send({
@@ -187,13 +225,14 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
 
   const { id } = req.user;
 
-  const playerList = await getPlayerList(draftid);
+  const playerList = await getLobbyPlayers(draftid);
 
-  const seats = draft.seats.length;
+  const { seats } = lobbyMetadata;
 
   if (playerList.slice(0, seats).includes(id)) {
     return res.status(200).send({
       success: 'true',
+      playerList: await getLobbyPlayers(draftid),
     });
   }
 
@@ -204,10 +243,44 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
     });
   }
 
-  await addPlayerToDraft(draftid, id);
+  await addPlayerToLobby(id, draftid);
+
   return res.status(200).send({
     success: 'true',
-    playerList: await getPlayerList(draftid),
+    playerList: await getLobbyPlayers(draftid),
+  });
+});
+
+router.post('/updatelobbyseats', ensureAuth, async (req, res) => {
+  const { draftid, order } = req.body;
+
+  if (order.Bot) {
+    delete order.Bot;
+  }
+
+  const metadata = await getLobbyMetadata(draftid);
+
+  if (metadata.host !== req.user.id) {
+    return res.status(401).send({
+      success: 'false',
+    });
+  }
+
+  await updateLobbySeatOrder(draftid, order);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
+router.post('/getseat', ensureAuth, async (req, res) => {
+  const { draftid } = req.body;
+
+  const seats = await getLobbySeatOrder(draftid);
+
+  return res.status(200).send({
+    success: 'true',
+    seat: seats[req.user.id],
   });
 });
 

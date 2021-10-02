@@ -95,12 +95,11 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     )}
                   />
                 </NavItem>
-                {user && deck.owner === user.id && (
+                {user && deck.seats[seatIndex].userid === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
                 )}
-                {/* loading && <Spinner className="position-absolute" /> */}
                 {draft ? (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
@@ -108,7 +107,6 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     </DropdownToggle>
                     <DropdownMenu right>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
-                      {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
                         Clone and Rebuild
                       </DropdownItem>

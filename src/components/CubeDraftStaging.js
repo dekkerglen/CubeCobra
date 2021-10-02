@@ -23,6 +23,8 @@ import {
   InputGroupAddon,
 } from 'reactstrap';
 
+const BOT_NAME = 'Bot';
+
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
 const SortableList = SortableContainer(({ items }) => {
@@ -35,48 +37,80 @@ const SortableList = SortableContainer(({ items }) => {
 
 const CubeDraft = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
-  const [seats, setSeats] = React.useState({});
+  const [order, setOrder] = React.useState({});
+  const [players, setPlayers] = React.useState([]);
   const user = useContext(UserContext);
 
-  const updateSeats = (s) => {
-    setSeats(s);
-    setLoading(false);
-  };
+  const seats = [];
+
+  console.log(order);
+
+  for (let i = 0; i < draft.seats.length; i++) {
+    let seat = BOT_NAME;
+
+    for (const [key, value] of Object.entries(order)) {
+      if (value === `${i}`) {
+        seat = key;
+      }
+    }
+
+    seats.push(seat);
+  }
 
   useMount(() => {
     const run = async () => {
-      socket.on('players', async (data) => {
-        console.log(data);
+      socket.on('lobbyplayers', async (data) => {
+        setPlayers(data);
+
+        // TODO: if not all players have a seat, assign a seat and make an API call to reflect the change
       });
 
-      socket.on('seats', async (data) => {
-        updateSeats(data);
+      socket.on('lobbyseats', async (data) => {
+        setOrder(data);
+
+        // TODO: if there is a collision, reassign a seat and make and API call to reflect the change
       });
 
-      await callApi('/multiplayer/initdraft', { draft: draft._id });
+      await callApi('/multiplayer/joinlobby', { draft: draft._id });
 
-      const res = await callApi('/multiplayer/getdraftseats', { draft: draft._id });
+      const res = await callApi('/multiplayer/getlobbyseats', { draft: draft._id });
       const json = await res.json();
-      updateSeats(json.seats);
+
+      setOrder(json.seats);
+      setPlayers(json.players);
+      setLoading(false);
     };
     run();
   });
 
-  const editableRows = draft.seats.map((seat, i) => {
+  const editableRows = seats.map((seat, i) => {
     return {
-      element: <div className="tag-color-row clickable pb-3">{<Username userId={seats[i]} /> || 'Bot'}</div>,
+      element: (
+        <div className="tag-color-row clickable pb-3">
+          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username userId={seats[i]} nolink />}
+        </div>
+      ),
       key: i,
     };
   });
 
-  const onSortEnd = ({ oldIndex, newIndex }) => {
-    const newSeats = { ...seats };
-    newSeats[oldIndex] = seats[newIndex];
-    newSeats[newIndex] = seats[oldIndex];
-    setSeats(newSeats);
+  const onSortEnd = async ({ oldIndex, newIndex }) => {
+    const newSeats = { ...order };
+    newSeats[seats[oldIndex]] = `${newIndex}`;
+    newSeats[seats[newIndex]] = `${oldIndex}`;
+
+    // TODO: make API call to update seat orders
+    await callApi('/multiplayer/updatelobbyseats', {
+      draftid: draft._id,
+      order: newSeats,
+    });
+
+    setOrder(newSeats);
   };
 
-  if (user.id !== seats[0]) {
+  console.log(seats);
+
+  if (user.id !== players[0]) {
     return (
       <Card className="mt-4">
         <CardHeader>
@@ -87,8 +121,10 @@ const CubeDraft = ({ draft, socket, start }) => {
             <Spinner className="position-absolute" />
           </div>
           <p>The draft owner is currently setting up the draft, please wait.</p>
-          {draft.seats.map((seat, i) => (
-            <div className="pb-3">{`Seat ${i + 1}: ${seats[i] || 'Bot'}`}</div>
+          {seats.map((seat, i) => (
+            <div className="pb-3">
+              {`Seat ${i + 1}: `} {seat === BOT_NAME ? BOT_NAME : <Username userId={seat} nolink />}
+            </div>
           ))}
         </CardBody>
       </Card>

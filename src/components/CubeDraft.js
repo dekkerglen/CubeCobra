@@ -39,7 +39,9 @@ const fetchPack = async (draft, seat) => {
 
 let staticPicks;
 
-const CubeDraft = ({ draft, seat, socket }) => {
+let seat = 0;
+
+const CubeDraft = ({ draft, socket }) => {
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
@@ -48,6 +50,12 @@ const CubeDraft = ({ draft, seat, socket }) => {
 
   useMount(() => {
     const run = async () => {
+      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft._id });
+      const seatJson = await getSeat.json();
+      seat = seatJson.seat;
+
+      console.log({ draft, seat });
+
       socket.emit('joinDraft', { draftId: draft._id, seat });
 
       socket.on('draft', async (data) => {
@@ -59,7 +67,8 @@ const CubeDraft = ({ draft, seat, socket }) => {
             sideboard: setupPicks(1, 8),
           });
           const json = await res.json();
-          window.open(`/cube/deck/deckbuilder/${json.deck}`);
+
+          window.location.href = `/cube/deck/deckbuilder/${json.deck}`;
         }
       });
       socket.on('seat', (data) => {

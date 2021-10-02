@@ -1,5 +1,5 @@
 const { eventEmitter } = require('./redis');
-const { seatRef, seatsRef, draftRef, getCurrentPackCards, draftPlayersRef } = require('./multiplayerDrafting');
+const { seatRef, lobbyOrderRef, lobbyPlayersRef, draftRef, getCurrentPackCards } = require('./multiplayerDrafting');
 
 const setup = (io) => {
   io.on('connection', (socket) => {
@@ -22,22 +22,22 @@ const setup = (io) => {
         socket.emit('draft', data);
       };
 
-      const onSeatsUpdate = async (data) => {
-        socket.emit('seats', data);
+      const onLobbySeatsUpdate = async (data) => {
+        socket.emit('lobbyseats', data);
       };
 
-      const onPlayersUpdate = async (data) => {
-        socket.emit('players', data);
+      const onLobbyPlayersUpdate = async (data) => {
+        socket.emit('lobbyplayers', data);
       };
 
-      eventEmitter.on(seatsRef(draftId), onSeatsUpdate);
+      eventEmitter.on(lobbyOrderRef(draftId), onLobbySeatsUpdate);
       eventEmitter.on(draftRef(draftId), onDraftUpdate);
-      eventEmitter.on(draftPlayersRef(draftId), onPlayersUpdate);
+      eventEmitter.on(lobbyPlayersRef(draftId), onLobbyPlayersUpdate);
 
       socket.on('disconnect', () => {
-        eventEmitter.removeListener(seatsRef(draftId), onSeatsUpdate);
+        eventEmitter.removeListener(lobbyOrderRef(draftId), onLobbySeatsUpdate);
         eventEmitter.removeListener(draftRef(draftId), onDraftUpdate);
-        eventEmitter.removeListener(draftPlayersRef(draftId), onPlayersUpdate);
+        eventEmitter.removeListener(lobbyPlayersRef(draftId), onLobbyPlayersUpdate);
       });
     });
 

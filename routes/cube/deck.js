@@ -328,8 +328,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const deckOwner = await User.findById(deck.seats[0].userid).lean();
-    if (!req.user || !deckOwner._id.equals(req.user._id)) {
+    const deckOwners = deck.seats.map((seat) => `${seat.userid}`).filter((userid) => userid !== 'null');
+    if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -535,12 +535,17 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
-    const deckOwner = await User.findById(deck.seats[0].userid);
 
-    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+    const deckOwners = deck.seats.map((seat) => `${seat.userid}`).filter((userid) => userid !== 'null');
+
+    if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
+
+    const seatIndex = deck.seats
+      .map((seat, index) => [seat, index])
+      .find((tuple) => `${tuple[0].userid}` === `${req.user.id}`)[1];
 
     const cube = await Cube.findOne({ _id: deck.cube });
 
@@ -571,11 +576,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
         ? 'C'
         : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
 
-    deck.seats[0].deck = newdeck.playerdeck;
-    deck.seats[0].sideboard = newdeck.playersideboard;
-    deck.seats[0].name = name;
-    deck.seats[0].description = description;
-    deck.seats[0].username = `${deckOwner.username}: ${colorString}`;
+    deck.seats[seatIndex].deck = newdeck.playerdeck;
+    deck.seats[seatIndex].sideboard = newdeck.playersideboard;
+    deck.seats[seatIndex].name = name;
+    deck.seats[seatIndex].description = description;
+    deck.seats[seatIndex].username = `${req.user.username}: ${colorString}`;
 
     await deck.save();
     await addDeckCardAnalytics(cube, deck, carddb);
