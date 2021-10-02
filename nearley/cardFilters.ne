@@ -46,7 +46,9 @@ import {
   cardCost,
   cardLayout,
   cardDevotion,
-  cardLegalIn
+  cardLegalIn,
+  cardBannedIn,
+  cardRestrictedIn
 } from 'utils/Card';
 %} # %}
 
@@ -95,6 +97,8 @@ condition -> (
   | castableCostCondition
   | devotionCondition
   | legalityCondition
+  | bannedCondition
+  | restrictedCondition
   | layoutCondition
   | collectorNumberCondition
 ) {% ([[condition]]) => condition %}
@@ -129,6 +133,10 @@ tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) =>
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
 legalityCondition -> ("leg"i | "legal"i | "legality"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred) %}
+
+bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred) %}
+
+restrictedCondition -> "restricted"i legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardRestrictedIn, valuePred) %}
 
 priceCondition -> ("p"i | "usd"i | "price"i) dollarOpValue {% ([, valuePred]) => genericCondition('price', cardPrice, valuePred) %}
 

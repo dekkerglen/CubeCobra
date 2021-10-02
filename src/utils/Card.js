@@ -160,10 +160,14 @@ export const cardOracleId = (card) => card.details.oracle_id;
 
 export const cardLegalities = (card) => card.details.legalities;
 
-export const cardLegalIn = (card) => {
+const cardLegalityFilter = (card, legality) => {
   const legalities = cardLegalities(card);
-  return Object.keys(legalities).filter((format) => legalities[format] === 'legal');
+  return Object.keys(legalities).filter((format) => legalities[format] === legality);
 };
+
+export const cardLegalIn = (card) => cardLegalityFilter(card, 'legal');
+export const cardBannedIn = (card) => cardLegalityFilter(card, 'banned');
+export const cardRestrictedIn = (card) => cardLegalityFilter(card, 'restricted');
 
 export const cardColors = (card) => card.details.colors;
 
