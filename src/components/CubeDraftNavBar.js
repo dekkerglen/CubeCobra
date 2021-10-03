@@ -1,15 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Card, CardBody, CardHeader, Collapse, Nav, Navbar, NavLink } from 'reactstrap';
+import { Card, Collapse, Nav, Navbar } from 'reactstrap';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
 import DndProvider from 'components/DndProvider';
-import { DraftbotBreakdownTable } from 'components/DraftbotBreakdown';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Pack from 'components/Pack';
-import useToggle from 'hooks/UseToggle';
 import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation from 'drafting/DraftLocation';
@@ -28,7 +26,6 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
     numPacks,
   } = drafterState;
 
-  const [showBotBreakdown, toggleShowBotBreakdown] = useToggle(false);
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
@@ -88,11 +85,6 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
           <Nav navbar>
             <CustomImageToggler />
           </Nav>
-          <Nav>
-            <NavLink href="#" onClick={toggleShowBotBreakdown}>
-              Toggle Bot Breakdown
-            </NavLink>
-          </Nav>
         </Collapse>
       </Navbar>
       <DynamicFlash />
@@ -110,18 +102,6 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
                 onClickCard={handleClickCard}
               />
             </ErrorBoundary>
-            {showBotBreakdown && (
-              <ErrorBoundary>
-                <Card className="mt-3">
-                  <CardHeader className="mb-0">
-                    <h4 className="mb-0">Draftbot Breakdown</h4>
-                  </CardHeader>
-                  <CardBody>
-                    <DraftbotBreakdownTable drafterState={drafterState} />
-                  </CardBody>
-                </Card>
-              </ErrorBoundary>
-            )}
           </>
         )}
         <ErrorBoundary className="mt-3">

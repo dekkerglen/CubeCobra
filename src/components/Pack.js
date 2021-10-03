@@ -10,11 +10,11 @@ const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;
 };
 
-const Pack = ({ pack, onMoveCard, onClickCard, loading }) => (
+const Pack = ({ pack, onMoveCard, onClickCard, loading, title }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
-        <h4 className="mb-1">Pack ?, Pick ?</h4>
+        <h4 className="mb-1">{title}</h4>
       </CardTitle>
     </CardHeader>
     <CardBody>
@@ -51,10 +51,12 @@ Pack.propTypes = {
   onMoveCard: PropTypes.func.isRequired,
   onClickCard: PropTypes.func.isRequired,
   loading: PropTypes.bool,
+  title: PropTypes.string,
 };
 
 Pack.defaultProps = {
   loading: false,
+  title: 'Pack',
 };
 
 export default Pack;

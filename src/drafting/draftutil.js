@@ -4,7 +4,7 @@ import seedrandom from 'seedrandom';
 import { moveOrAddCard } from 'drafting/DraftLocation';
 import { calculateBotPick } from 'drafting/draftbots';
 import { cardType, cardCmc } from 'utils/Card';
-import { cmcColumn, toNullableInt } from 'utils/Util';
+import { cmcColumn } from 'utils/Util';
 
 export const setupPicks = (rows, cols) => {
   const res = [];
@@ -30,130 +30,139 @@ export const defaultStepsForLength = (length) =>
     .slice(0, length * 2 - 1) // Remove the final pass.
     .map((action) => ({ ...action }));
 
-export const getDrafterState = ({ draft, seatNumber, pickNumber = -1, stepNumber = null }, skipAutoPass = false) => {
-  const { cards, basics } = draft;
-  const numSeats = draft.initial_state.length;
-  const seatNum = parseInt(seatNumber, 10);
-  const ourPacks = draft.initial_state[seatNum];
-  const numPacks = ourPacks.length;
-  const ourSeat = draft.seats[seatNum];
-  const stepEnd = toNullableInt(stepNumber);
-  const useFinal = stepNumber || pickNumber >= 0;
-  const pickEnd = pickNumber === -1 ? ourSeat.pickorder.length + ourSeat.trashorder.length : parseInt(pickNumber, 10);
-  const seen = [];
-  let pickedNum = 0;
-  let trashedNum = 0;
-  let curStepNumber = 0;
-  let pickNum = 0;
-  let packSize = 0;
-  let packsWithCards = new Array(draft.initial_state.length).fill([]);
-  let action = 'pass';
-  let amount = 0;
-  let packNum = 0;
+const flattenSteps = (steps) => {
+  const res = [];
+  let pick = 0;
+  let cardsInPack = steps.map((step) => (step.action === 'pass' ? 0 : step.amount)).reduce((a, b) => a + b, 0) + 1;
+
+  for (const step of steps) {
+    if (step.amount) {
+      for (let i = 0; i < step.amount; i++) {
+        if (step.action !== 'pass') {
+          pick += 1;
+          cardsInPack -= 1;
+
+          res.push({ pick, action: step.action, cardsInPack });
+        } else {
+          res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
+        }
+      }
+    } else if (step.action !== 'pass') {
+      pick += 1;
+      cardsInPack -= 1;
+
+      res.push({ pick, action: step.action, cardsInPack });
+    } else {
+      res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
+    }
+  }
+  return res;
+};
+
+export const getDrafterState = (draft, seatNumber, pickNumber) => {
+  // build list of steps and match to pick and pack number
+  const steps = draft.initial_state[0]
+    .map((pack, packIndex) =>
+      flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
+        pack: packIndex + 1,
+        ...step,
+      })),
+    )
+    .flat();
+
+  // build a list of states for each seat
+  const states = [];
+  for (let i = 0; i < draft.seats.length; i++) {
+    const picksList = [];
+    const pickQueue = draft.seats[i].pickorder.slice();
+    const trashQueue = draft.seats[i].trashorder.slice();
+    let index = 0;
+
+    for (let j = 0; j < steps.length; j++) {
+      const step = steps[j];
+
+      if (!picksList[step.pack - 1]) {
+        picksList[step.pack - 1] = [];
+      }
+
+      if (step.action === 'pick' || step.action === 'pickrandom') {
+        picksList[step.pack - 1].push({ action: step.action, cardIndex: pickQueue.pop(), index });
+        index += 1;
+      } else if (step.action === 'trash' || step.action === 'trashrandom') {
+        picksList[step.pack - 1].push({ action: step.action, cardIndex: trashQueue.pop(), index });
+        index += 1;
+      }
+    }
+
+    states.push({
+      picked: [],
+      trashed: [],
+      pickQueue: draft.seats[i].pickorder.slice(),
+      trashQueue: draft.seats[i].trashorder.slice(),
+      cardsInPack: [],
+      picksList,
+    });
+  }
+
+  // setup some useful context variables
+  let packsWithCards = [];
   let offset = 0;
 
-  // loop through each pack
-  while (packNum < numPacks) {
-    let done = false;
-    packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[packNum].cards.slice());
-    pickNum = 0;
-    packSize = packsWithCards[seatNum].length;
-    offset = 0;
-    const steps = ourPacks[packNum].steps ?? defaultStepsForLength(ourPacks[packNum].cards.length);
-    seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
+  // go through steps and update states
+  for (const step of steps) {
+    // open pack if we need to open a new pack
+    if (step.pick === 1 && step.action !== 'pass') {
+      packsWithCards = [];
 
-    // loop through each step of this pack
-    for ({ action, amount } of steps) {
-      const passLeft = (packNum % 2 === 0) === (amount || 1) >= 0;
-
-      // repeat the action for the amount
-      amount = Math.abs(amount ?? 1);
-      while (amount > 0) {
-        amount -= 1;
-
-        // if we've reached the end of this step
-        if (curStepNumber > (stepEnd ?? curStepNumber + 1)) {
-          done = true;
-          break;
-        }
-
-        // pass if we have a pass
-        if (action === 'pass') {
-          offset = (offset + (passLeft ? 1 : numSeats - 1)) % numSeats;
-          seen.push(...packsWithCards[(seatNum + offset) % numSeats]);
-
-          // pick or trash if we have a pick or trash
-        } else if (action.match(/pick|trash/)) {
-          // if we've hit the goal state in the middle of an action, end early
-          if (pickedNum + trashedNum >= pickEnd) {
-            done = true;
-            break;
-          }
-
-          // simulate the action
-          for (let seatIndex = 0; seatIndex < numSeats; seatIndex++) {
-            const offsetSeatIndex = (seatIndex + offset) % numSeats;
-            const takenCardIndex = action.match(/pick/)
-              ? draft.seats[seatIndex].pickorder[pickedNum]
-              : draft.seats[seatIndex].trashorder[trashedNum];
-
-            const cardsInPackForSeat = packsWithCards[offsetSeatIndex];
-            const indexToRemove = cardsInPackForSeat.indexOf(takenCardIndex);
-
-            if (indexToRemove < 0) {
-              console.error(
-                `Seat ${seatIndex} should have picked/trashed ${takenCardIndex} at pickNumber ${
-                  pickedNum + trashedNum
-                }, but the pack contains only [${packsWithCards[offsetSeatIndex].join(', ')}].`,
-              );
-            } else {
-              packsWithCards[offsetSeatIndex].splice(indexToRemove, 1);
-            }
-          }
-
-          // increment corresponding counter
-          if (action.match(/pick/)) {
-            pickedNum += 1;
-          } else {
-            trashedNum += 1;
-          }
-
-          pickNum += 1;
-        }
-        curStepNumber += 1;
-      } // step amount
-      if (done) {
-        break;
+      for (let i = 0; i < draft.initial_state.length; i++) {
+        packsWithCards[i] = draft.initial_state[i][step.pack - 1].cards.slice();
       }
-    } // step
-    if (done || (useFinal && (curStepNumber > (stepEnd ?? curStepNumber + 1) || pickedNum + trashedNum >= pickEnd))) {
-      if (!skipAutoPass && packsWithCards[seatNum].length === 0 && packNum + 1 < numPacks) {
-        packsWithCards = draft.initial_state.map((packsForSeat) => packsForSeat[packNum + 1].cards.slice());
-        seen.push(...packsWithCards[seatNum]); // We see the pack we opened.
+
+      offset = 0;
+    }
+
+    // perform the step if it's not a pass
+    for (let i = 0; i < states.length; i++) {
+      const seat = states[i];
+      seat.pick = step.pick;
+      seat.pack = step.pack;
+
+      if (step.action === 'pick' || step.action === 'pickrandom') {
+        seat.cardsInPack = packsWithCards[(i + offset) % states.length].slice();
+        const picked = seat.pickQueue.pop();
+        seat.picked.push(picked);
+        seat.selection = picked;
+        seat.action = step.action;
+
+        // remove this card from the pack
+        packsWithCards[(i + offset) % states.length] = packsWithCards[(i + offset) % states.length].filter(
+          (card) => card !== picked,
+        );
+      } else if (step.action === 'trash' || step.action === 'trashrandom') {
+        seat.cardsInPack = packsWithCards[(i + offset) % states.length].slice();
+        const trashed = seat.trashQueue.pop();
+        seat.trashed.push(trashed);
+        seat.selection = trashed;
+        seat.action = step.action;
+
+        // remove this card from the pack
+        packsWithCards[(i + offset) % states.length] = packsWithCards.filter((card) => card !== trashed);
       }
+    }
+
+    // if we've reached the desired time in the draft, we're done
+    if (states[seatNumber].picked.length + states[seatNumber].trashed.length > pickNumber) {
       break;
     }
-    packNum += 1;
-  } // pack
 
-  const result = {
-    cards, // .map((card, cardIndex) => (seen.includes(cardIndex) || basics.includes(cardIndex) ? card : null)),
-    picked: ourSeat.pickorder.slice(0, pickedNum),
-    trashed: ourSeat.trashorder.slice(0, trashedNum),
-    seen,
-    cardsInPack: packsWithCards[(seatNum + offset) % numSeats],
-    basics,
-    packNum,
-    pickNum,
-    numPacks,
-    packSize,
-    pickedNum,
-    trashedNum,
-    stepNumber: curStepNumber,
-    pickNumber: pickedNum + trashedNum,
-    step: { action, amount },
-  };
-  return result;
+    // now if it's a pass we can pass
+    if (step.action === 'pass') {
+      const passLeft = step.pack % 2 === 1;
+      offset = (offset + (passLeft ? 1 : states.length - 1)) % states.length;
+    }
+  }
+
+  return states[seatNumber];
 };
 
 export const getDefaultPosition = (card, picks) => {

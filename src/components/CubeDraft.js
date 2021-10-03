@@ -7,7 +7,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol } from 'drafting/draftutil';
+import { setupPicks, getCardCol, getDrafterState } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -37,6 +37,13 @@ const fetchPack = async (draft, seat) => {
   return json.pack;
 };
 
+const actionToString = {
+  pick: 'Pick One Card',
+  trash: 'Trash One Card',
+  pickrandom: 'Picking one card at random...',
+  trashrandom: 'Trashing one card at random...',
+};
+
 let staticPicks;
 
 let seat = 0;
@@ -45,8 +52,21 @@ const CubeDraft = ({ draft, socket }) => {
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
+  const [title, setTitle] = React.useState('Waiting for cards...');
 
   staticPicks = picks;
+
+  const updatePack = (data) => {
+    setPack(data);
+
+    const cardsPicked = staticPicks
+      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
+      .reduce((a, b) => a + b, 0);
+
+    const drafterState = getDrafterState(draft, seat, cardsPicked);
+
+    setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${actionToString[drafterState.action]}`);
+  };
 
   useMount(() => {
     const run = async () => {
@@ -72,12 +92,12 @@ const CubeDraft = ({ draft, socket }) => {
         }
       });
       socket.on('seat', (data) => {
-        setPack(data);
+        updatePack(data);
         setLoading(false);
       });
 
-      setPack(await fetchPack(draft, seat));
       setPicks(await fetchPicks(draft, seat));
+      updatePack(await fetchPack(draft, seat));
       setLoading(false);
     };
     run();
@@ -87,6 +107,7 @@ const CubeDraft = ({ draft, socket }) => {
     // eslint-disable-next-line no-undef
     /* global */ autocard_hide_card();
     setLoading(true);
+    setTitle('Waiting for cards...');
     await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
   };
 
@@ -125,6 +146,7 @@ const CubeDraft = ({ draft, socket }) => {
         onMoveCard={onMoveCard}
         onClickCard={onClickCard}
         loading={loading}
+        title={title}
       />
       <Card className="my-3">
         <DeckStacks
