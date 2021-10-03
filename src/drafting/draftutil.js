@@ -42,7 +42,7 @@ const flattenSteps = (steps) => {
           pick += 1;
           cardsInPack -= 1;
 
-          res.push({ pick, action: step.action, cardsInPack });
+          res.push({ pick, action: step.action, cardsInPack, amount: step.amount - i });
         } else {
           res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
         }
@@ -51,7 +51,7 @@ const flattenSteps = (steps) => {
       pick += 1;
       cardsInPack -= 1;
 
-      res.push({ pick, action: step.action, cardsInPack });
+      res.push({ pick, action: step.action, cardsInPack, amount: 1 });
     } else {
       res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
     }
@@ -132,7 +132,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
         const picked = seat.pickQueue.pop();
         seat.picked.push(picked);
         seat.selection = picked;
-        seat.action = step.action;
+        seat.step = step;
 
         // remove this card from the pack
         packsWithCards[(i + offset) % states.length] = packsWithCards[(i + offset) % states.length].filter(
@@ -143,10 +143,12 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
         const trashed = seat.trashQueue.pop();
         seat.trashed.push(trashed);
         seat.selection = trashed;
-        seat.action = step.action;
+        seat.step = step;
 
         // remove this card from the pack
-        packsWithCards[(i + offset) % states.length] = packsWithCards.filter((card) => card !== trashed);
+        packsWithCards[(i + offset) % states.length] = packsWithCards[(i + offset) % states.length].filter(
+          (card) => card !== trashed,
+        );
       }
     }
 

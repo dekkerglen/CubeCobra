@@ -37,11 +37,21 @@ const fetchPack = async (draft, seat) => {
   return json.pack;
 };
 
-const actionToString = {
-  pick: 'Pick One Card',
-  trash: 'Trash One Card',
-  pickrandom: 'Picking one card at random...',
-  trashrandom: 'Trashing one card at random...',
+const stepToTitle = (step) => {
+  if (step.action === 'pick') {
+    if (step.amount > 1) {
+      return `Pick ${step.amount} more cards`;
+    }
+    return 'Pick one more card';
+  }
+  if (step.action === 'trash') {
+    if (step.amount > 1) {
+      return `Trash ${step.amount} more cards`;
+    }
+    return 'Trash one more card';
+  }
+
+  return 'Making random selection...';
 };
 
 let staticPicks;
@@ -65,7 +75,7 @@ const CubeDraft = ({ draft, socket }) => {
 
     const drafterState = getDrafterState(draft, seat, cardsPicked);
 
-    setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${actionToString[drafterState.action]}`);
+    setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${stepToTitle(drafterState.step)}`);
   };
 
   useMount(() => {
