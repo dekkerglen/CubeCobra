@@ -1,8 +1,5 @@
 /* eslint-disable no-loop-func */
-import seedrandom from 'seedrandom';
 
-import { moveOrAddCard } from 'drafting/DraftLocation';
-import { calculateBotPick } from 'drafting/draftbots';
 import { cardType, cardCmc } from 'utils/Card';
 import { cmcColumn } from 'utils/Util';
 
@@ -172,66 +169,4 @@ export const getDefaultPosition = (card, picks) => {
   const col = cmcColumn(card);
   const colIndex = picks[row][col].length;
   return [row, col, colIndex];
-};
-
-export const allBotsDraft = (draft) => {
-  let drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft, seatNumber }));
-  let [
-    {
-      numPacks,
-      packNum,
-      step: { action },
-    },
-  ] = drafterStates;
-  const rng = seedrandom(draft.seed);
-  while (numPacks > packNum) {
-    const currentDraft = draft;
-    let picks;
-    if (action.match(/random/)) {
-      picks = drafterStates.map(({ cardsInPack }) => cardsInPack[Math.floor(rng() * cardsInPack.length)]);
-    }
-    if (action.match(/pick/)) {
-      if (!action.match(/random/)) {
-        picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, false));
-      }
-      draft = {
-        ...draft,
-        seats: draft.seats.map(({ pickorder, drafted, ...seat }, seatIndex) => ({
-          ...seat,
-          pickorder: [...pickorder, picks[seatIndex]],
-          drafted: moveOrAddCard(
-            drafted,
-            getDefaultPosition(currentDraft.cards[picks[seatIndex]], drafted),
-            picks[seatIndex],
-          ),
-        })),
-      };
-    } else if (action.match(/trash/)) {
-      if (!action.match(/random/)) {
-        picks = drafterStates.map((drafterState) => calculateBotPick(drafterState, true));
-      }
-      draft = {
-        ...draft,
-        seats: draft.seats.map(({ trashorder, ...seat }, seatIndex) => ({
-          ...seat,
-          trashorder: [...trashorder, picks[seatIndex]],
-        })),
-      };
-    } else {
-      const errorStr = `Unrecognized action '${action}' in allBotsDraft`;
-      console.warn(errorStr);
-      throw new Error(errorStr);
-    }
-    const constDraft = draft;
-    drafterStates = draft.seats.map((_, seatNumber) => getDrafterState({ draft: constDraft, seatNumber }));
-    [
-      {
-        numPacks,
-        packNum,
-        step: { action },
-      },
-    ] = drafterStates;
-  }
-
-  return draft;
 };
