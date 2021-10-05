@@ -82,6 +82,8 @@ const EditCollapse = ({ ...props }) => {
   const removals = changes.filter((change) => change.remove || change.replace).length;
   const newTotal = cube.cards.length + additions - removals;
 
+  const viewParams = new URLSearchParams(window.location.search).get('view');
+
   const handleChange = useCallback(
     (event) => {
       return {
@@ -245,7 +247,7 @@ const EditCollapse = ({ ...props }) => {
         </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm method="POST" action={`/cube/edit/${cubeID}`} onSubmit={handleMentions}>
+        <CSRFForm method="POST" action={`/cube/edit/${cubeID}?view=${viewParams}`} onSubmit={handleMentions}>
           <Row>
             <Col>
               <h6>

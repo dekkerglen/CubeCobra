@@ -1418,9 +1418,14 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
   try {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
+    let viewQuery = 'table';
+    if (req.query.view) {
+      viewQuery = req.query.view;
+    }
+
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Only cube owner may edit.');
-      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${viewQuery}`);
     }
 
     cube.date_updated = Date.now();
@@ -1487,7 +1492,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
       } else {
         req.flash('danger', 'Bad request format, all operations must be add, remove, or replace.');
-        return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+        return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${viewQuery}`);
       }
     }
 
@@ -1527,7 +1532,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     }
 
     req.flash('success', 'Cube Updated');
-    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?updated=true`);
+    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?updated=true&view=${viewQuery}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
