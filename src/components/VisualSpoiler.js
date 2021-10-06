@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
@@ -10,8 +10,6 @@ import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
 
 const VisualSpoiler = ({ cards, scale, setScale }) => {
-  // const [scale, setScale] = useState('medium');
-
   const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
   const cardList = sorted
@@ -46,5 +44,7 @@ const VisualSpoiler = ({ cards, scale, setScale }) => {
 
 VisualSpoiler.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
+  scale: PropTypes.string.isRequired,
+  setScale: PropTypes.func.isRequired,
 };
 export default VisualSpoiler;
