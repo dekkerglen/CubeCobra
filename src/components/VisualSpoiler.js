@@ -9,8 +9,8 @@ import SortContext from 'contexts/SortContext';
 import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
 
-const VisualSpoiler = ({ cards }) => {
-  const [scale, setScale] = useState('medium');
+const VisualSpoiler = ({ cards, scale, setScale }) => {
+  // const [scale, setScale] = useState('medium');
 
   const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
