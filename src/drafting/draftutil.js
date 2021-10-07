@@ -56,9 +56,8 @@ const flattenSteps = (steps) => {
   return res;
 };
 
-export const getDrafterState = (draft, seatNumber, pickNumber) => {
-  // build list of steps and match to pick and pack number
-  const steps = draft.initial_state[0]
+export const getStepList = (draft) =>
+  draft.initial_state[0]
     .map((pack, packIndex) =>
       flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
         pack: packIndex + 1,
@@ -66,6 +65,10 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       })),
     )
     .flat();
+
+export const getDrafterState = (draft, seatNumber, pickNumber) => {
+  // build list of steps and match to pick and pack number
+  const steps = getStepList(draft);
 
   // build a list of states for each seat
   const states = [];
@@ -169,4 +172,21 @@ export const getDefaultPosition = (card, picks) => {
   const col = cmcColumn(card);
   const colIndex = picks[row][col].length;
   return [row, col, colIndex];
+};
+
+export const stepToTitle = (step) => {
+  if (step.action === 'pick') {
+    if (step.amount > 1) {
+      return `Pick ${step.amount} more cards`;
+    }
+    return 'Pick one more card';
+  }
+  if (step.action === 'trash') {
+    if (step.amount > 1) {
+      return `Trash ${step.amount} more cards`;
+    }
+    return 'Trash one more card';
+  }
+
+  return 'Making random selection...';
 };

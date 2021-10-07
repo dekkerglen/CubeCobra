@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import useMount from 'hooks/UseMount';
@@ -7,7 +7,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, getDrafterState } from 'drafting/draftutil';
+import { setupPicks, getCardCol, getDrafterState, stepToTitle } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -37,23 +37,6 @@ const fetchPack = async (draft, seat) => {
   return json.pack;
 };
 
-const stepToTitle = (step) => {
-  if (step.action === 'pick') {
-    if (step.amount > 1) {
-      return `Pick ${step.amount} more cards`;
-    }
-    return 'Pick one more card';
-  }
-  if (step.action === 'trash') {
-    if (step.amount > 1) {
-      return `Trash ${step.amount} more cards`;
-    }
-    return 'Trash one more card';
-  }
-
-  return 'Making random selection...';
-};
-
 let staticPicks;
 
 let seat = 0;
@@ -63,10 +46,24 @@ const CubeDraft = ({ draft, socket }) => {
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
   const [title, setTitle] = React.useState('Waiting for cards...');
+  const [action, setAction] = React.useState(null);
+
+  const disabled = action === 'pickrandom' || action === 'trashrandom';
 
   staticPicks = picks;
 
-  const updatePack = (data) => {
+  const makePick = useCallback(
+    async (pick) => {
+      // eslint-disable-next-line no-undef
+      /* global */ autocard_hide_card();
+      setLoading(true);
+      setTitle('Waiting for cards...');
+      await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
+    },
+    [draft, setLoading, setTitle],
+  );
+
+  const updatePack = async (data) => {
     setPack(data);
 
     const cardsPicked = staticPicks
@@ -75,6 +72,7 @@ const CubeDraft = ({ draft, socket }) => {
 
     const drafterState = getDrafterState(draft, seat, cardsPicked);
 
+    setAction(drafterState.step.action);
     setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${stepToTitle(drafterState.step)}`);
   };
 
@@ -83,8 +81,6 @@ const CubeDraft = ({ draft, socket }) => {
       const getSeat = await callApi('/multiplayer/getseat', { draftid: draft._id });
       const seatJson = await getSeat.json();
       seat = seatJson.seat;
-
-      console.log({ draft, seat });
 
       socket.emit('joinDraft', { draftId: draft._id, seat });
 
@@ -113,41 +109,47 @@ const CubeDraft = ({ draft, socket }) => {
     run();
   });
 
-  const makePick = async (pick) => {
-    // eslint-disable-next-line no-undef
-    /* global */ autocard_hide_card();
-    setLoading(true);
-    setTitle('Waiting for cards...');
-    await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
-  };
-
-  const onMoveCard = async (source, target) => {
-    if (source.equals(target)) {
-      return;
-    }
-    if (source.type === DraftLocation.PACK) {
-      if (target.type === DraftLocation.PICKS) {
-        setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
-        makePick(source.data);
-      } else {
-        console.error("Can't move cards inside pack.");
+  const onMoveCard = useCallback(
+    async (source, target) => {
+      if (source.equals(target)) {
+        return;
       }
-    } else if (source.type === DraftLocation.PICKS) {
-      if (target.type === DraftLocation.PICKS) {
-        setPicks(moveOrAddCard(picks, target.data, source.data));
-      } else {
-        console.error("Can't move cards from picks back to pack.");
+      if (source.type === DraftLocation.PACK) {
+        if (target.type === DraftLocation.PICKS) {
+          setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+          makePick(source.data);
+        } else {
+          console.error("Can't move cards inside pack.");
+        }
+      } else if (source.type === DraftLocation.PICKS) {
+        if (target.type === DraftLocation.PICKS) {
+          setPicks(moveOrAddCard(picks, target.data, source.data));
+        } else {
+          console.error("Can't move cards from picks back to pack.");
+        }
       }
-    }
-  };
+    },
+    [pack, picks, makePick],
+  );
 
-  const onClickCard = (cardIndex) => {
-    const col = getCardCol(draft, pack[cardIndex]);
-    onMoveCard(
-      new DraftLocation(DraftLocation.PACK, cardIndex),
-      new DraftLocation(DraftLocation.PICKS, [0, col, picks[0][col].length]),
-    );
-  };
+  const onClickCard = useCallback(
+    (cardIndex) => {
+      // TODO: see if we have more steps, and do a partial update if so
+      const col = getCardCol(draft, pack[cardIndex]);
+      onMoveCard(
+        new DraftLocation(DraftLocation.PACK, cardIndex),
+        new DraftLocation(DraftLocation.PICKS, [0, col, picks[0][col].length]),
+      );
+    },
+    [pack, onMoveCard, picks, draft],
+  );
+
+  useEffect(() => {
+    if ((action === 'pickrandom' || action === 'trashrandom') && pack.length > 0 && !loading) {
+      setLoading(true);
+      onClickCard(Math.floor(Math.random() * pack.length));
+    }
+  }, [action, onClickCard, pack, loading]);
 
   return (
     <DndProvider>
@@ -157,6 +159,7 @@ const CubeDraft = ({ draft, socket }) => {
         onClickCard={onClickCard}
         loading={loading}
         title={title}
+        disabled={disabled}
       />
       <Card className="my-3">
         <DeckStacks

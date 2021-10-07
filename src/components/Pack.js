@@ -5,12 +5,13 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Row, Spinner } from 'reacts
 import DraggableCard from 'components/DraggableCard';
 import DraftLocation from 'drafting/DraftLocation';
 import CardPropType from 'proptypes/CardPropType';
+import FoilCardImage from 'components/FoilCardImage';
 
 const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;
 };
 
-const Pack = ({ pack, onMoveCard, onClickCard, loading, title }) => (
+const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
@@ -30,14 +31,18 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title }) => (
               xs={3}
               className="col-md-1-5 col-lg-1-5 col-xl-1-5 d-flex justify-content-center align-items-center"
             >
-              <DraggableCard
-                location={DraftLocation.pack(index)}
-                data-index={index}
-                card={card}
-                canDrop={canDrop}
-                onMoveCard={onMoveCard}
-                onClick={() => onClickCard(index)}
-              />
+              {disabled ? (
+                <FoilCardImage card={card} tags={[]} autocard />
+              ) : (
+                <DraggableCard
+                  location={DraftLocation.pack(index)}
+                  data-index={index}
+                  card={card}
+                  canDrop={canDrop}
+                  onMoveCard={onMoveCard}
+                  onClick={() => onClickCard(index)}
+                />
+              )}
             </Col>
           ))}
         </Row>
@@ -52,11 +57,13 @@ Pack.propTypes = {
   onClickCard: PropTypes.func.isRequired,
   loading: PropTypes.bool,
   title: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 Pack.defaultProps = {
   loading: false,
   title: 'Pack',
+  disabled: false,
 };
 
 export default Pack;

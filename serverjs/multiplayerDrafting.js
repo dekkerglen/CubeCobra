@@ -16,7 +16,7 @@ const {
   hset,
 } = require('./redis');
 
-const { setupPicks, getCardCol } = require('../dist/drafting/draftutil');
+const { setupPicks, getCardCol, getStepList } = require('../dist/drafting/draftutil');
 const { createDeckFromDraft } = require('./deckUtil');
 
 // returns a reference to a draft's metadata hash
@@ -37,6 +37,8 @@ const draftBotSeatsRef = (draftId) => `draft:${draftId}:botseats`;
 // returns a reference to a seat's pack queue
 const seatRef = (draftId, seat) => `draft:${draftId}:seat:${seat}`;
 
+const stepsQueueRef = (draftId, seat) => `draft:${draftId}:steps:${seat}`;
+
 // returns a reference to a draft's seating order
 const seatsRef = (draftId) => `draft:${draftId}:seats`;
 
@@ -51,6 +53,9 @@ const pickedRef = (draftId, seat, pack) => `draft:${draftId}:picked:${seat}-${pa
 
 // returns the reference to the cards picked by a user
 const userPicksRef = (draftId, seat) => `draft:${draftId}:userpicks:${seat}`;
+
+// returns the reference to the cards trashed by a user
+const userTrashRef = (draftId, seat) => `draft:${draftId}:usertrash:${seat}`;
 
 // converts a reference to a pack to a reference of the cards picked from that pack
 const packToPicked = (ref) => ref.replace('pack', 'picked');
@@ -125,15 +130,35 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
 
   const packCards = await getCurrentPackCards(packReference);
   const picked = packToPicked(packReference);
+  const step = await rpop(stepsQueueRef(draftId, seat));
+
+  console.log(`step is ${step}: taking ${pick}`);
+  console.log(packCards);
+
+  // pick this card if the step is pick
+  if (step === 'pick' || step === 'pickrandom') {
+    await lpush(userPicksRef(draftId, seat), packCards[pick]);
+    await expire(userPicksRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
+  }
+
+  // trash this card if the step is trash
+  if (step === 'trash' || step === 'trashrandom') {
+    await lpush(userTrashRef(draftId, seat), packCards[pick]);
+    await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
+  }
 
   // push the card into the picked list
   await lpush(picked, packCards[pick]);
   await expire(picked, 60 * 60 * 24 * 2); // 2 days
-  await lpush(userPicksRef(draftId, seat), packCards[pick]);
-  await expire(userPicksRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
 
-  // rotate the pack to the next seat
-  await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
+  // look if the next action is a pass
+  const [next] = await lrange(stepsQueueRef(draftId, seat), -1, -1);
+  if (next === 'pass') {
+    // rotate the pack to the next seat
+    await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
+
+    await rpop(stepsQueueRef(draftId, seat));
+  }
 };
 
 const isPackDone = async (draftId) => {
@@ -182,10 +207,8 @@ const packNeedsBotPicks = async (draftId) => {
   return true;
 };
 
-const getPlayerPicks = async (draftId, seat) => {
-  const userPicks = await lrange(userPicksRef(draftId, seat), 0, -1);
-  return userPicks;
-};
+const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
+const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
 
 const cleanUp = async (draftId) => {
   // get draft metadata
@@ -195,6 +218,7 @@ const cleanUp = async (draftId) => {
   for (let i = 0; i < seats; i++) {
     await del(seatRef(draftId, i));
     await del(userPicksRef(draftId, i));
+    await del(userTrashRef(draftId, i));
     for (let j = 0; j < totalPacks; j++) {
       await del(packRef(draftId, i));
       await del(pickedRef(draftId, i));
@@ -207,7 +231,11 @@ const finishDraft = async (draftId, draft) => {
   // set user picks to the actual picks
   for (let i = 0; i < seats; i++) {
     const picks = await getPlayerPicks(draftId, i);
+    const trash = await getPlayerTrash(draftId, i);
+
     draft.seats[i].pickorder = picks;
+    draft.seats[i].trashorder = trash;
+
     const drafted = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);
     for (const cardIndex of picks) {
@@ -281,6 +309,20 @@ const setup = async (draft) => {
       'state',
       'drafting',
     ]);
+
+    // create a list of steps for each seat
+    const stepList = getStepList(draft);
+    for (let i = 0; i < draft.seats.length; i++) {
+      for (const step of stepList) {
+        if (step.action === 'pass') {
+          await lpush(stepsQueueRef(draft._id, i), step.action);
+        } else {
+          for (let j = 0; j < step.amount; j++) {
+            await lpush(stepsQueueRef(draft._id, i), step.action);
+          }
+        }
+      }
+    }
 
     // create a pack contents for each pack
     for (let i = 0; i < draft.initial_state.length; i++) {

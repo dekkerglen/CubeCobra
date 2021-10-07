@@ -26,6 +26,8 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
   const drafterState = getDrafterState(draft, parseInt(seatNumber, 10), parseInt(pickNumber, 10));
   const { cardsInPack, pick, pack, picksList } = drafterState;
 
+  console.log(drafterState);
+
   return (
     <Row>
       <Col xs={12} sm={3}>
