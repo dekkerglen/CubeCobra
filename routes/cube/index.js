@@ -1425,7 +1425,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Only cube owner may edit.');
-      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${viewQuery}`);
+      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${encodeURIComponent(viewQuery)}`);
     }
 
     cube.date_updated = Date.now();
