@@ -1532,7 +1532,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     }
 
     req.flash('success', 'Cube Updated');
-    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?updated=true&view=${viewQuery}`);
+    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?updated=true&view=${encodeURIComponent(viewQuery)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
