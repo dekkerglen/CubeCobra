@@ -1492,7 +1492,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         }
       } else {
         req.flash('danger', 'Bad request format, all operations must be add, remove, or replace.');
-        return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${viewQuery}`);
+        return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}?view=${encodeURIComponent(viewQuery)}`);
       }
     }
 
