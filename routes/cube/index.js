@@ -1418,7 +1418,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
   try {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
-    let viewQuery = 'table';
+    const viewQuery = req.query.view || 'table';
     if (req.query.view) {
       viewQuery = req.query.view;
     }
