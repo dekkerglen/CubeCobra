@@ -8,13 +8,15 @@ import { sortDeep } from 'utils/Sort';
 import SortContext from 'contexts/SortContext';
 import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
+import useQueryParam from 'hooks/useQueryParam';
 
-const VisualSpoiler = ({ cards, scale, setScale }) => {
+const VisualSpoiler = ({ cards }) => {
   const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
   const cardList = sorted
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);
+  const [scale, setScale] = useQueryParam('scale', 'medium');
 
   let sizes = 'col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1-5';
 
@@ -44,7 +46,5 @@ const VisualSpoiler = ({ cards, scale, setScale }) => {
 
 VisualSpoiler.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
-  scale: PropTypes.string.isRequired,
-  setScale: PropTypes.func.isRequired,
 };
 export default VisualSpoiler;
