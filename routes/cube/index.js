@@ -1419,9 +1419,6 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
     const viewQuery = req.query.view || 'table';
-    if (req.query.view) {
-      viewQuery = req.query.view;
-    }
 
     if (!req.user._id.equals(cube.owner)) {
       req.flash('danger', 'Only cube owner may edit.');
