@@ -247,7 +247,7 @@ const EditCollapse = ({ ...props }) => {
         </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm method="POST" action={`/cube/edit/${cubeID}?view=${viewParams}`} onSubmit={handleMentions}>
+        <CSRFForm method="POST" action={`/cube/edit/${cubeID}?view=${encodeURIComponent(viewParams)}`} onSubmit={handleMentions}>
           <Row>
             <Col>
               <h6>
