@@ -43,7 +43,6 @@ const CubeListPageRaw = ({
   const [openCollapse, setOpenCollapse] = useState(null);
   const [filter, setFilter] = useState(null);
   const [sorts, setSorts] = useState(null);
-  const [scale, setScale] = useState('medium');
 
   useEffect(() => {
     const savedChanges = cube._id && LocalStorage.get(`changelist-${cube._id}`);
@@ -118,7 +117,7 @@ const CubeListPageRaw = ({
                   {
                     {
                       table: <TableView cards={filteredCards} />,
-                      spoiler: <VisualSpoiler cards={filteredCards} scale={scale} setScale={setScale} />,
+                      spoiler: <VisualSpoiler cards={filteredCards} />,
                       curve: <CurveView cards={filteredCards} />,
                       list: <ListView cards={filteredCards} />,
                     }[cubeView]
