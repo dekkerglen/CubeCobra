@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -58,7 +59,7 @@ export const getCard = async (cubeID, name, setAlerts) => {
   return null;
 };
 
-const EditCollapse = ({ ...props }) => {
+const EditCollapse = ({ cubeView, ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
   const [mentions, setMentions] = useState('');
@@ -81,6 +82,8 @@ const EditCollapse = ({ ...props }) => {
   const additions = changes.filter((change) => change.add || change.replace).length;
   const removals = changes.filter((change) => change.remove || change.replace).length;
   const newTotal = cube.cards.length + additions - removals;
+
+  const scaleParams = new URLSearchParams(window.location.search).get('scale');
 
   const handleChange = useCallback(
     (event) => {
@@ -245,7 +248,11 @@ const EditCollapse = ({ ...props }) => {
         </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm method="POST" action={`/cube/edit/${cubeID}`} onSubmit={handleMentions}>
+        <CSRFForm
+          method="POST"
+          action={`/cube/edit/${cubeID}?view=${encodeURIComponent(cubeView)}&scale=${encodeURIComponent(scaleParams)}`}
+          onSubmit={handleMentions}
+        >
           <Row>
             <Col>
               <h6>
@@ -298,6 +305,10 @@ const EditCollapse = ({ ...props }) => {
       </Collapse>
     </Collapse>
   );
+};
+
+EditCollapse.propTypes = {
+  cubeView: PropTypes.string.isRequired,
 };
 
 export default EditCollapse;

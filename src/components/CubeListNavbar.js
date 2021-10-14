@@ -480,7 +480,7 @@ const CubeListNavbar = ({
           </Nav>
         </Collapse>
       </Navbar>
-      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} />}
+      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
       <SortCollapse
         defaultPrimarySort={defaultPrimarySort}
         defaultSecondarySort={defaultSecondarySort}
