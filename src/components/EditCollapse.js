@@ -18,6 +18,7 @@ import {
   InputGroupText,
 } from 'reactstrap';
 
+import Query from 'utils/Query';
 import { encodeName } from 'utils/Card';
 import { findUserLinks } from 'markdown/parser';
 
@@ -83,7 +84,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
   const removals = changes.filter((change) => change.remove || change.replace).length;
   const newTotal = cube.cards.length + additions - removals;
 
-  const scaleParams = new URLSearchParams(window.location.search).get('scale');
+  const scaleParams = Query.get('scale', 'medium');
 
   const handleChange = useCallback(
     (event) => {
