@@ -210,7 +210,8 @@ const specialCaseCards = {
 
   // This card didn't have a printed token until Commander Collection: Black, and the printed version is a double-faced
   // token
-  'Ophiomancer': ['13e4832d-8530-4b85-b738-51d0c18f28ec'],
+  // TODO(#2196): When the card parser can handle DFC tokens, we can remove this special case
+  Ophiomancer: ['13e4832d-8530-4b85-b738-51d0c18f28ec'],
 
   // These two are a bit of a problem. Normaly when an ability creates copies the scryfall tokens associated with it are fetched.
   // This works great in most cases, but these two already have a token in scryfall only it's the wrong token. It's a token refering to
