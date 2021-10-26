@@ -68,14 +68,14 @@ router.get('/approved/:page/:sort/:direction/:filter', async (req, res) => getPa
 router.get('/pending/:page/:sort/:direction/:filter', async (req, res) => getPackages(req, res, { approved: false }));
 
 router.get('/yourpackages/:page/:sort/:direction/:filter', async (req, res) =>
-  getPackages(req, res, { userid: req.user.id }),
+  getPackages(req, res, { userid: req.user._id }),
 );
 
 router.get('/approved/:page/:sort/:direction', async (req, res) => getPackages(req, res, { approved: true }));
 
 router.get('/pending/:page/:sort/:direction', async (req, res) => getPackages(req, res, { approved: false }));
 
-router.get('/yourpackages/:page/:sort/:direction', async (req, res) => getPackages(req, res, { userid: req.user.id }));
+router.get('/yourpackages/:page/:sort/:direction', async (req, res) => getPackages(req, res, { userid: req.user._id }));
 
 router.get('/browse', async (req, res) => {
   return render(req, res, 'BrowsePackagesPage', {});
@@ -112,7 +112,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
     });
   }
 
-  const poster = await User.findById(req.user.id);
+  const poster = await User.findById(req.user._id);
   if (!poster) {
     return res.status(400).send({
       success: 'false',
@@ -153,7 +153,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
 
 router.get('/upvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.findById(req.params.id);
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (!pack.voters.includes(user._id)) {
     pack.voters.push(user._id);
@@ -169,7 +169,7 @@ router.get('/upvote/:id', ensureAuth, async (req, res) => {
 
 router.get('/downvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.findById(req.params.id);
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (pack.voters.includes(user._id)) {
     pack.voters = pack.voters.filter((uid) => !user._id.equals(uid));

@@ -446,7 +446,7 @@ const run = async () => {
     },
   );
 
-  cubeCursor.close();
+  await cubeCursor.close();
   winston.info('Finished: all cubes');
 
   // process all deck objects
@@ -468,7 +468,7 @@ const run = async () => {
     },
   );
 
-  deckCursor.close();
+  await deckCursor.close();
   winston.info('Finished: all decks');
 
   // save card models

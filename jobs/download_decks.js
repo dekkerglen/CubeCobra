@@ -73,7 +73,7 @@ try {
       await s3.upload(params).promise();
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
     }
-    mongoose.disconnect();
+    await mongoose.disconnect();
 
     const params = {
       Bucket: 'cubecobra',

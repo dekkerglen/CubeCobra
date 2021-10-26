@@ -357,7 +357,9 @@ class FilterCollapse extends Component {
     this.handleApply = this.handleApply.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleReset = this.handleReset.bind(this);
+  }
 
+  componentDidMount() {
     if (this.props.defaultFilterText) this.updateFilters();
   }
 

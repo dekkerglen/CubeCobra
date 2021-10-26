@@ -99,6 +99,10 @@ const MUTATIONS = Object.freeze({
     newFormat.packs[packIndex].steps.splice(stepIndex, 1);
     if (newFormat.packs[packIndex].steps.length === 0) newFormat.packs[packIndex].steps = null;
   },
+
+  changeDefaultSeatCount: ({ newFormat, value }) => {
+    newFormat.defaultSeats = Number.parseInt(value, 10);
+  },
 });
 
 const serializeFormat = (rawFormat) => {
@@ -112,6 +116,13 @@ const getErrorsInFormat = (format) => {
   if (!format?.packs) return ['Internal error in the format.'];
   if (!format.title.trim()) errors.push('Title must not be empty.');
   if (format.packs.length === 0) errors.push('Format must have at least 1 pack.');
+
+  if (format.defaultSeats !== undefined) {
+    if (!Number.isFinite(format.defaultSeats)) errors.push('Default seat count must be a number.');
+    if (format.defaultSeats < 2 || format.defaultSeats > 16)
+      errors.push('Default seat count must be between 2 and 16.');
+  }
+
   for (let i = 0; i < format.packs.length; i++) {
     const pack = format.packs[i];
     if (
@@ -183,6 +194,18 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               value={format.title}
               onChange={mutations.changeTitle}
             />
+            <FormGroup className="mt-3">
+              <Label>
+                Default seat count
+                <Input
+                  type="number"
+                  min={2}
+                  max={16}
+                  defaultValue={format.defaultSeats ?? 8}
+                  onChange={mutations.changeDefaultSeatCount}
+                />
+              </Label>
+            </FormGroup>
           </Col>
           <Col>
             <FormGroup tag="fieldset">

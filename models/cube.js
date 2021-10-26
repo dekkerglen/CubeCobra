@@ -4,7 +4,6 @@ const cardSchema = require('./shared/cardSchema');
 const stepsSchema = require('./shared/stepsSchema');
 const CURRENT_SCHEMA_VERSION = require('./migrations/cubeMigrations').slice(-1)[0].version;
 
-// Cube schema
 const cubeSchema = mongoose.Schema({
   name: {
     type: String,
@@ -16,7 +15,7 @@ const cubeSchema = mongoose.Schema({
     unique: true,
   },
   owner: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   isListed: {
@@ -90,12 +89,13 @@ const cubeSchema = mongoose.Schema({
         packs: {
           type: [{ slots: [String], steps: stepsSchema }],
         },
+        defaultSeats: Number,
       },
     ],
     default: [],
   },
   users_following: {
-    type: [String],
+    type: [mongoose.Schema.Types.ObjectId],
     default: [],
   },
   defaultStatus: {

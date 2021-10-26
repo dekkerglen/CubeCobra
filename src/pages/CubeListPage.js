@@ -25,6 +25,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';
+import CardPropType from 'proptypes/CardPropType';
 
 const CubeListPageRaw = ({
   defaultFilterText,
@@ -139,7 +140,7 @@ CubeListPageRaw.propTypes = {
   defaultSecondarySort: PropTypes.string.isRequired,
   defaultTertiarySort: PropTypes.string.isRequired,
   defaultQuaternarySort: PropTypes.string.isRequired,
-  defaultShowUnsorted: PropTypes.bool.isRequired,
+  defaultShowUnsorted: PropTypes.string.isRequired,
 };
 
 const CubeListPage = ({
@@ -172,13 +173,15 @@ const CubeListPage = ({
 
 CubeListPage.propTypes = {
   cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.object).isRequired,
-    tag_colors: PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
-    }),
+    cards: PropTypes.arrayOf(CardPropType).isRequired,
+    tag_colors: PropTypes.arrayOf(
+      PropTypes.shape({
+        tag: PropTypes.string.isRequired,
+        color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
+      }),
+    ),
     default_sorts: PropTypes.arrayOf(PropTypes.string).isRequired,
-    maybe: PropTypes.object.isRequired,
+    maybe: PropTypes.arrayOf(CardPropType).isRequired,
     _id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
   }).isRequired,
@@ -189,7 +192,7 @@ CubeListPage.propTypes = {
   defaultSecondarySort: PropTypes.string.isRequired,
   defaultTertiarySort: PropTypes.string.isRequired,
   defaultQuaternarySort: PropTypes.string.isRequired,
-  defaultShowUnsorted: PropTypes.bool.isRequired,
+  defaultShowUnsorted: PropTypes.string.isRequired,
   loginCallback: PropTypes.string,
 };
 

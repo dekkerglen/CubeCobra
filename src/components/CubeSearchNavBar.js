@@ -105,7 +105,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
     }
 
     if (queryText.length > 0) {
-      window.location.href = `/search/${queryText.trim()}/0`;
+      window.location.href = `/search/${encodeURIComponent(queryText.trim())}/0`;
     } else {
       window.location.href = '/search';
     }
@@ -213,7 +213,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
     if (queryText && queryText.length > 0) {
-      window.location.href = `/search/${queryText}/0?order=${searchOrder}`;
+      window.location.href = `/search/${encodeURIComponent(queryText)}/0?order=${searchOrder}`;
     } else {
       window.location.href = `/search`;
     }

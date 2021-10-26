@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
-// Blog schema
 const podcastSchema = mongoose.Schema({
   title: String,
   description: String,
   url: String,
   rss: String,
-  owner: String,
+  owner: mongoose.Schema.Types.ObjectId,
   image: String,
   date: Date,
   username: {

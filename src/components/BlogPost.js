@@ -91,7 +91,7 @@ const BlogPost = ({ post, noScroll }) => {
 };
 
 BlogPost.propTypes = {
-  post: PropTypes.arrayOf(BlogPostPropType).isRequired,
+  post: BlogPostPropType.isRequired,
   noScroll: PropTypes.bool,
 };
 

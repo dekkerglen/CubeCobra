@@ -46,7 +46,9 @@ import {
   cardCost,
   cardLayout,
   cardDevotion,
-  cardLegalIn
+  cardLegalIn,
+  cardBannedIn,
+  cardRestrictedIn
 } from 'utils/Card';
 %} # %}
 
@@ -95,6 +97,8 @@ condition -> (
   | castableCostCondition
   | devotionCondition
   | legalityCondition
+  | bannedCondition
+  | restrictedCondition
   | layoutCondition
   | collectorNumberCondition
 ) {% ([[condition]]) => condition %}
@@ -129,6 +133,10 @@ tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) =>
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
 legalityCondition -> ("leg"i | "legal"i | "legality"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardLegalIn, valuePred) %}
+
+bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred) %}
+
+restrictedCondition -> "restricted"i legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardRestrictedIn, valuePred) %}
 
 priceCondition -> ("p"i | "usd"i | "price"i) dollarOpValue {% ([, valuePred]) => genericCondition('price', cardPrice, valuePred) %}
 
@@ -177,7 +185,8 @@ notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition(
 isOpValue -> ":" isValue {% ([, category]) => CARD_CATEGORY_DETECTORS[category] %}
 
 isValue -> (
-    "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "digital"i | "reasonable"i | "dfc"i | "mdfc"i |"tdfc"i
+    "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i 
+  | "dfc"i | "mdfc"i |"tdfc"i
   | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i
   | "vanilla"i | "modal"i | "fullart"i | "foil"i | "nonfoil"i
   | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "fetchland"i

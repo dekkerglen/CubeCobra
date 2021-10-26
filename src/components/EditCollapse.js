@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react';
+import PropTypes from 'prop-types';
 
 import {
   Button,
@@ -17,6 +18,7 @@ import {
   InputGroupText,
 } from 'reactstrap';
 
+import Query from 'utils/Query';
 import { encodeName } from 'utils/Card';
 import { findUserLinks } from 'markdown/parser';
 
@@ -58,7 +60,7 @@ export const getCard = async (cubeID, name, setAlerts) => {
   return null;
 };
 
-const EditCollapse = ({ ...props }) => {
+const EditCollapse = ({ cubeView, ...props }) => {
   const [alerts, setAlerts] = useState([]);
   const [postContent, setPostContent] = useState('');
   const [mentions, setMentions] = useState('');
@@ -77,6 +79,12 @@ const EditCollapse = ({ ...props }) => {
   } = useContext(ChangelistContext);
   const { cube, cubeID } = useContext(CubeContext);
   const { toggleShowMaybeboard } = useContext(DisplayContext);
+
+  const additions = changes.filter((change) => change.add || change.replace).length;
+  const removals = changes.filter((change) => change.remove || change.replace).length;
+  const newTotal = cube.cards.length + additions - removals;
+
+  const scaleParams = Query.get('scale', 'medium');
 
   const handleChange = useCallback(
     (event) => {
@@ -241,10 +249,23 @@ const EditCollapse = ({ ...props }) => {
         </Button>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm method="POST" action={`/cube/edit/${cubeID}`} onSubmit={handleMentions}>
+        <CSRFForm
+          method="POST"
+          action={`/cube/edit/${cubeID}?view=${encodeURIComponent(cubeView)}&scale=${encodeURIComponent(scaleParams)}`}
+          onSubmit={handleMentions}
+        >
           <Row>
             <Col>
-              <h6>Changelist</h6>
+              <h6>
+                <Row>
+                  <Col>Changelist</Col>
+                  <Col className="col-sm-auto">
+                    <div className="text-secondary">
+                      +{additions}, -{removals}, {newTotal} Total
+                    </div>
+                  </Col>
+                </Row>
+              </h6>
               <div className="changelist-container mb-2">
                 <Changelist />
               </div>
@@ -285,6 +306,10 @@ const EditCollapse = ({ ...props }) => {
       </Collapse>
     </Collapse>
   );
+};
+
+EditCollapse.propTypes = {
+  cubeView: PropTypes.string.isRequired,
 };
 
 export default EditCollapse;

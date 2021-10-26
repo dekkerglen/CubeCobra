@@ -211,7 +211,8 @@ class CubeOverviewModal extends Component {
   }
 
   render() {
-    const { cube, cubeID, tags, isOpen } = this.state;
+    const { cube, tags, isOpen } = this.state;
+    const cubeID = getCubeId(cube);
     return (
       <>
         <a className="nav-link" href="#" onClick={this.open}>
