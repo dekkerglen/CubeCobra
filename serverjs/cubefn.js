@@ -700,7 +700,7 @@ function cachePromise(key, callback) {
 function isCubeViewable(cube, user) {
   if (!cube) return false;
   if (!cube.isPrivate) return true;
-  return user && (user.id === cube.owner || util.isAdmin(user));
+  return user && (user._id.equals(cube.owner) || util.isAdmin(user));
 }
 
 const methods = {
