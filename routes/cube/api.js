@@ -25,6 +25,7 @@ const {
   addCardHtml,
   isCubeViewable,
 } = require('../../serverjs/cubefn.js');
+const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 const { rotateArrayLeft, createPool } = require('./helper');
 
@@ -205,8 +206,12 @@ router.post(
     // convert visibility value to indicators
     switch (req.body.visibility) {
       case 'private':
-        cube.isListed = false;
-        cube.isPrivate = true;
+        if (cube.isFeatured || await isInFeaturedQueue(cube)) {
+          req.flash('danger', 'Cannot set a cube in featured queue as private');
+        } else {
+          cube.isListed = false;
+          cube.isPrivate = true;
+        }
         break;
       case 'unlisted':
         cube.isListed = false;
