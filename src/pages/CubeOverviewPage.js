@@ -243,7 +243,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     action={`/cube/${cubeState.isFeatured ? 'unfeature/' : 'feature/'}${cubeState._id}`}
                     className="mt-2"
                   >
-                    <Button color="success" type="submit">
+                    <Button color="success" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
                       {' '}
                       {cubeState.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
                     </Button>

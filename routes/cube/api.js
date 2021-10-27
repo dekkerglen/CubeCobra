@@ -206,7 +206,7 @@ router.post(
     // convert visibility value to indicators
     switch (req.body.visibility) {
       case 'private':
-        if (cube.isFeatured || await isInFeaturedQueue(cube)) {
+        if (cube.isFeatured || (await isInFeaturedQueue(cube))) {
           req.flash('danger', 'Cannot set a cube in featured queue as private');
         } else {
           cube.isListed = false;
