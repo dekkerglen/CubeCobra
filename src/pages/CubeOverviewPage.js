@@ -51,7 +51,12 @@ const CubeIdModalLink = withModal('span', CubeIdModal);
 const QRCodeModalLink = withModal('a', QRCodeModal);
 
 const PrivateCubeIcon = () => (
-  <Tooltip text="This cube is set as private." wrapperTag="span" className="text-secondary" style={{ position: 'relative', top: '-3px' }}>
+  <Tooltip
+    text="This cube is set as private."
+    wrapperTag="span"
+    className="text-secondary"
+    style={{ position: 'relative', top: '-3px' }}
+  >
     <EyeClosedIcon size={24} />
   </Tooltip>
 );
@@ -160,7 +165,9 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
               <CardHeader>
                 <Row>
                   <Col>
-                    <h3>{cubeState.name}{' '}{cubeState.isPrivate && <PrivateCubeIcon />}</h3>
+                    <h3>
+                      {cubeState.name} {cubeState.isPrivate && <PrivateCubeIcon />}
+                    </h3>
                   </Col>
                 </Row>
                 <Row>
