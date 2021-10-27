@@ -272,8 +272,8 @@ router.post(
 );
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
+  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
-    const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
@@ -301,8 +301,8 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
 });
 
 router.post('/unfeature/:id', ensureAuth, async (req, res) => {
+  const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {
-    const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
     const { user } = req;
     if (!util.isAdmin(user)) {
       req.flash('danger', 'Not Authorized');
