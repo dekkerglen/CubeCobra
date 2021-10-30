@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { Alert, UncontrolledAlert } from 'reactstrap';
+import Markdown from 'components/Markdown';
 
 const DynamicFlash = (props) => {
   const messages = useMemo(() => {
@@ -23,7 +24,11 @@ const DynamicFlash = (props) => {
           </UncontrolledAlert>
         )),
       )}
-      {messages.notice && <Alert color="warning">{messages.notice}</Alert>}
+      {messages.notice && (
+        <Alert id="notice-alert" color="warning">
+          <Markdown markdown={messages.notice} />
+        </Alert>
+      )}
     </div>
   );
 };
