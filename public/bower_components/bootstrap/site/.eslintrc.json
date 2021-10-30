@@ -1,26 +1,61 @@
 {
-  "env": {
-    "es6": false,
-    "jquery": true
-  },
+  "root": true,
   "parserOptions": {
     "ecmaVersion": 5,
     "sourceType": "script"
   },
-  "extends": "../.eslintrc.json",
+  "extends": [
+    "plugin:unicorn/recommended",
+    "xo",
+    "xo/browser"
+  ],
   "rules": {
-    // Best Practices
-    "no-magic-numbers": "off",
-    "vars-on-top": "off",
-
-    // Stylistic Issues
-    "spaced-comment": "off",
-
-    // ECMAScript 6
+    "arrow-body-style": "off",
+    "capitalized-comments": "off",
+    "comma-dangle": [
+      "error",
+      "never"
+    ],
+    "indent": [
+      "error",
+      2,
+      {
+        "MemberExpression": "off",
+        "SwitchCase": 1
+      }
+    ],
+    "multiline-ternary": [
+      "error",
+      "always-multiline"
+    ],
+    "no-new": "off",
     "no-var": "off",
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
     "object-shorthand": "off",
+    "operator-linebreak": [
+      "error",
+      "after"
+    ],
     "prefer-arrow-callback": "off",
-    "prefer-template": "off",
-    "prefer-rest-params": "off"
+    "prefer-destructuring": "off",
+    "semi": [
+      "error",
+      "never"
+    ],
+    "strict": "error",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-method-this-argument": "off",
+    "unicorn/no-for-loop": "off",
+    "unicorn/no-null": "off",
+    "unicorn/numeric-separators-style": "off",
+    "unicorn/prefer-array-flat": "off",
+    "unicorn/prefer-dom-node-dataset": "off",
+    "unicorn/prefer-module": "off",
+    "unicorn/prefer-prototype-methods": "off",
+    "unicorn/prefer-query-selector": "off",
+    "unicorn/prevent-abbreviations": "off"
   }
 }

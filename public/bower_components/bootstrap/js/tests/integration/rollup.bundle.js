@@ -1,8 +1,8 @@
 /* eslint-env node */
 
-const resolve = require('rollup-plugin-node-resolve')
-const commonjs = require('rollup-plugin-commonjs')
-const babel = require('rollup-plugin-babel')
+const { babel } = require('@rollup/plugin-babel')
+const { nodeResolve } = require('@rollup/plugin-node-resolve')
+const replace = require('@rollup/plugin-replace')
 
 module.exports = {
   input: 'js/tests/integration/bundle.js',
@@ -11,10 +11,14 @@ module.exports = {
     format: 'iife'
   },
   plugins: [
-    resolve(),
-    commonjs(),
+    replace({
+      'process.env.NODE_ENV': '"production"',
+      preventAssignment: true
+    }),
+    nodeResolve(),
     babel({
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
+      babelHelpers: 'bundled'
     })
   ]
 }

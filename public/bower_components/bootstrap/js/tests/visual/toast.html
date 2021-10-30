@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="../../../dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../../../dist/css/bootstrap.min.css" rel="stylesheet">
     <title>Toast</title>
     <style>
       .notifications {
@@ -26,10 +26,10 @@
     </div>
 
     <div class="notifications">
-      <div id="toastAutoHide" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000">
+      <div id="toastAutoHide" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
         <div class="toast-header">
-          <span class="d-block bg-primary rounded mr-2" style="width: 20px; height: 20px;"></span>
-          <strong class="mr-auto">Bootstrap</strong>
+          <span class="d-block bg-primary rounded me-2" style="width: 20px; height: 20px;"></span>
+          <strong class="me-auto">Bootstrap</strong>
           <small>11 mins ago</small>
         </div>
         <div class="toast-body">
@@ -37,14 +37,12 @@
         </div>
       </div>
 
-      <div class="toast" data-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
-          <span class="d-block bg-primary rounded mr-2" style="width: 20px; height: 20px;"></span>
-          <strong class="mr-auto">Bootstrap</strong>
+          <span class="d-block bg-primary rounded me-2" style="width: 20px; height: 20px;"></span>
+          <strong class="me-auto">Bootstrap</strong>
           <small class="text-muted">2 seconds ago</small>
-          <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+          <button type="button" class="ms-2 mb-1 btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
           Heads up, toasts will stack automatically
@@ -52,20 +50,33 @@
       </div>
     </div>
 
-    <script src="../../../node_modules/jquery/dist/jquery.slim.min.js"></script>
-    <script src="../../dist/util.js"></script>
+    <script src="../../dist/dom/event-handler.js"></script>
+    <script src="../../dist/dom/manipulator.js"></script>
+    <script src="../../dist/dom/data.js"></script>
+    <script src="../../dist/base-component.js"></script>
     <script src="../../dist/toast.js"></script>
     <script>
-      $(function () {
-        $('.toast').toast()
+      window.addEventListener('load', function () {
+        Array.from(document.querySelectorAll('.toast'))
+          .forEach(function (toastNode) {
+            new Toast(toastNode)
+          })
 
-        $('#btnShowToast').on('click', function () {
-          $('.toast').toast('show')
-        })
+          document.getElementById('btnShowToast').addEventListener('click', function () {
+            Array.from(document.querySelectorAll('.toast'))
+              .forEach(function (toastNode) {
+                var toast = Toast.getInstance(toastNode)
+                toast.show()
+              })
+          })
 
-        $('#btnHideToast').on('click', function () {
-          $('.toast').toast('hide')
-        })
+          document.getElementById('btnHideToast').addEventListener('click', function () {
+            Array.from(document.querySelectorAll('.toast'))
+              .forEach(function (toastNode) {
+                var toast = Toast.getInstance(toastNode)
+                toast.hide()
+              })
+          })
       })
     </script>
   </body>

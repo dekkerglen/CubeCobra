@@ -1,48 +1,57 @@
 'use strict'
 
-const path    = require('path')
-const babel   = require('rollup-plugin-babel')
-const resolve = require('rollup-plugin-node-resolve')
-const banner  = require('./banner.js')
+const path = require('path')
+const { babel } = require('@rollup/plugin-babel')
+const { nodeResolve } = require('@rollup/plugin-node-resolve')
+const replace = require('@rollup/plugin-replace')
+const banner = require('./banner.js')
 
-const BUNDLE  = process.env.BUNDLE === 'true'
+const BUNDLE = process.env.BUNDLE === 'true'
+const ESM = process.env.ESM === 'true'
 
-let fileDest  = 'bootstrap.js'
-const external = ['jquery', 'popper.js']
+let fileDest = `bootstrap${ESM ? '.esm' : ''}`
+const external = ['@popperjs/core']
 const plugins = [
   babel({
-    exclude: 'node_modules/**', // Only transpile our source code
-    externalHelpersWhitelist: [ // Include only required helpers
-      'defineProperties',
-      'createClass',
-      'inheritsLoose',
-      'defineProperty',
-      'objectSpread2'
-    ]
+    // Only transpile our source code
+    exclude: 'node_modules/**',
+    // Include the helpers in the bundle, at most one copy of each
+    babelHelpers: 'bundled'
   })
 ]
 const globals = {
-  jquery: 'jQuery', // Ensure we use jQuery which is always available even in noConflict mode
-  'popper.js': 'Popper'
+  '@popperjs/core': 'Popper'
 }
 
 if (BUNDLE) {
-  fileDest = 'bootstrap.bundle.js'
+  fileDest += '.bundle'
   // Remove last entry in external array to bundle Popper
   external.pop()
-  delete globals['popper.js']
-  plugins.push(resolve())
+  delete globals['@popperjs/core']
+  plugins.push(
+    replace({
+      'process.env.NODE_ENV': '"production"',
+      preventAssignment: true
+    }),
+    nodeResolve()
+  )
 }
 
-module.exports = {
-  input: path.resolve(__dirname, '../js/src/index.js'),
+const rollupConfig = {
+  input: path.resolve(__dirname, `../js/index.${ESM ? 'esm' : 'umd'}.js`),
   output: {
     banner,
-    file: path.resolve(__dirname, `../dist/js/${fileDest}`),
-    format: 'umd',
+    file: path.resolve(__dirname, `../dist/js/${fileDest}.js`),
+    format: ESM ? 'esm' : 'umd',
     globals,
-    name: 'bootstrap'
+    generatedCode: 'es2015'
   },
   external,
   plugins
 }
+
+if (!ESM) {
+  rollupConfig.output.name = 'bootstrap'
+}
+
+module.exports = rollupConfig
