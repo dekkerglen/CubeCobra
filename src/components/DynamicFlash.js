@@ -8,7 +8,7 @@ const DynamicFlash = (props) => {
     if (typeof document !== 'undefined') {
       const flashInput = document.getElementById('flash');
       const flashValue = flashInput ? flashInput.value : '[]';
-      const globalNotice = document.getElementById('global-notice').value;
+      const globalNotice = document.getElementById('global-notice')?.value;
       return { flash: JSON.parse(flashValue), notice: globalNotice };
     }
     return [];
