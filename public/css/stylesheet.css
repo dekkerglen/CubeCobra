@@ -1307,3 +1307,13 @@ div.advertisement-div > div {
 .modal-dialog {
 	padding-bottom: 60px;
 }
+
+#notice-alert .markdown {
+	padding: 0;
+    margin: 0;
+}
+
+#notice-alert .markdown p:last-child {
+	padding-bottom: 0;
+	margin-bottom: 0;
+}
