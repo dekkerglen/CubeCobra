@@ -326,12 +326,12 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 <CardBody>
                   <Row>
                     <Col xs="6">
-                      <div className="text-left">
+                      <div className="text-start">
                         <b>{card.name}</b>
                       </div>
                     </Col>
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         {card.parsed_cost
                           .slice(0)
                           .reverse()
@@ -356,14 +356,14 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   </div>
                   <Row>
                     <Col xs="6">
-                      <div className="text-left">
+                      <div className="text-start">
                         <small>
                           <i>{`Illustrated by ${card.artist}`}</i>
                         </small>
                       </div>
                     </Col>
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <>{card.loyalty && <p>{card.loyalty}</p>}</>
                         <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
                       </div>
@@ -603,13 +603,13 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>TCGPlayer</b>
                     </div>
                   </Col>
                   {card.prices.usd && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`$${card.prices.usd.toFixed(2)}`}</b>
                       </div>
                     </Col>
@@ -619,7 +619,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <ButtonLink outline color="success" block href={getCardKingdomLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>Card Kingdom</b>
                     </div>
                   </Col>
@@ -628,13 +628,13 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <ButtonLink outline color="success" block href={getCardMarketLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>CardMarket</b>
                     </div>
                   </Col>
                   {card.prices.eur && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`€${card.prices.eur.toFixed(2)}`}</b>
                       </div>
                     </Col>
@@ -644,13 +644,13 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <ButtonLink outline color="success" block href={getCardHoarderLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>CardHoarder</b>
                     </div>
                   </Col>
                   {card.prices.tix && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`${card.prices.tix.toFixed(2)} TIX`}</b>
                       </div>
                     </Col>

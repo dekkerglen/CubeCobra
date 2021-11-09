@@ -101,7 +101,7 @@ const CardSearchPage = ({ loginCallback }) => {
             <h3 className="mx-3">Search Cards</h3>
           </Col>
           <Col xs="6">
-            <div className="text-right">
+            <div className="text-end">
               <ButtonLink outline color="success" href="/tool/topcards">
                 View Top Cards
               </ButtonLink>{' '}

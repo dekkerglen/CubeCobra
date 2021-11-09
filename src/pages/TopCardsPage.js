@@ -27,7 +27,7 @@ const TopCardsPage = ({ data, numResults, loginCallback }) => {
             <h3 className="mx-3">Top Cards</h3>
           </Col>
           <Col xs="6">
-            <div className="text-right">
+            <div className="text-end">
               <ButtonLink outline color="success" href="/tool/searchcards">
                 Search All Cards
               </ButtonLink>{' '}

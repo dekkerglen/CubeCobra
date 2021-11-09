@@ -101,7 +101,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
             </Col>
             {user && (
               <Col xs="6">
-                <div className="text-right">
+                <div className="text-end">
                   <CreatePackageModalLink
                     outline
                     color="success"
