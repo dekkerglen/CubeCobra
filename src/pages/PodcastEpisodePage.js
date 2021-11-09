@@ -31,7 +31,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
               <img className="w-100" alt={episode.title} src={episode.image} />
             </AspectRatioBox>
           </Col>
-          <Col xs="12" sm="8" className="border-left pl-0">
+          <Col xs="12" sm="8" className="border-start pl-0">
             <CardBody>
               <ReactAudioPlayer src={episode.source} controls />
             </CardBody>

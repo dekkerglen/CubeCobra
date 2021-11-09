@@ -1198,7 +1198,7 @@ a{
 	color:var(--dropdown-hover);
 }
 
-.border-left{
+.border-start{
     border-left: 1px solid var(--border-light) !important;
 }
 

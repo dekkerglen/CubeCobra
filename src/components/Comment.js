@@ -198,7 +198,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               toggle={toggleReply}
             />
             {loaded && comments.length > 0 && (
-              <Collapse className="border-left" isOpen={expanded}>
+              <Collapse className="border-start" isOpen={expanded}>
                 {comments
                   .slice(0)
                   .reverse()

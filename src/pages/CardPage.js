@@ -538,7 +538,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 </CardBody>
               </TabPane>
               <TabPane tabId="5">
-                <div className="border-left border-bottom">
+                <div className="border-start border-bottom">
                   <CommentsSection parentType="card" parent={card.oracle_id} collapse={false} />
                 </div>
               </TabPane>
