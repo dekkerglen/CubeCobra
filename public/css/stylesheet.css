@@ -1307,3 +1307,14 @@ div.advertisement-div > div {
 .modal-dialog {
 	padding-bottom: 60px;
 }
+
+/* Shims for .badge-* until we replace changelogs with a React component */
+.badge.badge-success {
+	background-color: var(--success);
+}
+.badge.badge-danger {
+	background-color: var(--danger);
+}
+.badge.badge-primary {
+	background-color: #007bff; /* bootstrap primary color */
+}
