@@ -68,7 +68,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
 
   return (
     <Card className="mb-4">
-      <CardHeader className="pl-4 pr-0 pt-2 pb-0">
+      <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <Row>
           <Col xs="12" sm="6">
             <h5 className="card-title">

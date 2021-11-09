@@ -116,7 +116,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
                 // eslint-disable-next-line react/no-array-index-key
                 <InputGroup key={stepIndex} className="pb-1">
                   <InputGroupText>{stepIndex + 1}</InputGroupText>
-                  <UncontrolledDropdown className="pr-2">
+                  <UncontrolledDropdown className="pe-2">
                     <DropdownToggle caret>{ACTION_LABELS[step.action]}</DropdownToggle>
                     <DropdownMenu>
                       {Object.entries(ACTION_LABELS).map(([actionKey, actionLabel]) => (

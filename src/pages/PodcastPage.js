@@ -23,7 +23,7 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
             <h5>
               {podcast.status !== 'published' && (
                 <>
-                  <em className="pr-3">*Draft*</em>
+                  <em className="pe-3">*Draft*</em>
                   <ButtonLink color="success" outline href={`/content/podcast/edit/${podcast._id}`}>
                     Edit
                   </ButtonLink>

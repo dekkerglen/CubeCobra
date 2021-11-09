@@ -193,7 +193,7 @@ const Maybeboard = ({ filter, ...props }) => {
       {canEdit && (
         <Form className="mt-2 w-100" onSubmit={handleAdd}>
           <Row noGutters>
-            <Col xs="9" sm="auto" className="pr-2">
+            <Col xs="9" sm="auto" className="pe-2">
               <AutocompleteInput
                 treeUrl="/cube/api/cardnames"
                 treePath="cardnames"

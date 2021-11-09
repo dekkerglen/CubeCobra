@@ -105,7 +105,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
           </ModalFooter>
         </CSRFForm>
       </Modal>
-      <div className={`pl-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
+      <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
         <a href={`/user/view/${comment.owner}`}>
           <img className="profile-thumbnail" src={comment.image} alt={comment.artist} title={comment.artist} />
         </a>
