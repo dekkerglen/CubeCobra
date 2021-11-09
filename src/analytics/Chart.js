@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
-import { Col, Row, InputGroup, InputGroupAddon, CustomInput, InputGroupText } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupAddon, Input, InputGroupText } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import useQueryParam from 'hooks/useQueryParam';
@@ -97,29 +97,25 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Group by: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
+            <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
           <InputGroup className="mb-3">
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Characteristic: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput
-              type="select"
-              value={characteristic}
-              onChange={(event) => setcharacteristic(event.target.value)}
-            >
+            <Input type="select" value={characteristic} onChange={(event) => setcharacteristic(event.target.value)}>
               {Object.keys(characteristics).map((key) => (
                 <option key={key} value={key}>
                   {key}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
         </Col>
       </Row>

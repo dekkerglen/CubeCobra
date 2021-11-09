@@ -13,7 +13,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Input,
 } from 'reactstrap';
 
@@ -147,10 +146,10 @@ const BrowsePackagesPage = ({ loginCallback }) => {
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Sort: </InputGroupText>
                 </InputGroupAddon>
-                <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
+                <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
                   <option value="votes">Votes</option>
                   <option value="date">Date</option>
-                </CustomInput>
+                </Input>
               </InputGroup>
             </Col>
             <Col xs={12} sm={6}>
@@ -158,14 +157,10 @@ const BrowsePackagesPage = ({ loginCallback }) => {
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText>Direction: </InputGroupText>
                 </InputGroupAddon>
-                <CustomInput
-                  type="select"
-                  value={sortDirection}
-                  onChange={(event) => setSortDirection(event.target.value)}
-                >
+                <Input type="select" value={sortDirection} onChange={(event) => setSortDirection(event.target.value)}>
                   <option value="1">Ascending</option>
                   <option value="-1">Descending</option>
-                </CustomInput>
+                </Input>
               </InputGroup>
             </Col>
           </Row>

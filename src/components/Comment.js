@@ -11,7 +11,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
   ModalFooter,
   Button,
   Input,
@@ -86,11 +85,11 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Report Reason:</InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" id="reason" name="reason">
+              <Input type="select" id="reason" name="reason">
                 <option>This is spam or phishing</option>
                 <option>This is offensive or abusive</option>
                 <option>It expresses intentions of self-harm or suicide</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
             <Input
               type="textarea"

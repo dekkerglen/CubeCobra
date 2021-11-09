@@ -2,18 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import {
-  Col,
-  Row,
-  Table,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  CustomInput,
-  Input,
-  Button,
-  Form,
-} from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, Input, Button, Form } from 'reactstrap';
 
 import useQueryParam from 'hooks/useQueryParam';
 import calculate from 'utils/CalculateHyperGeom';
@@ -279,13 +268,13 @@ const HyperGeom = () => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>X-Axis: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
+              <Input type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
                 {inputs.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
-              </CustomInput>
+              </Input>
             </InputGroup>
             <h5>Datasets</h5>
             <Row>

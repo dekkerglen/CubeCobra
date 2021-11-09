@@ -14,7 +14,7 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
+  Input,
   UncontrolledAlert,
 } from 'reactstrap';
 
@@ -124,7 +124,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Cube: </InputGroupText>
           </InputGroupAddon>
-          <CustomInput
+          <Input
             id="selected-cube-input"
             type="select"
             value={selectedCube}
@@ -135,7 +135,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
                 {cube.name}
               </option>
             ))}
-          </CustomInput>
+          </Input>
         </InputGroup>
       </ModalBody>
       <ModalFooter>

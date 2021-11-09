@@ -4,7 +4,6 @@ import {
   Button,
   Row,
   Col,
-  CustomInput,
   Form,
   FormGroup,
   FormText,
@@ -274,17 +273,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Status</InputGroupText>
                   </InputGroupAddon>
-                  <CustomInput
-                    type="select"
-                    id="groupStatus"
-                    name="status"
-                    value={formValues.status}
-                    onChange={handleChange}
-                  >
+                  <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
-                  </CustomInput>
+                  </Input>
                 </InputGroup>
 
                 <Label for="groupStatus">
@@ -294,17 +287,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>Finish</InputGroupText>
                   </InputGroupAddon>
-                  <CustomInput
-                    type="select"
-                    id="groupFinish"
-                    name="finish"
-                    value={formValues.finish}
-                    onChange={handleChange}
-                  >
+                  <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
-                  </CustomInput>
+                  </Input>
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>

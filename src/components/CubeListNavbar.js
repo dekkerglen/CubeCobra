@@ -7,7 +7,6 @@ import {
   Collapse,
   Col,
   Container,
-  CustomInput,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
@@ -102,7 +101,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
             <br />• .csv with the same format as our .csv export (columns may be omitted and re-arranged, default values
             may be used).
           </p>
-          <CustomInput type="file" id="uploadBulkFile" name="document" />
+          <Input type="file" id="uploadBulkFile" name="document" />
           <Label for="uploadBulkFile" className="visually-hidden">
             Choose file
           </Label>
@@ -140,7 +139,7 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
             Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
             .csv export.
           </p>
-          <CustomInput type="file" id="uploadReplacementFile" name="document" />
+          <Input type="file" id="uploadReplacementFile" name="document" />
           <Label for="uploadReplacementFile" className="visually-hidden">
             Choose file
           </Label>

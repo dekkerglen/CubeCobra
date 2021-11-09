@@ -12,7 +12,7 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
+  Input,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -125,7 +125,7 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Sort: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput
+              <Input
                 id="card-sort-input"
                 type="select"
                 value={sort}
@@ -134,7 +134,7 @@ const CardSearchPage = ({ loginCallback }) => {
                 {ORDERED_SORTS.map((s) => (
                   <option value={s}>{s}</option>
                 ))}
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
           <Col xs={12} sm={4}>
@@ -142,7 +142,7 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Direction: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput
+              <Input
                 id="card-direction-input"
                 type="select"
                 value={direction}
@@ -150,7 +150,7 @@ const CardSearchPage = ({ loginCallback }) => {
               >
                 <option value="ascending">Ascending</option>
                 <option value="descending">Descending</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
           <Col xs={12} sm={4}>
@@ -158,7 +158,7 @@ const CardSearchPage = ({ loginCallback }) => {
               <InputGroupAddon addonType="prepend">
                 <InputGroupText>Distinct: </InputGroupText>
               </InputGroupAddon>
-              <CustomInput
+              <Input
                 id="card-distinct-input"
                 type="select"
                 value={distinct}
@@ -166,7 +166,7 @@ const CardSearchPage = ({ loginCallback }) => {
               >
                 <option value="names">Names</option>
                 <option value="printings">Printings</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
         </Row>

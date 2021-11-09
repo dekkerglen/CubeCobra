@@ -5,7 +5,6 @@ import {
   Col,
   Row,
   Collapse,
-  CustomInput,
   Form,
   Input,
   InputGroup,
@@ -104,22 +103,22 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
             <InputGroupText>Color</InputGroupText>
           </InputGroupAddon>
           <ColorChecksAddon colorless prefix="color" values={values} onChange={onChange} />
-          <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
+          <Input type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
             <option value="<=">At most these colors</option>
-          </CustomInput>
+          </Input>
         </InputGroup>
         <InputGroup className="mb-3">
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Color Identity</InputGroupText>
           </InputGroupAddon>
           <ColorChecksAddon colorless prefix="identity" values={values} onChange={onChange} />
-          <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
+          <Input type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
             <option value="<=">At most these colors</option>
-          </CustomInput>
+          </Input>
         </InputGroup>
         <TextField
           name="mana"
@@ -288,10 +287,10 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           <InputGroupAddon addonType="prepend">
             <InputGroupText>Legality</InputGroupText>
           </InputGroupAddon>
-          <CustomInput type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
+          <Input type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
             <option value="=">legal</option>
             <option value="!=">not legal</option>
-          </CustomInput>
+          </Input>
           <Input type="select" name="legality" value={values.legality} onChange={onChange}>
             {[
               '',
@@ -556,7 +555,7 @@ class FilterCollapse extends Component {
                 <InputGroupAddon addonType="prepend">
                   <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
                 </InputGroupAddon>
-                <CustomInput
+                <Input
                   id="cmcQickOp"
                   type="select"
                   name="cmcQuickOp"
@@ -570,7 +569,7 @@ class FilterCollapse extends Component {
                   <option>{'='}</option>
                   <option>{'<='}</option>
                   <option>{'<'}</option>
-                </CustomInput>
+                </Input>
                 <InputGroupAddon addonType="append">
                   <Input
                     name="cmcQuick"

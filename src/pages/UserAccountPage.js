@@ -19,7 +19,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Modal,
   ModalBody,
   ModalFooter,
@@ -49,11 +48,11 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
       <CSRFForm method="POST" action="/user/queuefeatured">
         <ModalHeader toggle={toggle}>Select Cube</ModalHeader>
         <ModalBody>
-          <CustomInput type="select" id="featuredCube" name="cubeId">
+          <Input type="select" id="featuredCube" name="cubeId">
             {cubes.map((cube) => (
               <option value={cube.id}>{cube.name}</option>
             ))}
-          </CustomInput>
+          </Input>
         </ModalBody>
         <ModalFooter>
           <Button type="submit" color="success">
@@ -313,10 +312,10 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                       <InputGroupAddon addonType="prepend">
                         <InputGroupText>Theme</InputGroupText>
                       </InputGroupAddon>
-                      <CustomInput type="select" id="theme" name="theme" defaultValue={user.theme}>
+                      <Input type="select" id="theme" name="theme" defaultValue={user.theme}>
                         <option value="default">Default</option>
                         <option value="dark">Dark Mode</option>
-                      </CustomInput>
+                      </Input>
                     </InputGroup>
                     <FormGroup check className="mb-3">
                       <Input

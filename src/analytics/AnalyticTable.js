@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, Input } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -78,36 +78,31 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Columns: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput
-              id="columnSort"
-              type="select"
-              value={column}
-              onChange={(event) => setColumn(event.target.value)}
-            >
+            <Input id="columnSort" type="select" value={column} onChange={(event) => setColumn(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
           <InputGroup className="mb-3">
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Rows: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput id="rowSort" type="select" value={row} onChange={(event) => setRow(event.target.value)}>
+            <Input id="rowSort" type="select" value={row} onChange={(event) => setRow(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
           <InputGroup className="mb-3">
             <InputGroupAddon addonType="prepend">
               <InputGroupText>Show Percent Of: </InputGroupText>
             </InputGroupAddon>
-            <CustomInput
+            <Input
               id="percentOf"
               type="select"
               value={percentOf}
@@ -125,7 +120,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
               <option key="none" value="none">
                 No Percent
               </option>
-            </CustomInput>
+            </Input>
           </InputGroup>
         </Col>
       </Row>

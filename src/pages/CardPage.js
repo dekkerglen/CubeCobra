@@ -15,7 +15,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Table,
   Badge,
   Button,
@@ -402,7 +401,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Price Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput
+                    <Input
                       id="priceType"
                       type="select"
                       value={priceType}
@@ -412,7 +411,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="price_foil">USD Foil</option>
                       <option value="eur">EUR</option>
                       <option value="tix">TIX</option>
-                    </CustomInput>
+                    </Input>
                   </InputGroup>
                   <Graph
                     unit={getPriceTypeUnit[priceType]}
@@ -427,7 +426,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <InputGroupAddon addonType="prepend">
                       <InputGroupText>Cube Type: </InputGroupText>
                     </InputGroupAddon>
-                    <CustomInput
+                    <Input
                       id="cubeType"
                       type="select"
                       value={cubeType}
@@ -445,7 +444,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="size450">361-450 Cards</option>
                       <option value="size540">451-540 Cards</option>
                       <option value="size720">541+ Cards</option>
-                    </CustomInput>
+                    </Input>
                   </InputGroup>
                   <Graph
                     unit="Percent of Cubes"

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, CustomInput, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import { postJson } from 'utils/CSRF';
 import { formDataObject } from 'utils/Form';
@@ -65,20 +65,15 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
           </FormGroup>
           <FormGroup>
             <Label for="defaultStatus">Default Status</Label>
-            <CustomInput
-              id="defaultStatus"
-              name="defaultStatus"
-              type="select"
-              defaultValue={cube.defaultStatus || false}
-            >
+            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.defaultStatus || false}>
               {['Owned', 'Not Owned'].map((status) => (
                 <option key={status}>{status}</option>
               ))}
-            </CustomInput>
+            </Input>
           </FormGroup>
           <FormGroup>
             <Label for="defaultPrinting">Default Printing</Label>
-            <CustomInput
+            <Input
               id="defaultPrinting"
               name="defaultPrinting"
               type="select"
@@ -86,7 +81,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
             >
               <option value="recent">Most Recent</option>
               <option value="first">First</option>
-            </CustomInput>
+            </Input>
           </FormGroup>
         </CSRFForm>
       </ModalBody>
