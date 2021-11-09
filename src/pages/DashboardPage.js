@@ -122,7 +122,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
                   <h5>Latest Content</h5>
                 </Col>
                 <Col xs="6">
-                  <a className="float-right" href="/content/browse">
+                  <a className="float-end" href="/content/browse">
                     View more...
                   </a>
                 </Col>

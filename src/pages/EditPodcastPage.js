@@ -28,7 +28,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <h4>Edit Podcast</h4>
             </Col>
             <Col xs="12" sm="6">
-              <a href="/content/creators" className="float-right">
+              <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
             </Col>

@@ -32,7 +32,7 @@ const NotificationsNav = () => {
           <h6>
             Notifications
             {notifications.length > 0 && (
-              <LinkButton className="card-subtitle float-right mt-0" onClick={clear}>
+              <LinkButton className="card-subtitle float-end mt-0" onClick={clear}>
                 Clear All
               </LinkButton>
             )}

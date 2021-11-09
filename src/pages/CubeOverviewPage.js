@@ -166,7 +166,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </FollowersModalLink>
                     </h6>
                   </Col>
-                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
+                  <div className="float-end" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
                     <TextBadge name="Cube ID">
                       <Tooltip text="Click to copy to clipboard">
                         <button

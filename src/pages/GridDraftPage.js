@@ -82,7 +82,7 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
         <Row key={`row-${row}`} className="justify-content-center">
           <Col className="my-2" xs="1">
             <Button
-              className="float-right h-100"
+              className="float-end h-100"
               outline
               color="success"
               onClick={() => {

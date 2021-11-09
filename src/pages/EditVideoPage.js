@@ -72,7 +72,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <h4>Edit Video</h4>
             </Col>
             <Col xs="12" sm="6">
-              <a href="/content/creators" className="float-right">
+              <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
             </Col>
