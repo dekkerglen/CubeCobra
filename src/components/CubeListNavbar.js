@@ -408,7 +408,7 @@ const CubeListNavbar = ({
               <DropdownToggle nav caret>
                 Display
               </DropdownToggle>
-              <DropdownMenu right>
+              <DropdownMenu end>
                 <DropdownItem onClick={handleOpenTagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
@@ -432,7 +432,7 @@ const CubeListNavbar = ({
               <DropdownToggle nav caret>
                 {canEdit ? 'Import/Export' : 'Export'}
               </DropdownToggle>
-              <DropdownMenu right>
+              <DropdownMenu end>
                 {canEdit && (
                   <>
                     <DropdownItem disabled>Import</DropdownItem>

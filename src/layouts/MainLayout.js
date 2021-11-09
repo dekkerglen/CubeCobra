@@ -57,7 +57,7 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownToggle nav caret>
                   Content
                 </DropdownToggle>
-                <DropdownMenu right>
+                <DropdownMenu end>
                   <DropdownItem href="/content/browse">Browse</DropdownItem>
                   <DropdownItem href="/content/articles">Articles</DropdownItem>
                   <DropdownItem href="/content/podcasts">Podcasts</DropdownItem>
@@ -68,7 +68,7 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownToggle nav caret>
                   Cube
                 </DropdownToggle>
-                <DropdownMenu right>
+                <DropdownMenu end>
                   <DropdownItem href="/explore">Explore Cubes</DropdownItem>
                   <DropdownItem href="/search">Search Cubes</DropdownItem>
                   <DropdownItem href="/random">Random Cube</DropdownItem>
@@ -78,7 +78,7 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownToggle nav caret>
                   Cards
                 </DropdownToggle>
-                <DropdownMenu right>
+                <DropdownMenu end>
                   <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
                   <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
                   <DropdownItem href="/packages/browse">Packages</DropdownItem>
@@ -90,7 +90,7 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownToggle nav caret>
                   About
                 </DropdownToggle>
-                <DropdownMenu right>
+                <DropdownMenu end>
                   <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
                   <DropdownItem href="/contact">Contact</DropdownItem>
                   <DropdownItem href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
@@ -110,7 +110,7 @@ const MainLayout = ({ children, loginCallback }) => {
                       <DropdownToggle nav caret>
                         Your Cubes
                       </DropdownToggle>
-                      <DropdownMenu right>
+                      <DropdownMenu end>
                         {user.cubes.map((item) => (
                           <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
                             {item.name}
@@ -125,7 +125,7 @@ const MainLayout = ({ children, loginCallback }) => {
                     <DropdownToggle nav caret>
                       {user.username}
                     </DropdownToggle>
-                    <DropdownMenu right>
+                    <DropdownMenu end>
                       <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
                       {user.roles && user.roles.includes('Admin') && (
                         <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>

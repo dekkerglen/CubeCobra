@@ -106,7 +106,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     <DropdownToggle nav caret>
                       Rebuild/Redraft Seat
                     </DropdownToggle>
-                    <DropdownMenu right>
+                    <DropdownMenu end>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
                       {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
@@ -124,7 +124,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                   <DropdownToggle nav caret>
                     Export
                   </DropdownToggle>
-                  <DropdownMenu right>
+                  <DropdownMenu end>
                     <DropdownItem href={`/cube/deck/download/txt/${deck._id}/${seatIndex}`}>
                       Card Names (.txt)
                     </DropdownItem>

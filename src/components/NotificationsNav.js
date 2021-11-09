@@ -27,7 +27,7 @@ const NotificationsNav = () => {
         )}
         <img className="notification-icon" src="/content/notification.png" alt="notifications" />
       </DropdownToggle>
-      <DropdownMenu className="dropdown-no-green pb-0 mb-0" right>
+      <DropdownMenu className="dropdown-no-green pb-0 mb-0" end>
         <CardHeader>
           <h6>
             Notifications

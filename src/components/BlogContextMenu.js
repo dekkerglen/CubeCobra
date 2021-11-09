@@ -44,7 +44,7 @@ class BlogContextMenu extends React.Component {
           <DropdownToggle tag="a" className="nav-link clickable">
             {value}
           </DropdownToggle>
-          <DropdownMenu right>
+          <DropdownMenu end>
             <DropdownItem onClick={() => onEdit(post._id)}>Edit</DropdownItem>
             <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
           </DropdownMenu>
