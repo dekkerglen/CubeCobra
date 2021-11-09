@@ -201,7 +201,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
               <Card>
                 <CardBody>
                   <CSRFForm method="POST" action="/user/updateuserinfo">
-                    <div className="form-group">
+                    <div className="mb-3">
                       <dl className="row">
                         <dt className="col-sm-3">Username</dt>
                         <dd className="col-sm-9">
