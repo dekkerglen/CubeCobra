@@ -103,7 +103,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
             may be used).
           </p>
           <CustomInput type="file" id="uploadBulkFile" name="document" />
-          <Label for="uploadBulkFile" className="sr-only">
+          <Label for="uploadBulkFile" className="visually-hidden">
             Choose file
           </Label>
         </ModalBody>
@@ -141,7 +141,7 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
             .csv export.
           </p>
           <CustomInput type="file" id="uploadReplacementFile" name="document" />
-          <Label for="uploadReplacementFile" className="sr-only">
+          <Label for="uploadReplacementFile" className="visually-hidden">
             Choose file
           </Label>
         </ModalBody>
@@ -361,7 +361,7 @@ const CubeListNavbar = ({
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
-            <Label className="sr-only" for="viewSelect">
+            <Label className="visually-hidden" for="viewSelect">
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={cubeView} onChange={handleChangeCubeView}>

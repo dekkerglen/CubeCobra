@@ -273,11 +273,11 @@ const EditCollapse = ({ cubeView, ...props }) => {
             <Col>
               <h6>Blog Post</h6>
               <FormGroup>
-                <Label className="sr-only">Blog Title</Label>
+                <Label className="visually-hidden">Blog Title</Label>
                 <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
               </FormGroup>
               <FormGroup>
-                <Label className="sr-only">Blog Body</Label>
+                <Label className="visually-hidden">Blog Body</Label>
                 <Card>
                   <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
                 </Card>
