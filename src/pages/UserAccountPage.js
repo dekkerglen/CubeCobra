@@ -17,7 +17,6 @@ import {
   Card,
   CardBody,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Modal,
   ModalBody,
@@ -309,9 +308,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/changedisplay">
                     <InputGroup className="mb-3">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText>Theme</InputGroupText>
-                      </InputGroupAddon>
+                      <InputGroupText>Theme</InputGroupText>
                       <Input type="select" id="theme" name="theme" defaultValue={user.theme}>
                         <option value="default">Default</option>
                         <option value="dark">Dark Mode</option>

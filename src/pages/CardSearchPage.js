@@ -10,7 +10,6 @@ import {
   Row,
   Col,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Input,
 } from 'reactstrap';
@@ -122,9 +121,7 @@ const CardSearchPage = ({ loginCallback }) => {
         <Row className="px-3">
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Sort: </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Sort: </InputGroupText>
               <Input
                 id="card-sort-input"
                 type="select"
@@ -139,9 +136,7 @@ const CardSearchPage = ({ loginCallback }) => {
           </Col>
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Direction: </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Direction: </InputGroupText>
               <Input
                 id="card-direction-input"
                 type="select"
@@ -155,9 +150,7 @@ const CardSearchPage = ({ loginCallback }) => {
           </Col>
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Distinct: </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Distinct: </InputGroupText>
               <Input
                 id="card-distinct-input"
                 type="select"

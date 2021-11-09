@@ -9,7 +9,6 @@ import {
   ModalHeader,
   ModalBody,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   ModalFooter,
   Button,
@@ -82,9 +81,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
           <ModalHeader toggle={toggle}>Report this Comment</ModalHeader>
           <ModalBody>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Report Reason:</InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Report Reason:</InputGroupText>
               <Input type="select" id="reason" name="reason">
                 <option>This is spam or phishing</option>
                 <option>This is offensive or abusive</option>

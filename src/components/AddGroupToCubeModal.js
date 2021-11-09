@@ -11,7 +11,6 @@ import {
   ModalFooter,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   UncontrolledAlert,
   Spinner,
@@ -170,9 +169,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           ))}
         </ListGroup>
         <InputGroup className="my-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Cube: </InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Cube: </InputGroupText>
           <Input type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
             {cubes.map((cube) => (
               <option value={cube._id}>{cube.name}</option>

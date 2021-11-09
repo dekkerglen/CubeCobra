@@ -1,6 +1,6 @@
 import React, { Fragment, useCallback } from 'react';
 
-import { Button, ButtonGroup, FormGroup, Input, InputGroupAddon, Label } from 'reactstrap';
+import { Button, ButtonGroup, FormGroup, Input, Label } from 'reactstrap';
 
 import { COLORS } from '../utils/Util';
 
@@ -92,7 +92,7 @@ ColorChecksControl.defaultProps = {
   prefix: 'color',
 };
 
-export const ColorChecksAddon = ({ addonType, colorless, prefix, size, values, onChange }) => {
+export const ColorChecksAddon = ({ colorless, prefix, size, values, onChange }) => {
   const colors = [...COLORS];
   if (colorless) {
     colors.push(['Colorless', 'C']);
@@ -100,16 +100,14 @@ export const ColorChecksAddon = ({ addonType, colorless, prefix, size, values, o
   return (
     <Fragment>
       {colors.map(([color, short]) => (
-        <InputGroupAddon key={short} addonType={addonType}>
-          <ColorCheckButton
-            prefix={prefix}
-            size={size}
-            color={color}
-            short={short}
-            value={values[prefix + short]}
-            onChange={onChange}
-          />
-        </InputGroupAddon>
+        <ColorCheckButton
+          prefix={prefix}
+          size={size}
+          color={color}
+          short={short}
+          value={values[prefix + short]}
+          onChange={onChange}
+        />
       ))}
     </Fragment>
   );

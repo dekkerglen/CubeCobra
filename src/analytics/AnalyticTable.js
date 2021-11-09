@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, Input } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -75,9 +75,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
           <h4 className="d-lg-block d-none">Table</h4>
           <p>View card counts and percentages.</p>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Columns: </InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText>Columns: </InputGroupText>
             <Input id="columnSort" type="select" value={column} onChange={(event) => setColumn(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
@@ -87,9 +85,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             </Input>
           </InputGroup>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Rows: </InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText>Rows: </InputGroupText>
             <Input id="rowSort" type="select" value={row} onChange={(event) => setRow(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
@@ -99,9 +95,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
             </Input>
           </InputGroup>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Show Percent Of: </InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText>Show Percent Of: </InputGroupText>
             <Input
               id="percentOf"
               type="select"

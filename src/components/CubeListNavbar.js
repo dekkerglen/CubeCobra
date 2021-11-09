@@ -13,7 +13,6 @@ import {
   Form,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Label,
   Modal,
@@ -183,9 +182,7 @@ const CubetutorImportModal = ({ isOpen, toggle }) => {
             version has been added.
           </p>
           <InputGroup>
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
             {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
             <Input type="number" name="cubeid" placeholder="e.g. 123456" />
           </InputGroup>

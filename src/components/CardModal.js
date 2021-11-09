@@ -5,7 +5,6 @@ import {
   Col,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Modal,
   ModalBody,
@@ -86,9 +85,7 @@ const CardModal = ({
             <h5>Card Attributes</h5>
             <fieldset disabled={disabled}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Version (Set and #)</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Version (Set and #)</InputGroupText>
                 <LoadingInput
                   type="select"
                   name="version"
@@ -108,9 +105,7 @@ const CardModal = ({
                 </LoadingInput>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Status</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Status</InputGroupText>
                 <Input type="select" name="status" id="cardModalStatus" value={values.status} onChange={onChange}>
                   {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
@@ -118,9 +113,7 @@ const CardModal = ({
                 </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Finish</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Finish</InputGroupText>
                 <Input type="select" name="finish" id="cardModalFinish" value={values.finish} onChange={onChange}>
                   {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
@@ -128,21 +121,15 @@ const CardModal = ({
                 </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Mana Value</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Mana Value</InputGroupText>
                 <Input type="text" name="cmc" value={values.cmc} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Type</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Type</InputGroupText>
                 <Input type="text" name="type_line" value={values.type_line} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Rarity</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Rarity</InputGroupText>
                 <Input type="select" name="rarity" id="cardModalRarity" value={values.rarity} onChange={onChange}>
                   {getLabels(null, 'Rarity').map((rarity) => (
                     <option key={rarity}>{rarity}</option>
@@ -150,25 +137,19 @@ const CardModal = ({
                 </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Image URL</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Image URL</InputGroupText>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Image Back URL</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Image Back URL</InputGroupText>
                 <Input type="text" name="imgBackUrl" value={values.imgBackUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupText className="square-right">Color</InputGroupText>
-                <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
+                <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Color Category</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Color Category</InputGroupText>
                 <Input
                   type="select"
                   name="colorCategory"

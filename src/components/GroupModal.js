@@ -10,7 +10,6 @@ import {
   Input,
   Label,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   ListGroup,
   Modal,
@@ -270,9 +269,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <h5>Set Status of All</h5>
                 </Label>
                 <InputGroup className="mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Status</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Status</InputGroupText>
                   <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                       <option key={status}>{status}</option>
@@ -284,9 +281,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <h5>Set Finish of All</h5>
                 </Label>
                 <InputGroup className="mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Finish</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Finish</InputGroupText>
                   <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
@@ -296,15 +291,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
 
                 <h5>Override Attribute on All</h5>
                 <InputGroup className="mb-2">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Mana Value</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Mana Value</InputGroupText>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
                 <InputGroup className="mb-2">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Type</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Type</InputGroupText>
                   <Input type="text" name="type_line" value={formValues.type_line} onChange={handleChange} />
                 </InputGroup>
 

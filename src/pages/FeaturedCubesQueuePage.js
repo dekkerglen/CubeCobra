@@ -13,7 +13,6 @@ import {
   FormGroup,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Label,
   Modal,
@@ -37,9 +36,7 @@ const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
       <ModalHeader toggle={toggle}>Set Rotation Period</ModalHeader>
       <ModalBody>
         <InputGroup>
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Days between rotations</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Days between rotations</InputGroupText>
           <Input type="number" value={input} onChange={(e) => setInput(e.target.value)} />
         </InputGroup>
       </ModalBody>
@@ -74,9 +71,7 @@ const AddCubeModal = ({ isOpen, toggle }) => (
       <ModalHeader>Add Cube to Queue</ModalHeader>
       <ModalBody>
         <InputGroup>
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Cube ID</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Cube ID</InputGroupText>
           <Input type="text" name="cubeId" placeholder="Short or long ID of the cube." />
         </InputGroup>
       </ModalBody>

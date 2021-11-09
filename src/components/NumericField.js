@@ -1,13 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Input, InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
+import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
 const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText>{humanName}</InputGroupText>
-    </InputGroupAddon>
+    <InputGroupText>{humanName}</InputGroupText>
     <Input type="select" id={`${name}Op`} name={`${name}Op`} value={valueOp} onChange={onChange}>
       <option value="=">equal to</option>
       <option value="<">less than</option>

@@ -13,7 +13,6 @@ import {
   TabContent,
   TabPane,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Table,
   Badge,
@@ -194,15 +193,11 @@ const CardIdBadge = ({ id }) => {
 
   return (
     <InputGroup className="flex-nowrap mb-3" size="sm">
-      <InputGroupAddon addonType="prepend">
-        <InputGroupText>Card ID</InputGroupText>
-      </InputGroupAddon>
+      <InputGroupText>Card ID</InputGroupText>
       <Input className="bg-white" value={id} disabled />
-      <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
-        <Button className="btn-sm input-group-button" onClick={onCopyClick}>
-          {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
-        </Button>
-      </InputGroupAddon>
+      <Button className="btn-sm input-group-button" onClick={onCopyClick} style={{ width: 'auto' }}>
+        {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
+      </Button>
     </InputGroup>
   );
 };
@@ -398,9 +393,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <TabPane tabId="2">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Price Type: </InputGroupText>
-                    </InputGroupAddon>
+                    <InputGroupText>Price Type: </InputGroupText>
                     <Input
                       id="priceType"
                       type="select"
@@ -423,9 +416,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <TabPane tabId="3">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Cube Type: </InputGroupText>
-                    </InputGroupAddon>
+                    <InputGroupText>Cube Type: </InputGroupText>
                     <Input
                       id="cubeType"
                       type="select"

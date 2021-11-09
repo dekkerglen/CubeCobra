@@ -11,7 +11,6 @@ import {
   UncontrolledAlert,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Input,
 } from 'reactstrap';
@@ -122,9 +121,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
             )}
           </Row>
           <InputGroup className="mb-3 px-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText htmlFor="filterInput">Keywords</InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText htmlFor="filterInput">Keywords</InputGroupText>
             <Input
               type="text"
               placeholder="Search for keywords or packages that include a card..."
@@ -134,18 +131,14 @@ const BrowsePackagesPage = ({ loginCallback }) => {
               onChange={(e) => setFilterTemp(e.target.value)}
               onKeyDown={(e) => e.keyCode === 13 && setFilter(filterTemp)}
             />
-            <InputGroupAddon addonType="append">
-              <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
-                Apply
-              </Button>
-            </InputGroupAddon>
+            <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
+              Apply
+            </Button>
           </InputGroup>
           <Row className="px-3">
             <Col xs={12} sm={6}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Sort: </InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Sort: </InputGroupText>
                 <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
                   <option value="votes">Votes</option>
                   <option value="date">Date</option>
@@ -154,9 +147,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
             </Col>
             <Col xs={12} sm={6}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Direction: </InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Direction: </InputGroupText>
                 <Input type="select" value={sortDirection} onChange={(event) => setSortDirection(event.target.value)}>
                   <option value="1">Ascending</option>
                   <option value="-1">Descending</option>

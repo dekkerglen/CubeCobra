@@ -7,7 +7,6 @@ import {
   Collapse,
   Form,
   InputGroup,
-  InputGroupAddon,
   Row,
   UncontrolledAlert,
   FormGroup,
@@ -195,11 +194,9 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <InputGroupAddon addonType="append">
-                <Button color="success" type="submit" disabled={addValue.length === 0}>
-                  Add
-                </Button>
-              </InputGroupAddon>
+              <Button color="success" type="submit" disabled={addValue.length === 0}>
+                Add
+              </Button>
             </InputGroup>
           </Form>
           <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
@@ -219,26 +216,22 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <InputGroupAddon addonType="append">
-                <Button color="success" type="submit" disabled={removeValue.length === 0}>
-                  Remove/Replace
-                </Button>
-              </InputGroupAddon>
+              <Button color="success" type="submit" disabled={removeValue.length === 0}>
+                Remove/Replace
+              </Button>
             </InputGroup>
           </Form>
           <Form inline className="mb-2 mr-2">
             <InputGroup>
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>
-                  <Input
-                    addon
-                    type="checkbox"
-                    aria-label="Checkbox for following text input"
-                    checked={specifyEdition}
-                    onChange={() => setSpecifyEdition(!specifyEdition)}
-                  />
-                </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>
+                <Input
+                  addon
+                  type="checkbox"
+                  aria-label="Checkbox for following text input"
+                  checked={specifyEdition}
+                  onChange={() => setSpecifyEdition(!specifyEdition)}
+                />
+              </InputGroupText>
               <Input disabled value="Specify Versions" />
             </InputGroup>
           </Form>

@@ -12,7 +12,6 @@ import {
   ModalFooter,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Input,
   UncontrolledAlert,
@@ -121,9 +120,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
           alt={card.name}
         />
         <InputGroup className="my-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Cube: </InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Cube: </InputGroupText>
           <Input
             id="selected-cube-input"
             type="select"

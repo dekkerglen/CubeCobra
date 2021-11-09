@@ -2,16 +2,14 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import { Col, Row, Table, InputGroup, InputGroupAddon, InputGroupText, Input, Button, Form } from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupText, Input, Button, Form } from 'reactstrap';
 
 import useQueryParam from 'hooks/useQueryParam';
 import calculate from 'utils/CalculateHyperGeom';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
-    </InputGroupAddon>
+    <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>
 );
@@ -26,9 +24,7 @@ TextField.propTypes = {
 
 const TextDisplay = ({ humanName, value }) => (
   <InputGroup className="mb-3">
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
-    </InputGroupAddon>
+    <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
     <Input type="text" disabled value={value} />
   </InputGroup>
 );
@@ -265,9 +261,7 @@ const HyperGeom = () => {
             <h5>Cumulative Distributions</h5>
             <ChartComponent options={options} data={plotdata} type="line" />
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>X-Axis: </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>X-Axis: </InputGroupText>
               <Input type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
                 {inputs.map((item) => (
                   <option key={item} value={item}>

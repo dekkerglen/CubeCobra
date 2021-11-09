@@ -11,7 +11,6 @@ import {
   Col,
   Card,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Input,
 } from 'reactstrap';
@@ -76,9 +75,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
           packages can be quickly added to any cube.
         </p>
         <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Package Name</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Package Name</InputGroupText>
           <Input
             type="text"
             value={packageName}
