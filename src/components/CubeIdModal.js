@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  Button,
-  ModalFooter,
-  Input,
-  Label,
-  InputGroup,
-} from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, InputGroup } from 'reactstrap';
 import PropTypes from 'prop-types';
 import { ClippyIcon } from '@primer/octicons-react';
 
