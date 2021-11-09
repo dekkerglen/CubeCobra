@@ -245,7 +245,7 @@ const CompareCollapse = (props) => {
             <Form method="GET" action={targetUrl} inline>
               <Input
                 type="text"
-                className="mb-2 mr-2"
+                className="mb-2 me-2"
                 placeholder="Comparison Cube ID"
                 value={compareID}
                 onChange={handleChange}
@@ -370,7 +370,7 @@ const CubeListNavbar = ({
           <NavbarToggler onClick={toggle} />
         </div>
         <Collapse isOpen={isOpen} navbar>
-          <Nav className="ml-auto" navbar>
+          <Nav className="ms-auto" navbar>
             {!canEdit ? (
               ''
             ) : (
@@ -454,7 +454,7 @@ const CubeListNavbar = ({
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
                     <Input type="checkbox" checked={isSortUsed} onChange={() => {}} /> Use Sort
-                    <Tooltip text="Order export using current sort options." wrapperTag="span" className="ml-auto mr-0">
+                    <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
                       <QuestionIcon size={16} />
                     </Tooltip>
                   </FormGroup>
@@ -465,7 +465,7 @@ const CubeListNavbar = ({
                     <Tooltip
                       text="Include in export only cards matching current filter."
                       wrapperTag="span"
-                      className="ml-auto mr-0"
+                      className="ms-auto me-0"
                     >
                       <QuestionIcon size={16} />
                     </Tooltip>

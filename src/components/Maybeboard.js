@@ -90,12 +90,12 @@ const MaybeboardListItem = ({ card, className }) => {
       <div className="name">{card.details.name}</div>
       {canEdit &&
         (loading ? (
-          <Spinner size="sm" className="ml-auto" />
+          <Spinner size="sm" className="ms-auto" />
         ) : (
           <>
             <button
               type="button"
-              className="icon-button ml-auto"
+              className="icon-button ms-auto"
               data-index={card.index}
               onClick={handleAdd}
               aria-label="Add"
@@ -181,7 +181,7 @@ const Maybeboard = ({ filter, ...props }) => {
   return (
     <CardModalForm>
       <Row>
-        <Col className="mr-auto">
+        <Col className="me-auto">
           <h4>Maybeboard</h4>
         </Col>
         <Col xs="auto">

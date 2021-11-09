@@ -73,7 +73,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
                   treeUrl="/cube/api/cardnames"
                   treePath="cardnames"
                   type="text"
-                  className="mr-2"
+                  className="me-2"
                   innerRef={addInput}
                   value={addValue}
                   onChange={handleChange}

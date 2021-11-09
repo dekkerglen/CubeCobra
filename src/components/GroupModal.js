@@ -233,31 +233,31 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 <ListGroup className="list-outline w-100">
                   {cards.map((card) => (
                     <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                      <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
+                      <Button close className="me-1" data-index={card.index} onClick={handleRemoveCard} />
                     </AutocardListItem>
                   ))}
                 </ListGroup>
               </Row>
               <Row noGutters>
                 {Number.isFinite(totalPriceUsd) && (
-                  <TextBadge name="Price USD" className="mt-2 mr-2">
+                  <TextBadge name="Price USD" className="mt-2 me-2">
                     <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
-                  <TextBadge name="Foil USD" className="mt-2 mr-2">
+                  <TextBadge name="Foil USD" className="mt-2 me-2">
                     <Tooltip text="TCGPlayer Market Foil Price">
                       ${Math.round(totalPriceUsdFoil).toLocaleString()}
                     </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (
-                  <TextBadge name="EUR" className="mt-2 mr-2">
+                  <TextBadge name="EUR" className="mt-2 me-2">
                     <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceTix) && (
-                  <TextBadge name="TIX" className="mt-2 mr-2">
+                  <TextBadge name="TIX" className="mt-2 me-2">
                     <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}

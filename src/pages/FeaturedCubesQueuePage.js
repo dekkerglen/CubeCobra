@@ -253,7 +253,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
               <h6>
                 Rotation period: <span className="text-muted">{rotationPeriod} days</span>
                 <SetRotationButton
-                  className="p-1 ml-2"
+                  className="p-1 ms-2"
                   modalProps={{ period: rotationPeriod, onSubmit: updateRotationPeriod }}
                 >
                   <span style={{ position: 'relative', top: '-1px' }}>
@@ -264,7 +264,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
               <h6>Last rotation: {lastRotation.toLocaleDateString()}</h6>
             </Col>
             <Col className="mb-4">
-              <AddCubeButton outline color="success" className="mr-md-4 mb-xs-2 mb-md-0">
+              <AddCubeButton outline color="success" className="me-md-4 mb-xs-2 mb-md-0">
                 Add Cube to Queue
               </AddCubeButton>
               <RotateButton outline color="secondary">

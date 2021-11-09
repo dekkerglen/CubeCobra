@@ -63,7 +63,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
               treeUrl="/cube/api/fullnames"
               treePath="cardnames"
               type="text"
-              className="mr-2"
+              className="me-2"
               name="remove"
               value={cardName}
               onChange={(event) => setCardName(event.target.value)}

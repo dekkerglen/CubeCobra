@@ -88,7 +88,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
     <Card>
       <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
-          <h4 className="mb-0 mr-auto">{seat.name}</h4>
+          <h4 className="mb-0 me-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
               Drafted by {seat.userid ? <a href={`/user/view/${seat.userid}`}>{seat.username}</a> : 'Anonymous'}

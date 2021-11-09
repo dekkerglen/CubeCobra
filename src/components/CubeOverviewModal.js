@@ -332,7 +332,7 @@ class CubeOverviewModal extends Component {
                   treeUrl="/cube/api/fullnames"
                   treePath="cardnames"
                   type="text"
-                  className="mr-2"
+                  className="me-2"
                   name="remove"
                   value={cube.image_name}
                   onChange={this.imageNameChange}

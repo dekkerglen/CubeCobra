@@ -15,7 +15,7 @@ const trigger = isTouchDevice() ? 'click' : 'hover';
 const TagCloudTag = ({ tag, size, color }) => {
   const spanRef = useRef();
   return (
-    <div className="tag-cloud-tag mr-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+    <div className="tag-cloud-tag me-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
       <span style={{ color, fontSize: `${size}px` }} className="tag-cloud-tag" ref={spanRef}>
         {tag.value}
       </span>

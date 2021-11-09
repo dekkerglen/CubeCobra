@@ -109,7 +109,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
         <a href={`/user/view/${comment.owner}`}>
           <img className="profile-thumbnail" src={comment.image} alt={comment.artist} title={comment.artist} />
         </a>
-        <div className="flex-grow ml-2">
+        <div className="flex-grow ms-2">
           <div className="flex-container flex-direction-col">
             <div className="flex-container flex-space-between">
               <div>
@@ -165,7 +165,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               )}
               {!noReplies && comments.length > 0 && depth < maxDepth && (
                 <LinkButton
-                  className="ml-2"
+                  className="ms-2"
                   onClick={() => {
                     toggle();
                     setLoaded(true);
@@ -179,10 +179,10 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
                 </a>
               )}
-              <LinkButton className="ml-2" onClick={toggleShareModal}>
+              <LinkButton className="ms-2" onClick={toggleShareModal}>
                 <small>Share</small>
               </LinkButton>
-              <LinkButton className="ml-2" onClick={toggleReportModal}>
+              <LinkButton className="ms-2" onClick={toggleReportModal}>
                 <small>Report</small>
               </LinkButton>
             </div>

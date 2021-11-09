@@ -85,7 +85,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 <option value="draftbot">Draftbot Analysis</option>
               </Input>
             </div>
-            <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+            <NavbarToggler onClick={toggleNavbar} className="ms-auto" />
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>

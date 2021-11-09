@@ -55,22 +55,22 @@ const CardModal = ({
             <FoilCardImage card={card} finish={values.finish} />
             <Row noGutters className="mb-2">
               {card.details.prices && Number.isFinite(cardPrice(card)) && (
-                <TextBadge name="Price" className="mt-2 mr-2">
+                <TextBadge name="Price" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardFoilPrice(card)) && (
-                <TextBadge name="Foil" className="mt-2 mr-2">
+                <TextBadge name="Foil" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardPriceEur(card)) && (
-                <TextBadge name="EUR" className="mt-2 mr-2">
+                <TextBadge name="EUR" className="mt-2 me-2">
                   <Tooltip text="Cardmarket Price">€{cardPriceEur(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardTix(card)) && (
-                <TextBadge name="TIX" className="mt-2 mr-2">
+                <TextBadge name="TIX" className="mt-2 me-2">
                   <Tooltip text="MTGO TIX">{cardTix(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}

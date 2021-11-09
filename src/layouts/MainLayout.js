@@ -38,7 +38,7 @@ const MainLayout = ({ children, loginCallback }) => {
       <Navbar color="dark" expand="md" dark>
         <Container fluid="xl">
           <div className="d-flex flex-nowrap w-100 header-banner">
-            <div className="overflow-hidden mr-auto">
+            <div className="overflow-hidden me-auto">
               <a href="/">
                 <img
                   className="banner-image"
@@ -52,7 +52,7 @@ const MainLayout = ({ children, loginCallback }) => {
             </button>
           </div>
           <Collapse className="banner-collapse" isOpen={expanded} navbar>
-            <Nav className="mr-auto" navbar>
+            <Nav className="me-auto" navbar>
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
                   Content

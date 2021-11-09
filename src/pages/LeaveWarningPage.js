@@ -26,7 +26,7 @@ const LeaveWarningPage = ({ url, loginCallback }) => (
         <ButtonLink href={url} color="danger">
           Yes, continue
         </ButtonLink>
-        <Button className="ml-2" color="secondary" onClick={back}>
+        <Button className="ms-2" color="secondary" onClick={back}>
           Go back
         </Button>
       </CardFooter>

@@ -96,7 +96,7 @@ const Suggestions = ({ adds, cuts, loadState, cube, filter }) => {
             <Card>
               <CardHeader>
                 <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
-                <input className="mr-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
+                <input className="me-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
                 <Label for="toggleMaybeboard">Show cards from my Maybeboard only.</Label>
               </CardHeader>
               <ListGroup className="pb-3">

@@ -230,14 +230,14 @@ const CubeSearchNavBar = ({ query, order, title }) => {
       <form onSubmit={handleSubmit}>
         <Navbar expand="md" className="navbar-light">
           <Input
-            className="form-control mr-sm-2"
+            className="form-control me-sm-2"
             type="search"
             placeholder="Search Cubes..."
             aria-label="Search"
             value={queryText}
             onChange={handleChange}
           />
-          <h6 className="noBreak mr-2 pt-2">Sorted by:</h6>
+          <h6 className="noBreak me-2 pt-2">Sorted by:</h6>
           <Input type="select" id="viewSelect" value={searchOrder} onChange={handleChangeSearch}>
             {searchOptions.map((search) => (
               <option key={search[1]} value={search[1]}>

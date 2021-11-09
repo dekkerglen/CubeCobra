@@ -89,7 +89,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
               treeUrl="/cube/api/fullnames"
               treePath="cardnames"
               type="text"
-              className="mr-2"
+              className="me-2"
               name="remove"
               value={cardName}
               onChange={(event) => setCardName(event.target.value)}

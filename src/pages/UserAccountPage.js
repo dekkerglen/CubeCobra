@@ -223,7 +223,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 treeUrl="/cube/api/fullnames"
                                 treePath="cardnames"
                                 type="text"
-                                className="mr-2"
+                                className="me-2"
                                 name="remove"
                                 value={imageValue}
                                 onChange={handleChangeImage}
@@ -242,7 +242,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         </dd>
                       </dl>
                       <Row noGutters>
-                        <Button className="ml-auto" block outline color="success" type="submit">
+                        <Button className="ms-auto" block outline color="success" type="submit">
                           Update
                         </Button>
                       </Row>

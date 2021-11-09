@@ -26,7 +26,7 @@ const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
       >
         <small>Submit</small>
       </LinkButton>
-      <LinkButton className="ml-2" onClick={toggle}>
+      <LinkButton className="ms-2" onClick={toggle}>
         <small>Cancel</small>
       </LinkButton>
     </Collapse>

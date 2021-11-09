@@ -600,13 +600,13 @@ class FilterCollapse extends Component {
         </Row>
         <Row>
           <Col>
-            <Button color="danger" className="mr-2 mb-3" onClick={this.handleReset}>
+            <Button color="danger" className="me-2 mb-3" onClick={this.handleReset}>
               Reset Filters
             </Button>
-            <Button color="primary" className="mr-2 mb-3" onClick={this.toggleAdvanced}>
+            <Button color="primary" className="me-2 mb-3" onClick={this.toggleAdvanced}>
               Advanced...
             </Button>
-            <Button color="secondary" className="mr-2 mb-3" href="/filters">
+            <Button color="secondary" className="me-2 mb-3" href="/filters">
               Syntax Guide
             </Button>
           </Col>

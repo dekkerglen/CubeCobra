@@ -95,7 +95,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
       ))}
       <Card>
         <div className="usercontrols pt-3 mb-3">
-          <Row className="pb-3 mr-1">
+          <Row className="pb-3 me-1">
             <Col xs="6">
               <h3 className="mx-3">Browse Card Packages</h3>
             </Col>

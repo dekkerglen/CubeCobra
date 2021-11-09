@@ -177,8 +177,8 @@ const EditCollapse = ({ cubeView, ...props }) => {
         </UncontrolledAlert>
       ))}
       <Row noGutters>
-        <Row noGutters className="mr-auto">
-          <Form inline className="mb-2 mr-2" onSubmit={handleAdd}>
+        <Row noGutters className="me-auto">
+          <Form inline className="mb-2 me-2" onSubmit={handleAdd}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
                 treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
@@ -199,7 +199,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
               </Button>
             </InputGroup>
           </Form>
-          <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
+          <Form inline className="mb-2 me-2" onSubmit={handleRemoveReplace}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
                 cubeId={cube._id}
@@ -221,7 +221,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
               </Button>
             </InputGroup>
           </Form>
-          <Form inline className="mb-2 mr-2">
+          <Form inline className="mb-2 me-2">
             <InputGroup>
               <InputGroupText>
                 <Input
@@ -287,7 +287,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </Row>
           <Row className="mb-2">
             <Col>
-              <Button color="success" className="mr-2" type="submit">
+              <Button color="success" className="me-2" type="submit">
                 Save Changes
               </Button>
               <Button color="danger" onClick={handleDiscardAll}>

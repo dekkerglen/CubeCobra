@@ -205,16 +205,16 @@ const CustomDraftCard = ({
           <Input type="hidden" name="id" value={index} />
           <div className="justify-content-center align-items-center">
             {loading && <Spinner className="position-absolute" />}
-            <Button type="submit" color="success" className="mr-2" disabled={loading}>
+            <Button type="submit" color="success" className="me-2" disabled={loading}>
               Start Draft
             </Button>
             {canEdit && (
               <>
-                <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
+                <Button color="success" className="me-2" onClick={onEditFormat} data-index={index}>
                   Edit
                 </Button>
                 {defaultDraftFormat !== index && (
-                  <Button color="success" className="mr-2" onClick={onSetDefaultFormat} data-index={index}>
+                  <Button color="success" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
                     Make Default
                   </Button>
                 )}
@@ -296,12 +296,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
           <Input type="hidden" name="id" value="-1" />
           <div className="justify-content-center align-items-center">
             {loading && <Spinner className="position-absolute" />}
-            <Button color="success" className="mr-2" disabled={loading}>
+            <Button color="success" className="me-2" disabled={loading}>
               Start Draft
             </Button>
           </div>
           {canEdit && defaultDraftFormat !== -1 && (
-            <Button color="success" className="mr-3" onClick={onSetDefaultFormat} data-index={-1}>
+            <Button color="success" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
               Make Default
             </Button>
           )}
@@ -414,7 +414,7 @@ const SamplePackCard = (props) => {
         </LabelRow>
       </CardBody>
       <CardFooter>
-        <Button color="success" className="mr-2" href={`/cube/samplepack/${cubeID}`}>
+        <Button color="success" className="me-2" href={`/cube/samplepack/${cubeID}`}>
           View Random
         </Button>
         <Button color="success" disabled={!seed} href={`/cube/samplepack/${cubeID}/${seed}`}>

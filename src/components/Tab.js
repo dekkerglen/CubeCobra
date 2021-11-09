@@ -5,7 +5,7 @@ import { NavItem, NavLink } from 'reactstrap';
 
 const Tab = ({ tab, setTab, index, children }) => {
   return (
-    <NavItem className="ml-2 clickable">
+    <NavItem className="ms-2 clickable">
       <NavLink
         active={tab === index}
         onClick={() => {

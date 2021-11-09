@@ -127,7 +127,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
           ) : (
             <Col xs="6">
               <div className="float-end">
-                <TextBadge name="Votes" className="mr-2">
+                <TextBadge name="Votes" className="me-2">
                   <Tooltip text="Login to upvote">{cardPackage.votes}</Tooltip>
                 </TextBadge>
               </div>

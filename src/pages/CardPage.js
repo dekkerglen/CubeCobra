@@ -269,7 +269,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Played in {cardPopularity({ details: card })}%
                 <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
               </p>
-              <AddModal color="success" block outline className="mb-1 mr-2" modalProps={{ card, hideAnalytics: true }}>
+              <AddModal color="success" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />

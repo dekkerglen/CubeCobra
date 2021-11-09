@@ -140,7 +140,7 @@ class TagColorsModalRaw extends Component {
     });
 
     const staticRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `mr-2 tag ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
       return (
         <span key={tag} className={tagClass}>
           {tag}
@@ -174,7 +174,7 @@ class TagColorsModalRaw extends Component {
           )}
         </ModalBody>
         <ModalFooter>
-          <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
+          <LoadingButton color="success" className="ms-auto" onClick={this.handleSubmit}>
             Submit
           </LoadingButton>
         </ModalFooter>

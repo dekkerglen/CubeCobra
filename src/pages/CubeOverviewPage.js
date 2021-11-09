@@ -97,7 +97,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
         {user && cubeState.owner === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
-              className="ml-auto"
+              className="ms-auto"
               id="cubeOverviewNavbarToggler"
               aria-controls="cubeOverviewNavbarCollapse"
             />
@@ -187,7 +187,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   <CubeIdModalLink
                     modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
                     aria-label="Show Cube IDs"
-                    className="mr-2"
+                    className="me-2"
                     style={{ position: 'relative', top: '5px' /* the icon needs to be pulled down */ }}
                   >
                     <QuestionIcon size="18" />
@@ -221,7 +221,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                 {!cubeState.privatePrices && (
                   <Row noGutters className="mb-1">
                     {Number.isFinite(priceOwned) && (
-                      <TextBadge name="Owned" className="mr-2">
+                      <TextBadge name="Owned" className="me-2">
                         <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
                           ${Math.round(priceOwned).toLocaleString()}
                         </Tooltip>

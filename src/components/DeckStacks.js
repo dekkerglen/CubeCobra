@@ -11,7 +11,7 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
   <>
     <CardHeader {...props}>
       <CardTitle className="mb-0 d-flex flex-row align-items-end">
-        <h4 className="mb-0 mr-auto">{title}</h4>
+        <h4 className="mb-0 me-auto">{title}</h4>
         <h6 className="mb-0 font-weight-normal d-sm-block">{subtitle}</h6>
       </CardTitle>
     </CardHeader>

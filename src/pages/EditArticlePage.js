@@ -161,7 +161,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       treeUrl="/cube/api/fullnames"
                       treePath="cardnames"
                       type="text"
-                      className="mr-2"
+                      className="me-2"
                       name="remove"
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
