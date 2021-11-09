@@ -51,7 +51,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
               <h5>Your Cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
-              <Row className="no-gutters">
+              <Row className="g-0">
                 {cubes.length > 0 ? (
                   cubes.slice(0, 4).map((cube) => (
                     <Col key={cube._id} xs="12" sm="12" md="12" lg="6">

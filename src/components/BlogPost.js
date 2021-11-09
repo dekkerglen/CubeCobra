@@ -54,7 +54,7 @@ const BlogPost = ({ post, noScroll }) => {
       </CardHeader>
       <div style={scrollStyle}>
         {post.changelist && (html || post.markdown) ? (
-          <Row className="no-gutters">
+          <Row className="g-0">
             <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
               <CardBody className="py-2">
                 <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
