@@ -48,6 +48,7 @@ const missingCardMarkdown = (card) => {
   for (const [name, val] of Object.entries(values)) {
     if (val) md += `**${name}:** ${val}\n`;
   }
+  md += `*ID: ${card.cardID}*\n`;
   return md;
 };
 
