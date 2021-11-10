@@ -1139,7 +1139,6 @@ audio {
 	border-color: var(--border);
 }
 
-.close,
 .table {
 	color:var(--text);
 	background-color: var(--bg);
