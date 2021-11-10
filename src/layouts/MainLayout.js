@@ -12,6 +12,8 @@ import {
   DropdownToggle,
   DropdownItem,
   DropdownMenu,
+  NavbarBrand,
+  NavbarToggler,
 } from 'reactstrap';
 
 import UserContext from 'contexts/UserContext';
@@ -35,125 +37,118 @@ const MainLayout = ({ children, loginCallback }) => {
 
   return (
     <div className="flex-container flex-vertical viewport">
-      <Navbar color="dark" expand="md" dark>
-        <Container fluid="xl">
-          <div className="d-flex flex-nowrap w-100 header-banner">
-            <div className="overflow-hidden me-auto">
-              <a href="/">
-                <img
-                  className="banner-image"
-                  src="/content/banner.png"
-                  alt="Cube Cobra: a site for Magic: the Gathering Cubing"
-                />
-              </a>
-            </div>
-            <button className="navbar-toggler" type="button" onClick={toggle}>
-              <span className="navbar-toggler-icon" />
-            </button>
-          </div>
-          <Collapse className="banner-collapse" isOpen={expanded} navbar>
-            <Nav className="me-auto" navbar>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  Content
-                </DropdownToggle>
-                <DropdownMenu end>
-                  <DropdownItem href="/content/browse">Browse</DropdownItem>
-                  <DropdownItem href="/content/articles">Articles</DropdownItem>
-                  <DropdownItem href="/content/podcasts">Podcasts</DropdownItem>
-                  <DropdownItem href="/content/videos">Videos</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  Cube
-                </DropdownToggle>
-                <DropdownMenu end>
-                  <DropdownItem href="/explore">Explore Cubes</DropdownItem>
-                  <DropdownItem href="/search">Search Cubes</DropdownItem>
-                  <DropdownItem href="/random">Random Cube</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  Cards
-                </DropdownToggle>
-                <DropdownMenu end>
-                  <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
-                  <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
-                  <DropdownItem href="/packages/browse">Packages</DropdownItem>
-                  <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
-                  <DropdownItem href="/filters">Filter Syntax</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-              <UncontrolledDropdown nav inNavbar>
-                <DropdownToggle nav caret>
-                  About
-                </DropdownToggle>
-                <DropdownMenu end>
-                  <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
-                  <DropdownItem href="/contact">Contact</DropdownItem>
-                  <DropdownItem href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
-                    Merchandise
-                  </DropdownItem>
-                  <DropdownItem href="/ourstory">Our Story</DropdownItem>
-                  <DropdownItem href="/faq">FAQ</DropdownItem>
-                  <DropdownItem href="/donate">Donate</DropdownItem>
-                  <DropdownItem href="https://github.com/dekkerglen/CubeCobra">Github</DropdownItem>
-                </DropdownMenu>
-              </UncontrolledDropdown>
-              {user ? (
-                <>
-                  <NotificationsNav />
-                  {user.cubes && user.cubes.length > 0 && (
-                    <UncontrolledDropdown nav inNavbar>
-                      <DropdownToggle nav caret>
-                        Your Cubes
-                      </DropdownToggle>
-                      <DropdownMenu end>
-                        {user.cubes.map((item) => (
-                          <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
-                            {item.name}
-                          </DropdownItem>
-                        ))}
-                        <DropdownItem divider />
-                        <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
-                      </DropdownMenu>
-                    </UncontrolledDropdown>
-                  )}
+      <Navbar color="dark" expand="md" container="xl" dark>
+        <NavbarBrand href="/" className="overflow-hidden">
+          <img
+            className="banner-image"
+            src="/content/banner.png"
+            alt="Cube Cobra: a site for Magic: the Gathering Cubing"
+          />
+        </NavbarBrand>
+        <NavbarToggler className="me-1" onClick={toggle} />
+        <Collapse isOpen={expanded} navbar>
+          <Nav className="ms-auto" navbar>
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                Content
+              </DropdownToggle>
+              <DropdownMenu end>
+                <DropdownItem href="/content/browse">Browse</DropdownItem>
+                <DropdownItem href="/content/articles">Articles</DropdownItem>
+                <DropdownItem href="/content/podcasts">Podcasts</DropdownItem>
+                <DropdownItem href="/content/videos">Videos</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                Cube
+              </DropdownToggle>
+              <DropdownMenu end>
+                <DropdownItem href="/explore">Explore Cubes</DropdownItem>
+                <DropdownItem href="/search">Search Cubes</DropdownItem>
+                <DropdownItem href="/random">Random Cube</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                Cards
+              </DropdownToggle>
+              <DropdownMenu end>
+                <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
+                <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
+                <DropdownItem href="/packages/browse">Packages</DropdownItem>
+                <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
+                <DropdownItem href="/filters">Filter Syntax</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                About
+              </DropdownToggle>
+              <DropdownMenu end>
+                <DropdownItem href="/dev/blog">Dev Blog</DropdownItem>
+                <DropdownItem href="/contact">Contact</DropdownItem>
+                <DropdownItem href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
+                  Merchandise
+                </DropdownItem>
+                <DropdownItem href="/ourstory">Our Story</DropdownItem>
+                <DropdownItem href="/faq">FAQ</DropdownItem>
+                <DropdownItem href="/donate">Donate</DropdownItem>
+                <DropdownItem href="https://github.com/dekkerglen/CubeCobra">Github</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+            {user ? (
+              <>
+                <NotificationsNav />
+                {user.cubes && user.cubes.length > 0 && (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
-                      {user.username}
+                      Your Cubes
                     </DropdownToggle>
                     <DropdownMenu end>
-                      <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
-                      {user.roles && user.roles.includes('Admin') && (
-                        <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>
-                      )}
-                      {user.roles && user.roles.includes('ContentCreator') && (
-                        <DropdownItem href="/content/creators">Content Creator Dashboard</DropdownItem>
-                      )}
+                      {user.cubes.map((item) => (
+                        <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
+                          {item.name}
+                        </DropdownItem>
+                      ))}
+                      <DropdownItem divider />
                       <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
-                      <DropdownItem href="/user/social">Social</DropdownItem>
-                      <DropdownItem href="/user/account">Account Information</DropdownItem>
-                      <DropdownItem href="/user/logout">Logout</DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
-                </>
-              ) : (
-                <>
-                  <NavItem>
-                    <NavLink href="/user/register">Register</NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <LoginModalLink modalProps={{ loginCallback }}>Login</LoginModalLink>
-                  </NavItem>
-                </>
-              )}
-            </Nav>
-          </Collapse>
-        </Container>
+                )}
+                <UncontrolledDropdown nav inNavbar>
+                  <DropdownToggle nav caret>
+                    {user.username}
+                  </DropdownToggle>
+                  <DropdownMenu end>
+                    <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
+                    {user.roles && user.roles.includes('Admin') && (
+                      <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>
+                    )}
+                    {user.roles && user.roles.includes('ContentCreator') && (
+                      <DropdownItem href="/content/creators">Content Creator Dashboard</DropdownItem>
+                    )}
+                    <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>
+                    <DropdownItem href="/user/social">Social</DropdownItem>
+                    <DropdownItem href="/user/account">Account Information</DropdownItem>
+                    <DropdownItem href="/user/logout">Logout</DropdownItem>
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              </>
+            ) : (
+              <>
+                <NavItem>
+                  <NavLink href="/user/register">Register</NavLink>
+                </NavItem>
+                <NavItem>
+                  <LoginModalLink modalProps={{ loginCallback }}>Login</LoginModalLink>
+                </NavItem>
+              </>
+            )}
+          </Nav>
+        </Collapse>
       </Navbar>
+
       <Container fluid="xl" className="flex-grow main-content">
         <ThemeContext.Provider value={user?.theme ?? 'default'}>
           <ErrorBoundary>{children}</ErrorBoundary>
