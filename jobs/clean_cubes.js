@@ -82,16 +82,17 @@ const processCube = async (leanCube, admin) => {
     const owner = await User.findById(cube.owner);
     let blogText = '';
     if (removedCards.length > 0) {
-      blogText += '## Removed from cube\n';
+      blogText += '>>>### Removed from cube<<<\n';
       blogText += removedCards.map(missingCardMarkdown).join('\n----\n');
+      blogText += '\n';
     }
     if (removedMaybe.length > 0) {
-      blogText += '## Removed from maybeboard\n';
+      blogText += '>>>### Removed from maybeboard<<<\n';
       blogText += removedMaybe.map(missingCardMarkdown).join('\n----\n');
     }
     const blogpost = new Blog();
     blogpost.markdown = blogText;
-    blogpost.title = 'Invalid Cards Automatically Removed';
+    blogpost.title = 'Removed Invalid Cards - Automatic Post';
     blogpost.owner = owner._id;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;
