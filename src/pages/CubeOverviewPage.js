@@ -166,7 +166,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </FollowersModalLink>
                     </h6>
                   </Col>
-                  <div className="float-end" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
+                  <Col xs="auto" className="ms-auto d-flex">
                     <TextBadge name="Cube ID">
                       <Tooltip text="Click to copy to clipboard">
                         <button
@@ -183,15 +183,14 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                         </button>
                       </Tooltip>
                     </TextBadge>
-                  </div>
-                  <CubeIdModalLink
-                    modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
-                    aria-label="Show Cube IDs"
-                    className="me-2"
-                    style={{ position: 'relative', top: '5px' /* the icon needs to be pulled down */ }}
-                  >
-                    <QuestionIcon size="18" />
-                  </CubeIdModalLink>
+                    <CubeIdModalLink
+                      modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
+                      aria-label="Show Cube IDs"
+                      className="me-2 ms-1 pt-1"
+                    >
+                      <QuestionIcon size="18" />
+                    </CubeIdModalLink>
+                  </Col>
                 </Row>
               </CardHeader>
               <div className="position-relative">
