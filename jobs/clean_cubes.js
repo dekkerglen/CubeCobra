@@ -32,7 +32,7 @@ const needsCleaning = (cube) =>
 
 const missingCardMarkdown = (card) => {
   const values = {
-    'Date added': card.addedTmsp.toISOString(),
+    'Date Added': card.addedTmsp.toISOString(),
     'Mana Value': card.cmc,
     'Type Line': card.type_line,
     Rarity: card.rarity,
@@ -46,7 +46,7 @@ const missingCardMarkdown = (card) => {
   };
   let md = '';
   for (const [name, val] of Object.entries(values)) {
-    if (val) md += `**${name}:** ${val}\n`;
+    if (val != null) md += `**${name}:** ${val}\n`;
   }
   md += `*ID: ${card.cardID}*\n`;
   return md;
