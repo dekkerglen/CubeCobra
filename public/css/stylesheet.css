@@ -1300,7 +1300,7 @@ thead th.corner[scope=col] {
 	background-color: #FFFFFF !important
 }
 
-div.advertisement-div > div {
+div.advertisement-div > div:not(.report-link) {
 	height: 100% !important
   }
 
