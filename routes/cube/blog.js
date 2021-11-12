@@ -7,7 +7,7 @@ const { render } = require('../../serverjs/render');
 const generateMeta = require('../../serverjs/meta.js');
 const miscutil = require('../../dist/utils/Util.js');
 
-const { setCubeType, buildIdQuery, abbreviate } = require('../../serverjs/cubefn.js');
+const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn.js');
 
 const Cube = require('../../models/cube');
 const Blog = require('../../models/blog');
@@ -43,6 +43,11 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
+
+    if (!isCubeViewable(cube, user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/blog/404');
+    }
 
     // post new blog
     if (!user._id.equals(cube.owner)) {
@@ -93,6 +98,11 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
 router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.findById(req.params.id);
+    const cube = await Cube.findById(post.cube);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Blog post not found');
+      return res.redirect('/cube/blog/404');
+    }
 
     return render(req, res, 'BlogPostPage', {
       post,
@@ -130,7 +140,21 @@ router.get(
   '/src/:id',
   util.wrapAsyncApi(async (req, res) => {
     const blog = await Blog.findById(req.params.id);
-    res.status(200).send({
+    if (!blog) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Blog post not found',
+      });
+    }
+    const cube = await Cube.findById(blog.cube).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        messasge: 'Blog post not found',
+      });
+    }
+
+    return res.status(200).send({
       success: 'true',
       src: blog.html,
       title: blog.title,
@@ -145,9 +169,9 @@ router.get('/:id', (req, res) => {
 
 router.get('/:id/:page', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id), `${Cube.LAYOUT_FIELDS} isPrivate owner`).lean();
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }

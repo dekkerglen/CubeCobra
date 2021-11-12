@@ -16,9 +16,9 @@ const { ensureAuth, csrfProtection } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
-const Blog = require('../models/blog');
 
 const { buildIdQuery } = require('../serverjs/cubefn.js');
+const { getBlogFeedItems } = require('../serverjs/blogpostFeed');
 
 const router = express.Router();
 
@@ -328,29 +328,8 @@ router.get('/searchcards', async (req, res) => {
 });
 
 router.get('/getfeeditems/:skip', ensureAuth, async (req, res) => {
-  const items = await Blog.find({
-    $or: [
-      {
-        cube: {
-          $in: req.user.followed_cubes,
-        },
-      },
-      {
-        owner: {
-          $in: req.user.followed_users,
-        },
-      },
-      {
-        dev: 'true',
-      },
-    ],
-  })
-    .sort({
-      date: -1,
-    })
-    .skip(parseInt(req.params.skip, 10))
-    .limit(5);
-
+  const skip = Number.parseInt(req.params.skip, 10) || 0;
+  const items = await getBlogFeedItems(req.user, skip, 10);
   return res.status(200).send({
     success: 'true',
     items,

@@ -718,6 +718,11 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return res.redirect('/admin/featuredcubes');
   }
 
+  if (cube.isPrivate) {
+    req.flash('danger', 'Cannot feature private cube');
+    return res.redirect('/admin/featuredcubes');
+  }
+
   const update = await fq.updateFeatured(async (featured) => {
     const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
     if (index !== -1) {
