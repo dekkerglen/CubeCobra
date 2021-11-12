@@ -2,7 +2,6 @@ const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
-const cheerio = require('cheerio');
 const RSS = require('rss');
 const { Canvas, Image } = require('canvas');
 
@@ -13,7 +12,7 @@ const filterutil = require('../../dist/filtering/FilterCards.js');
 const miscutil = require('../../dist/utils/Util.js');
 const carddb = require('../../serverjs/cards.js');
 const { render } = require('../../serverjs/render');
-const { ensureAuth, csrfProtection, flashValidationErrors } = require('../middleware');
+const { ensureAuth, csrfProtection } = require('../middleware');
 const util = require('../../serverjs/util.js');
 const generateMeta = require('../../serverjs/meta.js');
 
@@ -836,78 +835,6 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
     return res.end(imageBuffer);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
-  }
-});
-
-router.post('/importcubetutor/:id', ensureAuth, body('cubeid').toInt(), flashValidationErrors, async (req, res) => {
-  try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/list/404');
-    }
-    if (!req.user._id.equals(cube.owner)) {
-      req.flash('danger', 'Not Authorized');
-      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
-    }
-
-    const response = await fetch(`https://www.cubetutor.com/viewcube/${req.body.cubeid}`, {
-      headers: {
-        // This tricks cubetutor into not redirecting us to the unsupported browser page.
-        'User-Agent': 'Mozilla/5.0',
-      },
-    });
-    if (!response.ok) {
-      req.flash('danger', 'Error accessing CubeTutor.');
-      return res.redirect(`/cube/list${encodeURIComponent(req.params.id)}`);
-    }
-    const text = await response.text();
-    const data = cheerio.load(text);
-
-    const tagColors = new Map();
-    data('.keyColour').each((_, elem) => {
-      const nodeText = elem.firstChild.nodeValue.trim();
-      tagColors.set(elem.attribs.class.split(' ')[1], nodeText);
-    });
-
-    const cards = [];
-    data('.cardPreview').each((_, elem) => {
-      const str = elem.attribs['data-image'].substring(37, elem.attribs['data-image'].length - 4);
-      const name = decodeURIComponent(elem.children[0].data).replace('_flip', '');
-      const tagColorClasses = elem.attribs.class.split(' ').filter((c) => tagColors.has(c));
-      const tags = tagColorClasses.map((c) => tagColors.get(c));
-      cards.push({
-        set: str.includes('/') ? str.split('/')[0] : 'unknown',
-        name,
-        tags,
-      });
-    });
-
-    const added = [];
-    const missing = [];
-    let changelog = '';
-    for (const card of cards) {
-      const potentialIds = carddb.allVersions(card);
-      if (potentialIds && potentialIds.length > 0) {
-        const matchingSet = potentialIds.find((id) => carddb.cardFromId(id).set.toUpperCase() === card.set);
-        const nonPromo = carddb.getMostReasonable(card.name, cube.defaultPrinting)._id;
-        const selected = matchingSet || nonPromo || potentialIds[0];
-        const details = carddb.cardFromId(selected);
-        if (!details.error) {
-          added.push(details);
-          util.addCardToCube(cube, details, card.tags);
-          changelog += addCardHtml(details);
-        } else {
-          missing.push(card.name);
-        }
-      } else {
-        missing.push(card.name);
-      }
-    }
-
-    return await updateCubeAndBlog(req, res, cube, changelog, added, missing);
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }
 });
 

@@ -25,7 +25,7 @@ const dedupeCardObjects = async (draft) => {
   if (!Array.isArray(cardsArray) || (cardsArray.length > 0 && (!cardsArray[0] || !cardsArray[0].cardID))) {
     throw new Error(`Could not correctly transform the cardsArray. Got ${JSON.stringify(cardsArray[0], null, 2)}`);
   }
-  cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
+  cardsArray = cleanCards(cardsArray)[0].map((card, index) => ({ ...card, index }));
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && cardsAreEquivalent(card, card2));
     if (idx === -1) {
