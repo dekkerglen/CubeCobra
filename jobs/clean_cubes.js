@@ -8,6 +8,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Cube = require('../models/cube');
 const User = require('../models/user');
+const Blog = require('../models/blog');
 const { cardsNeedsCleaning, cleanCards } = require('../models/migrations/cleanCards');
 const carddb = require('../serverjs/cards');
 const util = require('../serverjs/util');
@@ -29,6 +30,28 @@ const needsCleaning = (cube) =>
   cardsNeedsCleaning(cube.maybe) ||
   cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag);
 
+const missingCardMarkdown = (card) => {
+  const values = {
+    'Date Added': card.addedTmsp.toISOString(),
+    'Mana Value': card.cmc,
+    'Type Line': card.type_line,
+    Rarity: card.rarity,
+    Status: card.status,
+    Finish: card.finish,
+    'Image URL': card.imgUrl,
+    Colors: card.colors.join(''),
+    'Color Category': card.colorCategory,
+    Tags: card.tags.join(),
+    Notes: card.notes,
+  };
+  let md = '';
+  for (const [name, val] of Object.entries(values)) {
+    if (val != null) md += `**${name}:** ${val}\n`;
+  }
+  md += `*ID: ${card.cardID}*\n`;
+  return md;
+};
+
 const processCube = async (leanCube, admin) => {
   if (needsCleaning(leanCube)) {
     const cube = await Cube.findById(leanCube._id);
@@ -40,45 +63,63 @@ const processCube = async (leanCube, admin) => {
     if (!cube.maybe) {
       cube.maybe = [];
     }
-    const oldCardCount = cube.cards.length;
-    const oldMaybeCount = cube.cards.length;
     if (!Array.isArray(cube.basics)) {
       cube.basics = DEFAULT_BASICS;
     }
+    let removedCards = [];
     if (cardsNeedsCleaning(cube.cards)) {
-      cube.cards = cleanCards(cube.cards);
+      [cube.cards, removedCards] = cleanCards(cube.cards);
     }
+    let removedMaybe = [];
     if (cardsNeedsCleaning(cube.maybe)) {
-      cube.maybe = cleanCards(cube.maybe);
+      [cube.maybe, removedMaybe] = cleanCards(cube.maybe);
     }
     if (cube.tags.some((tag) => !tag || tag.toLowerCase() !== tag)) {
       cube.tags = cube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
     }
     await cube.save();
-
-    const cardDiff = cube.cards.length - oldCardCount;
-    const maybeDiff = cube.maybe.length - oldMaybeCount;
-    if (!cardDiff && !maybeDiff) return;
+    if (removedMaybe.length === 0 && removedCards.length === 0) return;
 
     const owner = await User.findById(cube.owner);
-    if (cardDiff)
-      await util.addNotification(
-        owner,
-        admin,
-        `/cube/list/${cube.id}`,
-        `${cardDiff} invalid card${cardDiff === 1 ? ' was' : 's were'} automatically removed from your cube ${
-          cube.name
-        }`,
-      );
+    let blogText = '';
+    if (removedCards.length > 0) {
+      blogText += '>>>### Removed from cube<<<\n';
+      blogText += removedCards.map(missingCardMarkdown).join('\n----\n');
+      blogText += '\n';
+    }
+    if (removedMaybe.length > 0) {
+      blogText += '>>>### Removed from maybeboard<<<\n';
+      blogText += removedMaybe.map(missingCardMarkdown).join('\n----\n');
+    }
+    const blogpost = new Blog();
+    blogpost.markdown = blogText;
+    blogpost.title = 'Removed Invalid Cards - Automatic Post';
+    blogpost.owner = owner._id;
+    blogpost.date = Date.now();
+    blogpost.cube = cube._id;
+    blogpost.dev = 'false';
+    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    blogpost.username = owner.username;
+    blogpost.cubename = cube.name;
+    await blogpost.save();
 
-    if (maybeDiff)
+    if (removedCards.length > 0)
       await util.addNotification(
         owner,
         admin,
-        `/cube/list/${cube.id}`,
-        `${maybeDiff} invalid card${maybeDiff === 1 ? ' was' : 's were'} automatically removed from your cube ${
-          cube.name
-        }`,
+        `/cube/blog/blogpost/${blogpost._id}`,
+        `${removedCards.length} invalid card${
+          removedCards.length === 1 ? ' was' : 's were'
+        } automatically removed from your cube ${cube.name}`,
+      );
+    if (removedMaybe.length > 0)
+      await util.addNotification(
+        owner,
+        admin,
+        `/cube/blog/blogpost/${blogpost._id}`,
+        `${removedMaybe.length} invalid card${
+          removedMaybe.length === 1 ? ' was' : 's were'
+        } automatically removed from your cube ${cube.name}`,
       );
   }
 };

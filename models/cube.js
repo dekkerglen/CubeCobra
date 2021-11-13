@@ -22,6 +22,10 @@ const cubeSchema = mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  isPrivate: {
+    type: Boolean,
+    default: false,
+  },
   privatePrices: {
     type: Boolean,
     default: false,

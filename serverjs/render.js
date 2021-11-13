@@ -141,6 +141,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
       colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
       patron: req.user && req.user.roles.includes('Patron'),
+      notice: process.env.NOTICE,
     });
   });
 };

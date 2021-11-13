@@ -15,7 +15,13 @@ const frontutil = require('../../dist/utils/Util.js');
 const { ensureAuth } = require('../middleware');
 const { createDeckFromDraft } = require('../../serverjs/deckUtil');
 
-const { buildIdQuery, abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics } = require('../../serverjs/cubefn.js');
+const {
+  buildIdQuery,
+  abbreviate,
+  addDeckCardAnalytics,
+  removeDeckCardAnalytics,
+  isCubeViewable,
+} = require('../../serverjs/cubefn.js');
 
 const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
 
@@ -334,8 +340,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
-    const cube = await Cube.findById(deck.cube, `${Cube.LAYOUT_FIELDS} basics useCubeElo`).lean();
-    if (!cube) {
+    const cube = await Cube.findById(deck.cube, `${Cube.LAYOUT_FIELDS} basics useCubeElo isPrivate owner`).lean();
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
@@ -384,9 +390,9 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
     const { cubeid } = req.params;
     const pagesize = 30;
 
-    const cube = await Cube.findOne(buildIdQuery(cubeid), Cube.LAYOUT_FIELDS).lean();
+    const cube = await Cube.findOne(buildIdQuery(cubeid), `${Cube.LAYOUT_FIELDS} isPrivate owner`).lean();
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
@@ -449,6 +455,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
     const cube = await Cube.findById(base.cube);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect(`/cube/deck/${base._id}`);
+    }
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
       const analytic = await CubeAnalytic.findOne({ cube: cube._id });
@@ -614,7 +624,15 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     // req.body contains a draft
     const draftid = req.body.body;
     const draft = await GridDraft.findById(draftid).lean();
+    if (!draft) {
+      req.flash('danger', 'Draft not found');
+      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
+    }
     const cube = await Cube.findById(draft.cube);
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/cube/playtest/404');
+    }
 
     const deck = new Deck();
     deck.cube = draft.cube;
@@ -722,7 +740,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     }
 
     const cube = await Cube.findById(srcDraft.cube);
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -753,7 +771,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
       return res.redirect('/404');
     }

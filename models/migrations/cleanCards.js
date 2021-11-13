@@ -10,17 +10,29 @@ const isInvalidStatus = (status) => !['Not Owned', 'Ordered', 'Owned', 'Premium 
 const isInvalidColors = (colors) => !colors || !Array.isArray(colors) || colors.some((c) => !COLORS.includes(c));
 const isInvalidTags = (tags) => !tags || tags.some((t) => !t);
 
-const cleanCards = (collection, filter = true) => {
-  if (filter) {
-    collection = collection.filter((c) => c && !isInvalidCardId(c.cardID));
+const partition = (collection, predicate) => {
+  const pass = [];
+  const fail = [];
+  for (const elem of collection) {
+    if (predicate(elem)) pass.push(elem);
+    else fail.push(elem);
   }
-  for (const card of collection) {
+  return [pass, fail];
+};
+
+const cleanCards = (collection, filter = true) => {
+  let valid = collection;
+  let invalid = [];
+  if (filter) {
+    [valid, invalid] = partition(collection, (c) => c && !isInvalidCardId(c.cardID));
+  }
+  for (const card of valid) {
     if (isInvalidFinish(card.finish)) card.finish = DEFAULT_FINISH;
     if (isInvalidStatus(card.status)) card.status = DEFAULT_STATUS;
     if (isInvalidColors(card.colors)) card.colors = carddb.cardFromId(card.cardID).color_identity;
     if (isInvalidTags(card.tags)) card.tags = (card.tags || []).filter((t) => t);
   }
-  return collection;
+  return [valid, invalid];
 };
 
 const cardsNeedsCleaning = (collection) =>
