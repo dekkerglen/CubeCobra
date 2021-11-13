@@ -16,6 +16,7 @@ const {
   getPlayerPicks,
   getDraftBotsSeats,
   makePick,
+  getPassAmount,
   isPackDone,
   finishDraft,
   getLobbyMetadata,
@@ -93,7 +94,8 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draft);
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
-  const nextSeat = (seat + seats + passDirection) % seats;
+  const passAmount = await getPassAmount(draft, seat);
+  const nextSeat = (seat + seats + passDirection * passAmount) % seats;
 
   await makePick(draft, seat, pick, nextSeat);
 
@@ -102,7 +104,7 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
     const botSeats = await getDraftBotsSeats(draft);
     for (const index of botSeats) {
       // TODO: plug in draft bot logic here
-      const next = (index + seats + passDirection) % seats;
+      const next = (index + seats + passDirection * passAmount) % seats;
       await makePick(draft, index, 0, next);
     }
   }

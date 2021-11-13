@@ -7,7 +7,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, getDrafterState, stepToTitle } from 'drafting/draftutil';
+import { setupPicks, getCardCol, getDrafterState, stepToTitle, nextStep } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -52,25 +52,43 @@ const CubeDraft = ({ draft, socket }) => {
 
   staticPicks = picks;
 
+  const currentDrafterState = useCallback(() => {
+    const cardsPicked = staticPicks
+      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
+      .reduce((a, b) => a + b, 0);
+
+    return getDrafterState(draft, seat, cardsPicked);
+  }, [draft]);
+
+  const getNextStep = useCallback(() => {
+    const cardsPicked = staticPicks
+      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
+      .reduce((a, b) => a + b, 0);
+
+    return nextStep(draft, seat, cardsPicked + 1);
+  }, [draft]);
+
   const makePick = useCallback(
     async (pick) => {
       // eslint-disable-next-line no-undef
       /* global */ autocard_hide_card();
-      setLoading(true);
+
+      if (getNextStep() === 'pass') {
+        setLoading(true);
+      } else {
+        setPack(pack.filter((_, index) => index !== pick));
+      }
+
       setTitle('Waiting for cards...');
       await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
     },
-    [draft, setLoading, setTitle],
+    [draft, setLoading, setTitle, setPack, pack, getNextStep],
   );
 
   const updatePack = async (data) => {
     setPack(data);
 
-    const cardsPicked = staticPicks
-      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
-      .reduce((a, b) => a + b, 0);
-
-    const drafterState = getDrafterState(draft, seat, cardsPicked);
+    const drafterState = currentDrafterState();
 
     setAction(drafterState.step.action);
     setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${stepToTitle(drafterState.step)}`);
@@ -98,6 +116,7 @@ const CubeDraft = ({ draft, socket }) => {
         }
       });
       socket.on('seat', (data) => {
+        console.log(data);
         updatePack(data);
         setLoading(false);
       });
@@ -114,9 +133,15 @@ const CubeDraft = ({ draft, socket }) => {
       if (source.equals(target)) {
         return;
       }
+
       if (source.type === DraftLocation.PACK) {
         if (target.type === DraftLocation.PICKS) {
-          setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+          const drafterState = currentDrafterState();
+
+          if (drafterState.step.action === 'pick' || drafterState.step.action === 'pickrandom') {
+            setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+          }
+
           makePick(source.data);
         } else {
           console.error("Can't move cards inside pack.");
@@ -134,7 +159,6 @@ const CubeDraft = ({ draft, socket }) => {
 
   const onClickCard = useCallback(
     (cardIndex) => {
-      // TODO: see if we have more steps, and do a partial update if so
       const col = getCardCol(draft, pack[cardIndex]);
       onMoveCard(
         new DraftLocation(DraftLocation.PACK, cardIndex),

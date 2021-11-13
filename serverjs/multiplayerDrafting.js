@@ -62,6 +62,9 @@ const packToPicked = (ref) => ref.replace('pack', 'picked');
 
 const nonIntersect = (list1, list2) => list1.filter((x) => !list2.includes(x));
 
+const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
+const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
+
 const getDraftMetaData = async (draftId) => {
   const [seats, currentPack, totalPacks, initialized] = await hmget(
     draftRef(draftId),
@@ -132,9 +135,6 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const picked = packToPicked(packReference);
   const step = await rpop(stepsQueueRef(draftId, seat));
 
-  console.log(`step is ${step}: taking ${pick}`);
-  console.log(packCards);
-
   // pick this card if the step is pick
   if (step === 'pick' || step === 'pickrandom') {
     await lpush(userPicksRef(draftId, seat), packCards[pick]);
@@ -147,6 +147,12 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
   }
 
+  if (seat === 0) {
+    console.log(`${seat}: step is ${step}: taking ${pick}`);
+    console.log(packCards);
+    console.log(await getPlayerPicks(draftId, seat));
+  }
+
   // push the card into the picked list
   await lpush(picked, packCards[pick]);
   await expire(picked, 60 * 60 * 24 * 2); // 2 days
@@ -156,9 +162,28 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   if (next === 'pass') {
     // rotate the pack to the next seat
     await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
+  }
 
+  while ((await lrange(stepsQueueRef(draftId, seat), -1, -1))[0] === 'pass') {
     await rpop(stepsQueueRef(draftId, seat));
   }
+};
+
+const getPassAmount = async (draftId, seat) => {
+  const steps = await lrange(stepsQueueRef(draftId, seat), 0, -1);
+  let foundStep = false;
+  let passes = 0;
+
+  for (let i = steps.length - 1; i >= 0; i--) {
+    if (steps[i] === 'pass') {
+      foundStep = true;
+      passes += 1;
+    } else if (foundStep) {
+      return passes;
+    }
+  }
+
+  return 0;
 };
 
 const isPackDone = async (draftId) => {
@@ -206,9 +231,6 @@ const packNeedsBotPicks = async (draftId) => {
 
   return true;
 };
-
-const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
-const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
 
 const cleanUp = async (draftId) => {
   // get draft metadata
@@ -317,9 +339,7 @@ const setup = async (draft) => {
         if (step.action === 'pass') {
           await lpush(stepsQueueRef(draft._id, i), step.action);
         } else {
-          for (let j = 0; j < step.amount; j++) {
-            await lpush(stepsQueueRef(draft._id, i), step.action);
-          }
+          await lpush(stepsQueueRef(draft._id, i), step.action);
         }
       }
     }
@@ -356,6 +376,7 @@ module.exports = {
   getPlayerPicks,
   getDraftBotsSeats,
   makePick,
+  getPassAmount,
   isPackDone,
   finishDraft,
   seatRef,

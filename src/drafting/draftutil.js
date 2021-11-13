@@ -66,6 +66,22 @@ export const getStepList = (draft) =>
     )
     .flat();
 
+export const nextStep = (draft, seat, cardsPicked) => {
+  const steps = getStepList(draft);
+
+  let picks = 0;
+
+  for (const step of steps) {
+    if (picks >= cardsPicked) {
+      return step.action;
+    }
+
+    if (step.action !== 'pass') {
+      picks += 1;
+    }
+  }
+};
+
 export const getDrafterState = (draft, seatNumber, pickNumber) => {
   // build list of steps and match to pick and pack number
   const steps = getStepList(draft);
