@@ -176,8 +176,8 @@ const EditCollapse = ({ cubeView, ...props }) => {
           {message}
         </UncontrolledAlert>
       ))}
-      <Row noGutters>
-        <Row noGutters className="me-auto">
+      <Row noGutters className="me-auto">
+        <Col xs={12} md="auto">
           <Form inline className="mb-2 me-2" onSubmit={handleAdd}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
@@ -199,6 +199,8 @@ const EditCollapse = ({ cubeView, ...props }) => {
               </Button>
             </InputGroup>
           </Form>
+        </Col>
+        <Col xs={12} md="auto">
           <Form inline className="mb-2 me-2" onSubmit={handleRemoveReplace}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
@@ -221,6 +223,8 @@ const EditCollapse = ({ cubeView, ...props }) => {
               </Button>
             </InputGroup>
           </Form>
+        </Col>
+        <Col xs={12} md="auto">
           <Form inline className="mb-2 me-2">
             <InputGroup>
               <InputGroupText>
@@ -235,11 +239,13 @@ const EditCollapse = ({ cubeView, ...props }) => {
               <Input disabled value="Specify Versions" />
             </InputGroup>
           </Form>
-        </Row>
-        <ResizeModal cubeID={cubeID} />
-        <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
-          Maybeboard
-        </Button>
+        </Col>
+        <Col xs="auto" className="ms-md-auto">
+          <ResizeModal cubeID={cubeID} />
+          <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
+            Maybeboard
+          </Button>
+        </Col>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
         <CSRFForm

@@ -186,7 +186,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     <CubeIdModalLink
                       modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
                       aria-label="Show Cube IDs"
-                      className="me-2 ms-1 pt-1"
+                      className="ms-1 pt-1"
                     >
                       <QuestionIcon size="18" />
                     </CubeIdModalLink>
