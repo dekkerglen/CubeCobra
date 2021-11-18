@@ -1080,7 +1080,7 @@ audio {
 
 .markdown-input {
 	font-family: "Fira Mono", monospace;
-	min-height: 20rem;
+	min-height: 20rem !important;
 }
 
 .monospaced {
