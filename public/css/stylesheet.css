@@ -1181,6 +1181,7 @@ audio {
 
 a{
 	color: var(--link);
+	text-decoration: none;
 }
 
 .page-item.disabled .page-link {

@@ -224,7 +224,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
             </InputGroup>
           </Form>
         </Col>
-        <Col xs={12} md="auto">
+        <Col xs="auto">
           <Form inline className="mb-2 me-2">
             <InputGroup>
               <InputGroupText>
@@ -240,7 +240,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
             </InputGroup>
           </Form>
         </Col>
-        <Col xs="auto" className="ms-md-auto">
+        <Col xs={12} md="auto" className="ms-md-auto">
           <ResizeModal cubeID={cubeID} />
           <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
             Maybeboard
