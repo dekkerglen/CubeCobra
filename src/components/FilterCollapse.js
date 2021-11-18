@@ -519,78 +519,76 @@ class FilterCollapse extends Component {
             </Form>
           </Col>
         </Row>
-        <Row style={{ margin: '0 -5px' }}>
-          <Form inline>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <ColorChecksControl
-                size="sm"
-                className="mb-3"
-                colorless
-                prefix="colorQuick"
-                values={this.state}
+        <Form className="row ps-2">
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <ColorChecksControl
+              size="sm"
+              className="mb-3"
+              colorless
+              prefix="colorQuick"
+              values={this.state}
+              onChange={this.handleChange}
+            />
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
+              <Input
+                id="cmcQickOp"
+                type="select"
+                name="cmcQuickOp"
+                value={this.state.cmcQuickOp}
                 onChange={this.handleChange}
+                bsSize="sm"
+                style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+              >
+                <option>{'>'}</option>
+                <option>{'>='}</option>
+                <option>{'='}</option>
+                <option>{'<='}</option>
+                <option>{'<'}</option>
+              </Input>
+              <Input
+                name="cmcQuick"
+                id="cmcQuick"
+                value={this.state.cmcQuick}
+                onChange={this.handleChange}
+                bsSize="sm"
+                className="square-left"
+                style={{ width: '3rem' }}
               />
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
-                <Input
-                  id="cmcQickOp"
-                  type="select"
-                  name="cmcQuickOp"
-                  value={this.state.cmcQuickOp}
-                  onChange={this.handleChange}
-                  bsSize="sm"
-                  style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
-                >
-                  <option>{'>'}</option>
-                  <option>{'>='}</option>
-                  <option>{'='}</option>
-                  <option>{'<='}</option>
-                  <option>{'<'}</option>
-                </Input>
-                <Input
-                  name="cmcQuick"
-                  id="cmcQuick"
-                  value={this.state.cmcQuick}
-                  onChange={this.handleChange}
-                  bsSize="sm"
-                  className="square-left"
-                  style={{ width: '3rem' }}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
-                <Input
-                  name="typeQuick"
-                  id="typeQuick"
-                  value={this.state.typeQuick}
-                  onChange={this.handleChange}
-                  style={{ width: '8rem' }}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupText htmlFor="textQuick">Text</InputGroupText>
-                <Input
-                  name="textQuick"
-                  id="textQuick"
-                  value={this.state.textQuick}
-                  onChange={this.handleChange}
-                  style={{ width: '8rem' }}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <Button type="submit" onClick={this.applyQuick} size="sm" color="success" className="mb-3">
-                Quick Filter
-              </Button>
-            </Col>
-          </Form>
-        </Row>
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
+              <Input
+                name="typeQuick"
+                id="typeQuick"
+                value={this.state.typeQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="textQuick">Text</InputGroupText>
+              <Input
+                name="textQuick"
+                id="textQuick"
+                value={this.state.textQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <Button type="submit" onClick={this.applyQuick} size="sm" color="success" className="mb-3">
+              Quick Filter
+            </Button>
+          </Col>
+        </Form>
         <Row>
           <Col>
             {!noCount && (
