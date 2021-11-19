@@ -1300,7 +1300,7 @@ thead th.corner[scope=col] {
 	background-color: #FFFFFF !important
 }
 
-div.advertisement-div > div {
+div.advertisement-div > div:not(.report-link) {
 	height: 100% !important
   }
 
@@ -1317,4 +1317,14 @@ div.advertisement-div > div {
 }
 .badge.badge-primary {
 	background-color: #007bff; /* bootstrap primary color */
+}
+
+#notice-alert .markdown {
+	padding: 0;
+  margin: 0;
+}
+
+#notice-alert .markdown p:last-child {
+	padding-bottom: 0;
+	margin-bottom: 0;
 }

@@ -849,6 +849,11 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
+  if (cube.isPrivate) {
+    req.flash('danger', 'Private cubes cannot be featured');
+    return res.redirect(redirect);
+  }
+
   const patron = await Patron.findOne({ user: req.user._id }).lean();
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');

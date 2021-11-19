@@ -19,7 +19,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
+import { LinkExternalIcon, QuestionIcon, EyeClosedIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeId, getCubeDescription } from 'utils/Util';
@@ -49,6 +49,17 @@ const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
 const QRCodeModalLink = withModal('a', QRCodeModal);
+
+const PrivateCubeIcon = () => (
+  <Tooltip
+    text="This cube is set as private."
+    wrapperTag="span"
+    className="text-secondary"
+    style={{ position: 'relative', top: '-3px' }}
+  >
+    <EyeClosedIcon size={24} />
+  </Tooltip>
+);
 
 const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
   const user = useContext(UserContext);
@@ -154,7 +165,9 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
               <CardHeader>
                 <Row>
                   <Col>
-                    <h3>{cubeState.name}</h3>
+                    <h3>
+                      {cubeState.name} {cubeState.isPrivate && <PrivateCubeIcon />}
+                    </h3>
                   </Col>
                 </Row>
                 <Row>
@@ -242,7 +255,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     action={`/cube/${cubeState.isFeatured ? 'unfeature/' : 'feature/'}${cubeState._id}`}
                     className="mt-2"
                   >
-                    <Button color="success" type="submit">
+                    <Button color="success" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
                       {' '}
                       {cubeState.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
                     </Button>

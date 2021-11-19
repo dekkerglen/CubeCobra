@@ -23,7 +23,9 @@ const {
   maybeCards,
   saveDraftAnalytics,
   addCardHtml,
+  isCubeViewable,
 } = require('../../serverjs/cubefn.js');
+const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 const { rotateArrayLeft, createPool } = require('./helper');
 
@@ -74,14 +76,15 @@ router.post(
     const updatedCube = req.body;
 
     const cube = await Cube.findById(updatedCube._id);
-    if (!cube) {
+    const { user } = req;
+
+    if (!isCubeViewable(cube, user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Cube Not Found',
       });
     }
 
-    const { user } = req;
     if (!user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
@@ -104,7 +107,6 @@ router.post(
     }
 
     cube.name = updatedCube.name;
-    cube.isListed = updatedCube.isListed;
     cube.privatePrices = updatedCube.privatePrices;
     cube.overrideCategory = updatedCube.overrideCategory;
 
@@ -172,15 +174,15 @@ router.post(
 router.post(
   '/settings/:id',
   ensureAuth,
-  body('isListed').toBoolean(),
   body('privatePrices').toBoolean(),
   body('disableNotifications').toBoolean(),
   body('defaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
   body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
+  body('visibility', 'Visibility must be valid').isIn(['public', 'unlisted', 'private']),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Cube Not Found',
@@ -195,17 +197,32 @@ router.post(
     }
 
     const update = req.body;
-    for (const field of [
-      'isListed',
-      'privatePrices',
-      'defaultStatus',
-      'defaultPrinting',
-      'disableNotifications',
-      'useCubeElo',
-    ]) {
+    for (const field of ['privatePrices', 'defaultStatus', 'defaultPrinting', 'disableNotifications', 'useCubeElo']) {
       if (update[field] !== undefined) {
         cube[field] = update[field];
       }
+    }
+
+    // convert visibility value to indicators
+    switch (req.body.visibility) {
+      case 'private':
+        if (cube.isFeatured || (await isInFeaturedQueue(cube))) {
+          req.flash('danger', 'Cannot set a cube in featured queue as private');
+        } else {
+          cube.isListed = false;
+          cube.isPrivate = true;
+        }
+        break;
+      case 'unlisted':
+        cube.isListed = false;
+        cube.isPrivate = false;
+        break;
+      case 'public':
+        cube.isListed = true;
+        cube.isPrivate = false;
+        break;
+      default:
+        break; // can't occur due to the validation above
     }
 
     await cube.save();
@@ -250,6 +267,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not found',
+      });
+    }
+
     const cardnames = [];
     for (const card of cube.cards) {
       util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
@@ -267,6 +291,12 @@ router.get(
   '/cubecardtags/:id',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
     const tags = cubeCardTags(cube);
 
     return res.status(200).send({
@@ -305,6 +335,12 @@ router.post(
   '/savetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
@@ -326,6 +362,13 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
+    if (!isCubeViewable(cube, req.user)) {
+      return req.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
+
     const tagColors = buildTagColors(cube);
     const tags = tagColors.map((item) => item.tag);
 
@@ -333,6 +376,13 @@ router.get(
     const cubeB = await Cube.findOne(buildIdQuery(req.query.b_id)).lean();
 
     if (cubeB) {
+      if (!isCubeViewable(cubeB, req.user)) {
+        return res.status(404).send({
+          success: 'false',
+          message: 'Not Found',
+        });
+      }
+
       const bTagColors = buildTagColors(cubeB);
       for (const bTag of bTagColors) {
         if (!tags.includes(bTag.tag)) {
@@ -343,7 +393,7 @@ router.get(
 
     const showTagColors = req.user ? !req.user.hide_tag_colors : true;
 
-    res.status(200).send({
+    return res.status(200).send({
       success: 'true',
       tagColors,
       showTagColors,
@@ -361,6 +411,12 @@ router.get(
     cardname = cardutil.normalizeName(cardname);
 
     const cube = await Cube.findOne(buildIdQuery(cubeid)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return req.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
 
     for (const card of cube.cards) {
       if (carddb.cardFromId(card.cardID).name_lower === cardname) {
@@ -382,7 +438,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.status)) {
       return res.status(404).send('Cube not found.');
     }
 
@@ -398,7 +454,7 @@ router.get(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');
     }
 
@@ -422,7 +478,7 @@ router.post('/redraft/:id/:seat', async (req, res) => {
     }
 
     const cube = await Cube.findById(srcDraft.cube);
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'The cube that this deck belongs to no longer exists.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -479,7 +535,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(400).send({
         success: 'false',
         message: 'Cube not found',
@@ -507,6 +563,13 @@ router.get(
   '/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id), 'defaultPrinting').lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Not Found',
+      });
+    }
+
     const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
     if (card) {
       return res.status(200).send({
@@ -619,6 +682,12 @@ router.post(
       });
     }
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
 
     if (!req.user._id.equals(cube.owner)) {
       return res.status(401).send({
@@ -687,8 +756,14 @@ router.post(
     }
 
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!req.user._id.equals(cube.owner)) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
       });
@@ -802,6 +877,12 @@ router.get(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
     return res.status(200).send({
       success: 'true',
       maybe: maybeCards(cube, carddb),
@@ -815,7 +896,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     let cube = await Cube.findOne(buildIdQuery(req.params.id));
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(400).send({
         success: 'false',
         message: 'Cube not found',
@@ -884,7 +965,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
 
-    if (!cube) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(400).send({
         success: 'false',
         message: 'Cube not found',
@@ -927,6 +1008,12 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
     if (!req.user._id.equals(cube.owner)) {
       return res.status(403).send({
         success: 'false',
@@ -975,9 +1062,14 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.findOne(buildIdQuery(req.params.id));
-
-    if (!req.user._id.equals(cube.owner)) {
+    if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
       });
@@ -1022,7 +1114,14 @@ router.post('/submitgriddraft/:id', async (req, res) => {
 router.get(
   '/p1p1/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const result = await generatePack(req.params.id, carddb, false);
+    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    const result = await generatePack(cube, carddb, false);
 
     return res.status(200).send({
       seed: result.seed,
@@ -1034,7 +1133,14 @@ router.get(
 router.get(
   '/p1p1/:id/:seed',
   util.wrapAsyncApi(async (req, res) => {
-    const result = await generatePack(req.params.id, carddb, req.params.seed);
+    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+    const result = await generatePack(cube, carddb, req.params.seed);
 
     return res.status(200).send({
       seed: req.params.seed,
@@ -1047,8 +1153,8 @@ router.get(
   '/date_updated/:id',
   util.wrapAsyncApi(async (req, res) => {
     const { id } = req.params;
-    const result = await Cube.findOne(buildIdQuery(id), 'date_updated').lean();
-    if (!result) {
+    const result = await Cube.findOne(buildIdQuery(id), 'date_updated isPrivate owner').lean();
+    if (!isCubeViewable(result, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'No such cube.',

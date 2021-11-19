@@ -65,8 +65,15 @@ async function rotateFeatured() {
   return { success: 'true', messages, removed: [old1, old2], added: [new1, new2] };
 }
 
+async function isInFeaturedQueue(cube) {
+  if (!cube) return false;
+  const featured = await FeaturedCubes.getSingleton();
+  return featured.queue.some((f) => cube._id.equals(f.cubeID));
+}
+
 module.exports = {
   updateFeatured,
   rotateFeatured,
   canBeFeatured,
+  isInFeaturedQueue,
 };

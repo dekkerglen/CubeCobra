@@ -1,7 +1,7 @@
-import React, { useCallback, useContext, useRef } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import { postJson } from 'utils/CSRF';
 import { formDataObject } from 'utils/Form';
@@ -10,8 +10,21 @@ import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
 import LoadingButton from 'components/LoadingButton';
 
+const visibilityHelp = {
+  public: 'Anyone can search for and see your cube',
+  unlisted: 'Anyone with a link can see your cube',
+  private: 'Only you can see your cube',
+};
+
+const convertVisibility = (cube) => {
+  if (!cube.isListed && cube.isPrivate) return 'private';
+  if (!cube.isListed && !cube.isPrivate) return 'unlisted';
+  return 'public';
+};
+
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
   const { cube, cubeID, setCube } = useContext(CubeContext);
+  const [visibility, setVisibility] = useState(convertVisibility(cube));
   const formRef = useRef();
 
   const handleSave = useCallback(async () => {
@@ -38,10 +51,6 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
       <ModalBody>
         <CSRFForm innerRef={formRef}>
           <FormGroup check>
-            <Input id="isListed" name="isListed" type="checkbox" defaultChecked={cube.isListed || false} />
-            <Label for="isListed">Is Listed</Label>
-          </FormGroup>
-          <FormGroup check>
             <Input
               id="privatePrices"
               name="privatePrices"
@@ -62,6 +71,21 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
           <FormGroup check>
             <Input id="useCubeElo" name="useCubeElo" type="checkbox" defaultChecked={cube.useCubeElo || false} />
             <Label for="useCubeElo">Use Cube Elo instead of Global Elo</Label>
+          </FormGroup>
+          <FormGroup>
+            <Label for="visibility">Cube Visibility</Label>
+            <CustomInput
+              id="visibility"
+              name="visibility"
+              type="select"
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value)}
+            >
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </CustomInput>
+            <FormText>{visibilityHelp[visibility]}</FormText>
           </FormGroup>
           <FormGroup>
             <Label for="defaultStatus">Default Status</Label>

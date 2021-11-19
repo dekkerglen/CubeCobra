@@ -12,8 +12,6 @@ import {
   DropdownToggle,
   Form,
   Input,
-  InputGroup,
-  InputGroupText,
   Label,
   Modal,
   ModalBody,
@@ -162,50 +160,6 @@ UploadBulkReplaceModal.propTypes = {
 };
 
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
-
-const CubetutorImportModal = ({ isOpen, toggle }) => {
-  const { cubeID } = useContext(CubeContext);
-  return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="cubetutorImportModalTitle">
-      <ModalHeader id="cubetutorImportModalTitle" toggle={toggle}>
-        Bulk Upload - Import from Cubetutor
-      </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/importcubetutor/${cubeID}`}>
-        <ModalBody>
-          <p>
-            Most card versions will be mantained. Some cards with unknown sets will default to the newest printing. Tags
-            will not be imported.
-            <br />
-            <br />
-            Cubetutor does not recognize alternate versions of cards with the same name, in the same set (e.g. Hymn to
-            Tourach alternate arts, Basic Lands, Everythingamajig). These cards should be checked to ensure the desired
-            version has been added.
-          </p>
-          <InputGroup>
-            <InputGroupText>Cube ID (enter cube id from URL):</InputGroupText>
-            {/* FIXME: For some reason hitting enter in this input doesn't submit the form. */}
-            <Input type="number" name="cubeid" placeholder="e.g. 123456" />
-          </InputGroup>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="success" type="submit">
-            Import
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </CSRFForm>
-    </Modal>
-  );
-};
-
-CubetutorImportModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
-const CubetutorImportModalItem = withModal(DropdownItem, CubetutorImportModal);
 
 const SelectEmptyModal = ({ isOpen, toggle }) => (
   <Modal isOpen={isOpen} toggle={toggle} labelledBy="selectEmptyTitle">
@@ -439,7 +393,6 @@ const CubeListNavbar = ({
                     <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
                     <UploadBulkModalItem>Upload File</UploadBulkModalItem>
                     <UploadBulkReplaceModalItem>Replace with CSV File Upload</UploadBulkReplaceModalItem>
-                    <CubetutorImportModalItem>Import from CubeTutor</CubetutorImportModalItem>
                     <DropdownItem divider />
                     <DropdownItem disabled>Export</DropdownItem>
                   </>

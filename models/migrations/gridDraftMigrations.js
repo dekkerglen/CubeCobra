@@ -33,7 +33,7 @@ const dedupeCardObjects = async (gridDraft) => {
     );
   }
   addBasics(cardsArray, cube.basics, gridDraft);
-  cardsArray = cleanCards(cardsArray).map((card, index) => ({ ...card, index }));
+  cardsArray = cleanCards(cardsArray)[0].map((card, index) => ({ ...card, index }));
 
   const replaceWithIndex = (card) => {
     const idx = cardsArray.findIndex((card2) => card && card2 && cardsAreEquivalent(card, card2));
