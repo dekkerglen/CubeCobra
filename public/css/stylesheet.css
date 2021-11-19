@@ -1179,8 +1179,11 @@ audio {
 	border-color:var(--border-light) var(--border-light) var(--bg)
 }
 
-a{
+a {
 	color: var(--link);
+}
+
+a, button.btn-link {
 	text-decoration: none;
 }
 
