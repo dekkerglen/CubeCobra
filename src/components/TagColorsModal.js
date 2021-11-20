@@ -154,7 +154,12 @@ class TagColorsModalRaw extends Component {
         <ModalBody>
           <Form className="mb-2">
             <Label>
-              <Input type="checkbox" className="me-1" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
+              <Input
+                type="checkbox"
+                className="me-1"
+                checked={showTagColors}
+                onChange={this.handleChangeShowTagColors}
+              />
               Show Tag Colors in Card List
             </Label>
           </Form>
