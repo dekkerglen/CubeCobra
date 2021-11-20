@@ -74,7 +74,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
           </FormGroup>
           <FormGroup>
             <Label for="visibility">Cube Visibility</Label>
-            <CustomInput
+            <Input
               id="visibility"
               name="visibility"
               type="select"
@@ -84,7 +84,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               <option value="public">Public</option>
               <option value="unlisted">Unlisted</option>
               <option value="private">Private</option>
-            </CustomInput>
+            </Input>
             <FormText>{visibilityHelp[visibility]}</FormText>
           </FormGroup>
           <FormGroup>
