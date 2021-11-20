@@ -405,7 +405,7 @@ const CubeListNavbar = ({
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isSortUsed} onChange={() => {}} /> Use Sort
+                    <Input type="checkbox" className="me-1" checked={isSortUsed} onChange={() => {}} /> Use Sort
                     <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
                       <QuestionIcon size={16} />
                     </Tooltip>
@@ -413,7 +413,7 @@ const CubeListNavbar = ({
                 </DropdownItem>
                 <DropdownItem toggle={false} onClick={() => setIsFilterUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isFilterUsed} onChange={() => {}} /> Use Filter
+                    <Input type="checkbox" className="me-1" checked={isFilterUsed} onChange={() => {}} /> Use Filter
                     <Tooltip
                       text="Include in export only cards matching current filter."
                       wrapperTag="span"
