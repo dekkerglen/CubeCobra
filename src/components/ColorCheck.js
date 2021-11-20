@@ -1,25 +1,8 @@
 import React, { Fragment, useCallback } from 'react';
 
-import { Button, ButtonGroup, FormGroup, Input, Label } from 'reactstrap';
+import { Button, ButtonGroup, Input } from 'reactstrap';
 
 import { COLORS } from '../utils/Util';
-
-export const ColorChecks = ({ prefix, values, onChange }) =>
-  COLORS.map(([color, short]) => (
-    <FormGroup key={short} check inline>
-      <Label check>
-        <ColorCheck
-          key={short}
-          prefix={prefix}
-          color={color}
-          short={short}
-          value={values[`${prefix || 'color'}${short}`]}
-          onChange={onChange}
-        />
-        <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} />
-      </Label>
-    </FormGroup>
-  ));
 
 export const ColorCheckButton = ({ prefix, size, color, short, value, onChange }) => {
   const handleClick = useCallback(

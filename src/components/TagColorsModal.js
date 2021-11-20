@@ -152,9 +152,9 @@ class TagColorsModalRaw extends Component {
       <Modal isOpen={isOpen} toggle={toggle}>
         <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
         <ModalBody>
-          <Form inline className="mb-2">
+          <Form className="mb-2">
             <Label>
-              <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
+              <Input type="checkbox" className="me-1" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
               Show Tag Colors in Card List
             </Label>
           </Form>

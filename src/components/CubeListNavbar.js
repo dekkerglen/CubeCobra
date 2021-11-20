@@ -22,7 +22,6 @@ import {
   NavLink,
   Navbar,
   NavbarToggler,
-  Row,
   UncontrolledDropdown,
   FormGroup,
 } from 'reactstrap';
@@ -194,22 +193,22 @@ const CompareCollapse = (props) => {
   return (
     <Collapse {...props}>
       <Container>
-        <Row>
-          <Col>
-            <Form method="GET" action={targetUrl} inline>
-              <Input
-                type="text"
-                className="mb-2 me-2"
-                placeholder="Comparison Cube ID"
-                value={compareID}
-                onChange={handleChange}
-              />
-              <Button color="success" className="mb-2" href={targetUrl}>
-                Compare Cubes
-              </Button>
-            </Form>
+        <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
+          <Col xs={12}>
+            <Input
+              type="text"
+              className="mb-2 me-2"
+              placeholder="Comparison Cube ID"
+              value={compareID}
+              onChange={handleChange}
+            />
           </Col>
-        </Row>
+          <Col>
+            <Button color="success" className="mb-2" href={targetUrl}>
+              Compare Cubes
+            </Button>
+          </Col>
+        </Form>
       </Container>
     </Collapse>
   );
