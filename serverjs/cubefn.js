@@ -243,7 +243,7 @@ function CSVtoCards(csvString, carddb) {
     'collector number': collectorNumber,
     status,
     finish,
-    maybeboard,
+    maybeboard = 'false',
     'image url': imageUrl,
     'image back url': imageBackUrl,
     tags,
