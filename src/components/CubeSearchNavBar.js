@@ -113,7 +113,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
 
   return (
     <>
-      <Button color="success" onClick={toggle}>
+      <Button color="accent" onClick={toggle}>
         Advanced...
       </Button>
       <Modal size="lg" isOpen={isOpen} toggle={toggle}>
@@ -173,7 +173,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" onClick={submit}>
+          <Button color="accent" onClick={submit}>
             Search
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -245,7 +245,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
               </option>
             ))}
           </Input>
-          <Button color="success" className="mx-2">
+          <Button color="accent" className="mx-2">
             Search
           </Button>
           <AdvancedSearchModal isOpen={isOpen} toggle={toggle} setQuery={setQuery} />

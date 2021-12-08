@@ -43,7 +43,7 @@ const CreateCubeModal = ({ isOpen, toggle }) => {
               <Spinner />
             </div>
           )}
-          <Button type="submit" color="success" block outline disabled={loading}>
+          <Button type="submit" color="accent" block outline disabled={loading}>
             Create
           </Button>
         </ModalFooter>

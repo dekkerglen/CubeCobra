@@ -178,7 +178,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
         </InputGroup>
       </ModalBody>
       <ModalFooter>
-        <Button color="success" onClick={add}>
+        <Button color="accent" onClick={add}>
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>

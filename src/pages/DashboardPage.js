@@ -61,7 +61,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
                 ) : (
                   <p className="m-2">
                     You don't have any cubes.{' '}
-                    <CreateCubeModalButton color="success">Add a new cube?</CreateCubeModalButton>
+                    <CreateCubeModalButton color="accent">Add a new cube?</CreateCubeModalButton>
                   </p>
                 )}
               </Row>

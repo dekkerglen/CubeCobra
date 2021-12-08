@@ -250,7 +250,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
             {card.image_flip && (
               <Button
                 className="mt-1"
-                color="success"
+                color="accent"
                 outline
                 block
                 onClick={() => {
@@ -269,7 +269,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Played in {cardPopularity({ details: card })}%
                 <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
               </p>
-              <AddModal color="success" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
+              <AddModal color="accent" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
@@ -476,14 +476,14 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 <CardBody>
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={`/search/card:"${card.name}"/0`} target="_blank">
+                      <ButtonLink outline color="accent" block href={`/search/card:"${card.name}"/0`} target="_blank">
                         {`Cubes with ${card.name}`}
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
                         target="_blank"
@@ -492,19 +492,19 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
+                      <ButtonLink outline color="accent" block href={card.scryfall_uri} target="_blank">
                         View on Scryfall
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+                      <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                         View on TCGPlayer
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={getCardKingdomLink({ details: card })}
                         target="_blank"
@@ -515,7 +515,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}`}
                         target="_blank"
@@ -526,7 +526,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
                         target="_blank"
@@ -600,7 +600,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <h4>Purchase</h4>
             </CardHeader>
             <CardBody>
-              <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -616,7 +616,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   )}
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardKingdomLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardKingdomLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -625,7 +625,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   </Col>
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardMarketLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardMarketLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -641,7 +641,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   )}
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardHoarderLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardHoarderLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">

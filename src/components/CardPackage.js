@@ -101,7 +101,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
 
                 <AddGroupToCubeModalLink
                   outline
-                  color="success"
+                  color="accent"
                   modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage._id }}
                 >
                   Add To Cube
@@ -113,7 +113,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
                         Remove Approval
                       </Button>
                     ) : (
-                      <Button outline color="success" className="mx-2" onClick={approve}>
+                      <Button outline color="accent" className="mx-2" onClick={approve}>
                         Approve
                       </Button>
                     )}

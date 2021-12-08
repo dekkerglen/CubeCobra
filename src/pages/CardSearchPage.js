@@ -102,10 +102,10 @@ const CardSearchPage = ({ loginCallback }) => {
           </Col>
           <Col xs="6">
             <div className="text-end">
-              <ButtonLink outline color="success" href="/tool/topcards">
+              <ButtonLink outline color="accent" href="/tool/topcards">
                 View Top Cards
               </ButtonLink>{' '}
-              <ButtonLink outline color="success" href="/packages/browse">
+              <ButtonLink outline color="accent" href="/packages/browse">
                 View Card Packages
               </ButtonLink>
             </div>

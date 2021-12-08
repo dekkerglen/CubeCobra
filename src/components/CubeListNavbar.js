@@ -63,7 +63,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -103,7 +103,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
           </Label>
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -141,7 +141,7 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
           </Label>
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -204,7 +204,7 @@ const CompareCollapse = (props) => {
             />
           </Col>
           <Col>
-            <Button color="success" className="mb-2" href={targetUrl}>
+            <Button color="accent" className="mb-2" href={targetUrl}>
               Compare Cubes
             </Button>
           </Col>

@@ -141,7 +141,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             Analytics
           </Button>
         )}
-        <Button color="success" onClick={add}>
+        <Button color="accent" onClick={add}>
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>

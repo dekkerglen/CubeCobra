@@ -88,7 +88,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
-                <Button type="submit" color="success" block disabled={!hasChanges}>
+                <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Save
                 </Button>
               </CSRFForm>
@@ -103,7 +103,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
-                <Button type="submit" outline color="success" block>
+                <Button type="submit" outline color="accent" block>
                   Submit for Review
                 </Button>
               </CSRFForm>

@@ -306,7 +306,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         <Button color="danger" aria-label="Close" onClick={toggle}>
           Cancel
         </Button>
-        <Button color="success" type="submit">
+        <Button color="accent" type="submit">
           Apply
         </Button>
       </ModalFooter>
@@ -512,7 +512,7 @@ class FilterCollapse extends Component {
                   onChange={this.handleChange}
                   onKeyDown={this.handleKeyDown}
                 />
-                <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
+                <LoadingButton color="accent" className="square-left" onClick={this.handleApply} loading={loading}>
                   Apply
                 </LoadingButton>
               </InputGroup>
@@ -584,7 +584,7 @@ class FilterCollapse extends Component {
             </InputGroup>
           </Col>
           <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <Button type="submit" onClick={this.applyQuick} size="sm" color="success" className="mb-3">
+            <Button type="submit" onClick={this.applyQuick} size="sm" color="accent" className="mb-3">
               Quick Filter
             </Button>
           </Col>

@@ -83,7 +83,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
                   />
                 </Col>
                 <Col>
-                  <LoadingButton color="success" type="submit" disabled={addValue.length === 0} loading={loading}>
+                  <LoadingButton color="accent" type="submit" disabled={addValue.length === 0} loading={loading}>
                     Add
                   </LoadingButton>
                 </Col>
@@ -95,7 +95,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
                 </div>
                 <Input type="hidden" name="title" value={blogpost.title} />
                 <Input type="hidden" name="blog" value={blogpost.html} />
-                <Button color="success" type="submit" className="mt-3" block outline>
+                <Button color="accent" type="submit" className="mt-3" block outline>
                   Save Changes
                 </Button>
               </CSRFForm>

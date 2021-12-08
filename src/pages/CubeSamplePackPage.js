@@ -26,10 +26,10 @@ const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
                 <h5 className="card-title">Sample Pack</h5>
               </Col>
               <Col md={6} className="text-end">
-                <a className="btn btn-success me-2" href={`/cube/samplepack/${cube._id}`}>
+                <a className="btn btn-accent me-2" href={`/cube/samplepack/${cube._id}`}>
                   New Pack
                 </a>
-                <a className="btn btn-success" href={`/cube/samplepackimage/${cube._id}/${seed}`}>
+                <a className="btn btn-accent" href={`/cube/samplepackimage/${cube._id}/${seed}`}>
                   Get Image
                 </a>
               </Col>

@@ -208,7 +208,7 @@ const Maybeboard = ({ filter, ...props }) => {
               />
             </Col>
             <Col xs="3" sm="auto">
-              <LoadingButton color="success" type="submit" className="w-100" loading={loading}>
+              <LoadingButton color="accent" type="submit" className="w-100" loading={loading}>
                 Add
               </LoadingButton>
             </Col>

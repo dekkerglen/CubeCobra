@@ -22,7 +22,7 @@ const VideoPage = ({ loginCallback, video }) => {
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="success" outline href={`/content/video/edit/${video._id}`}>
+              <ButtonLink color="accent" outline href={`/content/video/edit/${video._id}`}>
                 Edit
               </ButtonLink>
             </h5>

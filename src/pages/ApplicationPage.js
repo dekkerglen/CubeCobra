@@ -33,7 +33,7 @@ const AdminDashboardPage = ({ loginCallback }) => (
             name="info"
             placeholder="Please list as much info as you can here."
           />
-          <Button color="success" block outline>
+          <Button color="accent" block outline>
             Submit
           </Button>
         </CardBody>

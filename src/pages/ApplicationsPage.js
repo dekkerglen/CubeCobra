@@ -56,7 +56,7 @@ const AdminDashboardPage = ({ loginCallback, applications, count, page }) => (
             </p>
             <Row>
               <Col xs="12" sm="6">
-                <ButtonLink color="success" block outline href={`/admin/application/approve/${application._id}`}>
+                <ButtonLink color="accent" block outline href={`/admin/application/approve/${application._id}`}>
                   Approve
                 </ButtonLink>
               </Col>

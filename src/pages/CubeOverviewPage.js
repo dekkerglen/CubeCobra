@@ -255,7 +255,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     action={`/cube/${cubeState.isFeatured ? 'unfeature/' : 'feature/'}${cubeState._id}`}
                     className="mt-2"
                   >
-                    <Button color="success" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
+                    <Button color="accent" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
                       {' '}
                       {cubeState.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
                     </Button>
@@ -269,7 +269,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     Unfollow
                   </Button>
                 ) : (
-                  <Button color="success" className="rounded-0" onClick={follow}>
+                  <Button color="accent" className="rounded-0" onClick={follow}>
                     Follow
                   </Button>
                 ))}

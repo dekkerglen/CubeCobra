@@ -113,7 +113,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
         <Button color="secondary" onClick={toggle}>
           Close
         </Button>{' '}
-        <LoadingButton color="success" onClick={handleSave}>
+        <LoadingButton color="accent" onClick={handleSave}>
           Save Changes
         </LoadingButton>
       </ModalFooter>

@@ -98,7 +98,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
             <Input type="hidden" name="commentid" value={comment._id} />
           </ModalBody>
           <ModalFooter>
-            <Button color="success">Submit Report</Button>
+            <Button color="accent">Submit Report</Button>
             <Button color="danger" onClick={toggleReportModal}>
               Cancel
             </Button>

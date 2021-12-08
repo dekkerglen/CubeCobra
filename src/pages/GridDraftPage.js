@@ -63,7 +63,7 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
             <Button
               block
               outline
-              color="success"
+              color="accent"
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -84,7 +84,7 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
             <Button
               className="float-end h-100"
               outline
-              color="success"
+              color="accent"
               onClick={() => {
                 makePick({
                   seatIndex,

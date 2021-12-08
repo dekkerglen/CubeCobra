@@ -200,7 +200,7 @@ const CardModal = ({
           Buy
         </Button>
         {!disabled && (
-          <LoadingButton color="success" onClick={saveChanges}>
+          <LoadingButton color="accent" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
           </LoadingButton>

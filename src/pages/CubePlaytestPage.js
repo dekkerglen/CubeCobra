@@ -69,7 +69,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -205,16 +205,16 @@ const CustomDraftCard = ({
           <Input type="hidden" name="id" value={index} />
           <div className="justify-content-center align-items-center">
             {loading && <Spinner className="position-absolute" />}
-            <Button type="submit" color="success" className="me-2" disabled={loading}>
+            <Button type="submit" color="accent" className="me-2" disabled={loading}>
               Start Draft
             </Button>
             {canEdit && (
               <>
-                <Button color="success" className="me-2" onClick={onEditFormat} data-index={index}>
+                <Button color="accent" className="me-2" onClick={onEditFormat} data-index={index}>
                   Edit
                 </Button>
                 {defaultDraftFormat !== index && (
-                  <Button color="success" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
+                  <Button color="accent" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
                     Make Default
                   </Button>
                 )}
@@ -296,12 +296,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
           <Input type="hidden" name="id" value="-1" />
           <div className="justify-content-center align-items-center">
             {loading && <Spinner className="position-absolute" />}
-            <Button color="success" className="me-2" disabled={loading}>
+            <Button color="accent" className="me-2" disabled={loading}>
               Start Draft
             </Button>
           </div>
           {canEdit && defaultDraftFormat !== -1 && (
-            <Button color="success" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
+            <Button color="accent" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
               Make Default
             </Button>
           )}
@@ -337,7 +337,7 @@ const SealedCard = () => {
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Button color="success">Start Sealed</Button>
+          <Button color="accent">Start Sealed</Button>
         </CardFooter>
       </CSRFForm>
     </Card>
@@ -369,7 +369,7 @@ const GridCard = () => {
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Button color="success">Start Grid Draft</Button>
+          <Button color="accent">Start Grid Draft</Button>
         </CardFooter>
       </CSRFForm>
     </Card>
@@ -414,10 +414,10 @@ const SamplePackCard = (props) => {
         </LabelRow>
       </CardBody>
       <CardFooter>
-        <Button color="success" className="me-2" href={`/cube/samplepack/${cubeID}`}>
+        <Button color="accent" className="me-2" href={`/cube/samplepack/${cubeID}`}>
           View Random
         </Button>
-        <Button color="success" disabled={!seed} href={`/cube/samplepack/${cubeID}/${seed}`}>
+        <Button color="accent" disabled={!seed} href={`/cube/samplepack/${cubeID}/${seed}`}>
           View Seeded
         </Button>
       </CardFooter>

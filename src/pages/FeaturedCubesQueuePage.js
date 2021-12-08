@@ -42,7 +42,7 @@ const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
       </ModalBody>
       <ModalFooter>
         <Button
-          color="success"
+          color="accent"
           onClick={() => {
             onSubmit(input);
             toggle();
@@ -76,7 +76,7 @@ const AddCubeModal = ({ isOpen, toggle }) => (
         </InputGroup>
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success">
+        <Button type="submit" color="accent">
           Submit
         </Button>
         <Button type="button" color="secondary" onClick={toggle}>
@@ -134,7 +134,7 @@ const MoveModal = ({ isOpen, toggle, cube, index }) => (
       </CSRFForm>
     </ModalBody>
     <ModalFooter>
-      <Button color="success" form="move-cube-form" type="submit">
+      <Button color="accent" form="move-cube-form" type="submit">
         Submit
       </Button>
       <Button color="secondary" onClick={toggle}>
@@ -264,7 +264,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
               <h6>Last rotation: {lastRotation.toLocaleDateString()}</h6>
             </Col>
             <Col className="mb-4">
-              <AddCubeButton outline color="success" className="me-md-4 mb-xs-2 mb-md-0">
+              <AddCubeButton outline color="accent" className="me-md-4 mb-xs-2 mb-md-0">
                 Add Cube to Queue
               </AddCubeButton>
               <RotateButton outline color="secondary">
