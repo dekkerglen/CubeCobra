@@ -218,12 +218,12 @@ const CustomDraftCard = ({
                     Make Default
                   </Button>
                 )}
-                <Button color="danger" id={`deleteToggler-${index}`}>
+                <Button color="unsafe" id={`deleteToggler-${index}`}>
                   Delete
                 </Button>
                 <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
                   <h6 className="my-4">Are you sure? This action cannot be undone.</h6>
-                  <Button color="danger" onClick={onDeleteFormat} data-index={index}>
+                  <Button color="unsafe" onClick={onDeleteFormat} data-index={index}>
                     Yes, delete this format
                   </Button>
                 </UncontrolledCollapse>

@@ -23,7 +23,7 @@ const LeaveWarningPage = ({ url, loginCallback }) => (
         <p>Are you sure you want to proceed?</p>
       </CardBody>
       <CardFooter>
-        <ButtonLink href={url} color="danger">
+        <ButtonLink href={url} color="unsafe">
           Yes, continue
         </ButtonLink>
         <Button className="ms-2" color="secondary" onClick={back}>

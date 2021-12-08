@@ -91,7 +91,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
                 <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
                 <Button
                   className="mt-1"
-                  color="danger"
+                  color="unsafe"
                   outline
                   block
                   onClick={() => {

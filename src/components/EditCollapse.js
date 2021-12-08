@@ -296,7 +296,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
               <Button color="accent" className="me-2" type="submit">
                 Save Changes
               </Button>
-              <Button color="danger" onClick={handleDiscardAll}>
+              <Button color="unsafe" onClick={handleDiscardAll}>
                 Discard All
               </Button>
             </Col>

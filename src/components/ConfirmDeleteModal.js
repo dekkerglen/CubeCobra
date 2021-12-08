@@ -13,7 +13,7 @@ const ConfirmDeleteModal = ({ isOpen, toggle, text, submitDelete }) => {
       </ModalBody>
       <ModalFooter>
         <Button
-          color="danger"
+          color="unsafe"
           onClick={() => {
             submitDelete();
             toggle();

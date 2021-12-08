@@ -267,7 +267,7 @@ const SortCollapse = ({
               </Button>
             )}
             <Button
-              color={showOther ? 'danger' : 'primary'}
+              color={showOther ? 'unsafe' : 'primary'}
               className="me-sm-2 mb-3"
               onClick={() => {
                 const newShowOther = !showOther;

@@ -46,7 +46,7 @@ const ReviewPodcastsPage = ({ loginCallback, podcasts, count, page }) => (
               </ButtonLink>
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="danger" outline block href={`/admin/removepodcastreview/${podcast._id}`}>
+              <ButtonLink color="unsafe" outline block href={`/admin/removepodcastreview/${podcast._id}`}>
                 Remove from Reviews
               </ButtonLink>
             </Col>

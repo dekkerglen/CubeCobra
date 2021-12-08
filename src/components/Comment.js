@@ -99,7 +99,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
           </ModalBody>
           <ModalFooter>
             <Button color="accent">Submit Report</Button>
-            <Button color="danger" onClick={toggleReportModal}>
+            <Button color="unsafe" onClick={toggleReportModal}>
               Cancel
             </Button>
           </ModalFooter>

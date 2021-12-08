@@ -108,7 +108,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <Spinner className="position-absolute" />
         </div>
         <ModalFooter>
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -137,7 +137,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -184,7 +184,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
         <Button color="secondary" onClick={maybe}>
           Maybeboard
         </Button>
-        <Button color="danger" onClick={toggle}>
+        <Button color="unsafe" onClick={toggle}>
           Close
         </Button>
       </ModalFooter>

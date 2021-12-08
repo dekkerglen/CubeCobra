@@ -109,7 +109,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
                 {user.roles.includes('Admin') && (
                   <>
                     {cardPackage.approved ? (
-                      <Button outline color="danger" className="mx-2" onClick={unapprove}>
+                      <Button outline color="unsafe" className="mx-2" onClick={unapprove}>
                         Remove Approval
                       </Button>
                     ) : (
@@ -117,7 +117,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
                         Approve
                       </Button>
                     )}
-                    <Button outline color="danger" onClick={remove}>
+                    <Button outline color="unsafe" onClick={remove}>
                       Delete
                     </Button>
                   </>

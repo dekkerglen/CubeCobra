@@ -84,7 +84,7 @@ const RemoveFeaturedModal = ({ isOpen, toggle }) => {
       <ModalBody>
         <p>You are about to remove your cube from the featured cubes queue. Do you wish to proceed?</p>
         <CSRFForm method="POST" action="/user/unqueuefeatured">
-          <Button type="submit" block color="danger" outline>
+          <Button type="submit" block color="unsafe" outline>
             Yes, remove my cube.
           </Button>
         </CSRFForm>
@@ -368,7 +368,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                               >
                                 Replace in&nbsp;queue
                               </AddFeaturedButton>
-                              <RemoveFeaturedButton className="mt-2" block outline color="danger">
+                              <RemoveFeaturedButton className="mt-2" block outline color="unsafe">
                                 Remove from&nbsp;queue
                               </RemoveFeaturedButton>
                             </Col>
@@ -394,7 +394,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     <p className="text-center">
                       <i>More Patreon features are coming soon!</i>
                     </p>
-                    <Button block outline color="danger" href="/patreon/unlink">
+                    <Button block outline color="unsafe" href="/patreon/unlink">
                       Unlink Patreon Account
                     </Button>
                   </CardBody>

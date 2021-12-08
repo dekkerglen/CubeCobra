@@ -95,7 +95,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
               Analytics
             </Button>
           )}
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -147,7 +147,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
         <Button color="secondary" onClick={maybe}>
           Maybeboard
         </Button>
-        <Button color="danger" onClick={toggle}>
+        <Button color="unsafe" onClick={toggle}>
           Close
         </Button>
       </ModalFooter>

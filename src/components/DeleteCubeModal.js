@@ -17,7 +17,7 @@ const DeleteCubeModal = ({ isOpen, toggle, cubeid }) => {
           <Input value={deleteText} onChange={(e) => setDeleteText(e.target.value)} />
         </ModalBody>
         <ModalFooter>
-          <Button type="submit" color="danger" outline disabled={deleteText !== 'Delete'}>
+          <Button type="submit" color="unsafe" outline disabled={deleteText !== 'Delete'}>
             Delete
           </Button>
           <Button onClick={toggle}>Close</Button>

@@ -46,7 +46,7 @@ const ReviewVideosPage = ({ loginCallback, videos, count, page }) => (
               </ButtonLink>
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="danger" outline block href={`/admin/removevideoreview/${video._id}`}>
+              <ButtonLink color="unsafe" outline block href={`/admin/removevideoreview/${video._id}`}>
                 Remove from Reviews
               </ButtonLink>
             </Col>

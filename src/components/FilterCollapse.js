@@ -303,7 +303,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         />
       </ModalBody>
       <ModalFooter>
-        <Button color="danger" aria-label="Close" onClick={toggle}>
+        <Button color="unsafe" aria-label="Close" onClick={toggle}>
           Cancel
         </Button>
         <Button color="accent" type="submit">
@@ -598,7 +598,7 @@ class FilterCollapse extends Component {
         </Row>
         <Row>
           <Col>
-            <Button color="danger" className="me-2 mb-3" onClick={this.handleReset}>
+            <Button color="unsafe" className="me-2 mb-3" onClick={this.handleReset}>
               Reset Filters
             </Button>
             <Button color="primary" className="me-2 mb-3" onClick={this.toggleAdvanced}>

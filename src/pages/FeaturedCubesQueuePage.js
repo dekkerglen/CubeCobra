@@ -98,7 +98,7 @@ const RotateModal = ({ isOpen, toggle }) => (
     <ModalBody>
       <p>You are about to rotate the featured cubes. Are you sure?</p>
       <CSRFForm method="POST" action="/admin/featuredcubes/rotate">
-        <Button type="submit" outline block color="danger">
+        <Button type="submit" outline block color="unsafe">
           Yes, I'm sure
         </Button>
       </CSRFForm>
@@ -175,7 +175,7 @@ const QueueItem = ({ cube, index, onMove }) => (
               <Col xs={4} md={12}>
                 <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
                   <input type="hidden" name="cubeId" value={cube._id} />
-                  <Button type="submit" color="danger" outline disabled={index < 2}>
+                  <Button type="submit" color="unsafe" outline disabled={index < 2}>
                     Remove
                   </Button>
                 </CSRFForm>

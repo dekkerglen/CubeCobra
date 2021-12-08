@@ -265,7 +265,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
               {user &&
                 cubeState.owner !== user.id &&
                 (followedState ? (
-                  <Button outline color="danger" className="rounded-0" onClick={unfollow}>
+                  <Button outline color="unsafe" className="rounded-0" onClick={unfollow}>
                     Unfollow
                   </Button>
                 ) : (

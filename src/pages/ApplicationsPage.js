@@ -61,7 +61,7 @@ const AdminDashboardPage = ({ loginCallback, applications, count, page }) => (
                 </ButtonLink>
               </Col>
               <Col xs="12" sm="6">
-                <ButtonLink color="danger" block outline href={`/admin/application/decline/${application._id}`}>
+                <ButtonLink color="unsafe" block outline href={`/admin/application/decline/${application._id}`}>
                   Decline
                 </ButtonLink>
               </Col>

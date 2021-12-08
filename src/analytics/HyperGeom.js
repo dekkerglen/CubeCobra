@@ -304,7 +304,7 @@ const HyperGeom = () => {
                 </Col>
               ))}
             </Row>
-            <Button className="mb-3" color="danger" block onClick={clear}>
+            <Button className="mb-3" color="unsafe" block onClick={clear}>
               Reset
             </Button>
           </>
