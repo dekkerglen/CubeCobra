@@ -214,6 +214,62 @@ describe('CSVtoCards', () => {
     expectSame(newMaybe[0], expectedMaybe);
     expect(missing).toEqual([]);
   });
+
+  it('can handle imports without a Maybeboard column', async () => {
+    const expectedId = 'aaae15dd-11b6-4421-99e9-365c7fe4a5d6';
+    const expectedCards = [
+      {
+        name: 'Embercleave',
+        cmc: '3',
+        typeLine: 'Creature - Test',
+        colors: ['U'],
+        set: 'ELD',
+        collectorNumber: '359',
+        status: 'Owned',
+        finish: 'Is Foil',
+        imgUrl: 'http://example.com/',
+        tags: ['tag1', 'tag2'],
+      },
+    ];
+
+    const CSV_HEADER = 'Name,CMC,Type,Color,Set,Collector Number,Status,Finish,Image URL,Tags';
+
+    const cards = expectedCards.reduce((acc, next) => {
+      const { name, cmc, typeLine, colors, set, collectorNumber, status, finish, imgUrl, tags } = next;
+
+      acc +=
+        `\n` +
+        `${name},${cmc},${typeLine.replace('—', '-')},` +
+        `${colors.join('')},${set},${collectorNumber},` +
+        `${status},${finish},${imgUrl},${tags.join(';')}`;
+
+      return acc;
+    }, CSV_HEADER);
+
+    await carddb.initializeCardDb(fixturesPath, true);
+    const { newCards, missing } = cubefn.CSVtoCards(cards, carddb);
+
+    expect.extend({
+      equalsArray: (received, expected) => ({
+        message: () => `expected ${received} to equal array ${expected}`,
+        pass: arraysEqual(received, expected),
+      }),
+    });
+    const expectSame = (card, expected) => {
+      expect(card.cardID).toBe(expectedId);
+      expect(card.name).toBe(expected.name);
+      expect(card.cmc).toBe(expected.cmc);
+      expect(card.colors).equalsArray(expected.colors);
+      expect(card.collectorNumber).toBe(expected.collector_number);
+      expect(card.status).toBe(expected.status);
+      expect(card.finish).toBe(expected.finish);
+      expect(card.imgUrl).toBe(expected.imgUrl);
+      expect(card.tags).equalsArray(expected.tags);
+    };
+    expect(newCards.length).toBe(1);
+    expectSame(newCards[0], expectedCards[0]);
+    expect(missing).toEqual([]);
+  });
 });
 
 describe('compareCubes', () => {
