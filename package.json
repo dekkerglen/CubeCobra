@@ -54,7 +54,7 @@
     "bad-words": "^3.0.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
-    "canvas": "^2.6.1",
+    "canvas": "^2.8.0",
     "chart.js": "^2.9.4",
     "cheerio": "^1.0.0-rc.10",
     "classnames": "^2.2.6",
