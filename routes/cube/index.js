@@ -28,6 +28,9 @@ const {
   addDeckCardAnalytics,
   cachePromise,
   isCubeViewable,
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
 } = require('../../serverjs/cubefn.js');
 
 const {
@@ -456,8 +459,24 @@ router.get('/rss/:id', async (req, res) => {
     blogs.forEach((blog) => {
       let content = blog.html ? blog.html : blog.content;
 
-      if (blog.changelist) {
-        const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+      if (blog.changelist || blog.changed_cards) {
+        let changeSetElement = '<div class="change-set">';
+        if (blog.changelist) changeSetElement += blog.changelist;
+        else {
+          for (const change in blog.changed_cards) {
+            if (change.addedID && change.removedID) {
+              changeSetElement += replaceCardHtml(
+                carddb.cardFromId(change.removedID),
+                carddb.cardFromId(change.addedID),
+              );
+            } else if (change.addedID) {
+              changeSetElement += addCardHtml(carddb.cardFromId(change.addedID));
+            } else if (change.removedID) {
+              changeSetElement += removeCardHtml(carddb.cardFromId(change.removedID));
+            }
+          }
+        }
+        changeSetElement += '</div>';
         if (content) {
           content += changeSetElement;
         } else {
