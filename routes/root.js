@@ -14,7 +14,7 @@ const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { getCubeId } = require('../serverjs/cubefn');
-const { getBlogFeedItems } = require('../serverjs/blogpostFeed');
+const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 

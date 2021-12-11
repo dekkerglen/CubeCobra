@@ -53,6 +53,7 @@ const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
 const { fromEntries } = require('../../serverjs/util.js');
+const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
 router.use(csrfProtection);
@@ -412,7 +413,7 @@ router.get('/overview/:id', async (req, res) => {
       'CubeOverviewPage',
       {
         cube,
-        post: blogs ? blogs[0] : null,
+        post: blogs ? fillBlogpostChangelog(blogs[0]) : null,
         followed: req.user && cube.users_following && cube.users_following.some((id) => req.user._id.equals(id)),
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
@@ -459,20 +460,18 @@ router.get('/rss/:id', async (req, res) => {
     blogs.forEach((blog) => {
       let content = blog.html ? blog.html : blog.content;
 
+      fillBlogpostChangelog(blog);
       if (blog.changelist || blog.changed_cards) {
         let changeSetElement = '<div class="change-set">';
         if (blog.changelist) changeSetElement += blog.changelist;
         else {
           for (const change in blog.changed_cards) {
-            if (change.addedID && change.removedID) {
-              changeSetElement += replaceCardHtml(
-                carddb.cardFromId(change.removedID),
-                carddb.cardFromId(change.addedID),
-              );
-            } else if (change.addedID) {
-              changeSetElement += addCardHtml(carddb.cardFromId(change.addedID));
-            } else if (change.removedID) {
-              changeSetElement += removeCardHtml(carddb.cardFromId(change.removedID));
+            if (change.added && change.removed) {
+              changeSetElement += replaceCardHtml(change.removed, change.added);
+            } else if (change.added) {
+              changeSetElement += addCardHtml(change.added);
+            } else if (change.removed) {
+              changeSetElement += removeCardHtml(change.removed);
             }
           }
         }

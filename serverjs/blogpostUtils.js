@@ -1,4 +1,19 @@
 const Blog = require('../models/blog.js');
+const carddb = require('./cards.js');
+
+function fillBlogpostChangelog(blog) {
+  if (!blog.changed_cards) return blog;
+  for (const change of blog.changed_cards) {
+    if (change.addedID) {
+      change.added = carddb.cardFromId(change.addedID);
+    }
+    if (change.removedID) {
+      change.removed = carddb.cardFromId(change.removedID);
+    }
+  }
+
+  return blog;
+}
 
 function getBlogFeedItems(user, skip, limit) {
   // aggregation returns POJO results, so no .lean() needed
@@ -41,4 +56,5 @@ function getBlogFeedItems(user, skip, limit) {
 
 module.exports = {
   getBlogFeedItems,
+  fillBlogpostChangelog,
 };

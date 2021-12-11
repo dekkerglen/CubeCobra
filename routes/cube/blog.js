@@ -12,6 +12,7 @@ const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../..
 const Cube = require('../../models/cube');
 const Blog = require('../../models/blog');
 const User = require('../../models/user');
+const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
 
@@ -103,7 +104,7 @@ router.get('/blogpost/:id', async (req, res) => {
       req.flash('danger', 'Blog post not found');
       return res.redirect('/cube/blog/404');
     }
-
+    fillBlogpostChangelog(post);
     return render(req, res, 'BlogPostPage', {
       post,
     });
@@ -189,6 +190,7 @@ router.get('/:id/:page', async (req, res) => {
       .limit(10)
       .lean();
     const [blogs, count] = await Promise.all([blogsQ, countQ]);
+    blogs.forEach(fillBlogpostChangelog);
 
     return render(
       req,

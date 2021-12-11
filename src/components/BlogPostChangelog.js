@@ -31,7 +31,9 @@ const BlogPostChangelog = ({ cards }) => (
 
       return (
         <>
-          <span className={className}>{symbol}</span>
+          <span className={className} style={{ fontFamily: ['Lucida Console', 'Monaco', 'monospace'] }}>
+            {symbol}
+          </span>{' '}
           {added && <CardHtml card={added} />}
           {added && removed && '>'}
           {removed && <CardHtml card={removed} />}

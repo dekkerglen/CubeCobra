@@ -18,7 +18,7 @@ const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 
 const { buildIdQuery } = require('../serverjs/cubefn.js');
-const { getBlogFeedItems } = require('../serverjs/blogpostFeed');
+const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 
