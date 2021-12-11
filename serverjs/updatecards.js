@@ -575,19 +575,28 @@ function convertColors(card, isExtra = false) {
     return Array.from(card.card_faces[0].colors);
   }
 
-  winston.error(`Error converting colors: (isExtra:${isExtra}) card.name`);
+  winston.error(`Error converting colors: (isExtra:${isExtra}) ${card.name}`);
   return [];
 }
 
-function convertType(card, isExtra) {
-  let type = card.type_line;
-  if (isExtra) {
-    type = type.substring(type.indexOf('/') + 2);
-  } else if (type.includes('//')) {
-    type = type.substring(0, type.indexOf('/'));
+function convertType(card, isExtra, faceAttributeSource) {
+  let type = faceAttributeSource.type_line;
+  if (!type) {
+    type = card.type_line;
+    if (isExtra) {
+      type = type.substring(type.indexOf('/') + 2);
+    } else if (type.includes('//')) {
+      type = type.substring(0, type.indexOf('/'));
+    }
   }
+
   if (type === 'Artifact — Contraption') {
     type = 'Artifact Contraption';
+  }
+
+  if (!type) {
+    winston.error(`Error converting type: (isExtra:${isExtra}) ${card.name} (id: ${card._id})`);
+    return '';
   }
   return type.trim();
 }
@@ -681,12 +690,13 @@ function convertCard(card, isExtra) {
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
   newcard._id = convertId(card, isExtra);
-  newcard.oracle_id = card.oracle_id;
+  // reversible cards have a separate Oracle ID on each face
+  newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
   newcard.cmc = convertCmc(card, isExtra);
   newcard.legalities = convertLegalities(card, isExtra);
   newcard.parsed_cost = convertParsedCost(card, isExtra);
   newcard.colors = convertColors(card, isExtra);
-  newcard.type = convertType(card, isExtra);
+  newcard.type = convertType(card, isExtra, faceAttributeSource);
   newcard.full_art = card.full_art;
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
