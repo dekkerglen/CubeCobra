@@ -54,11 +54,11 @@ const BlogPost = ({ post, noScroll }) => {
         </h6>
       </CardHeader>
       <div style={scrollStyle}>
-        {(post.changed_cards || post.changelist) && (html || post.markdown) ? (
+        {(post.changed_cards?.length || post.changelist) && (html || post.markdown) ? (
           <Row className="no-gutters">
             <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
               <CardBody className="py-2">
-                {post.changed_cards ? (
+                {post.changed_cards?.length ? (
                   <BlogPostChangelog cards={post.changed_cards} />
                 ) : (
                   <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
@@ -77,7 +77,7 @@ const BlogPost = ({ post, noScroll }) => {
           </Row>
         ) : (
           <CardBody className="py-2">
-            {post.changed_cards && <BlogPostChangelog cards={post.changed_cards} />}
+            {post.changed_cards?.length && <BlogPostChangelog cards={post.changed_cards} />}
             {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
             {post.body && <CardText>{post.body}</CardText>}
             {(html || post.markdown) &&
