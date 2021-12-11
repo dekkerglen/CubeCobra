@@ -5,6 +5,7 @@ const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/utils/Card.js');
+const { getFaceAttributeSource } = require('../../serverjs/updatecards');
 
 const emptyFixturePath = 'fixtures/empty.json';
 const cardsFixturePath = 'fixtures/cards_small.json';
@@ -456,6 +457,66 @@ const convertedExampleNonFoilCard = {
   cubeCount: 0,
 };
 
+const convertedExampleReversibleCard = {
+  color_identity: ['U'],
+  set: 'sld',
+  set_name: 'Secret Lair Drop',
+  foil: true,
+  nonfoil: true,
+  collector_number: '381',
+  released_at: '2022-04-22',
+  reprint: true,
+  promo: false,
+  prices: { usd: null, usd_foil: null, eur: null, tix: null },
+  elo: 1200,
+  popularity: 0,
+  cubeCount: 0,
+  pickCount: 0,
+  embedding: [],
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Propaganda',
+  name_lower: 'propaganda',
+  full_name: 'Propaganda [sld-381]',
+  artist: 'Scott Balmer',
+  scryfall_uri: 'https://scryfall.com/card/sld/381/propaganda-propaganda?utm_source=api',
+  rarity: 'rare',
+  oracle_text:
+    "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.\n" +
+    "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+  _id: '3e3f0bcd-0796-494d-bf51-94b33c1671e9',
+  oracle_id: 'ea9709b6-4c37-4d5a-b04d-cd4c42e4f9dd',
+  cmc: 3.0,
+  legalities: {
+    Legacy: 'legal',
+    Modern: 'not_legal',
+    Standard: 'not_legal',
+    Pioneer: 'not_legal',
+    Pauper: 'not_legal',
+    Brawl: 'not_legal',
+    Historic: 'not_legal',
+    Commander: 'legal',
+    Penny: 'not_legal',
+    Vintage: 'legal',
+  },
+  parsed_cost: ['u', '2'],
+  colors: ['U'],
+  type: 'Enchantment',
+  full_art: false,
+  language: 'en',
+  layout: 'reversible_card',
+  image_small:
+    'https://c1.scryfall.com/file/scryfall-cards/small/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  image_normal:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  art_crop:
+    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  image_flip:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  colorcategory: 'u',
+};
+
 const mockRatings = [
   {
     name: 'Inspiring Veteran',
@@ -657,25 +718,40 @@ test('convertCard returns a correctly converted Adventure card object', () => {
   expect(result).toEqual(convertedExampleAdventureCard);
 });
 
+test('convertCard returns a correctly converted reversible card', () => {
+  const result = updatecards.convertCard(examplecards.exampleReversibleCard, false);
+  expect(result).toEqual(convertedExampleReversibleCard);
+});
+
 describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribute) => {
   test('for standard card', () => {
-    const result = updatecards[convertFn](examplecards.exampleCard);
+    const card = examplecards.exampleCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleCard[attribute]);
   });
 
   test('for a double-faced card', () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, false);
+    const card = examplecards.exampleDoubleFacedCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleDoubleFacedCard[attribute]);
   });
 
   test("for Adventure card's creature", () => {
-    const result = updatecards[convertFn](examplecards.exampleAdventureCard, false);
+    const card = examplecards.exampleAdventureCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleAdventureCard[attribute]);
   });
 
   test("for Adventure card's Adventure", () => {
-    const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
+    const card = examplecards.exampleAdventureCard;
+    const result = updatecards[convertFn](card, true, getFaceAttributeSource(card, true));
     expect(result).toEqual(convertedExampleAdventureCardAdventure[attribute]);
+  });
+
+  test('for a reversible card', () => {
+    const card = examplecards.exampleReversibleCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
+    expect(result).toEqual(convertedExampleReversibleCard[attribute]);
   });
 });
 

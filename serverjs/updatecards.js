@@ -78,8 +78,8 @@ const catalog = {};
  *   art_crop: URI?
  *   image_flip: URI?
  *   // Lowercase
- *   color_category: Char
- *   // Card ID's
+ *   colorcategory: Char
+ *   // Card IDs
  *   tokens: [UUID]?
  */
 function initializeCatalog() {
@@ -470,11 +470,11 @@ function getTokens(card, catalogCard) {
   return mentionedTokens;
 }
 
-function convertCmc(card, isExtra) {
+function convertCmc(card, isExtra, faceAttributeSource) {
   if (isExtra) {
     return 0;
   }
-  return card.cmc;
+  return typeof faceAttributeSource.cmc === 'number' ? faceAttributeSource.cmc : card.cmc;
 }
 
 function convertLegalities(card, isExtra) {
@@ -575,19 +575,28 @@ function convertColors(card, isExtra = false) {
     return Array.from(card.card_faces[0].colors);
   }
 
-  winston.error(`Error converting colors: (isExtra:${isExtra}) card.name`);
+  winston.error(`Error converting colors: (isExtra:${isExtra}) ${card.name}`);
   return [];
 }
 
-function convertType(card, isExtra) {
-  let type = card.type_line;
-  if (isExtra) {
-    type = type.substring(type.indexOf('/') + 2);
-  } else if (type.includes('//')) {
-    type = type.substring(0, type.indexOf('/'));
+function convertType(card, isExtra, faceAttributeSource) {
+  let type = faceAttributeSource.type_line;
+  if (!type) {
+    type = card.type_line;
+    if (isExtra) {
+      type = type.substring(type.indexOf('/') + 2);
+    } else if (type.includes('//')) {
+      type = type.substring(0, type.indexOf('/'));
+    }
   }
+
   if (type === 'Artifact — Contraption') {
     type = 'Artifact Contraption';
+  }
+
+  if (!type) {
+    winston.error(`Error converting type: (isExtra:${isExtra}) ${card.name} (id: ${card._id})`);
+    return '';
   }
   return type.trim();
 }
@@ -612,17 +621,24 @@ function convertName(card, isExtra) {
   return str.trim();
 }
 
-function convertCard(card, isExtra) {
+function getFaceAttributeSource(card, isExtra) {
   let faceAttributeSource;
-  const newcard = {};
   if (isExtra) {
     [, faceAttributeSource] = card.card_faces;
-    card = { ...card };
-    card.card_faces = [faceAttributeSource];
   } else if (card.card_faces) {
     [faceAttributeSource] = card.card_faces;
   } else {
     faceAttributeSource = card;
+  }
+  return faceAttributeSource;
+}
+
+function convertCard(card, isExtra) {
+  const faceAttributeSource = getFaceAttributeSource(card, isExtra);
+  const newcard = {};
+  if (isExtra) {
+    card = { ...card };
+    card.card_faces = [faceAttributeSource];
   }
   const name = convertName(card, isExtra);
   newcard.color_identity = Array.from(card.color_identity);
@@ -681,12 +697,13 @@ function convertCard(card, isExtra) {
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
   newcard._id = convertId(card, isExtra);
-  newcard.oracle_id = card.oracle_id;
-  newcard.cmc = convertCmc(card, isExtra);
+  // reversible cards have a separate Oracle ID on each face
+  newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
+  newcard.cmc = convertCmc(card, isExtra, faceAttributeSource);
   newcard.legalities = convertLegalities(card, isExtra);
   newcard.parsed_cost = convertParsedCost(card, isExtra);
   newcard.colors = convertColors(card, isExtra);
-  newcard.type = convertType(card, isExtra);
+  newcard.type = convertType(card, isExtra, faceAttributeSource);
   newcard.full_art = card.full_art;
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
@@ -916,4 +933,5 @@ module.exports = {
   convertParsedCost,
   convertCmc,
   getTokens,
+  getFaceAttributeSource,
 };

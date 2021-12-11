@@ -758,6 +758,153 @@ const exampleNonFoilCard = {
   },
 };
 
+const exampleReversibleCard = {
+  object: 'card',
+  id: '3e3f0bcd-0796-494d-bf51-94b33c1671e9',
+  multiverse_ids: [],
+  name: 'Propaganda // Propaganda',
+  lang: 'en',
+  released_at: '2022-04-22',
+  uri: 'https://api.scryfall.com/cards/3e3f0bcd-0796-494d-bf51-94b33c1671e9',
+  scryfall_uri: 'https://scryfall.com/card/sld/381/propaganda-propaganda?utm_source=api',
+  layout: 'reversible_card',
+  highres_image: false,
+  image_status: 'lowres',
+  color_identity: ['U'],
+  keywords: [],
+  card_faces: [
+    {
+      object: 'card_face',
+      oracle_id: 'ea9709b6-4c37-4d5a-b04d-cd4c42e4f9dd',
+      layout: 'normal',
+      name: 'Propaganda',
+      flavor_name: '',
+      mana_cost: '{2}{U}',
+      cmc: 3,
+      type_line: 'Enchantment',
+      oracle_text:
+        "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      colors: ['U'],
+      flavor_text: '"Obedience is the true path to happiness."\n—Dolorus, magister equitum',
+      artist: 'Scott Balmer',
+      artist_id: 'c26dd9c9-54f9-4a8c-9d54-caac6be0161d',
+      illustration_id: '7af368fa-6036-462a-a480-02ccc589bea5',
+      image_uris: {
+        small:
+          'https://c1.scryfall.com/file/scryfall-cards/small/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        normal:
+          'https://c1.scryfall.com/file/scryfall-cards/normal/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        large:
+          'https://c1.scryfall.com/file/scryfall-cards/large/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        png: 'https://c1.scryfall.com/file/scryfall-cards/png/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.png?1637270794',
+        art_crop:
+          'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        border_crop:
+          'https://c1.scryfall.com/file/scryfall-cards/border_crop/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+      },
+    },
+    {
+      object: 'card_face',
+      oracle_id: 'ea9709b6-4c37-4d5a-b04d-cd4c42e4f9dd',
+      layout: 'normal',
+      name: 'Propaganda',
+      flavor_name: '',
+      mana_cost: '{2}{U}',
+      cmc: 3,
+      type_line: 'Enchantment',
+      oracle_text:
+        "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+      colors: ['U'],
+      flavor_text: '"Why rebel? The system can be changed from within."\n—Dolorus, magister equitum',
+      artist: 'Scott Balmer',
+      artist_id: 'c26dd9c9-54f9-4a8c-9d54-caac6be0161d',
+      illustration_id: 'fee742d4-3025-430f-9094-b67f249e54f5',
+      image_uris: {
+        small:
+          'https://c1.scryfall.com/file/scryfall-cards/small/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        normal:
+          'https://c1.scryfall.com/file/scryfall-cards/normal/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        large:
+          'https://c1.scryfall.com/file/scryfall-cards/large/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        png: 'https://c1.scryfall.com/file/scryfall-cards/png/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.png?1637270794',
+        art_crop:
+          'https://c1.scryfall.com/file/scryfall-cards/art_crop/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+        border_crop:
+          'https://c1.scryfall.com/file/scryfall-cards/border_crop/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+      },
+    },
+  ],
+  legalities: {
+    standard: 'not_legal',
+    future: 'not_legal',
+    historic: 'not_legal',
+    gladiator: 'not_legal',
+    pioneer: 'not_legal',
+    modern: 'not_legal',
+    legacy: 'legal',
+    pauper: 'not_legal',
+    vintage: 'legal',
+    penny: 'not_legal',
+    commander: 'legal',
+    brawl: 'not_legal',
+    historicbrawl: 'not_legal',
+    alchemy: 'not_legal',
+    paupercommander: 'not_legal',
+    duel: 'legal',
+    oldschool: 'not_legal',
+    premodern: 'legal',
+  },
+  games: ['paper'],
+  reserved: false,
+  foil: true,
+  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
+  oversized: false,
+  promo: false,
+  reprint: true,
+  variation: false,
+  set_id: '4d92a8a7-ccb0-437d-abdc-9d70fc5ed672',
+  set: 'sld',
+  set_name: 'Secret Lair Drop',
+  set_type: 'box',
+  set_uri: 'https://api.scryfall.com/sets/4d92a8a7-ccb0-437d-abdc-9d70fc5ed672',
+  set_search_uri: 'https://api.scryfall.com/cards/search?order=set&q=e%3Asld&unique=prints',
+  scryfall_set_uri: 'https://scryfall.com/sets/sld?utm_source=api',
+  rulings_uri: 'https://api.scryfall.com/cards/3e3f0bcd-0796-494d-bf51-94b33c1671e9/rulings',
+  prints_search_uri:
+    'https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aea9709b6-4c37-4d5a-b04d-cd4c42e4f9dd&unique=prints',
+  collector_number: '381',
+  digital: false,
+  rarity: 'rare',
+  artist: 'Scott Balmer',
+  artist_ids: ['c26dd9c9-54f9-4a8c-9d54-caac6be0161d'],
+  border_color: 'black',
+  frame: '2015',
+  frame_effects: ['inverted'],
+  security_stamp: 'oval',
+  full_art: false,
+  textless: false,
+  booster: false,
+  story_spotlight: false,
+  edhrec_rank: 194,
+  prices: {
+    usd: null,
+    usd_foil: null,
+    usd_etched: null,
+    eur: null,
+    eur_foil: null,
+    tix: null,
+  },
+  related_uris: {
+    tcgplayer_infinite_articles:
+      'https://infinite.tcgplayer.com/search?contentMode=article&game=magic&partner=scryfall&q=Propaganda+%2F%2F+Propaganda&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall',
+    tcgplayer_infinite_decks:
+      'https://infinite.tcgplayer.com/search?contentMode=deck&game=magic&partner=scryfall&q=Propaganda+%2F%2F+Propaganda&utm_campaign=affiliate&utm_medium=api&utm_source=scryfall',
+    edhrec: 'https://edhrec.com/route/?cc=Propaganda+%2F%2F+Propaganda',
+    mtgtop8: 'https://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Propaganda+%2F%2F+Propaganda',
+  },
+};
+
 module.exports = {
   exampleCard,
   exampleDoubleFacedCard,
@@ -765,4 +912,5 @@ module.exports = {
   exampleAdventureCard,
   exampleForeignCard,
   exampleNonFoilCard,
+  exampleReversibleCard,
 };
