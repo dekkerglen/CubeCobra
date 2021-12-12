@@ -44,7 +44,6 @@ import RenderToRoot from 'utils/RenderToRoot';
 import Tab from 'components/Tab';
 
 import {
-  cardPrice,
   cardFoilPrice,
   cardPriceEur,
   cardTix,
@@ -52,6 +51,7 @@ import {
   cardPopularity,
   cardCubeCount,
   cardEtchedPrice,
+  cardNormalPrice,
 } from 'utils/Card';
 import {
   getTCGLink,
@@ -289,9 +289,9 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
-              {card.prices && Number.isFinite(cardPrice({ details: card })) && (
+              {card.prices && Number.isFinite(cardNormalPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardNormalPrice({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (

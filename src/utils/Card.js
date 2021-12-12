@@ -279,6 +279,7 @@ export const CARD_CATEGORY_DETECTORS = {
   foil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Foil' : details.finishes.includes('foil')),
   nonfoil: (details, card) =>
     cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
+  etched: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched')),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
