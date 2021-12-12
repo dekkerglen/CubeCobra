@@ -661,6 +661,7 @@ function convertCard(card, isExtra) {
   newcard.prices = {
     usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
     usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+    usd_etched: card.prices.usd_etched ? parseFloat(card.prices.usd_etched) : null,
     eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
