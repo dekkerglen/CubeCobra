@@ -17,7 +17,7 @@ import {
 
 import Affiliate from 'utils/Affiliate';
 import { getLabels, cardGetLabels } from 'utils/Sort';
-import { cardPrice, cardFoilPrice, cardEtchedPrice, cardPriceEur, cardTix, cardElo,  } from 'utils/Card';
+import { cardPrice, cardFoilPrice, cardEtchedPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
