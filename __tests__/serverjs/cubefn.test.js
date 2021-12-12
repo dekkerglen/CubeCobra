@@ -134,8 +134,8 @@ test('setCubeType correctly sets the type of its input cube', () => {
   const promise = carddb.initializeCardDb(fixturesPath, true);
   return promise.then(() => {
     const result = cubefn.setCubeType(exampleCube, carddb);
-    expect(result.type).toBe('Standard');
-    expect(exampleCube.type).toBe('Standard');
+    expect(result.type).toBe('Pioneer');
+    expect(exampleCube.type).toBe('Pioneer');
   });
 });
 
