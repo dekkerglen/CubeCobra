@@ -858,7 +858,7 @@ const downloadFromScryfall = async (
   winston.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
-    // await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+    await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
   } catch (error) {
     winston.error('Downloading card data failed:');
     winston.error(error.message, error);
