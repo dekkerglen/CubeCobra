@@ -42,7 +42,7 @@ async function rotateFeatured() {
     const owner2 = await Patron.findOne({ user: old2.ownerID }).lean();
     if (canBeFeatured(owner1)) featured.queue.push(old1);
     if (canBeFeatured(owner2)) featured.queue.push(old2);
-    featured.lastUpdated = new Date();
+    featured.lastRotation = new Date();
     return [old1, old2, new1, new2];
   });
 
