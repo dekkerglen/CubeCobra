@@ -62,7 +62,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
   if (loading) {
     return (
       <>
-        {count > 0 && <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />}
+        {count > 0 && <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />}
         <div className="centered py-3">
           <Spinner className="position-absolute" />
         </div>
@@ -73,7 +73,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
   console.log(data);
   return (
     <>
-      <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />
+      <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />
       <Table responsive className="mt-lg-3">
         <thead>
           <tr>
@@ -103,7 +103,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
           ))}
         </tbody>
       </Table>
-      <Paginate count={Math.floor(count / 100)} active={page} onClick={(i) => updatePage(i)} />
+      <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />
     </>
   );
 };

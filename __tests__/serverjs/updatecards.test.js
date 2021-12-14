@@ -5,6 +5,7 @@ const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
 const cardutil = require('../../dist/utils/Card.js');
+const { getFaceAttributeSource } = require('../../serverjs/updatecards');
 
 const emptyFixturePath = 'fixtures/empty.json';
 const cardsFixturePath = 'fixtures/cards_small.json';
@@ -48,6 +49,7 @@ const convertedExampleCard = {
   prices: {
     usd: 0.19,
     usd_foil: 0.62,
+    usd_etched: null,
     eur: null,
     tix: 0.03,
   },
@@ -64,8 +66,7 @@ const convertedExampleCard = {
   image_normal: 'https://img.scryfall.com/cards/normal/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
   art_crop: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c3f372d-259d-4a31-9491-2d369b3f3f8b.jpg?1572490775',
   colorcategory: 'm',
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -109,6 +110,7 @@ const convertedExampleDoubleFacedCard = {
   prices: {
     usd: 0.19,
     usd_foil: 0.62,
+    usd_etched: null,
     eur: null,
     tix: 0.03,
   },
@@ -128,8 +130,7 @@ const convertedExampleDoubleFacedCard = {
   tcgplayer_id: 57617,
   toughness: '1',
   type: 'Creature — Human Werewolf',
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -176,6 +177,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   prices: {
     usd: 0.19,
     usd_foil: 0.62,
+    usd_etched: null,
     eur: null,
     tix: 0.03,
   },
@@ -191,8 +193,7 @@ const convertedExampleDoubleFacedCardFlipFace = {
   image_small: 'https://img.scryfall.com/cards/small/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   art_crop: 'https://img.scryfall.com/cards/art_crop/back/6/f/6f35e364-81d9-4888-993b-acc7a53d963c.jpg?1562921188',
   colorcategory: 'g',
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -241,6 +242,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   prices: {
     usd: 12.98,
     usd_foil: 22.46,
+    usd_etched: null,
     eur: 9.8,
     tix: 1.78,
   },
@@ -260,8 +262,7 @@ const convertedExampleDoubleFacedPlaneswalkerCard = {
   image_flip: 'https://img.scryfall.com/cards/normal/back/9/f/9f25e1cf-eeb4-458d-8fb2-b3a2f86bdd54.jpg?1562033824',
   colorcategory: 'b',
   tokens: ['e5ccae95-95c2-4d11-aa68-5c80ecf90fd2', 'd75f984f-2e11-4f52-b3b0-dd9d94a2dd74'],
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -304,6 +305,7 @@ const convertedExampleAdventureCard = {
   prices: {
     usd: 0.19,
     usd_foil: 0.62,
+    usd_etched: null,
     eur: null,
     tix: 0.03,
   },
@@ -324,8 +326,7 @@ const convertedExampleAdventureCard = {
   tokens: ['b0f09f9e-e0f9-4ed8-bfc0-5f1a3046106e'],
   toughness: '2',
   type: 'Creature — Human Berserker',
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -370,6 +371,7 @@ const convertedExampleAdventureCardAdventure = {
   prices: {
     usd: 1,
     usd_foil: 2,
+    usd_etched: null,
     eur: 3,
     tix: 4,
   },
@@ -384,8 +386,7 @@ const convertedExampleAdventureCardAdventure = {
   set: 'eld',
   tcgplayer_id: 198574,
   type: 'Sorcery — Adventure',
-  foil: true,
-  nonfoil: true,
+  finishes: ['nonfoil', 'foil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
@@ -430,6 +431,7 @@ const convertedExampleNonFoilCard = {
   prices: {
     usd: 0.17,
     usd_foil: null,
+    usd_etched: null,
     eur: 0.07,
     tix: 0.09,
   },
@@ -449,11 +451,69 @@ const convertedExampleNonFoilCard = {
   art_crop:
     'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/c/d/cdf7ea34-2cde-4ec5-9b12-99b0002da986.jpg?1562056856',
   colorcategory: 'u',
-  foil: false,
-  nonfoil: true,
+  finishes: ['nonfoil'],
   popularity: 0,
   pickCount: 0,
   cubeCount: 0,
+};
+
+const convertedExampleReversibleCard = {
+  color_identity: ['U'],
+  set: 'sld',
+  set_name: 'Secret Lair Drop',
+  finishes: ['nonfoil', 'foil'],
+  collector_number: '381',
+  released_at: '2022-04-22',
+  reprint: true,
+  promo: false,
+  prices: { usd: null, usd_foil: null, usd_etched: null, eur: null, tix: null },
+  elo: 1200,
+  popularity: 0,
+  cubeCount: 0,
+  pickCount: 0,
+  embedding: [],
+  digital: false,
+  isToken: false,
+  border_color: 'black',
+  name: 'Propaganda',
+  name_lower: 'propaganda',
+  full_name: 'Propaganda [sld-381]',
+  artist: 'Scott Balmer',
+  scryfall_uri: 'https://scryfall.com/card/sld/381/propaganda-propaganda?utm_source=api',
+  rarity: 'rare',
+  oracle_text:
+    "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.\n" +
+    "Creatures can't attack you unless their controller pays {2} for each creature they control that's attacking you.",
+  _id: '3e3f0bcd-0796-494d-bf51-94b33c1671e9',
+  oracle_id: 'ea9709b6-4c37-4d5a-b04d-cd4c42e4f9dd',
+  cmc: 3.0,
+  legalities: {
+    Legacy: 'legal',
+    Modern: 'not_legal',
+    Standard: 'not_legal',
+    Pioneer: 'not_legal',
+    Pauper: 'not_legal',
+    Brawl: 'not_legal',
+    Historic: 'not_legal',
+    Commander: 'legal',
+    Penny: 'not_legal',
+    Vintage: 'legal',
+  },
+  parsed_cost: ['u', '2'],
+  colors: ['U'],
+  type: 'Enchantment',
+  full_art: false,
+  language: 'en',
+  layout: 'reversible_card',
+  image_small:
+    'https://c1.scryfall.com/file/scryfall-cards/small/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  image_normal:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  art_crop:
+    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  image_flip:
+    'https://c1.scryfall.com/file/scryfall-cards/normal/back/3/e/3e3f0bcd-0796-494d-bf51-94b33c1671e9.jpg?1637270794',
+  colorcategory: 'u',
 };
 
 const mockRatings = [
@@ -657,25 +717,40 @@ test('convertCard returns a correctly converted Adventure card object', () => {
   expect(result).toEqual(convertedExampleAdventureCard);
 });
 
+test('convertCard returns a correctly converted reversible card', () => {
+  const result = updatecards.convertCard(examplecards.exampleReversibleCard, false);
+  expect(result).toEqual(convertedExampleReversibleCard);
+});
+
 describe.each(fnToAttributeTable)('%s properly converts %s', (convertFn, attribute) => {
   test('for standard card', () => {
-    const result = updatecards[convertFn](examplecards.exampleCard);
+    const card = examplecards.exampleCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleCard[attribute]);
   });
 
   test('for a double-faced card', () => {
-    const result = updatecards[convertFn](examplecards.exampleDoubleFacedCard, false);
+    const card = examplecards.exampleDoubleFacedCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleDoubleFacedCard[attribute]);
   });
 
   test("for Adventure card's creature", () => {
-    const result = updatecards[convertFn](examplecards.exampleAdventureCard, false);
+    const card = examplecards.exampleAdventureCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
     expect(result).toEqual(convertedExampleAdventureCard[attribute]);
   });
 
   test("for Adventure card's Adventure", () => {
-    const result = updatecards[convertFn](examplecards.exampleAdventureCard, true);
+    const card = examplecards.exampleAdventureCard;
+    const result = updatecards[convertFn](card, true, getFaceAttributeSource(card, true));
     expect(result).toEqual(convertedExampleAdventureCardAdventure[attribute]);
+  });
+
+  test('for a reversible card', () => {
+    const card = examplecards.exampleReversibleCard;
+    const result = updatecards[convertFn](card, false, getFaceAttributeSource(card, false));
+    expect(result).toEqual(convertedExampleReversibleCard[attribute]);
   });
 });
 

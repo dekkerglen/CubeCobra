@@ -283,7 +283,7 @@ function CSVtoCards(csvString, carddb) {
         const nonPromo = potentialIds.find(carddb.reasonableId);
         const first = potentialIds[0];
         card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
-        if (maybeboard.toLowerCase() === 'true') {
+        if (typeof maybeboard === 'string' && maybeboard.toLowerCase() === 'true') {
           newMaybe.push(card);
         } else {
           newCards.push(card);
@@ -697,6 +697,12 @@ function cachePromise(key, callback) {
   return newPromise;
 }
 
+function isCubeViewable(cube, user) {
+  if (!cube) return false;
+  if (!cube.isPrivate) return true;
+  return user && (user._id.equals(cube.owner) || util.isAdmin(user));
+}
+
 const methods = {
   setCubeType,
   cardsAreEquivalent,
@@ -723,8 +729,7 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  generatePack: async (cubeId, carddb, seed) => {
-    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
+  generatePack: async (cube, carddb, seed) => {
     if (!seed) {
       seed = Date.now().toString();
     }
@@ -762,6 +767,7 @@ const methods = {
   addDeckCardAnalytics,
   cachePromise,
   saveDraftAnalytics,
+  isCubeViewable,
   ELO_BASE,
   ELO_SPEED,
   CUBE_ELO_SPEED,

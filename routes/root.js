@@ -2,7 +2,6 @@ const express = require('express');
 
 const util = require('../serverjs/util.js');
 
-const Blog = require('../models/blog');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const User = require('../models/user');
@@ -15,6 +14,7 @@ const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { getCubeId } = require('../serverjs/cubefn');
+const { getBlogFeedItems } = require('../serverjs/blogpostFeed');
 
 const router = express.Router();
 
@@ -110,27 +110,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       .sort({
         date_updated: -1,
       });
-    const postsq = Blog.find({
-      $or: [
-        {
-          cube: {
-            $in: req.user.followed_cubes,
-          },
-        },
-        {
-          owner: {
-            $in: req.user.followed_users,
-          },
-        },
-        {
-          dev: 'true',
-        },
-      ],
-    })
-      .sort({
-        date: -1,
-      })
-      .limit(10);
+    const postsq = getBlogFeedItems(req.user, 0, 10);
 
     const featuredq = Cube.find(
       {

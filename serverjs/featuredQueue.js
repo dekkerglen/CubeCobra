@@ -2,11 +2,13 @@ const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../models/cube');
 const Patron = require('../models/patron');
 
+const TRY_COUNT = 5;
 // the return value of fn must be awaitable
 async function updateFeatured(fn) {
   let replaced = null;
   let ret;
-  while (!replaced) {
+  let i;
+  for (i = 0; !replaced && i < TRY_COUNT; i++) {
     // eslint-disable-next-line no-await-in-loop
     const featured = await FeaturedCubes.findOne({ singleton: true }).lean();
     const stamp = featured.timestamp;
@@ -20,7 +22,7 @@ async function updateFeatured(fn) {
     // eslint-disable-next-line no-await-in-loop
     replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, featured);
   }
-  return { ok: true, return: ret };
+  return i < TRY_COUNT ? { ok: true, return: ret } : { ok: false, message: 'Timeout exceeded. Please try again.' };
 }
 
 function canBeFeatured(patron) {
@@ -63,8 +65,15 @@ async function rotateFeatured() {
   return { success: 'true', messages, removed: [old1, old2], added: [new1, new2] };
 }
 
+async function isInFeaturedQueue(cube) {
+  if (!cube) return false;
+  const featured = await FeaturedCubes.getSingleton();
+  return featured.queue.some((f) => cube._id.equals(f.cubeID));
+}
+
 module.exports = {
   updateFeatured,
   rotateFeatured,
   canBeFeatured,
+  isInFeaturedQueue,
 };
