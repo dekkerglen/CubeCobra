@@ -28,6 +28,7 @@ import {
   cardDevotion,
   cardFoilPrice,
   cardNormalPrice,
+  cardEtchedPrice,
   cardPower,
   cardPrice,
   cardToughness,
@@ -107,6 +108,7 @@ const CubeAnalysisPage = ({
     Price: convertToCharacteristic('Price', (card) => parseFloat(cardPrice(card), 10)),
     'Price USD': convertToCharacteristic('Price USD', (card) => parseFloat(cardNormalPrice(card))),
     'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => parseFloat(cardFoilPrice(card))),
+    'Price USD Etched': convertToCharacteristic('Price USD Etched', (card) => parseFloat(cardEtchedPrice(card))),
     'Price EUR': convertToCharacteristic('Price EUR', (card) => parseFloat(cardPriceEur(card))),
     'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => parseFloat(cardTix(card))),
     'Cube Elo': {

@@ -43,7 +43,16 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Tab from 'components/Tab';
 
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo, cardPopularity, cardCubeCount } from 'utils/Card';
+import {
+  cardFoilPrice,
+  cardPriceEur,
+  cardTix,
+  cardElo,
+  cardPopularity,
+  cardCubeCount,
+  cardEtchedPrice,
+  cardNormalPrice,
+} from 'utils/Card';
 import {
   getTCGLink,
   getCardMarketLink,
@@ -215,6 +224,7 @@ CardIdBadge.propTypes = {
 const getPriceTypeUnit = {
   price: 'USD',
   price_foil: 'USD',
+  price_etched: 'USD',
   eur: 'EUR',
   tix: 'TIX',
 };
@@ -279,14 +289,19 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
-              {card.prices && Number.isFinite(cardPrice({ details: card })) && (
+              {card.prices && Number.isFinite(cardNormalPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
-                  <Tooltip text="TCGPlayer Market Price">${cardPrice({ details: card }).toFixed(2)}</Tooltip>
+                  <Tooltip text="TCGPlayer Market Price">${cardNormalPrice({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardFoilPrice({ details: card })) && (
                 <TextBadge name="Foil" className="mt-1" fill>
                   <Tooltip text="TCGPlayer Market Price">${cardFoilPrice({ details: card }).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {card.prices && Number.isFinite(cardEtchedPrice({ details: card })) && (
+                <TextBadge name="Etched" className="mt-1" fill>
+                  <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice({ details: card }).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.prices && Number.isFinite(cardPriceEur({ details: card })) && (
@@ -410,6 +425,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     >
                       <option value="price">USD</option>
                       <option value="price_foil">USD Foil</option>
+                      <option value="price_etched">USD Etched</option>
                       <option value="eur">EUR</option>
                       <option value="tix">TIX</option>
                     </CustomInput>

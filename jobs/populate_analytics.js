@@ -295,6 +295,7 @@ const processCard = async (
     if (prices) {
       versionPrice.price = prices.usd;
       versionPrice.price_foil = prices.usd_foil;
+      versionPrice.price_etched = prices.usd_etched;
       versionPrice.eur = prices.eur;
       versionPrice.tix = prices.tix;
     }
