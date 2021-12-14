@@ -23,6 +23,7 @@ const {
   addPlayerToLobby,
   updateLobbySeatOrder,
   packNeedsBotPicks,
+  getCurrentPackStepQueue,
 } = require('../serverjs/multiplayerDrafting');
 
 const Draft = require('../models/draft');
@@ -67,6 +68,7 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
   const draft = await Draft.findById(draftid);
 
   const seatOrder = await getLobbySeatOrder(draftid);
+
   const seatToPlayer = fromEntries(Object.entries(seatOrder).map(([player, seat]) => [parseInt(seat, 10), player]));
 
   for (let i = 0; i < draft.seats.length; i++) {
@@ -128,10 +130,14 @@ router.post('/getpack', ensureAuth, async (req, res) => {
     const { draft, seat } = req.body;
 
     const pack = await getPlayerPack(draft, seat);
+    const steps = await getCurrentPackStepQueue(draft, seat);
 
     return res.status(200).send({
       success: 'true',
-      pack,
+      data: {
+        pack,
+        steps,
+      },
     });
   } catch (err) {
     return res.status(500).send({

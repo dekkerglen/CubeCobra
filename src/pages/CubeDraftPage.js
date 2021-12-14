@@ -60,7 +60,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider>
+        <DisplayContextProvider cubeID={cube._id}>
           {state === 'loading' && (
             <div className="centered py-3">
               <Spinner className="position-absolute" />

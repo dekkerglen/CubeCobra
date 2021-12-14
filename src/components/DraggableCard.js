@@ -6,7 +6,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import FoilCardImage from 'components/FoilCardImage';
 import CardPropType from 'proptypes/CardPropType';
 
-const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, onClick, ...props }) => {
+const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick, ...props }) => {
   const [{ isDragging }, drag, preview] = useDrag({
     item: { type: 'card', location },
     begin: () => {
@@ -70,11 +70,12 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
 
 DraggableCard.propTypes = {
   card: CardPropType.isRequired,
-  location: PropTypes.string.isRequired,
+  location: PropTypes.shape({
+    type: PropTypes.string,
+    data: PropTypes.any,
+  }).isRequired,
   canDrop: PropTypes.func.isRequired,
   onMoveCard: PropTypes.func.isRequired,
-  width: PropTypes.number.isRequired,
-  height: PropTypes.number.isRequired,
   className: PropTypes.string,
   onClick: PropTypes.func,
 };

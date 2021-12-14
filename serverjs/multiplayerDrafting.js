@@ -123,6 +123,16 @@ const openPack = async (draftId) => {
   }
 };
 
+const getCurrentPackStep = async (draftId, seat) => {
+  const [next] = await lrange(stepsQueueRef(draftId, seat), -1, -1);
+  return next;
+};
+
+const getCurrentPackStepQueue = async (draftId, seat) => {
+  const items = await lrange(stepsQueueRef(draftId, seat), 0, -1);
+  return items.reverse();
+};
+
 const makePick = async (draftId, seat, pick, nextSeat) => {
   // get reference to pack and to the cards picked from it
   const packReference = await getPlayerPackReference(draftId, seat);
@@ -134,6 +144,11 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const packCards = await getCurrentPackCards(packReference);
   const picked = packToPicked(packReference);
   const step = await rpop(stepsQueueRef(draftId, seat));
+
+  console.log(`-----seat ${seat}------`);
+  console.log(packCards);
+  console.log(pick);
+  console.log('-------------------');
 
   // pick this card if the step is pick
   if (step === 'pick' || step === 'pickrandom') {
@@ -147,24 +162,20 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
   }
 
-  if (seat === 0) {
-    console.log(`${seat}: step is ${step}: taking ${pick}`);
-    console.log(packCards);
-    console.log(await getPlayerPicks(draftId, seat));
+  if (packCards.length > 0) {
+    // push the card into the picked list
+    await lpush(picked, packCards[pick]);
+    await expire(picked, 60 * 60 * 24 * 2); // 2 days
   }
 
-  // push the card into the picked list
-  await lpush(picked, packCards[pick]);
-  await expire(picked, 60 * 60 * 24 * 2); // 2 days
-
   // look if the next action is a pass
-  const [next] = await lrange(stepsQueueRef(draftId, seat), -1, -1);
+  const next = await getCurrentPackStep(draftId, seat);
   if (next === 'pass') {
     // rotate the pack to the next seat
     await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
   }
 
-  while ((await lrange(stepsQueueRef(draftId, seat), -1, -1))[0] === 'pass') {
+  while ((await getCurrentPackStep(draftId, seat)) === 'pass') {
     await rpop(stepsQueueRef(draftId, seat));
   }
 };
@@ -393,4 +404,6 @@ module.exports = {
   lobbyOrderRef,
   updateLobbySeatOrder,
   packNeedsBotPicks,
+  getCurrentPackStep,
+  getCurrentPackStepQueue,
 };

@@ -27,7 +27,7 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => (
         <Row noGutters>
           {pack.map((card, index) => (
             <Col
-              key={`${card.details._id}`}
+              key={`pack-${card.details._id}`}
               xs={3}
               className="col-md-1-5 col-lg-1-5 col-xl-1-5 d-flex justify-content-center align-items-center"
             >

@@ -43,8 +43,6 @@ const CubeDraft = ({ draft, socket, start }) => {
 
   const seats = [];
 
-  console.log(order);
-
   for (let i = 0; i < draft.seats.length; i++) {
     let seat = BOT_NAME;
 
@@ -107,8 +105,6 @@ const CubeDraft = ({ draft, socket, start }) => {
 
     setOrder(newSeats);
   };
-
-  console.log(seats);
 
   if (user.id !== players[0]) {
     return (

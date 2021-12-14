@@ -7,7 +7,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, getDrafterState, stepToTitle, nextStep } from 'drafting/draftutil';
+import { setupPicks, getCardCol, stepListToTitle } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -34,7 +34,7 @@ const fetchPack = async (draft, seat) => {
     seat,
   });
   const json = await res.json();
-  return json.pack;
+  return json.data;
 };
 
 let staticPicks;
@@ -46,52 +46,41 @@ const CubeDraft = ({ draft, socket }) => {
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
   const [title, setTitle] = React.useState('Waiting for cards...');
-  const [action, setAction] = React.useState(null);
+  const [stepQueue, setStepQueue] = React.useState([]);
 
-  const disabled = action === 'pickrandom' || action === 'trashrandom';
+  const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
   staticPicks = picks;
-
-  const currentDrafterState = useCallback(() => {
-    const cardsPicked = staticPicks
-      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
-      .reduce((a, b) => a + b, 0);
-
-    return getDrafterState(draft, seat, cardsPicked);
-  }, [draft]);
-
-  const getNextStep = useCallback(() => {
-    const cardsPicked = staticPicks
-      .map((row) => row.map((col) => col.length).reduce((a, b) => a + b, 0))
-      .reduce((a, b) => a + b, 0);
-
-    return nextStep(draft, seat, cardsPicked + 1);
-  }, [draft]);
 
   const makePick = useCallback(
     async (pick) => {
       // eslint-disable-next-line no-undef
       /* global */ autocard_hide_card();
 
-      if (getNextStep() === 'pass') {
+      console.log(stepQueue);
+
+      if (stepQueue[1] === 'pass' || pack.length < 1) {
+        console.log('passing');
         setLoading(true);
+        setTitle('Waiting for cards...');
       } else {
+        console.log('not passing');
+        const slice = stepQueue.slice(1, stepQueue.length);
+        setTitle(stepListToTitle(slice));
+        setStepQueue(slice);
         setPack(pack.filter((_, index) => index !== pick));
+        setLoading(false);
       }
 
-      setTitle('Waiting for cards...');
       await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
     },
-    [draft, setLoading, setTitle, setPack, pack, getNextStep],
+    [draft, setLoading, setTitle, setPack, pack, stepQueue],
   );
 
   const updatePack = async (data) => {
-    setPack(data);
-
-    const drafterState = currentDrafterState();
-
-    setAction(drafterState.step.action);
-    setTitle(`Pack ${drafterState.pack} Pick ${drafterState.pick}: ${stepToTitle(drafterState.step)}`);
+    setPack(data.pack);
+    setStepQueue(data.steps);
+    setTitle(stepListToTitle(data.steps));
   };
 
   useMount(() => {
@@ -136,9 +125,7 @@ const CubeDraft = ({ draft, socket }) => {
 
       if (source.type === DraftLocation.PACK) {
         if (target.type === DraftLocation.PICKS) {
-          const drafterState = currentDrafterState();
-
-          if (drafterState.step.action === 'pick' || drafterState.step.action === 'pickrandom') {
+          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
             setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
           }
 
@@ -154,11 +141,12 @@ const CubeDraft = ({ draft, socket }) => {
         }
       }
     },
-    [pack, picks, makePick],
+    [makePick, picks, pack, stepQueue],
   );
 
   const onClickCard = useCallback(
     (cardIndex) => {
+      console.log(`Picking: ${cardIndex}: ${pack[cardIndex]}`);
       const col = getCardCol(draft, pack[cardIndex]);
       onMoveCard(
         new DraftLocation(DraftLocation.PACK, cardIndex),
@@ -169,11 +157,13 @@ const CubeDraft = ({ draft, socket }) => {
   );
 
   useEffect(() => {
-    if ((action === 'pickrandom' || action === 'trashrandom') && pack.length > 0 && !loading) {
+    if ((stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom') && pack.length > 0 && !loading) {
       setLoading(true);
-      onClickCard(Math.floor(Math.random() * pack.length));
+      setTimeout(() => {
+        onClickCard(Math.floor(Math.random() * pack.length));
+      }, 1000);
     }
-  }, [action, onClickCard, pack, loading]);
+  }, [stepQueue, onClickCard, pack, loading]);
 
   return (
     <DndProvider>

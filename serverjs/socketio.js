@@ -1,5 +1,12 @@
 const { eventEmitter } = require('./redis');
-const { seatRef, lobbyOrderRef, lobbyPlayersRef, draftRef, getCurrentPackCards } = require('./multiplayerDrafting');
+const {
+  seatRef,
+  lobbyOrderRef,
+  lobbyPlayersRef,
+  draftRef,
+  getCurrentPackCards,
+  getCurrentPackStepQueue,
+} = require('./multiplayerDrafting');
 
 const setup = (io) => {
   io.on('connection', (socket) => {
@@ -31,7 +38,10 @@ const setup = (io) => {
       const onSeatUpdate = async (data) => {
         if (data.length > 0) {
           const pack = data[data.length - 1];
-          socket.emit('seat', await getCurrentPackCards(pack));
+          socket.emit('seat', {
+            pack: await getCurrentPackCards(pack),
+            steps: await getCurrentPackStepQueue(draftId, seat),
+          });
         }
       };
 

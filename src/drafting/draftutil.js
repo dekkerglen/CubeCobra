@@ -190,16 +190,24 @@ export const getDefaultPosition = (card, picks) => {
   return [row, col, colIndex];
 };
 
-export const stepToTitle = (step) => {
-  if (step.action === 'pick') {
-    if (step.amount > 1) {
-      return `Pick ${step.amount} more cards`;
+export const stepListToTitle = (steps) => {
+  if (steps[0] === 'pick') {
+    let count = 1;
+    while (steps.length > count && steps[count] === 'pick') {
+      count += 1;
+    }
+    if (count > 1) {
+      return `Pick ${count} more cards`;
     }
     return 'Pick one more card';
   }
-  if (step.action === 'trash') {
-    if (step.amount > 1) {
-      return `Trash ${step.amount} more cards`;
+  if (steps[0] === 'trash') {
+    let count = 1;
+    while (steps.length > count && steps[count] === 'trash') {
+      count += 1;
+    }
+    if (count > 1) {
+      return `Trash ${count} more cards`;
     }
     return 'Trash one more card';
   }
