@@ -40,8 +40,8 @@ dollarValue -> "$":? (
 
 finishOpValue -> equalityOperator finishValue {% ([op, value]) => stringOperation(op.toString() === ':' ? '=' : op, value) %}
 
-finishValue -> ("Foil"i | "Non-Foil"i) {% ([[finish]]) => finish.toLowerCase() %}
-  | "\"" ("Foil"i | "Non-Foil"i) "\"" {% ([, [finish]]) => finish.toLowerCase() %}
+finishValue -> ("Foil"i | "Non-Foil"i | "Etched"i) {% ([[finish]]) => finish.toLowerCase() %}
+  | "\"" ("Foil"i | "Non-Foil"i | "Etched"i) "\"" {% ([, [finish]]) => finish.toLowerCase() %}
 
 legalityOpValue -> equalityOperator legalityValue {% ([op, value]) => setElementOperation(op, value) %}
 

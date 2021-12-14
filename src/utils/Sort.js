@@ -313,7 +313,7 @@ function getLabelsRaw(cube, sort, showOther) {
   } else if (sort === 'Status') {
     ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
   } else if (sort === 'Finish') {
-    ret = ['Non-foil', 'Foil'];
+    ret = ['Non-foil', 'Foil', 'Etched'];
   } else if (sort === 'Guilds') {
     ret = GUILDS;
   } else if (sort === 'Shards / Wedges') {

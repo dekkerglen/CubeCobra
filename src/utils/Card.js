@@ -116,14 +116,30 @@ export const cardColorCategory = (card) => card.colorCategory ?? card.details.co
 
 // prices being null causes unwanted coercing behaviour in price filters,
 // so nullish price values are transformed to undefined instead
-export const cardPrice = (card) =>
-  (cardFinish(card) === 'Foil'
-    ? card.details.prices.usd_foil ?? card.details.prices.usd
-    : card.details.prices.usd ?? card.details.prices.usd_foil) ?? undefined;
-
 export const cardNormalPrice = (card) => card.details.prices.usd ?? undefined;
 
 export const cardFoilPrice = (card) => card.details.prices.usd_foil ?? undefined;
+
+export const cardEtchedPrice = (card) => card.details.prices.usd_etched ?? undefined;
+
+export const cardPrice = (card) => {
+  let prices;
+  switch (cardFinish(card)) {
+    case 'Foil':
+      prices = [cardFoilPrice(card), cardNormalPrice(card), cardEtchedPrice(card)];
+      break;
+    case 'Non-foil':
+      prices = [cardNormalPrice(card), cardFoilPrice(card), cardEtchedPrice(card)];
+      break;
+    case 'Etched':
+      prices = [cardEtchedPrice(card), cardFoilPrice(card), cardNormalPrice(card)];
+      break;
+    default:
+      console.error('Unknown finish:', cardFinish(card));
+  }
+
+  return prices.find((p) => typeof p !== 'undefined');
+};
 
 export const cardPriceEur = (card) => card.details.prices.eur ?? undefined;
 
@@ -260,8 +276,10 @@ export const CARD_CATEGORY_DETECTORS = {
   modal: (details) => details.oracle_text.includes('•'),
   creatureland: isCreatureLand,
   manland: isCreatureLand,
-  foil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Foil' : details.foil),
-  nonfoil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.nonfoil),
+  foil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Foil' : details.finishes.includes('foil')),
+  nonfoil: (details, card) =>
+    cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
+  etched: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched')),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),

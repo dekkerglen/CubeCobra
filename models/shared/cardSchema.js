@@ -17,7 +17,7 @@ module.exports = {
   finish: {
     type: String,
     default: 'Non-foil',
-    enum: ['Foil', 'Non-foil'],
+    enum: ['Foil', 'Non-foil', 'Etched'],
   },
   imgBackUrl: String,
   imgUrl: String,
