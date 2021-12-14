@@ -73,7 +73,7 @@ AddFeaturedModal.propTypes = {
   toggle: PropTypes.func.isRequired,
   cubes: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
+      _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
     }),
   ).isRequired,
