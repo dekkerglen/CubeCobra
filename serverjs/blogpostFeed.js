@@ -36,7 +36,7 @@ function getBlogFeedItems(user, skip, limit) {
       // we don't want to include the joined cube in output
       $project: { cubes: 0 },
     },
-  ]);
+  ]).allowDiskUse(true);
 }
 
 module.exports = {
