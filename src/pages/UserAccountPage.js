@@ -51,7 +51,7 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
         <ModalBody>
           <CustomInput type="select" id="featuredCube" name="cubeId">
             {cubes.map((cube) => (
-              <option value={cube.id}>{cube.name}</option>
+              <option value={cube._id}>{cube.name}</option>
             ))}
           </CustomInput>
         </ModalBody>
