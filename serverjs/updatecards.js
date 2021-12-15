@@ -746,6 +746,7 @@ function convertCard(card, isExtra) {
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }
+
   return newcard;
 }
 
