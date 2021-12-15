@@ -790,7 +790,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
-    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/playtest/404');

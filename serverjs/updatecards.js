@@ -18,8 +18,7 @@ const catalog = {};
  *   color_identity: [Char],
  *   set: String,
  *   set_name: String,
- *   foil: Boolean,
- *   nonfoil: Boolean,
+ *   finishes: [String],
  *   collector_number: String,
  *   released_at: Date,
  *   reprint: Boolean,
@@ -644,8 +643,7 @@ function convertCard(card, isExtra) {
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
   newcard.set_name = card.set_name;
-  newcard.foil = card.foil;
-  newcard.nonfoil = card.nonfoil;
+  newcard.finishes = card.finishes;
   newcard.collector_number = card.collector_number;
   newcard.released_at = card.released_at;
   newcard.reprint = card.reprint;
@@ -663,6 +661,7 @@ function convertCard(card, isExtra) {
   newcard.prices = {
     usd: card.prices.usd ? parseFloat(card.prices.usd) : null,
     usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : null,
+    usd_etched: card.prices.usd_etched ? parseFloat(card.prices.usd_etched) : null,
     eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
@@ -747,6 +746,7 @@ function convertCard(card, isExtra) {
   if (tokens.length > 0) {
     newcard.tokens = tokens;
   }
+
   return newcard;
 }
 

@@ -10,6 +10,7 @@ const Datapoint = {
       version: String,
       price: Number,
       price_foil: Number,
+      price_etched: Number,
       eur: Number,
       tix: Number,
     },
