@@ -36,6 +36,7 @@ const featuredCubesSchema = mongoose.Schema({
 });
 
 const FeaturedCubes = mongoose.model('FeaturedCubes', featuredCubesSchema);
+
 // simplified getter for operations not requiring an update
 FeaturedCubes.getSingleton = function getSingleton() {
   return FeaturedCubes.findOne({ singleton: true }).lean();
