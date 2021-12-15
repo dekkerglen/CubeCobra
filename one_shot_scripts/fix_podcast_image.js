@@ -2,7 +2,6 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const { getFeedData } = require('../serverjs/rss');
 
 const Podcast = require('../models/podcast');
 const Episode = require('../models/podcastEpisode');
