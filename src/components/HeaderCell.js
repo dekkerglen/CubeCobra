@@ -30,7 +30,7 @@ const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip, ...pro
         active
       >
         <Wrapper>{label}</Wrapper>
-        <img src={icon} className="sortIcon mr-auto" alt="Toggle sort direction" />
+        <img src={icon} className="sortIcon me-auto" alt="Toggle sort direction" />
       </NavLink>
     </th>
   );

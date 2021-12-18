@@ -23,7 +23,7 @@ const BlogPost = ({ post, noScroll }) => {
 
   return (
     <Card className="shadowed rounded-0 mb-3">
-      <CardHeader className="pl-4 pr-0 pt-2 pb-0">
+      <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <h5 className="card-title">
           <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
           <div className="float-sm-right">
@@ -54,7 +54,7 @@ const BlogPost = ({ post, noScroll }) => {
       </CardHeader>
       <div style={scrollStyle}>
         {post.changelist && (html || post.markdown) ? (
-          <Row className="no-gutters">
+          <Row className="g-0">
             <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
               <CardBody className="py-2">
                 <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />

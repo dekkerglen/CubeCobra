@@ -50,7 +50,7 @@ const Tokens = ({ cube }) => {
       <p>All the tokens and emblems your cube uses and what cards require each of them.</p>
       <Row className="mb-3">
         <Col>
-          <MassBuyButton color="success" cards={data.map(({ card }) => card)}>
+          <MassBuyButton color="accent" cards={data.map(({ card }) => card)}>
             Buy All Tokens
           </MassBuyButton>
         </Col>

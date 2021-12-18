@@ -40,7 +40,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
               </Col>
             </Row>
             {user && user.id === owner._id && (
-              <Button color="success" block outline href="/user/account">
+              <Button color="accent" block outline href="/user/account">
                 Update
               </Button>
             )}

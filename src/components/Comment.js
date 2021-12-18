@@ -9,9 +9,7 @@ import {
   ModalHeader,
   ModalBody,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
   ModalFooter,
   Button,
   Input,
@@ -83,14 +81,12 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
           <ModalHeader toggle={toggle}>Report this Comment</ModalHeader>
           <ModalBody>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Report Reason:</InputGroupText>
-              </InputGroupAddon>
-              <CustomInput type="select" id="reason" name="reason">
+              <InputGroupText>Report Reason:</InputGroupText>
+              <Input type="select" id="reason" name="reason">
                 <option>This is spam or phishing</option>
                 <option>This is offensive or abusive</option>
                 <option>It expresses intentions of self-harm or suicide</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
             <Input
               type="textarea"
@@ -102,18 +98,18 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
             <Input type="hidden" name="commentid" value={comment._id} />
           </ModalBody>
           <ModalFooter>
-            <Button color="success">Submit Report</Button>
-            <Button color="danger" onClick={toggleReportModal}>
+            <Button color="accent">Submit Report</Button>
+            <Button color="unsafe" onClick={toggleReportModal}>
               Cancel
             </Button>
           </ModalFooter>
         </CSRFForm>
       </Modal>
-      <div className={`pl-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
+      <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
         <a href={`/user/view/${comment.owner}`}>
           <img className="profile-thumbnail" src={comment.image} alt={comment.artist} title={comment.artist} />
         </a>
-        <div className="flex-grow ml-2">
+        <div className="flex-grow ms-2">
           <div className="flex-container flex-direction-col">
             <div className="flex-container flex-space-between">
               <div>
@@ -169,7 +165,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               )}
               {!noReplies && comments.length > 0 && depth < maxDepth && (
                 <LinkButton
-                  className="ml-2"
+                  className="ms-2"
                   onClick={() => {
                     toggle();
                     setLoaded(true);
@@ -183,10 +179,10 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
                 </a>
               )}
-              <LinkButton className="ml-2" onClick={toggleShareModal}>
+              <LinkButton className="ms-2" onClick={toggleShareModal}>
                 <small>Share</small>
               </LinkButton>
-              <LinkButton className="ml-2" onClick={toggleReportModal}>
+              <LinkButton className="ms-2" onClick={toggleReportModal}>
                 <small>Report</small>
               </LinkButton>
             </div>
@@ -202,7 +198,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               toggle={toggleReply}
             />
             {loaded && comments.length > 0 && (
-              <Collapse className="border-left" isOpen={expanded}>
+              <Collapse className="border-start" isOpen={expanded}>
                 {comments
                   .slice(0)
                   .reverse()

@@ -13,7 +13,7 @@ const CommentContextMenu = ({ edit, remove, children }) => {
       <DropdownToggle tag="a" className="nav-link clickable py-0">
         {children}
       </DropdownToggle>
-      <DropdownMenu right>
+      <DropdownMenu end>
         <DropdownItem onClick={edit}>Edit</DropdownItem>
         <DropdownItem onClick={remove}>Delete</DropdownItem>
       </DropdownMenu>

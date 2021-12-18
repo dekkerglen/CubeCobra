@@ -11,9 +11,7 @@ import {
   UncontrolledAlert,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Input,
 } from 'reactstrap';
 
@@ -97,16 +95,16 @@ const BrowsePackagesPage = ({ loginCallback }) => {
       ))}
       <Card>
         <div className="usercontrols pt-3 mb-3">
-          <Row className="pb-3 mr-1">
+          <Row className="pb-3 me-1">
             <Col xs="6">
               <h3 className="mx-3">Browse Card Packages</h3>
             </Col>
             {user && (
               <Col xs="6">
-                <div className="text-right">
+                <div className="text-end">
                   <CreatePackageModalLink
                     outline
-                    color="success"
+                    color="accent"
                     modalProps={{
                       onError: (message) => {
                         addAlert('danger', message);
@@ -123,9 +121,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
             )}
           </Row>
           <InputGroup className="mb-3 px-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText htmlFor="filterInput">Keywords</InputGroupText>
-            </InputGroupAddon>
+            <InputGroupText htmlFor="filterInput">Keywords</InputGroupText>
             <Input
               type="text"
               placeholder="Search for keywords or packages that include a card..."
@@ -135,37 +131,27 @@ const BrowsePackagesPage = ({ loginCallback }) => {
               onChange={(e) => setFilterTemp(e.target.value)}
               onKeyDown={(e) => e.keyCode === 13 && setFilter(filterTemp)}
             />
-            <InputGroupAddon addonType="append">
-              <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
-                Apply
-              </Button>
-            </InputGroupAddon>
+            <Button color="accent" className="square-left" onClick={() => setFilter(filterTemp)}>
+              Apply
+            </Button>
           </InputGroup>
           <Row className="px-3">
             <Col xs={12} sm={6}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Sort: </InputGroupText>
-                </InputGroupAddon>
-                <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
+                <InputGroupText>Sort: </InputGroupText>
+                <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
                   <option value="votes">Votes</option>
                   <option value="date">Date</option>
-                </CustomInput>
+                </Input>
               </InputGroup>
             </Col>
             <Col xs={12} sm={6}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Direction: </InputGroupText>
-                </InputGroupAddon>
-                <CustomInput
-                  type="select"
-                  value={sortDirection}
-                  onChange={(event) => setSortDirection(event.target.value)}
-                >
+                <InputGroupText>Direction: </InputGroupText>
+                <Input type="select" value={sortDirection} onChange={(event) => setSortDirection(event.target.value)}>
                   <option value="1">Ascending</option>
                   <option value="-1">Descending</option>
-                </CustomInput>
+                </Input>
               </InputGroup>
             </Col>
           </Row>

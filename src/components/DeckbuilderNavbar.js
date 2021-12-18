@@ -76,7 +76,7 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
-      <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+      <NavbarToggler onClick={toggleNavbar} className="ms-auto" />
       <Collapse isOpen={isOpen} navbar>
         <Nav navbar>
           <NavItem>

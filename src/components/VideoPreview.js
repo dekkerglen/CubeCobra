@@ -39,13 +39,13 @@ const VideoPreview = ({ video }) => {
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-left">
+        <small className="float-start">
           By{' '}
           <a data-sublink href={`/user/view/${video.owner}`}>
             {video.username}
           </a>
         </small>
-        <small className="float-right">
+        <small className="float-end">
           <TimeAgo date={video.date} />
         </small>
       </div>

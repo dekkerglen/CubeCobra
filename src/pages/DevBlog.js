@@ -34,7 +34,7 @@ const DevBlog = ({ blogs, pages, activePage, loginCallback }) => {
                   <Label>HTML:</Label>
                   <Input name="html" type="textarea" />
                 </FormGroup>
-                <Button type="submit" color="success" block outline>
+                <Button type="submit" color="accent" block outline>
                   Submit
                 </Button>
               </CSRFForm>

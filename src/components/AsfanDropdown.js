@@ -47,22 +47,24 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
       </Col>
       {draftFormat !== null && (
         <Col xs="12" sm="6">
-          <Form inline>
-            Draft Format:
-            <UncontrolledDropdown disabled={draftFormat === null} className="ml-2">
-              <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'success' : 'disabled'}>
-                {labelText}
-              </DropdownToggle>
-              <DropdownMenu>
-                <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
-                {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
-                {cube.draft_formats.map((format, index) => (
-                  <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                    {format.title}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </UncontrolledDropdown>
+          <Form className="row row-cols-auto align-items-center gx-1">
+            <Col>Draft Format:</Col>
+            <Col>
+              <UncontrolledDropdown disabled={draftFormat === null} className="ms-2">
+                <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'accent' : 'disabled'}>
+                  {labelText}
+                </DropdownToggle>
+                <DropdownMenu>
+                  <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
+                  {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
+                  {cube.draft_formats.map((format, index) => (
+                    <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
+                      {format.title}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </UncontrolledDropdown>
+            </Col>
           </Form>
         </Col>
       )}
