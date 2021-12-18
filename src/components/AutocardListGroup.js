@@ -18,6 +18,10 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, rowTa
   const canGroupModal = !noGroupModal && canEdit;
   const handleClick = useCallback(
     (event) => {
+      if (window.event.ctrlKey) {
+        return;
+      }
+
       event.preventDefault();
       setGroupModalCards(cards);
       openGroupModal();

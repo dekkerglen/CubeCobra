@@ -9,18 +9,9 @@ const ArticlePreview = ({ article }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  const handleClick = useCallback(
-    (event) => {
-      if (!event.target.getAttribute('data-sublink')) {
-        window.location.href = `/content/article/${article._id}`;
-      }
-    },
-    [article],
-  );
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
       onMouseOut={handleMouseOut}
@@ -33,7 +24,9 @@ const ArticlePreview = ({ article }) => {
         </h6>
       </AspectRatioBox>
       <div className="w-100 pt-1 pb-1 px-2">
-        <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{article.title}</h6>
+        <a href={`/content/article/${article._id}`} className="stretched-link">
+          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{article.title}</h6>
+        </a>
         <small>
           <p className="mb-0">{article.short}</p>
         </small>
