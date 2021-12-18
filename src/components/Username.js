@@ -31,8 +31,11 @@ const CardPackage = ({ userId, defaultName, nolink }) => {
   if (nolink) {
     return <>{name || <Spinner className="position-absolute" size="sm" />}</>;
   }
-
-  return <a href={`/user/view/${userId}`}>{name || <Spinner className="position-absolute" size="sm" />}</a>;
+  return (
+    <a data-sublink href={`/user/view/${userId}`}>
+      {name || <Spinner className="position-absolute" size="sm" />}
+    </a>
+  );
 };
 
 CardPackage.propTypes = {
