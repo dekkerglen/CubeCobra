@@ -58,12 +58,16 @@ const flattenSteps = (steps) => {
 
 export const getStepList = (draft) =>
   draft.initial_state[0]
-    .map((pack, packIndex) =>
-      flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
+    .map((pack, packIndex) => [
+      ...flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
         pack: packIndex + 1,
         ...step,
       })),
-    )
+      {
+        pack: packIndex + 1,
+        action: 'endpack',
+      },
+    ])
     .flat();
 
 export const nextStep = (draft, seat, cardsPicked) => {
@@ -76,10 +80,12 @@ export const nextStep = (draft, seat, cardsPicked) => {
       return step.action;
     }
 
-    if (step.action !== 'pass') {
+    if (step.action !== 'pass' && step.action !== 'endpack') {
       picks += 1;
     }
   }
+
+  return null;
 };
 
 export const getDrafterState = (draft, seatNumber, pickNumber) => {
@@ -127,7 +133,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   // go through steps and update states
   for (const step of steps) {
     // open pack if we need to open a new pack
-    if (step.pick === 1 && step.action !== 'pass') {
+    if (step.action === 'endpack') {
       packsWithCards = [];
 
       for (let i = 0; i < draft.initial_state.length; i++) {
@@ -191,6 +197,10 @@ export const getDefaultPosition = (card, picks) => {
 };
 
 export const stepListToTitle = (steps) => {
+  if (steps.length === 0) {
+    return 'Finishing up draft...';
+  }
+
   if (steps[0] === 'pick') {
     let count = 1;
     while (steps.length > count && steps[count] === 'pick') {

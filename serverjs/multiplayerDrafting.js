@@ -133,6 +133,11 @@ const getCurrentPackStepQueue = async (draftId, seat) => {
   return items.reverse();
 };
 
+const currentPackStepIsPadding = async (draftId, seat) => {
+  const step = await getCurrentPackStep(draftId, seat);
+  return step === 'pass' || step === 'endpack';
+};
+
 const makePick = async (draftId, seat, pick, nextSeat) => {
   // get reference to pack and to the cards picked from it
   const packReference = await getPlayerPackReference(draftId, seat);
@@ -144,6 +149,11 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const packCards = await getCurrentPackCards(packReference);
   const picked = packToPicked(packReference);
   const step = await rpop(stepsQueueRef(draftId, seat));
+
+  if (packCards.length === 0) {
+    // pack is empty, we fail
+    return;
+  }
 
   console.log(`-----seat ${seat}------`);
   console.log(packCards);
@@ -175,7 +185,7 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
   }
 
-  while ((await getCurrentPackStep(draftId, seat)) === 'pass') {
+  while (await currentPackStepIsPadding(draftId, seat)) {
     await rpop(stepsQueueRef(draftId, seat));
   }
 };
@@ -347,11 +357,7 @@ const setup = async (draft) => {
     const stepList = getStepList(draft);
     for (let i = 0; i < draft.seats.length; i++) {
       for (const step of stepList) {
-        if (step.action === 'pass') {
-          await lpush(stepsQueueRef(draft._id, i), step.action);
-        } else {
-          await lpush(stepsQueueRef(draft._id, i), step.action);
-        }
+        await lpush(stepsQueueRef(draft._id, i), step.action);
       }
     }
 
