@@ -33,10 +33,10 @@ const LandingPage = ({ numusers, numcubes, numdrafts }) => {
               <strong>{numdrafts}</strong>
               {' Completed Drafts'}
             </h5>
-            <Button href="/user/register" className="landing-btn my-3" color="success">
+            <Button href="/user/register" className="landing-btn my-3" color="accent">
               Sign Up
             </Button>
-            <LoginModalButton modalProps={{ loginCallback: '/' }} className="landing-btn mb-3" color="success" outline>
+            <LoginModalButton modalProps={{ loginCallback: '/' }} className="landing-btn mb-3" color="accent" outline>
               Login
             </LoginModalButton>
             <span data-ccpa-link="1" />

@@ -87,7 +87,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
-                <Button type="submit" color="success" block disabled={!hasChanges}>
+                <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Save
                 </Button>
               </CSRFForm>
@@ -101,7 +101,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Input type="hidden" name="imagename" value={imageName} />
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
-                <Button type="submit" outline color="success" block>
+                <Button type="submit" outline color="accent" block>
                   Submit for Review
                 </Button>
               </CSRFForm>

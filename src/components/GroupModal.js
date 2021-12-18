@@ -343,11 +343,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
           </Row>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" onClick={handleRemoveAll}>
+          <Button color="unsafe" onClick={handleRemoveAll}>
             Remove all from cube
           </Button>
           <MassBuyButton cards={cards}>Buy all</MassBuyButton>
-          <LoadingButton color="success" onClick={handleApply}>
+          <LoadingButton color="accent" onClick={handleApply}>
             Apply to all
           </LoadingButton>
         </ModalFooter>

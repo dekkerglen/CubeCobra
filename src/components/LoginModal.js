@@ -39,7 +39,7 @@ const LoginModal = ({ isOpen, toggle, loginCallback }) => (
         <Input type="hidden" name="loginCallback" value={loginCallback} />
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success" block outline>
+        <Button type="submit" color="accent" block outline>
           Login
         </Button>
       </ModalFooter>

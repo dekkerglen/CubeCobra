@@ -194,7 +194,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <Button color="success" type="submit" disabled={addValue.length === 0}>
+              <Button color="accent" type="submit" disabled={addValue.length === 0}>
                 Add
               </Button>
             </InputGroup>
@@ -218,7 +218,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <Button color="success" type="submit" disabled={removeValue.length === 0}>
+              <Button color="accent" type="submit" disabled={removeValue.length === 0}>
                 Remove/Replace
               </Button>
             </InputGroup>
@@ -242,7 +242,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         </Col>
         <Col xs={12} md="auto" className="ms-md-auto">
           <ResizeModal cubeID={cubeID} />
-          <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
+          <Button color="accent" className="mb-2" onClick={toggleShowMaybeboard}>
             Maybeboard
           </Button>
         </Col>
@@ -293,10 +293,10 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </Row>
           <Row className="mb-2">
             <Col>
-              <Button color="success" className="me-2" type="submit">
+              <Button color="accent" className="me-2" type="submit">
                 Save Changes
               </Button>
-              <Button color="danger" onClick={handleDiscardAll}>
+              <Button color="unsafe" onClick={handleDiscardAll}>
                 Discard All
               </Button>
             </Col>

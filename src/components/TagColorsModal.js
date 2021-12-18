@@ -179,7 +179,7 @@ class TagColorsModalRaw extends Component {
           )}
         </ModalBody>
         <ModalFooter>
-          <LoadingButton color="success" className="ms-auto" onClick={this.handleSubmit}>
+          <LoadingButton color="accent" className="ms-auto" onClick={this.handleSubmit}>
             Submit
           </LoadingButton>
         </ModalFooter>

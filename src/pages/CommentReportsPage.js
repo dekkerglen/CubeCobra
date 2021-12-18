@@ -53,12 +53,12 @@ const CommentReportsPage = ({ loginCallback, reports, count, page }) => (
             </p>
             <Row>
               <Col xs="12" sm="6">
-                <ButtonLink color="success" block outline href={`/admin/ignorereport/${report._id}`}>
+                <ButtonLink color="accent" block outline href={`/admin/ignorereport/${report._id}`}>
                   Ignore
                 </ButtonLink>
               </Col>
               <Col xs="12" sm="6">
-                <ButtonLink color="danger" block outline href={`/admin/removecomment/${report._id}`}>
+                <ButtonLink color="unsafe" block outline href={`/admin/removecomment/${report._id}`}>
                   Remove Comment
                 </ButtonLink>
               </Col>

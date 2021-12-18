@@ -381,7 +381,7 @@ class CubeOverviewModal extends Component {
                 <Button color="secondary" onClick={this.close}>
                   Close
                 </Button>{' '}
-                <LoadingButton color="success" onClick={this.handleApply}>
+                <LoadingButton color="accent" onClick={this.handleApply}>
                   Save Changes
                 </LoadingButton>
               </ModalFooter>

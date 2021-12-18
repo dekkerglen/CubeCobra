@@ -51,7 +51,7 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
             <Col>Draft Format:</Col>
             <Col>
               <UncontrolledDropdown disabled={draftFormat === null} className="ms-2">
-                <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'success' : 'disabled'}>
+                <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'accent' : 'disabled'}>
                   {labelText}
                 </DropdownToggle>
                 <DropdownMenu>

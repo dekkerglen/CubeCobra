@@ -104,7 +104,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
                 <div className="text-end">
                   <CreatePackageModalLink
                     outline
-                    color="success"
+                    color="accent"
                     modalProps={{
                       onError: (message) => {
                         addAlert('danger', message);
@@ -131,7 +131,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
               onChange={(e) => setFilterTemp(e.target.value)}
               onKeyDown={(e) => e.keyCode === 13 && setFilter(filterTemp)}
             />
-            <Button color="success" className="square-left" onClick={() => setFilter(filterTemp)}>
+            <Button color="accent" className="square-left" onClick={() => setFilter(filterTemp)}>
               Apply
             </Button>
           </InputGroup>

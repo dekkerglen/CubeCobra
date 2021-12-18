@@ -265,7 +265,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             pack={pack}
           />
         ))}
-        <Button color="success" onClick={mutations.addPack}>
+        <Button color="accent" onClick={mutations.addPack}>
           Add Pack
         </Button>
       </ModalBody>
@@ -280,7 +280,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
           <Input type="hidden" name="serializedFormat" value={packsJson} />
           <Input type="hidden" name="id" value={formatIndex} />
-          <Button color={errorsInFormat ? 'error' : 'success'} type="submit" disabled={!!errorsInFormat}>
+          <Button color={errorsInFormat ? 'error' : 'accent'} type="submit" disabled={!!errorsInFormat}>
             Save
           </Button>
         </CSRFForm>

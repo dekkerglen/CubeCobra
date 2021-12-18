@@ -101,7 +101,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
           </Col>
           <Col xs="12" md="4">
             <Button
-              color="success"
+              color="accent"
               block
               onClick={submitCard}
               disabled={!(imageDict && imageDict[cardName.toLowerCase()])}
@@ -117,7 +117,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
                 <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
                 <Button
                   className="mt-1"
-                  color="danger"
+                  color="unsafe"
                   outline
                   block
                   onClick={() => {
@@ -134,10 +134,10 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
         </Row>
       </ModalBody>
       <ModalFooter>
-        <LoadingButton color="success" outline onClick={save}>
+        <LoadingButton color="accent" outline onClick={save}>
           Submit Package
         </LoadingButton>
-        <Button color="danger" outline onClick={toggle}>
+        <Button color="unsafe" outline onClick={toggle}>
           Cancel
         </Button>
       </ModalFooter>

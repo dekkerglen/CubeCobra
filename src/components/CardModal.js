@@ -183,7 +183,7 @@ const CardModal = ({
       </ModalBody>
       <ModalFooter>
         {!disabled && !maybe && (
-          <Button color="danger" onClick={queueRemoveCard}>
+          <Button color="unsafe" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
           </Button>
@@ -200,7 +200,7 @@ const CardModal = ({
           Buy
         </Button>
         {!disabled && (
-          <LoadingButton color="success" onClick={saveChanges}>
+          <LoadingButton color="accent" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
           </LoadingButton>

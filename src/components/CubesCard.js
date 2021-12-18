@@ -34,7 +34,7 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
       </Collapse>
       {(!lean || cubes.length > 2) && (
         <CardBody>
-          <Button color="success" block onClick={toggle}>
+          <Button color="accent" block onClick={toggle}>
             {isOpen ? 'View Fewer...' : 'View More...'}
           </Button>
         </CardBody>

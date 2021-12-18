@@ -41,12 +41,12 @@ const ReviewVideosPage = ({ loginCallback, videos, count, page }) => (
               <VideoPreview video={video} />
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="success" outline block href={`/admin/publishvideo/${video._id}`}>
+              <ButtonLink color="accent" outline block href={`/admin/publishvideo/${video._id}`}>
                 Publish
               </ButtonLink>
             </Col>
             <Col xs="12" sm="4">
-              <ButtonLink color="danger" outline block href={`/admin/removevideoreview/${video._id}`}>
+              <ButtonLink color="unsafe" outline block href={`/admin/removevideoreview/${video._id}`}>
                 Remove from Reviews
               </ButtonLink>
             </Col>

@@ -38,7 +38,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast._id} />
                 <Input type="hidden" name="rss" value={rss} />
-                <Button type="submit" color="success" block disabled={!hasChanges}>
+                <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Update
                 </Button>
               </CSRFForm>
@@ -47,7 +47,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast._id} />
                 <Input type="hidden" name="rss" value={rss} />
-                <Button type="submit" outline color="success" block>
+                <Button type="submit" outline color="accent" block>
                   Submit for Review
                 </Button>
               </CSRFForm>

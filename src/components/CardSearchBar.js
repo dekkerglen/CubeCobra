@@ -8,7 +8,7 @@ const CardSearchBar = () => {
       <div className="search-bar flex-container flex-align-stretch flex-grow">
         <InputGroup>
           <Input name="f" placeholder="Search Cards..." />
-          <Button className="search-button" type="submit" color="success">
+          <Button className="search-button" type="submit" color="accent">
             Go
           </Button>
         </InputGroup>

@@ -256,18 +256,18 @@ const SortCollapse = ({
         </Row>
         <Row className="mb-3">
           <Col>
-            <Button color="success" className="me-sm-2 mb-3" onClick={handleReset}>
+            <Button color="accent" className="me-sm-2 mb-3" onClick={handleReset}>
               Reset Sort
             </Button>
             {!canEdit ? (
               false
             ) : (
-              <Button color="success" className="me-sm-2 mb-3" onClick={handleSave}>
+              <Button color="accent" className="me-sm-2 mb-3" onClick={handleSave}>
                 Save as Default Sort
               </Button>
             )}
             <Button
-              color={showOther ? 'danger' : 'primary'}
+              color={showOther ? 'unsafe' : 'primary'}
               className="me-sm-2 mb-3"
               onClick={() => {
                 const newShowOther = !showOther;

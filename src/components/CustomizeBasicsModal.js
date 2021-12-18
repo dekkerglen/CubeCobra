@@ -75,7 +75,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
           </Col>
           <Col xs="12" md="4">
             <Button
-              color="success"
+              color="accent"
               block
               onClick={submitCard}
               disabled={!(imageDict && imageDict[cardName.toLowerCase()])}
@@ -91,7 +91,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
                 <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
                 <Button
                   className="mt-1"
-                  color="danger"
+                  color="unsafe"
                   outline
                   block
                   onClick={() => {
@@ -108,7 +108,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
         </Row>
       </ModalBody>
       <ModalFooter>
-        <LoadingButton color="success" outline onClick={save}>
+        <LoadingButton color="accent" outline onClick={save}>
           Save Changes
         </LoadingButton>
         <Button onClick={toggle}>Close</Button>

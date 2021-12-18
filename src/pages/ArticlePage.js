@@ -24,7 +24,7 @@ const ArticlePage = ({ loginCallback, article }) => {
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="success" outline href={`/content/article/edit/${article._id}`}>
+              <ButtonLink color="accent" outline href={`/content/article/edit/${article._id}`}>
                 Edit
               </ButtonLink>
             </h5>

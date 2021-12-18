@@ -72,10 +72,10 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
         </Row>
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success" onClick={handleAddBasics}>
+        <Button type="submit" color="accent" onClick={handleAddBasics}>
           Add
         </Button>
-        <Button color="success" onClick={calculateBasics}>
+        <Button color="accent" onClick={calculateBasics}>
           Calculate
         </Button>
         <Button color="secondary" onClick={toggle}>

@@ -42,7 +42,7 @@ const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
       </ModalBody>
       <ModalFooter>
         <Button
-          color="success"
+          color="accent"
           onClick={() => {
             onSubmit(input);
             toggle();
@@ -76,7 +76,7 @@ const AddCubeModal = ({ isOpen, toggle }) => (
         </InputGroup>
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success">
+        <Button type="submit" color="accent">
           Submit
         </Button>
         <Button type="button" color="secondary" onClick={toggle}>
@@ -98,7 +98,7 @@ const RotateModal = ({ isOpen, toggle }) => (
     <ModalBody>
       <p>You are about to rotate the featured cubes. Are you sure?</p>
       <CSRFForm method="POST" action="/admin/featuredcubes/rotate">
-        <Button type="submit" outline block color="danger">
+        <Button type="submit" outline block color="unsafe">
           Yes, I'm sure
         </Button>
       </CSRFForm>
@@ -134,7 +134,7 @@ const MoveModal = ({ isOpen, toggle, cube, index }) => (
       </CSRFForm>
     </ModalBody>
     <ModalFooter>
-      <Button color="success" form="move-cube-form" type="submit">
+      <Button color="accent" form="move-cube-form" type="submit">
         Submit
       </Button>
       <Button color="secondary" onClick={toggle}>
@@ -175,7 +175,7 @@ const QueueItem = ({ cube, index, onMove }) => (
               <Col xs={4} md={12}>
                 <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
                   <input type="hidden" name="cubeId" value={cube._id} />
-                  <Button type="submit" color="danger" outline disabled={index < 2}>
+                  <Button type="submit" color="unsafe" outline disabled={index < 2}>
                     Remove
                   </Button>
                 </CSRFForm>
@@ -264,7 +264,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
               <h6>Last rotation: {lastRotation.toLocaleDateString()}</h6>
             </Col>
             <Col className="mb-4">
-              <AddCubeButton outline color="success" className="me-md-4 mb-xs-2 mb-md-0">
+              <AddCubeButton outline color="accent" className="me-md-4 mb-xs-2 mb-md-0">
                 Add Cube to Queue
               </AddCubeButton>
               <RotateButton outline color="secondary">
