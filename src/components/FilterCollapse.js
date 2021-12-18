@@ -5,11 +5,9 @@ import {
   Col,
   Row,
   Collapse,
-  CustomInput,
   Form,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Modal,
   ModalBody,
@@ -100,26 +98,22 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           onChange={onChange}
         />
         <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Color</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Color</InputGroupText>
           <ColorChecksAddon colorless prefix="color" values={values} onChange={onChange} />
-          <CustomInput type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
+          <Input type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
             <option value="<=">At most these colors</option>
-          </CustomInput>
+          </Input>
         </InputGroup>
         <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Color Identity</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Color Identity</InputGroupText>
           <ColorChecksAddon colorless prefix="identity" values={values} onChange={onChange} />
-          <CustomInput type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
+          <Input type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
             <option value="=">Exactly these colors</option>
             <option value=">=">Including these colors</option>
             <option value="<=">At most these colors</option>
-          </CustomInput>
+          </Input>
         </InputGroup>
         <TextField
           name="mana"
@@ -129,9 +123,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           onChange={onChange}
         />
         <InputGroup className="mb-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Manacost Type</InputGroupText>
-          </InputGroupAddon>
+          <InputGroupText>Manacost Type</InputGroupText>
           <Input type="select" name="is" value={values.is} onChange={onChange}>
             {['', 'Gold', 'Hybrid', 'Phyrexian'].map((type) => (
               <option key={type}>{type}</option>
@@ -156,9 +148,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           {({ cubeID }) =>
             cubeID && (
               <InputGroup className="mb-3" {...props}>
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Tag</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Tag</InputGroupText>
                 <AutocompleteInput
                   treeUrl={`/cube/api/cubecardtags/${cubeID}`}
                   treePath="tags"
@@ -179,9 +169,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         <Row className="row-mid-padding">
           <Col md={6}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Status</InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Status</InputGroupText>
               <Input type="select" name="status" value={values.status} onChange={onChange}>
                 {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                   <option key={status}>{status}</option>
@@ -191,9 +179,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           </Col>
           <Col md={6}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Finish</InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>Finish</InputGroupText>
               <Input type="select" name="finish" value={values.finish} onChange={onChange}>
                 {['', 'Foil', 'Non-foil'].map((finish) => (
                   <option key={finish}>{finish}</option>
@@ -285,13 +271,11 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
           onChange={onChange}
         />
         <InputGroup className="mb-3" {...props}>
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Legality</InputGroupText>
-          </InputGroupAddon>
-          <CustomInput type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
+          <InputGroupText>Legality</InputGroupText>
+          <Input type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
             <option value="=">legal</option>
             <option value="!=">not legal</option>
-          </CustomInput>
+          </Input>
           <Input type="select" name="legality" value={values.legality} onChange={onChange}>
             {[
               '',
@@ -319,10 +303,10 @@ const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props
         />
       </ModalBody>
       <ModalFooter>
-        <Button color="danger" aria-label="Close" onClick={toggle}>
+        <Button color="unsafe" aria-label="Close" onClick={toggle}>
           Cancel
         </Button>
-        <Button color="success" type="submit">
+        <Button color="accent" type="submit">
           Apply
         </Button>
       </ModalFooter>
@@ -515,9 +499,7 @@ class FilterCollapse extends Component {
           <Col>
             <Form>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
                 <Input
                   type="text"
                   id="filterInput"
@@ -530,95 +512,83 @@ class FilterCollapse extends Component {
                   onChange={this.handleChange}
                   onKeyDown={this.handleKeyDown}
                 />
-                <InputGroupAddon addonType="append">
-                  <LoadingButton color="success" className="square-left" onClick={this.handleApply} loading={loading}>
-                    Apply
-                  </LoadingButton>
-                </InputGroupAddon>
+                <LoadingButton color="accent" className="square-left" onClick={this.handleApply} loading={loading}>
+                  Apply
+                </LoadingButton>
               </InputGroup>
             </Form>
           </Col>
         </Row>
-        <Row style={{ margin: '0 -5px' }}>
-          <Form inline>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <ColorChecksControl
-                size="sm"
-                className="mb-3"
-                colorless
-                prefix="colorQuick"
-                values={this.state}
+        <Form className="row ps-2">
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <ColorChecksControl
+              size="sm"
+              className="mb-3"
+              colorless
+              prefix="colorQuick"
+              values={this.state}
+              onChange={this.handleChange}
+            />
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
+              <Input
+                id="cmcQickOp"
+                type="select"
+                name="cmcQuickOp"
+                value={this.state.cmcQuickOp}
                 onChange={this.handleChange}
+                bsSize="sm"
+                style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+              >
+                <option>{'>'}</option>
+                <option>{'>='}</option>
+                <option>{'='}</option>
+                <option>{'<='}</option>
+                <option>{'<'}</option>
+              </Input>
+              <Input
+                name="cmcQuick"
+                id="cmcQuick"
+                value={this.state.cmcQuick}
+                onChange={this.handleChange}
+                bsSize="sm"
+                className="square-left"
+                style={{ width: '3rem' }}
               />
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
-                </InputGroupAddon>
-                <CustomInput
-                  id="cmcQickOp"
-                  type="select"
-                  name="cmcQuickOp"
-                  value={this.state.cmcQuickOp}
-                  onChange={this.handleChange}
-                  bsSize="sm"
-                  style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
-                >
-                  <option>{'>'}</option>
-                  <option>{'>='}</option>
-                  <option>{'='}</option>
-                  <option>{'<='}</option>
-                  <option>{'<'}</option>
-                </CustomInput>
-                <InputGroupAddon addonType="append">
-                  <Input
-                    name="cmcQuick"
-                    id="cmcQuick"
-                    value={this.state.cmcQuick}
-                    onChange={this.handleChange}
-                    bsSize="sm"
-                    className="square-left"
-                    style={{ width: '3rem' }}
-                  />
-                </InputGroupAddon>
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  name="typeQuick"
-                  id="typeQuick"
-                  value={this.state.typeQuick}
-                  onChange={this.handleChange}
-                  style={{ width: '8rem' }}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <InputGroup size="sm" className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText htmlFor="textQuick">Text</InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  name="textQuick"
-                  id="textQuick"
-                  value={this.state.textQuick}
-                  onChange={this.handleChange}
-                  style={{ width: '8rem' }}
-                />
-              </InputGroup>
-            </Col>
-            <Col xs="auto" style={{ padding: '0 5px' }}>
-              <Button type="submit" onClick={this.applyQuick} size="sm" color="success" className="mb-3">
-                Quick Filter
-              </Button>
-            </Col>
-          </Form>
-        </Row>
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
+              <Input
+                name="typeQuick"
+                id="typeQuick"
+                value={this.state.typeQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <InputGroup size="sm" className="mb-3">
+              <InputGroupText htmlFor="textQuick">Text</InputGroupText>
+              <Input
+                name="textQuick"
+                id="textQuick"
+                value={this.state.textQuick}
+                onChange={this.handleChange}
+                style={{ width: '8rem' }}
+              />
+            </InputGroup>
+          </Col>
+          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+            <Button type="submit" onClick={this.applyQuick} size="sm" color="accent" className="mb-3">
+              Quick Filter
+            </Button>
+          </Col>
+        </Form>
         <Row>
           <Col>
             {!noCount && (
@@ -628,13 +598,13 @@ class FilterCollapse extends Component {
         </Row>
         <Row>
           <Col>
-            <Button color="danger" className="mr-2 mb-3" onClick={this.handleReset}>
+            <Button color="unsafe" className="me-2 mb-3" onClick={this.handleReset}>
               Reset Filters
             </Button>
-            <Button color="primary" className="mr-2 mb-3" onClick={this.toggleAdvanced}>
+            <Button color="primary" className="me-2 mb-3" onClick={this.toggleAdvanced}>
               Advanced...
             </Button>
-            <Button color="secondary" className="mr-2 mb-3" href="/filters">
+            <Button color="secondary" className="me-2 mb-3" href="/filters">
               Syntax Guide
             </Button>
           </Col>

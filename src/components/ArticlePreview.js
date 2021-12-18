@@ -43,7 +43,7 @@ const ArticlePreview = ({ article }) => {
         <small className="float-left">
           Written by <Username userId={article.owner} defaultName={article.username} />
         </small>
-        <small className="float-right">
+        <small className="float-end">
           <TimeAgo date={article.date} />
         </small>
       </div>

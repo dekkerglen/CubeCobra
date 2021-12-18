@@ -43,7 +43,7 @@ const VideoPreview = ({ video }) => {
         <small className="float-left">
           By <Username userId={video.owner} defaultName={video.username} />
         </small>
-        <small className="float-right">
+        <small className="float-end">
           <TimeAgo date={video.date} />
         </small>
       </div>

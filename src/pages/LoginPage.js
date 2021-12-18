@@ -45,7 +45,7 @@ const LoginPage = ({ loginCallback }) => (
               </Col>
             </Row>
           </FormGroup>
-          <Button type="submit" color="success" block outline>
+          <Button type="submit" color="accent" block outline>
             Login
           </Button>
         </CSRFForm>

@@ -13,9 +13,7 @@ import {
   TabContent,
   TabPane,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Table,
   Badge,
   Button,
@@ -204,15 +202,11 @@ const CardIdBadge = ({ id }) => {
 
   return (
     <InputGroup className="flex-nowrap mb-3" size="sm">
-      <InputGroupAddon addonType="prepend">
-        <InputGroupText>Card ID</InputGroupText>
-      </InputGroupAddon>
+      <InputGroupText>Card ID</InputGroupText>
       <Input className="bg-white" value={id} disabled />
-      <InputGroupAddon addonType="append" style={{ width: 'auto' }}>
-        <Button className="btn-sm input-group-button" onClick={onCopyClick}>
-          {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
-        </Button>
-      </InputGroupAddon>
+      <Button className="btn-sm input-group-button" onClick={onCopyClick} style={{ width: 'auto' }}>
+        {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
+      </Button>
     </InputGroup>
   );
 };
@@ -261,12 +255,12 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
           <h6>{`${card.set_name} [${card.set.toUpperCase()}-${card.collector_number}]`}</h6>
         </CardHeader>
         <Row className="mt-2" noGutters>
-          <Col className="pl-2 pb-2" xs="12" sm="3">
+          <Col className="ps-2 pb-2" xs="12" sm="3">
             <ImageFallback className="w-100" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
             {card.image_flip && (
               <Button
                 className="mt-1"
-                color="success"
+                color="accent"
                 outline
                 block
                 onClick={() => {
@@ -285,7 +279,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Played in {cardPopularity({ details: card })}%
                 <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
               </p>
-              <AddModal color="success" block outline className="mb-1 mr-2" modalProps={{ card, hideAnalytics: true }}>
+              <AddModal color="accent" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
               <CardIdBadge id={card._id} />
@@ -347,12 +341,12 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 <CardBody>
                   <Row>
                     <Col xs="6">
-                      <div className="text-left">
+                      <div className="text-start">
                         <b>{card.name}</b>
                       </div>
                     </Col>
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         {card.parsed_cost
                           .slice(0)
                           .reverse()
@@ -377,14 +371,14 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   </div>
                   <Row>
                     <Col xs="6">
-                      <div className="text-left">
+                      <div className="text-start">
                         <small>
                           <i>{`Illustrated by ${card.artist}`}</i>
                         </small>
                       </div>
                     </Col>
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <>{card.loyalty && <p>{card.loyalty}</p>}</>
                         <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
                       </div>
@@ -414,10 +408,8 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <TabPane tabId="2">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Price Type: </InputGroupText>
-                    </InputGroupAddon>
-                    <CustomInput
+                    <InputGroupText>Price Type: </InputGroupText>
+                    <Input
                       id="priceType"
                       type="select"
                       value={priceType}
@@ -428,7 +420,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="price_etched">USD Etched</option>
                       <option value="eur">EUR</option>
                       <option value="tix">TIX</option>
-                    </CustomInput>
+                    </Input>
                   </InputGroup>
                   <Graph
                     unit={getPriceTypeUnit[priceType]}
@@ -440,10 +432,8 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <TabPane tabId="3">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupAddon addonType="prepend">
-                      <InputGroupText>Cube Type: </InputGroupText>
-                    </InputGroupAddon>
-                    <CustomInput
+                    <InputGroupText>Cube Type: </InputGroupText>
+                    <Input
                       id="cubeType"
                       type="select"
                       value={cubeType}
@@ -461,7 +451,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="size450">361-450 Cards</option>
                       <option value="size540">451-540 Cards</option>
                       <option value="size720">541+ Cards</option>
-                    </CustomInput>
+                    </Input>
                   </InputGroup>
                   <Graph
                     unit="Percent of Cubes"
@@ -502,14 +492,14 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 <CardBody>
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={`/search/card:"${card.name}"/0`} target="_blank">
+                      <ButtonLink outline color="accent" block href={`/search/card:"${card.name}"/0`} target="_blank">
                         {`Cubes with ${card.name}`}
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
                         target="_blank"
@@ -518,19 +508,19 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={card.scryfall_uri} target="_blank">
+                      <ButtonLink outline color="accent" block href={card.scryfall_uri} target="_blank">
                         View on Scryfall
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+                      <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                         View on TCGPlayer
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={getCardKingdomLink({ details: card })}
                         target="_blank"
@@ -541,7 +531,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}`}
                         target="_blank"
@@ -552,7 +542,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink
                         outline
-                        color="success"
+                        color="accent"
                         block
                         href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
                         target="_blank"
@@ -564,7 +554,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 </CardBody>
               </TabPane>
               <TabPane tabId="5">
-                <div className="border-left border-bottom">
+                <div className="border-start border-bottom">
                   <CommentsSection parentType="card" parent={card.oracle_id} collapse={false} />
                 </div>
               </TabPane>
@@ -626,57 +616,57 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <h4>Purchase</h4>
             </CardHeader>
             <CardBody>
-              <ButtonLink outline color="success" block href={getTCGLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>TCGPlayer</b>
                     </div>
                   </Col>
                   {card.prices.usd && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`$${card.prices.usd.toFixed(2)}`}</b>
                       </div>
                     </Col>
                   )}
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardKingdomLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardKingdomLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>Card Kingdom</b>
                     </div>
                   </Col>
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardMarketLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardMarketLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>CardMarket</b>
                     </div>
                   </Col>
                   {card.prices.eur && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`€${card.prices.eur.toFixed(2)}`}</b>
                       </div>
                     </Col>
                   )}
                 </Row>
               </ButtonLink>
-              <ButtonLink outline color="success" block href={getCardHoarderLink({ details: card })} target="_blank">
+              <ButtonLink outline color="accent" block href={getCardHoarderLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
-                    <div className="text-left">
+                    <div className="text-start">
                       <b>CardHoarder</b>
                     </div>
                   </Col>
                   {card.prices.tix && (
                     <Col xs="6">
-                      <div className="text-right">
+                      <div className="text-end">
                         <b>{`${card.prices.tix.toFixed(2)} TIX`}</b>
                       </div>
                     </Col>

@@ -108,7 +108,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
         {user && cubeState.owner === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
-              className="ml-auto"
+              className="ms-auto"
               id="cubeOverviewNavbarToggler"
               aria-controls="cubeOverviewNavbarCollapse"
             />
@@ -179,7 +179,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </FollowersModalLink>
                     </h6>
                   </Col>
-                  <div className="float-right" style={{ paddingTop: 3, marginRight: '0.25rem' }}>
+                  <Col xs="auto" className="ms-auto d-flex">
                     <TextBadge name="Cube ID">
                       <Tooltip text="Click to copy to clipboard">
                         <button
@@ -196,15 +196,14 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                         </button>
                       </Tooltip>
                     </TextBadge>
-                  </div>
-                  <CubeIdModalLink
-                    modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
-                    aria-label="Show Cube IDs"
-                    className="mr-2"
-                    style={{ position: 'relative', top: '5px' /* the icon needs to be pulled down */ }}
-                  >
-                    <QuestionIcon size="18" />
-                  </CubeIdModalLink>
+                    <CubeIdModalLink
+                      modalProps={{ fullID: cube._id, shortID: getCubeId(cubeState), alert: addAlert }}
+                      aria-label="Show Cube IDs"
+                      className="ms-1 pt-1"
+                    >
+                      <QuestionIcon size="18" />
+                    </CubeIdModalLink>
+                  </Col>
                 </Row>
               </CardHeader>
               <div className="position-relative">
@@ -234,7 +233,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                 {!cubeState.privatePrices && (
                   <Row noGutters className="mb-1">
                     {Number.isFinite(priceOwned) && (
-                      <TextBadge name="Owned" className="mr-2">
+                      <TextBadge name="Owned" className="me-2">
                         <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">
                           ${Math.round(priceOwned).toLocaleString()}
                         </Tooltip>
@@ -256,7 +255,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     action={`/cube/${cubeState.isFeatured ? 'unfeature/' : 'feature/'}${cubeState._id}`}
                     className="mt-2"
                   >
-                    <Button color="success" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
+                    <Button color="accent" type="submit" disabled={!cubeState.isFeatured && cubeState.isPrivate}>
                       {' '}
                       {cubeState.isFeatured ? 'Remove from Featured' : 'Add to Featured'}
                     </Button>
@@ -266,11 +265,11 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
               {user &&
                 cubeState.owner !== user.id &&
                 (followedState ? (
-                  <Button outline color="danger" className="rounded-0" onClick={unfollow}>
+                  <Button outline color="unsafe" className="rounded-0" onClick={unfollow}>
                     Unfollow
                   </Button>
                 ) : (
-                  <Button color="success" className="rounded-0" onClick={follow}>
+                  <Button color="accent" className="rounded-0" onClick={follow}>
                     Follow
                   </Button>
                 ))}

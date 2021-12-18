@@ -35,7 +35,7 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
           <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Save
           </Button>
           <Button color="secondary" onClick={toggle}>

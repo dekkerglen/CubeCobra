@@ -12,7 +12,6 @@ import {
   DropdownToggle,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Label,
   UncontrolledDropdown,
@@ -76,9 +75,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
               {pack.slots.map((filter, slotIndex) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <InputGroup key={slotIndex} className={slotIndex !== 0 ? 'mt-3' : undefined}>
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>{slotIndex + 1}</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>{slotIndex + 1}</InputGroupText>
                   <Input
                     type="text"
                     value={filter}
@@ -87,23 +84,21 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
                     data-slot-index={slotIndex}
                   />
                   {pack.slots.length > 1 && (
-                    <InputGroupAddon addonType="append">
-                      <Button
-                        color="secondary"
-                        outline
-                        onClick={mutations.removeSlot}
-                        data-pack-index={packIndex}
-                        data-slot-index={slotIndex}
-                      >
-                        Remove
-                      </Button>
-                    </InputGroupAddon>
+                    <Button
+                      color="secondary"
+                      outline
+                      onClick={mutations.removeSlot}
+                      data-pack-index={packIndex}
+                      data-slot-index={slotIndex}
+                    >
+                      Remove
+                    </Button>
                   )}
                 </InputGroup>
               ))}
             </CardBody>
             <CardFooter>
-              <Button className="mr-2" color="success" onClick={mutations.addSlot} data-pack-index={packIndex}>
+              <Button className="me-2" color="accent" onClick={mutations.addSlot} data-pack-index={packIndex}>
                 Add Card Slot
               </Button>
             </CardFooter>
@@ -120,10 +115,8 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
               {steps.map((step, stepIndex) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <InputGroup key={stepIndex} className="pb-1">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>{stepIndex + 1}</InputGroupText>
-                  </InputGroupAddon>
-                  <UncontrolledDropdown className="pr-2">
+                  <InputGroupText>{stepIndex + 1}</InputGroupText>
+                  <UncontrolledDropdown className="pe-2">
                     <DropdownToggle caret>{ACTION_LABELS[step.action]}</DropdownToggle>
                     <DropdownMenu>
                       {Object.entries(ACTION_LABELS).map(([actionKey, actionLabel]) => (
@@ -151,22 +144,20 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
                       <Label className="px-2"> Card{step.amount !== 1 && 's'} </Label>
                     </>
                   )}
-                  <InputGroupAddon addonType="append">
-                    <Button
-                      color="secondary"
-                      outline
-                      onClick={mutations.removeStep}
-                      data-pack-index={packIndex}
-                      data-step-index={stepIndex}
-                    >
-                      Remove
-                    </Button>
-                  </InputGroupAddon>
+                  <Button
+                    color="secondary"
+                    outline
+                    onClick={mutations.removeStep}
+                    data-pack-index={packIndex}
+                    data-step-index={stepIndex}
+                  >
+                    Remove
+                  </Button>
                 </InputGroup>
               ))}
             </CardBody>
             <CardFooter>
-              <Button className="mr-2" color="success" onClick={mutations.addStep} data-pack-index={packIndex}>
+              <Button className="me-2" color="accent" onClick={mutations.addStep} data-pack-index={packIndex}>
                 Add Step
               </Button>
             </CardFooter>
@@ -174,7 +165,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
         </Card>
       </CardBody>
       <CardFooter>
-        <Button color="success" onClick={mutations.duplicatePack} data-pack-index={packIndex}>
+        <Button color="accent" onClick={mutations.duplicatePack} data-pack-index={packIndex}>
           Duplicate Pack
         </Button>
       </CardFooter>

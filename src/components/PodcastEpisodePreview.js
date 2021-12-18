@@ -51,7 +51,7 @@ const PodcastEpisodePreview = ({ episode }) => {
         <small className="float-left">
           By <Username userId={episode.owner} defaultName={episode.username} />
         </small>
-        <small className="float-right">
+        <small className="float-end">
           <TimeAgo date={episode.date} />
         </small>
       </div>

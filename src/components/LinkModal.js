@@ -13,7 +13,7 @@ const AddToCubeModal = ({ link, isOpen, toggle }) => {
           This link leads to: <code>{link}</code>
         </p>
         <p>Following unknown links can be dangerous, are you sure you wish to proceed?</p>
-        <ButtonLink href={link} block color="danger" outline target="_blank" rel="noopener noreferrer">
+        <ButtonLink href={link} block color="unsafe" outline target="_blank" rel="noopener noreferrer">
           Yes, I know what I'm doing
         </ButtonLink>
       </ModalBody>
