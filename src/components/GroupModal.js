@@ -21,7 +21,7 @@ import {
 
 import { csrfFetch } from 'utils/CSRF';
 import { fromEntries } from 'utils/Util';
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardEtchedPrice } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
 import ChangelistContext from 'contexts/ChangelistContext';
@@ -215,6 +215,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
 
   const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
   const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
+  const totalPriceUsdEtched = cards.length ? cards.reduce((total, card) => total + (cardEtchedPrice(card) ?? 0), 0) : 0;
   const totalPriceEur = cards.length ? cards.reduce((total, card) => total + (cardPriceEur(card) ?? 0), 0) : 0;
   const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
@@ -246,6 +247,13 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
                   <TextBadge name="Foil USD" className="mt-2 me-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceUsdEtched) && (
+                  <TextBadge name="Etched USD" className="mt-2 mr-2">
                     <Tooltip text="TCGPlayer Market Foil Price">
                       ${Math.round(totalPriceUsdFoil).toLocaleString()}
                     </Tooltip>

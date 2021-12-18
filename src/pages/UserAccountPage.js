@@ -49,7 +49,7 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
         <ModalBody>
           <Input type="select" id="featuredCube" name="cubeId">
             {cubes.map((cube) => (
-              <option value={cube.id}>{cube.name}</option>
+              <option value={cube._id}>{cube.name}</option>
             ))}
           </Input>
         </ModalBody>
@@ -71,7 +71,7 @@ AddFeaturedModal.propTypes = {
   toggle: PropTypes.func.isRequired,
   cubes: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
+      _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
     }),
   ).isRequired,

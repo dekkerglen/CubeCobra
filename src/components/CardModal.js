@@ -15,7 +15,7 @@ import {
 
 import Affiliate from 'utils/Affiliate';
 import { getLabels, cardGetLabels } from 'utils/Sort';
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
+import { cardPrice, cardFoilPrice, cardEtchedPrice, cardPriceEur, cardTix, cardElo } from 'utils/Card';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import LoadingButton from 'components/LoadingButton';
@@ -62,6 +62,11 @@ const CardModal = ({
               {card.details.prices && Number.isFinite(cardFoilPrice(card)) && (
                 <TextBadge name="Foil" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card).toFixed(2)}</Tooltip>
+                </TextBadge>
+              )}
+              {card.details.prices && Number.isFinite(cardEtchedPrice(card)) && (
+                <TextBadge name="Etched" className="mt-2 mr-2">
+                  <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardPriceEur(card)) && (

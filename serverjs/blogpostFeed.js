@@ -1,6 +1,30 @@
 const Blog = require('../models/blog.js');
 
-function getBlogFeedItems(user, skip, limit) {
+const getBlogFeedItems = (user, skip, limit) =>
+  Blog.find({
+    $or: [
+      {
+        cube: {
+          $in: user.followed_cubes,
+        },
+      },
+      {
+        owner: {
+          $in: user.followed_users,
+        },
+      },
+      {
+        dev: 'true',
+      },
+    ],
+  })
+    .sort({
+      date: -1,
+    })
+    .skip(skip)
+    .limit(limit);
+
+/* {
   // aggregation returns POJO results, so no .lean() needed
   return Blog.aggregate([
     {
@@ -36,8 +60,8 @@ function getBlogFeedItems(user, skip, limit) {
       // we don't want to include the joined cube in output
       $project: { cubes: 0 },
     },
-  ]);
-}
+  ]).allowDiskUse(true);
+} */
 
 module.exports = {
   getBlogFeedItems,
