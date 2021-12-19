@@ -44,12 +44,13 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
 
   const handleClick = useCallback(
     (event) => {
-      event.preventDefault();
       if (event.ctrlKey) {
         openCardToolWindow();
-      } else {
-        openCardModal(card);
+        return;
       }
+
+      event.preventDefault();
+      openCardModal(card);
     },
     [card, openCardModal, openCardToolWindow],
   );

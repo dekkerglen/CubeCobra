@@ -1147,6 +1147,11 @@ audio {
 .btn-success {
 	background-color: var(--button-green);	
 	border-color: var(--button-green);
+	color: var(--link-secondary);
+}
+
+.btn-success:hover {
+	color: var(--link-secondary);
 }
 
 .btn-danger {

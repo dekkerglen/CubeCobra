@@ -37,7 +37,7 @@ const MainLayout = ({ children, loginCallback }) => {
 
   return (
     <div className="flex-container flex-vertical viewport">
-      <Navbar color="dark" expand="md" container="xl" dark>
+      <Navbar color="dark" expand="md" container="xl" dark className="my-0">
         <NavbarBrand href="/" className="overflow-hidden">
           <img
             className="banner-image"
