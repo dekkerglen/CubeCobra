@@ -1,7 +1,3 @@
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
-
 const carddb = require('../../serverjs/cards.js');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util.js');

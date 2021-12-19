@@ -1,8 +1,5 @@
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
 
 const sortutil = require('../../dist/utils/Sort.js');
 const filterutil = require('../../dist/filtering/FilterCards.js');

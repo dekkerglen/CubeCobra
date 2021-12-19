@@ -1,9 +1,5 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
-
 const miscutil = require('../../dist/utils/Util.js');
 const carddb = require('../../serverjs/cards.js');
 const { buildDeck } = require('../../dist/drafting/deckutil.js');

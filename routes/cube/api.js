@@ -3,9 +3,6 @@ const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body } = require('express-validator');
 const fetch = require('node-fetch');
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
 
 const cardutil = require('../../dist/utils/Card.js');
 const carddb = require('../../serverjs/cards.js');
