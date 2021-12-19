@@ -12,19 +12,9 @@ const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  const handleClick = useCallback(
-    (event) => {
-      if (!event.target.getAttribute('data-sublink')) {
-        window.location.href = `/cube/overview/${encodeURIComponent(getCubeId(cube))}`;
-      }
-    },
-    [cube],
-  );
-
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
       onMouseOut={handleMouseOut}
@@ -35,9 +25,11 @@ const CubePreview = ({ cube }) => {
         <em className="cube-preview-artist">Art by {cube.image_artist}</em>
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
-        <h5 className="text-muted text-ellipsis my-0" title={cube.name}>
-          {cube.name}
-        </h5>
+        <a href={`/cube/overview/${encodeURIComponent(getCubeId(cube))}`} className="stretched-link">
+          <h5 className="text-muted text-ellipsis my-0" title={cube.name}>
+            {cube.name}
+          </h5>
+        </a>
         <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
         <em className="text-muted text-ellipsis">
           Designed by{' '}
