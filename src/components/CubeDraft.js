@@ -57,14 +57,10 @@ const CubeDraft = ({ draft, socket }) => {
       // eslint-disable-next-line no-undef
       /* global */ autocard_hide_card();
 
-      console.log(stepQueue);
-
       if (stepQueue[1] === 'pass' || pack.length < 1) {
-        console.log('passing');
         setLoading(true);
         setTitle('Waiting for cards...');
       } else {
-        console.log('not passing');
         const slice = stepQueue.slice(1, stepQueue.length);
         setTitle(stepListToTitle(slice));
         setStepQueue(slice);
@@ -105,7 +101,6 @@ const CubeDraft = ({ draft, socket }) => {
         }
       });
       socket.on('seat', (data) => {
-        console.log(data);
         updatePack(data);
         setLoading(false);
       });
@@ -114,16 +109,14 @@ const CubeDraft = ({ draft, socket }) => {
       updatePack(await fetchPack(draft, seat));
       setLoading(false);
 
-      console.log(seat);
       if (seat === '0') {
         setInterval(async () => {
-          console.log('updating pack');
           try {
             await callApi('/multiplayer/trybotpicks', {
               draft: draft._id,
             });
           } catch (e) {
-            console.log(e);
+            console.error(e);
           }
         }, 1000);
       }
@@ -160,7 +153,6 @@ const CubeDraft = ({ draft, socket }) => {
 
   const onClickCard = useCallback(
     (cardIndex) => {
-      console.log(`Picking: ${cardIndex}: ${pack[cardIndex]}`);
       const col = getCardCol(draft, pack[cardIndex]);
       onMoveCard(
         new DraftLocation(DraftLocation.PACK, cardIndex),

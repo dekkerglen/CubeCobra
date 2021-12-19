@@ -104,7 +104,6 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
 });
 
 router.post('/trybotpicks', ensureAuth, async (req, res) => {
-  console.log('trybotpicks');
   const { draft } = req.body;
 
   await tryBotPicks(draft);

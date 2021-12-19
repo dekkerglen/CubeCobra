@@ -380,33 +380,7 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await rpop(stepsQueueRef(draftId, seat));
   }
 };
-
-const printDraftState = async (draft) => {
-  const { seats } = await getDraftMetaData(draft);
-
-  // eslint-disable-next-line no-console
-  console.log('===== Draft State =====');
-  for (let i = 0; i < seats; i++) {
-    const pack = await getPlayerPack(draft, i);
-    const steps = await getCurrentPackStepQueue(draft, i);
-
-    // eslint-disable-next-line no-console
-    console.log('------------------------------------');
-    // eslint-disable-next-line no-console
-    console.log(`Seat ${i}`);
-    // eslint-disable-next-line no-console
-    console.log(pack);
-    // eslint-disable-next-line no-console
-    console.log(steps);
-    // eslint-disable-next-line no-console
-    console.log('------------------------------------');
-  }
-  // eslint-disable-next-line no-console
-  console.log('===== End Draft State =====');
-};
-
 const tryBotPicks = async (draftId) => {
-  await printDraftState(draftId);
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
@@ -459,6 +433,5 @@ module.exports = {
   packNeedsBotPicks,
   getCurrentPackStep,
   getCurrentPackStepQueue,
-  printDraftState,
   tryBotPicks,
 };

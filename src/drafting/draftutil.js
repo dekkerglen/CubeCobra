@@ -143,11 +143,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       offset = 0;
     }
 
-    console.log(step);
-    console.log(packsWithCards);
     // perform the step if it's not a pass
     for (let i = 0; i < states.length; i++) {
-      console.log(i);
       const seat = states[i];
       seat.pick = step.pick;
       seat.pack = step.pack;
