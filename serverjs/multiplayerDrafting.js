@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 const { cardType } = require('../dist/utils/Card');
+const Draft = require('../models/draft');
 const {
   hget,
   hmget,
@@ -136,58 +137,6 @@ const getCurrentPackStepQueue = async (draftId, seat) => {
 const currentPackStepIsPadding = async (draftId, seat) => {
   const step = await getCurrentPackStep(draftId, seat);
   return step === 'pass' || step === 'endpack';
-};
-
-const makePick = async (draftId, seat, pick, nextSeat) => {
-  // get reference to pack and to the cards picked from it
-  const packReference = await getPlayerPackReference(draftId, seat);
-
-  if (!packReference) {
-    return; // no pack to pick from
-  }
-
-  const packCards = await getCurrentPackCards(packReference);
-  const picked = packToPicked(packReference);
-  const step = await rpop(stepsQueueRef(draftId, seat));
-
-  if (packCards.length === 0) {
-    // pack is empty, we fail
-    return;
-  }
-
-  console.log(`-----seat ${seat}------`);
-  console.log(packCards);
-  console.log(pick);
-  console.log('-------------------');
-
-  // pick this card if the step is pick
-  if (step === 'pick' || step === 'pickrandom') {
-    await lpush(userPicksRef(draftId, seat), packCards[pick]);
-    await expire(userPicksRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
-  }
-
-  // trash this card if the step is trash
-  if (step === 'trash' || step === 'trashrandom') {
-    await lpush(userTrashRef(draftId, seat), packCards[pick]);
-    await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
-  }
-
-  if (packCards.length > 0) {
-    // push the card into the picked list
-    await lpush(picked, packCards[pick]);
-    await expire(picked, 60 * 60 * 24 * 2); // 2 days
-  }
-
-  // look if the next action is a pass
-  const next = await getCurrentPackStep(draftId, seat);
-  if (next === 'pass') {
-    // rotate the pack to the next seat
-    await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
-  }
-
-  while (await currentPackStepIsPadding(draftId, seat)) {
-    await rpop(stepsQueueRef(draftId, seat));
-  }
 };
 
 const getPassAmount = async (draftId, seat) => {
@@ -385,6 +334,104 @@ const setup = async (draft) => {
   }
 };
 
+const makePick = async (draftId, seat, pick, nextSeat) => {
+  // get reference to pack and to the cards picked from it
+  const packReference = await getPlayerPackReference(draftId, seat);
+
+  if (!packReference) {
+    return; // no pack to pick from
+  }
+
+  const packCards = await getCurrentPackCards(packReference);
+  const picked = packToPicked(packReference);
+  const step = await rpop(stepsQueueRef(draftId, seat));
+
+  if (packCards.length === 0) {
+    // pack is empty, we fail
+    return;
+  }
+
+  // pick this card if the step is pick
+  if (step === 'pick' || step === 'pickrandom') {
+    await lpush(userPicksRef(draftId, seat), packCards[pick]);
+    await expire(userPicksRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
+  }
+
+  // trash this card if the step is trash
+  if (step === 'trash' || step === 'trashrandom') {
+    await lpush(userTrashRef(draftId, seat), packCards[pick]);
+    await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
+  }
+
+  if (packCards.length > 0) {
+    // push the card into the picked list
+    await lpush(picked, packCards[pick]);
+    await expire(picked, 60 * 60 * 24 * 2); // 2 days
+  }
+
+  // look if the next action is a pass
+  const next = await getCurrentPackStep(draftId, seat);
+  if (next === 'pass') {
+    // rotate the pack to the next seat
+    await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
+  }
+
+  while (await currentPackStepIsPadding(draftId, seat)) {
+    await rpop(stepsQueueRef(draftId, seat));
+  }
+};
+
+const printDraftState = async (draft) => {
+  const { seats } = await getDraftMetaData(draft);
+
+  // eslint-disable-next-line no-console
+  console.log('===== Draft State =====');
+  for (let i = 0; i < seats; i++) {
+    const pack = await getPlayerPack(draft, i);
+    const steps = await getCurrentPackStepQueue(draft, i);
+
+    // eslint-disable-next-line no-console
+    console.log('------------------------------------');
+    // eslint-disable-next-line no-console
+    console.log(`Seat ${i}`);
+    // eslint-disable-next-line no-console
+    console.log(pack);
+    // eslint-disable-next-line no-console
+    console.log(steps);
+    // eslint-disable-next-line no-console
+    console.log('------------------------------------');
+  }
+  // eslint-disable-next-line no-console
+  console.log('===== End Draft State =====');
+};
+
+const tryBotPicks = async (draftId) => {
+  await printDraftState(draftId);
+  const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
+
+  const passDirection = currentPack % 2 === 0 ? 1 : -1;
+
+  while (await packNeedsBotPicks(draftId)) {
+    // make bot picks
+    const botSeats = await getDraftBotsSeats(draftId);
+    for (const index of botSeats) {
+      // TODO: plug in draft bot logic here
+      const passAmount = await getPassAmount(draftId, index);
+      const next = (index + seats + passDirection * passAmount) % seats;
+      await makePick(draftId, index, 0, next);
+    }
+  }
+
+  if (await isPackDone(draftId)) {
+    if (currentPack < totalPacks) {
+      await openPack(draftId);
+    } else {
+      // draft is done
+      await finishDraft(draftId, await Draft.findById(draftId));
+    }
+  }
+};
+
 module.exports = {
   setup,
   getDraftMetaData,
@@ -412,4 +459,6 @@ module.exports = {
   packNeedsBotPicks,
   getCurrentPackStep,
   getCurrentPackStepQueue,
+  printDraftState,
+  tryBotPicks,
 };

@@ -133,7 +133,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   // go through steps and update states
   for (const step of steps) {
     // open pack if we need to open a new pack
-    if (step.action === 'endpack') {
+    if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
       for (let i = 0; i < draft.initial_state.length; i++) {
@@ -143,14 +143,17 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       offset = 0;
     }
 
+    console.log(step);
+    console.log(packsWithCards);
     // perform the step if it's not a pass
     for (let i = 0; i < states.length; i++) {
+      console.log(i);
       const seat = states[i];
       seat.pick = step.pick;
       seat.pack = step.pack;
 
       if (step.action === 'pick' || step.action === 'pickrandom') {
-        seat.cardsInPack = packsWithCards[(i + offset) % states.length].slice();
+        seat.cardsInPack = packsWithCards[(i + offset) % draft.seats.length].slice();
         const picked = seat.pickQueue.pop();
         seat.picked.push(picked);
         seat.selection = picked;
@@ -197,7 +200,7 @@ export const getDefaultPosition = (card, picks) => {
 };
 
 export const stepListToTitle = (steps) => {
-  if (steps.length === 0) {
+  if (steps.length <= 1) {
     return 'Finishing up draft...';
   }
 
@@ -220,6 +223,9 @@ export const stepListToTitle = (steps) => {
       return `Trash ${count} more cards`;
     }
     return 'Trash one more card';
+  }
+  if (steps[0] === 'endpack') {
+    return 'Waiting for next pack...';
   }
 
   return 'Making random selection...';

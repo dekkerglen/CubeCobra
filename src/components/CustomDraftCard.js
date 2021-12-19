@@ -52,16 +52,16 @@ const CustomDraftCard = ({
         <CardFooter>
           <Input type="hidden" name="id" value={index} />
           <div className="justify-content-center align-items-center">
-            <Button type="submit" color="success" className="mr-2">
+            <Button type="submit" color="success" className="me-2">
               Start Draft
             </Button>
             {canEdit && (
               <>
-                <Button color="success" className="mr-2" onClick={onEditFormat} data-index={index}>
+                <Button color="success" className="me-2" onClick={onEditFormat} data-index={index}>
                   Edit
                 </Button>
                 {defaultDraftFormat !== index && (
-                  <Button color="success" className="mr-2" onClick={onSetDefaultFormat} data-index={index}>
+                  <Button color="success" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
                     Make Default
                   </Button>
                 )}

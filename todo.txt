@@ -1,9 +1,9 @@
-[ ] regular drafting
-[ ] pick 2, pass 2
+[x] regular drafting
+[x] all steps
+[x] pick 2, pass 2
 [ ] pick, trash, rpick, rtrash
 
 
 Bugs:
-  regular drafting:
-    last pick of a draft says "making random selection" because that's the default statement
-    with adjacent human players, the last pick of the 2nd seat doesn't get the last pack
+  pick, trash, rpick, rtrash:
+    if players are not sitting next to each other, can get into a state where they can't do anything

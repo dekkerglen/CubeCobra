@@ -11,19 +11,15 @@ const {
   getLobbyPlayers,
   getLobbySeatOrder,
   getDraftMetaData,
-  openPack,
   getPlayerPack,
   getPlayerPicks,
-  getDraftBotsSeats,
   makePick,
   getPassAmount,
-  isPackDone,
-  finishDraft,
   getLobbyMetadata,
   addPlayerToLobby,
   updateLobbySeatOrder,
-  packNeedsBotPicks,
   getCurrentPackStepQueue,
+  tryBotPicks,
 } = require('../serverjs/multiplayerDrafting');
 
 const Draft = require('../models/draft');
@@ -92,8 +88,9 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
 
 router.post('/draftpick', ensureAuth, async (req, res) => {
   const { draft, pick } = req.body;
+
   const seat = parseInt(req.body.seat, 10);
-  const { currentPack, seats, totalPacks } = await getDraftMetaData(draft);
+  const { currentPack, seats } = await getDraftMetaData(draft);
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
   const passAmount = await getPassAmount(draft, seat);
@@ -101,24 +98,16 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
 
   await makePick(draft, seat, pick, nextSeat);
 
-  while (await packNeedsBotPicks(draft)) {
-    // make bot picks
-    const botSeats = await getDraftBotsSeats(draft);
-    for (const index of botSeats) {
-      // TODO: plug in draft bot logic here
-      const next = (index + seats + passDirection * passAmount) % seats;
-      await makePick(draft, index, 0, next);
-    }
-  }
+  return res.status(200).send({
+    success: 'true',
+  });
+});
 
-  if (await isPackDone(draft)) {
-    if (currentPack < totalPacks) {
-      await openPack(draft);
-    } else {
-      // draft is done
-      await finishDraft(draft, await Draft.findById(draft));
-    }
-  }
+router.post('/trybotpicks', ensureAuth, async (req, res) => {
+  console.log('trybotpicks');
+  const { draft } = req.body;
+
+  await tryBotPicks(draft);
 
   return res.status(200).send({
     success: 'true',
@@ -140,6 +129,7 @@ router.post('/getpack', ensureAuth, async (req, res) => {
       },
     });
   } catch (err) {
+    req.logger.error(err);
     return res.status(500).send({
       success: 'false',
       error: err,
@@ -203,6 +193,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
         deck: deck._id,
       });
     } catch (err) {
+      req.logger.info(`Error saving deck, retry ${retry}`);
       req.logger.error(err);
     }
   }

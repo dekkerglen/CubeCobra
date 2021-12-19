@@ -9,19 +9,7 @@ import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import { ClippyIcon, LockIcon } from '@primer/octicons-react';
 import Username from 'components/Username';
 
-import {
-  Button,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Spinner,
-  Row,
-  Col,
-  Input,
-  InputGroup,
-  InputGroupAddon,
-} from 'reactstrap';
+import { Button, Card, CardHeader, CardBody, CardFooter, Spinner, Row, Col, Input, InputGroup } from 'reactstrap';
 
 const BOT_NAME = 'Bot';
 
@@ -142,15 +130,13 @@ const CubeDraft = ({ draft, socket, start }) => {
             <p>Use the following link to invite players to your draft:</p>
             <InputGroup>
               <Input className="bg-white monospaced" value={`https://cubecobra.com/d/${draft._id}`} readonly />
-              <InputGroupAddon addonType="append">
-                <Button
-                  className="btn-sm input-group-button"
-                  onClick={() => navigator.clipboard.writeText(`https://cubecobra.com/d/${draft._id}`)}
-                  aria-label="Copy Short ID"
-                >
-                  <ClippyIcon size={16} />
-                </Button>
-              </InputGroupAddon>
+              <Button
+                className="btn-sm input-group-button"
+                onClick={() => navigator.clipboard.writeText(`https://cubecobra.com/d/${draft._id}`)}
+                aria-label="Copy Short ID"
+              >
+                <ClippyIcon size={16} />
+              </Button>
             </InputGroup>
             <br />
             <i>Click and drag seats to reposition players and bots.</i>

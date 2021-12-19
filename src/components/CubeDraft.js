@@ -113,6 +113,20 @@ const CubeDraft = ({ draft, socket }) => {
       setPicks(await fetchPicks(draft, seat));
       updatePack(await fetchPack(draft, seat));
       setLoading(false);
+
+      console.log(seat);
+      if (seat === '0') {
+        setInterval(async () => {
+          console.log('updating pack');
+          try {
+            await callApi('/multiplayer/trybotpicks', {
+              draft: draft._id,
+            });
+          } catch (e) {
+            console.log(e);
+          }
+        }, 1000);
+      }
     };
     run();
   });

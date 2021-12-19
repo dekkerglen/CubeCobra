@@ -65,7 +65,7 @@ const CardModal = ({
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardEtchedPrice(card)) && (
-                <TextBadge name="Etched" className="mt-2 mr-2">
+                <TextBadge name="Etched" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
