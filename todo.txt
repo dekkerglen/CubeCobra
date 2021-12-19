@@ -1,9 +1,0 @@
-[x] regular drafting
-[x] all steps
-[x] pick 2, pass 2
-[ ] pick, trash, rpick, rtrash
-
-
-Bugs:
-  pick, trash, rpick, rtrash:
-    if players are not sitting next to each other, can get into a state where they can't do anything
