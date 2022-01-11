@@ -147,7 +147,7 @@
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^4.2.2",
     "webpack-node-externals": "^1.7.2",
-    "winston": "git://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
+    "winston": "https://github.com/winstonjs/winston.git#80d343939facdab4eb4aa315cb061c75a3f77549",
     "winston-cloudwatch": "^2.5.2",
     "winston-loggly-bulk": "^3.1.0"
   },
