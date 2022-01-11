@@ -7,4 +7,4 @@ COPY ./serverjs ./serverjs
 COPY ./models ./models
 COPY ./jobs ./jobs
 
-RUN npm install mongoose dotenv fs winston node-fetch url sanitize-html 
+RUN npm install mongoose dotenv fs node-fetch url sanitize-html 
