@@ -19,6 +19,7 @@ const {
 
 const { setupPicks, getCardCol, getStepList } = require('../dist/drafting/draftutil');
 const { createDeckFromDraft } = require('./deckUtil');
+const { calculateBotPick } = require('./draftbots');
 
 // returns a reference to a draft's metadata hash
 const lobbyRef = (draftId) => `lobby:${draftId}`;
@@ -380,6 +381,24 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await rpop(stepsQueueRef(draftId, seat));
   }
 };
+
+const getDraftPick = async (draftId, seat) => {
+  const drafterState = {
+    cardOracleIds, // all the oracle ids
+    picked: [0, 1, 2], // Indices of the oracle IDs of the card this player has picked so far this draft.
+    seen: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], // Indices of the oracle IDs of all the cards this player has seen this draft, including duplicates.
+    basics: [10, 11, 12, 13, 14], // Indices of the oracle IDs for the set of basics the drafter has access to unlimited copies of.
+    cardsInPack: [7, 8, 9], // Indices of the oracle IDs for the cards in the current pack.
+    packNum: 0, // 0-Indexed pack number
+    numPacks: 3, // How many packs will this player open
+    pickNum: 4, // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
+    numPicks: 15, // How many cards were in the pack when it was opened.
+    seed: Math.floor(Math.random() * 1000), // A random seed for the randomized portions of the algorithm, best not to use a constant, is reproducible if this is known.
+  };
+
+  return calculateBotPick(drafterState);
+};
+
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
 
@@ -392,7 +411,7 @@ const tryBotPicks = async (draftId) => {
       // TODO: plug in draft bot logic here
       const passAmount = await getPassAmount(draftId, index);
       const next = (index + seats + passDirection * passAmount) % seats;
-      await makePick(draftId, index, 0, next);
+      await makePick(draftId, index, await getDraftPick(draftId, index), next);
     }
   }
 

@@ -17,12 +17,13 @@ const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
 const { winston } = require('./serverjs/cloudwatch');
-const updatedb = require('./serverjs/updatecards.js');
-const carddb = require('./serverjs/cards.js');
+const updatedb = require('./serverjs/updatecards');
+const carddb = require('./serverjs/cards');
 const CardRating = require('./models/cardrating');
 const CardHistory = require('./models/cardHistory');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
+const { setupDraftbots } = require('./serverjs/draftbots');
 
 // Connect db
 mongoose.connect(process.env.MONGODB_URL, {
@@ -235,7 +236,9 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb is initialized.
-carddb.initializeCardDb().then(() => {
+carddb.initializeCardDb().then(async () => {
+  await setupDraftbots();
+
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
   winston.info(`Server started on port ${process.env.PORT || 5000}...`);
 
