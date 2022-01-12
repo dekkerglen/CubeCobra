@@ -1,5 +1,5 @@
 const fs = require('fs');
-const winston = require('winston');
+const { winston } = require('./cloudwatch');
 const util = require('./util.js');
 
 const { SortFunctions, ORDERED_SORTS } = require('../dist/utils/Sort.js');
