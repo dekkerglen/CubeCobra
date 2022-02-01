@@ -4,9 +4,7 @@ let calculateBotPick = async () => null;
 
 const setupDraftbots = async () => {
   const resolved = await mtgdraftbots;
-
-  resolved.initializeDraftbots();
-
+  await resolved.initializeDraftbots();
   calculateBotPick = resolved.calculateBotPick;
 };
 
