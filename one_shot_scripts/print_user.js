@@ -8,7 +8,7 @@ const username = 'Ashok';
 
 (async () => {
   mongoose.connect(process.env.MONGODB_URL).then(async () => {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email: 'kresseljakob@gmail.com' });
 
     user.email = user.email.toLowerCase();
 
