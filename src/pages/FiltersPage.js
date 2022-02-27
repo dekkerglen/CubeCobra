@@ -523,7 +523,7 @@ const ContactPage = ({ loginCallback }) => (
             <tbody>
               <tr>
                 <td>
-                  <code>t:Signed</code>
+                  <code>tag:Signed</code>
                 </td>
                 <td>All cards in a cube who have a tag named Signed, case insensitive.</td>
               </tr>
