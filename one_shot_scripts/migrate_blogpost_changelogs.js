@@ -6,7 +6,7 @@ const cheerio = require('cheerio');
 const Blog = require('../models/blog');
 const carddb = require('../serverjs/cards.js');
 
-const batchSize = 1;
+const batchSize = 100;
 
 function nextLink(node) {
   let a = node.next;
