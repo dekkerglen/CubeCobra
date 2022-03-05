@@ -647,6 +647,7 @@ router.post(
           image_flip,
           price: prices.usd,
           price_foil: prices.usd_foil,
+          price_etched: prices.usd_etched,
           elo,
         })),
       ]),

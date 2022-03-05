@@ -28,7 +28,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <h4>Edit Podcast</h4>
             </Col>
             <Col xs="12" sm="6">
-              <a href="/content/creators" className="float-right">
+              <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
             </Col>
@@ -38,7 +38,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast._id} />
                 <Input type="hidden" name="rss" value={rss} />
-                <Button type="submit" color="success" block disabled={!hasChanges}>
+                <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Update
                 </Button>
               </CSRFForm>
@@ -47,7 +47,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast._id} />
                 <Input type="hidden" name="rss" value={rss} />
-                <Button type="submit" outline color="success" block>
+                <Button type="submit" outline color="accent" block>
                   Submit for Review
                 </Button>
               </CSRFForm>

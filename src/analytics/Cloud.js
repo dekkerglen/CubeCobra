@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { TagCloud } from 'react-tagcloud';
-import { InputGroup, InputGroupAddon, InputGroupText, UncontrolledTooltip } from 'reactstrap';
+import { InputGroup, InputGroupText, UncontrolledTooltip } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
@@ -15,7 +15,7 @@ const trigger = isTouchDevice() ? 'click' : 'hover';
 const TagCloudTag = ({ tag, size, color }) => {
   const spanRef = useRef();
   return (
-    <div className="tag-cloud-tag mr-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
+    <div className="tag-cloud-tag me-2" style={{ verticalAlign: 'middle', display: 'inline-block' }}>
       <span style={{ color, fontSize: `${size}px` }} className="tag-cloud-tag" ref={spanRef}>
         {tag.value}
       </span>
@@ -107,9 +107,7 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
       </p>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <InputGroup>
-        <InputGroupAddon addonType="prepend">
-          <InputGroupText>Tags to exclude</InputGroupText>
-        </InputGroupAddon>
+        <InputGroupText>Tags to exclude</InputGroupText>
         <TagInput
           tags={excludeList.map((t) => ({ text: t, id: t }))}
           inputValue={tagInput}

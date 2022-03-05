@@ -13,9 +13,7 @@ const FoilOverlay =
     const WrapperTag = wrapperTag ?? 'div';
     return (
       <WrapperTag className="position-relative">
-        {finish !== 'Foil' ? (
-          ''
-        ) : (
+        {finish === 'Foil' && (
           <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" alt="Foil overlay" />
         )}
         <Tag {...props} />

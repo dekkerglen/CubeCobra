@@ -10,9 +10,8 @@ import {
   Row,
   Col,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
+  Input,
 } from 'reactstrap';
 
 import Query from 'utils/Query';
@@ -97,16 +96,16 @@ const CardSearchPage = ({ loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <div className="usercontrols pt-3">
-        <Row className="pb-3 mr-1">
+        <Row className="pb-3 me-1">
           <Col xs="6">
             <h3 className="mx-3">Search Cards</h3>
           </Col>
           <Col xs="6">
-            <div className="text-right">
-              <ButtonLink outline color="success" href="/tool/topcards">
+            <div className="text-end">
+              <ButtonLink outline color="accent" href="/tool/topcards">
                 View Top Cards
               </ButtonLink>{' '}
-              <ButtonLink outline color="success" href="/packages/browse">
+              <ButtonLink outline color="accent" href="/packages/browse">
                 View Card Packages
               </ButtonLink>
             </div>
@@ -122,10 +121,8 @@ const CardSearchPage = ({ loginCallback }) => {
         <Row className="px-3">
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Sort: </InputGroupText>
-              </InputGroupAddon>
-              <CustomInput
+              <InputGroupText>Sort: </InputGroupText>
+              <Input
                 id="card-sort-input"
                 type="select"
                 value={sort}
@@ -134,15 +131,13 @@ const CardSearchPage = ({ loginCallback }) => {
                 {ORDERED_SORTS.map((s) => (
                   <option value={s}>{s}</option>
                 ))}
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Direction: </InputGroupText>
-              </InputGroupAddon>
-              <CustomInput
+              <InputGroupText>Direction: </InputGroupText>
+              <Input
                 id="card-direction-input"
                 type="select"
                 value={direction}
@@ -150,15 +145,13 @@ const CardSearchPage = ({ loginCallback }) => {
               >
                 <option value="ascending">Ascending</option>
                 <option value="descending">Descending</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>Distinct: </InputGroupText>
-              </InputGroupAddon>
-              <CustomInput
+              <InputGroupText>Distinct: </InputGroupText>
+              <Input
                 id="card-distinct-input"
                 type="select"
                 value={distinct}
@@ -166,7 +159,7 @@ const CardSearchPage = ({ loginCallback }) => {
               >
                 <option value="names">Names</option>
                 <option value="printings">Printings</option>
-              </CustomInput>
+              </Input>
             </InputGroup>
           </Col>
         </Row>
@@ -177,7 +170,7 @@ const CardSearchPage = ({ loginCallback }) => {
         <Card className="mb-3">
           {count / 96 > 1 && (
             <CardHeader>
-              <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+              <Paginate count={Math.ceil(count / 96)} active={page} onClick={(i) => updatePage(i)} />
             </CardHeader>
           )}
 
@@ -199,7 +192,7 @@ const CardSearchPage = ({ loginCallback }) => {
           )}
           {count / 100 > 1 && (
             <CardFooter>
-              <Paginate count={Math.floor(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+              <Paginate count={Math.ceil(count / 96)} active={page} onClick={(i) => updatePage(i)} />
             </CardFooter>
           )}
         </Card>

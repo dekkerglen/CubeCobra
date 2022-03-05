@@ -34,7 +34,7 @@ const getEntry = ({ details }) => {
 };
 
 const MassBuyButton = ({ cards, ...props }) => (
-  <Form method="POST" action={tcgMassEntryUrl} inline>
+  <Form method="POST" action={tcgMassEntryUrl}>
     <Input
       type="hidden"
       name="c"

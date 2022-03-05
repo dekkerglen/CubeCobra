@@ -20,7 +20,7 @@ const ResizeModal = ({ cubeID }) => {
 
   return (
     <>
-      <Button color="success" className="mb-2 mr-2" onClick={toggleOpen}>
+      <Button color="accent" className="mb-2 me-2" onClick={toggleOpen}>
         Resize
       </Button>
       <Modal isOpen={open} toggle={toggleOpen} size="lg">
@@ -59,7 +59,7 @@ const ResizeModal = ({ cubeID }) => {
             </Card>
           </ModalBody>
           <ModalFooter>
-            <Button color="success" type="submit" disabled={!valid}>
+            <Button color="accent" type="submit" disabled={!valid}>
               Resize
             </Button>
             <Button color="secondary" onClick={toggleOpen}>

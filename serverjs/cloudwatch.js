@@ -1,5 +1,7 @@
 // Load Environment Variables
 require('dotenv').config();
+
+/*
 const winston = require('winston');
 const uuid = require('uuid/v4');
 const WinstonCloudWatch = require('winston-cloudwatch');
@@ -76,7 +78,13 @@ if (process.env.ENV === 'production') {
     transports: [new winston.transports.Console({ format: consoleFormat })],
   });
 }
+*/
 
 module.exports = {
-  winston,
+  winston: {
+    // eslint-disable-next-line no-console
+    info: (...params) => console.log(...params),
+    // eslint-disable-next-line no-console
+    error: (...params) => console.error(...params),
+  },
 };

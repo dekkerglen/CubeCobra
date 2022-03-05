@@ -4,14 +4,12 @@ import {
   Button,
   Row,
   Col,
-  CustomInput,
   Form,
   FormGroup,
   FormText,
   Input,
   Label,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   ListGroup,
   Modal,
@@ -23,7 +21,7 @@ import {
 
 import { csrfFetch } from 'utils/CSRF';
 import { fromEntries } from 'utils/Util';
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix } from 'utils/Card';
+import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardEtchedPrice } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
 import ChangelistContext from 'contexts/ChangelistContext';
@@ -217,6 +215,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
 
   const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
   const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
+  const totalPriceUsdEtched = cards.length ? cards.reduce((total, card) => total + (cardEtchedPrice(card) ?? 0), 0) : 0;
   const totalPriceEur = cards.length ? cards.reduce((total, card) => total + (cardPriceEur(card) ?? 0), 0) : 0;
   const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
@@ -235,31 +234,38 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                 <ListGroup className="list-outline w-100">
                   {cards.map((card) => (
                     <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                      <Button close className="mr-1" data-index={card.index} onClick={handleRemoveCard} />
+                      <Button close className="me-1" data-index={card.index} onClick={handleRemoveCard} />
                     </AutocardListItem>
                   ))}
                 </ListGroup>
               </Row>
               <Row noGutters>
                 {Number.isFinite(totalPriceUsd) && (
-                  <TextBadge name="Price USD" className="mt-2 mr-2">
+                  <TextBadge name="Price USD" className="mt-2 me-2">
                     <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
-                  <TextBadge name="Foil USD" className="mt-2 mr-2">
+                  <TextBadge name="Foil USD" className="mt-2 me-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceUsdEtched) && (
+                  <TextBadge name="Etched USD" className="mt-2 mr-2">
                     <Tooltip text="TCGPlayer Market Foil Price">
                       ${Math.round(totalPriceUsdFoil).toLocaleString()}
                     </Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (
-                  <TextBadge name="EUR" className="mt-2 mr-2">
+                  <TextBadge name="EUR" className="mt-2 me-2">
                     <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceTix) && (
-                  <TextBadge name="TIX" className="mt-2 mr-2">
+                  <TextBadge name="TIX" className="mt-2 me-2">
                     <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
                   </TextBadge>
                 )}
@@ -271,53 +277,33 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   <h5>Set Status of All</h5>
                 </Label>
                 <InputGroup className="mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Status</InputGroupText>
-                  </InputGroupAddon>
-                  <CustomInput
-                    type="select"
-                    id="groupStatus"
-                    name="status"
-                    value={formValues.status}
-                    onChange={handleChange}
-                  >
+                  <InputGroupText>Status</InputGroupText>
+                  <Input type="select" id="groupStatus" name="status" value={formValues.status} onChange={handleChange}>
                     {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                       <option key={status}>{status}</option>
                     ))}
-                  </CustomInput>
+                  </Input>
                 </InputGroup>
 
                 <Label for="groupStatus">
                   <h5>Set Finish of All</h5>
                 </Label>
                 <InputGroup className="mb-3">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Finish</InputGroupText>
-                  </InputGroupAddon>
-                  <CustomInput
-                    type="select"
-                    id="groupFinish"
-                    name="finish"
-                    value={formValues.finish}
-                    onChange={handleChange}
-                  >
+                  <InputGroupText>Finish</InputGroupText>
+                  <Input type="select" id="groupFinish" name="finish" value={formValues.finish} onChange={handleChange}>
                     {['', 'Non-foil', 'Foil'].map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
-                  </CustomInput>
+                  </Input>
                 </InputGroup>
 
                 <h5>Override Attribute on All</h5>
                 <InputGroup className="mb-2">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Mana Value</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Mana Value</InputGroupText>
                   <Input type="text" name="cmc" value={formValues.cmc} onChange={handleChange} />
                 </InputGroup>
                 <InputGroup className="mb-2">
-                  <InputGroupAddon addonType="prepend">
-                    <InputGroupText>Type</InputGroupText>
-                  </InputGroupAddon>
+                  <InputGroupText>Type</InputGroupText>
                   <Input type="text" name="type_line" value={formValues.type_line} onChange={handleChange} />
                 </InputGroup>
 
@@ -365,11 +351,11 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
           </Row>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" onClick={handleRemoveAll}>
+          <Button color="unsafe" onClick={handleRemoveAll}>
             Remove all from cube
           </Button>
           <MassBuyButton cards={cards}>Buy all</MassBuyButton>
-          <LoadingButton color="success" onClick={handleApply}>
+          <LoadingButton color="accent" onClick={handleApply}>
             Apply to all
           </LoadingButton>
         </ModalFooter>

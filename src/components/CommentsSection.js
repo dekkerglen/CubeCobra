@@ -32,7 +32,7 @@ const CommentsSection = ({ parent, parentType, collapse }) => {
         <div className="p-2 border-bottom">
           <Collapse isOpen={!replyExpanded}>
             <h6>
-              <LinkButton className="ml-1" onClick={toggleReply}>
+              <LinkButton className="ms-1" onClick={toggleReply}>
                 Add a Comment
               </LinkButton>
             </h6>
@@ -45,7 +45,7 @@ const CommentsSection = ({ parent, parentType, collapse }) => {
           {collapse && (
             <div className="p-2 border-bottom">
               <h6>
-                <LinkButton className="ml-1" onClick={toggle}>
+                <LinkButton className="ms-1" onClick={toggle}>
                   {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
                 </LinkButton>
               </h6>

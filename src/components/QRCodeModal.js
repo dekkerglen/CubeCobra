@@ -27,7 +27,7 @@ const QRCodeModal = ({ isOpen, toggle, link, cubeName }) => (
       </div>
     </ModalBody>
     <ModalFooter>
-      <Button color="success" onClick={() => saveQRImage(cubeName)}>
+      <Button color="accent" onClick={() => saveQRImage(cubeName)}>
         Download
       </Button>
       <Button color="secondary" onClick={toggle}>

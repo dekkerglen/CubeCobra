@@ -20,12 +20,14 @@ const ContactPage = ({ title, content, loginCallback }) => (
         {content.map((item) =>
           item.table ? (
             <Table bordered responsive className="mt-lg-3">
-              {item.table.map((row) => (
-                <tr>
-                  <th scope="col">{row[0]}</th>
-                  <td>{row[1]}</td>
-                </tr>
-              ))}
+              <tbody>
+                {item.table.map((row) => (
+                  <tr>
+                    <th scope="col">{row[0]}</th>
+                    <td>{row[1]}</td>
+                  </tr>
+                ))}
+              </tbody>
             </Table>
           ) : (
             <Row key={item.label} className={item.label.length > 0 ? 'mt-3' : 'my-0'}>

@@ -12,9 +12,8 @@ import {
   ModalFooter,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
+  Input,
   UncontrolledAlert,
 } from 'reactstrap';
 
@@ -96,7 +95,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
               Analytics
             </Button>
           )}
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -121,10 +120,8 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
           alt={card.name}
         />
         <InputGroup className="my-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Cube: </InputGroupText>
-          </InputGroupAddon>
-          <CustomInput
+          <InputGroupText>Cube: </InputGroupText>
+          <Input
             id="selected-cube-input"
             type="select"
             value={selectedCube}
@@ -135,7 +132,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
                 {cube.name}
               </option>
             ))}
-          </CustomInput>
+          </Input>
         </InputGroup>
       </ModalBody>
       <ModalFooter>
@@ -144,13 +141,13 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             Analytics
           </Button>
         )}
-        <Button color="success" onClick={add}>
+        <Button color="accent" onClick={add}>
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>
           Maybeboard
         </Button>
-        <Button color="danger" onClick={toggle}>
+        <Button color="unsafe" onClick={toggle}>
           Close
         </Button>
       </ModalFooter>

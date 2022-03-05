@@ -59,7 +59,7 @@ const RegisterPage = ({ username, email, loginCallback }) => (
               </Col>
             </Row>
           </FormGroup>
-          <Button type="submit" color="success" block outline>
+          <Button type="submit" color="accent" block outline>
             Register
           </Button>
         </CSRFForm>

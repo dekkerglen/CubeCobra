@@ -2,27 +2,14 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ChartComponent from 'react-chartjs-2';
 
-import {
-  Col,
-  Row,
-  Table,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  CustomInput,
-  Input,
-  Button,
-  Form,
-} from 'reactstrap';
+import { Col, Row, Table, InputGroup, InputGroupText, Input, Button, Form } from 'reactstrap';
 
 import useQueryParam from 'hooks/useQueryParam';
 import calculate from 'utils/CalculateHyperGeom';
 
 const TextField = ({ name, humanName, placeholder, value, onChange, ...props }) => (
   <InputGroup className="mb-3" {...props}>
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
-    </InputGroupAddon>
+    <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
     <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
   </InputGroup>
 );
@@ -37,9 +24,7 @@ TextField.propTypes = {
 
 const TextDisplay = ({ humanName, value }) => (
   <InputGroup className="mb-3">
-    <InputGroupAddon addonType="prepend">
-      <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
-    </InputGroupAddon>
+    <InputGroupText style={{ width: '20rem' }}>{humanName}</InputGroupText>
     <Input type="text" disabled value={value} />
   </InputGroup>
 );
@@ -262,7 +247,7 @@ const HyperGeom = () => {
             value={sampleSuccesses}
             onChange={(event) => setSampleSuccesses(event.target.value, 10)}
           />
-          <Button type="submit" className="mb-3" color="success" block>
+          <Button type="submit" className="mb-3" color="accent" block>
             Calculate
           </Button>
         </Form>
@@ -276,16 +261,14 @@ const HyperGeom = () => {
             <h5>Cumulative Distributions</h5>
             <ChartComponent options={options} data={plotdata} type="line" />
             <InputGroup className="mb-3">
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>X-Axis: </InputGroupText>
-              </InputGroupAddon>
-              <CustomInput type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
+              <InputGroupText>X-Axis: </InputGroupText>
+              <Input type="select" value={xAxis} onChange={(event) => setXAxis(event.target.value)}>
                 {inputs.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
-              </CustomInput>
+              </Input>
             </InputGroup>
             <h5>Datasets</h5>
             <Row>
@@ -321,7 +304,7 @@ const HyperGeom = () => {
                 </Col>
               ))}
             </Row>
-            <Button className="mb-3" color="danger" block onClick={clear}>
+            <Button className="mb-3" color="unsafe" block onClick={clear}>
               Reset
             </Button>
           </>

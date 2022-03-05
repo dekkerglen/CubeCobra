@@ -846,6 +846,10 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   }
 
   const cube = await Cube.findOne(buildIdQuery(req.body.cubeId)).lean();
+  if (!cube) {
+    req.flash('danger', 'Cube not found');
+    return res.redirect(redirect);
+  }
   if (!req.user._id.equals(cube.owner)) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
     return res.redirect(redirect);
@@ -880,7 +884,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 
   if (!update.ok) req.flash('danger', update.message);
   else req.flash('success', update.return);
-  return res.redirect('/user/account?nav=patreon');
+  return res.redirect(redirect);
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {

@@ -18,7 +18,7 @@ async function updateFeatured(fn) {
     } catch (e) {
       return { ok: false, message: e.message };
     }
-    featured.timestamp = (stamp + 1) % 100_000_000; // arbitrary constant to avoid overflowing safe integer range
+    featured.timestamp = (stamp + 1) % 100000000; // arbitrary constant to avoid overflowing safe integer range
     // eslint-disable-next-line no-await-in-loop
     replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, featured);
   }
@@ -42,7 +42,7 @@ async function rotateFeatured() {
     const owner2 = await Patron.findOne({ user: old2.ownerID }).lean();
     if (canBeFeatured(owner1)) featured.queue.push(old1);
     if (canBeFeatured(owner2)) featured.queue.push(old2);
-    featured.lastUpdated = new Date();
+    featured.lastRotation = new Date();
     return [old1, old2, new1, new2];
   });
 

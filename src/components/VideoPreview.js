@@ -9,18 +9,9 @@ const VideoPreview = ({ video }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  const handleClick = useCallback(
-    (event) => {
-      if (!event.target.getAttribute('data-sublink')) {
-        window.location.href = `/content/video/${video._id}`;
-      }
-    },
-    [video],
-  );
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
       onMouseOut={handleMouseOut}
@@ -33,19 +24,21 @@ const VideoPreview = ({ video }) => {
         </h6>
       </AspectRatioBox>
       <div className="w-100 pt-1 pb-1 px-2">
-        <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{video.title}</h6>
+        <a href={`/content/video/${video._id}`} className="stretched-link">
+          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{video.title}</h6>
+        </a>
         <small>
           <p className="mb-0">{video.short}</p>
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-left">
+        <small className="float-start">
           By{' '}
           <a data-sublink href={`/user/view/${video.owner}`}>
             {video.username}
           </a>
         </small>
-        <small className="float-right">
+        <small className="float-end">
           <TimeAgo date={video.date} />
         </small>
       </div>

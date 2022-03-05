@@ -105,7 +105,7 @@ test('CubeListPage supports modal and new window card triggers', async () => {
   fireEvent.click(getByText(cardName));
   expect(await findByAltText(cardName));
   // Close dialog
-  fireEvent.click(global.document.querySelector('.close[aria-label="Close"]'));
+  fireEvent.click(global.document.querySelector('.btn-close[aria-label="Close"]'));
   await findByText(cardName);
 
   // Open new window if ctrl pressed

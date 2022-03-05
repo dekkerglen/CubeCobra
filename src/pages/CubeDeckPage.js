@@ -63,7 +63,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <Navbar expand="md" light className="usercontrols mb-3">
-            <div className="view-style-select pr-2">
+            <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
                 Cube View Style
               </Label>
@@ -75,7 +75,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 ))}
               </Input>
             </div>
-            <div className="view-style-select pr-2">
+            <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
                 Cube View Style
               </Label>
@@ -85,7 +85,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 <option value="draftbot">Draftbot Analysis</option>
               </Input>
             </div>
-            <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+            <NavbarToggler onClick={toggleNavbar} className="ms-auto" />
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
@@ -106,7 +106,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     <DropdownToggle nav caret>
                       Rebuild/Redraft Seat
                     </DropdownToggle>
-                    <DropdownMenu right>
+                    <DropdownMenu end>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
                       {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
@@ -124,7 +124,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                   <DropdownToggle nav caret>
                     Export
                   </DropdownToggle>
-                  <DropdownMenu right>
+                  <DropdownMenu end>
                     <DropdownItem href={`/cube/deck/download/txt/${deck._id}/${seatIndex}`}>
                       Card Names (.txt)
                     </DropdownItem>

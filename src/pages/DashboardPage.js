@@ -51,7 +51,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
               <h5>Your Cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
-              <Row className="no-gutters">
+              <Row className="g-0">
                 {cubes.length > 0 ? (
                   cubes.slice(0, 4).map((cube) => (
                     <Col key={cube._id} xs="12" sm="12" md="12" lg="6">
@@ -61,7 +61,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
                 ) : (
                   <p className="m-2">
                     You don't have any cubes.{' '}
-                    <CreateCubeModalButton color="success">Add a new cube?</CreateCubeModalButton>
+                    <CreateCubeModalButton color="accent">Add a new cube?</CreateCubeModalButton>
                   </p>
                 )}
               </Row>
@@ -122,7 +122,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
                   <h5>Latest Content</h5>
                 </Col>
                 <Col xs="6">
-                  <a className="float-right" href="/content/browse">
+                  <a className="float-end" href="/content/browse">
                     View more...
                   </a>
                 </Col>

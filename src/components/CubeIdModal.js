@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  Button,
-  ModalFooter,
-  Input,
-  Label,
-  InputGroup,
-  InputGroupAddon,
-} from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, InputGroup } from 'reactstrap';
 import PropTypes from 'prop-types';
 import { ClippyIcon } from '@primer/octicons-react';
 
@@ -27,30 +17,26 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
         <h6>Short ID</h6>
         <InputGroup>
           <Input className="bg-white monospaced" value={shortID} readonly />
-          <InputGroupAddon addonType="append">
-            <Button
-              className="btn-sm input-group-button"
-              onClick={() => onCopyClick(shortID, 'Short ID')}
-              aria-label="Copy Short ID"
-            >
-              <ClippyIcon size={16} />
-            </Button>
-          </InputGroupAddon>
+          <Button
+            className="btn-sm input-group-button"
+            onClick={() => onCopyClick(shortID, 'Short ID')}
+            aria-label="Copy Short ID"
+          >
+            <ClippyIcon size={16} />
+          </Button>
         </InputGroup>
         <Label for="short-id-input">A custom, memorable ID that owners are allowed to modify.</Label>
 
         <h6 className="mt-3">Full ID</h6>
         <InputGroup>
           <Input className="bg-white monospaced" value={fullID} readonly />
-          <InputGroupAddon addonType="append">
-            <Button
-              className="btn-sm input-group-button"
-              onClick={() => onCopyClick(fullID, 'Full ID')}
-              aria-label="Copy Full ID"
-            >
-              <ClippyIcon size={16} />
-            </Button>
-          </InputGroupAddon>
+          <Button
+            className="btn-sm input-group-button"
+            onClick={() => onCopyClick(fullID, 'Full ID')}
+            aria-label="Copy Full ID"
+          >
+            <ClippyIcon size={16} />
+          </Button>
         </InputGroup>
         <Label for="full-id-input">The canonical unique ID for this cube, guaranteed not to change.</Label>
         <br />

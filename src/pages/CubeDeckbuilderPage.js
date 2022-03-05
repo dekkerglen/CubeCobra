@@ -141,7 +141,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                 </ErrorBoundary>
                 <CardHeader className="border-top">
                   <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                    <h4 className="mb-0 mr-auto">About</h4>
+                    <h4 className="mb-0 me-auto">About</h4>
                   </CardTitle>
                 </CardHeader>
                 <CardBody>

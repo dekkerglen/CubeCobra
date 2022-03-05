@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -59,32 +59,24 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
           <h4 className="d-lg-block d-none">Averages</h4>
           <p>View the averages of a characteristic for all the cards, grouped by category.</p>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Order By: </InputGroupText>
-            </InputGroupAddon>
-            <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
+            <InputGroupText>Order By: </InputGroupText>
+            <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Characteristic: </InputGroupText>
-            </InputGroupAddon>
-            <CustomInput
-              type="select"
-              value={characteristic}
-              onChange={(event) => setCharacteristic(event.target.value)}
-            >
+            <InputGroupText>Characteristic: </InputGroupText>
+            <Input type="select" value={characteristic} onChange={(event) => setCharacteristic(event.target.value)}>
               {Object.keys(characteristics).map((key) => (
                 <option key={key} value={key}>
                   {key}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
         </Col>
       </Row>

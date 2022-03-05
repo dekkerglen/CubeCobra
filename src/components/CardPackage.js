@@ -68,7 +68,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
 
   return (
     <Card className="mb-4">
-      <CardHeader className="pl-4 pr-0 pt-2 pb-0">
+      <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <Row>
           <Col xs="12" sm="6">
             <h5 className="card-title">
@@ -101,7 +101,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
 
                 <AddGroupToCubeModalLink
                   outline
-                  color="success"
+                  color="accent"
                   modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage._id }}
                 >
                   Add To Cube
@@ -109,15 +109,15 @@ const CardPackage = ({ cardPackage, refresh }) => {
                 {user.roles.includes('Admin') && (
                   <>
                     {cardPackage.approved ? (
-                      <Button outline color="danger" className="mx-2" onClick={unapprove}>
+                      <Button outline color="unsafe" className="mx-2" onClick={unapprove}>
                         Remove Approval
                       </Button>
                     ) : (
-                      <Button outline color="success" className="mx-2" onClick={approve}>
+                      <Button outline color="accent" className="mx-2" onClick={approve}>
                         Approve
                       </Button>
                     )}
-                    <Button outline color="danger" onClick={remove}>
+                    <Button outline color="unsafe" onClick={remove}>
                       Delete
                     </Button>
                   </>
@@ -126,8 +126,8 @@ const CardPackage = ({ cardPackage, refresh }) => {
             </Col>
           ) : (
             <Col xs="6">
-              <div className="float-right">
-                <TextBadge name="Votes" className="mr-2">
+              <div className="float-end">
+                <TextBadge name="Votes" className="me-2">
                   <Tooltip text="Login to upvote">{cardPackage.votes}</Tooltip>
                 </TextBadge>
               </div>

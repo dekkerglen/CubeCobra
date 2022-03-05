@@ -72,7 +72,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <h4>Edit Video</h4>
             </Col>
             <Col xs="12" sm="6">
-              <a href="/content/creators" className="float-right">
+              <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
             </Col>
@@ -88,7 +88,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
-                <Button type="submit" color="success" block disabled={!hasChanges}>
+                <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Save
                 </Button>
               </CSRFForm>
@@ -103,7 +103,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
-                <Button type="submit" outline color="success" block>
+                <Button type="submit" outline color="accent" block>
                   Submit for Review
                 </Button>
               </CSRFForm>
@@ -173,7 +173,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                       treeUrl="/cube/api/fullnames"
                       treePath="cardnames"
                       type="text"
-                      className="mr-2"
+                      className="me-2"
                       name="remove"
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
