@@ -31,7 +31,7 @@ const BlogPostChangelog = ({ cards }) => (
 
       return (
         <>
-          <span className={className} style={{ fontFamily: ['Lucida Console', 'Monaco', 'monospace'] }}>
+          <span className={className} style={{ fontFamily: "'Lucida Console', 'Monaco', 'monospace'" }}>
             {symbol}
           </span>{' '}
           {added && <CardHtml card={added} />}
@@ -45,10 +45,12 @@ const BlogPostChangelog = ({ cards }) => (
 );
 
 BlogPostChangelog.propTypes = {
-  cards: PropTypes.arrayOf({
-    added: CardPropType,
-    removed: CardPropType,
-  }).isRequired,
+  cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      added: CardPropType,
+      removed: CardPropType,
+    }),
+  ).isRequired,
 };
 
 export default BlogPostChangelog;
