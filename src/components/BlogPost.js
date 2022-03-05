@@ -77,7 +77,7 @@ const BlogPost = ({ post, noScroll }) => {
           </Row>
         ) : (
           <CardBody className="py-2">
-            {post.changed_cards?.length && <BlogPostChangelog cards={post.changed_cards} />}
+            {post.changed_cards?.length > 0 && <BlogPostChangelog cards={post.changed_cards} />}
             {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
             {post.body && <CardText>{post.body}</CardText>}
             {(html || post.markdown) &&

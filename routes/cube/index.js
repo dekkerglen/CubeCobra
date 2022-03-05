@@ -413,7 +413,7 @@ router.get('/overview/:id', async (req, res) => {
       'CubeOverviewPage',
       {
         cube,
-        post: blogs ? fillBlogpostChangelog(blogs[0]) : null,
+        post: blogs && blogs.length > 0 ? fillBlogpostChangelog(blogs[0]) : null,
         followed: req.user && cube.users_following && cube.users_following.some((id) => req.user._id.equals(id)),
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
