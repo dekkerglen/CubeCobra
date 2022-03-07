@@ -298,7 +298,7 @@ function getTokens(card, catalogCard) {
           const re = new RegExp(reString);
           const result = re.exec(ability);
           // eslint-disable-next-line no-continue
-          if (typeof result === 'undefined') continue;
+          if (!result) continue;
 
           let tokenPowerAndToughness = result[4];
           const tokenColorString = result[5] ? result[5] : result[1];
@@ -859,7 +859,7 @@ const downloadFromScryfall = async (
   winston.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
-    await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
+    // await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
   } catch (error) {
     winston.error('Downloading card data failed:');
     winston.error(error.message, error);
