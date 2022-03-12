@@ -19,7 +19,6 @@ const {
 
 const { setupPicks, getCardCol, getStepList } = require('../dist/drafting/draftutil');
 const { createDeckFromDraft } = require('./deckUtil');
-const { calculateBotPick } = require('./draftbots');
 
 // returns a reference to a draft's metadata hash
 const lobbyRef = (draftId) => `lobby:${draftId}`;
@@ -318,7 +317,10 @@ const setup = async (draft) => {
     ]);
 
     // push all the oracle ids to redis
-    await rpush(draftCardsRef(draft._id), draft.cards.map((card) => card.cardID));
+    await rpush(
+      draftCardsRef(draft._id),
+      draft.cards.map((card) => card.cardID),
+    );
     await expire(draftCardsRef(draft._id), 60 * 60 * 24 * 2); // expire in 2 days
 
     // push all the basic indexes to redis
@@ -410,7 +412,7 @@ const listToInt = (list) => list.map(strToInt);
 const getDraftPick = async (draftId, seat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
   const cardsInPack = await getCurrentPackCards(packReference);
-  const fullPack = await lrange(packReference, 0, -1); 
+  const fullPack = await lrange(packReference, 0, -1);
 
   // add current pack to seen
   await rpush(userSeenRef(draftId, seat), cardsInPack);
@@ -429,12 +431,10 @@ const getDraftPick = async (draftId, seat) => {
     numPacks: strToInt(totalPacks), // How many packs will this player open
     pickNum: strToInt(fullPack.length - cardsInPack.length), // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
     numPicks: strToInt(fullPack.length), // How many cards were in the pack when it was opened.
-    seed: 0, //Math.floor(Math.random() * 1000), // A random seed for the randomized portions of the algorithm, best not to use a constant, is reproducible if this is known.
+    seed: 0, // Math.floor(Math.random() * 1000), // A random seed for the randomized portions of the algorithm, best not to use a constant, is reproducible if this is known.
   };
 
-  const res = await calculateBotPick(drafterState);
-
-  console.log(res);
+  const res = { chosenOption: 0 };
 
   return res.chosenOption;
 };
