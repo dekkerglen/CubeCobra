@@ -1,5 +1,7 @@
 /* eslint-disable no-await-in-loop */
 const { cardType } = require('../dist/utils/Card');
+const carddb = require('./cards.js');
+
 const Draft = require('../models/draft');
 const {
   hget,
@@ -407,36 +409,66 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
 };
 
 const strToInt = (str) => parseInt(str, 10);
-const listToInt = (list) => list.map(strToInt);
 
 const getDraftPick = async (draftId, seat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
   const cardsInPack = await getCurrentPackCards(packReference);
+
+  if (cardsInPack.length === 0) {
+    return 0;
+  }
+
   const fullPack = await lrange(packReference, 0, -1);
 
   // add current pack to seen
-  await rpush(userSeenRef(draftId, seat), cardsInPack);
-  const seen = await lrange(userSeenRef(draftId, seat), 0, -1);
+  // await rpush(userSeenRef(draftId, seat), cardsInPack);
+  // const seen = await lrange(userSeenRef(draftId, seat), 0, -1);
 
   // get draft metadata
   const { currentPack, totalPacks } = await getDraftMetaData(draftId);
 
+  const cardOracleIds = (await lrange(draftCardsRef(draftId), 0, -1)).map(
+    (scryfallId) => carddb.cardFromId(scryfallId).oracle_id,
+  ); // all the oracle ids
+  const basics = await lrange(draftBasicsRef(draftId), 0, -1); // Indices of the oracle IDs for the set of basics the drafter has access to unlimited copies of.
+  const picked = await getPlayerPicks(draftId, seat); // the cards picked by the user
+
   const drafterState = {
-    cardOracleIds: await lrange(draftCardsRef(draftId), 0, -1), // all the oracle ids
-    picked: listToInt(await getPlayerPicks(draftId, seat)), // Indices of the oracle IDs of the card this player has picked so far this draft.
-    seen: listToInt(seen), // Indices of the oracle IDs of all the cards this player has seen this draft, including duplicates.
-    basics: listToInt(await lrange(draftBasicsRef(draftId), 0, -1)), // Indices of the oracle IDs for the set of basics the drafter has access to unlimited copies of.
-    cardsInPack: listToInt(cardsInPack), // Indices of the oracle IDs for the cards in the current pack.
-    packNum: strToInt(currentPack), // 0-Indexed pack number
-    numPacks: strToInt(totalPacks), // How many packs will this player open
+    cardsInPack: cardsInPack.map((card) => cardOracleIds[card]),
+    basics: basics.map((card) => cardOracleIds[card]),
+    picked: picked.map((card) => cardOracleIds[card]),
+    seen: [], // TODO: implement seen
     pickNum: strToInt(fullPack.length - cardsInPack.length), // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
     numPicks: strToInt(fullPack.length), // How many cards were in the pack when it was opened.
-    seed: 0, // Math.floor(Math.random() * 1000), // A random seed for the randomized portions of the algorithm, best not to use a constant, is reproducible if this is known.
+    packNum: strToInt(currentPack) - 1, // 0-Indexed pack number
+    numPacks: strToInt(totalPacks), // How many packs will this player open
   };
 
-  const res = { chosenOption: 0 };
+  let choice = 0;
+  try {
+    const result = await fetch('https://mtgml.cubeartisan.net/draft', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        drafterState,
+      }),
+    });
 
-  return res.chosenOption;
+    const json = await result.json();
+
+    // get the index of the highest scoring card
+    choice = json.choices.reduce((acc, cur, i) => (cur > acc.score ? { score: cur, index: i } : acc), {
+      score: -1,
+      index: -1,
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  }
+
+  return choice;
 };
 
 const tryBotPicks = async (draftId) => {
