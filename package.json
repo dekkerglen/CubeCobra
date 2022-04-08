@@ -89,7 +89,7 @@
     "mtgdraftbots": "^1.3.3",
     "nearley": "^2.19.3",
     "node-cache": "^5.1.2",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "node-schedule": "^1.3.2",
     "nodemailer": "^6.4.16",
     "on-finished": "^2.3.0",

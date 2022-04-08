@@ -298,7 +298,7 @@ function getTokens(card, catalogCard) {
           const re = new RegExp(reString);
           const result = re.exec(ability);
           // eslint-disable-next-line no-continue
-          if (typeof result === 'undefined') continue;
+          if (!result) continue;
 
           let tokenPowerAndToughness = result[4];
           const tokenColorString = result[5] ? result[5] : result[1];

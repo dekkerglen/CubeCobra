@@ -32,7 +32,7 @@ const needsCleaning = (cube) =>
 
 const missingCardMarkdown = (card) => {
   const values = {
-    'Date Added': card.addedTmsp.toISOString(),
+    'Date Added': card.addedTmsp ? card.addedTmsp.toISOString() : null,
     'Mana Value': card.cmc,
     'Type Line': card.type_line,
     Rarity: card.rarity,
@@ -41,7 +41,7 @@ const missingCardMarkdown = (card) => {
     'Image URL': card.imgUrl,
     Colors: card.colors.join(''),
     'Color Category': card.colorCategory,
-    Tags: card.tags.join(),
+    Tags: card.tags ? card.tags.join() : null,
     Notes: card.notes,
   };
   let md = '';

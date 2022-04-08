@@ -18,7 +18,7 @@ async function updateFeatured(fn) {
     } catch (e) {
       return { ok: false, message: e.message };
     }
-    featured.timestamp = (stamp + 1) % 100_000_000; // arbitrary constant to avoid overflowing safe integer range
+    featured.timestamp = (stamp + 1) % 100000000; // arbitrary constant to avoid overflowing safe integer range
     // eslint-disable-next-line no-await-in-loop
     replaced = await FeaturedCubes.findOneAndReplace({ singleton: true, timestamp: stamp }, featured);
   }
