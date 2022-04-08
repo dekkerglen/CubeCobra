@@ -459,16 +459,16 @@ const getDraftPick = async (draftId, seat) => {
     const json = await result.json();
 
     // get the index of the highest scoring card
-    choice = json.choices.reduce((acc, cur, i) => (cur > acc.score ? { score: cur, index: i } : acc), {
+    choice = json.scores.reduce((acc, cur, i) => (cur > acc.score ? { score: cur, index: i } : acc), {
       score: -1,
       index: -1,
-    });
+    }).index;
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
   }
 
-  return choice;
+  return Math.max(0, choice);
 };
 
 const tryBotPicks = async (draftId) => {

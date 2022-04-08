@@ -86,7 +86,6 @@
     "micromark": "^2.10.1",
     "mongoose": "^5.12.10",
     "mongoose-seed": "^0.6.0",
-    "mtgdraftbots": "^1.3.3",
     "nearley": "^2.19.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.7",
