@@ -130,7 +130,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       });
     }
 
-    const theme = (req && req.user.theme) || 'default';
+    const theme = (req.user && req.user.theme) || 'default';
     res.render('main', {
       reactHTML:
         NODE_ENV === 'production'
