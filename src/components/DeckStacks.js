@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
@@ -17,20 +18,23 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
     </CardHeader>
     <CardBody className="pt-0">
       {cards.map((row, index) => (
-        <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
+        <Row key={`row-${index}`} className="row-low-padding">
           {row.map((column, index2) => (
-            <CardStack
-              key={/* eslint-disable-line react/no-array-index-key */ index2}
-              location={new Location(locationType, [index, index2, 0])}
-            >
+            <CardStack key={`row-${index}-col-${index2}`} location={new Location(locationType, [index, index2, 0])}>
               {column.map((card, index3) => (
-                <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
+                <div className="stacked" key={`row-${index}-col-${index2}-card-${index3}`}>
                   <DraggableCard
                     location={new Location(locationType, [index, index2, index3 + 1])}
                     card={card}
                     canDrop={canDrop}
                     onMoveCard={onMoveCard}
-                    onClick={onClickCard}
+                    onClick={() =>
+                      onMoveCard(new Location(locationType, [index, index2, index3 + 1]), {
+                        data: [0, index2, -0],
+                        dropEffect: 'move',
+                        type: locationType === Location.DECK ? Location.SIDEBOARD : Location.DECK,
+                      })
+                    }
                   />
                 </div>
               ))}

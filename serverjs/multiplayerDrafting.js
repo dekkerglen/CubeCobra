@@ -366,6 +366,7 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
 
   if (!packReference) {
+    console.log(`${seat} has no pack reference`);
     return; // no pack to pick from
   }
 
@@ -373,19 +374,18 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const picked = packToPicked(packReference);
   const step = await rpop(stepsQueueRef(draftId, seat));
 
-  if (packCards.length === 0) {
+  if (packCards.length === 0 || pick >= packCards.length) {
+    console.log(packCards, pick, seat);
     // pack is empty, we fail
     return;
   }
 
+  console.log(picked, packCards, pick);
   // pick this card if the step is pick
   if (step === 'pick' || step === 'pickrandom') {
     await lpush(userPicksRef(draftId, seat), packCards[pick]);
     await expire(userPicksRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
-  }
-
-  // trash this card if the step is trash
-  if (step === 'trash' || step === 'trashrandom') {
+  } else if (step === 'trash' || step === 'trashrandom') {
     await lpush(userTrashRef(draftId, seat), packCards[pick]);
     await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
   }
@@ -493,8 +493,11 @@ const tryBotPicks = async (draftId) => {
     } else {
       // draft is done
       await finishDraft(draftId, await Draft.findById(draftId));
+      return 'done';
     }
   }
+
+  return 'in_progress';
 };
 
 module.exports = {

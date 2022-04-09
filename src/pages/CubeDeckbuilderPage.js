@@ -49,6 +49,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const handleMoveCard = useCallback(
     (source, target) => {
+      console.log(source, target);
+
       if (source.equals(target)) {
         return;
       }
@@ -69,28 +71,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
     [locationMap],
   );
 
-  const handleClickCard = useCallback(
-    (event) => {
-      event.preventDefault();
-      /* eslint-disable-line no-undef */ autocard_hide_card();
-      const eventTarget = event.currentTarget;
-      const locationType = eventTarget.getAttribute('data-location-type');
-      const locationData = JSON.parse(eventTarget.getAttribute('data-location-data'));
-      const source = new DraftLocation(locationType, locationData);
-      const target = new DraftLocation(oppositeLocation[source.type], [...source.data]);
-      target.data[2] = 0;
-      if (target.type === DraftLocation.SIDEBOARD) {
-        // Only one row for the sideboard.
-        target.data[0] = 0;
-      } else {
-        // Pick row based on CNC.
-        target.data[0] = eventTarget.getAttribute('data-cnc') === 'true' ? 0 : 1;
-      }
-      handleMoveCard(source, target);
-    },
-    [handleMoveCard],
-  );
-
   const addBasics = useCallback(
     (numBasics) => {
       const toAdd = numBasics.map((count, index) => new Array(count).fill(initialDeck.cards[basics[index]])).flat();
@@ -108,6 +88,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const [name, setName] = useState(initialDeck.seats[seat].name);
   const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
+  console.log(deck);
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -135,7 +116,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                       locationType={DraftLocation.DECK}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
-                      onClickCard={handleClickCard}
+                      onClickCard={handleMoveCard}
                     />
                     <DeckStacks
                       className="border-top"
@@ -144,7 +125,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                       locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
-                      onClickCard={handleClickCard}
+                      onClickCard={handleMoveCard}
                     />
                   </DndProvider>
                 </ErrorBoundary>

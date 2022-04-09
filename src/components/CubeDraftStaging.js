@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
@@ -23,7 +24,7 @@ const SortableList = SortableContainer(({ items }) => {
   );
 });
 
-const CubeDraft = ({ draft, socket, start }) => {
+const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
   const [order, setOrder] = React.useState({});
   const [players, setPlayers] = React.useState([]);
@@ -72,7 +73,7 @@ const CubeDraft = ({ draft, socket, start }) => {
   const editableRows = seats.map((seat, i) => {
     return {
       element: (
-        <div className="tag-color-row clickable pb-3">
+        <div className="tag-color-row clickable pb-3" key={i}>
           {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username userId={seats[i]} nolink />}
         </div>
       ),
@@ -106,7 +107,7 @@ const CubeDraft = ({ draft, socket, start }) => {
           </div>
           <p>The draft owner is currently setting up the draft, please wait.</p>
           {seats.map((seat, i) => (
-            <div className="pb-3">
+            <div className="pb-3" key={i}>
               {`Seat ${i + 1}: `} {seat === BOT_NAME ? BOT_NAME : <Username userId={seat} nolink />}
             </div>
           ))}
@@ -129,7 +130,7 @@ const CubeDraft = ({ draft, socket, start }) => {
           <>
             <p>Use the following link to invite players to your draft:</p>
             <InputGroup>
-              <Input className="bg-white monospaced" value={`https://cubecobra.com/d/${draft._id}`} readonly />
+              <Input className="bg-white monospaced" value={`https://cubecobra.com/d/${draft._id}`} readOnly />
               <Button
                 className="btn-sm input-group-button"
                 onClick={() => navigator.clipboard.writeText(`https://cubecobra.com/d/${draft._id}`)}
@@ -140,10 +141,10 @@ const CubeDraft = ({ draft, socket, start }) => {
             </InputGroup>
             <br />
             <i>Click and drag seats to reposition players and bots.</i>
-            <Row noGutters>
+            <Row className="g-0">
               <Col xs={3}>
                 {draft.seats.map((seat, i) => (
-                  <div className="pb-3">{`Seat ${i + 1}`}</div>
+                  <div className="pb-3" key={i}>{`Seat ${i + 1}`}</div>
                 ))}
               </Col>
               <Col xs={9} className="tag-color-container">
@@ -165,7 +166,7 @@ const CubeDraft = ({ draft, socket, start }) => {
   );
 };
 
-CubeDraft.propTypes = {
+CubeDraftStaging.propTypes = {
   draft: DraftPropType.isRequired,
   start: PropTypes.func.isRequired,
   socket: PropTypes.shape({
@@ -173,4 +174,4 @@ CubeDraft.propTypes = {
   }).isRequired,
 };
 
-export default CubeDraft;
+export default CubeDraftStaging;

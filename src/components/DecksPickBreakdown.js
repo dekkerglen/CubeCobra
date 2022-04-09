@@ -56,7 +56,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
       </Col>
       <Col xs={12} sm={9}>
         <h4>{`Pack ${pack}: Pick ${pick}`}</h4>
-        <Row noGutters>
+        <Row className="g-0">
           {cardsInPack.map((cardIndex) => (
             <Col key={/* eslint-disable-line react/no-array-index-key */ cardIndex} xs={4} sm={2}>
               <a href={`/tool/card/${encodeName(draft.cards[cardIndex].details.name)}`}>

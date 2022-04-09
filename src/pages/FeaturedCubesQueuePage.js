@@ -122,7 +122,7 @@ const MoveModal = ({ isOpen, toggle, cube, index }) => (
     <ModalBody>
       <FormGroup>
         <Label for="move-cube-name">Cube name</Label>
-        <Input id="move-cube-name" value={cube?.name} readonly />
+        <Input id="move-cube-name" value={cube?.name} readOnly />
       </FormGroup>
       <CSRFForm method="POST" action="/admin/featuredcubes/move" id="move-cube-form">
         <Input id="move-cube-from" type="hidden" name="from" value={index + 1} />

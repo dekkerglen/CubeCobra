@@ -230,7 +230,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
           ))}
           <Row>
             <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
-              <Row noGutters className="w-100" style={{ overflow: 'scroll', flexShrink: 1 }}>
+              <Row className="w-100 g-0" style={{ overflow: 'scroll', flexShrink: 1 }}>
                 <ListGroup className="list-outline w-100">
                   {cards.map((card) => (
                     <AutocardListItem key={card.index} card={card} noCardModal inModal>
@@ -239,7 +239,7 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
                   ))}
                 </ListGroup>
               </Row>
-              <Row noGutters>
+              <Row className="g-0">
                 {Number.isFinite(totalPriceUsd) && (
                   <TextBadge name="Price USD" className="mt-2 me-2">
                     <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>

@@ -231,7 +231,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   </a>
                 </p>
                 {!cubeState.privatePrices && (
-                  <Row noGutters className="mb-1">
+                  <Row className="mb-1 g-0">
                     {Number.isFinite(priceOwned) && (
                       <TextBadge name="Owned" className="me-2">
                         <Tooltip text="TCGPlayer Market Price as owned (excluding cards marked Not Owned)">

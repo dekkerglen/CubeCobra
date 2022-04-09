@@ -16,7 +16,7 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
       <ModalBody>
         <h6>Short ID</h6>
         <InputGroup>
-          <Input className="bg-white monospaced" value={shortID} readonly />
+          <Input className="bg-white monospaced" value={shortID} readOnly />
           <Button
             className="btn-sm input-group-button"
             onClick={() => onCopyClick(shortID, 'Short ID')}
@@ -29,7 +29,7 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
 
         <h6 className="mt-3">Full ID</h6>
         <InputGroup>
-          <Input className="bg-white monospaced" value={fullID} readonly />
+          <Input className="bg-white monospaced" value={fullID} readOnly />
           <Button
             className="btn-sm input-group-button"
             onClick={() => onCopyClick(fullID, 'Full ID')}

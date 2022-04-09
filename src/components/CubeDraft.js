@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
@@ -110,15 +111,24 @@ const CubeDraft = ({ draft, socket }) => {
       setLoading(false);
 
       if (seat === '0') {
-        setInterval(async () => {
-          try {
-            await callApi('/multiplayer/trybotpicks', {
-              draft: draft._id,
-            });
-          } catch (e) {
-            console.error(e);
+        const botPickLoop = async () => {
+          let status = 'in_progress';
+          while (status === 'in_progress') {
+            try {
+              const res = await callApi('/multiplayer/trybotpicks', {
+                draft: draft._id,
+              });
+              const json = await res.json();
+              status = json.result;
+            } catch (e) {
+              console.error(e);
+            }
+            // wait
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
-        }, 1000);
+        };
+
+        botPickLoop();
       }
     };
     run();

@@ -25,7 +25,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
             <TimeAgo date={episode.date} />
           </h6>
         </CardHeader>
-        <Row noGutters>
+        <Row className="g-0">
           <Col xs="12" sm="4" className="pe-0">
             <AspectRatioBox ratio={1} className="text-ellipsis">
               <img className="w-100" alt={episode.title} src={episode.image} />

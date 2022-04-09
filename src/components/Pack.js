@@ -24,7 +24,7 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => (
           <Spinner className="position-absolute" />
         </div>
       ) : (
-        <Row noGutters>
+        <Row className="g-0">
           {pack.map((card, index) => (
             <Col
               key={`pack-${card.details._id}`}
