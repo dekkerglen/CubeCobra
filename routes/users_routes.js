@@ -24,6 +24,7 @@ const FeaturedCubes = require('../models/featuredCubes');
 const router = express.Router();
 
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
+const { fillBlogpostChangelog } = require('../serverjs/blogpostUtils');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
@@ -605,6 +606,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
     );
 
     const [posts, numBlogs, followers] = await Promise.all([postsq, numBlogsq, followersq]);
+    posts.forEach(fillBlogpostChangelog);
 
     delete user.users_following;
 
