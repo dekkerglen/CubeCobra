@@ -1,13 +1,13 @@
 const express = require('express');
 
 const { ensureAuth } = require('../middleware');
-const carddb = require('../../serverjs/cards.js');
-const util = require('../../serverjs/util.js');
+const carddb = require('../../serverjs/cards');
+const util = require('../../serverjs/util');
 const { render } = require('../../serverjs/render');
-const generateMeta = require('../../serverjs/meta.js');
-const miscutil = require('../../dist/utils/Util.js');
+const generateMeta = require('../../serverjs/meta');
+const miscutil = require('../../dist/utils/Util');
 
-const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn.js');
+const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
 const Cube = require('../../models/cube');
 const Blog = require('../../models/blog');

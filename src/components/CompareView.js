@@ -16,7 +16,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
     <ListGroup className="list-outline">
       <ListGroupItem className="list-group-heading px-0">
         {heading}
-        <Row noGutters>
+        <Row className="g-0">
           <Col>({both.length})</Col>
           <Col>({onlyA.length})</Col>
           <Col>({onlyB.length})</Col>
@@ -25,7 +25,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
       {getLabels(null, 'Mana Value')
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
-          <Row key={cmc} noGutters className="cmc-group">
+          <Row key={cmc} className="cmc-group g-0">
             {[
               [bothCmc, 'both'],
               [onlyACmc, 'a'],

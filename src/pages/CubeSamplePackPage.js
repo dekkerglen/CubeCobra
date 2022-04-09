@@ -36,7 +36,7 @@ const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
             </Row>
           </div>
           <div className="card-body">
-            <Row noGutters className="pack-body justify-content-center">
+            <Row className="pack-body justify-content-center g-0">
               <Col style={{ maxWidth: '800px' }}>
                 <CardGrid
                   cardList={pack}

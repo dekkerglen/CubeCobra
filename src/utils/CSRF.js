@@ -24,3 +24,13 @@ export const postJson = (resource, body) => {
     },
   });
 };
+
+export const callApi = async (route, body) => {
+  return csrfFetch(route, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};

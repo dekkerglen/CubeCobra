@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { winston } = require('./cloudwatch');
-const util = require('./util.js');
+const util = require('./util');
 
-const { SortFunctions, ORDERED_SORTS } = require('../dist/utils/Sort.js');
+const { SortFunctions, ORDERED_SORTS } = require('../dist/utils/Sort');
 
 let data = {
   cardtree: {},

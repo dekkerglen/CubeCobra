@@ -33,7 +33,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
-import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import DraftPropType from 'proptypes/DraftPropType';
 
 const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   const user = useContext(UserContext);
@@ -95,12 +95,11 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     )}
                   />
                 </NavItem>
-                {user && deck.owner === user.id && (
+                {user && deck.seats[seatIndex].userid === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
                 )}
-                {/* loading && <Spinner className="position-absolute" /> */}
                 {draft ? (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
@@ -108,7 +107,6 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     </DropdownToggle>
                     <DropdownMenu end>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
-                      {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
                         Clone and Rebuild
                       </DropdownItem>

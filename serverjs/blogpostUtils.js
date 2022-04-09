@@ -1,5 +1,5 @@
-const Blog = require('../models/blog.js');
-const carddb = require('./cards.js');
+const Blog = require('../models/blog');
+const carddb = require('./cards');
 
 function fillBlogpostChangelog(blog) {
   if (!blog.changed_cards) return blog;

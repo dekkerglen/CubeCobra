@@ -6,7 +6,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const { ensureAuth } = require('./middleware');
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 
 const Patron = require('../models/patron');
 const User = require('../models/user');

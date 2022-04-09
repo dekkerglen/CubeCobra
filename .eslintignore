@@ -28,7 +28,6 @@ src/components/CompareView.js
 src/components/CountTableRow.js
 src/components/CubeCompareNavbar.js
 src/components/CubeOverviewModal.js
-src/components/DraggableCard.js
 src/components/ErrorBoundary.js
 src/components/FilterCollapse.js
 src/components/GroupModal.js

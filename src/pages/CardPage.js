@@ -254,7 +254,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
           <h4>{card.name}</h4>
           <h6>{`${card.set_name} [${card.set.toUpperCase()}-${card.collector_number}]`}</h6>
         </CardHeader>
-        <Row className="mt-2" noGutters>
+        <Row className="mt-2 g-0">
           <Col className="ps-2 pb-2" xs="12" sm="3">
             <ImageFallback className="w-100" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
             {card.image_flip && (

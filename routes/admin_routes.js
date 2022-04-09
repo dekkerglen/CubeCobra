@@ -19,8 +19,8 @@ const Podcast = require('../models/podcast');
 const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../models/cube');
 const { render } = require('../serverjs/render');
-const { buildIdQuery } = require('../serverjs/cubefn.js');
-const util = require('../serverjs/util.js');
+const { buildIdQuery } = require('../serverjs/cubefn');
+const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 
 const ensureAdmin = ensureRole('Admin');

@@ -3,18 +3,16 @@ const express = require('express');
 const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const RSS = require('rss');
-const { Canvas, Image } = require('canvas');
 
-Canvas.Image = Image;
-
-const createdraft = require('../../dist/drafting/createdraft.js');
-const filterutil = require('../../dist/filtering/FilterCards.js');
-const miscutil = require('../../dist/utils/Util.js');
-const carddb = require('../../serverjs/cards.js');
+const createdraft = require('../../dist/drafting/createdraft');
+const filterutil = require('../../dist/filtering/FilterCards');
+const miscutil = require('../../dist/utils/Util');
+const carddb = require('../../serverjs/cards');
 const { render } = require('../../serverjs/render');
 const { ensureAuth, csrfProtection } = require('../middleware');
-const util = require('../../serverjs/util.js');
-const generateMeta = require('../../serverjs/meta.js');
+const util = require('../../serverjs/util');
+const generateMeta = require('../../serverjs/meta');
+const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
@@ -31,7 +29,7 @@ const {
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
-} = require('../../serverjs/cubefn.js');
+} = require('../../serverjs/cubefn');
 
 const {
   CARD_HEIGHT,
@@ -42,7 +40,7 @@ const {
   createPool,
   shuffle,
   updateCubeAndBlog,
-} = require('./helper.js');
+} = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -52,16 +50,16 @@ const User = require('../../models/user');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const { fromEntries } = require('../../serverjs/util.js');
+const { fromEntries } = require('../../serverjs/util');
 const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
 router.use(csrfProtection);
 
-router.use('/blog', require('./blog.js'));
-router.use('/deck', require('./deck.js'));
-router.use('/api', require('./api.js'));
-router.use('/download', require('./download.js'));
+router.use('/blog', require('./blog'));
+router.use('/deck', require('./deck'));
+router.use('/api', require('./api'));
+router.use('/download', require('./download'));
 
 router.post('/add', ensureAuth, async (req, res) => {
   try {
@@ -818,7 +816,6 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      const imgScale = 0.9;
       // Try to make it roughly 5 times as wide as it is tall in cards.
       const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
       const height = Math.ceil(pack.pack.length / width);
@@ -826,26 +823,16 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       const srcArray = pack.pack.map((card, index) => {
         return {
           src: card.imgUrl || card.details.image_normal,
-          x: imgScale * CARD_WIDTH * (index % width),
-          y: imgScale * CARD_HEIGHT * Math.floor(index / width),
-          w: imgScale * CARD_WIDTH,
-          h: imgScale * CARD_HEIGHT,
-          rX: imgScale * 0.065 * CARD_WIDTH,
-          rY: imgScale * 0.0464 * CARD_HEIGHT,
+          x: CARD_WIDTH * (index % width),
+          y: CARD_HEIGHT * Math.floor(index / width),
         };
       });
 
-      const image = await generateSamplepackImage(srcArray, {
-        width: imgScale * CARD_WIDTH * width,
-        height: imgScale * CARD_HEIGHT * height,
-        Canvas,
-      });
-
-      return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+      return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
     });
 
     res.writeHead(200, {
-      'Content-Type': 'image/png',
+      'Content-Type': 'image/webp',
     });
     return res.end(imageBuffer);
   } catch (err) {
@@ -1254,6 +1241,8 @@ router.post(
       draft.cards = populated.cards;
 
       await draft.save();
+
+      await createLobby(draft, req.user);
 
       if (req.body.botsOnly) {
         draft = await Draft.findById(draft._id).lean();

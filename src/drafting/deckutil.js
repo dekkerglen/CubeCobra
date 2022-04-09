@@ -1,6 +1,5 @@
-import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME, FETCH_LANDS } from 'drafting/draftbots';
-import { COLOR_COMBINATIONS, cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType } from 'utils/Card';
-import { arraysAreEqualSets } from 'utils/Util';
+import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME } from 'drafting/draftbots';
+import { cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType, cardColors } from 'utils/Card';
 
 const getSortFn = (draftCards) => (a, b) => draftCards[b].rating - draftCards[a].rating;
 
@@ -141,40 +140,70 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
   return bestNodes.map((ind) => nodes[ind]);
 };
 
-export const calculateBasicCounts = ({ picked, cards, basics }) => {
-  const {
-    botState: { lands },
-    colors,
-  } = evaluateCardsOrPool([], {
-    picked,
-    cards,
-    basics,
-    seen: [],
-    packNum: 3,
-    pickNum: 15,
-    numPacks: 3,
-    packSize: 15,
-  });
-  const landCards = picked
-    .concat(...basics.map((ci) => new Array(17).fill(ci)))
-    .filter((ci) => cardType(cards[ci]).toLowerCase().includes('land') && !cardIsSpecialZoneType(cards[ci]))
-    .sort(getSortFn(cards));
-  const landsByComb = Array.from(lands).map((v, i) => [COLOR_COMBINATIONS[i].join(''), v]);
-  const main = [];
-  for (const [comb, count] of landsByComb) {
-    for (let i = 0; i < count; i++) {
-      const match = landCards.findIndex((ci) =>
-        arraysAreEqualSets([...comb], FETCH_LANDS[cardName(cards[ci])] ?? cardColorIdentity(cards[ci])),
-      );
-      if (match === -1) {
-        console.warn('Could not find a matching land that the bots said was there.');
-      } else {
-        main.push(landCards.splice(match, 1)[0]);
-      }
+const calculateBasicCounts = ({ picked, cards }) => {
+  const landCards = picked.filter((ci) => cardType(cards[ci]).toLowerCase().includes('land'));
+  const spellCards = picked.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land'));
+
+  const colorDistribution = {
+    W: 0,
+    U: 0,
+    B: 0,
+    R: 0,
+    G: 0,
+  };
+
+  for (let i = 0; i < spellCards.length; i++) {
+    const card = cards[spellCards[i]];
+    for (const color of cardColors(card)) {
+      colorDistribution[color] += 1;
     }
   }
-  const remainingLands = landCards.filter((ci) => !basics.includes(ci));
-  return { lands: main, remainingLands, colors };
+
+  // normalize color distribution
+  const total = Object.values(colorDistribution).reduce((a, b) => a + b, 0);
+  for (const color in colorDistribution) {
+    if (colorDistribution[color]) {
+      colorDistribution[color] /= total;
+    }
+  }
+
+  // filter out less than threshold
+  const threshold = 0.05;
+  const filtered = [];
+  for (const color in colorDistribution) {
+    if (colorDistribution[color] > threshold) {
+      filtered.push(color);
+    }
+  }
+
+  const lands = [];
+  // add on-color lands to lands
+  for (let i = 0; i < landCards.length; i++) {
+    const card = cards[landCards[i]];
+    const colors = cardColorIdentity(card);
+    // if colors is a subset of filtered, add to lands
+    if (colors.every((color) => filtered.includes(color))) {
+      lands.push(landCards[i]);
+    } else if (colors.length === 0) {
+      // if no colors, add it
+      lands.push(landCards[i]);
+    }
+  }
+  const chosenLands = lands.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('basic'));
+  const distinctBasics = [...new Set(lands.filter((ci) => cardType(cards[ci]).toLowerCase().includes('basic')))];
+
+  const desiredBasics = 40 - chosenLands.length - spellCards.length;
+
+  for (const basic of distinctBasics) {
+    const amount = desiredBasics * colorDistribution[cardColorIdentity(cards[basic])[0]];
+    for (let i = 0; i < amount; i++) {
+      chosenLands.push(basic);
+    }
+  }
+
+  const remainingLands = chosenLands.filter((ci) => !lands.includes(ci));
+
+  return { lands: chosenLands, remainingLands, colors: filtered };
 };
 
 async function build({ cards, picked, probabilities, basics, lands: orginalLands }) {
@@ -293,12 +322,12 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
   };
 }
 
-export async function buildDeck(cards, picked, basics) {
+export default async function buildDeck(cards, picked, basics) {
   const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked: picked.concat(...basics.map((ci) => new Array(20).fill(ci))),
     seen: [],
-    basics: [],
+    basics: basics || [],
     packNum: 3,
     pickNum: 15,
     numPacks: 3,

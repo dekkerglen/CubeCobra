@@ -1,6 +1,6 @@
 const express = require('express');
 
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
@@ -887,6 +887,10 @@ router.get('/donate', (req, res) => {
 
 router.get('/c/:id', (req, res) => {
   res.redirect(`/cube/list/${req.params.id}`);
+});
+
+router.get('/d/:id', (req, res) => {
+  res.redirect(`/cube/draft/${req.params.id}`);
 });
 
 router.get('/leave', (req, res) => {

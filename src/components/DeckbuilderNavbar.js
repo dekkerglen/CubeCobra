@@ -10,7 +10,7 @@ import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'r
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { buildDeck } from 'drafting/deckutil';
+import buildDeck from 'drafting/deckutil';
 import BasicsModal from 'components/BasicsModal';
 import withModal from 'components/WithModal';
 

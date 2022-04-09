@@ -5,6 +5,7 @@ import { Card } from 'reactstrap';
 import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/AspectRatioBox';
 import htmlToText from 'html-to-text';
+import Username from 'components/Username';
 
 const PodcastEpisodePreview = ({ episode }) => {
   const [hover, setHover] = useState(false);
@@ -39,11 +40,8 @@ const PodcastEpisodePreview = ({ episode }) => {
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-start">
-          By{' '}
-          <a data-sublink href={`/user/view/${episode.owner}`}>
-            {episode.username}
-          </a>
+        <small className="float-left">
+          By <Username userId={episode.owner} defaultName={episode.username} />
         </small>
         <small className="float-end">
           <TimeAgo date={episode.date} />

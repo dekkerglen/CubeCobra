@@ -6,10 +6,10 @@ const es = require('event-stream');
 const fetch = require('node-fetch');
 const AWS = require('aws-sdk');
 const { winston } = require('./cloudwatch');
-const cardutil = require('../dist/utils/Card.js');
+const cardutil = require('../dist/utils/Card');
 
-const util = require('./util.js');
-const carddb = require('./cards.js');
+const util = require('./util');
+const carddb = require('./cards');
 
 const catalog = {};
 

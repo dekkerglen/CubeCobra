@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const { winston } = require('./serverjs/cloudwatch');
-const updatedb = require('./serverjs/updatecards.js');
+const updatedb = require('./serverjs/updatecards');
 const CardRating = require('./models/cardrating');
 const CardHistory = require('./models/cardHistory');
 

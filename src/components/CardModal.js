@@ -53,7 +53,7 @@ const CardModal = ({
         <Row>
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
-            <Row noGutters className="mb-2">
+            <Row className="mb-2 ">
               {card.details.prices && Number.isFinite(cardPrice(card)) && (
                 <TextBadge name="Price" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardPrice(card).toFixed(2)}</Tooltip>
@@ -65,7 +65,7 @@ const CardModal = ({
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardEtchedPrice(card)) && (
-                <TextBadge name="Etched" className="mt-2 mr-2">
+                <TextBadge name="Etched" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}

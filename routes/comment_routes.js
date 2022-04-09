@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 const Comment = require('../models/comment');
 const User = require('../models/user');
 const Report = require('../models/report');

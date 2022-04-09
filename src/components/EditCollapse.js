@@ -176,7 +176,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
           {message}
         </UncontrolledAlert>
       ))}
-      <Row noGutters className="me-auto">
+      <Row className="me-auto g-0">
         <Col xs={12} md="auto">
           <Form className="mb-2 me-2" onSubmit={handleAdd}>
             <InputGroup className="flex-nowrap">

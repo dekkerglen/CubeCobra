@@ -1,13 +1,15 @@
+/* eslint-disable no-undef */
 import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
 import { useDrag, useDrop } from 'react-dnd';
 
-import CardImage from './CardImage';
-import FoilCardImage from './FoilCardImage';
+import FoilCardImage from 'components/FoilCardImage';
+import CardPropType from 'proptypes/CardPropType';
 
-const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, className, ...props }) => {
+const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick, ...props }) => {
   const [{ isDragging }, drag, preview] = useDrag({
     item: { type: 'card', location },
-    begin: (monitor) => {
+    begin: () => {
       /* global */ stopAutocard = true;
       /* global */ autocard_hide_card();
     },
@@ -47,7 +49,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
   return (
     <>
       <FoilCardImage card={card} innerRef={imageRef} className={oldClasses.join(' ')} />
-      <div ref={drag} className={onMoveCard || props.onClick ? 'clickable' : undefined}>
+      <div ref={drag} className={onMoveCard || onClick ? 'clickable' : undefined}>
         <div ref={drop}>
           <FoilCardImage
             card={card}
@@ -57,12 +59,30 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, width, height, cla
             data-location-type={location.type}
             data-location-data={JSON.stringify(location.data)}
             data-cnc={cnc.toString()}
+            onClick={() => onClick(card)}
             {...props}
           />
         </div>
       </div>
     </>
   );
+};
+
+DraggableCard.propTypes = {
+  card: CardPropType.isRequired,
+  location: PropTypes.shape({
+    type: PropTypes.string,
+    data: PropTypes.shape({}),
+  }).isRequired,
+  canDrop: PropTypes.func.isRequired,
+  onMoveCard: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  onClick: PropTypes.func,
+};
+
+DraggableCard.defaultProps = {
+  className: '',
+  onClick: null,
 };
 
 export default DraggableCard;

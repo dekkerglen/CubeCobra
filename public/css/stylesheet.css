@@ -1253,7 +1253,7 @@ thead th.corner[scope=col] {
 	border-right: 1px solid var(--border-light);
 }
 
-.form-control:disabled, .form-control[readonly] {
+.form-control:disabled, .form-control[readOnly] {
 	background-color: var(--read-only-disabled);
 }
 

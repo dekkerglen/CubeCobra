@@ -4,7 +4,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const cheerio = require('cheerio');
 const Blog = require('../models/blog');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 
 const batchSize = 100;
 

@@ -16,7 +16,7 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
         <Heading>{title} </Heading>
         {header && <a href={header.sideLink}>{header.sideText}</a>}
       </CardHeader>
-      <Row noGutters>
+      <Row className="g-0">
         {cubes.slice(0, 2).map((cube) => (
           <Col key={cube._id} lg={6} md={6} sm={12} xs={12}>
             <CubePreview cube={cube} />
@@ -24,7 +24,7 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
         ))}
       </Row>
       <Collapse isOpen={isOpen}>
-        <Row noGutters>
+        <Row className="g-0">
           {cubes.slice(2).map((cube) => (
             <Col key={cube._id} lg={6} md={6} sm={12} xs={12}>
               <CubePreview cube={cube} />

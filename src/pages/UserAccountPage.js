@@ -241,7 +241,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                           <TextEntry maxLength={2500} onChange={handleChangeMarkdown} name="body" value={markdown} />
                         </dd>
                       </dl>
-                      <Row noGutters>
+                      <Row className="g-0">
                         <Button className="ms-auto" block outline color="accent" type="submit">
                           Update
                         </Button>
