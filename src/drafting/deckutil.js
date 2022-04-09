@@ -1,15 +1,5 @@
-import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME, FETCH_LANDS } from 'drafting/draftbots';
-import {
-  COLOR_COMBINATIONS,
-  cardCmc,
-  cardColorIdentity,
-  cardIsSpecialZoneType,
-  cardName,
-  cardType,
-  cardColors,
-  cardElo,
-} from 'utils/Card';
-import { arraysAreEqualSets } from 'utils/Util';
+import { evaluateCardsOrPool, getSynergy, MAX_SCORE, ORACLES_BY_NAME } from 'drafting/draftbots';
+import { cardCmc, cardColorIdentity, cardIsSpecialZoneType, cardName, cardType, cardColors } from 'utils/Card';
 
 const getSortFn = (draftCards) => (a, b) => draftCards[b].rating - draftCards[a].rating;
 
@@ -150,11 +140,10 @@ const findShortestKSpanningTree = (nodes, distanceFunc, k) => {
   return bestNodes.map((ind) => nodes[ind]);
 };
 
-const calculateBasicCounts = ({ picked, cards, basics }) => {
+const calculateBasicCounts = ({ picked, cards }) => {
   const landCards = picked.filter((ci) => cardType(cards[ci]).toLowerCase().includes('land'));
   const spellCards = picked.filter((ci) => !cardType(cards[ci]).toLowerCase().includes('land'));
 
-  const spellCount = spellCards.length;
   const colorDistribution = {
     W: 0,
     U: 0,
@@ -333,7 +322,7 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
   };
 }
 
-export async function buildDeck(cards, picked, basics) {
+export default async function buildDeck(cards, picked, basics) {
   const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked: picked.concat(...basics.map((ci) => new Array(20).fill(ci))),

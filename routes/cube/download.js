@@ -1,13 +1,13 @@
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 
-const sortutil = require('../../dist/utils/Sort.js');
-const filterutil = require('../../dist/filtering/FilterCards.js');
-const carddb = require('../../serverjs/cards.js');
-const util = require('../../serverjs/util.js');
+const sortutil = require('../../dist/utils/Sort');
+const filterutil = require('../../dist/filtering/FilterCards');
+const carddb = require('../../serverjs/cards');
+const util = require('../../serverjs/util');
 
-const { buildIdQuery, isCubeViewable } = require('../../serverjs/cubefn.js');
-const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper.js');
+const { buildIdQuery, isCubeViewable } = require('../../serverjs/cubefn');
+const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');

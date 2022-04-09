@@ -35,8 +35,6 @@ listener.on('ready', () => {
   });
 });
 
-const lpushAsync = promisify(client.lpush).bind(client);
-
 module.exports = {
   hmset: promisify(client.hmset).bind(client),
   hmget: promisify(client.hmget).bind(client),
@@ -44,10 +42,7 @@ module.exports = {
   hset: promisify(client.hset).bind(client),
   lrange,
   hgetall,
-  lpush: async (...params) => {
-    console.log(...params);
-    return lpushAsync(...params);
-  },
+  lpush: promisify(client.lpush).bind(client),
   rpush: promisify(client.rpush).bind(client),
   rpoplpush: promisify(client.rpoplpush).bind(client),
   expire: promisify(client.expire).bind(client),

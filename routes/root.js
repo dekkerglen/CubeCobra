@@ -1,6 +1,6 @@
 const express = require('express');
 
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');

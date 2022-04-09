@@ -2,7 +2,7 @@ const express = require('express');
 
 const { render } = require('../serverjs/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 
 const Package = require('../models/package');
 const User = require('../models/user');

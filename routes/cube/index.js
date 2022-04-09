@@ -4,15 +4,15 @@ const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const RSS = require('rss');
 
-const createdraft = require('../../dist/drafting/createdraft.js');
-const filterutil = require('../../dist/filtering/FilterCards.js');
-const miscutil = require('../../dist/utils/Util.js');
-const carddb = require('../../serverjs/cards.js');
+const createdraft = require('../../dist/drafting/createdraft');
+const filterutil = require('../../dist/filtering/FilterCards');
+const miscutil = require('../../dist/utils/Util');
+const carddb = require('../../serverjs/cards');
 const { render } = require('../../serverjs/render');
 const { ensureAuth, csrfProtection } = require('../middleware');
-const util = require('../../serverjs/util.js');
-const generateMeta = require('../../serverjs/meta.js');
-const { createLobby } = require('../../serverjs/multiplayerDrafting.js');
+const util = require('../../serverjs/util');
+const generateMeta = require('../../serverjs/meta');
+const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
@@ -29,7 +29,7 @@ const {
   addDeckCardAnalytics,
   cachePromise,
   isCubeViewable,
-} = require('../../serverjs/cubefn.js');
+} = require('../../serverjs/cubefn');
 
 const {
   CARD_HEIGHT,
@@ -40,7 +40,7 @@ const {
   createPool,
   shuffle,
   updateCubeAndBlog,
-} = require('./helper.js');
+} = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -50,15 +50,15 @@ const User = require('../../models/user');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const { fromEntries } = require('../../serverjs/util.js');
+const { fromEntries } = require('../../serverjs/util');
 
 const router = express.Router();
 router.use(csrfProtection);
 
-router.use('/blog', require('./blog.js'));
-router.use('/deck', require('./deck.js'));
-router.use('/api', require('./api.js'));
-router.use('/download', require('./download.js'));
+router.use('/blog', require('./blog'));
+router.use('/deck', require('./deck'));
+router.use('/api', require('./api'));
+router.use('/download', require('./download'));
 
 router.post('/add', ensureAuth, async (req, res) => {
   try {

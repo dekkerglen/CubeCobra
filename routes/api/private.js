@@ -1,6 +1,6 @@
 const express = require('express');
 const { csrfProtection } = require('../middleware');
-const { getUserFromId } = require('../../serverjs/cache.js');
+const { getUserFromId } = require('../../serverjs/cache');
 
 const router = express.Router();
 

@@ -6,7 +6,7 @@ const DeckSeatPropType = PropTypes.shape({
   sideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number).isRequired).isRequired).isRequired,
   username: PropTypes.string,
   userid: PropTypes.string,
-  bot: PropTypes.array,
+  bot: PropTypes.arrayOf(),
   name: PropTypes.string,
 });
 

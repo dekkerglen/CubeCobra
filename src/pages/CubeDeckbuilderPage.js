@@ -20,11 +20,6 @@ import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
-const oppositeLocation = {
-  [DraftLocation.DECK]: DraftLocation.SIDEBOARD,
-  [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
-};
-
 const getMatchingSeat = (seats, userid) =>
   seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
 

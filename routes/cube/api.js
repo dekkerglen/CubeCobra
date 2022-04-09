@@ -4,10 +4,10 @@ const express = require('express');
 const { body } = require('express-validator');
 const fetch = require('node-fetch');
 
-const cardutil = require('../../dist/utils/Card.js');
-const carddb = require('../../serverjs/cards.js');
+const cardutil = require('../../dist/utils/Card');
+const carddb = require('../../serverjs/cards');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
-const util = require('../../serverjs/util.js');
+const util = require('../../serverjs/util');
 
 const {
   fromEntries,
@@ -21,7 +21,7 @@ const {
   saveDraftAnalytics,
   addCardHtml,
   isCubeViewable,
-} = require('../../serverjs/cubefn.js');
+} = require('../../serverjs/cubefn');
 const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 const { rotateArrayLeft, createPool } = require('./helper');

@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 const { cardType } = require('../dist/utils/Card');
-const carddb = require('./cards.js');
+const carddb = require('./cards');
 
 const Draft = require('../models/draft');
 const {
@@ -366,7 +366,6 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
 
   if (!packReference) {
-    console.log(`${seat} has no pack reference`);
     return; // no pack to pick from
   }
 
@@ -375,12 +374,10 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   const step = await rpop(stepsQueueRef(draftId, seat));
 
   if (packCards.length === 0 || pick >= packCards.length) {
-    console.log(packCards, pick, seat);
     // pack is empty, we fail
     return;
   }
 
-  console.log(picked, packCards, pick);
   // pick this card if the step is pick
   if (step === 'pick' || step === 'pickrandom') {
     await lpush(userPicksRef(draftId, seat), packCards[pick]);

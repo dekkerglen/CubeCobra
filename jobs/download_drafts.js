@@ -5,7 +5,7 @@ const AWS = require('aws-sdk');
 
 const Deck = require('../models/deck');
 const Draft = require('../models/draft');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 const deckutils = require('../dist/drafting/deckutil');
 
 const s3 = new AWS.S3({

@@ -72,7 +72,7 @@ DraggableCard.propTypes = {
   card: CardPropType.isRequired,
   location: PropTypes.shape({
     type: PropTypes.string,
-    data: PropTypes.any,
+    data: PropTypes.shape({}),
   }).isRequired,
   canDrop: PropTypes.func.isRequired,
   onMoveCard: PropTypes.func.isRequired,

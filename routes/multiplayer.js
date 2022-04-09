@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const { fromEntries } = require('../serverjs/util');
 const { lpush } = require('../serverjs/redis');
-const { getUserFromId } = require('../serverjs/cache.js');
+const { getUserFromId } = require('../serverjs/cache');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const {
   setup,

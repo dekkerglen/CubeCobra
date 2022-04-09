@@ -1,13 +1,13 @@
 const express = require('express');
 const { body } = require('express-validator');
-const miscutil = require('../../dist/utils/Util.js');
-const carddb = require('../../serverjs/cards.js');
-const { buildDeck } = require('../../dist/drafting/deckutil.js');
+const miscutil = require('../../dist/utils/Util');
+const carddb = require('../../serverjs/cards');
+const { buildDeck } = require('../../dist/drafting/deckutil');
 const { render } = require('../../serverjs/render');
-const util = require('../../serverjs/util.js');
-const generateMeta = require('../../serverjs/meta.js');
-const cardutil = require('../../dist/utils/Card.js');
-const frontutil = require('../../dist/utils/Util.js');
+const util = require('../../serverjs/util');
+const generateMeta = require('../../serverjs/meta');
+const cardutil = require('../../dist/utils/Card');
+const frontutil = require('../../dist/utils/Util');
 const { ensureAuth } = require('../middleware');
 const { createDeckFromDraft } = require('../../serverjs/deckUtil');
 
@@ -17,9 +17,9 @@ const {
   addDeckCardAnalytics,
   removeDeckCardAnalytics,
   isCubeViewable,
-} = require('../../serverjs/cubefn.js');
+} = require('../../serverjs/cubefn');
 
-const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
+const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');

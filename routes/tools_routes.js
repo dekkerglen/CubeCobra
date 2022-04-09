@@ -5,19 +5,19 @@ const express = require('express');
 
 const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards');
-const cardutil = require('../dist/utils/Card.js');
-const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort.js');
-const getBlankCardHistory = require('../src/utils/BlankCardHistory.js');
+const cardutil = require('../dist/utils/Card');
+const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort');
+const getBlankCardHistory = require('../src/utils/BlankCardHistory');
 const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
-const generateMeta = require('../serverjs/meta.js');
-const util = require('../serverjs/util.js');
+const generateMeta = require('../serverjs/meta');
+const util = require('../serverjs/util');
 const { render } = require('../serverjs/render');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../models/cube');
 
-const { buildIdQuery } = require('../serverjs/cubefn.js');
+const { buildIdQuery } = require('../serverjs/cubefn');
 const { getBlogFeedItems } = require('../serverjs/blogpostFeed');
 
 const router = express.Router();

@@ -27,14 +27,14 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
                     location={new Location(locationType, [index, index2, index3 + 1])}
                     card={card}
                     canDrop={canDrop}
-                    onMoveCard={onMoveCard}
-                    onClick={() =>
+                    onClick={() => {
                       onMoveCard(new Location(locationType, [index, index2, index3 + 1]), {
                         data: [0, index2, -0],
                         dropEffect: 'move',
                         type: locationType === Location.DECK ? Location.SIDEBOARD : Location.DECK,
-                      })
-                    }
+                      });
+                    }}
+                    onMoveCard={onMoveCard}
                   />
                 </div>
               ))}

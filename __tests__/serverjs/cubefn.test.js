@@ -7,7 +7,7 @@ const cubefixture = require('../../fixtures/examplecube');
 
 const Cube = require('../../models/cube');
 
-const { arraysEqual } = require('../../src/utils/Util.js');
+const { arraysEqual } = require('../../src/utils/Util');
 
 const fixturesPath = 'fixtures';
 

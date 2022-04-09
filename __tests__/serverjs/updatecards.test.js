@@ -4,7 +4,7 @@ const rimraf = require('rimraf');
 const updatecards = require('../../serverjs/updatecards');
 const carddb = require('../../serverjs/cards');
 const examplecards = require('../../fixtures/examplecards');
-const cardutil = require('../../dist/utils/Card.js');
+const cardutil = require('../../dist/utils/Card');
 const { getFaceAttributeSource } = require('../../serverjs/updatecards');
 
 const emptyFixturePath = 'fixtures/empty.json';

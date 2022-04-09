@@ -6,9 +6,9 @@ const mailer = require('nodemailer');
 const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 const { render } = require('../serverjs/render');
 const { buildIdQuery } = require('../serverjs/cubefn');
 
