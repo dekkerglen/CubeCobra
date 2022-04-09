@@ -1,4 +1,19 @@
 const Blog = require('../models/blog.js');
+const carddb = require('./cards.js');
+
+function fillBlogpostChangelog(blog) {
+  if (!blog.changed_cards) return blog;
+  for (const change of blog.changed_cards) {
+    if (change.addedID) {
+      change.added = carddb.cardFromId(change.addedID);
+    }
+    if (change.removedID) {
+      change.removed = carddb.cardFromId(change.removedID);
+    }
+  }
+
+  return blog;
+}
 
 const getBlogFeedItems = (user, skip, limit) =>
   Blog.find({
@@ -65,4 +80,5 @@ const getBlogFeedItems = (user, skip, limit) =>
 
 module.exports = {
   getBlogFeedItems,
+  fillBlogpostChangelog,
 };

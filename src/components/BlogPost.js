@@ -12,6 +12,7 @@ import BlogContextMenu from 'components/BlogContextMenu';
 import EditBlogModal from 'components/EditBlogModal';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
+import BlogPostChangelog from 'components/BlogPostChangelog';
 
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
@@ -53,11 +54,15 @@ const BlogPost = ({ post, noScroll }) => {
         </h6>
       </CardHeader>
       <div style={scrollStyle}>
-        {post.changelist && (html || post.markdown) ? (
+        {(post.changed_cards?.length || post.changelist) && (html || post.markdown) ? (
           <Row className="g-0">
             <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
               <CardBody className="py-2">
-                <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
+                {post.changed_cards?.length ? (
+                  <BlogPostChangelog cards={post.changed_cards} />
+                ) : (
+                  <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
+                )}
               </CardBody>
             </Col>
             <Col className="col-l-7 col-m-6">
@@ -72,6 +77,7 @@ const BlogPost = ({ post, noScroll }) => {
           </Row>
         ) : (
           <CardBody className="py-2">
+            {post.changed_cards?.length > 0 && <BlogPostChangelog cards={post.changed_cards} />}
             {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
             {post.body && <CardText>{post.body}</CardText>}
             {(html || post.markdown) &&

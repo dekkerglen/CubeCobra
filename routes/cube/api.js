@@ -22,7 +22,6 @@ const {
   cubeCardTags,
   maybeCards,
   saveDraftAnalytics,
-  addCardHtml,
   isCubeViewable,
 } = require('../../serverjs/cubefn.js');
 const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
@@ -938,10 +937,9 @@ router.post(
     if (tag) {
       const blogpost = new Blog();
       blogpost.title = `Added Package "${tag}"`;
-      blogpost.changelist = req.body.cards.reduce(
-        (changes, card) => changes + addCardHtml(carddb.cardFromId(card)),
-        '',
-      );
+      blogpost.changed_cards = req.body.cards.map((card) => {
+        return { addedID: card, removedID: null };
+      });
       blogpost.markdown = `Add from the package [${tag}](/packages/${req.body.packid})`;
       blogpost.owner = cube.owner;
       blogpost.date = Date.now();
