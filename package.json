@@ -124,6 +124,7 @@
     "react-tag-input": "^6.4.1",
     "react-tagcloud": "^2.0.0",
     "react-timeago": "^4.4.0",
+    "react-transition-group": "^4.4.2",
     "reactstrap": "^9.0.0",
     "redis": "^3.1.2",
     "remark-autolink-headings": "^6.0.1",
