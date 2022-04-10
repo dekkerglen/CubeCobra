@@ -256,22 +256,28 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/resetpassword">
                     <FormGroup row>
-                      <Label for="password" className="col-sm-4 col-form-Label">
+                      <Label for="password" sm={4}>
                         Old password:
                       </Label>
-                      <Input className="col-sm-8" id="currentPassword" name="password" type="password" />
+                      <Col sm={8}>
+                        <Input id="currentPassword" name="password" type="password" />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="newPassword" className="col-sm-4 col-form-Label">
+                      <Label for="newPassword" sm={4}>
                         New Password:
                       </Label>
-                      <Input className="col-sm-8" id="newPassword" name="password2" type="password" />
+                      <Col sm={8}>
+                        <Input id="newPassword" name="password2" type="password" />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="confirmPassword" className="col-sm-4 col-form-Label">
+                      <Label for="confirmPassword" sm={4}>
                         Confirm New Password:
                       </Label>
-                      <Input className="col-sm-8" id="confirmPassword" name="password3" type="password" />
+                      <Col sm={8}>
+                        <Input id="confirmPassword" name="password3" type="password" />
+                      </Col>
                     </FormGroup>
                     <Button outline block color="accent" type="submit">
                       Change Password
@@ -285,16 +291,20 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/updateemail">
                     <FormGroup row>
-                      <Label for="email" className="col-sm-4 col-form-Label">
+                      <Label for="email" sm={4}>
                         New Email:
                       </Label>
-                      <Input className="col-sm-8" id="email" name="email" type="email" defaultValue={user.email} />
+                      <Col sm={8}>
+                        <Input id="email" name="email" type="email" defaultValue={user.email} />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="emailPassword" className="col-sm-4 col-form-Label">
+                      <Label for="emailPassword" sm={4}>
                         Password:
                       </Label>
-                      <Input className="col-sm-8" id="emailPassword" name="password" type="password" />
+                      <Col sm={8}>
+                        <Input id="emailPassword" name="password" type="password" />
+                      </Col>
                     </FormGroup>
                     <Button block outline color="accent" type="submit">
                       Update
