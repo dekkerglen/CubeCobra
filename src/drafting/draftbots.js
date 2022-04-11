@@ -124,8 +124,10 @@ export const getSynergy = (index1, index2, cards) => {
     const embedding1 = card1.details.embedding;
     const embedding2 = card2.details.embedding;
     synergy = 0;
-    for (let i = 0; i < 64; i++) {
-      synergy += embedding1[i] * embedding2[i];
+    if (embedding1 && embedding2) {
+      for (let i = 0; i < 64; i++) {
+        synergy += embedding1[i] * embedding2[i];
+      }
     }
     synergy *= MAX_SCORE;
     synergyCache[name1][name2] = synergy;
