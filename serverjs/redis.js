@@ -16,17 +16,6 @@ const type = promisify(client.type).bind(client);
 const listener = redis.createClient(process.env.REDIS_HOST);
 
 listener.on('ready', () => {
-  // we wrap this in try/catch because you cannot edit this value if using elasticache, but in development it's fine
-  try {
-    listener.config('set', 'notify-keyspace-events', 'Elh');
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.log(err);
-  }
-  // Elh => see https://redis.io/topics/notifications to understand the configuration
-  // l means we are interested in list events
-  // h means we are interested in hash events
-
   listener.psubscribe(['__key*__:*']);
 
   listener.on('pmessage', async (pattern, channel, message) => {
