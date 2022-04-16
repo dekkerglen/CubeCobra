@@ -16,6 +16,9 @@ const type = promisify(client.type).bind(client);
 const listener = redis.createClient(process.env.REDIS_HOST);
 
 listener.on('ready', () => {
+  if (process.env.REDIS_SETUP && process.env.REDIS_SETUP === 'true') {
+    listener.config('set', 'notify-keyspace-events', 'Elh');
+  }
   listener.psubscribe(['__key*__:*']);
 
   listener.on('pmessage', async (pattern, channel, message) => {
