@@ -33,7 +33,7 @@ const ArticlePreview = ({ article }) => {
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-left">
+        <small className="float-start">
           Written by <Username userId={article.owner} defaultName={article.username} />
         </small>
         <small className="float-end">

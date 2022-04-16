@@ -47,3 +47,8 @@
   --code-bg: rgb(245, 245, 245);
   --read-only-disabled: #e9ecef;
 }
+
+/* override bootstrap's contrast mechanism for button text */
+.btn-accent, .btn-outline-accent:hover {
+  color: #fff !important;
+}

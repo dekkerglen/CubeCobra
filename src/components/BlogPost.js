@@ -28,10 +28,10 @@ const BlogPost = ({ post, noScroll }) => {
       <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <h5 className="card-title">
           <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
-          <div className="float-sm-right">
+          <div className="float-sm-end">
             {canEdit && (
               <>
-                <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={() => setEditOpen(true)} />
+                <BlogContextMenu className="float-sm-end" post={post} value="..." onEdit={() => setEditOpen(true)} />
                 <EditBlogModal
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
