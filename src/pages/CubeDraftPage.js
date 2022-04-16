@@ -16,7 +16,7 @@ import UserContext from 'contexts/UserContext';
 
 import { Spinner } from 'reactstrap';
 
-const socket = socketIOClient('localhost:8080', { rejectUnauthorized: false });
+const socket = socketIOClient('/', { rejectUnauthorized: false });
 
 const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
   const user = useContext(UserContext);

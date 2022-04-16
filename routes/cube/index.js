@@ -1162,6 +1162,7 @@ router.post(
 
 router.post(
   '/startdraft/:id',
+  ensureAuth,
   body('id').toInt(),
   body('botsOnly').toBoolean(),
   body('seats').toInt({
