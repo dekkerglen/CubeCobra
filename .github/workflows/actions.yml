@@ -13,7 +13,7 @@ jobs:
     - name: Setup
       run: npm install
     - name: Build
-      run: npm run build
+      run: npm run ci-build
     - name: Check Code Style
       run: npm run lint
     - name: Run Unit Tests

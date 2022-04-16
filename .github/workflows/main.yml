@@ -42,7 +42,7 @@ jobs:
         run: npm install
 
       - name: Building application
-        run: npm run build
+        run: npm run ci-build
 
       - name: Generate deployment package
         run: zip -r deploy.zip . -x .git/\* -x node_modules/\* -x private/\*
