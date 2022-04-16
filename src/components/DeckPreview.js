@@ -62,8 +62,8 @@ const DeckPreview = ({ deck, nextURL }) => {
   };
 
   return (
-    <Row className="deck-preview" {...handleClick}>
-      <Col xs={canEdit ? 11 : 12}>
+    <Row className="deck-preview mx-0" {...handleClick}>
+      <Col xs={canEdit ? 11 : 12} className="ps-0">
         <h6 className="mb-0 text-muted">
           <a href={`/cube/deck/${deck._id}`} title={fullName}>
             {name}
@@ -78,7 +78,7 @@ const DeckPreview = ({ deck, nextURL }) => {
         </h6>
       </Col>
       {canEdit && (
-        <Col xs={1}>
+        <Col xs={1} className="pe-0">
           <button
             type="button"
             className="btn-close"
