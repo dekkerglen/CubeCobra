@@ -16,7 +16,7 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const batchSize = 1;
+const batchSize = 10000;
 
 const processDeck = (deck) => {
   const main = [];
@@ -68,10 +68,7 @@ try {
         if (i + j < count) {
           const deck = await cursor.next(); // eslint-disable-line no-await-in-loop
           if (deck) {
-            decks.push({
-              deck: processDeck(deck),
-              src: deck,
-            });
+            decks.push(processDeck(deck));
           }
         }
       }
@@ -82,7 +79,6 @@ try {
       };
       await s3.upload(params).promise();
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
-      return;
     }
     await mongoose.disconnect();
 
