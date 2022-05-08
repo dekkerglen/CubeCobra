@@ -23,22 +23,26 @@ const processDeck = (deck) => {
   const side = [];
 
   if (deck.seats[0] && deck.seats[0].deck) {
-    for (const col of deck.seats[0].deck) {
-      for (const cardIndex of col) {
-        const card = deck.cards[cardIndex];
-        if (card && card.cardID) {
-          main.push(card.cardID);
+    for (const row of deck.seats[0].deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          if (card && card.cardID) {
+            main.push(card.cardID);
+          }
         }
       }
     }
   }
 
   if (deck.seats[0] && deck.seats[0].sideboard) {
-    for (const col of deck.seats[0].sideboard) {
-      for (const cardIndex of col) {
-        const card = deck.cards[cardIndex];
-        if (card && card.cardID) {
-          side.push(card.cardID);
+    for (const row of deck.seats[0].deck) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          if (card && card.cardID) {
+            side.push(card.cardID);
+          }
         }
       }
     }
