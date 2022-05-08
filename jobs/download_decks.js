@@ -63,7 +63,10 @@ try {
         if (i + j < count) {
           const deck = await cursor.next(); // eslint-disable-line no-await-in-loop
           if (deck) {
-            decks.push(processDeck(deck));
+            decks.push({
+              deck: processDeck(deck),
+              src: deck,
+            });
           }
         }
       }
