@@ -32,7 +32,7 @@ const SealedCard = () => {
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Button color="success">Start Sealed</Button>
+          <Button color="accent">Start Sealed</Button>
         </CardFooter>
       </CSRFForm>
     </Card>

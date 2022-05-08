@@ -36,7 +36,7 @@ const GridDraftCard = () => {
           </LabelRow>
         </CardBody>
         <CardFooter>
-          <Button color="success">Start Grid Draft</Button>
+          <Button color="accent">Start Grid Draft</Button>
         </CardFooter>
       </CSRFForm>
     </Card>

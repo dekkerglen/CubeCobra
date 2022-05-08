@@ -28,7 +28,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
