@@ -27,7 +27,7 @@ const processDeck = (deck) => {
       for (const cardIndex of col) {
         const card = deck.cards[cardIndex];
         if (card && card.cardID) {
-          main.push(carddb.cardFromId(card.cardID).name_lower);
+          main.push(card.cardID);
         }
       }
     }
@@ -36,8 +36,9 @@ const processDeck = (deck) => {
   if (deck.seats[0] && deck.seats[0].sideboard) {
     for (const col of deck.seats[0].sideboard) {
       for (const cardIndex of col) {
-        if (deck.cards[cardIndex]) {
-          side.push(carddb.cardFromId(deck.cards[cardIndex].cardID).name_lower);
+        const card = deck.cards[cardIndex];
+        if (card && card.cardID) {
+          side.push(card.cardID);
         }
       }
     }
