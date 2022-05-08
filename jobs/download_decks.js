@@ -16,7 +16,7 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const batchSize = 1000;
+const batchSize = 1;
 
 const processDeck = (deck) => {
   const main = [];
@@ -77,6 +77,7 @@ try {
       };
       await s3.upload(params).promise();
       console.log(`Finished: ${Math.min(count, i + batchSize)} of ${count} decks`);
+      return;
     }
     await mongoose.disconnect();
 
