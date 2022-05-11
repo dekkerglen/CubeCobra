@@ -41,12 +41,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
         <CardFooter>
           <Input type="hidden" name="id" value="-1" />
           <div className="justify-content-center align-items-center">
-            <Button color="success" className="me-2">
+            <Button color="accent" className="me-2">
               Start Draft
             </Button>
           </div>
           {canEdit && defaultDraftFormat !== -1 && (
-            <Button color="success" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
+            <Button color="accent" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
               Make Default
             </Button>
           )}

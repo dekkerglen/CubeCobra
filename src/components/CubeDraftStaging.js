@@ -158,7 +158,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
         )}
       </CardBody>
       <CardFooter>
-        <Button color="success" block outline onClick={start} disabled={loading}>
+        <Button color="accent" block outline onClick={start} disabled={loading}>
           Start Draft
         </Button>
       </CardFooter>

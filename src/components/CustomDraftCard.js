@@ -52,25 +52,25 @@ const CustomDraftCard = ({
         <CardFooter>
           <Input type="hidden" name="id" value={index} />
           <div className="justify-content-center align-items-center">
-            <Button type="submit" color="success" className="me-2">
+            <Button type="submit" color="accent" className="me-2">
               Start Draft
             </Button>
             {canEdit && (
               <>
-                <Button color="success" className="me-2" onClick={onEditFormat} data-index={index}>
+                <Button color="accent" className="me-2" onClick={onEditFormat} data-index={index}>
                   Edit
                 </Button>
                 {defaultDraftFormat !== index && (
-                  <Button color="success" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
+                  <Button color="accent" className="me-2" onClick={onSetDefaultFormat} data-index={index}>
                     Make Default
                   </Button>
                 )}
-                <Button color="danger" id={`deleteToggler-${index}`}>
+                <Button color="unsafe" id={`deleteToggler-${index}`}>
                   Delete
                 </Button>
                 <UncontrolledCollapse toggler={`#deleteToggler-${index}`}>
                   <h6 className="my-4">Are you sure? This action cannot be undone.</h6>
-                  <Button color="danger" onClick={onDeleteFormat} data-index={index}>
+                  <Button color="unsafe" onClick={onDeleteFormat} data-index={index}>
                     Yes, delete this format
                   </Button>
                 </UncontrolledCollapse>
