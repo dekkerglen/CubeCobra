@@ -6,6 +6,7 @@ import useMount from 'hooks/UseMount';
 import { callApi } from 'utils/CSRF';
 
 import UserContext from 'contexts/UserContext';
+import DomainContext from 'contexts/DomainContext';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 import { ClippyIcon, LockIcon } from '@primer/octicons-react';
 import Username from 'components/Username';
@@ -29,6 +30,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
   const [order, setOrder] = React.useState({});
   const [players, setPlayers] = React.useState([]);
   const user = useContext(UserContext);
+  const domain = useContext(DomainContext);
 
   const seats = [];
 
@@ -130,10 +132,10 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
           <>
             <p>Use the following link to invite players to your draft:</p>
             <InputGroup>
-              <Input className="bg-white monospaced" value={`https://cubecobra.com/d/${draft._id}`} readOnly />
+              <Input className="bg-white monospaced" value={`https://${domain}/d/${draft._id}`} readOnly />
               <Button
                 className="btn-sm input-group-button"
-                onClick={() => navigator.clipboard.writeText(`https://cubecobra.com/d/${draft._id}`)}
+                onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft._id}`)}
                 aria-label="Copy Short ID"
               >
                 <ClippyIcon size={16} />
