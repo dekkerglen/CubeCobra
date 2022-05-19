@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import UserContext from 'contexts/UserContext';
 import AdsContext from 'contexts/AdsContext';
+import DomainContext from 'contexts/DomainContext';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 
@@ -11,9 +12,11 @@ const RenderToRoot = (Element) => {
   const element = (
     <ErrorBoundary className="mt-3">
       <AdsContext.Provider value={reactProps ? reactProps.nitroPayEnabled : null}>
-        <UserContext.Provider value={reactProps ? reactProps.user : null}>
-          <Element {...reactProps} />
-        </UserContext.Provider>
+        <DomainContext.Provider value={reactProps ? reactProps.domain : null}>
+          <UserContext.Provider value={reactProps ? reactProps.user : null}>
+            <Element {...reactProps} />
+          </UserContext.Provider>
+        </DomainContext.Provider>
       </AdsContext.Provider>
     </ErrorBoundary>
   );
