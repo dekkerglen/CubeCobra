@@ -12,7 +12,6 @@ const User = require('../models/user');
 
 const createDeckFromDraft = async (draft) => {
   const cube = await Cube.findById(draft.cube);
-
   const deck = new Deck();
   deck.cube = draft.cube;
   deck.cubeOwner = cube.owner;
