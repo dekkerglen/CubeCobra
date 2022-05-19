@@ -1,7 +1,7 @@
 const { addDeckCardAnalytics } = require('./cubefn');
 const { fromEntries, addNotification } = require('./util');
 const carddb = require('./cards');
-const buildDeck = require('../dist/drafting/deckutil');
+const { buildDeck } = require('../dist/drafting/deckutil');
 const { COLOR_COMBINATIONS } = require('../dist/utils/Card');
 const { arraysAreEqualSets } = require('../dist/utils/Util');
 

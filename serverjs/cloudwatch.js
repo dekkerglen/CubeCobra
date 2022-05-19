@@ -83,7 +83,7 @@ if (process.env.ENV === 'production') {
 module.exports = {
   winston: {
     // eslint-disable-next-line no-console
-    info: () => {}, // console.log(...params),
+    info: (...params) => console.log(...params),
     // eslint-disable-next-line no-console
     error: (...params) => console.error(...params),
   },
