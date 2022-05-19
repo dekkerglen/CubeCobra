@@ -322,7 +322,9 @@ async function build({ cards, picked, probabilities, basics, lands: orginalLands
   };
 }
 
-export default async function buildDeck(cards, picked, basics) {
+export function temp() {}
+
+export async function buildDeck(cards, picked, basics) {
   const botEvaluation = evaluateCardsOrPool(null, {
     cards,
     picked: picked.concat(...basics.map((ci) => new Array(20).fill(ci))),

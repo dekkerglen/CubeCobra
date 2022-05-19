@@ -1,7 +1,7 @@
 const { addDeckCardAnalytics } = require('./cubefn');
 const { fromEntries, addNotification } = require('./util');
 const carddb = require('./cards');
-const buildDeck = require('../dist/drafting/deckutil');
+const { buildDeck } = require('../dist/drafting/deckutil');
 const { COLOR_COMBINATIONS } = require('../dist/utils/Card');
 const { arraysAreEqualSets } = require('../dist/utils/Util');
 
@@ -39,6 +39,7 @@ const createDeckFromDraft = async (draft) => {
   let botNumber = 1;
   for (const seat of draft.seats) {
     // eslint-disable-next-line no-await-in-loop
+    console.log(buildDeck);
     const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
     const colorString =
       colors.length === 0 ? 'C' : COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors)).join('');

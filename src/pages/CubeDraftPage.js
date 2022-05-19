@@ -34,6 +34,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
         setMessage('Please log in to join this draft.');
       } else {
         socket.on('draft', async (data) => {
+          console.log('draft', data);
           setState(data.state);
         });
 

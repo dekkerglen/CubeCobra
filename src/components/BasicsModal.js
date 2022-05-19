@@ -4,7 +4,7 @@ import CardPropType from 'proptypes/CardPropType';
 
 import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card } from 'reactstrap';
 
-import buildDeck from 'drafting/deckutil';
+import { buildDeck } from 'drafting/deckutil';
 import { fromEntries } from 'utils/Util';
 
 const MAX_BASICS = 21;
