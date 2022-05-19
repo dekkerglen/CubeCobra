@@ -39,7 +39,6 @@ const createDeckFromDraft = async (draft) => {
   let botNumber = 1;
   for (const seat of draft.seats) {
     // eslint-disable-next-line no-await-in-loop
-    console.log(buildDeck);
     const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
     const colorString =
       colors.length === 0 ? 'C' : COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(comb, colors)).join('');
