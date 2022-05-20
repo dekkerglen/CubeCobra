@@ -21,8 +21,13 @@ const batchSize = 10000;
 const processDeck = (deck) => {
   const main = [];
   const side = [];
+  const fields = {};
 
   try {
+    fields.cube = deck.cube;
+    fields.drafter = deck.owner;
+    fields.date_drafted = deck.date;
+
     if (deck.seats[0] && deck.seats[0].deck) {
       for (const row of deck.seats[0].deck) {
         for (const col of row) {
@@ -52,7 +57,7 @@ const processDeck = (deck) => {
     console.log(`Error processing deck ${deck._id}: ${e}`);
   }
 
-  return { main, side };
+  return { main, side, ...fields };
 };
 
 try {
