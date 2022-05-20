@@ -137,10 +137,11 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    maxLength="100"
                   />
                   <br />
                   <h6>Description</h6>
-                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
+                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} maxLength="10000" />
                 </CardBody>
               </Card>
             </Col>

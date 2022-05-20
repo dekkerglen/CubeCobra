@@ -557,9 +557,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     await removeDeckCardAnalytics(cube, deck, carddb);
 
-    const newdeck = JSON.parse(req.body.draftraw);
-    const name = JSON.parse(req.body.name);
-    const description = JSON.parse(req.body.description);
+    const [playerdeck, playersideboard] = JSON.parse(req.body.draftraw);
+    const name = JSON.parse(req.body.name).substring(0, 100);
+    const description = JSON.parse(req.body.description).substring(0, 10000);
 
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
@@ -582,8 +582,8 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
         ? 'C'
         : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
 
-    deck.seats[seatIndex].deck = newdeck.playerdeck;
-    deck.seats[seatIndex].sideboard = newdeck.playersideboard;
+    deck.seats[seatIndex].deck = playerdeck;
+    deck.seats[seatIndex].sideboard = playersideboard;
     deck.seats[seatIndex].name = name;
     deck.seats[seatIndex].description = description;
     deck.seats[seatIndex].username = `${req.user.username}: ${colorString}`;
