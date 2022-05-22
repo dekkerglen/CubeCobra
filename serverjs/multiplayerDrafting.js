@@ -17,6 +17,7 @@ const {
   hincrby,
   del,
   hset,
+  setnx,
 } = require('./redis');
 
 const { setupPicks, getCardCol, getStepList } = require('../dist/drafting/draftutil');
@@ -73,6 +74,31 @@ const nonIntersect = (list1, list2) => list1.filter((x) => !list2.includes(x));
 
 const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
 const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
+
+const obtainLock = async (draftId) => {
+  const lock = await setnx(`draft:${draftId}:lock`, 1);
+  if (lock) {
+    await expire(`draft:${draftId}:lock`, 1);
+    return true;
+  }
+  return false;
+};
+
+const releaseLock = async (draftId) => {
+  await del(`draft:${draftId}:lock`);
+};
+
+const runWithLock = async (draftId, fn) => {
+  const lock = await obtainLock(draftId);
+  if (lock) {
+    try {
+      return await fn();
+    } finally {
+      await releaseLock(draftId);
+    }
+  }
+  return null;
+};
 
 const getDraftMetaData = async (draftId) => {
   const [seats, currentPack, totalPacks, initialized] = await hmget(
@@ -479,20 +505,25 @@ const tryBotPicks = async (draftId) => {
     for (const index of botSeats) {
       const passAmount = await getPassAmount(draftId, index);
       const next = (index + seats + passDirection * passAmount) % seats;
-      await makePick(draftId, index, await getDraftPick(draftId, index), next);
+
+      await runWithLock(draftId, async () => makePick(draftId, index, await getDraftPick(draftId, index), next));
     }
   }
 
   if (await isPackDone(draftId)) {
-    if (currentPack < totalPacks) {
-      await openPack(draftId);
-    } else {
-      // draft is done
-      await finishDraft(draftId, await Draft.findById(draftId));
+    const res = await runWithLock(draftId, async () => {
+      if (currentPack < totalPacks) {
+        await openPack(draftId);
+      } else {
+        // draft is done
+        await finishDraft(draftId, await Draft.findById(draftId));
+        return 'done';
+      }
+    });
+    if (res === 'done') {
       return 'done';
     }
   }
-
   return 'in_progress';
 };
 
