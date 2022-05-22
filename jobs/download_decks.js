@@ -27,6 +27,7 @@ const processDeck = (deck) => {
     fields.cube = deck.cube;
     fields.drafter = deck.owner;
     fields.date_drafted = deck.date;
+    fields.deck_id = deck._id;
 
     if (deck.seats[0] && deck.seats[0].deck) {
       for (const row of deck.seats[0].deck) {
