@@ -417,10 +417,6 @@ const getDraftPick = async (draftId, seat) => {
 
   const fullPack = await lrange(packReference, 0, -1);
 
-  // add current pack to seen
-  // await rpush(userSeenRef(draftId, seat), cardsInPack);
-  // const seen = await lrange(userSeenRef(draftId, seat), 0, -1);
-
   // get draft metadata
   const { currentPack, totalPacks } = await getDraftMetaData(draftId);
 
