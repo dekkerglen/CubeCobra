@@ -127,7 +127,7 @@ const CubeDraft = ({ draft, socket }) => {
           let status = 'in_progress';
           while (status === 'in_progress') {
             // wait
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 2000));
             try {
               const res = await callApi('/multiplayer/trybotpicks', {
                 draft: draft._id,
