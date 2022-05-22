@@ -473,7 +473,7 @@ const tryBotPicks = async (draftId) => {
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
-  while (await packNeedsBotPicks(draftId)) {
+  if (await packNeedsBotPicks(draftId)) {
     // make bot picks
     const botSeats = await getDraftBotsSeats(draftId);
     for (const index of botSeats) {
