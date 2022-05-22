@@ -43,6 +43,7 @@ let staticPicks;
 let seat = 0;
 
 const CubeDraft = ({ draft, socket }) => {
+  const [packQueue, setPackQueue] = React.useState([]);
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
@@ -53,14 +54,24 @@ const CubeDraft = ({ draft, socket }) => {
 
   staticPicks = picks;
 
+  const tryPopPack = useCallback(async () => {
+    if (packQueue.length > 0 && pack.length === 0) {
+      const data = packQueue.shift();
+      setPack(data.pack);
+      setStepQueue(data.steps);
+      setTitle(stepListToTitle(stepQueue));
+    } else {
+      setLoading(true);
+    }
+  }, [pack, packQueue, stepQueue]);
+
   const makePick = useCallback(
     async (pick) => {
       // eslint-disable-next-line no-undef
       /* global */ autocard_hide_card();
 
       if (stepQueue[1] === 'pass' || pack.length < 1) {
-        setLoading(true);
-        setTitle('Waiting for cards...');
+        tryPopPack();
       } else {
         const slice = stepQueue.slice(1, stepQueue.length);
         setTitle(stepListToTitle(slice));
@@ -71,13 +82,17 @@ const CubeDraft = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
     },
-    [draft, setLoading, setTitle, setPack, pack, stepQueue],
+    [stepQueue, pack, draft._id, tryPopPack],
   );
 
   const updatePack = async (data) => {
-    setPack(data.pack);
-    setStepQueue(data.steps);
-    setTitle(stepListToTitle(data.steps));
+    if (pack.length === 0) {
+      setPack(data.pack);
+      setStepQueue(data.steps);
+      setTitle(stepListToTitle(data.steps));
+    } else {
+      setPackQueue([...packQueue, data]);
+    }
   };
 
   useMount(() => {
