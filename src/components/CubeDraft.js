@@ -8,7 +8,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, stepListToTitle } from 'drafting/draftutil';
+import { setupPicks, getCardCol, draftStateToTitle } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -43,15 +43,26 @@ let staticPicks;
 let seat = 0;
 
 const CubeDraft = ({ draft, socket }) => {
+  const [packQueue, setPackQueue] = React.useState([]);
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
-  const [title, setTitle] = React.useState('Waiting for cards...');
   const [stepQueue, setStepQueue] = React.useState([]);
+  const [trashed, setTrashed] = React.useState([]);
 
   const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
   staticPicks = picks;
+
+  const tryPopPack = useCallback(async () => {
+    if (packQueue.length > 0 && pack.length === 0) {
+      const data = packQueue.shift();
+      setPack(data.pack);
+      setStepQueue(data.steps);
+    } else {
+      setLoading(true);
+    }
+  }, [pack, packQueue]);
 
   const makePick = useCallback(
     async (pick) => {
@@ -59,11 +70,9 @@ const CubeDraft = ({ draft, socket }) => {
       /* global */ autocard_hide_card();
 
       if (stepQueue[1] === 'pass' || pack.length < 1) {
-        setLoading(true);
-        setTitle('Waiting for cards...');
+        tryPopPack();
       } else {
         const slice = stepQueue.slice(1, stepQueue.length);
-        setTitle(stepListToTitle(slice));
         setStepQueue(slice);
         setPack(pack.filter((_, index) => index !== pick));
         setLoading(false);
@@ -71,13 +80,16 @@ const CubeDraft = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
     },
-    [draft, setLoading, setTitle, setPack, pack, stepQueue],
+    [stepQueue, pack, draft._id, tryPopPack],
   );
 
   const updatePack = async (data) => {
-    setPack(data.pack);
-    setStepQueue(data.steps);
-    setTitle(stepListToTitle(data.steps));
+    if (pack.length === 0) {
+      setPack(data.pack);
+      setStepQueue(data.steps);
+    } else {
+      setPackQueue([...packQueue, data]);
+    }
   };
 
   useMount(() => {
@@ -115,7 +127,7 @@ const CubeDraft = ({ draft, socket }) => {
           let status = 'in_progress';
           while (status === 'in_progress') {
             // wait
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 2000));
             try {
               const res = await callApi('/multiplayer/trybotpicks', {
                 draft: draft._id,
@@ -144,6 +156,8 @@ const CubeDraft = ({ draft, socket }) => {
         if (target.type === DraftLocation.PICKS) {
           if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
             setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+            setTrashed([...trashed, pack[source.data]]);
           }
 
           makePick(source.data);
@@ -158,7 +172,7 @@ const CubeDraft = ({ draft, socket }) => {
         }
       }
     },
-    [makePick, picks, pack, stepQueue],
+    [stepQueue, makePick, picks, pack, trashed],
   );
 
   const onClickCard = useCallback(
@@ -188,7 +202,7 @@ const CubeDraft = ({ draft, socket }) => {
         onMoveCard={onMoveCard}
         onClickCard={onClickCard}
         loading={loading}
-        title={title}
+        title={draftStateToTitle(draft, picks, trashed, loading, stepQueue)}
         disabled={disabled}
       />
       <Card className="my-3">

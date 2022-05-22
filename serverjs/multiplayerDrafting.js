@@ -203,19 +203,19 @@ const packNeedsBotPicks = async (draftId) => {
   const bots = await getDraftBotsSeats(draftId);
 
   for (let i = 0; i < seats; i++) {
-    if (!bots.includes(i)) {
+    if (bots.includes(i)) {
       const packReference = await getPlayerPackReference(draftId, i);
 
       if (packReference) {
         const packCards = await getCurrentPackCards(packReference);
         if (packCards.length > 0) {
-          return false;
+          return true;
         }
       }
     }
   }
 
-  return true;
+  return false;
 };
 
 const cleanUp = async (draftId) => {
@@ -473,11 +473,10 @@ const tryBotPicks = async (draftId) => {
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
-  while (await packNeedsBotPicks(draftId)) {
+  if (await packNeedsBotPicks(draftId)) {
     // make bot picks
     const botSeats = await getDraftBotsSeats(draftId);
     for (const index of botSeats) {
-      // TODO: plug in draft bot logic here
       const passAmount = await getPassAmount(draftId, index);
       const next = (index + seats + passDirection * passAmount) % seats;
       await makePick(draftId, index, await getDraftPick(draftId, index), next);

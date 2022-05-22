@@ -97,6 +97,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
             setDeck={setDeck}
             setSideboard={setSideboard}
             cards={initialDeck.cards}
+            seat={seat}
           />
           <DynamicFlash />
           <Row className="mb-3">
