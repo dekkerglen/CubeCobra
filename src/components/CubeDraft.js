@@ -8,7 +8,7 @@ import DndProvider from 'components/DndProvider';
 import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, stepListToTitle } from 'drafting/draftutil';
+import { setupPicks, getCardCol, draftStateToTitle } from 'drafting/draftutil';
 
 import { callApi } from 'utils/CSRF';
 
@@ -47,8 +47,8 @@ const CubeDraft = ({ draft, socket }) => {
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
   const [loading, setLoading] = React.useState(true);
-  const [title, setTitle] = React.useState('Waiting for cards...');
   const [stepQueue, setStepQueue] = React.useState([]);
+  const [trashed, setTrashed] = React.useState([]);
 
   const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
@@ -59,11 +59,10 @@ const CubeDraft = ({ draft, socket }) => {
       const data = packQueue.shift();
       setPack(data.pack);
       setStepQueue(data.steps);
-      setTitle(stepListToTitle(stepQueue));
     } else {
       setLoading(true);
     }
-  }, [pack, packQueue, stepQueue]);
+  }, [pack, packQueue]);
 
   const makePick = useCallback(
     async (pick) => {
@@ -74,7 +73,6 @@ const CubeDraft = ({ draft, socket }) => {
         tryPopPack();
       } else {
         const slice = stepQueue.slice(1, stepQueue.length);
-        setTitle(stepListToTitle(slice));
         setStepQueue(slice);
         setPack(pack.filter((_, index) => index !== pick));
         setLoading(false);
@@ -89,7 +87,6 @@ const CubeDraft = ({ draft, socket }) => {
     if (pack.length === 0) {
       setPack(data.pack);
       setStepQueue(data.steps);
-      setTitle(stepListToTitle(data.steps));
     } else {
       setPackQueue([...packQueue, data]);
     }
@@ -159,6 +156,8 @@ const CubeDraft = ({ draft, socket }) => {
         if (target.type === DraftLocation.PICKS) {
           if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
             setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+            setTrashed([...trashed, pack[source.data]]);
           }
 
           makePick(source.data);
@@ -173,7 +172,7 @@ const CubeDraft = ({ draft, socket }) => {
         }
       }
     },
-    [makePick, picks, pack, stepQueue],
+    [stepQueue, makePick, picks, pack, trashed],
   );
 
   const onClickCard = useCallback(
@@ -203,7 +202,7 @@ const CubeDraft = ({ draft, socket }) => {
         onMoveCard={onMoveCard}
         onClickCard={onClickCard}
         loading={loading}
-        title={title}
+        title={draftStateToTitle(draft, picks, trashed, loading, stepQueue)}
         disabled={disabled}
       />
       <Card className="my-3">

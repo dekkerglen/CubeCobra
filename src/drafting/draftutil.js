@@ -222,8 +222,52 @@ export const stepListToTitle = (steps) => {
     return 'Trash one more card';
   }
   if (steps[0] === 'endpack') {
-    return 'Waiting for next pack...';
+    return 'Waiting for next pack to open...';
   }
 
   return 'Making random selection...';
+};
+
+export const draftStateToTitle = (draft, picks, trashed, loading, stepQueue) => {
+  let stepText = stepListToTitle(stepQueue);
+  // get count of picks
+  const totalPicks = picks.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
+  // get count of trashes
+  const totalTrashed = trashed.length;
+
+  let pack = 1;
+  let pick = 1;
+
+  const steplist = getStepList(draft);
+  let pickCount = 0;
+  let trashCount = 0;
+
+  for (const step of steplist) {
+    if (step.action === 'endpack') {
+      pack += 1;
+      pick = 1;
+    } else if (step.action === 'pick' || step.action === 'pickrandom') {
+      if (totalPicks <= pickCount && totalTrashed <= trashCount) {
+        break;
+      }
+      pickCount += 1;
+      pick += 1;
+    } else if (step.action === 'trash' || step.action === 'trashrandom') {
+      if (totalPicks <= pickCount && totalTrashed <= trashCount) {
+        break;
+      }
+      trashCount += 1;
+      pick += 1;
+    }
+  }
+
+  if (!stepText.includes('Waiting') && loading) {
+    stepText = 'Waiting for cards...';
+  }
+
+  if (stepText.includes('Finishing up draft')) {
+    return stepText;
+  }
+
+  return `Pack ${pack} Pick ${pick}: ${stepText}`;
 };
