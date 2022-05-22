@@ -42,7 +42,7 @@ const processDeck = (deck) => {
     }
 
     if (deck.seats[0] && deck.seats[0].sideboard) {
-      for (const row of deck.seats[0].deck) {
+      for (const row of deck.seats[0].sideboard) {
         for (const col of row) {
           for (const cardIndex of col) {
             const card = deck.cards[cardIndex];
