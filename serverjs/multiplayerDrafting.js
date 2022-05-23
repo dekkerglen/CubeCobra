@@ -509,12 +509,11 @@ const tryBotPicks = async (draftId) => {
   if (await isPackDone(draftId)) {
     const res = await runWithLock(draftId, async () => {
       if (currentPack < totalPacks) {
-        await openPack(draftId);
-      } else {
-        // draft is done
-        await finishDraft(draftId, await Draft.findById(draftId));
-        return 'done';
+        return openPack(draftId);
       }
+      // draft is done
+      await finishDraft(draftId, await Draft.findById(draftId));
+      return 'done';
     });
     if (res === 'done') {
       return 'done';
