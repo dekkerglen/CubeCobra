@@ -70,8 +70,8 @@ const standardDraftAsfan = (cards) => {
   };
 };
 
-const customDraft = (cards, duplicates = false, rng) => {
-  return (cardFilters) => {
+const customDraft = (cards, duplicates = false, packDuplicates = false, rng) => {
+  return (cardFilters, packCards = []) => {
     if (cards.length === 0) {
       throw new Error('Unable to create draft: not enough cards.');
     }
@@ -85,6 +85,10 @@ const customDraft = (cards, duplicates = false, rng) => {
         index = Math.floor(rng() * cardFilters.length);
         const filter = cardFilters[index];
         validCards = matchingCards(cards, filter);
+        if (duplicates && !packDuplicates) {
+          // filter out cards that were already added to this pack
+          validCards = validCards.filter((validCard) => !packCards.includes(validCard));
+        }
         if (validCards.length === 0) {
           // TODO: display warnings for players
           messages.push(`Warning: no cards matching filter: ${filterToString(filter)}`);
@@ -187,7 +191,7 @@ const createPacks = (draft, format, seats, nextCardFn) => {
       draft.initial_state[seat].push([]);
       const cards = [];
       for (let cardNum = 0; cardNum < format[packNum].slots.length; cardNum++) {
-        const result = nextCardFn(format[packNum].slots[cardNum]);
+        const result = nextCardFn(format[packNum].slots[cardNum], cards);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
         }
@@ -225,7 +229,7 @@ export const createDraft = (format, cubeCards, seats, user, botsOnly = false, se
   }
 
   if (format.custom === true) {
-    nextCardFn = customDraft(cubeCards, format.multiples, rng);
+    nextCardFn = customDraft(cubeCards, format.multiples, false, rng);
   } else {
     nextCardFn = standardDraft(cubeCards, rng);
   }
