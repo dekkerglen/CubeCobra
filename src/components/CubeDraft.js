@@ -123,24 +123,15 @@ const CubeDraft = ({ draft, socket }) => {
       setLoading(false);
 
       if (seat === '0') {
-        const botPickLoop = async () => {
-          let status = 'in_progress';
-          while (status === 'in_progress') {
-            // wait
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            try {
-              const res = await callApi('/multiplayer/trybotpicks', {
-                draft: draft._id,
-              });
-              const json = await res.json();
-              status = json.result;
-            } catch (e) {
-              console.error(e);
-            }
+        setInterval(async () => {
+          try {
+            await callApi('/multiplayer/trybotpicks', {
+              draft: draft._id,
+            });
+          } catch (e) {
+            console.error(e);
           }
-        };
-
-        botPickLoop();
+        }, 2000);
       }
     };
     run();

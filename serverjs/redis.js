@@ -38,6 +38,8 @@ module.exports = {
   hmget: promisify(client.hmget).bind(client),
   hget: promisify(client.hget).bind(client),
   hset: promisify(client.hset).bind(client),
+  set: promisify(client.set).bind(client),
+  get: promisify(client.get).bind(client),
   setnx: promisify(client.setnx).bind(client),
   lrange,
   hgetall,
