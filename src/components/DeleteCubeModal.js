@@ -14,12 +14,12 @@ const DeleteCubeModal = ({ isOpen, toggle, cubeId, cubeName }) => {
         <ModalBody>
           <p>Are you sure you wish to delete this cube? This action cannot be undone.</p>
           <p>
-            Please type <code>{cubeName}</code> in order to confirm.
+            Please type <code>{cubeName.trim()}</code> in order to confirm.
           </p>
           <Input value={deleteText} onChange={(e) => setDeleteText(e.target.value)} />
         </ModalBody>
         <ModalFooter>
-          <Button type="submit" color="unsafe" outline disabled={deleteText !== cubeName}>
+          <Button type="submit" color="unsafe" outline disabled={deleteText !== cubeName.trim()}>
             Delete
           </Button>
           <Button onClick={toggle}>Close</Button>
