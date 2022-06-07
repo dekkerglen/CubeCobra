@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+const uuid = require('uuid/v4');
 const { cardType } = require('../dist/utils/Card');
 const carddb = require('./cards');
 
@@ -17,7 +18,8 @@ const {
   hincrby,
   del,
   hset,
-  setnx,
+  set,
+  get,
 } = require('./redis');
 
 const { setupPicks, getCardCol, getStepList } = require('../dist/drafting/draftutil');
@@ -75,26 +77,30 @@ const nonIntersect = (list1, list2) => list1.filter((x) => !list2.includes(x));
 const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
 const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
 
-const obtainLock = async (draftId) => {
-  const lock = await setnx(`draft:${draftId}:lock`, 1);
-  if (lock) {
-    await expire(`draft:${draftId}:lock`, 1);
+const obtainLock = async (draftId, random) => {
+  await set(`draft:${draftId}:lock`, random, 'NX', 'PX', 10000);
+  const value = await get(`draft:${draftId}:lock`);
+  if (value === random) {
     return true;
   }
   return false;
 };
 
-const releaseLock = async (draftId) => {
-  await del(`draft:${draftId}:lock`);
+const releaseLock = async (draftId, random) => {
+  const value = await get(`draft:${draftId}:lock`);
+  if (value === random) {
+    await del(`draft:${draftId}:lock`);
+  }
 };
 
 const runWithLock = async (draftId, fn) => {
-  const lock = await obtainLock(draftId);
+  const random = uuid();
+  const lock = await obtainLock(draftId, random);
   if (lock) {
     try {
       return await fn();
     } finally {
-      await releaseLock(draftId);
+      await releaseLock(draftId, random);
     }
   }
   return null;
@@ -421,7 +427,7 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
 
   // look if the next action is a pass
   const next = await getCurrentPackStep(draftId, seat);
-  if (next === 'pass') {
+  if (next === 'pass' || next === 'endpack') {
     // rotate the pack to the next seat
     await rpoplpush(seatRef(draftId, seat), seatRef(draftId, nextSeat));
   }
@@ -491,35 +497,40 @@ const getDraftPick = async (draftId, seat) => {
 };
 
 const tryBotPicks = async (draftId) => {
-  const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
+  const res = await runWithLock(draftId, async () => {
+    const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
 
-  const passDirection = currentPack % 2 === 0 ? 1 : -1;
+    const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
-  if (await packNeedsBotPicks(draftId)) {
-    // make bot picks
-    const botSeats = await getDraftBotsSeats(draftId);
-    for (const index of botSeats) {
-      const passAmount = await getPassAmount(draftId, index);
-      const next = (index + seats + passDirection * passAmount) % seats;
+    if (await packNeedsBotPicks(draftId)) {
+      // make bot picks
+      const botSeats = await getDraftBotsSeats(draftId);
+      if (passDirection === 1) {
+        botSeats.reverse();
+      }
+      for (const seat of botSeats) {
+        const packReference = await getPlayerPackReference(draftId, seat);
 
-      await runWithLock(draftId, async () => makePick(draftId, index, await getDraftPick(draftId, index), next));
+        if (packReference != null) {
+          const passAmount = await getPassAmount(draftId, seat);
+          const next = (seat + seats + passDirection * passAmount) % seats;
+
+          await makePick(draftId, seat, await getDraftPick(draftId, seat), next);
+        }
+      }
     }
-  }
 
-  if (await isPackDone(draftId)) {
-    const res = await runWithLock(draftId, async () => {
+    if (await isPackDone(draftId)) {
       if (currentPack < totalPacks) {
         return openPack(draftId);
       }
       // draft is done
       await finishDraft(draftId, await Draft.findById(draftId));
       return 'done';
-    });
-    if (res === 'done') {
-      return 'done';
     }
-  }
-  return 'in_progress';
+    return 'in_progress';
+  });
+  return res;
 };
 
 module.exports = {
