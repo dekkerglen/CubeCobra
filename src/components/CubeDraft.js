@@ -131,7 +131,7 @@ const CubeDraft = ({ draft, socket }) => {
           } catch (e) {
             console.error(e);
           }
-        }, 2000);
+        }, 1000);
       }
     };
     run();
