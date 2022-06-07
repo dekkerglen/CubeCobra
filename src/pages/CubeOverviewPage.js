@@ -145,7 +145,9 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                   </CustomizeBasicsModalLink>
                 </NavItem>
                 <NavItem>
-                  <DeleteCubeModalLink modalProps={{ cubeid: cubeState._id }}>Delete Cube</DeleteCubeModalLink>
+                  <DeleteCubeModalLink modalProps={{ cubeId: cubeState._id, cubeName: cube.name }}>
+                    Delete Cube
+                  </DeleteCubeModalLink>
                 </NavItem>
               </Nav>
             </UncontrolledCollapse>
