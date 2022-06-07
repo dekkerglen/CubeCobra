@@ -396,19 +396,18 @@ const setup = async (draft) => {
 const makePick = async (draftId, seat, pick, nextSeat) => {
   // get reference to pack and to the cards picked from it
   const packReference = await getPlayerPackReference(draftId, seat);
-
   if (!packReference) {
     return; // no pack to pick from
   }
 
   const packCards = await getCurrentPackCards(packReference);
-  const picked = packToPicked(packReference);
-  const step = await rpop(stepsQueueRef(draftId, seat));
-
-  if (packCards.length === 0 || pick >= packCards.length) {
+  if (packCards.length <= pick) {
     // pack is empty, we fail
     return;
   }
+
+  const picked = packToPicked(packReference);
+  const step = await rpop(stepsQueueRef(draftId, seat));
 
   // pick this card if the step is pick
   if (step === 'pick' || step === 'pickrandom') {
@@ -418,12 +417,9 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
     await lpush(userTrashRef(draftId, seat), packCards[pick]);
     await expire(userTrashRef(draftId, seat), 60 * 60 * 24 * 2); // 2 days
   }
-
-  if (packCards.length > 0) {
-    // push the card into the picked list
-    await lpush(picked, packCards[pick]);
-    await expire(picked, 60 * 60 * 24 * 2); // 2 days
-  }
+  // push the card into the picked mask
+  await lpush(picked, packCards[pick]);
+  await expire(picked, 60 * 60 * 24 * 2); // 2 days
 
   // look if the next action is a pass
   const next = await getCurrentPackStep(draftId, seat);
@@ -497,11 +493,11 @@ const getDraftPick = async (draftId, seat) => {
 };
 
 const tryBotPicks = async (draftId) => {
+  const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
+
+  const passDirection = currentPack % 2 === 0 ? 1 : -1;
+
   const res = await runWithLock(draftId, async () => {
-    const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
-
-    const passDirection = currentPack % 2 === 0 ? 1 : -1;
-
     if (await packNeedsBotPicks(draftId)) {
       // make bot picks
       const botSeats = await getDraftBotsSeats(draftId);
