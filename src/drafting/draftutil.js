@@ -151,6 +151,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
 
       if (step.action === 'pick' || step.action === 'pickrandom') {
         seat.cardsInPack = packsWithCards[(i + offset) % draft.seats.length].slice();
+
         const picked = seat.pickQueue.pop();
         seat.picked.push(picked);
         seat.selection = picked;

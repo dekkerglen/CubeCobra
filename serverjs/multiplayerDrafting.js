@@ -77,8 +77,8 @@ const nonIntersect = (list1, list2) => list1.filter((x) => !list2.includes(x));
 const getPlayerPicks = async (draftId, seat) => lrange(userPicksRef(draftId, seat), 0, -1);
 const getPlayerTrash = async (draftId, seat) => lrange(userTrashRef(draftId, seat), 0, -1);
 
-const obtainLock = async (draftId, random) => {
-  await set(`draft:${draftId}:lock`, random, 'NX', 'PX', 10000);
+const obtainLock = async (draftId, random, timeout = 10000) => {
+  await set(`draft:${draftId}:lock`, random, 'NX', 'PX', timeout);
   const value = await get(`draft:${draftId}:lock`);
   if (value === random) {
     return true;
@@ -267,6 +267,13 @@ const cleanUp = async (draftId) => {
 };
 
 const finishDraft = async (draftId, draft) => {
+  // ensure this is only called once
+  const lock = await obtainLock(draftId, 'finish', 60000);
+
+  if (!lock) {
+    return;
+  }
+
   const { seats } = await getDraftMetaData(draftId);
   // set user picks to the actual picks
   for (let i = 0; i < seats; i++) {
@@ -289,12 +296,9 @@ const finishDraft = async (draftId, draft) => {
   }
 
   await draft.save();
-  const deck = await createDeckFromDraft(draft);
-  hset(draftRef(draftId), 'finished', true);
-
+  await createDeckFromDraft(draft);
+  await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);
-
-  return deck;
 };
 
 const createLobby = async (draft, hostUser) => {
@@ -539,7 +543,6 @@ module.exports = {
   makePick,
   getPassAmount,
   isPackDone,
-  finishDraft,
   seatRef,
   seatsRef,
   draftRef,
