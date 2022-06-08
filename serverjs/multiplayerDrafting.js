@@ -268,7 +268,7 @@ const cleanUp = async (draftId) => {
 
 const finishDraft = async (draftId, draft) => {
   // ensure this is only called once
-  const lock = await obtainLock(draftId, 'finish', 60000);
+  const lock = await obtainLock(`finishdraft:${draftId}`, 'finish', 60000);
 
   if (!lock) {
     return;
