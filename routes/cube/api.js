@@ -10,7 +10,6 @@ const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../serverjs/util');
 
 const {
-  fromEntries,
   generatePack,
   setCubeType,
   cardsAreEquivalent,
@@ -23,13 +22,10 @@ const {
 } = require('../../serverjs/cubefn');
 const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
-const { rotateArrayLeft, createPool } = require('./helper');
-
 // Bring in models
 const Cube = require('../../models/cube');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
-const CubeAnalytic = require('../../models/cubeAnalytic');
 const Package = require('../../models/package');
 const Blog = require('../../models/blog');
 
@@ -458,73 +454,6 @@ router.get(
     return res.status(200).send(JSON.stringify(cube));
   }),
 );
-
-router.post('/redraft/:id/:seat', async (req, res) => {
-  try {
-    // TODO: Handle gridDraft here.
-    const srcDraft = await Draft.findById(req.params.id).lean();
-    const seat = parseInt(req.params.seat, 10);
-    if (!srcDraft) {
-      req.flash('danger', 'This deck is not able to be redrafted.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
-    }
-    if (!Number.isInteger(seat) || seat < 0 || seat >= srcDraft.seats.length) {
-      req.flash('dange', 'Did not give a valid seat number to redraft as.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
-    }
-
-    const cube = await Cube.findById(srcDraft.cube);
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'The cube that this deck belongs to no longer exists.');
-      return res.redirect(`/cube/deck/${req.params.id}`);
-    }
-
-    let draft = new Draft();
-    draft.cube = srcDraft.cube;
-    draft.seats = srcDraft.seats.slice();
-    rotateArrayLeft(draft.seats, seat);
-    draft.seats[seat].bot = null;
-    draft.basics = srcDraft.basics;
-    draft.initial_state = srcDraft.initial_state.slice();
-    draft.cards = srcDraft.cards;
-
-    for (let i = 0; i < draft.seats.length; i += 1) {
-      draft.seats[i].bot = [];
-      draft.seats[i].drafted = createPool();
-      draft.seats[i].sideboard = createPool();
-      draft.seats[i].pickorder = [];
-      draft.seats[i].trashorder = [];
-    }
-    draft.seats[0].bot = null;
-    draft.seats[0].userid = req.user ? req.user._id : null;
-    draft.seats[0].name = req.user ? req.user.username : 'Anonymous';
-
-    await draft.save();
-
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      if (analytic) {
-        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-      }
-    }
-
-    draft = await Draft.findById(draft._id).lean();
-    // insert card details everywhere that needs them
-    for (const card of draft.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-      if (eloOverrideDict[card.details.name_lower]) {
-        card.details.elo = eloOverrideDict[card.details.name_lower];
-      }
-    }
-    return res.status(200).send({
-      success: 'true',
-      draft,
-    });
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
-  }
-});
 
 router.post(
   '/updatebasics/:id',

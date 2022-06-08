@@ -10,6 +10,7 @@ const cardutil = require('../../dist/utils/Card');
 const frontutil = require('../../dist/utils/Util');
 const { ensureAuth } = require('../middleware');
 const { createDeckFromDraft } = require('../../serverjs/deckUtil');
+const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   buildIdQuery,
@@ -724,7 +725,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
 
     const seat = parseInt(req.params.seat, 10);
     if (!Number.isInteger(seat) || seat < 0 || seat >= base.seats.length) {
-      req.flash('dangeer', 'Invalid seat index to redraft as.');
+      req.flash('danger', 'Invalid seat index to redraft as.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
@@ -744,10 +745,10 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    rotateArrayLeft(draft.seats, seat);
+    draft.seats = rotateArrayLeft(draft.seats, seat);
     draft.cards = srcDraft.cards;
     draft.basics = srcDraft.basics;
-    draft.initial_state = srcDraft.initial_state.slice();
+    draft.initial_state = rotateArrayLeft(srcDraft.initial_state.slice(), seat);
 
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].drafted = createPool();
@@ -758,6 +759,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     draft.seats[0].name = req.user ? req.user.username : 'Anonymous';
 
     await draft.save();
+    await createLobby(draft, req.user);
     return res.redirect(`/cube/draft/${draft._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);

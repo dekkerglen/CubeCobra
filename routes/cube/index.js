@@ -1215,7 +1215,7 @@ router.post(
       // setup draft
       const format = createdraft.getDraftFormat(params, cube);
 
-      let draft = new Draft();
+      const draft = new Draft();
       let populated = {};
       try {
         populated = createdraft.createDraft(
@@ -1245,17 +1245,6 @@ router.post(
 
       await createLobby(draft, req.user);
 
-      if (req.body.botsOnly) {
-        draft = await Draft.findById(draft._id).lean();
-        // insert card details everywhere that needs them
-        for (const card of draft.cards) {
-          card.details = carddb.cardFromId(card.cardID);
-        }
-        return res.status(200).send({
-          success: 'true',
-          draft,
-        });
-      }
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
