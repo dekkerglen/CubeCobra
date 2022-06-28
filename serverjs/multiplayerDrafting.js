@@ -295,12 +295,10 @@ const finishDraft = async (draftId, draft) => {
     draft.seats[i].drafted = drafted;
   }
 
-  if (draft.seats[0].pickorder.length > 0) {
-    await draft.save();
-    await createDeckFromDraft(draft);
-    await hset(draftRef(draftId), 'finished', true);
-    await cleanUp(draftId);
-  }
+  await draft.save();
+  await createDeckFromDraft(draft);
+  await hset(draftRef(draftId), 'finished', true);
+  await cleanUp(draftId);
 };
 
 const createLobby = async (draft, hostUser) => {
