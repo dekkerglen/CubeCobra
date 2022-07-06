@@ -13,11 +13,11 @@ const UserPreview = ({ user }) => {
   const handleClick = useCallback((event) => {
     window.location.href = event.currentTarget.getAttribute('data-href');
   }, []);
-  const followers = user.users_following.length;
+  const followers = user.UsersFollowing.length;
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      data-href={`/user/view/${user._id}`}
+      data-href={`/user/view/${user.Id}`}
       onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
@@ -26,12 +26,12 @@ const UserPreview = ({ user }) => {
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <img className="w-100" src={user.image} />
-        <em className="cube-preview-artist">Art by {user.artist}</em>
+        <img className="w-100" src={user.Image} />
+        <em className="cube-preview-artist">Art by {user.Artist}</em>
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">
-          <Username userId={user._id} defaultName={user.username} />
+          <Username userId={user.Id} defaultName={user.Username} />
         </h5>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>
@@ -41,11 +41,11 @@ const UserPreview = ({ user }) => {
 
 UserPreview.propTypes = {
   user: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
+    Id: PropTypes.string.isRequired,
+    Username: PropTypes.string.isRequired,
+    Image: PropTypes.string.isRequired,
+    Artist: PropTypes.string.isRequired,
+    UsersFollowing: PropTypes.arrayOf(PropTypes.string.isRequired),
   }).isRequired,
 };
 

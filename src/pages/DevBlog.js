@@ -21,7 +21,7 @@ const DevBlog = ({ blogs, pages, activePage, loginCallback }) => {
       <DynamicFlash />
       <div className="mt-3">
         <h3 className="centered">Developer Blog</h3>
-        {user && user.roles.includes('Admin') && (
+        {user && user.Roles.includes('Admin') && (
           <Card>
             <CardBody>
               <h5>Create New Blog Post</h5>

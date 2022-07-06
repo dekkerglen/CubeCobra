@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
@@ -6,15 +7,12 @@ const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util');
 const Comment = require('../models/comment');
-const User = require('../models/user');
-const Report = require('../models/report');
+const User = require('../dynamo/models/user');
 const Deck = require('../models/deck');
-const Article = require('../models/article');
-const Video = require('../models/video');
-const Podcast = require('../models/podcast');
-const PodcastEpisode = require('../models/podcastEpisode');
+const Content = require('../dynamo/models/content');
 const Blog = require('../models/blog');
 const Package = require('../models/package');
+const Notice = require('../dynamo/models/notice');
 const { render } = require('../serverjs/render');
 
 const router = express.Router();
@@ -49,20 +47,20 @@ const getReplyContext = {
     return [deck.owner, 'deck'];
   },
   article: async (id) => {
-    const article = await Article.findById(id);
-    return [article.owner, 'article'];
+    const article = await Content.getById(id);
+    return [article.Owner, 'article'];
   },
   podcast: async (id) => {
-    const podcast = await Podcast.findById(id);
-    return [podcast.owner, 'podcast'];
+    const podcast = await Content.getById(id);
+    return [podcast.Owner, 'podcast'];
   },
   video: async (id) => {
-    const video = await Video.findById(id);
-    return [video.owner, 'video'];
+    const video = await Content.getById(id);
+    return [video.Owner, 'video'];
   },
   episode: async (id) => {
-    const episode = await PodcastEpisode.findById(id);
-    return [episode.owner, 'podcast episode'];
+    const episode = await Content.getById(id);
+    return [episode.Owner, 'podcast episode'];
   },
   package: async (id) => {
     const pack = await Package.findById(id);
@@ -75,7 +73,7 @@ router.post(
   '/:type/:parent',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const poster = await User.findById(req.user._id);
+    const poster = await User.getById(req.user.Id);
 
     if (
       !['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(
@@ -92,10 +90,10 @@ router.post(
 
     comment.parent = req.params.parent.substring(0, 500);
     comment.parentType = req.params.type;
-    comment.owner = poster._id;
-    comment.ownerName = poster.username;
-    comment.image = poster.image;
-    comment.artist = poster.artist;
+    comment.owner = poster.Id;
+    comment.ownerName = poster.Username;
+    comment.image = poster.Image;
+    comment.artist = poster.Artist;
     comment.updated = false;
     comment.content = req.body.comment.substring(0, 5000);
     // the -1000 is to prevent weird time display error
@@ -106,7 +104,7 @@ router.post(
 
     const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
 
-    const owner = await User.findById(ownerid);
+    const owner = await User.getById(ownerid);
 
     if (owner) {
       await util.addNotification(
@@ -119,13 +117,17 @@ router.post(
 
     if (req.body.mentions) {
       const mentions = req.body.mentions.split(';');
-      const users = User.find({ username_lower: mentions });
-      await util.addMultipleNotifications(
-        users,
-        poster,
-        `/comment/${comment._id}`,
-        `${poster.username} mentioned you in their comment`,
-      );
+      for (const mention of mentions) {
+        const query = await User.getByUsername(mention);
+        if (query.items.length === 1) {
+          await util.addNotification(
+            query.items[0],
+            poster,
+            `/comment/${comment._id}`,
+            `${poster.Username} mentioned you in their comment`,
+          );
+        }
+      }
     }
 
     return res.status(200).send({
@@ -143,7 +145,7 @@ router.post(
 
     const comment = await Comment.findById(newComment._id);
 
-    if (!comment.owner.equals(req.user._id)) {
+    if (!comment.owner.equals(req.user.Id)) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
@@ -184,13 +186,15 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const { commentid, info, reason } = req.body;
 
-    const report = new Report();
-    report.commentid = commentid;
-    report.info = info;
-    report.reason = reason;
-    report.reportee = req.user ? req.user._id : null;
-    report.timePosted = Date.now() - 1000;
-    await report.save();
+    const report = {
+      Subject: commentid,
+      Body: `${reason}\n\n${info}`,
+      User: req.user ? req.user.Id : null,
+      Date: Date.now().valueOf(),
+      Type: Notice.TYPE.COMMENT_REPORT,
+    };
+
+    await Notice.put(report);
 
     req.flash(
       'success',

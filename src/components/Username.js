@@ -4,7 +4,7 @@ import { csrfFetch } from 'utils/CSRF';
 
 import { Spinner } from 'reactstrap';
 
-const CardPackage = ({ userId, defaultName, nolink }) => {
+const Username = ({ userId, defaultName, nolink }) => {
   const [name, setName] = useState(defaultName);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const CardPackage = ({ userId, defaultName, nolink }) => {
     };
 
     getData().then((result) => {
-      setName(result.user.username);
+      setName(result.user.Username);
     });
   }, [userId]);
 
@@ -38,15 +38,15 @@ const CardPackage = ({ userId, defaultName, nolink }) => {
   );
 };
 
-CardPackage.propTypes = {
+Username.propTypes = {
   userId: PropTypes.string.isRequired,
   defaultName: PropTypes.string,
   nolink: PropTypes.bool,
 };
 
-CardPackage.defaultProps = {
-  defaultName: null,
+Username.defaultProps = {
+  defaultName: 'User',
   nolink: false,
 };
 
-export default CardPackage;
+export default Username;

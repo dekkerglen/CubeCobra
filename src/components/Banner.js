@@ -44,7 +44,7 @@ const Banner = () => {
   const user = useContext(UserContext);
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.Roles) && user.Roles.includes('Patron')) return <></>;
   if (option < options.length) {
     return (
       <Col xs="12" className="py-2">

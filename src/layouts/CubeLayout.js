@@ -35,12 +35,12 @@ const CubeLayout = ({ cube, activeLink, children }) => {
   const user = useContext(UserContext);
   const subtitle = getCubeDescription(cube);
   return (
-    <CubeContextProvider cubeID={cube._id} initialCube={cube} canEdit={user && cube.owner === user.id}>
+    <CubeContextProvider cubeID={cube.Id} initialCube={cube} canEdit={user && cube.Owner === user.Id}>
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
           <div className="nav-item px-lg-4 px-3 text-sm-start text-center font-weight-boldish mt-auto mb-2">
-            {cube.name}
-            {cube.type && <span className="d-sm-inline"> ({subtitle})</span>}
+            {cube.Name}
+            <span className="d-sm-inline"> ({subtitle})</span>
           </div>
           <div className="d-flex flex-row flex-wrap">
             <CubeNavItem link="overview" activeLink={activeLink}>

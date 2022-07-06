@@ -1,5 +1,6 @@
 const shuffleSeed = require('shuffle-seed');
 const { winston } = require('./cloudwatch');
+const Notification = require('../dynamo/models/notification');
 
 function hasProfanity(text) {
   if (!text) return false;
@@ -114,35 +115,19 @@ function fromEntries(entries) {
   return obj;
 }
 
-async function addNotification(user, from, url, text) {
-  if (user.username === from.username) {
+async function addNotification(to, from, url, text) {
+  if (to.username === from.username) {
     return; // we don't need to give notifications to ourselves
   }
 
-  user.notifications.push({
-    user_from: from._id,
-    user_from_name: from.username,
-    url,
-    date: new Date(),
-    text,
+  await Notification.put({
+    Date: new Date().valueOf(),
+    To: `${to.Id}`,
+    From: `${from.Id}`,
+    FromUsername: from.Username,
+    Url: url,
+    Body: text,
   });
-  user.old_notifications.push({
-    user_from: from._id,
-    user_from_name: from.username,
-    url,
-    date: new Date(),
-    text,
-  });
-  while (user.old_notifications.length > 200) {
-    user.old_notifications = user.old_notifications.slice(1);
-  }
-  await user.save();
-}
-
-async function addMultipleNotifications(users, from, url, text) {
-  for await (const user of users) {
-    await addNotification(user, from, url, text);
-  }
 }
 
 function wrapAsyncApi(route) {
@@ -213,10 +198,9 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.roles.includes('Admin');
+    return user && user.Roles.includes('Admin');
   },
   addNotification,
-  addMultipleNotifications,
   wrapAsyncApi,
   handleRouteError,
   toNonNullArray,

@@ -5,7 +5,6 @@ const UserPropType = PropTypes.shape({
   email: PropTypes.string,
   username: PropTypes.string,
   about: PropTypes.string,
-  notifications: PropTypes.arrayOf(PropTypes.shape({})),
   image_name: PropTypes.string,
   image: PropTypes.string,
   artist: PropTypes.string,

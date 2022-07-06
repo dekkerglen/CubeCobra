@@ -18,11 +18,11 @@ const VideoPage = ({ loginCallback, video }) => {
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === video.owner && video.status !== 'published' && (
+        {user && user.id === video.Owner && video.Status !== 'published' && (
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="accent" outline href={`/content/video/edit/${video._id}`}>
+              <ButtonLink color="accent" outline href={`/content/video/edit/${video.Id}`}>
                 Edit
               </ButtonLink>
             </h5>

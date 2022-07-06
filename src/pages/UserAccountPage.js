@@ -205,10 +205,10 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                       <dl className="row">
                         <dt className="col-sm-3">Username</dt>
                         <dd className="col-sm-9">
-                          <Input name="username" defaultValue={user.username} />
+                          <Input name="username" defaultValue={user.Username} />
                         </dd>
                         <dt className="col-sm-3">Email</dt>
-                        <dd className="col-sm-9">{user.email}</dd>
+                        <dd className="col-sm-9">{user.Email}</dd>
                         <dt className="col-sm-3">Profile Pic</dt>
                         <dd className="col-sm-9">
                           <Row>
@@ -295,7 +295,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         New Email:
                       </Label>
                       <Col sm={8}>
-                        <Input id="email" name="email" type="email" defaultValue={user.email} />
+                        <Input id="email" name="email" type="email" defaultValue={user.Email} />
                       </Col>
                     </FormGroup>
                     <FormGroup row>
@@ -345,7 +345,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
               <Card>
                 {patron ? (
                   <CardBody>
-                    {user.roles.includes('Patron') ? (
+                    {user.Roles.includes('Patron') ? (
                       <p>
                         Your account is linked at the <b>{patron.level}</b> level.
                       </p>

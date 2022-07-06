@@ -73,7 +73,7 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
 
       draft.seats[i].userid = seatToPlayer[i];
       draft.seats[i].bot = false;
-      draft.seats[i].name = user.username;
+      draft.seats[i].name = user.Username;
     }
   }
 
@@ -215,13 +215,13 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
     });
   }
 
-  const { id } = req.user;
+  const { Id } = req.user;
 
   const playerList = await getLobbyPlayers(draftid);
 
   const { seats } = lobbyMetadata;
 
-  if (playerList.slice(0, seats).includes(id)) {
+  if (playerList.slice(0, seats).includes(Id)) {
     return res.status(200).send({
       success: 'true',
       playerList: await getLobbyPlayers(draftid),
@@ -235,7 +235,7 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
     });
   }
 
-  await addPlayerToLobby(id, draftid);
+  await addPlayerToLobby(Id, draftid);
 
   return res.status(200).send({
     success: 'true',

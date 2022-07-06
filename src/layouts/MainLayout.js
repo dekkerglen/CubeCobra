@@ -118,14 +118,14 @@ const MainLayout = ({ children, loginCallback }) => {
                 )}
                 <UncontrolledDropdown nav inNavbar>
                   <DropdownToggle nav caret>
-                    {user.username}
+                    {user.Username}
                   </DropdownToggle>
                   <DropdownMenu end>
-                    <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
-                    {user.roles && user.roles.includes('Admin') && (
+                    <DropdownItem href={`/user/view/${user.Id}`}>Your Profile</DropdownItem>
+                    {user.Roles && user.Roles.includes('Admin') && (
                       <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>
                     )}
-                    {user.roles && user.roles.includes('ContentCreator') && (
+                    {user.Roles && user.Roles.includes('ContentCreator') && (
                       <DropdownItem href="/content/creators">Content Creator Dashboard</DropdownItem>
                     )}
                     <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>

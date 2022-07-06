@@ -12,7 +12,6 @@ const util = require('../../serverjs/util');
 const {
   generatePack,
   setCubeType,
-  cardsAreEquivalent,
   buildIdQuery,
   buildTagColors,
   cubeCardTags,
@@ -23,7 +22,7 @@ const {
 const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 // Bring in models
-const Cube = require('../../models/cube');
+const Cube = require('../../dynamo/models/cube');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const Package = require('../../models/package');
@@ -50,24 +49,25 @@ router.get('/cardimages', (_, res) => {
 router.post(
   '/editoverview',
   ensureAuth,
-  body('name', 'Cube name should be between 5 and 100 characters long.').isLength({
+  body('Name', 'Cube name should be between 5 and 100 characters long.').isLength({
     min: 5,
     max: 100,
   }),
-  body('name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('shortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+  body('Name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('ShortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('shortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
+  body('ShortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
     min: 1,
     max: 100,
   }),
-  body('shortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('ShortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
 
-    const cube = await Cube.findById(updatedCube._id);
+    const oldCube = await Cube.getById(updatedCube.Id);
+    const cube = Cube.deepClone(oldCube);
     const { user } = req;
 
     if (!isCubeViewable(cube, user)) {
@@ -77,47 +77,51 @@ router.post(
       });
     }
 
-    if (!user._id.equals(cube.owner)) {
+    if (cube.Owner !== user.Id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
       });
     }
 
-    if (updatedCube.shortID !== cube.shortID) {
-      updatedCube.shortID = updatedCube.shortID.toLowerCase();
-      const taken = await Cube.findOne(buildIdQuery(updatedCube.shortID));
+    if (updatedCube.ShortId !== cube.ShortID) {
+      const taken = await Cube.getSortedByName(`shortid:${updatedCube.ShortID.toLowerCase()}`);
 
-      if (taken) {
+      if (taken.items.length > 0) {
         return res.status(400).send({
           success: 'false',
           message: 'Custom URL already taken.',
         });
       }
 
-      cube.shortID = updatedCube.shortID;
+      cube.ShortId = updatedCube.ShortID;
     }
 
-    cube.name = updatedCube.name;
-    cube.privatePrices = updatedCube.privatePrices;
-    cube.overrideCategory = updatedCube.overrideCategory;
+    cube.Name = updatedCube.Name;
 
-    const image = carddb.imagedict[updatedCube.image_name.toLowerCase()];
+    if (!Cube.PRICE_VISIBLITY.includes(updatedCube.PriceVisibility)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid Price Visibility',
+      });
+    }
+    cube.PriceVisibility = updatedCube.PriceVisibility;
+
+    const image = carddb.imagedict[updatedCube.ImageName.toLowerCase()];
 
     if (image) {
-      cube.image_uri = updatedCube.image_uri;
-      cube.image_artist = updatedCube.image_artist;
-      cube.image_name = updatedCube.image_name;
+      cube.ImageUri = updatedCube.ImageUri;
+      cube.ImageArtist = updatedCube.ImageArtist;
+      cube.ImageName = updatedCube.ImageName;
     }
 
-    if (updatedCube.description) {
-      cube.description = updatedCube.description;
+    if (updatedCube.Description !== null) {
+      cube.Description = updatedCube.Description;
     }
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString('en-US');
+    cube.Date = Date.now().valueOf();
 
     // cube category override
-    if (cube.overrideCategory) {
+    if (updatedCube.CategoryOverride != null) {
       const categories = ['Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'];
       const prefixes = [
         'Powered',
@@ -132,15 +136,15 @@ router.post(
         'Judge Tower',
       ];
 
-      if (!categories.includes(updatedCube.categoryOverride)) {
+      if (!categories.includes(updatedCube.CategoryOverride)) {
         return res.status(400).send({
           success: 'false',
           message: 'Not a valid category override.',
         });
       }
 
-      for (let i = 0; i < updatedCube.categoryPrefixes.length; i += 1) {
-        if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+      for (let i = 0; i < updatedCube.CategoryPrefixes.length; i += 1) {
+        if (!prefixes.includes(updatedCube.CategoryPrefixes[i])) {
           return res.status(400).send({
             success: 'false',
             message: 'Not a valid category prefix.',
@@ -148,15 +152,17 @@ router.post(
         }
       }
 
-      cube.categoryOverride = updatedCube.categoryOverride;
-      cube.categoryPrefixes = updatedCube.categoryPrefixes;
+      cube.CategoryOverride = updatedCube.CategoryOverride;
+      cube.CategoryPrefixes = updatedCube.CategoryOverride;
+    } else {
+      cube.CategoryOverride = null;
+      cube.categoryPrefixes = [];
     }
 
     // cube tags
-    cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
-    setCubeType(cube, carddb);
+    cube.Tags = updatedCube.Tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
 
-    await cube.save();
+    await Cube.update(oldCube, cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -166,14 +172,16 @@ router.post(
 router.post(
   '/settings/:id',
   ensureAuth,
-  body('privatePrices').toBoolean(),
-  body('disableNotifications').toBoolean(),
-  body('defaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
-  body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
-  body('visibility', 'Visibility must be valid').isIn(['public', 'unlisted', 'private']),
+  body('PriceVisibility').toBoolean(),
+  body('DisableNotifications').toBoolean(),
+  body('DefaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
+  body('DefaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
+  body('Visibility', 'Visibility must be valid').isIn(Cube.VISIBLITY),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const oldCube = await Cube.getById(req.params.id);
+    const cube = Cube.deepClone(oldCube);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -181,7 +189,7 @@ router.post(
       });
     }
 
-    if (!req.user._id.equals(cube.owner)) {
+    if (!cube.Owner === req.user.Id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -189,35 +197,32 @@ router.post(
     }
 
     const update = req.body;
-    for (const field of ['privatePrices', 'defaultStatus', 'defaultPrinting', 'disableNotifications', 'useCubeElo']) {
+    for (const field of ['PriceVisibility', 'DisableNotifications', 'DefaultStatus', 'DefaultPrinting', 'Visibility']) {
       if (update[field] !== undefined) {
         cube[field] = update[field];
       }
     }
 
     // convert visibility value to indicators
-    switch (req.body.visibility) {
-      case 'private':
-        if (cube.isFeatured || (await isInFeaturedQueue(cube))) {
+    switch (req.body.Visibility) {
+      case Cube.VISIBLITY.PRIVATE:
+        if (cube.Featured || (await isInFeaturedQueue(cube))) {
           req.flash('danger', 'Cannot set a cube in featured queue as private');
         } else {
-          cube.isListed = false;
-          cube.isPrivate = true;
+          cube.Visibility = req.body.VISIBLITY;
         }
         break;
       case 'unlisted':
-        cube.isListed = false;
-        cube.isPrivate = false;
+        cube.Visibility = req.body.VISIBLITY;
         break;
       case 'public':
-        cube.isListed = true;
-        cube.isPrivate = false;
+        cube.Visibility = req.body.VISIBLITY;
         break;
       default:
         break; // can't occur due to the validation above
     }
 
-    await cube.save();
+    await Cube.update(oldCube, cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -239,25 +244,18 @@ router.get('/fullnames', (_, res) => {
 });
 
 router.get('/usercubes/:id', async (req, res) => {
-  const cubes = await Cube.find({
-    owner: req.params.id,
-    ...(req.user && req.user._id.equals(req.params.id)
-      ? {}
-      : {
-          isListed: true,
-        }),
-  }).lean();
+  const cubes = await Cube.getByOwner(req.params.id);
 
   res.status(200).send({
     success: 'true',
-    cubes,
+    cubes: cubes.items.filter((cube) => isCubeViewable(cube, req.user)),
   });
 });
 
 router.get(
   '/cubecardnames/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -266,8 +264,10 @@ router.get(
       });
     }
 
+    const cubeCards = Cube.getCards(req.params.id);
+
     const cardnames = [];
-    for (const card of cube.cards) {
+    for (const card of cubeCards) {
       util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
     }
 
@@ -282,14 +282,17 @@ router.get(
 router.get(
   '/cubecardtags/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Not Found',
       });
     }
-    const tags = cubeCardTags(cube);
+
+    const cubeCards = Cube.getCards(req.params.id);
+    const tags = cubeCardTags(cubeCards);
 
     return res.status(200).send({
       success: 'true',
@@ -314,7 +317,7 @@ router.post(
   body('show_tag_colors').toBoolean(),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    req.user.hide_tag_colors = !req.body.show_tag_colors;
+    req.user.HideTagColors = !req.body.show_tag_colors;
     await req.user.save();
 
     return res.status(200).send({
@@ -326,7 +329,9 @@ router.post(
 router.post(
   '/savetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const oldCube = await Cube.getById(req.params.id);
+    const cube = Cube.deepClone(oldCube);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -334,15 +339,15 @@ router.post(
       });
     }
 
-    if (!req.user._id.equals(cube.owner)) {
+    if (cube.Owner !== req.user.Id) {
       return res.status(401).send({
         success: 'false',
       });
     }
 
-    cube.tag_colors = req.body;
+    cube.TagColors = req.body.tag_colors;
 
-    await cube.save();
+    await Cube.update(oldCube, cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -352,7 +357,7 @@ router.post(
 router.get(
   '/cubetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return req.status(404).send({
@@ -361,13 +366,15 @@ router.get(
       });
     }
 
-    const tagColors = buildTagColors(cube);
+    const cubeCards = Cube.getCards(req.params.id);
+
+    const tagColors = buildTagColors(cube, cubeCards);
     const tags = tagColors.map((item) => item.tag);
 
-    // this is for the case of cube compare
-    const cubeB = await Cube.findOne(buildIdQuery(req.query.b_id)).lean();
+    if (req.query.b_id) {
+      const cubeB = await Cube.getById(req.query.b_id);
+      const cubeBCards = Cube.getCards(req.query.b_id);
 
-    if (cubeB) {
       if (!isCubeViewable(cubeB, req.user)) {
         return res.status(404).send({
           success: 'false',
@@ -375,7 +382,7 @@ router.get(
         });
       }
 
-      const bTagColors = buildTagColors(cubeB);
+      const bTagColors = buildTagColors(cubeB, cubeBCards);
       for (const bTag of bTagColors) {
         if (!tags.includes(bTag.tag)) {
           tagColors.push(bTag);
@@ -383,7 +390,7 @@ router.get(
       }
     }
 
-    const showTagColors = req.user ? !req.user.hide_tag_colors : true;
+    const showTagColors = req.user ? !req.user.HideTagColors : true;
 
     return res.status(200).send({
       success: 'true',
@@ -402,7 +409,8 @@ router.get(
     cardname = cardutil.decodeName(cardname);
     cardname = cardutil.normalizeName(cardname);
 
-    const cube = await Cube.findOne(buildIdQuery(cubeid)).lean();
+    const cube = await Cube.getById(cubeid);
+
     if (!isCubeViewable(cube, req.user)) {
       return req.status(404).send({
         success: 'false',
@@ -410,7 +418,9 @@ router.get(
       });
     }
 
-    for (const card of cube.cards) {
+    const cubeCards = Cube.getCards(cubeid);
+
+    for (const card of cubeCards) {
       if (carddb.cardFromId(card.cardID).name_lower === cardname) {
         card.details = carddb.cardFromId(card.cardID);
         return res.status(200).send({
@@ -428,13 +438,15 @@ router.get(
 router.get(
   '/cubelist/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.status)) {
       return res.status(404).send('Cube not found.');
     }
 
-    const names = cube.cards.map((card) => carddb.cardFromId(card.cardID).name);
+    const cubeCards = Cube.getCards(req.params.id);
+
+    const names = cubeCards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));
@@ -444,39 +456,35 @@ router.get(
 router.get(
   '/cubeJSON/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send('Cube not found.');
     }
 
+    const cubeCards = Cube.getCards(req.params.id);
+
     res.contentType('application/json');
-    return res.status(200).send(JSON.stringify(cube));
+    return res.status(200).send(JSON.stringify({ ...cube, cards: cubeCards }));
   }),
 );
 
 router.post(
   '/updatebasics/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const oldCcube = await Cube.getById(req.params.id);
+    const cube = Cube.deepClone(oldCcube);
 
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-
-    if (!req.user._id.equals(cube.owner)) {
+    if (cube.Owner !== req.user.Id) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
       });
     }
 
-    cube.basics = req.body;
+    cube.Basics = req.body;
 
-    await cube.save();
+    await Cube.update(oldCcube, cube);
 
     return res.status(200).send({
       success: 'true',
@@ -487,7 +495,8 @@ router.post(
 router.get(
   '/getcardforcube/:id/:name',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), 'defaultPrinting').lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -495,7 +504,7 @@ router.get(
       });
     }
 
-    const card = carddb.getMostReasonable(req.params.name, cube.defaultPrinting);
+    const card = carddb.getMostReasonable(req.params.name, cube.DefaultPrinting);
     if (card) {
       return res.status(200).send({
         success: 'true',
@@ -582,160 +591,6 @@ router.post(
     return res.status(200).send({
       success: 'true',
       dict: result,
-    });
-  }),
-);
-
-router.post(
-  '/updatecard/:id',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const { src, updated } = req.body;
-    if (
-      !src ||
-      (src && typeof src.index !== 'number') ||
-      (updated.cardID && typeof updated.cardID !== 'string') ||
-      (updated.cmc && (typeof updated.cmc !== 'number' || updated.cmc < 0 || !Number.isInteger(updated.cmc * 2))) ||
-      (updated.status && typeof updated.status !== 'string') ||
-      (updated.type_line && typeof updated.type_line !== 'string') ||
-      (updated.colors && !Array.isArray(updated.colors)) ||
-      (updated.tags && !Array.isArray(updated.tags)) ||
-      (updated.finish && typeof updated.finish !== 'string')
-    ) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Failed input validation',
-      });
-    }
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-
-    if (!req.user._id.equals(cube.owner)) {
-      return res.status(401).send({
-        success: 'false',
-        message: 'Insufficient permissions',
-      });
-    }
-    if (src.index >= cube.cards.length) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'No such card',
-      });
-    }
-
-    const card = cube.cards[src.index];
-    if (!card.type_line) {
-      card.type_line = carddb.cardFromId(card.cardID).type;
-    }
-
-    if (!cardsAreEquivalent(src, card)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cards not equivalent',
-      });
-    }
-
-    for (const key of Object.keys(Cube.schema.paths.cards.schema.paths)) {
-      if (!Object.prototype.hasOwnProperty.call(updated, key)) {
-        updated[key] = card[key];
-      }
-    }
-    for (const key of Object.keys(updated)) {
-      if (updated[key] === null) {
-        delete updated[key];
-      }
-    }
-    cube.cards[src.index] = updated;
-
-    setCubeType(cube, carddb);
-
-    await cube.save();
-    return res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
-
-router.post(
-  '/updatecards/:id',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const { selected, updated } = req.body;
-    if (
-      (updated.cmc && typeof updated.cmc !== 'number') ||
-      (updated.status && typeof updated.status !== 'string') ||
-      (updated.type_line && typeof updated.type_line !== 'string') ||
-      (updated.colors && !Array.isArray(updated.colors)) ||
-      (updated.tags && !Array.isArray(updated.tags)) ||
-      !Array.isArray(selected) ||
-      selected.some((index) => !Number.isInteger(index) || index < 0)
-    ) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Failed input validation',
-      });
-    }
-
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-    if (!req.user._id.equals(cube.owner)) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    const allUpdates = {
-      $set: {},
-    };
-    for (const index of selected) {
-      if (updated.status) {
-        allUpdates.$set[`cards.${index}.status`] = updated.status;
-      }
-      if (updated.cmc) {
-        allUpdates.$set[`cards.${index}.cmc`] = updated.cmc;
-      }
-      if (updated.type_line) {
-        allUpdates.$set[`cards.${index}.type_line`] = updated.type_line;
-      }
-      if (updated.colors) {
-        allUpdates.$set[`cards.${index}.colors`] = updated.colors.filter((color) => [...'WUBRG'].includes(color));
-      }
-      if (updated.colorC) {
-        allUpdates.$set[`cards.${index}.colors`] = [];
-      }
-      if (updated.finish) {
-        allUpdates.$set[`cards.${index}.finish`] = updated.finish;
-      }
-      if (updated.tags) {
-        if (updated.addTags) {
-          if (!allUpdates.$addToSet) {
-            allUpdates.$addToSet = {};
-          }
-          allUpdates.$addToSet[`cards.${index}.tags`] = updated.tags;
-        }
-        if (updated.deleteTags) {
-          if (!allUpdates.$pullAll) {
-            allUpdates.$pullAll = {};
-          }
-          allUpdates.$pullAll[`cards.${index}.tags`] = updated.tags;
-        }
-      }
-    }
-
-    await cube.updateOne(allUpdates);
-    return res.status(200).send({
-      success: 'true',
     });
   }),
 );
@@ -829,7 +684,7 @@ router.post(
       });
     }
 
-    if (!req.user._id.equals(cube.owner)) {
+    if (!cube.owner.equals(req.user.Id)) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
@@ -885,124 +740,28 @@ router.post(
 );
 
 router.post(
-  '/maybe/:id',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-
-    if (!req.user._id.equals(cube.owner)) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Maybeboard can only be updated by owner.',
-      });
-    }
-
-    const maybe = [...(cube.maybe || [])];
-
-    const removeIndices = Array.isArray(req.body.remove) ? req.body.remove : [];
-    const withRemoved = maybe.filter((_, index) => !removeIndices.includes(index));
-
-    const addCards = Array.isArray(req.body.add) ? req.body.add : [];
-    const addCardsNoDetails = addCards.map(({ details, ...card }) => ({
-      ...util.newCard(details),
-      ...card,
-    }));
-    const withAdded = [...withRemoved, ...addCardsNoDetails];
-
-    cube.maybe = withAdded;
-    await cube.save();
-
-    const added = cube.maybe.slice(cube.maybe.length - addCardsNoDetails.length);
-
-    return res.status(200).send({
-      success: 'true',
-      added: util.fromEntries(added.map(({ _id, cardID }) => [cardID, _id])),
-    });
-  }),
-);
-
-router.post(
-  '/maybe/update/:id',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-    if (!req.user._id.equals(cube.owner)) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Maybeboard can only be updated by cube owner.',
-      });
-    }
-
-    const card = cube.maybe.find((c) => c._id.equals(req.body.id));
-    if (!card) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'No card found to update.',
-      });
-    }
-
-    const { updated } = req.body;
-    if (!updated) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Bad request.',
-      });
-    }
-    const newVersion = updated.cardID && updated.cardID !== card.cardID;
-    for (const field of ['cardID', 'status', 'finish', 'cmc', 'type_line', 'imgUrl', 'imgBackUrl', 'colors']) {
-      if (Object.prototype.hasOwnProperty.call(updated, field)) {
-        card[field] = updated[field];
-      }
-    }
-    await cube.save();
-
-    if (newVersion) {
-      return res.status(200).send({
-        success: 'true',
-        details: carddb.cardFromId(card.cardID),
-      });
-    }
-
-    return res.status(200).send({
-      success: 'true',
-    });
-  }),
-);
-
-router.post(
   '/savesorts/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const oldCube = await Cube.getById(req.params.id);
+    const cube = Cube.deepClone(oldCube);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Cube not found',
       });
     }
-    if (!req.user._id.equals(cube.owner)) {
+    if (cube.Owner !== req.user.Id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
       });
     }
 
-    cube.default_sorts = req.body.sorts;
-    cube.default_show_unsorted = !!req.body.showOther;
-    await cube.save();
+    cube.DefaultSorts = req.body.sorts;
+    cube.ShowUnsorted = !!req.body.showOther;
+    await Cube.update(oldCube, cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -1039,14 +798,18 @@ router.post('/submitgriddraft/:id', async (req, res) => {
 router.get(
   '/p1p1/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Cube not found',
       });
     }
-    const result = await generatePack(cube, carddb, false);
+
+    const cubeCards = await Cube.getCards(req.params.id);
+
+    const result = await generatePack(cube, cubeCards, carddb, false);
 
     return res.status(200).send({
       seed: result.seed,
@@ -1058,14 +821,18 @@ router.get(
 router.get(
   '/p1p1/:id/:seed',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findById(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'Cube not found',
       });
     }
-    const result = await generatePack(cube, carddb, req.params.seed);
+
+    const cubeCards = await Cube.getCards(req.params.id);
+
+    const result = await generatePack(cube, cubeCards, carddb, req.params.seed);
 
     return res.status(200).send({
       seed: req.params.seed,
@@ -1077,8 +844,8 @@ router.get(
 router.get(
   '/date_updated/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const { id } = req.params;
-    const result = await Cube.findOne(buildIdQuery(id), 'date_updated isPrivate owner').lean();
+    const result = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(result, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -1087,7 +854,7 @@ router.get(
     }
     return res.status(200).send({
       success: 'true',
-      date_updated: result.date_updated.valueOf(),
+      date_updated: result.Date,
     });
   }),
 );

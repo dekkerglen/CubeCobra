@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const fq = require('../serverjs/featuredQueue');
 const FeaturedCubes = require('../models/featuredCubes');
 const util = require('../serverjs/util');
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const MS_PER_DAY = 1000 * 3600 * 24;
 
@@ -29,9 +29,9 @@ const MS_PER_DAY = 1000 * 3600 * 24;
         }
 
         console.log('Sending notifications to featured cube owners');
-        const olds = await User.find({ _id: rotate.removed.map((f) => f.ownerID) });
-        const news = await User.find({ _id: rotate.added.map((f) => f.ownerID) });
-        const admin = await User.findOne({ roles: 'Admin' }).lean();
+        const olds = await User.batchGet(rotate.removed.map((f) => `${f.ownerID}`));
+        const news = await User.batchGet(rotate.added.map((f) => `${f.ownerID}`));
+        const admin = await User.getById('5d1125b00e0713602c55d967'); // this is admin magic number
         const notifications = [];
         for (const old of olds) {
           notifications.push(

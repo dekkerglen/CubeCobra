@@ -9,7 +9,7 @@ import LoadingButton from 'components/LoadingButton';
 import AutocompleteInput from 'components/AutocompleteInput';
 
 const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) => {
-  const [basics, setBasics] = useState(cube.basics.slice());
+  const [basics, setBasics] = useState(cube.Basics.slice());
   const [cardName, setCardName] = useState('');
   const [imageDict, setImageDict] = useState({});
 
@@ -32,7 +32,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
   };
 
   const save = async () => {
-    const response = await csrfFetch(`/cube/api/updatebasics/${cube._id}`, {
+    const response = await csrfFetch(`/cube/api/updatebasics/${cube.Id}`, {
       method: 'POST',
       body: JSON.stringify(basics),
       headers: {

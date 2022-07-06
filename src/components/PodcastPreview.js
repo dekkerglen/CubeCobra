@@ -18,15 +18,15 @@ const PodcastPreview = ({ podcast }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={1} className="text-ellipsis">
-        <img className="w-100" alt={podcast.title} src={podcast.image} />
+        <img className="w-100" alt={podcast.Title} src={podcast.Image} />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
-        <a href={`/content/podcast/${podcast._id}`} className="stretched-link">
-          <h5 className="text-muted text-ellipsis my-0">{podcast.title}</h5>
+        <a href={`/content/podcast/${podcast.Id}`} className="stretched-link">
+          <h5 className="text-muted text-ellipsis my-0">{podcast.Title}</h5>
         </a>
         <small>
           <em className="text-muted text-ellipsis">
-            By <Username userId={podcast.owner} defaultName={podcast.username} />
+            By <Username userId={podcast.Owner} defaultName={podcast.Username} />
           </em>
         </small>
       </div>

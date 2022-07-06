@@ -12,18 +12,18 @@ const Article = ({ article }) => {
   return (
     <>
       <CardHeader>
-        <h1>{article.title}</h1>
+        <h1>{article.Title}</h1>
         <h6>
-          By <Username userId={article.owner} defaultName={article.username} />
+          By <Username userId={article.Owner} defaultName={article.Username} />
           {' | '}
-          <TimeAgo date={article.date} />
+          <TimeAgo date={article.Date} />
         </h6>
       </CardHeader>
       <CardBody>
-        <Markdown markdown={article.body} />
+        <Markdown markdown={article.Body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="article" parent={article._id} collapse={false} />
+        <CommentsSection parentType="article" parent={article.Id} collapse={false} />
       </div>
     </>
   );

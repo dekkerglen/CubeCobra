@@ -8,7 +8,7 @@ const { arraysAreEqualSets } = require('../dist/utils/Util');
 const Cube = require('../models/cube');
 const Deck = require('../models/deck');
 const CubeAnalytic = require('../models/cubeAnalytic');
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const createDeckFromDraft = async (draft) => {
   const cube = await Cube.findById(draft.cube);
@@ -66,24 +66,15 @@ const createDeckFromDraft = async (draft) => {
     }
   }
 
-  const userq = User.findById(deck.seats[0].userid);
-  const cubeOwnerq = User.findById(cube.owner);
-
-  const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
+  const user = await User.getById(deck.seats[0].userid);
+  const cubeOwner = await User.getById(cube.owner);
 
   if (user && !cube.disableNotifications) {
     await addNotification(
       cubeOwner,
       user,
       `/cube/deck/${deck._id}`,
-      `${user.username} drafted your cube: ${cube.name}`,
-    );
-  } else if (!cube.disableNotifications) {
-    await addNotification(
-      cubeOwner,
-      { user_from_name: 'Anonymous', user_from: '404' },
-      `/cube/deck/${deck._id}`,
-      `An anonymous user drafted your cube: ${cube.name}`,
+      `${user.Username} drafted your cube: ${cube.name}`,
     );
   }
 

@@ -51,9 +51,7 @@ if (NODE_ENV === 'production') {
   pages.PodcastsPage = require('../dist/pages/PodcastsPage').default;
   pages.RecentDraftsPage = require('../dist/pages/RecentDraftsPage').default;
   pages.RegisterPage = require('../dist/pages/RegisterPage').default;
-  pages.ReviewArticlesPage = require('../dist/pages/ReviewArticlesPage').default;
-  pages.ReviewPodcastsPage = require('../dist/pages/ReviewPodcastsPage').default;
-  pages.ReviewVideosPage = require('../dist/pages/ReviewVideosPage').default;
+  pages.ReviewContentPage = require('../dist/pages/ReviewContentPage').default;
   pages.SearchPage = require('../dist/pages/SearchPage').default;
   pages.TopCardsPage = require('../dist/pages/TopCardsPage').default;
   pages.UserAccountPage = require('../dist/pages/UserAccountPage').default;
@@ -85,7 +83,7 @@ const getCubes = (req, callback) => {
   if (!req.user) {
     callback([]);
   } else {
-    Cube.find({ owner: req.user._id }, '_id name')
+    Cube.find({ owner: req.user.Id }, '_id name')
       .sort({ date_updated: -1 })
       .lean()
       .exec((err, docs) => {
@@ -102,17 +100,16 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, (cubes) => {
     reactProps.user = req.user
       ? {
-          id: req.user._id,
-          notifications: req.user.notifications,
-          username: req.user.username,
-          email: req.user.email,
-          about: req.user.about,
-          image: req.user.image,
-          image_name: req.user.image_name,
-          artist: req.user.artist,
-          roles: req.user.roles,
-          theme: req.user.theme,
-          hide_featured: req.user.hide_featured,
+          Id: req.user.Id,
+          Username: req.user.Username,
+          Email: req.user.Email,
+          About: req.user.About,
+          Image: req.user.Image,
+          ImageName: req.user.ImageName,
+          Artist: req.user.Artist,
+          Roles: req.user.Roles,
+          Theme: req.user.Theme,
+          HideFeatured: req.user.HideFeatured,
           cubes,
         }
       : null;
@@ -143,7 +140,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
       colors: `/css/${theme}.css`,
       bootstrap: `/css/bootstrap/bs-${theme}.css`,
-      patron: req.user && req.user.roles.includes('Patron'),
+      patron: req.user && req.user.Roles.includes('Patron'),
       notice: process.env.NOTICE,
     });
   });

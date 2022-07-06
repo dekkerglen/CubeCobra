@@ -5,7 +5,7 @@ const { ensureAuth, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
 
 // Bring in models
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 const Blog = require('../models/blog');
 
 const router = express.Router();
@@ -43,7 +43,7 @@ router.get('/blog/:id', async (req, res) => {
 
 router.post('/blogpost', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.getById(req.user.Id);
 
     if (user && util.isAdmin(user)) {
       const blogpost = new Blog();
@@ -53,7 +53,7 @@ router.post('/blogpost', ensureAuth, async (req, res) => {
       } else {
         blogpost.body = req.body.body;
       }
-      blogpost.owner = user._id;
+      blogpost.owner = user.Id;
       blogpost.date = Date.now();
       blogpost.dev = 'true';
       blogpost.date_formatted = blogpost.date.toLocaleString('en-US');

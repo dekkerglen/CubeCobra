@@ -27,19 +27,19 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
           </CardHeader>
           <CardBody>
             <Row className="mb-3">
-              {owner.image && (
+              {owner.Image && (
                 <Col xs={4} lg={3}>
                   <div className="position-relative">
-                    <img width="100%" className="border" src={owner.image} alt={owner.image_name} />
-                    <em className="cube-preview-artist">Art by {owner.artist}</em>
+                    <img width="100%" className="border" src={owner.Image} alt={owner.ImageName} />
+                    <em className="cube-preview-artist">Art by {owner.Artist}</em>
                   </div>
                 </Col>
               )}
-              <Col xs={owner.image ? 8 : 12} lg={owner.image ? 9 : 12}>
-                <Markdown markdown={owner.about || '_This user has not yet filled out their about section._'} />
+              <Col xs={owner.Image ? 8 : 12} lg={owner.Image ? 9 : 12}>
+                <Markdown markdown={owner.About || '_This user has not yet filled out their about section._'} />
               </Col>
             </Row>
-            {user && user.id === owner._id && (
+            {user && user.id === owner.Id && (
               <Button color="accent" block outline href="/user/account">
                 Update
               </Button>
@@ -60,11 +60,11 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
 
 UserCubePage.propTypes = {
   owner: PropTypes.shape({
-    about: PropTypes.string.isRequired,
-    image_name: PropTypes.string.isRequired,
-    image: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
+    Id: PropTypes.string.isRequired,
+    Image: PropTypes.string.isRequired,
+    Artist: PropTypes.string.isRequired,
+    About: PropTypes.string.isRequired,
+    ImageName: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,

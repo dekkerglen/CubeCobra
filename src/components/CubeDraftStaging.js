@@ -151,7 +151,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
               </Col>
               <Col xs={9} className="tag-color-container">
                 <div className="tag-color-row pb-3">
-                  <LockIcon size={16} /> {user.username}
+                  <LockIcon size={16} /> {user.Username}
                 </div>
                 <SortableList onSortEnd={onSortEnd} items={editableRows} />
               </Col>

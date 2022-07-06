@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
-import { Row, Col } from 'reactstrap';
+import { Row, Col, Spinner } from 'reactstrap';
 
+import InfiniteScroll from 'react-infinite-scroll-component';
 import DynamicFlash from 'components/DynamicFlash';
 import ArticlePreview from 'components/ArticlePreview';
 import VideoPreview from 'components/VideoPreview';
@@ -10,28 +11,70 @@ import Banner from 'components/Banner';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import { csrfFetch } from 'utils/CSRF';
 
-const BrowseContentPage = ({ loginCallback, content }) => {
+const wait = async (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
+const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
+  const [items, setItems] = useState(content);
+  const [currentLastKey, setLastKey] = useState(lastKey);
+
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
+
+    const response = await csrfFetch(`/content/getmore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+      }),
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      console.log(json);
+      if (json.success === 'true') {
+        setItems([...items, ...json.content]);
+        setLastKey(json.lastKey);
+      }
+    }
+  }, [items, setItems, currentLastKey]);
+
+  const loader = (
+    <div className="centered py-3 my-4">
+      <Spinner className="position-absolute" />
+    </div>
+  );
+
   return (
     <MainLayout loginCallback={loginCallback}>
       <Banner />
       <DynamicFlash />
-      <Row>
-        <Col xs="12">
-          <Row>
-            <Col xs="6">
-              <h4>Browse Content</h4>
-            </Col>
-          </Row>
-        </Col>
-        {content.map((item) => (
-          <Col className="mb-3" xs="6" md="4">
-            {item.type === 'article' && <ArticlePreview article={item.content} />}
-            {item.type === 'video' && <VideoPreview video={item.content} />}
-            {item.type === 'episode' && <PodcastEpisodePreview episode={item.content} />}
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <Row className="mx-0">
+          <Col xs="12">
+            <Row>
+              <Col xs="6">
+                <h4>Browse Content</h4>
+              </Col>
+            </Row>
           </Col>
-        ))}
-      </Row>
+          {items.map((item) => (
+            <Col className="mb-3" xs="6" md="4">
+              {item.Type === 'a' && <ArticlePreview article={item} />}
+              {item.Type === 'v' && <VideoPreview video={item} />}
+              {item.Type === 'e' && <PodcastEpisodePreview episode={item} />}
+            </Col>
+          ))}
+        </Row>
+      </InfiniteScroll>
     </MainLayout>
   );
 };
@@ -39,10 +82,12 @@ const BrowseContentPage = ({ loginCallback, content }) => {
 BrowseContentPage.propTypes = {
   loginCallback: PropTypes.string,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  lastKey: PropTypes.shape({}),
 };
 
 BrowseContentPage.defaultProps = {
   loginCallback: '/',
+  lastKey: null,
 };
 
 export default RenderToRoot(BrowseContentPage);

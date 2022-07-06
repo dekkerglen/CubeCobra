@@ -4,7 +4,7 @@ const ButtonLink = ({ children, outline, color = 'primary', block, ...props }) =
   let type = outline ? `btn-outline-${color}` : `btn-${color}`;
 
   const link = (
-    <a className={`btn ${type}`} {...props} role="button">
+    <a className={`btn ${type} my-1`} {...props} role="button">
       {children}
     </a>
   );

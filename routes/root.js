@@ -2,70 +2,33 @@ const express = require('express');
 
 const util = require('../serverjs/util');
 
-const Cube = require('../models/cube');
+const Cube = require('../dynamo/models/cube');
+const CubeHash = require('../dynamo/models/cubeHash');
 const Deck = require('../models/deck');
-const User = require('../models/user');
-const Article = require('../models/article');
-const Video = require('../models/video');
-const PodcastEpisode = require('../models/podcastEpisode');
+const Content = require('../dynamo/models/content');
 
-const carddb = require('../serverjs/cards');
-const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
-const { getCubeId } = require('../serverjs/cubefn');
 const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-const CUBE_PREVIEW_FIELDS =
-  '_id shortID image_uri image_name image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
-
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const recentsq = Cube.find(
-    {
-      card_count: {
-        $gt: 200,
-      },
-      isListed: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .sort({
-      date_updated: -1,
-    })
-    .limit(12)
-    .exec();
+  const recentsQuery = await Cube.getByVisibility(Cube.VISIBLITY.PUBLIC);
+  const recents = recentsQuery.items;
 
-  const featuredq = Cube.find(
-    {
-      isFeatured: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .exec();
+  const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
+  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
 
-  const draftedq = Cube.find(
-    {
-      isListed: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .sort({
-      numDecks: -1,
-    })
-    .limit(12)
-    .exec();
+  const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
+  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.CubeId));
 
-  const decksq = Deck.find()
+  const decks = await Deck.find()
     .lean()
     .sort({
       date: -1,
@@ -73,100 +36,37 @@ router.get('/explore', async (req, res) => {
     .limit(10)
     .exec();
 
-  const [recents, featured, drafted, decks] = await Promise.all([recentsq, featuredq, draftedq, decksq]);
-
-  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }, CUBE_PREVIEW_FIELDS).lean();
-
+  const drafted = await Cube.batchGet([...new Set(decks.map((deck) => `${deck.cube}`))]);
   return render(req, res, 'ExplorePage', {
-    recents,
+    recents: recents.sort((a, b) => b.Date - a.Date).slice(0, 12),
     featured,
-    drafted,
-    recentlyDrafted,
+    drafted: drafted.slice(0, 12),
+    popular: popular.sort((a, b) => b.UsersFollowing.length - a.UsersFollowing.length).slice(0, 12),
   });
 });
 
 router.get('/random', async (req, res) => {
-  const lastMonth = () => {
-    const ret = new Date();
-    ret.setMonth(ret.getMonth() - 1);
-    return ret;
-  };
+  const now = new Date().valueOf();
+  // sometime random within the last month
+  const random = now - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30 * 30);
 
-  const [randCube] = await Cube.aggregate()
-    .match({ isListed: true, card_count: { $gte: 360 }, date_updated: { $gte: lastMonth() } })
-    .sample(1);
-  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(randCube))}`);
+  const query = await Cube.getByVisibilityBefore(Cube.VISIBLITY.PUBLIC, random);
+
+  res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].Id)}`);
 });
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const cubesq = Cube.find(
-      {
-        owner: req.user._id,
-      },
-      CUBE_PREVIEW_FIELDS,
-    )
-      .lean()
-      .sort({
-        date_updated: -1,
-      });
-    const postsq = getBlogFeedItems(req.user, 0, 10);
+    const cubes = await Cube.getByOwner(req.user.Id);
 
-    const featuredq = Cube.find(
-      {
-        isFeatured: true,
-      },
-      CUBE_PREVIEW_FIELDS,
-    ).lean();
+    const posts = await getBlogFeedItems(req.user, 0, 10);
 
-    const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(10);
-    const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(10);
-    const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(10);
+    const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
+    const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
 
-    // We can do these queries in parallel
-    const [cubes, posts, articles, videos, episodes, featured] = await Promise.all([
-      cubesq,
-      postsq,
-      articlesq,
-      videosq,
-      episodesq,
-      featuredq,
-    ]);
-
-    const content = [];
-
-    for (const article of articles) {
-      content.push({
-        type: 'article',
-        date: article.date,
-        content: article,
-      });
-    }
-    for (const video of videos) {
-      content.push({
-        type: 'video',
-        date: video.date,
-        content: video,
-      });
-    }
-    for (const episode of episodes) {
-      content.push({
-        type: 'episode',
-        date: episode.date,
-        content: episode,
-      });
-    }
-
-    content.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB - dateA;
-    });
-
-    content.splice(10);
-
+    const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
     const decks = await Deck.find({
-      cubeOwner: req.user._id,
+      cubeOwner: req.user.Id,
     })
       .sort({
         date: -1,
@@ -174,7 +74,13 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       .lean()
       .limit(12);
 
-    return render(req, res, 'DashboardPage', { posts, cubes, decks, content, featured });
+    return render(req, res, 'DashboardPage', {
+      posts,
+      cubes: cubes.items.sort((a, b) => b.Date - a.Date).slice(0, 12),
+      decks,
+      content: content.items.filter((item) => item.Type !== 'p'),
+      featured,
+    });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }
@@ -190,7 +96,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
     }
 
     const decks = await Deck.find({
-      cubeOwner: user._id,
+      cubeOwner: user.Id,
     })
       .sort({
         date: -1,
@@ -201,7 +107,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
       .exec();
 
     const numDecks = await Deck.countDocuments({
-      cubeOwner: user._id,
+      cubeOwner: user.Id,
     })
       .lean()
       .exec();
@@ -219,18 +125,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-  const cubeq = Cube.estimatedDocumentCount().exec();
-  const deckq = Deck.estimatedDocumentCount().exec();
-  const userq = User.estimatedDocumentCount().exec();
-
-  const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
-
-  return render(req, res, 'LandingPage', {
-    numusers: user.toLocaleString('en-US'),
-    numcubes: cube.toLocaleString('en-US'),
-    numdrafts: deck.toLocaleString('en-US'),
-    version: process.env.CUBECOBRA_VERSION,
-  });
+  return render(req, res, 'LandingPage');
 });
 
 router.get('/version', async (req, res) => {
@@ -245,85 +140,6 @@ router.get('/search', async (req, res) => {
     query: '',
     cubes: [],
   });
-});
-
-router.get('/search/:query/:page', async (req, res) => {
-  try {
-    const perPage = 36;
-    const page = Math.max(0, Math.max(req.params.page, 0));
-
-    const { order } = req.query;
-
-    let sort = {
-      date_updated: -1,
-    };
-
-    switch (order) {
-      case 'pop':
-        sort = {
-          numDecks: -1,
-        };
-        break;
-      case 'alpha':
-        sort = {
-          name: -1,
-        };
-        break;
-      default:
-        break;
-    }
-
-    const query = await makeFilter(req.params.query, carddb);
-
-    if (query.error) {
-      req.flash('danger', `Invalid Search Syntax: ${query.error}`);
-
-      return render(req, res, 'SearchPage', {
-        query: req.params.query,
-        cubes: [],
-        count: 0,
-        perPage: 0,
-        page: 0,
-      });
-    }
-
-    if (query.warnings) {
-      for (const warning of query.warnings) {
-        req.flash('danger', `Warning: ${warning}`);
-      }
-      delete query.warnings;
-    }
-
-    query.isListed = true;
-
-    const count = await Cube.countDocuments(query);
-
-    const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
-      .lean()
-      .sort(sort)
-      .skip(perPage * page)
-      .limit(perPage);
-
-    return render(req, res, 'SearchPage', {
-      query: req.params.query,
-      cubes,
-      count,
-      perPage,
-      page,
-      order,
-    });
-  } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', 'Invalid Search Syntax');
-
-    return render(req, res, 'SearchPage', {
-      query: req.params.query,
-      cubes: [],
-      count: 0,
-      perPage: 0,
-      page: 0,
-    });
-  }
 });
 
 router.get('/contact', (req, res) => {

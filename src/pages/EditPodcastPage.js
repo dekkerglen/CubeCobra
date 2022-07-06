@@ -13,11 +13,17 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import CSRFForm from 'components/CSRFForm';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
+
 const EditPodcastPage = ({ loginCallback, podcast }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
-  const [rss, setRss] = useState(podcast.rss);
+  const [rss, setRss] = useState(podcast.Url);
 
-  const hasChanges = podcast.rss !== rss;
+  const hasChanges = podcast.Url !== rss;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -36,7 +42,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast._id} />
+                <Input type="hidden" name="podcastid" value={podcast.Id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Update
@@ -45,7 +51,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast._id} />
+                <Input type="hidden" name="podcastid" value={podcast.Id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" outline color="accent" block>
                   Submit for Review
@@ -72,7 +78,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
                     <Label>Status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={podcast.status} />
+                    <Input disabled value={CONVERT_STATUS[podcast.Status]} />
                   </Col>
                 </Row>
               </FormGroup>

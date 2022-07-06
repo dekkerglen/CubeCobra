@@ -8,14 +8,7 @@ import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const AdminDashboardPage = ({
-  loginCallback,
-  commentReportCount,
-  applicationCount,
-  articlesInReview,
-  videosInReview,
-  podcastsInReview,
-}) => (
+const AdminDashboardPage = ({ loginCallback, noticeCount, contentInReview }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <Card className="my-3 mx-4">
@@ -23,23 +16,14 @@ const AdminDashboardPage = ({
         <h5>Admin Dashboard</h5>
       </CardHeader>
       <CardBody>
-        <ButtonLink href="/admin/commentreports" block outline color="accent">
-          {`Comment Reports (${commentReportCount})`}
-        </ButtonLink>
-        <ButtonLink href="/admin/applications" block outline color="accent">
-          {`Content Creator Applications (${applicationCount})`}
+        <ButtonLink href="/admin/notices" block outline color="accent">
+          {`Notices (${noticeCount})`}
         </ButtonLink>
         <ButtonLink href="/admin/comments" block outline color="accent">
           Recent Comments
         </ButtonLink>
-        <ButtonLink href="/admin/reviewarticles" block outline color="accent">
-          {`Review Articles (${articlesInReview})`}
-        </ButtonLink>
-        <ButtonLink href="/admin/reviewvideos" block outline color="accent">
-          {`Review Videos (${videosInReview})`}
-        </ButtonLink>
-        <ButtonLink href="/admin/reviewpodcasts" block outline color="accent">
-          {`Review Podcasts (${podcastsInReview})`}
+        <ButtonLink href="/admin/reviewcontent" block outline color="accent">
+          {`Review Content (${contentInReview})`}
         </ButtonLink>
         <ButtonLink href="/admin/featuredcubes" block outline color="accent">
           Featured Cubes Queue
@@ -51,11 +35,8 @@ const AdminDashboardPage = ({
 
 AdminDashboardPage.propTypes = {
   loginCallback: PropTypes.string,
-  commentReportCount: PropTypes.number.isRequired,
-  applicationCount: PropTypes.number.isRequired,
-  articlesInReview: PropTypes.number.isRequired,
-  videosInReview: PropTypes.number.isRequired,
-  podcastsInReview: PropTypes.number.isRequired,
+  noticeCount: PropTypes.number.isRequired,
+  contentInReview: PropTypes.number.isRequired,
 };
 
 AdminDashboardPage.defaultProps = {

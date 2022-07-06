@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 
 const VideoPropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  body: PropTypes.string.isRequired,
-  date: PropTypes.instanceOf(Date).isRequired,
-  status: PropTypes.string.isRequired,
-  owner: PropTypes.string.isRequired,
-  username: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
+  Id: PropTypes.string.isRequired,
+  Title: PropTypes.string.isRequired,
+  Body: PropTypes.string.isRequired,
+  Date: PropTypes.instanceOf(Date).isRequired,
+  Status: PropTypes.string.isRequired,
+  Owner: PropTypes.string.isRequired,
+  Username: PropTypes.string.isRequired,
+  Url: PropTypes.string.isRequired,
   // For video preview
-  artist: PropTypes.string.isRequired,
-  short: PropTypes.string.isRequired,
-  image: PropTypes.string.isRequired,
-  imagename: PropTypes.string.isRequired,
+  Artist: PropTypes.string.isRequired,
+  Short: PropTypes.string.isRequired,
+  Image: PropTypes.string.isRequired,
+  ImageName: PropTypes.string.isRequired,
 });
 
 export default VideoPropType;

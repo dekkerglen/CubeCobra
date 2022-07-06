@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const express = require('express');
 
 const { ensureAuth } = require('../middleware');
@@ -9,9 +10,9 @@ const miscutil = require('../../dist/utils/Util');
 
 const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
-const Cube = require('../../models/cube');
+const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../models/blog');
-const User = require('../../models/user');
+const User = require('../../dynamo/models/user');
 const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
@@ -29,7 +30,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.findById(req.body.id);
 
-      if (!user._id.equals(blog.owner)) {
+      if (!blog.owner.equals(user.Id)) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
@@ -43,7 +44,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
@@ -51,42 +52,38 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     // post new blog
-    if (!user._id.equals(cube.owner)) {
+    if (cube.Owner !== user.Id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString('en-US');
-    cube = setCubeType(cube, carddb);
-
-    await cube.save();
-
     const blogpost = new Blog();
     blogpost.markdown = req.body.markdown.substring(0, 10000);
     blogpost.title = req.body.title;
-    blogpost.owner = user._id;
+    blogpost.owner = user.Id;
     blogpost.date = Date.now();
-    blogpost.cube = cube._id;
+    blogpost.cube = cube.Id;
     blogpost.dev = 'false';
     blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = user.username;
-    blogpost.cubename = cube.name;
+    blogpost.username = user.Username;
+    blogpost.cubename = cube.Name;
 
     await blogpost.save();
 
     // mentions are only added for new posts and ignored on edits
     if (req.body.mentions) {
-      const owner = await User.findById(user._id);
-      const mentions = req.body.mentions.split(';');
-      // mentions is either a string (if just one is found) or an array (if multiple are found)
-      const query = User.find({ username_lower: mentions });
-      await util.addMultipleNotifications(
-        query,
-        owner,
-        `/cube/blog/blogpost/${blogpost._id}`,
-        `${user.username} mentioned you in their blog post`,
-      );
+      for (const mention of req.body.mentions) {
+        const query = await User.getByUsername(mention);
+
+        if (query.items.length > 0) {
+          await util.addNotification(
+            query.items[0],
+            user,
+            `/cube/blog/blogpost/${blogpost._id}`,
+            `${user.Username} mentioned you in their blog post`,
+          );
+        }
+      }
     }
 
     req.flash('success', 'Blog post successful');
@@ -99,7 +96,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
 router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.findById(req.params.id);
-    const cube = await Cube.findById(post.cube);
+    const cube = await Cube.getById(post.cube);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Blog post not found');
       return res.redirect('/cube/blog/404');
@@ -121,7 +118,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
 
     const blog = await Blog.findById(req.params.id);
 
-    if (!req.user._id.equals(blog.owner)) {
+    if (!req.blog.owner.equals(user.Id)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -147,7 +144,7 @@ router.get(
         message: 'Blog post not found',
       });
     }
-    const cube = await Cube.findById(blog.cube).lean();
+    const cube = await Cube.getById(blog.cube);
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
@@ -170,7 +167,7 @@ router.get('/:id', (req, res) => {
 
 router.get('/:id/:page', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), `${Cube.LAYOUT_FIELDS} isPrivate owner`).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -178,10 +175,10 @@ router.get('/:id/:page', async (req, res) => {
     }
 
     const countQ = Blog.countDocuments({
-      cube: cube._id,
+      cube: cube.Id,
     });
     const blogsQ = Blog.find({
-      cube: cube._id,
+      cube: cube.Id,
     })
       .sort({
         date: -1,
@@ -203,11 +200,11 @@ router.get('/:id/:page', async (req, res) => {
         activePage: Math.max(req.params.page, 0),
       },
       {
-        title: `${abbreviate(cube.name)} - Blog`,
+        title: `${abbreviate(cube.Name)} - Blog`,
         metadata: generateMeta(
-          `Cube Cobra Blog: ${cube.name}`,
-          miscutil.getCubeDescription(cube),
-          cube.image_uri,
+          `Cube Cobra Blog: ${cube.Name}`,
+          cube.Description,
+          cube.ImageUri,
           `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),
       },

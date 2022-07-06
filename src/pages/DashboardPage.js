@@ -130,9 +130,9 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
             </Col>
             {content.map((item) => (
               <Col className="mb-3" xs="12">
-                {item.type === 'article' && <ArticlePreview article={item.content} />}
-                {item.type === 'video' && <VideoPreview video={item.content} />}
-                {item.type === 'episode' && <PodcastEpisodePreview episode={item.content} />}
+                {item.Type === 'a' && <ArticlePreview article={item} />}
+                {item.Type === 'v' && <VideoPreview video={item} />}
+                {item.Type === 'e' && <PodcastEpisodePreview episode={item} />}
               </Col>
             ))}
           </Row>

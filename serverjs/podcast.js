@@ -1,39 +1,46 @@
 const { getFeedEpisodes } = require('./rss');
 
-const PodcastEpisode = require('../models/podcastEpisode');
+const Content = require('../dynamo/models/content');
 
 const updatePodcast = async (podcast) => {
   const episodes = await getFeedEpisodes(podcast.rss);
+  const existingGuids = episodes.map((episode) => episode.guid);
 
-  const liveEpisodes = await PodcastEpisode.find({ guid: { $in: episodes.map((episode) => episode.guid) } });
+  let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
+  let items = result.items.filter((item) => existingGuids.includes(item.PodcastGuid));
 
-  const guids = liveEpisodes.map((episode) => episode.guid);
+  while (result.lastKey) {
+    // eslint-disable-next-line no-await-in-loop
+    result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
+    items = [...episodes, ...result.items.filter((item) => existingGuids.includes(item.PodcastGuid))];
+  }
+
+  const guids = items.map((episode) => episode.PodcastGuid);
 
   const filtered = episodes.filter((episode) => !guids.includes(episode.guid));
 
   await Promise.all(
     filtered.map((episode) => {
-      const podcastEpisode = new PodcastEpisode();
+      const podcastEpisode = {
+        Title: episode.title,
+        Description: episode.description,
+        Url: episode.source,
+        Date: new Date(episode.date).valueOf(),
+        Owner: podcast.owner,
+        Image: podcast.image,
+        Username: podcast.username,
+        PodcastId: podcast._id,
+        PodcastName: podcast.title,
+        PodcastGuid: episode.guid,
+        PodcastLink: episode.link,
+      };
 
-      podcastEpisode.title = episode.title;
-      podcastEpisode.description = episode.description;
-      podcastEpisode.source = episode.source;
-      podcastEpisode.guid = episode.guid;
-      podcastEpisode.link = episode.link;
-      podcastEpisode.date = new Date(episode.date);
-
-      podcastEpisode.podcast = podcast._id;
-      podcastEpisode.owner = podcast.owner;
-      podcastEpisode.image = podcast.image;
-      podcastEpisode.username = podcast.username;
-      podcastEpisode.podcastname = podcast.title;
-
-      return podcastEpisode.save();
+      return Content.put(podcastEpisode, Content.TYPES.EPISODE);
     }),
   );
 
-  podcast.date = new Date();
-  await podcast.save();
+  podcast.Date = new Date().valueOf();
+  await Content.update(podcast);
 };
 
 module.exports = {

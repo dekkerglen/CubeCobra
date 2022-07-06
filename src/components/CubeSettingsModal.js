@@ -55,7 +55,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               id="privatePrices"
               name="privatePrices"
               type="checkbox"
-              defaultChecked={cube.privatePrices || false}
+              defaultChecked={cube.PriceVisibility === 'pr'}
             />
             <Label for="privatePrices">Hide Total Prices</Label>
           </FormGroup>
@@ -64,13 +64,9 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               id="disableNotifications"
               name="disableNotifications"
               type="checkbox"
-              defaultChecked={cube.disableNotifications || false}
+              defaultChecked={cube.DisableNotifications || false}
             />
             <Label for="disableNotifications">Disable Draft Notifications</Label>
-          </FormGroup>
-          <FormGroup check>
-            <Input id="useCubeElo" name="useCubeElo" type="checkbox" defaultChecked={cube.useCubeElo || false} />
-            <Label for="useCubeElo">Use Cube Elo instead of Global Elo</Label>
           </FormGroup>
           <FormGroup>
             <Label for="visibility">Cube Visibility</Label>
@@ -89,7 +85,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
           </FormGroup>
           <FormGroup>
             <Label for="defaultStatus">Default Status</Label>
-            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.defaultStatus || false}>
+            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.DefaultStatus || false}>
               {['Owned', 'Not Owned'].map((status) => (
                 <option key={status}>{status}</option>
               ))}
@@ -101,7 +97,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               id="defaultPrinting"
               name="defaultPrinting"
               type="select"
-              defaultValue={cube.defaultPrinting || false}
+              defaultValue={cube.DefaultPrinting || false}
             >
               <option value="recent">Most Recent</option>
               <option value="first">First</option>

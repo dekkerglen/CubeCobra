@@ -9,7 +9,7 @@ const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util');
 
 const Patron = require('../models/patron');
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
@@ -28,12 +28,12 @@ const isValidPatreonSignature = (signature, body) => {
 
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
-    await Patron.deleteOne({ user: req.user._id });
+    await Patron.deleteOne({ user: req.user.Id });
 
-    const user = await User.findById(req.user._id);
-    user.roles = user.roles.filter((role) => role !== 'Patron');
-    user.patron = undefined;
-    await user.save();
+    const user = await User.getById(req.user.Id);
+    user.Roles = user.Roles.filter((role) => role !== 'Patron');
+    user.Patron = undefined;
+    await User.update(user);
 
     req.flash('success', `Patron account has been unlinked.`);
     return res.redirect('/user/account?nav=patreon');
@@ -77,7 +77,7 @@ router.post('/hook', async (req, res) => {
       });
     }
 
-    const user = await User.findById(patron.user);
+    const user = await User.getById(patron.user);
 
     if (!user) {
       req.logger.info(`Recieved a patreon hook without a found user: "${patron.user}"`);
@@ -98,12 +98,12 @@ router.post('/hook', async (req, res) => {
       }
 
       patron.active = true;
-      if (!user.roles.includes('Patron')) {
-        user.roles.push('Patron');
+      if (!user.Roles.includes('Patron')) {
+        user.Roles.push('Patron');
       }
     } else if (action === 'pledges:delete') {
       patron.active = false;
-      user.roles = user.roles.filter((role) => role !== 'Patron');
+      user.Roles = user.Roles.filter((role) => role !== 'Patron');
     } else {
       req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
       return res.status(500).send({
@@ -111,7 +111,7 @@ router.post('/hook', async (req, res) => {
       });
     }
     await patron.save();
-    await user.save();
+    await User.update(user);
 
     return res.status(200).send({
       success: 'false',
@@ -156,7 +156,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
 
       const newPatron = new Patron();
       newPatron.email = email;
-      newPatron.user = req.user._id;
+      newPatron.user = req.user.Id;
 
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
@@ -201,12 +201,12 @@ router.get('/redirect', ensureAuth, (req, res) => {
 
       await newPatron.save();
 
-      const user = await User.findById(req.user._id);
-      if (!user.roles.includes('Patron')) {
-        user.roles.push('Patron');
+      const user = await User.getById(req.user.Id);
+      if (!user.Roles.includes('Patron')) {
+        user.Roles.push('Patron');
       }
-      user.patron = newPatron._id;
-      await user.save();
+      user.Patron = newPatron._id;
+      await User.update(user);
 
       if (newPatron.level === 'Patron') {
         req.flash(

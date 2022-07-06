@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const cardSchema = require('./shared/cardSchema');
-const CURRENT_SCHEMA_VERSION = require('./migrations/deckMigrations').slice(-1)[0].version;
 
 // data for each seat, human or bot
 const SeatDeck = {
@@ -41,9 +40,6 @@ const deckSchema = mongoose.Schema(
     schemaVersion: {
       type: Number,
       default() {
-        if (this.isNew) {
-          return CURRENT_SCHEMA_VERSION;
-        }
         return void 0; // eslint-disable-line
       },
     },
@@ -79,11 +75,7 @@ deckSchema.index({
   draft: 1,
 });
 
-deckSchema.pre('save', async () => {
-  this.schemaVersion = CURRENT_SCHEMA_VERSION;
-});
-
 const Deck = mongoose.model('Deck', deckSchema);
-Deck.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
+Deck.CURRENT_SCHEMA_VERSION = 1;
 
 module.exports = Deck;

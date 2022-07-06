@@ -16,7 +16,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages
       <DynamicFlash />
 
       {pages > 1 && (
-        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
+        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner.Id}/${i}`} />
       )}
       {posts.length > 0 ? (
         posts.slice(0).map((post) => <BlogPost key={post._id} post={post} />)
@@ -25,7 +25,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages
       )}
 
       {pages > 1 && (
-        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
+        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner.Id}/${i}`} />
       )}
     </UserLayout>
   </MainLayout>
@@ -33,8 +33,8 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages
 
 UserBlogPage.propTypes = {
   owner: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
+    Id: PropTypes.string.isRequired,
+    Username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,

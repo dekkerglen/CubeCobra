@@ -6,7 +6,6 @@ const fetch = require('node-fetch');
 const sharp = require('sharp');
 const { winston } = require('./cloudwatch');
 const CardRating = require('../models/cardrating');
-const Cube = require('../models/cube');
 const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
@@ -27,23 +26,6 @@ function buildIdQuery(id) {
     return { _id: id };
   }
   return { shortID: id.toLowerCase() };
-}
-
-async function generateShortId() {
-  const numCubes = await Cube.estimatedDocumentCount();
-  const space = numCubes * 100;
-
-  let newId = '';
-  let isGoodId = false;
-  while (!isGoodId) {
-    const rand = Math.floor(Math.random() * space);
-    newId = util.toBase36(rand);
-    // eslint-disable-next-line no-await-in-loop
-    const taken = await Cube.exists({ shortID: newId });
-    isGoodId = !util.hasProfanity(newId) && !taken;
-  }
-
-  return newId;
 }
 
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
@@ -174,16 +156,16 @@ function abbreviate(name) {
   return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
-function buildTagColors(cube) {
-  let { tag_colors: tagColor } = cube;
-  const tags = tagColor.map((item) => item.tag);
-  const notFound = tagColor.map((item) => item.tag);
+function buildTagColors(cube, cards) {
+  const { TagColors } = cube;
+  const tags = TagColors.map((item) => item.tag);
+  const notFound = TagColors.map((item) => item.tag);
 
-  for (const card of cube.cards) {
+  for (const card of cards) {
     for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
-        tagColor.push({
+        TagColors.push({
           tag,
           color: null,
         });
@@ -194,17 +176,16 @@ function buildTagColors(cube) {
   }
 
   const tmp = [];
-  for (const color of tagColor) {
+  for (const color of TagColors) {
     if (!notFound.includes(color.tag)) tmp.push(color);
   }
-  tagColor = tmp;
 
-  return tagColor;
+  return tmp;
 }
 
-function cubeCardTags(cube) {
+function cubeCardTags(cubeCards) {
   const tags = [];
-  for (const card of cube.cards) {
+  for (const card of cubeCards) {
     for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
@@ -351,11 +332,11 @@ const newCardAnalytics = (cardName, elo) => {
 const removeDeckCardAnalytics = async (cube, deck, carddb) => {
   // we don't want to save deck analytics for decks have not been built
   if (deck.seats[0].sideboard.flat().length > 0) {
-    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+    let analytic = await CubeAnalytic.findOne({ cube: cube.Id });
 
     if (!analytic) {
       analytic = new CubeAnalytic();
-      analytic.cube = cube._id;
+      analytic.cube = cube.Id;
     }
 
     for (const row of deck.seats[0].deck) {
@@ -396,11 +377,11 @@ const removeDeckCardAnalytics = async (cube, deck, carddb) => {
 const addDeckCardAnalytics = async (cube, deck, carddb) => {
   // we don't want to save deck analytics for decks have not been built
   if (deck.seats[0].sideboard.flat().length > 0) {
-    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
+    let analytic = await CubeAnalytic.findOne({ cube: cube.Id });
 
     if (!analytic) {
       analytic = new CubeAnalytic();
-      analytic.cube = cube._id;
+      analytic.cube = cube.Id;
     }
 
     for (const row of deck.seats[0].deck) {
@@ -602,8 +583,8 @@ function cachePromise(key, callback) {
 
 function isCubeViewable(cube, user) {
   if (!cube) return false;
-  if (!cube.isPrivate) return true;
-  return user && (user._id.equals(cube.owner) || util.isAdmin(user));
+  if (cube.Visibility !== 'pu') return true;
+  return user && (cube.Owner === user.Id || util.isAdmin(user));
 }
 
 const methods = {
@@ -632,14 +613,16 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  generatePack: async (cube, carddb, seed) => {
+  generatePack: async (cube, cards, carddb, seed) => {
+    const main = cards.boards.filter((board) => board.name === 'Mainboard')[0];
+
     if (!seed) {
       seed = Date.now().toString();
     }
-    cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
-    const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
+    main.cards = main.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
+    const formatId = cube.DefaultDraftFormat === undefined ? -1 : cube.DefaultDraftFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = createDraft(format, cube.cards, 1, { username: 'Anonymous' }, false, seed);
+    const draft = createDraft(format, main.cards, 1, { username: 'Anonymous' }, false, seed);
     return {
       seed,
       pack: draft.initial_state[0][0].cards.map((cardIndex) => ({
@@ -650,7 +633,6 @@ const methods = {
   },
   newCardAnalytics,
   getEloAdjustment,
-  generateShortId,
   buildIdQuery,
   getCubeId,
   intToLegality,

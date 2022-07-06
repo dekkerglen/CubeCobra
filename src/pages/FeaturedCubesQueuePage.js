@@ -174,7 +174,7 @@ const QueueItem = ({ cube, index, onMove }) => (
             <Row className="justify-content-end pt-3">
               <Col xs={4} md={12}>
                 <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
-                  <input type="hidden" name="cubeId" value={cube._id} />
+                  <input type="hidden" name="cubeId" value={cube.Id} />
                   <Button type="submit" color="unsafe" outline disabled={index < 2}>
                     Remove
                   </Button>

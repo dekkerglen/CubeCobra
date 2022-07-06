@@ -15,7 +15,7 @@ const { render } = require('../serverjs/render');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const CardHistory = require('../models/cardHistory');
-const Cube = require('../models/cube');
+const Cube = require('../dynamo/models/cube');
 
 const { buildIdQuery } = require('../serverjs/cubefn');
 const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
@@ -259,9 +259,11 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.cubeid), 'cards').lean();
+    const cards = await Cube.getCards(req.params.cubeid);
 
-    const found = cube.cards
+    const main = cards.boards.filter((board) => board.name === 'Mainboard');
+
+    const found = main
       .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
       .find(
         (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,

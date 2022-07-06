@@ -2,14 +2,15 @@ const mongoose = require('mongoose');
 
 const cardSchema = require('./shared/cardSchema');
 const stepsSchema = require('./shared/stepsSchema');
-const CURRENT_SCHEMA_VERSION = require('./migrations/cubeMigrations').slice(-1)[0].version;
 
 const cubeSchema = mongoose.Schema({
   name: {
+    // sort key for hashes table
     type: String,
     required: true,
   },
   shortID: {
+    // hashrow this
     type: String,
     required: true,
     unique: true,
@@ -19,10 +20,12 @@ const cubeSchema = mongoose.Schema({
     required: true,
   },
   isListed: {
+    // put into visibility
     type: Boolean,
     default: true,
   },
   isPrivate: {
+    // put into visibility
     type: Boolean,
     default: false,
   },
@@ -31,26 +34,32 @@ const cubeSchema = mongoose.Schema({
     default: false,
   },
   isFeatured: {
+    // hashrow this
     type: Boolean,
     default: false,
   },
   overrideCategory: {
+    // deprecated
     type: Boolean,
     default: false,
   },
   categoryOverride: {
+    // hashrow this
     type: String,
     default: 'Vintage',
   },
   categoryPrefixes: {
+    // hashrow this
     type: [String],
     default: [],
   },
   cards: {
+    // put in s3
     type: [cardSchema],
     default: [],
   },
   maybe: {
+    // put in s3
     type: [cardSchema],
     default: [],
   },
@@ -65,6 +74,7 @@ const cubeSchema = mongoose.Schema({
     default: -1,
   },
   numDecks: {
+    // sort key for hashes table
     type: Number,
     default: 0,
   },
@@ -73,11 +83,11 @@ const cubeSchema = mongoose.Schema({
   image_artist: String,
   image_name: String,
   owner_name: String,
-  date_updated: Date,
+  date_updated: Date, // sort key for hashes table
   updated_string: String,
   default_sorts: [String],
   default_show_unsorted: Boolean,
-  card_count: Number,
+  card_count: Number, // sort key for hashes table
   type: String,
   draft_formats: {
     type: [
@@ -86,9 +96,7 @@ const cubeSchema = mongoose.Schema({
         multiples: Boolean,
         html: String,
         markdown: String,
-        packs: {
-          type: [{ slots: [String], steps: stepsSchema }],
-        },
+        packs: [{ slots: [String], steps: stepsSchema }],
         defaultSeats: Number,
       },
     ],
@@ -114,9 +122,6 @@ const cubeSchema = mongoose.Schema({
   schemaVersion: {
     type: Number,
     default() {
-      if (this.isNew) {
-        return CURRENT_SCHEMA_VERSION;
-      }
       return void 0; // eslint-disable-line
     },
   },
@@ -136,14 +141,17 @@ const cubeSchema = mongoose.Schema({
   },
   // These fields are just for indexing
   tags: {
+    // hashrow this
     type: [String],
     default: [],
   },
   cardOracles: {
+    // hashrow this
     type: [String],
     default: [],
   },
   keywords: {
+    // hashrow this
     type: [String],
     default: [],
   },
@@ -231,16 +239,8 @@ cubeSchema.index({
   card_count: -1,
 });
 
-cubeSchema.pre('save', function saveCubeHook(next) {
-  this.schemaVersion = CURRENT_SCHEMA_VERSION;
-  if (this.cards) {
-    this.card_count = this.cards.length;
-  }
-  next();
-});
-
 const Cube = mongoose.model('Cube', cubeSchema);
-Cube.CURRENT_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION;
+Cube.CURRENT_SCHEMA_VERSION = 1;
 Cube.LAYOUT_FIELDS =
   '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri shortID';
 Cube.PREVIEW_FIELDS =

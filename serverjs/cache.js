@@ -1,6 +1,6 @@
 const { hmset, hgetall, expire, exists } = require('./redis');
 
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const flattenObject = (object) => {
   const result = [];
@@ -20,18 +20,21 @@ const flattenObject = (object) => {
 };
 
 const getUserFromId = async (id) => {
-  const entryExixts = await exists(id);
-
+  const entryExixts = await exists(`user:${id}`);
   if (!entryExixts) {
-    const user = await User.findById(id, User.PUBLIC_FIELDS).lean();
+    const user = await User.getById(id);
+
+    delete user.UsersFollowing; // don't leak this info
+    delete user.PasswordHash;
+    delete user.Email;
 
     const flattened = flattenObject(user);
-    hmset(id, flattened);
-    expire(id, 60 * 60 * 24); // 1 day
-    return hgetall(id);
+    hmset(`user:${id}`, flattened);
+    expire(`user:${id}`, 60 * 60 * 24); // 1 day
+    return hgetall(`user:${id}`);
   }
 
-  return hgetall(id);
+  return hgetall(`user:${id}`);
 };
 
 module.exports = {

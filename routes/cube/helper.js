@@ -4,7 +4,7 @@ const util = require('../../serverjs/util');
 const { setCubeType, CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
-const Cube = require('../../models/cube');
+const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../models/blog');
 
 const DEFAULT_BASICS = [
@@ -25,13 +25,13 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
     const blogpost = new Blog();
     blogpost.title = 'Cube Bulk Import - Automatic Post';
     blogpost.changed_cards = changelog;
-    blogpost.owner = cube.owner;
+    blogpost.owner = cube.Owner;
     blogpost.date = Date.now();
-    blogpost.cube = cube._id;
+    blogpost.cube = cube.Id;
     blogpost.dev = 'false';
     blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.owner_name;
-    blogpost.cubename = cube.name;
+    blogpost.username = '';
+    blogpost.cubename = cube.Name;
 
     if (missing.length > 0) {
       return render(req, res, 'BulkUploadPage', {
@@ -49,19 +49,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
       });
     }
     await blogpost.save();
-    cube = setCubeType(cube, carddb);
-    try {
-      await Cube.updateOne(
-        {
-          _id: cube._id,
-        },
-        cube,
-      );
-    } catch (err) {
-      req.logger.error(err);
-      req.flash('danger', 'Error adding cards. Please try again.');
-      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
-    }
+
     req.flash('success', 'All cards successfully added.');
     return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {

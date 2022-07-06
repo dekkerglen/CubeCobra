@@ -3,16 +3,16 @@ import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';
 
 const Notification = ({ notification }) => {
-  const texts = notification.text.split(notification.user_from_name);
+  const texts = notification.Body.split(notification.FromUsername);
   return (
-    <a className="no-underline-hover" href={notification.url}>
+    <a className="no-underline-hover" href={`/user/notification/${notification.Id}`}>
       <div className="border-top pb-2 pt-3 px-2 deck-preview">
         <h6 className="card-subtitle mb-2 text-muted">
-          <a href={notification.url}>{texts[0]}</a>
-          <a href={`/user/view/${notification.user_from}`}>{notification.user_from_name}</a>
-          <a href={notification.url}>{texts[1]}</a>
+          <a href={`/user/notification/${notification.Id}`}>{texts[0]}</a>
+          <a href={`/user/view/${notification.From}`}>{notification.FromUsername}</a>
+          <a href={`/user/notification/${notification.Id}`}>{texts[1]}</a>
           {' - '}
-          <TimeAgo date={notification.date} />
+          <TimeAgo date={notification.Date} />
         </h6>
       </div>
     </a>
@@ -21,11 +21,13 @@ const Notification = ({ notification }) => {
 
 Notification.propTypes = {
   notification: PropTypes.shape({
-    text: PropTypes.string,
-    user_from_name: PropTypes.string,
-    url: PropTypes.string,
-    user_from: PropTypes.string,
-    date: PropTypes.string,
+    Body: PropTypes.string,
+    From: PropTypes.string,
+    FromUsername: PropTypes.string,
+    Url: PropTypes.string,
+    To: PropTypes.string,
+    Date: PropTypes.number,
+    Id: PropTypes.string,
   }).isRequired,
 };
 

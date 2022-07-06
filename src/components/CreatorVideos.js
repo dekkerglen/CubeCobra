@@ -1,42 +1,52 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 
-import UserContext from 'contexts/UserContext';
-import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
-import Loading from 'pages/Loading';
+import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
+
+import InfiniteScroll from 'react-infinite-scroll-component';
 import VideoPreview from 'components/VideoPreview';
-import Paginate from 'components/Paginate';
-import useQueryParam from 'hooks/useQueryParam';
 import { csrfFetch } from 'utils/CSRF';
 
-const PAGE_SIZE = 24;
+const wait = async (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 
-const CreatorVideos = () => {
-  const user = useContext(UserContext);
+const CreatorVideos = ({ videos, lastKey }) => {
+  const [items, setItems] = useState(videos);
+  const [currentLastKey, setLastKey] = useState(lastKey);
 
-  const [videos, setVideos] = useState([]);
-  const [page, setPage] = useQueryParam('page', 0);
-  const [pages, setPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/videos/${user.id}/${page}`);
-      if (!response.ok) {
-        console.log(response);
-      }
+    const response = await csrfFetch(`/content/getcreatorcontent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+        type: 'a',
+      }),
+    });
+
+    console.log(response);
+    if (response.ok) {
       const json = await response.json();
+      if (json.success === 'true') {
+        setItems([...items, ...json.content]);
+        setLastKey(json.lastKey);
+      }
+    }
+  }, [items, setItems, currentLastKey]);
 
-      setPages(Math.ceil(json.numResults / PAGE_SIZE));
-      setVideos(json.videos);
-      setLoading(false);
-    };
-    fetchData();
-  }, [page, user]);
-
-  const updatePage = (index) => {
-    setLoading(true);
-    setPage(index);
-  };
+  const loader = (
+    <div className="centered py-3 my-4">
+      <Spinner className="position-absolute" />
+    </div>
+  );
 
   return (
     <>
@@ -49,24 +59,26 @@ const CreatorVideos = () => {
           </NavItem>
         </Nav>
       </Navbar>
-      {pages > 1 && (
-        <CardBody className="pt-0">
-          <Paginate count={pages} active={page} onClick={(i) => updatePage(i)} />
-        </CardBody>
-      )}
-      {loading ? (
-        <Loading />
-      ) : (
-        <Row className="px-3">
-          {videos.map((video) => (
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <Row className="mx-0">
+          {items.map((video) => (
             <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
               <VideoPreview video={video} />
             </Col>
           ))}
         </Row>
-      )}
+      </InfiniteScroll>
     </>
   );
+};
+
+CreatorVideos.propTypes = {
+  videos: PropTypes.arrayOf({}).isRequired,
+  lastKey: PropTypes.shape({}),
+};
+
+CreatorVideos.defaultProps = {
+  lastKey: null,
 };
 
 export default CreatorVideos;

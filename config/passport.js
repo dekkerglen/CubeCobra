@@ -1,45 +1,40 @@
 const LocalStrategy = require('passport-local').Strategy;
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const User = require('../dynamo/models/user');
 
-module.exports = function (passport) {
-  //Local Strategy
+module.exports = (passport) => {
+  // Local Strategy
   passport.use(
-    new LocalStrategy(function (username, password, done) {
-      //Match username
-      let query = {
-        username_lower: username.toLowerCase(),
-      };
-      User.findOne(query, function (err, user) {
-        if (err) throw err;
-        if (!user) {
-          return done(null, false, {
-            message: 'Incorrect username',
-          });
-        }
+    new LocalStrategy(async (username, password, done) => {
+      const queryResult = await User.getByUsername(username);
 
-        //Match password
-        bcrypt.compare(password, user.password, function (err, isMatch) {
-          if (err) throw err;
-          if (isMatch) {
-            return done(null, user);
-          } else {
-            return done(null, false, {
-              message: 'Incorrect password',
-            });
-          }
+      if (queryResult.items.length !== 1) {
+        return done(null, false, {
+          message: 'Incorrect username',
+        });
+      }
+
+      const user = queryResult.items[0];
+
+      // Match password
+      return bcrypt.compare(password, user.PasswordHash, (err, isMatch) => {
+        if (err) throw err;
+        if (isMatch) {
+          return done(null, user);
+        }
+        return done(null, false, {
+          message: 'Incorrect password',
         });
       });
     }),
   );
 
-  passport.serializeUser(function (user, done) {
-    done(null, user.id);
+  passport.serializeUser((user, done) => {
+    done(null, user.Id);
   });
 
-  passport.deserializeUser(function (id, done) {
-    User.findById(id, function (err, user) {
-      done(err, user);
-    });
+  passport.deserializeUser(async (id, done) => {
+    const user = await User.getById(id);
+    done(null, user);
   });
 };

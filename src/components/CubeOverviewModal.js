@@ -28,32 +28,13 @@ import TagInput from 'components/TagInput';
 import { TagContextProvider } from 'contexts/TagContext';
 import TextEntry from 'components/TextEntry';
 
-/**
- * A utility for safely picking the current working description from a Cube.
- *
- * @param { Cube } cube
- * @returns { string }
- */
-const pickDescriptionFromCube = (cube) => {
-  /** 2020-11-24 strusdell:
-   * @phulin believes that the check for the string literal 'undefined' here is
-   * deliberate. Presumably this would represent bad data, and should be ignored.
-   *
-   * NOTE: This may introduce weird behavior if the user enters 'undefined' as their
-   * description.
-   */
-  return Object.prototype.hasOwnProperty.call(cube, 'raw_desc') && cube.raw_desc !== 'undefined'
-    ? cube.raw_desc
-    : cube.description;
-};
-
 class CubeOverviewModal extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       isOpen: false,
-      tags: (props.cube.tags ? props.cube.tags : []).map((tag) => ({
+      tags: (props.cube.Tags ? props.cube.Tags : []).map((tag) => ({
         id: tag,
         text: tag,
       })),
@@ -152,7 +133,7 @@ class CubeOverviewModal extends Component {
 
     if (e.target.name === 'category_prefix') {
       var id = target.value;
-      var prefixes = this.state.cube.categoryPrefixes;
+      var prefixes = this.state.cube.CategoryPrefixes;
 
       if (prefixes.includes(id) && !value) {
         prefixes = prefixes.filter(function (e) {
@@ -182,8 +163,8 @@ class CubeOverviewModal extends Component {
     event.preventDefault();
 
     const cube = { ...this.state.cube };
-    cube.tags = this.state.tags.map((tag) => tag.text);
-    cube.description = cube.raw_desc;
+    cube.Tags = this.state.tags.map((tag) => tag.text);
+    cube.Description = cube.raw_desc;
     const response = await csrfFetch('/cube/api/editoverview', {
       method: 'POST',
       body: JSON.stringify(cube),
@@ -221,7 +202,7 @@ class CubeOverviewModal extends Component {
 
         <TagContextProvider
           cubeID={cubeID}
-          defaultTagColors={cube.tag_colors}
+          defaultTagColors={cube.TagColors}
           defaultShowTagColors={false}
           defaultTags={[]}
         >
@@ -235,7 +216,7 @@ class CubeOverviewModal extends Component {
                   className="form-control"
                   name="name"
                   type="text"
-                  value={cube.name}
+                  value={cube.Name}
                   required={true}
                   onChange={this.handleChange}
                 />
@@ -272,7 +253,6 @@ class CubeOverviewModal extends Component {
                                 type="radio"
                                 name="categoryOverride"
                                 value={label}
-                                disabled={cube.overrideCategory ? false : true}
                                 checked={cube.categoryOverride == label}
                                 onChange={this.handleChange}
                               />{' '}
@@ -303,9 +283,8 @@ class CubeOverviewModal extends Component {
                           id={`categoryPrefix${label}`}
                           value={label}
                           type="checkbox"
-                          checked={(cube.categoryPrefixes ? cube.categoryPrefixes : []).includes(label)}
+                          checked={(cube.CategoryPrefixes || []).includes(label)}
                           onChange={this.handleChange}
-                          disabled={cube.overrideCategory ? false : true}
                         />
                         <label className="form-check-label" for={`categoryPrefix${label}`}>
                           {label}
@@ -320,9 +299,9 @@ class CubeOverviewModal extends Component {
                   <Col xs="12" sm="6" md="6" lg="6">
                     <Card>
                       <CardHeader>Preview</CardHeader>
-                      <img className="card-img-top w-100" src={cube.image_uri} />
+                      <img className="card-img-top w-100" src={cube.IamgeUri} />
                       <CardBody>
-                        <a>Art by: {cube.image_artist}</a>
+                        <a>Art by: {cube.ImageArtist}</a>
                       </CardBody>
                     </Card>
                   </Col>
@@ -334,7 +313,7 @@ class CubeOverviewModal extends Component {
                   type="text"
                   className="me-2"
                   name="remove"
-                  value={cube.image_name}
+                  value={cube.ImageName}
                   onChange={this.imageNameChange}
                   onSubmit={this.imageNameSubmit}
                   placeholder="Cardname for Image"
@@ -346,7 +325,7 @@ class CubeOverviewModal extends Component {
                 <h6>Description</h6>
                 <TextEntry
                   name="blog"
-                  value={pickDescriptionFromCube(cube)}
+                  value={cube.Description}
                   onChange={this.handleDescriptionChange}
                   maxLength={100000}
                 />
