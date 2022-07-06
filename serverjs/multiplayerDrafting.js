@@ -4,6 +4,8 @@ const { cardType } = require('../dist/utils/Card');
 const carddb = require('./cards');
 
 const Draft = require('../models/draft');
+const Deck = require('../models/deck');
+
 const {
   hget,
   hmget,
@@ -271,6 +273,12 @@ const finishDraft = async (draftId, draft) => {
   const lock = await obtainLock(`finishdraft:${draftId}`, uuid(), 30000);
 
   if (!lock) {
+    return;
+  }
+
+  // if there somehow is already a draft for this deck, don't do anything
+  const deck = await Deck.findOne({ draft: draftId });
+  if (deck) {
     return;
   }
 
