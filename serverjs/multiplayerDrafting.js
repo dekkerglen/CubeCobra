@@ -507,8 +507,9 @@ const getDraftPick = async (draftId, seat) => {
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
   const finished = await hget(draftRef(draftId), 'finished');
+  console.log(finished);
 
-  if (finished) {
+  if (finished === 'true') {
     return 'done';
   }
 
@@ -535,7 +536,8 @@ const tryBotPicks = async (draftId) => {
 
     if (await isPackDone(draftId)) {
       if (currentPack < totalPacks) {
-        return openPack(draftId);
+        await openPack(draftId);
+        return 'in_progress';
       }
       // draft is done
       await finishDraft(draftId, await Draft.findById(draftId));
@@ -543,7 +545,8 @@ const tryBotPicks = async (draftId) => {
     }
     return 'in_progress';
   });
-  return res;
+
+  return res || 'done'; // could be null if we fail to obtain a lock
 };
 
 module.exports = {
