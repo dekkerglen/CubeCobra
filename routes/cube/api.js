@@ -653,29 +653,11 @@ router.post(
   }),
 );
 
-router.get(
-  '/maybe/:id',
-  ensureAuth,
-  util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube not found',
-      });
-    }
-    return res.status(200).send({
-      success: 'true',
-      maybe: maybeCards(cube, carddb),
-    });
-  }),
-);
-
 router.post(
   '/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(400).send({
@@ -691,6 +673,10 @@ router.post(
       });
     }
 
+    const oldCubeCards = await Cube.getCards(req.params.id);
+    const newCubeCards = await Cube.deepClone(oldCubeCards);
+    const mainboard = newCubeCards.boards.find((board) => board.name === 'Mainboard');
+
     let tag = null;
     if (req.body.packid) {
       const pack = await Package.findById(req.body.packid);
@@ -700,7 +686,7 @@ router.post(
     }
 
     if (tag) {
-      cube.cards.push(
+      mainboard.cards.push(
         ...req.body.cards.map((id) => {
           const c = util.newCard(carddb.cardFromId(id));
           c.tags = [tag];
@@ -709,11 +695,10 @@ router.post(
         }),
       );
     } else {
-      cube.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+      mainboard.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
 
-    cube = setCubeType(cube, carddb);
-    await cube.save();
+    await Cube.updateCards(req.params.id, oldCubeCards, newCubeCards);
 
     if (tag) {
       const blogpost = new Blog();
