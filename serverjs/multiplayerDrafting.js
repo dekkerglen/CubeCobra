@@ -507,7 +507,6 @@ const getDraftPick = async (draftId, seat) => {
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
   const finished = await hget(draftRef(draftId), 'finished');
-  console.log(finished);
 
   if (finished === 'true') {
     return 'done';
