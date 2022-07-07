@@ -7,7 +7,6 @@ import {
   Collapse,
   Col,
   Container,
-  CustomInput,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
@@ -23,7 +22,6 @@ import {
   NavLink,
   Navbar,
   NavbarToggler,
-  Row,
   UncontrolledDropdown,
   FormGroup,
 } from 'reactstrap';
@@ -65,7 +63,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -99,13 +97,13 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
             <br />• .csv with the same format as our .csv export (columns may be omitted and re-arranged, default values
             may be used).
           </p>
-          <CustomInput type="file" id="uploadBulkFile" name="document" />
-          <Label for="uploadBulkFile" className="sr-only">
+          <Input type="file" id="uploadBulkFile" name="document" />
+          <Label for="uploadBulkFile" className="visually-hidden">
             Choose file
           </Label>
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -137,13 +135,13 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
             Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
             .csv export.
           </p>
-          <CustomInput type="file" id="uploadReplacementFile" name="document" />
-          <Label for="uploadReplacementFile" className="sr-only">
+          <Input type="file" id="uploadReplacementFile" name="document" />
+          <Label for="uploadReplacementFile" className="visually-hidden">
             Choose file
           </Label>
         </ModalBody>
         <ModalFooter>
-          <Button color="success" type="submit">
+          <Button color="accent" type="submit">
             Upload
           </Button>
           <Button color="secondary" onClick={toggle}>
@@ -195,22 +193,22 @@ const CompareCollapse = (props) => {
   return (
     <Collapse {...props}>
       <Container>
-        <Row>
-          <Col>
-            <Form method="GET" action={targetUrl} inline>
-              <Input
-                type="text"
-                className="mb-2 mr-2"
-                placeholder="Comparison Cube ID"
-                value={compareID}
-                onChange={handleChange}
-              />
-              <Button color="success" className="mb-2" href={targetUrl}>
-                Compare Cubes
-              </Button>
-            </Form>
+        <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
+          <Col xs={12}>
+            <Input
+              type="text"
+              className="mb-2 me-2"
+              placeholder="Comparison Cube ID"
+              value={compareID}
+              onChange={handleChange}
+            />
           </Col>
-        </Row>
+          <Col>
+            <Button color="accent" className="mb-2" href={targetUrl}>
+              Compare Cubes
+            </Button>
+          </Col>
+        </Form>
       </Container>
     </Collapse>
   );
@@ -312,7 +310,7 @@ const CubeListNavbar = ({
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
-            <Label className="sr-only" for="viewSelect">
+            <Label className="visually-hidden" for="viewSelect">
               Cube View Style
             </Label>
             <Input type="select" id="viewSelect" value={cubeView} onChange={handleChangeCubeView}>
@@ -325,7 +323,7 @@ const CubeListNavbar = ({
           <NavbarToggler onClick={toggle} />
         </div>
         <Collapse isOpen={isOpen} navbar>
-          <Nav className="ml-auto" navbar>
+          <Nav className="ms-auto" navbar>
             {!canEdit ? (
               ''
             ) : (
@@ -363,7 +361,7 @@ const CubeListNavbar = ({
               <DropdownToggle nav caret>
                 Display
               </DropdownToggle>
-              <DropdownMenu right>
+              <DropdownMenu end>
                 <DropdownItem onClick={handleOpenTagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
@@ -387,7 +385,7 @@ const CubeListNavbar = ({
               <DropdownToggle nav caret>
                 {canEdit ? 'Import/Export' : 'Export'}
               </DropdownToggle>
-              <DropdownMenu right>
+              <DropdownMenu end>
                 {canEdit && (
                   <>
                     <DropdownItem disabled>Import</DropdownItem>
@@ -407,19 +405,19 @@ const CubeListNavbar = ({
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isSortUsed} onChange={() => {}} /> Use Sort
-                    <Tooltip text="Order export using current sort options." wrapperTag="span" className="ml-auto mr-0">
+                    <Input type="checkbox" className="me-1" checked={isSortUsed} onChange={() => {}} /> Use Sort
+                    <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
                       <QuestionIcon size={16} />
                     </Tooltip>
                   </FormGroup>
                 </DropdownItem>
                 <DropdownItem toggle={false} onClick={() => setIsFilterUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
-                    <Input type="checkbox" checked={isFilterUsed} onChange={() => {}} /> Use Filter
+                    <Input type="checkbox" className="me-1" checked={isFilterUsed} onChange={() => {}} /> Use Filter
                     <Tooltip
                       text="Include in export only cards matching current filter."
                       wrapperTag="span"
-                      className="ml-auto mr-0"
+                      className="ms-auto me-0"
                     >
                       <QuestionIcon size={16} />
                     </Tooltip>

@@ -3,27 +3,22 @@ const express = require('express');
 const { body, param } = require('express-validator');
 const fetch = require('node-fetch');
 const RSS = require('rss');
-const { Canvas, Image } = require('canvas');
 
-Canvas.Image = Image;
-
-const createdraft = require('../../dist/drafting/createdraft.js');
-const filterutil = require('../../dist/filtering/FilterCards.js');
-const miscutil = require('../../dist/utils/Util.js');
-const carddb = require('../../serverjs/cards.js');
+const createdraft = require('../../dist/drafting/createdraft');
+const filterutil = require('../../dist/filtering/FilterCards');
+const miscutil = require('../../dist/utils/Util');
+const carddb = require('../../serverjs/cards');
 const { render } = require('../../serverjs/render');
 const { ensureAuth, csrfProtection } = require('../middleware');
-const util = require('../../serverjs/util.js');
-const generateMeta = require('../../serverjs/meta.js');
+const util = require('../../serverjs/util');
+const generateMeta = require('../../serverjs/meta');
+const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
   setCubeType,
   generateShortId,
   buildIdQuery,
-  addCardHtml,
-  removeCardHtml,
-  replaceCardHtml,
   abbreviate,
   CSVtoCards,
   compareCubes,
@@ -31,7 +26,10 @@ const {
   addDeckCardAnalytics,
   cachePromise,
   isCubeViewable,
-} = require('../../serverjs/cubefn.js');
+  addCardHtml,
+  removeCardHtml,
+  replaceCardHtml,
+} = require('../../serverjs/cubefn');
 
 const {
   CARD_HEIGHT,
@@ -42,7 +40,7 @@ const {
   createPool,
   shuffle,
   updateCubeAndBlog,
-} = require('./helper.js');
+} = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -52,15 +50,16 @@ const User = require('../../models/user');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const { fromEntries } = require('../../serverjs/util.js');
+const { fromEntries } = require('../../serverjs/util');
+const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
 router.use(csrfProtection);
 
-router.use('/blog', require('./blog.js'));
-router.use('/deck', require('./deck.js'));
-router.use('/api', require('./api.js'));
-router.use('/download', require('./download.js'));
+router.use('/blog', require('./blog'));
+router.use('/deck', require('./deck'));
+router.use('/api', require('./api'));
+router.use('/download', require('./download'));
 
 router.post('/add', ensureAuth, async (req, res) => {
   try {
@@ -412,7 +411,7 @@ router.get('/overview/:id', async (req, res) => {
       'CubeOverviewPage',
       {
         cube,
-        post: blogs ? blogs[0] : null,
+        post: blogs && blogs.length > 0 ? fillBlogpostChangelog(blogs[0]) : null,
         followed: req.user && cube.users_following && cube.users_following.some((id) => req.user._id.equals(id)),
         followers,
         priceOwned: !cube.privatePrices ? totalPriceOwned : null,
@@ -459,8 +458,22 @@ router.get('/rss/:id', async (req, res) => {
     blogs.forEach((blog) => {
       let content = blog.html ? blog.html : blog.content;
 
-      if (blog.changelist) {
-        const changeSetElement = `<div class="change-set">${blog.changelist}</div>`;
+      fillBlogpostChangelog(blog);
+      if (blog.changelist || blog.changed_cards) {
+        let changeSetElement = '<div class="change-set">';
+        if (blog.changelist) changeSetElement += blog.changelist;
+        else {
+          for (const change in blog.changed_cards) {
+            if (change.added && change.removed) {
+              changeSetElement += replaceCardHtml(change.removed, change.added);
+            } else if (change.added) {
+              changeSetElement += addCardHtml(change.added);
+            } else if (change.removed) {
+              changeSetElement += removeCardHtml(change.removed);
+            }
+          }
+        }
+        changeSetElement += '</div>';
         if (content) {
           content += changeSetElement;
         } else {
@@ -803,7 +816,6 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      const imgScale = 0.9;
       // Try to make it roughly 5 times as wide as it is tall in cards.
       const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
       const height = Math.ceil(pack.pack.length / width);
@@ -811,26 +823,16 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       const srcArray = pack.pack.map((card, index) => {
         return {
           src: card.imgUrl || card.details.image_normal,
-          x: imgScale * CARD_WIDTH * (index % width),
-          y: imgScale * CARD_HEIGHT * Math.floor(index / width),
-          w: imgScale * CARD_WIDTH,
-          h: imgScale * CARD_HEIGHT,
-          rX: imgScale * 0.065 * CARD_WIDTH,
-          rY: imgScale * 0.0464 * CARD_HEIGHT,
+          x: CARD_WIDTH * (index % width),
+          y: CARD_HEIGHT * Math.floor(index / width),
         };
       });
 
-      const image = await generateSamplepackImage(srcArray, {
-        width: imgScale * CARD_WIDTH * width,
-        height: imgScale * CARD_HEIGHT * height,
-        Canvas,
-      });
-
-      return Buffer.from(image.replace(/^data:image\/png;base64,/, ''), 'base64');
+      return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
     });
 
     res.writeHead(200, {
-      'Content-Type': 'image/png',
+      'Content-Type': 'image/webp',
     });
     return res.end(imageBuffer);
   } catch (err) {
@@ -903,7 +905,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     }
     const lines = items.match(/[^\r\n]+/g);
     if (lines) {
-      let changelog = '';
+      const changelog = [];
       let missing = [];
       const added = [];
       let newCards = [];
@@ -931,8 +933,16 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         const newDetails = addDetails(newCards);
 
         const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
-        changelog += onlyA.map(({ cardID }) => removeCardHtml(carddb.cardFromId(cardID))).join('');
-        changelog += onlyB.map(({ cardID }) => addCardHtml(carddb.cardFromId(cardID))).join('');
+        changelog.push(
+          ...onlyA.map(({ cardID }) => {
+            return { addedID: null, removedID: cardID };
+          }),
+        );
+        changelog.push(
+          ...onlyB.map(({ cardID }) => {
+            return { addedID: cardID, removedID: null };
+          }),
+        );
         added.push(...onlyB);
       } else {
         // Eventually add plaintext support here.
@@ -1152,6 +1162,7 @@ router.post(
 
 router.post(
   '/startdraft/:id',
+  ensureAuth,
   body('id').toInt(),
   body('botsOnly').toBoolean(),
   body('seats').toInt({
@@ -1204,7 +1215,7 @@ router.post(
       // setup draft
       const format = createdraft.getDraftFormat(params, cube);
 
-      let draft = new Draft();
+      const draft = new Draft();
       let populated = {};
       try {
         populated = createdraft.createDraft(
@@ -1232,17 +1243,8 @@ router.post(
 
       await draft.save();
 
-      if (req.body.botsOnly) {
-        draft = await Draft.findById(draft._id).lean();
-        // insert card details everywhere that needs them
-        for (const card of draft.cards) {
-          card.details = carddb.cardFromId(card.cardID);
-        }
-        return res.status(200).send({
-          success: 'true',
-          draft,
-        });
-      }
+      await createLobby(draft, req.user);
+
       return res.redirect(`/cube/draft/${draft._id}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -1396,19 +1398,20 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     const edits = req.body.body.split(';');
     const removes = new Set();
     const adds = [];
-    let changelog = '';
+    const changelog = [];
 
     for (const edit of edits) {
       if (edit.charAt(0) === '+') {
         // add id
-        const details = carddb.cardFromId(edit.substring(1));
+        const id = edit.substring(1);
+        const details = carddb.cardFromId(id);
         if (!details) {
           req.logger.error({
             message: `Card not found: ${edit}`,
           });
         } else {
           adds.push(details);
-          changelog += addCardHtml(details);
+          changelog.push({ addedID: id, removedID: null });
         }
       } else if (edit.charAt(0) === '-') {
         // remove id
@@ -1421,14 +1424,14 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
           const card = cube.cards[indexOut];
           if (card.cardID === outID) {
             removes.add(indexOut);
-            changelog += removeCardHtml(carddb.cardFromId(card.cardID));
+            changelog.push({ addedID: null, removedID: outID });
           } else {
             req.flash('danger', `Unable to remove card due outdated index: ${carddb.cardFromId(outID).name}`);
           }
         }
       } else if (edit.charAt(0) === '/') {
-        const [outStr, idIn] = edit.substring(1).split('>');
-        const detailsIn = carddb.cardFromId(idIn);
+        const [outStr, inID] = edit.substring(1).split('>');
+        const detailsIn = carddb.cardFromId(inID);
         if (!detailsIn) {
           req.logger.error({
             message: `Card not found: ${edit}`,
@@ -1441,15 +1444,15 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
         const indexOut = parseInt(indexOutStr, 10);
         if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
           req.flash('danger', `Unable to replace card due to invalid index: ${carddb.cardFromId(outID).name}`);
-          changelog += addCardHtml(detailsIn);
+          changelog.push({ addedID: inID, removedID: null });
         } else {
           const cardOut = cube.cards[indexOut];
           if (cardOut.cardID === outID) {
             removes.add(indexOut);
-            changelog += replaceCardHtml(carddb.cardFromId(cardOut.cardID), detailsIn);
+            changelog.push({ addedID: inID, removedID: outID });
           } else {
             req.flash('danger', `Unable to replace card due outdated index: ${carddb.cardFromId(outID).name}`);
-            changelog += addCardHtml(detailsIn);
+            changelog.push({ addedID: inID, removedID: null });
           }
         }
       } else {
@@ -1472,7 +1475,7 @@ router.post('/edit/:id', ensureAuth, async (req, res) => {
     if (req.body.blog.length > 0) {
       blogpost.markdown = req.body.blog.substring(0, 10000);
     }
-    blogpost.changelist = changelog;
+    blogpost.changed_cards = changelog;
     blogpost.owner = cube.owner;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;
@@ -1588,11 +1591,11 @@ router.post('/resize/:id/:size', async (req, res) => {
     }
     list = (filter ? list.filter(filter) : list).slice(0, Math.abs(newSize - cube.cards.length));
 
-    let changelog = '';
+    const changelog = [];
     if (newSize > cube.cards.length) {
       // we add to cube
       const toAdd = list.map((card) => {
-        changelog += addCardHtml(card.details);
+        changelog.push({ addedID: card.details._id, removedID: null });
         return util.newCard(card.details);
       });
       cube.cards = cube.cards.concat(toAdd);
@@ -1601,7 +1604,7 @@ router.post('/resize/:id/:size', async (req, res) => {
       for (const card of list) {
         for (let i = 0; i < cube.cards.length; i += 1) {
           if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
-            changelog += removeCardHtml(card.details);
+            changelog.push({ addedID: null, removedID: card.cardID });
             cube.cards.splice(i, 1);
             i = cube.cards.length;
           }
@@ -1613,7 +1616,7 @@ router.post('/resize/:id/:size', async (req, res) => {
 
     const blogpost = new Blog();
     blogpost.title = 'Resize - Automatic Post';
-    blogpost.changelist = changelog;
+    blogpost.changed_cards = changelog;
     blogpost.owner = cube.owner;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;

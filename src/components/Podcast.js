@@ -6,6 +6,7 @@ import PodcastPropType from 'proptypes/PodcastPropType';
 import CommentsSection from 'components/CommentsSection';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import AspectRatioBox from 'components/AspectRatioBox';
+import Username from 'components/Username';
 
 import { CardBody, CardHeader, Row, Col } from 'reactstrap';
 
@@ -15,7 +16,7 @@ const Podcast = ({ podcast, episodes }) => {
       <CardHeader>
         <h1>{podcast.title}</h1>
         <h6>
-          By <a href={`/user/view/${podcast.owner}`}>{podcast.username}</a>
+          By <Username userId={podcast.owner} defaultName={podcast.username} />
         </h6>
       </CardHeader>
       <Row>

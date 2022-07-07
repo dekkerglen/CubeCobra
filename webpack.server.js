@@ -1,3 +1,3 @@
-const common = require('./webpack.common.js');
+const common = require('./webpack.common');
 
 module.exports = common.serverConfig;

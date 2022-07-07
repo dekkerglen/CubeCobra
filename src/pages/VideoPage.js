@@ -21,8 +21,8 @@ const VideoPage = ({ loginCallback, video }) => {
         {user && user.id === video.owner && video.status !== 'published' && (
           <CardHeader>
             <h5>
-              <em className="pr-3">*Draft*</em>
-              <ButtonLink color="success" outline href={`/content/video/edit/${video._id}`}>
+              <em className="pe-3">*Draft*</em>
+              <ButtonLink color="accent" outline href={`/content/video/edit/${video._id}`}>
                 Edit
               </ButtonLink>
             </h5>

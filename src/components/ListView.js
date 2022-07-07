@@ -255,15 +255,8 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
 
   return (
     <tr className={cardColorClass(card)}>
-      <td className="align-middle">
-        <Input
-          type="checkbox"
-          bsSize="sm"
-          data-index={index}
-          checked={checked}
-          onChange={onCheck}
-          className="d-block mx-auto"
-        />
+      <td>
+        <Input type="checkbox" data-index={index} checked={checked} onChange={onCheck} className="mx-auto" />
       </td>
       <AutocardTd className="align-middle text-truncate" card={card}>
         {card.details.name}
@@ -436,7 +429,7 @@ const ListView = ({ cards }) => {
   return (
     <>
       <Alerts alerts={alerts} />
-      <Form inline>
+      <Form>
         <PagedTable rows={rowsFlat} size="sm" className="list-view-table">
           <thead>
             <tr>

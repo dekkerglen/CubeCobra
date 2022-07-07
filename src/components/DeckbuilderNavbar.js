@@ -17,7 +17,17 @@ import withModal from 'components/WithModal';
 const DeleteDeckModalLink = withModal(NavLink, DeckDeleteModal);
 const BasicsModalLink = withModal(NavLink, BasicsModal);
 
-const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setSideboard, setDeck, ...props }) => {
+const DeckbuilderNavbar = ({
+  deck,
+  addBasics,
+  name,
+  description,
+  className,
+  setSideboard,
+  setDeck,
+  seat,
+  ...props
+}) => {
   const { basics } = deck;
   const [isOpen, setIsOpen] = useState(false);
 
@@ -63,20 +73,20 @@ const DeckbuilderNavbar = ({ deck, addBasics, name, description, className, setS
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    let main = deck.seats[0].pickorder;
+    let main = deck.seats[seat].pickorder;
     if (main.length <= 0) {
-      main = [...deck.seats[0].deck.flat(3)].concat(...deck.seats[0].sideboard.flat(3));
+      main = [...deck.seats[seat].deck.flat(3), ...deck.seats[seat].sideboard.flat(3)];
     }
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
     const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     setSideboard(newSide);
     setDeck(newDeckCards);
-  }, [deck, basics, setDeck, setSideboard]);
+  }, [deck.seats, deck.cards, seat, basics, setSideboard, setDeck]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
-      <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+      <NavbarToggler onClick={toggleNavbar} className="ms-auto" />
       <Collapse isOpen={isOpen} navbar>
         <Nav navbar>
           <NavItem>
@@ -139,6 +149,7 @@ DeckbuilderNavbar.propTypes = {
   className: PropTypes.string,
   setDeck: PropTypes.func.isRequired,
   setSideboard: PropTypes.func.isRequired,
+  seat: PropTypes.number.isRequired,
 };
 
 DeckbuilderNavbar.defaultProps = {

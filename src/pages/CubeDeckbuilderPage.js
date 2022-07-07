@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
 
@@ -16,22 +16,26 @@ import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 import { makeSubtitle } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
-const oppositeLocation = {
-  [DraftLocation.DECK]: DraftLocation.SIDEBOARD,
-  [DraftLocation.SIDEBOARD]: DraftLocation.DECK,
-};
+const getMatchingSeat = (seats, userid) =>
+  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
 
 const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
-  const { basics } = initialDeck;
+  const user = useContext(UserContext);
+  const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
-    initialDeck.seats[0].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
   const [sideboard, setSideboard] = useState(
-    initialDeck.seats[0].sideboard.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].sideboard.map((row) =>
+      row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex])),
+    ),
   );
+
+  const { basics } = initialDeck;
 
   const locationMap = {
     [DraftLocation.DECK]: [deck, setDeck],
@@ -40,6 +44,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const handleMoveCard = useCallback(
     (source, target) => {
+      console.log(source, target);
+
       if (source.equals(target)) {
         return;
       }
@@ -60,28 +66,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
     [locationMap],
   );
 
-  const handleClickCard = useCallback(
-    (event) => {
-      event.preventDefault();
-      /* eslint-disable-line no-undef */ autocard_hide_card();
-      const eventTarget = event.currentTarget;
-      const locationType = eventTarget.getAttribute('data-location-type');
-      const locationData = JSON.parse(eventTarget.getAttribute('data-location-data'));
-      const source = new DraftLocation(locationType, locationData);
-      const target = new DraftLocation(oppositeLocation[source.type], [...source.data]);
-      target.data[2] = 0;
-      if (target.type === DraftLocation.SIDEBOARD) {
-        // Only one row for the sideboard.
-        target.data[0] = 0;
-      } else {
-        // Pick row based on CNC.
-        target.data[0] = eventTarget.getAttribute('data-cnc') === 'true' ? 0 : 1;
-      }
-      handleMoveCard(source, target);
-    },
-    [handleMoveCard],
-  );
-
   const addBasics = useCallback(
     (numBasics) => {
       const toAdd = numBasics.map((count, index) => new Array(count).fill(initialDeck.cards[basics[index]])).flat();
@@ -96,9 +80,10 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
 
-  const [name, setName] = useState(initialDeck.seats[0].name);
-  const [description, setDescription] = useState(initialDeck.seats[0].description);
+  const [name, setName] = useState(initialDeck.seats[seat].name);
+  const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
+  console.log(deck);
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -112,6 +97,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
             setDeck={setDeck}
             setSideboard={setSideboard}
             cards={initialDeck.cards}
+            seat={seat}
           />
           <DynamicFlash />
           <Row className="mb-3">
@@ -126,7 +112,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                       locationType={DraftLocation.DECK}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
-                      onClickCard={handleClickCard}
+                      onClickCard={handleMoveCard}
                     />
                     <DeckStacks
                       className="border-top"
@@ -135,13 +121,13 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                       locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
-                      onClickCard={handleClickCard}
+                      onClickCard={handleMoveCard}
                     />
                   </DndProvider>
                 </ErrorBoundary>
                 <CardHeader className="border-top">
                   <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                    <h4 className="mb-0 mr-auto">About</h4>
+                    <h4 className="mb-0 me-auto">About</h4>
                   </CardTitle>
                 </CardHeader>
                 <CardBody>
@@ -152,10 +138,11 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    maxLength="100"
                   />
                   <br />
                   <h6>Description</h6>
-                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} />
+                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} maxLength="10000" />
                 </CardBody>
               </Card>
             </Col>

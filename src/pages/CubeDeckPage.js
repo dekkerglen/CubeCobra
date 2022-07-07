@@ -33,7 +33,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
-import { DraftPropType } from 'proptypes/DraftbotPropTypes';
+import DraftPropType from 'proptypes/DraftPropType';
 
 const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   const user = useContext(UserContext);
@@ -63,7 +63,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
       <CubeLayout cube={cube} activeLink="playtest">
         <DisplayContextProvider cubeID={cube._id}>
           <Navbar expand="md" light className="usercontrols mb-3">
-            <div className="view-style-select pr-2">
+            <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
                 Cube View Style
               </Label>
@@ -75,7 +75,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 ))}
               </Input>
             </div>
-            <div className="view-style-select pr-2">
+            <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
                 Cube View Style
               </Label>
@@ -85,7 +85,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 <option value="draftbot">Draftbot Analysis</option>
               </Input>
             </div>
-            <NavbarToggler onClick={toggleNavbar} className="ml-auto" />
+            <NavbarToggler onClick={toggleNavbar} className="ms-auto" />
             <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
@@ -95,20 +95,18 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     )}
                   />
                 </NavItem>
-                {user && deck.owner === user.id && (
+                {user && deck.seats[seatIndex].userid === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
                   </NavItem>
                 )}
-                {/* loading && <Spinner className="position-absolute" /> */}
                 {draft ? (
                   <UncontrolledDropdown nav inNavbar>
                     <DropdownToggle nav caret>
                       Rebuild/Redraft Seat
                     </DropdownToggle>
-                    <DropdownMenu right>
+                    <DropdownMenu end>
                       <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
-                      {/* <DropdownItem onClick={haveBotsRedraft}>Have Bots Redraft</DropdownItem> */}
                       <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
                         Clone and Rebuild
                       </DropdownItem>
@@ -124,7 +122,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                   <DropdownToggle nav caret>
                     Export
                   </DropdownToggle>
-                  <DropdownMenu right>
+                  <DropdownMenu end>
                     <DropdownItem href={`/cube/deck/download/txt/${deck._id}/${seatIndex}`}>
                       Card Names (.txt)
                     </DropdownItem>

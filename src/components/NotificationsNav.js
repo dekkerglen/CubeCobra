@@ -23,16 +23,16 @@ const NotificationsNav = () => {
     <UncontrolledDropdown nav inNavbar>
       <DropdownToggle nav caret>
         {notifications.length > 0 && (
-          <Badge color="danger">{notifications.length > 100 ? '100+' : notifications.length}</Badge>
+          <Badge color="unsafe">{notifications.length > 100 ? '100+' : notifications.length}</Badge>
         )}
         <img className="notification-icon" src="/content/notification.png" alt="notifications" />
       </DropdownToggle>
-      <DropdownMenu className="dropdown-no-green pb-0 mb-0" right>
+      <DropdownMenu className="dropdown-no-green pb-0 mb-0" end>
         <CardHeader>
           <h6>
             Notifications
             {notifications.length > 0 && (
-              <LinkButton className="card-subtitle float-right mt-0" onClick={clear}>
+              <LinkButton className="card-subtitle float-end mt-0" onClick={clear}>
                 Clear All
               </LinkButton>
             )}

@@ -39,7 +39,8 @@ const parseToken = (token) => {
 
 const nameToOracle = (name, carddb) => {
   try {
-    return carddb.cardFromId(carddb.getIdsFromName(name)[0]).oracle_id;
+    // need to ignore art cards as those are not reasonable
+    return carddb.getMostReasonable(name).oracle_id;
   } catch (err) {
     return { error: `"${name}" is not a valid card name` };
   }

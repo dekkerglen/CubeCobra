@@ -6,10 +6,10 @@ const es = require('event-stream');
 const fetch = require('node-fetch');
 const AWS = require('aws-sdk');
 const { winston } = require('./cloudwatch');
-const cardutil = require('../dist/utils/Card.js');
+const cardutil = require('../dist/utils/Card');
 
-const util = require('./util.js');
-const carddb = require('./cards.js');
+const util = require('./util');
+const carddb = require('./cards');
 
 const catalog = {};
 
@@ -298,7 +298,7 @@ function getTokens(card, catalogCard) {
           const re = new RegExp(reString);
           const result = re.exec(ability);
           // eslint-disable-next-line no-continue
-          if (typeof result === 'undefined') continue;
+          if (!result) continue;
 
           let tokenPowerAndToughness = result[4];
           const tokenColorString = result[5] ? result[5] : result[1];

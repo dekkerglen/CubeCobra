@@ -23,8 +23,8 @@ const ArticlePage = ({ loginCallback, article }) => {
         {user && user.id === article.owner && article.status !== 'published' && (
           <CardHeader>
             <h5>
-              <em className="pr-3">*Draft*</em>
-              <ButtonLink color="success" outline href={`/content/article/edit/${article._id}`}>
+              <em className="pe-3">*Draft*</em>
+              <ButtonLink color="accent" outline href={`/content/article/edit/${article._id}`}>
                 Edit
               </ButtonLink>
             </h5>

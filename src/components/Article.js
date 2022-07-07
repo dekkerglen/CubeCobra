@@ -4,6 +4,7 @@ import ArticlePropType from 'proptypes/ArticlePropType';
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
+import Username from 'components/Username';
 
 import { CardBody, CardHeader } from 'reactstrap';
 
@@ -13,7 +14,7 @@ const Article = ({ article }) => {
       <CardHeader>
         <h1>{article.title}</h1>
         <h6>
-          By <a href={`/user/view/${article.owner}`}>{article.username}</a>
+          By <Username userId={article.owner} defaultName={article.username} />
           {' | '}
           <TimeAgo date={article.date} />
         </h6>

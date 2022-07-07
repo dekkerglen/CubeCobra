@@ -11,6 +11,12 @@ const blogSchema = mongoose.Schema({
   dev: String,
   date_formatted: String,
   changelist: String,
+  changed_cards: [
+    {
+      addedID: String,
+      removedID: String,
+    },
+  ],
   username: {
     type: String,
     default: 'User',

@@ -11,7 +11,7 @@ const Deck = require('../../models/deck');
 const Draft = require('../../models/draft');
 const Cube = require('../../models/cube');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const carddb = require('../../serverjs/cards.js');
+const carddb = require('../../serverjs/cards');
 const { newCardAnalytics, getEloAdjustment, ELO_BASE, CUBE_ELO_SPEED } = require('../../serverjs/cubefn');
 const { fromEntries } = require('../../serverjs/util');
 

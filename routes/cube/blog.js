@@ -1,17 +1,18 @@
 const express = require('express');
 
 const { ensureAuth } = require('../middleware');
-const carddb = require('../../serverjs/cards.js');
-const util = require('../../serverjs/util.js');
+const carddb = require('../../serverjs/cards');
+const util = require('../../serverjs/util');
 const { render } = require('../../serverjs/render');
-const generateMeta = require('../../serverjs/meta.js');
-const miscutil = require('../../dist/utils/Util.js');
+const generateMeta = require('../../serverjs/meta');
+const miscutil = require('../../dist/utils/Util');
 
-const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn.js');
+const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
 const Cube = require('../../models/cube');
 const Blog = require('../../models/blog');
 const User = require('../../models/user');
+const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
 
@@ -103,7 +104,7 @@ router.get('/blogpost/:id', async (req, res) => {
       req.flash('danger', 'Blog post not found');
       return res.redirect('/cube/blog/404');
     }
-
+    fillBlogpostChangelog(post);
     return render(req, res, 'BlogPostPage', {
       post,
     });
@@ -189,6 +190,7 @@ router.get('/:id/:page', async (req, res) => {
       .limit(10)
       .lean();
     const [blogs, count] = await Promise.all([blogsQ, countQ]);
+    blogs.forEach(fillBlogpostChangelog);
 
     return render(
       req,

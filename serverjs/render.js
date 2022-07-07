@@ -119,6 +119,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
     reactProps.loginCallback = req.baseUrl + req.path;
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
+    reactProps.domain = process.env.DOMAIN;
 
     if (!options.metadata) {
       options.metadata = [];
@@ -130,6 +131,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       });
     }
 
+    const theme = (req && req.user && req.user.theme) || 'default';
     res.render('main', {
       reactHTML:
         NODE_ENV === 'production'
@@ -139,7 +141,8 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       page,
       metadata: options.metadata,
       title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
-      colors: req.user && req.user.theme ? `/css/${req.user.theme}.css` : '/css/default.css',
+      colors: `/css/${theme}.css`,
+      bootstrap: `/css/bootstrap/bs-${theme}.css`,
       patron: req.user && req.user.roles.includes('Patron'),
       notice: process.env.NOTICE,
     });

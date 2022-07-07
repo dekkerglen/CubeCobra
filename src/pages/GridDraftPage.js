@@ -63,7 +63,7 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
             <Button
               block
               outline
-              color="success"
+              color="accent"
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -82,9 +82,9 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
         <Row key={`row-${row}`} className="justify-content-center">
           <Col className="my-2" xs="1">
             <Button
-              className="float-right h-100"
+              className="float-end h-100"
               outline
-              color="success"
+              color="accent"
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -285,7 +285,7 @@ GridDraftPage.propTypes = {
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
     _id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
-    unopenedPacks: PropTypes.array.isRequired,
+    unopenedPacks: PropTypes.arrayOf().isRequired,
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired)).isRequired,
     basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
     cube: PropTypes.string.isRequired,

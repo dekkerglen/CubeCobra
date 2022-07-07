@@ -7,7 +7,6 @@ import {
   Collapse,
   Form,
   InputGroup,
-  InputGroupAddon,
   Row,
   UncontrolledAlert,
   FormGroup,
@@ -177,9 +176,9 @@ const EditCollapse = ({ cubeView, ...props }) => {
           {message}
         </UncontrolledAlert>
       ))}
-      <Row noGutters>
-        <Row noGutters className="mr-auto">
-          <Form inline className="mb-2 mr-2" onSubmit={handleAdd}>
+      <Row className="me-auto g-0">
+        <Col xs={12} md="auto">
+          <Form className="mb-2 me-2" onSubmit={handleAdd}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
                 treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
@@ -195,14 +194,14 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <InputGroupAddon addonType="append">
-                <Button color="success" type="submit" disabled={addValue.length === 0}>
-                  Add
-                </Button>
-              </InputGroupAddon>
+              <Button color="accent" type="submit" disabled={addValue.length === 0}>
+                Add
+              </Button>
             </InputGroup>
           </Form>
-          <Form inline className="mb-2 mr-2" onSubmit={handleRemoveReplace}>
+        </Col>
+        <Col xs={12} md="auto">
+          <Form className="mb-2 me-2" onSubmit={handleRemoveReplace}>
             <InputGroup className="flex-nowrap">
               <AutocompleteInput
                 cubeId={cube._id}
@@ -219,34 +218,34 @@ const EditCollapse = ({ cubeView, ...props }) => {
                 data-lpignore
                 className="square-right"
               />
-              <InputGroupAddon addonType="append">
-                <Button color="success" type="submit" disabled={removeValue.length === 0}>
-                  Remove/Replace
-                </Button>
-              </InputGroupAddon>
+              <Button color="accent" type="submit" disabled={removeValue.length === 0}>
+                Remove/Replace
+              </Button>
             </InputGroup>
           </Form>
-          <Form inline className="mb-2 mr-2">
+        </Col>
+        <Col xs="auto">
+          <Form className="mb-2 me-2">
             <InputGroup>
-              <InputGroupAddon addonType="prepend">
-                <InputGroupText>
-                  <Input
-                    addon
-                    type="checkbox"
-                    aria-label="Checkbox for following text input"
-                    checked={specifyEdition}
-                    onChange={() => setSpecifyEdition(!specifyEdition)}
-                  />
-                </InputGroupText>
-              </InputGroupAddon>
+              <InputGroupText>
+                <Input
+                  addon
+                  type="checkbox"
+                  aria-label="Checkbox for following text input"
+                  checked={specifyEdition}
+                  onChange={() => setSpecifyEdition(!specifyEdition)}
+                />
+              </InputGroupText>
               <Input disabled value="Specify Versions" />
             </InputGroup>
           </Form>
-        </Row>
-        <ResizeModal cubeID={cubeID} />
-        <Button color="success" className="mb-2" onClick={toggleShowMaybeboard}>
-          Maybeboard
-        </Button>
+        </Col>
+        <Col xs={12} md="auto" className="ms-md-auto">
+          <ResizeModal cubeID={cubeID} />
+          <Button color="accent" className="mb-2" onClick={toggleShowMaybeboard}>
+            Maybeboard
+          </Button>
+        </Col>
       </Row>
       <Collapse isOpen={changes.length > 0} className="pt-1">
         <CSRFForm
@@ -273,11 +272,11 @@ const EditCollapse = ({ cubeView, ...props }) => {
             <Col>
               <h6>Blog Post</h6>
               <FormGroup>
-                <Label className="sr-only">Blog Title</Label>
+                <Label className="visually-hidden">Blog Title</Label>
                 <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
               </FormGroup>
               <FormGroup>
-                <Label className="sr-only">Blog Body</Label>
+                <Label className="visually-hidden">Blog Body</Label>
                 <Card>
                   <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
                 </Card>
@@ -294,10 +293,10 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </Row>
           <Row className="mb-2">
             <Col>
-              <Button color="success" className="mr-2" type="submit">
+              <Button color="accent" className="me-2" type="submit">
                 Save Changes
               </Button>
-              <Button color="danger" onClick={handleDiscardAll}>
+              <Button color="unsafe" onClick={handleDiscardAll}>
                 Discard All
               </Button>
             </Col>

@@ -8,6 +8,8 @@ import TimeAgo from 'react-timeago';
 import UserContext from 'contexts/UserContext';
 import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
+import Username from 'components/Username';
+import { Col, Row } from 'reactstrap';
 
 /** 2020-11-17 struesdell:
  *  Pulled constants out of component render so that they are defined only once
@@ -60,12 +62,26 @@ const DeckPreview = ({ deck, nextURL }) => {
   };
 
   return (
-    <div className="deck-preview" {...handleClick}>
+    <Row className="deck-preview mx-0" {...handleClick}>
+      <Col xs={canEdit ? 11 : 12} className="ps-0">
+        <h6 className="mb-0 text-muted">
+          <a href={`/cube/deck/${deck._id}`} title={fullName}>
+            {name}
+          </a>{' '}
+          by{' '}
+          {deck.seats[0].userid ? (
+            <Username userId={deck.seats[0].userid} defaultName={deck.seats[0].username} />
+          ) : (
+            'Anonymous'
+          )}{' '}
+          - <TimeAgo date={date} />
+        </h6>
+      </Col>
       {canEdit && (
-        <>
+        <Col xs={1} className="pe-0">
           <button
             type="button"
-            className="close"
+            className="btn-close"
             style={{
               fontSize: '.8rem',
               textAlign: 'center',
@@ -74,10 +90,10 @@ const DeckPreview = ({ deck, nextURL }) => {
               paddingBottom: '2px',
               lineHeight: '17px',
               border: '1px solid rgba(0,0,0,.5)',
+              float: 'right',
             }}
             onClick={openDeleteModal}
           >
-            X
             <DeckDeleteModal
               toggle={closeDeleteModal}
               isOpen={deleteModalOpen}
@@ -86,21 +102,9 @@ const DeckPreview = ({ deck, nextURL }) => {
               nextURL={nextURL}
             />
           </button>
-        </>
+        </Col>
       )}
-      <h6 className="mb-0 text-muted">
-        <a href={`/cube/deck/${deck._id}`} title={fullName}>
-          {name}
-        </a>{' '}
-        by{' '}
-        {deck.seats[0].userid ? (
-          <a href={`/user/view/${deck.seats[0].userid}`}>{deck.seats[0].username}</a>
-        ) : (
-          'Anonymous'
-        )}{' '}
-        - <TimeAgo date={date} />
-      </h6>
-    </div>
+    </Row>
   );
 };
 

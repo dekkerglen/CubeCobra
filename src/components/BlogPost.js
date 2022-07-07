@@ -12,6 +12,8 @@ import BlogContextMenu from 'components/BlogContextMenu';
 import EditBlogModal from 'components/EditBlogModal';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
+import Username from 'components/Username';
+import BlogPostChangelog from 'components/BlogPostChangelog';
 
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
@@ -23,13 +25,13 @@ const BlogPost = ({ post, noScroll }) => {
 
   return (
     <Card className="shadowed rounded-0 mb-3">
-      <CardHeader className="pl-4 pr-0 pt-2 pb-0">
+      <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <h5 className="card-title">
           <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
-          <div className="float-sm-right">
+          <div className="float-sm-end">
             {canEdit && (
               <>
-                <BlogContextMenu className="float-sm-right" post={post} value="..." onEdit={() => setEditOpen(true)} />
+                <BlogContextMenu className="float-sm-end" post={post} value="..." onEdit={() => setEditOpen(true)} />
                 <EditBlogModal
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
@@ -41,7 +43,7 @@ const BlogPost = ({ post, noScroll }) => {
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <a href={`/user/view/${post.owner}`}>{post.dev === 'true' ? 'Dekkaru' : post.username}</a>
+          <Username userId={post.owner} defaultName={post.username} />
           {' posted to '}
           {post.dev === 'true' ? (
             <a href="/dev/blog/0">Developer Blog</a>
@@ -53,11 +55,15 @@ const BlogPost = ({ post, noScroll }) => {
         </h6>
       </CardHeader>
       <div style={scrollStyle}>
-        {post.changelist && (html || post.markdown) ? (
-          <Row className="no-gutters">
+        {(post.changed_cards?.length || post.changelist) && (html || post.markdown) ? (
+          <Row className="g-0">
             <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
               <CardBody className="py-2">
-                <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
+                {post.changed_cards?.length ? (
+                  <BlogPostChangelog cards={post.changed_cards} />
+                ) : (
+                  <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
+                )}
               </CardBody>
             </Col>
             <Col className="col-l-7 col-m-6">
@@ -72,6 +78,7 @@ const BlogPost = ({ post, noScroll }) => {
           </Row>
         ) : (
           <CardBody className="py-2">
+            {post.changed_cards?.length > 0 && <BlogPostChangelog cards={post.changed_cards} />}
             {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
             {post.body && <CardText>{post.body}</CardText>}
             {(html || post.markdown) &&

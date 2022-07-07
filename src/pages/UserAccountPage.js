@@ -17,9 +17,7 @@ import {
   Card,
   CardBody,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
   Modal,
   ModalBody,
   ModalFooter,
@@ -49,14 +47,14 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
       <CSRFForm method="POST" action="/user/queuefeatured">
         <ModalHeader toggle={toggle}>Select Cube</ModalHeader>
         <ModalBody>
-          <CustomInput type="select" id="featuredCube" name="cubeId">
+          <Input type="select" id="featuredCube" name="cubeId">
             {cubes.map((cube) => (
               <option value={cube._id}>{cube.name}</option>
             ))}
-          </CustomInput>
+          </Input>
         </ModalBody>
         <ModalFooter>
-          <Button type="submit" color="success">
+          <Button type="submit" color="accent">
             Submit
           </Button>
           <Button type="button" color="secondary" onClick={toggle}>
@@ -86,7 +84,7 @@ const RemoveFeaturedModal = ({ isOpen, toggle }) => {
       <ModalBody>
         <p>You are about to remove your cube from the featured cubes queue. Do you wish to proceed?</p>
         <CSRFForm method="POST" action="/user/unqueuefeatured">
-          <Button type="submit" block color="danger" outline>
+          <Button type="submit" block color="unsafe" outline>
             Yes, remove my cube.
           </Button>
         </CSRFForm>
@@ -203,7 +201,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
               <Card>
                 <CardBody>
                   <CSRFForm method="POST" action="/user/updateuserinfo">
-                    <div className="form-group">
+                    <div className="mb-3">
                       <dl className="row">
                         <dt className="col-sm-3">Username</dt>
                         <dd className="col-sm-9">
@@ -225,7 +223,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 treeUrl="/cube/api/fullnames"
                                 treePath="cardnames"
                                 type="text"
-                                className="mr-2"
+                                className="me-2"
                                 name="remove"
                                 value={imageValue}
                                 onChange={handleChangeImage}
@@ -243,8 +241,8 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                           <TextEntry maxLength={2500} onChange={handleChangeMarkdown} name="body" value={markdown} />
                         </dd>
                       </dl>
-                      <Row noGutters>
-                        <Button className="ml-auto" block outline color="success" type="submit">
+                      <Row className="g-0">
+                        <Button className="ms-auto" block outline color="accent" type="submit">
                           Update
                         </Button>
                       </Row>
@@ -258,24 +256,30 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/resetpassword">
                     <FormGroup row>
-                      <Label for="password" className="col-sm-4 col-form-Label">
+                      <Label for="password" sm={4}>
                         Old password:
                       </Label>
-                      <Input className="col-sm-8" id="currentPassword" name="password" type="password" />
+                      <Col sm={8}>
+                        <Input id="currentPassword" name="password" type="password" />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="newPassword" className="col-sm-4 col-form-Label">
+                      <Label for="newPassword" sm={4}>
                         New Password:
                       </Label>
-                      <Input className="col-sm-8" id="newPassword" name="password2" type="password" />
+                      <Col sm={8}>
+                        <Input id="newPassword" name="password2" type="password" />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="confirmPassword" className="col-sm-4 col-form-Label">
+                      <Label for="confirmPassword" sm={4}>
                         Confirm New Password:
                       </Label>
-                      <Input className="col-sm-8" id="confirmPassword" name="password3" type="password" />
+                      <Col sm={8}>
+                        <Input id="confirmPassword" name="password3" type="password" />
+                      </Col>
                     </FormGroup>
-                    <Button outline block color="success" type="submit">
+                    <Button outline block color="accent" type="submit">
                       Change Password
                     </Button>
                   </CSRFForm>
@@ -287,18 +291,22 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/updateemail">
                     <FormGroup row>
-                      <Label for="email" className="col-sm-4 col-form-Label">
+                      <Label for="email" sm={4}>
                         New Email:
                       </Label>
-                      <Input className="col-sm-8" id="email" name="email" type="email" defaultValue={user.email} />
+                      <Col sm={8}>
+                        <Input id="email" name="email" type="email" defaultValue={user.email} />
+                      </Col>
                     </FormGroup>
                     <FormGroup row>
-                      <Label for="emailPassword" className="col-sm-4 col-form-Label">
+                      <Label for="emailPassword" sm={4}>
                         Password:
                       </Label>
-                      <Input className="col-sm-8" id="emailPassword" name="password" type="password" />
+                      <Col sm={8}>
+                        <Input id="emailPassword" name="password" type="password" />
+                      </Col>
                     </FormGroup>
-                    <Button block outline color="success" type="submit">
+                    <Button block outline color="accent" type="submit">
                       Update
                     </Button>
                   </CSRFForm>
@@ -310,13 +318,11 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/changedisplay">
                     <InputGroup className="mb-3">
-                      <InputGroupAddon addonType="prepend">
-                        <InputGroupText>Theme</InputGroupText>
-                      </InputGroupAddon>
-                      <CustomInput type="select" id="theme" name="theme" defaultValue={user.theme}>
+                      <InputGroupText>Theme</InputGroupText>
+                      <Input type="select" id="theme" name="theme" defaultValue={user.theme}>
                         <option value="default">Default</option>
                         <option value="dark">Dark Mode</option>
-                      </CustomInput>
+                      </Input>
                     </InputGroup>
                     <FormGroup check className="mb-3">
                       <Input
@@ -327,7 +333,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                       />
                       <Label for="hideFeatured">Hide Featured Cubes</Label>
                     </FormGroup>
-                    <Button block outline color="success" type="submit">
+                    <Button block outline color="accent" type="submit">
                       Update
                     </Button>
                   </CSRFForm>
@@ -367,12 +373,12 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 className="mt-3"
                                 block
                                 outline
-                                color="success"
+                                color="accent"
                                 modalProps={{ cubes: user.cubes }}
                               >
                                 Replace in&nbsp;queue
                               </AddFeaturedButton>
-                              <RemoveFeaturedButton className="mt-2" block outline color="danger">
+                              <RemoveFeaturedButton className="mt-2" block outline color="unsafe">
                                 Remove from&nbsp;queue
                               </RemoveFeaturedButton>
                             </Col>
@@ -380,7 +386,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         ) : ['Coiling Oracle', 'Lotus Cobra'].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
-                            <AddFeaturedButton block outline color="success" modalProps={{ cubes: user.cubes }}>
+                            <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
                               Add cube to queue
                             </AddFeaturedButton>
                           </>
@@ -398,7 +404,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     <p className="text-center">
                       <i>More Patreon features are coming soon!</i>
                     </p>
-                    <Button block outline color="danger" href="/patreon/unlink">
+                    <Button block outline color="unsafe" href="/patreon/unlink">
                       Unlink Patreon Account
                     </Button>
                   </CardBody>
@@ -408,7 +414,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     <Button
                       block
                       outline
-                      color="success"
+                      color="accent"
                       href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
                         patreonRedirectUri,
                       )}`}

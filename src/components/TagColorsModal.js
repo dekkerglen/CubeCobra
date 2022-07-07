@@ -140,7 +140,7 @@ class TagColorsModalRaw extends Component {
     });
 
     const staticRows = orderedTags.map(({ tag, color }) => {
-      const tagClass = `mr-2 tag ${getTagColorClass(tagColors, tag)}`;
+      const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
       return (
         <span key={tag} className={tagClass}>
           {tag}
@@ -152,9 +152,14 @@ class TagColorsModalRaw extends Component {
       <Modal isOpen={isOpen} toggle={toggle}>
         <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
         <ModalBody>
-          <Form inline className="mb-2">
+          <Form className="mb-2">
             <Label>
-              <Input type="checkbox" checked={showTagColors} onChange={this.handleChangeShowTagColors} />
+              <Input
+                type="checkbox"
+                className="me-1"
+                checked={showTagColors}
+                onChange={this.handleChangeShowTagColors}
+              />
               Show Tag Colors in Card List
             </Label>
           </Form>
@@ -174,7 +179,7 @@ class TagColorsModalRaw extends Component {
           )}
         </ModalBody>
         <ModalFooter>
-          <LoadingButton color="success" className="ml-auto" onClick={this.handleSubmit}>
+          <LoadingButton color="accent" className="ms-auto" onClick={this.handleSubmit}>
             Submit
           </LoadingButton>
         </ModalFooter>

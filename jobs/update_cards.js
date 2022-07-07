@@ -3,7 +3,7 @@
 // Load Environment Variables
 require('dotenv').config();
 const AWS = require('aws-sdk');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,

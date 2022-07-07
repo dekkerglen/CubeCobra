@@ -90,12 +90,12 @@ const MaybeboardListItem = ({ card, className }) => {
       <div className="name">{card.details.name}</div>
       {canEdit &&
         (loading ? (
-          <Spinner size="sm" className="ml-auto" />
+          <Spinner size="sm" className="ms-auto" />
         ) : (
           <>
             <button
               type="button"
-              className="icon-button ml-auto"
+              className="icon-button ms-auto"
               data-index={card.index}
               onClick={handleAdd}
               aria-label="Add"
@@ -181,7 +181,7 @@ const Maybeboard = ({ filter, ...props }) => {
   return (
     <CardModalForm>
       <Row>
-        <Col className="mr-auto">
+        <Col className="me-auto">
           <h4>Maybeboard</h4>
         </Col>
         <Col xs="auto">
@@ -192,8 +192,8 @@ const Maybeboard = ({ filter, ...props }) => {
       </Row>
       {canEdit && (
         <Form className="mt-2 w-100" onSubmit={handleAdd}>
-          <Row noGutters>
-            <Col xs="9" sm="auto" className="pr-2">
+          <Row className="g-0">
+            <Col xs="9" sm="auto" className="pe-2">
               <AutocompleteInput
                 treeUrl="/cube/api/cardnames"
                 treePath="cardnames"
@@ -208,7 +208,7 @@ const Maybeboard = ({ filter, ...props }) => {
               />
             </Col>
             <Col xs="3" sm="auto">
-              <LoadingButton color="success" type="submit" className="w-100" loading={loading}>
+              <LoadingButton color="accent" type="submit" className="w-100" loading={loading}>
                 Add
               </LoadingButton>
             </Col>

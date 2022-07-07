@@ -6,9 +6,9 @@ const mailer = require('nodemailer');
 const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 const { render } = require('../serverjs/render');
 const { buildIdQuery } = require('../serverjs/cubefn');
 
@@ -24,6 +24,7 @@ const FeaturedCubes = require('../models/featuredCubes');
 const router = express.Router();
 
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
+const { fillBlogpostChangelog } = require('../serverjs/blogpostUtils');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
@@ -450,8 +451,8 @@ router.post('/login', (req, res, next) => {
       }
       passport.authenticate('local', {
         successRedirect: redirect,
-        failureRedirect: '/user/Login',
-        failureFlash: true,
+        failureRedirect: '/user/login',
+        failureFlash: { type: 'danger' },
       })(req, res, next);
     }
   });
@@ -605,6 +606,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
     );
 
     const [posts, numBlogs, followers] = await Promise.all([postsq, numBlogsq, followersq]);
+    posts.forEach(fillBlogpostChangelog);
 
     delete user.users_following;
 

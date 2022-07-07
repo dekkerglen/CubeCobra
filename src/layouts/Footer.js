@@ -11,7 +11,7 @@ const Footer = () => (
         <Col xs="6" sm="3">
           <small>
             <h6 className="footer-header">Content</h6>
-            <ul className="footer-ul pl-0">
+            <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/content/browse">
                   Browse
@@ -38,7 +38,7 @@ const Footer = () => (
         <Col xs="6" sm="3">
           <small>
             <h6 className="footer-header">Cube</h6>
-            <ul className="footer-ul pl-0">
+            <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/explore">
                   Explore Cubes
@@ -60,7 +60,7 @@ const Footer = () => (
         <Col xs="6" sm="3">
           <small>
             <h6 className="footer-header">Cards</h6>
-            <ul className="footer-ul pl-0">
+            <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/tool/topcards">
                   Top Cards
@@ -92,7 +92,7 @@ const Footer = () => (
         <Col xs="6" sm="3">
           <small>
             <h6 className="footer-header">Cube Cobra</h6>
-            <ul className="footer-ul pl-0">
+            <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/dev/blog">
                   Dev Blog

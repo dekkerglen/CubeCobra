@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 
-import { Col, Row, InputGroup, InputGroupAddon, InputGroupText, CustomInput } from 'reactstrap';
+import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
@@ -49,10 +49,8 @@ const Asfans = ({ cards: cardsNoAsfan, cube }) => {
             pack instead of per player, but with custom formats it makes more sense to talk about per player.
           </p>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Draft Format: </InputGroupText>
-            </InputGroupAddon>
-            <CustomInput
+            <InputGroupText>Draft Format: </InputGroupText>
+            <Input
               type="select"
               value={draftFormat}
               onChange={(event) => setDraftFormat(parseInt(event.target.value, 10))}
@@ -63,19 +61,17 @@ const Asfans = ({ cards: cardsNoAsfan, cube }) => {
                   {format.title}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
           <InputGroup className="mb-3">
-            <InputGroupAddon addonType="prepend">
-              <InputGroupText>Order By: </InputGroupText>
-            </InputGroupAddon>
-            <CustomInput type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
+            <InputGroupText>Order By: </InputGroupText>
+            <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
               {SORTS.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
               ))}
-            </CustomInput>
+            </Input>
           </InputGroup>
         </Col>
       </Row>

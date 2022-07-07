@@ -69,12 +69,3 @@ export const SeatPropType = PropTypes.shape({
   trashorder: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   // packbacklog: PropTypes.arrayOf(PackPropType.isRequired).isRequired,
 });
-export const DraftPropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
-  basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  cube: PropTypes.string.isRequired,
-  initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PackPropType.isRequired).isRequired).isRequired,
-  seats: PropTypes.arrayOf(SeatPropType.isRequired).isRequired,
-  // unopenedPacks: PropTypes.arrayOf(PropTypes.arrayOf(PackPropType.isRequired).isRequired).isRequired,
-});

@@ -92,10 +92,10 @@ class SampleHandModal extends Component {
             />
           </ModalBody>
           <ModalFooter>
-            <Button color="success" onClick={this.refresh}>
+            <Button color="accent" onClick={this.refresh}>
               New Hand
             </Button>
-            <Button color="success" onClick={this.draw}>
+            <Button color="accent" onClick={this.draw}>
               Draw One Card
             </Button>
             <Button color="secondary" onClick={this.close}>

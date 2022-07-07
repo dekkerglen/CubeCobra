@@ -38,14 +38,15 @@ const CreateCubeModal = ({ isOpen, toggle }) => {
           </FormGroup>
         </ModalBody>
         <ModalFooter>
-          {loading && (
-            <div className="centered w-50">
+          {loading ? (
+            <div className="text-center w-100">
               <Spinner />
             </div>
+          ) : (
+            <Button type="submit" color="accent" block outline disabled={loading}>
+              Create
+            </Button>
           )}
-          <Button type="submit" color="success" block outline disabled={loading}>
-            Create
-          </Button>
         </ModalFooter>
       </CSRFForm>
     </Modal>

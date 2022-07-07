@@ -1,8 +1,7 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-import DraftSeatPropType from 'proptypes/DraftSeatPropType';
+import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 
 import CommentsSection from 'components/CommentsSection';
@@ -11,8 +10,10 @@ import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
 import { makeSubtitle } from 'utils/Card';
+import Username from 'components/Username';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
+import DraftPropType from 'proptypes/DraftPropType';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
@@ -88,10 +89,10 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
     <Card>
       <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
-          <h4 className="mb-0 mr-auto">{seat.name}</h4>
+          <h4 className="mb-0 me-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <a href={`/user/view/${seat.userid}`}>{seat.username}</a> : 'Anonymous'}
+              Drafted by {seat.userid ? <Username userId={seat.userid} defaultName={seat.username} /> : 'Anonymous'}
             </h6>
           )}
         </CardTitle>
@@ -99,7 +100,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
       {view === 'picks' && (
         <CardBody>
           {draft ? (
-            <DecksPickBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
+            <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={draft} />
           ) : (
             <h4>This deck does not have a related draft log.</h4>
           )}
@@ -154,9 +155,9 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
 };
 
 DeckCard.propTypes = {
-  seat: DraftSeatPropType.isRequired,
+  seat: DeckSeatPropType.isRequired,
   view: PropTypes.string,
-  draft: PropTypes.shape({ cards: PropTypes.arrayOf(CardPropType).isRequired }).isRequired,
+  draft: DraftPropType.isRequired,
   deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
 };

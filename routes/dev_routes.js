@@ -1,5 +1,5 @@
 const express = require('express');
-const util = require('../serverjs/util.js');
+const util = require('../serverjs/util');
 
 const { ensureAuth, csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');

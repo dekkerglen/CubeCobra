@@ -59,7 +59,7 @@ const LostPassword = ({ loginCallback }) => (
               </Col>
             </Row>
           </FormGroup>
-          <Button type="submit" color="success" block outline>
+          <Button type="submit" color="accent" block outline>
             Change Password
           </Button>
         </CSRFForm>

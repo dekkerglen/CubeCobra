@@ -11,13 +11,12 @@ import {
   ModalFooter,
   Button,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
-  CustomInput,
   UncontrolledAlert,
   Spinner,
   ListGroup,
   ListGroupItem,
+  Input,
 } from 'reactstrap';
 
 const AutocardItem = withAutocard(ListGroupItem);
@@ -109,7 +108,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <Spinner className="position-absolute" />
         </div>
         <ModalFooter>
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -138,7 +137,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" onClick={toggle}>
+          <Button color="unsafe" onClick={toggle}>
             Close
           </Button>
         </ModalFooter>
@@ -170,24 +169,22 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           ))}
         </ListGroup>
         <InputGroup className="my-3">
-          <InputGroupAddon addonType="prepend">
-            <InputGroupText>Cube: </InputGroupText>
-          </InputGroupAddon>
-          <CustomInput type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
+          <InputGroupText>Cube: </InputGroupText>
+          <Input type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
             {cubes.map((cube) => (
               <option value={cube._id}>{cube.name}</option>
             ))}
-          </CustomInput>
+          </Input>
         </InputGroup>
       </ModalBody>
       <ModalFooter>
-        <Button color="success" onClick={add}>
+        <Button color="accent" onClick={add}>
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>
           Maybeboard
         </Button>
-        <Button color="danger" onClick={toggle}>
+        <Button color="unsafe" onClick={toggle}>
           Close
         </Button>
       </ModalFooter>

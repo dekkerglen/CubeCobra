@@ -12,7 +12,7 @@ function cardImage(Tag, card, cardProps, linkDetails) {
 
 const CardGrid = ({ cardList, Tag, colProps, cardProps, linkDetails, ...props }) => {
   return (
-    <Row noGutters className="justify-content-center" {...props}>
+    <Row className="justify-content-center g-0" {...props}>
       {cardList.map((card, cardIndex) => (
         <Col key={/* eslint-disable-line react/no-array-index-key */ cardIndex} {...colProps}>
           {cardImage(Tag, card, cardProps, linkDetails)}

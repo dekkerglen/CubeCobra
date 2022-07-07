@@ -3,10 +3,8 @@ import React from 'react';
 import {
   Button,
   Col,
-  CustomInput,
   Input,
   InputGroup,
-  InputGroupAddon,
   InputGroupText,
   Modal,
   ModalBody,
@@ -27,7 +25,7 @@ import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import withLoading from 'components/WithLoading';
 
-const LoadingCustomInput = withLoading(CustomInput, []);
+const LoadingInput = withLoading(Input, []);
 
 const CardModal = ({
   card,
@@ -55,29 +53,29 @@ const CardModal = ({
         <Row>
           <Col xs="12" sm="4">
             <FoilCardImage card={card} finish={values.finish} />
-            <Row noGutters className="mb-2">
+            <Row className="mb-2 g-0">
               {card.details.prices && Number.isFinite(cardPrice(card)) && (
-                <TextBadge name="Price" className="mt-2 mr-2">
+                <TextBadge name="Price" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardFoilPrice(card)) && (
-                <TextBadge name="Foil" className="mt-2 mr-2">
+                <TextBadge name="Foil" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardEtchedPrice(card)) && (
-                <TextBadge name="Etched" className="mt-2 mr-2">
+                <TextBadge name="Etched" className="mt-2 me-2">
                   <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardPriceEur(card)) && (
-                <TextBadge name="EUR" className="mt-2 mr-2">
+                <TextBadge name="EUR" className="mt-2 me-2">
                   <Tooltip text="Cardmarket Price">€{cardPriceEur(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
               {card.details.prices && Number.isFinite(cardTix(card)) && (
-                <TextBadge name="TIX" className="mt-2 mr-2">
+                <TextBadge name="TIX" className="mt-2 me-2">
                   <Tooltip text="MTGO TIX">{cardTix(card).toFixed(2)}</Tooltip>
                 </TextBadge>
               )}
@@ -92,10 +90,8 @@ const CardModal = ({
             <h5>Card Attributes</h5>
             <fieldset disabled={disabled}>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Version (Set and #)</InputGroupText>
-                </InputGroupAddon>
-                <LoadingCustomInput
+                <InputGroupText>Version (Set and #)</InputGroupText>
+                <LoadingInput
                   type="select"
                   name="version"
                   id="cardModalVersion"
@@ -111,71 +107,55 @@ const CardModal = ({
                       </option>
                     );
                   })}
-                </LoadingCustomInput>
+                </LoadingInput>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Status</InputGroupText>
-                </InputGroupAddon>
-                <CustomInput type="select" name="status" id="cardModalStatus" value={values.status} onChange={onChange}>
+                <InputGroupText>Status</InputGroupText>
+                <Input type="select" name="status" id="cardModalStatus" value={values.status} onChange={onChange}>
                   {getLabels(null, 'Status').map((status) => (
                     <option key={status}>{status}</option>
                   ))}
-                </CustomInput>
+                </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Finish</InputGroupText>
-                </InputGroupAddon>
-                <CustomInput type="select" name="finish" id="cardModalFinish" value={values.finish} onChange={onChange}>
+                <InputGroupText>Finish</InputGroupText>
+                <Input type="select" name="finish" id="cardModalFinish" value={values.finish} onChange={onChange}>
                   {getLabels(null, 'Finish').map((finish) => (
                     <option key={finish}>{finish}</option>
                   ))}
-                </CustomInput>
+                </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Mana Value</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Mana Value</InputGroupText>
                 <Input type="text" name="cmc" value={values.cmc} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Type</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Type</InputGroupText>
                 <Input type="text" name="type_line" value={values.type_line} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Rarity</InputGroupText>
-                </InputGroupAddon>
-                <CustomInput type="select" name="rarity" id="cardModalRarity" value={values.rarity} onChange={onChange}>
+                <InputGroupText>Rarity</InputGroupText>
+                <Input type="select" name="rarity" id="cardModalRarity" value={values.rarity} onChange={onChange}>
                   {getLabels(null, 'Rarity').map((rarity) => (
                     <option key={rarity}>{rarity}</option>
                   ))}
-                </CustomInput>
+                </Input>
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Image URL</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Image URL</InputGroupText>
                 <Input type="text" name="imgUrl" value={values.imgUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Image Back URL</InputGroupText>
-                </InputGroupAddon>
+                <InputGroupText>Image Back URL</InputGroupText>
                 <Input type="text" name="imgBackUrl" value={values.imgBackUrl} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
                 <InputGroupText className="square-right">Color</InputGroupText>
-                <ColorChecksAddon addonType="append" prefix="color" values={values} onChange={onChange} />
+                <ColorChecksAddon prefix="color" values={values} onChange={onChange} />
               </InputGroup>
               <InputGroup className="mb-3">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>Color Category</InputGroupText>
-                </InputGroupAddon>
-                <CustomInput
+                <InputGroupText>Color Category</InputGroupText>
+                <Input
                   type="select"
                   name="colorCategory"
                   id="colorCat"
@@ -185,7 +165,7 @@ const CardModal = ({
                   {getLabels(null, 'Color Category').map((colorCat) => (
                     <option key={colorCat}>{colorCat}</option>
                   ))}
-                </CustomInput>
+                </Input>
               </InputGroup>
 
               <h5>Notes</h5>
@@ -208,7 +188,7 @@ const CardModal = ({
       </ModalBody>
       <ModalFooter>
         {!disabled && !maybe && (
-          <Button color="danger" onClick={queueRemoveCard}>
+          <Button color="unsafe" onClick={queueRemoveCard}>
             <span className="d-none d-sm-inline">Remove from cube</span>
             <span className="d-sm-none">Remove</span>
           </Button>
@@ -225,7 +205,7 @@ const CardModal = ({
           Buy
         </Button>
         {!disabled && (
-          <LoadingButton color="success" onClick={saveChanges}>
+          <LoadingButton color="accent" onClick={saveChanges}>
             <span className="d-none d-sm-inline">Save changes</span>
             <span className="d-sm-none">Save</span>
           </LoadingButton>

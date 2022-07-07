@@ -9,39 +9,56 @@ const mongoose = require('mongoose');
 
 const AWS = require('aws-sdk');
 const Deck = require('../models/deck');
-const carddb = require('../serverjs/cards.js');
+const carddb = require('../serverjs/cards');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const batchSize = 1000;
+const batchSize = 10000;
 
 const processDeck = (deck) => {
   const main = [];
   const side = [];
+  const fields = {};
 
-  if (deck.seats[0] && deck.seats[0].deck) {
-    for (const col of deck.seats[0].deck) {
-      for (const cardIndex of col) {
-        const card = deck.cards[cardIndex];
-        if (card && card.cardID) {
-          main.push(carddb.cardFromId(card.cardID).name_lower);
+  try {
+    fields.cube = deck.cube;
+    fields.drafter = deck.owner;
+    fields.date_drafted = deck.date;
+    fields.deck_id = deck._id;
+
+    if (deck.seats[0] && deck.seats[0].deck) {
+      for (const row of deck.seats[0].deck) {
+        for (const col of row) {
+          for (const cardIndex of col) {
+            const card = deck.cards[cardIndex];
+            if (card && card.cardID) {
+              main.push(card.cardID);
+            }
+          }
         }
       }
     }
-  }
 
-  if (deck.seats[0] && deck.seats[0].sideboard) {
-    for (const col of deck.seats[0].sideboard) {
-      for (const cardIndex of col) {
-        side.push(carddb.cardFromId(deck.cards[cardIndex].cardID).name_lower);
+    if (deck.seats[0] && deck.seats[0].sideboard) {
+      for (const row of deck.seats[0].sideboard) {
+        for (const col of row) {
+          for (const cardIndex of col) {
+            const card = deck.cards[cardIndex];
+            if (card && card.cardID) {
+              side.push(card.cardID);
+            }
+          }
+        }
       }
     }
+  } catch (e) {
+    console.log(`Error processing deck ${deck._id}: ${e}`);
   }
 
-  return { main, side };
+  return { main, side, ...fields };
 };
 
 try {

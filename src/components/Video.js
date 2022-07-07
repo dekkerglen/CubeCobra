@@ -3,8 +3,8 @@ import VideoPropType from 'proptypes/VideoPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
+import Username from 'components/Username';
 import TimeAgo from 'react-timeago';
-
 import ReactPlayer from 'react-player';
 
 import { CardBody, CardHeader } from 'reactstrap';
@@ -15,7 +15,7 @@ const Video = ({ video }) => {
       <CardHeader>
         <h1>{video.title}</h1>
         <h6>
-          By <a href={`/user/view/${video.owner}`}>{video.username}</a>
+          By <Username userId={video.owner} defaultName={video.username} />
           {' | '}
           <TimeAgo date={video.date} />
         </h6>

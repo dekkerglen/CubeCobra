@@ -25,18 +25,18 @@ const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
               <Col md={6}>
                 <h5 className="card-title">Sample Pack</h5>
               </Col>
-              <Col md={6} className="text-right">
-                <a className="btn btn-success mr-2" href={`/cube/samplepack/${cube._id}`}>
+              <Col md={6} className="text-end">
+                <a className="btn btn-accent me-2" href={`/cube/samplepack/${cube._id}`}>
                   New Pack
                 </a>
-                <a className="btn btn-success" href={`/cube/samplepackimage/${cube._id}/${seed}`}>
+                <a className="btn btn-accent" href={`/cube/samplepackimage/${cube._id}/${seed}`}>
                   Get Image
                 </a>
               </Col>
             </Row>
           </div>
           <div className="card-body">
-            <Row noGutters className="pack-body justify-content-center">
+            <Row className="pack-body justify-content-center g-0">
               <Col style={{ maxWidth: '800px' }}>
                 <CardGrid
                   cardList={pack}

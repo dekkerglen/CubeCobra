@@ -1080,7 +1080,7 @@ audio {
 
 .markdown-input {
 	font-family: "Fira Mono", monospace;
-	min-height: 20rem;
+	min-height: 20rem !important;
 }
 
 .monospaced {
@@ -1119,10 +1119,10 @@ audio {
 }
 
 .form-control,
-.custom-select,
-.custom-select:disabled,
+.form-select,
+.form-select:disabled,
 .form-control:focus,
-.custom-select:focus {
+.form-select:focus {
 	background-color: var(--bg);
 	color:var(--text);
 	border-color: var(--border);
@@ -1139,7 +1139,6 @@ audio {
 	border-color: var(--border);
 }
 
-.close,
 .table {
 	color:var(--text);
 	background-color: var(--bg);
@@ -1148,6 +1147,11 @@ audio {
 .btn-success {
 	background-color: var(--button-green);	
 	border-color: var(--button-green);
+	color: var(--link-secondary);
+}
+
+.btn-success:hover {
+	color: var(--link-secondary);
 }
 
 .btn-danger {
@@ -1180,8 +1184,12 @@ audio {
 	border-color:var(--border-light) var(--border-light) var(--bg)
 }
 
-a{
+a {
 	color: var(--link);
+}
+
+a, button.btn-link {
+	text-decoration: none;
 }
 
 .page-item.disabled .page-link {
@@ -1198,7 +1206,7 @@ a{
 	color:var(--dropdown-hover);
 }
 
-.border-left{
+.border-start{
     border-left: 1px solid var(--border-light) !important;
 }
 
@@ -1245,7 +1253,7 @@ thead th.corner[scope=col] {
 	border-right: 1px solid var(--border-light);
 }
 
-.form-control:disabled, .form-control[readonly] {
+.form-control:disabled, .form-control[readOnly] {
 	background-color: var(--read-only-disabled);
 }
 
@@ -1308,9 +1316,20 @@ div.advertisement-div > div:not(.report-link) {
 	padding-bottom: 60px;
 }
 
+/* Shims for .badge-* until we replace changelogs with a React component */
+.badge.badge-success {
+	background-color: var(--success);
+}
+.badge.badge-danger {
+	background-color: var(--danger);
+}
+.badge.badge-primary {
+	background-color: #007bff; /* bootstrap primary color */
+}
+
 #notice-alert .markdown {
 	padding: 0;
-    margin: 0;
+  margin: 0;
 }
 
 #notice-alert .markdown p:last-child {

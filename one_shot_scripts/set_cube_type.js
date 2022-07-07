@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const { setCubeType } = require('../serverjs/cubefn.js');
+const { setCubeType } = require('../serverjs/cubefn');
 const carddb = require('../serverjs/cards');
 
 const Cube = require('../models/cube');

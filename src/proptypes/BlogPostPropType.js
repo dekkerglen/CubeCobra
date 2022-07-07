@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 const BlogPostPropType = PropTypes.shape({
   _id: PropTypes.string.isRequired,
@@ -11,6 +12,12 @@ const BlogPostPropType = PropTypes.shape({
   dev: PropTypes.string.isRequired,
   date_formatted: PropTypes.string.isRequired,
   changelist: PropTypes.string,
+  changed_cards: PropTypes.arrayOf(
+    PropTypes.shape({
+      added: CardPropType,
+      removed: CardPropType,
+    }),
+  ),
   username: PropTypes.string.isRequired,
   cubename: PropTypes.string.isRequired,
 });

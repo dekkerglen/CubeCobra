@@ -1,11 +1,7 @@
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
-
-const carddb = require('../../serverjs/cards.js');
+const carddb = require('../../serverjs/cards');
 const { render } = require('../../serverjs/render');
-const util = require('../../serverjs/util.js');
-const { setCubeType, addCardHtml, CSVtoCards } = require('../../serverjs/cubefn.js');
+const util = require('../../serverjs/util');
+const { setCubeType, CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -28,7 +24,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
   try {
     const blogpost = new Blog();
     blogpost.title = 'Cube Bulk Import - Automatic Post';
-    blogpost.changelist = changelog;
+    blogpost.changed_cards = changelog;
     blogpost.owner = cube.owner;
     blogpost.date = Date.now();
     blogpost.cube = cube._id;
@@ -77,14 +73,18 @@ async function bulkUpload(req, res, list, cube) {
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
   const added = [];
-  let changelog = '';
+  const changelog = [];
   if (lines) {
     if ((lines[0].match(/,/g) || []).length > 3) {
       // upload is in CSV format
       let newCards;
       let newMaybe;
       ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
-      changelog = newCards.reduce((changes, card) => changes + addCardHtml(carddb.cardFromId(card.cardID)), changelog);
+      changelog.push(
+        ...newCards.map((card) => {
+          return { addedID: card.cardID, removedID: null };
+        }),
+      );
       cube.cards.push(...newCards);
       cube.maybe.push(...newMaybe);
       added.concat(newCards, newMaybe);
@@ -128,7 +128,7 @@ async function bulkUpload(req, res, list, cube) {
             for (let i = 0; i < count; i++) {
               util.addCardToCube(cube, details);
               added.push(details);
-              changelog += addCardHtml(details);
+              changelog.push({ addedID: selectedId, removedID: null });
             }
           }
         } else {

@@ -1,18 +1,7 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Button,
-  CustomInput,
-  FormGroup,
-  FormText,
-  Input,
-  Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from 'reactstrap';
+import { Button, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import { postJson } from 'utils/CSRF';
 import { formDataObject } from 'utils/Form';
@@ -85,7 +74,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
           </FormGroup>
           <FormGroup>
             <Label for="visibility">Cube Visibility</Label>
-            <CustomInput
+            <Input
               id="visibility"
               name="visibility"
               type="select"
@@ -95,25 +84,20 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               <option value="public">Public</option>
               <option value="unlisted">Unlisted</option>
               <option value="private">Private</option>
-            </CustomInput>
+            </Input>
             <FormText>{visibilityHelp[visibility]}</FormText>
           </FormGroup>
           <FormGroup>
             <Label for="defaultStatus">Default Status</Label>
-            <CustomInput
-              id="defaultStatus"
-              name="defaultStatus"
-              type="select"
-              defaultValue={cube.defaultStatus || false}
-            >
+            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.defaultStatus || false}>
               {['Owned', 'Not Owned'].map((status) => (
                 <option key={status}>{status}</option>
               ))}
-            </CustomInput>
+            </Input>
           </FormGroup>
           <FormGroup>
             <Label for="defaultPrinting">Default Printing</Label>
-            <CustomInput
+            <Input
               id="defaultPrinting"
               name="defaultPrinting"
               type="select"
@@ -121,7 +105,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
             >
               <option value="recent">Most Recent</option>
               <option value="first">First</option>
-            </CustomInput>
+            </Input>
           </FormGroup>
         </CSRFForm>
       </ModalBody>
@@ -129,7 +113,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
         <Button color="secondary" onClick={toggle}>
           Close
         </Button>{' '}
-        <LoadingButton color="success" onClick={handleSave}>
+        <LoadingButton color="accent" onClick={handleSave}>
           Save Changes
         </LoadingButton>
       </ModalFooter>

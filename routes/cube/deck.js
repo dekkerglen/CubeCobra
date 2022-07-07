@@ -1,18 +1,16 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { Canvas, Image } = require('canvas');
-
-Canvas.Image = Image;
-
-const miscutil = require('../../dist/utils/Util.js');
-const carddb = require('../../serverjs/cards.js');
-const { buildDeck } = require('../../dist/drafting/deckutil.js');
+const miscutil = require('../../dist/utils/Util');
+const carddb = require('../../serverjs/cards');
+const { buildDeck } = require('../../dist/drafting/deckutil');
 const { render } = require('../../serverjs/render');
-const util = require('../../serverjs/util.js');
-const generateMeta = require('../../serverjs/meta.js');
-const cardutil = require('../../dist/utils/Card.js');
-const frontutil = require('../../dist/utils/Util.js');
+const util = require('../../serverjs/util');
+const generateMeta = require('../../serverjs/meta');
+const cardutil = require('../../dist/utils/Card');
+const frontutil = require('../../dist/utils/Util');
 const { ensureAuth } = require('../middleware');
+const { createDeckFromDraft } = require('../../serverjs/deckUtil');
+const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   buildIdQuery,
@@ -20,9 +18,9 @@ const {
   addDeckCardAnalytics,
   removeDeckCardAnalytics,
   isCubeViewable,
-} = require('../../serverjs/cubefn.js');
+} = require('../../serverjs/cubefn');
 
-const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper.js');
+const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper');
 
 // Bring in models
 const Cube = require('../../models/cube');
@@ -333,8 +331,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const deckOwner = await User.findById(deck.seats[0].userid).lean();
-    if (!req.user || !deckOwner._id.equals(req.user._id)) {
+    const deckOwners = deck.seats.map((seat) => `${seat.userid}`).filter((userid) => userid !== 'null');
+    if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
@@ -544,20 +542,25 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
 router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Deck.findById(req.params.id);
-    const deckOwner = await User.findById(deck.seats[0].userid);
 
-    if (!deckOwner || !deckOwner._id.equals(req.user._id)) {
+    const deckOwners = deck.seats.map((seat) => `${seat.userid}`).filter((userid) => userid !== 'null');
+
+    if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
+
+    const seatIndex = deck.seats
+      .map((seat, index) => [seat, index])
+      .find((tuple) => `${tuple[0].userid}` === `${req.user.id}`)[1];
 
     const cube = await Cube.findOne({ _id: deck.cube });
 
     await removeDeckCardAnalytics(cube, deck, carddb);
 
-    const newdeck = JSON.parse(req.body.draftraw);
-    const name = JSON.parse(req.body.name);
-    const description = JSON.parse(req.body.description);
+    const draft = JSON.parse(req.body.draftraw);
+    const name = JSON.parse(req.body.name).substring(0, 100);
+    const description = JSON.parse(req.body.description).substring(0, 10000);
 
     let eloOverrideDict = {};
     if (cube.useCubeElo) {
@@ -580,11 +583,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
         ? 'C'
         : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
 
-    deck.seats[0].deck = newdeck.playerdeck;
-    deck.seats[0].sideboard = newdeck.playersideboard;
-    deck.seats[0].name = name;
-    deck.seats[0].description = description;
-    deck.seats[0].username = `${deckOwner.username}: ${colorString}`;
+    deck.seats[seatIndex].deck = draft.playerdeck;
+    deck.seats[seatIndex].sideboard = draft.playersideboard;
+    deck.seats[seatIndex].name = name;
+    deck.seats[seatIndex].description = description;
+    deck.seats[seatIndex].username = `${req.user.username}: ${colorString}`;
 
     await deck.save();
     await addDeckCardAnalytics(cube, deck, carddb);
@@ -599,101 +602,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
 router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, res) => {
   try {
-    // req.body contains a draft
     const draftid = req.body.body;
     const draft = await Draft.findById(draftid).lean();
-    if (!draft) {
-      req.flash('danger', 'Draft not found');
-      return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
-    }
-    const cube = await Cube.findById(draft.cube);
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/playtest/404');
-    }
 
-    const deck = new Deck();
-    deck.cube = draft.cube;
-    deck.cubeOwner = cube.owner;
-    deck.date = Date.now();
-    deck.draft = draft._id;
-    deck.cubename = cube.name;
-    deck.seats = [];
-    deck.owner = draft.seats[0].userid;
-    deck.cards = draft.cards;
-    deck.basics = draft.basics;
+    const deck = await createDeckFromDraft(draft);
 
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      if (analytic) {
-        eloOverrideDict = util.fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-      }
-    }
-    const cards = draft.cards.map((c) => {
-      const newCard = { ...c, details: carddb.cardFromId(c.cardID) };
-      if (eloOverrideDict[newCard.details.name_lower]) {
-        newCard.details.elo = eloOverrideDict[newCard.details.name_lower];
-      }
-      return newCard;
-    });
-    let botNumber = 1;
-    for (const seat of draft.seats) {
-      // eslint-disable-next-line no-await-in-loop
-      const { sideboard, deck: newDeck, colors } = await buildDeck(cards, seat.pickorder, draft.basics);
-      const colorString =
-        colors.length === 0
-          ? 'C'
-          : cardutil.COLOR_COMBINATIONS.find((comb) => frontutil.arraysAreEqualSets(comb, colors)).join('');
-      if (seat.bot) {
-        deck.seats.push({
-          bot: seat.bot,
-          userid: seat.userid,
-          username: `Bot ${botNumber}: ${colorString}`,
-          name: `Draft of ${cube.name}`,
-          description: '',
-          deck: newDeck,
-          sideboard,
-        });
-        botNumber += 1;
-      } else {
-        deck.seats.push({
-          bot: seat.bot,
-          userid: seat.userid,
-          username: `${seat.name}: ${colorString}`,
-          name: `Draft of ${cube.name}`,
-          description: '',
-          deck: seat.drafted,
-          sideboard: seat.sideboard ? seat.sideboard : [],
-        });
-      }
-    }
-
-    const userq = User.findById(deck.seats[0].userid);
-    const cubeOwnerq = User.findById(cube.owner);
-
-    const [user, cubeOwner] = await Promise.all([userq, cubeOwnerq]);
-
-    if (user && !cube.disableNotifications) {
-      await util.addNotification(
-        cubeOwner,
-        user,
-        `/cube/deck/${deck._id}`,
-        `${user.username} drafted your cube: ${cube.name}`,
-      );
-    } else if (!cube.disableNotifications) {
-      await util.addNotification(
-        cubeOwner,
-        {},
-        `/cube/deck/${deck._id}`,
-        `An anonymous user drafted your cube: ${cube.name}`,
-      );
-    }
-
-    cube.numDecks += 1;
-    await addDeckCardAnalytics(cube, deck, carddb);
-
-    await Promise.all([cube.save(), deck.save(), cubeOwner.save()]);
     if (req.body.skipDeckbuilder) {
       return res.redirect(`/cube/deck/${deck._id}`);
     }
@@ -812,7 +725,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
 
     const seat = parseInt(req.params.seat, 10);
     if (!Number.isInteger(seat) || seat < 0 || seat >= base.seats.length) {
-      req.flash('dangeer', 'Invalid seat index to redraft as.');
+      req.flash('danger', 'Invalid seat index to redraft as.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
 
@@ -832,10 +745,10 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     const draft = new Draft();
     draft.cube = srcDraft.cube;
     draft.seats = srcDraft.seats.slice();
-    rotateArrayLeft(draft.seats, seat);
+    draft.seats = rotateArrayLeft(draft.seats, seat);
     draft.cards = srcDraft.cards;
     draft.basics = srcDraft.basics;
-    draft.initial_state = srcDraft.initial_state.slice();
+    draft.initial_state = rotateArrayLeft(srcDraft.initial_state.slice(), seat);
 
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].drafted = createPool();
@@ -846,6 +759,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
     draft.seats[0].name = req.user ? req.user.username : 'Anonymous';
 
     await draft.save();
+    await createLobby(draft, req.user);
     return res.redirect(`/cube/draft/${draft._id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/playtest/${req.params.id}`);
