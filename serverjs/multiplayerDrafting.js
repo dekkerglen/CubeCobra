@@ -506,6 +506,11 @@ const getDraftPick = async (draftId, seat) => {
 
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
+  const finished = await hget(draftRef(draftId), 'finished');
+
+  if (finished) {
+    return 'done';
+  }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
