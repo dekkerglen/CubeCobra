@@ -4,6 +4,8 @@ const { cardType } = require('../dist/utils/Card');
 const carddb = require('./cards');
 
 const Draft = require('../models/draft');
+const Deck = require('../models/deck');
+
 const {
   hget,
   hmget,
@@ -274,6 +276,12 @@ const finishDraft = async (draftId, draft) => {
     return;
   }
 
+  // if there somehow is already a draft for this deck, don't do anything
+  const deck = await Deck.findOne({ draft: draftId });
+  if (deck) {
+    return;
+  }
+
   const { seats } = await getDraftMetaData(draftId);
   // set user picks to the actual picks
   for (let i = 0; i < seats; i++) {
@@ -498,6 +506,11 @@ const getDraftPick = async (draftId, seat) => {
 
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
+  const finished = await hget(draftRef(draftId), 'finished');
+
+  if (finished) {
+    return 'done';
+  }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
