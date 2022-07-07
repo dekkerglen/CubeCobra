@@ -21,7 +21,12 @@ let deleted = 0;
 
 const processDeck = async (deck) => {
   try {
-    if (deck.seats[0].pickorder.length === 0) {
+    let cardCount = 0;
+    for (const row of deck.seats[0].deck) {
+      cardCount += row.length;
+    }
+
+    if (cardCount === 0) {
       await Deck.deleteOne({ _id: deck._id });
       deleted += 1;
     }
