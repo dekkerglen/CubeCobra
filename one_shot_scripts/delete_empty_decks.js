@@ -16,7 +16,7 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const batchSize = 10000;
+const batchSize = 1000;
 let deleted = 0;
 
 const processDeck = async (deck) => {
