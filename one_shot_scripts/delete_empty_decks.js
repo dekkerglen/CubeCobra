@@ -23,7 +23,9 @@ const processDeck = async (deck) => {
   try {
     let cardCount = 0;
     for (const row of deck.seats[0].deck) {
-      cardCount += row.length;
+      for (const col of row) {
+        cardCount += col.length;
+      }
     }
 
     if (cardCount === 0) {
