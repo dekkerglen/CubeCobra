@@ -123,11 +123,18 @@ const CubeDraft = ({ draft, socket }) => {
       setLoading(false);
 
       if (seat === '0') {
+        let status = 'in_progress';
         setInterval(async () => {
           try {
-            await callApi('/multiplayer/trybotpicks', {
-              draft: draft._id,
-            });
+            console.log(status);
+            if (status === 'in_progress') {
+              const res = await callApi('/multiplayer/trybotpicks', {
+                draft: draft._id,
+              });
+              const json = await res.json();
+              console.log(json);
+              status = json.result;
+            }
           } catch (e) {
             console.error(e);
           }
