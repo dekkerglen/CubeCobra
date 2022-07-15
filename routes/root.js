@@ -19,7 +19,7 @@ router.use(csrfProtection);
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const recentsQuery = await Cube.getByVisibility(Cube.VISIBLITY.PUBLIC);
+  const recentsQuery = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
   const recents = recentsQuery.items;
 
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
@@ -50,15 +50,13 @@ router.get('/random', async (req, res) => {
   // sometime random within the last month
   const random = now - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30 * 30);
 
-  const query = await Cube.getByVisibilityBefore(Cube.VISIBLITY.PUBLIC, random);
+  const query = await Cube.getByVisibilityBefore(Cube.VISIBILITY.PUBLIC, random);
 
   res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].Id)}`);
 });
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const cubes = await Cube.getByOwner(req.user.Id);
-
     const posts = await getBlogFeedItems(req.user, 0, 10);
 
     const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
@@ -76,7 +74,6 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
 
     return render(req, res, 'DashboardPage', {
       posts,
-      cubes: cubes.items.sort((a, b) => b.Date - a.Date).slice(0, 12),
       decks,
       content: content.items.filter((item) => item.Type !== 'p'),
       featured,

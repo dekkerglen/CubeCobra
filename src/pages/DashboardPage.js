@@ -23,12 +23,12 @@ import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }) => {
+const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
   const user = useContext(UserContext);
   // where featured cubes are positioned on the screen
   let featuredPosition;
   if (!user.hide_featured) {
-    featuredPosition = cubes.length > 2 ? 'right' : 'left';
+    featuredPosition = user.cubes.length > 2 ? 'right' : 'left';
   }
 
   // the number of drafted decks shown, based on where cubes are located
@@ -36,7 +36,7 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
   if (featuredPosition === 'right') {
     filteredDecks = decks.slice(0, 4);
   }
-  if (!featuredPosition && cubes.length <= 2) {
+  if (!featuredPosition && user.cubes.length <= 2) {
     filteredDecks = decks.slice(0, 6);
   }
 
@@ -52,8 +52,8 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
             </CardHeader>
             <CardBody className="p-0">
               <Row className="g-0">
-                {cubes.length > 0 ? (
-                  cubes.slice(0, 4).map((cube) => (
+                {user.cubes.length > 0 ? (
+                  user.cubes.slice(0, 4).map((cube) => (
                     <Col key={cube._id} xs="12" sm="12" md="12" lg="6">
                       <CubePreview cube={cube} />
                     </Col>
@@ -67,7 +67,9 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
               </Row>
             </CardBody>
             {featuredPosition !== 'left' && (
-              <CardFooter>{cubes.length > 2 && <a href={`/user/view/${cubes[0].owner}`}>View All</a>}</CardFooter>
+              <CardFooter>
+                {user.cubes.length > 2 && <a href={`/user/view/${user.cubes[0].owner}`}>View All</a>}
+              </CardFooter>
             )}
           </Card>
           {featuredPosition === 'left' && (
@@ -144,7 +146,6 @@ const DashboardPage = ({ posts, cubes, decks, loginCallback, content, featured }
 
 DashboardPage.propTypes = {
   posts: PropTypes.arrayOf(BlogPostPropType).isRequired,
-  cubes: PropTypes.arrayOf(CubePropType).isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,

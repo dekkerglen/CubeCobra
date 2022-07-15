@@ -837,7 +837,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
-  if (cube.Visibility === Cube.VISIBLITY.PRIVATE) {
+  if (cube.Visibility === Cube.VISIBILITY.PRIVATE) {
     req.flash('danger', 'Private cubes cannot be featured');
     return res.redirect(redirect);
   }

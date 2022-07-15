@@ -3,6 +3,7 @@ const createClient = require('../util');
 const s3 = require('../s3client');
 const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
+const carddb = require('../../serverjs/cards');
 
 const { DEFAULT_BASICS } = require('../../routes/cube/helper');
 
@@ -13,7 +14,7 @@ const FIELDS = {
   SHORT_ID: 'ShortId',
   OWNER: 'Owner',
   NAME: 'Name',
-  VISIBLITY: 'Visibility',
+  VISIBILITY: 'Visibility',
   PRICE_VISIBLITY: 'PriceVisibility',
   FEATURED: 'Featured',
   CATEGORY_OVERRIDE: 'CategoryOverride',
@@ -39,7 +40,7 @@ const FIELDS = {
   CARD_COUNT: 'CardCount',
 };
 
-const VISIBLITY = {
+const VISIBILITY = {
   PUBLIC: 'pu',
   PRIVATE: 'pr',
   UNLISTED: 'un',
@@ -52,12 +53,12 @@ const PRICE_VISIBLITY = {
 
 const getVisibility = (isListed, isPrivate) => {
   if (isPrivate) {
-    return VISIBLITY.PRIVATE;
+    return VISIBILITY.PRIVATE;
   }
   if (!isListed) {
-    return VISIBLITY.UNLISTED;
+    return VISIBILITY.UNLISTED;
   }
-  return VISIBLITY.PUBLIC;
+  return VISIBILITY.PUBLIC;
 };
 
 const client = createClient({
@@ -67,7 +68,7 @@ const client = createClient({
     [FIELDS.ID]: 'S',
     [FIELDS.DATE]: 'N',
     [FIELDS.OWNER]: 'S',
-    [FIELDS.VISIBLITY]: 'S',
+    [FIELDS.VISIBILITY]: 'S',
   },
   indexes: [
     {
@@ -76,7 +77,7 @@ const client = createClient({
       name: 'ByOwner',
     },
     {
-      partitionKey: FIELDS.VISIBLITY,
+      partitionKey: FIELDS.VISIBILITY,
       sortKey: FIELDS.DATE,
       name: 'ByVisiblity',
     },
@@ -84,40 +85,47 @@ const client = createClient({
   FIELDS,
 });
 
-const deepFreeze = (object) => {
-  // Retrieve the property names defined on object
-  const propNames = Object.getOwnPropertyNames(object);
-
-  // Freeze properties before freezing self
-
-  for (const name of propNames) {
-    const value = object[name];
-
-    if (value && typeof value === 'object') {
-      Object.freeze(value);
-    }
-  }
-
-  return Object.freeze(object);
+const addDetails = (cards) => {
+  cards.forEach((card, index) => {
+    card.details = {
+      ...carddb.cardFromId(card.cardID),
+    };
+    card.index = index;
+  });
+  return cards;
 };
 
-const deepClone = (object) => {
-  return JSON.parse(JSON.stringify(object));
+const stripDetails = (cards) => {
+  cards.forEach((card) => {
+    delete card.details;
+    delete card.index;
+  });
+  return cards;
+};
+
+const getCards = async (id) => {
+  const res = await s3
+    .getObject({
+      Bucket: 'cubecobra',
+      Key: `cube/${id}.json`,
+    })
+    .promise();
+
+  const cards = JSON.parse(res.Body.toString());
+  for (const board of cards.boards) {
+    board.cards = addDetails(board.cards);
+  }
+  return cards;
 };
 
 module.exports = {
-  getCards: async (id) => {
-    const res = s3
-      .getObject({
-        Bucket: 'cubecobra',
-        Key: `cube/${id}.json`,
-      })
-      .promise();
-    return deepFreeze(res.Body);
-  },
-  updateCards: async (id, oldCards, newCards) => {
+  getCards,
+  updateCards: async (id, newCards) => {
+    const oldCards = getCards(id);
+
     const oldMetadata = (await client.get(id)).Item;
-    const newMetadata = deepClone(oldMetadata);
+    const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
+
     const main = newCards.boards.filter((board) => board.name === 'Mainboard');
     newMetadata.CardCount = main.cards.length;
 
@@ -143,6 +151,11 @@ module.exports = {
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: id })));
     await cubeHash.batchPut(hashesToPut);
 
+    // strip details from cards
+    for (const board of newCards.boards) {
+      board.cards = stripDetails(board.cards);
+    }
+
     await s3
       .upload({
         Bucket: 'cubecobra',
@@ -151,7 +164,25 @@ module.exports = {
       })
       .promise();
   },
-  getById: async (id) => deepFreeze((await client.get(id)).Item),
+  deleteById: async (id) => {
+    await client.delete(id);
+    await s3.deleteObject({ Bucket: 'cubecobra', Key: `cube/${id}.json` }).promise();
+  },
+  getById: async (id) => {
+    const byId = await client.get(id);
+    if (byId.Item) {
+      return byId.Item;
+    }
+
+    const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
+    if (byShortId.items.length > 0) {
+      const cubeId = byShortId.items[0].CubeId;
+      const query = await client.get(cubeId);
+      return query.Item;
+    }
+
+    return null;
+  },
   batchGet: async (ids) => client.batchGet(ids),
   getByOwner: async (owner, lastKey) => {
     const result = await client.query({
@@ -179,13 +210,13 @@ module.exports = {
         ':visibility': visibility,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.VISIBLITY,
+        '#p1': FIELDS.VISIBILITY,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: true,
     });
     return {
-      items: deepFreeze(result.Items),
+      items: result.Items,
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -198,31 +229,30 @@ module.exports = {
         ':before': before,
       },
       ExpressionAttributeNames: {
-        '#p1': FIELDS.VISIBLITY,
+        '#p1': FIELDS.VISIBILITY,
         '#p2': FIELDS.DATE,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: true,
     });
     return {
-      items: deepFreeze(result.Items),
+      items: result.Items,
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (oldDocument, newDocument) => {
-    if (_.isEqual(oldDocument, newDocument)) {
+  update: async (document) => {
+    const oldDocument = (await client.get(document.Id)).Item;
+
+    if (_.isEqual(oldDocument, document)) {
       return;
     }
 
-    if (!newDocument[FIELDS.ID]) {
+    if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
 
     const oldHashes = getHashRowsForMetadata(oldDocument);
-    const newHashes = getHashRowsForMetadata(newDocument);
-
-    console.log(oldHashes);
-    console.log(newHashes);
+    const newHashes = getHashRowsForMetadata(document);
 
     // get hashes to delete with deep object equality
     // delete old hash row if no new hash row has this hash
@@ -236,11 +266,8 @@ module.exports = {
       return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
     });
 
-    console.log(hashesToDelete);
-    console.log(hashesToPut);
-
     // put hashes to delete
-    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: newDocument.Id })));
+    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: document.Id })));
     await cubeHash.batchPut(hashesToPut);
 
     await client.put(document);
@@ -257,6 +284,11 @@ module.exports = {
     });
   },
   putCards: async (document) => {
+    // strip cards
+    for (const board of document.boards) {
+      board.cards = stripDetails(board.cards);
+    }
+
     return s3
       .upload({
         Bucket: 'cubecobra',
@@ -267,6 +299,13 @@ module.exports = {
   },
   batchPut: async (documents) => client.batchPut(documents),
   batchPutCards: async (documents) => {
+    // strip cards
+    for (const document of documents) {
+      for (const board of document.boards) {
+        board.cards = stripDetails(board.cards);
+      }
+    }
+
     await Promise.all(
       documents.map((document) =>
         s3
@@ -282,9 +321,9 @@ module.exports = {
   createTable: async () => client.createTable(),
   convertCubeToMetadata: (cube) => ({
     [FIELDS.ID]: `${cube._id}`,
-    [FIELDS.SHORT_ID]: cube.shortID,
+    [FIELDS.SHORT_ID]: cube.ShortId,
     [FIELDS.OWNER]: `${cube.owner}`,
-    [FIELDS.VISIBLITY]: getVisibility(cube.isListed, cube.isPrivate),
+    [FIELDS.VISIBILITY]: getVisibility(cube.isListed, cube.isPrivate),
     [FIELDS.PRICE_VISIBLITY]: cube.privatePrices ? PRICE_VISIBLITY.PRIVATE : PRICE_VISIBLITY.PUBLIC,
     [FIELDS.FEATURED]: cube.isFeatured,
     [FIELDS.CATEGORY_OVERRIDE]: cube.overrideCategory ? cube.categoryOverride : null,
@@ -336,6 +375,7 @@ module.exports = {
           name: 'Mainboard',
           cards: cube.cards.map((card) => {
             delete card._id;
+            delete card.details;
             if (card.addedTmsp) {
               card.addedTmsp = card.addedTmsp.valueOf();
             } else {
@@ -348,6 +388,7 @@ module.exports = {
           name: 'Maybeboard',
           cards: cube.maybe.map((card) => {
             delete card._id;
+            delete card.details;
             if (card.addedTmsp) {
               card.addedTmsp = card.addedTmsp.valueOf();
             } else {
@@ -359,8 +400,7 @@ module.exports = {
       ],
     };
   },
-  VISIBLITY,
+  VISIBILITY,
   PRICE_VISIBLITY,
   FIELDS,
-  deepClone,
 };

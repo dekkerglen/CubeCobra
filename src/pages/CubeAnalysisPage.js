@@ -44,7 +44,6 @@ import { getLabels, cardIsLabel } from 'utils/Sort';
 
 const CubeAnalysisPage = ({
   cube,
-  cubeID,
   defaultFilterText,
   defaultTab,
   defaultFormatId,
@@ -348,7 +347,9 @@ const CubeAnalysisPage = ({
 
 CubeAnalysisPage.propTypes = {
   cube: CubePropType.isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
   defaultFilterText: PropTypes.string,
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,

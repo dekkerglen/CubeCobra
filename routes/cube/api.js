@@ -11,11 +11,8 @@ const util = require('../../serverjs/util');
 
 const {
   generatePack,
-  setCubeType,
-  buildIdQuery,
   buildTagColors,
   cubeCardTags,
-  maybeCards,
   saveDraftAnalytics,
   isCubeViewable,
 } = require('../../serverjs/cubefn');
@@ -23,6 +20,7 @@ const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
+const CubeHash = require('../../dynamo/models/cubeHash');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const Package = require('../../models/package');
@@ -54,20 +52,19 @@ router.post(
     max: 100,
   }),
   body('Name', 'Cube name may not use profanity.').custom((value) => !util.hasProfanity(value)),
-  body('ShortID', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
+  body('ShortId', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('ShortID', `Custom URL may not be empty or longer than 100 characters.`).isLength({
+  body('ShortId', `Custom URL may not be empty or longer than 100 characters.`).isLength({
     min: 1,
     max: 100,
   }),
-  body('ShortID', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('ShortId', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
     const updatedCube = req.body;
 
-    const oldCube = await Cube.getById(updatedCube.Id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(updatedCube.Id);
     const { user } = req;
 
     if (!isCubeViewable(cube, user)) {
@@ -84,28 +81,26 @@ router.post(
       });
     }
 
-    if (updatedCube.ShortId !== cube.ShortID) {
-      const taken = await Cube.getSortedByName(`shortid:${updatedCube.ShortID.toLowerCase()}`);
+    if (updatedCube.ShortId !== cube.ShortId) {
+      const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.ShortId.toLowerCase()}`);
 
-      if (taken.items.length > 0) {
+      if (taken.items.length === 1 && taken.items[0].CubeId !== cube.Id) {
+        return res.status(400).send({
+          success: 'false',
+          message: 'Custom URL is already taken',
+        });
+      }
+      if (taken.items.length > 1) {
         return res.status(400).send({
           success: 'false',
           message: 'Custom URL already taken.',
         });
       }
 
-      cube.ShortId = updatedCube.ShortID;
+      cube.ShortId = updatedCube.ShortId;
     }
 
     cube.Name = updatedCube.Name;
-
-    if (!Cube.PRICE_VISIBLITY.includes(updatedCube.PriceVisibility)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Invalid Price Visibility',
-      });
-    }
-    cube.PriceVisibility = updatedCube.PriceVisibility;
 
     const image = carddb.imagedict[updatedCube.ImageName.toLowerCase()];
 
@@ -162,7 +157,7 @@ router.post(
     // cube tags
     cube.Tags = updatedCube.Tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
 
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -172,15 +167,14 @@ router.post(
 router.post(
   '/settings/:id',
   ensureAuth,
-  body('PriceVisibility').toBoolean(),
+  body('PriceVisibility').isIn(Object.entries(Cube.PRICE_VISIBLITY).map((entry) => entry[1])),
   body('DisableNotifications').toBoolean(),
   body('DefaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
   body('DefaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
-  body('Visibility', 'Visibility must be valid').isIn(Cube.VISIBLITY),
+  body('Visibility', 'Visibility must be valid').isIn(Object.entries(Cube.VISIBILITY).map((entry) => entry[1])),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -205,24 +199,24 @@ router.post(
 
     // convert visibility value to indicators
     switch (req.body.Visibility) {
-      case Cube.VISIBLITY.PRIVATE:
+      case Cube.VISIBILITY.PRIVATE:
         if (cube.Featured || (await isInFeaturedQueue(cube))) {
           req.flash('danger', 'Cannot set a cube in featured queue as private');
         } else {
-          cube.Visibility = req.body.VISIBLITY;
+          cube.Visibility = req.body.Visibility;
         }
         break;
       case 'unlisted':
-        cube.Visibility = req.body.VISIBLITY;
+        cube.Visibility = req.body.Visibility;
         break;
       case 'public':
-        cube.Visibility = req.body.VISIBLITY;
+        cube.Visibility = req.body.Visibility;
         break;
       default:
         break; // can't occur due to the validation above
     }
 
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -329,8 +323,7 @@ router.post(
 router.post(
   '/savetagcolors/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -347,7 +340,7 @@ router.post(
 
     cube.TagColors = req.body.tag_colors;
 
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
     return res.status(200).send({
       success: 'true',
     });
@@ -472,8 +465,7 @@ router.get(
 router.post(
   '/updatebasics/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const oldCcube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCcube);
+    const cube = await Cube.getById(req.params.id);
 
     if (cube.Owner !== req.user.Id) {
       return res.status(403).send({
@@ -484,7 +476,7 @@ router.post(
 
     cube.Basics = req.body;
 
-    await Cube.update(oldCcube, cube);
+    await Cube.update(cube);
 
     return res.status(200).send({
       success: 'true',
@@ -673,9 +665,8 @@ router.post(
       });
     }
 
-    const oldCubeCards = await Cube.getCards(req.params.id);
-    const newCubeCards = await Cube.deepClone(oldCubeCards);
-    const mainboard = newCubeCards.boards.find((board) => board.name === 'Mainboard');
+    const cubeCards = await Cube.getCards(req.params.id);
+    const mainboard = cubeCards.boards.find((board) => board.name === 'Mainboard');
 
     let tag = null;
     if (req.body.packid) {
@@ -698,7 +689,7 @@ router.post(
       mainboard.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
 
-    await Cube.updateCards(req.params.id, oldCubeCards, newCubeCards);
+    await Cube.updateCards(req.params.id, cubeCards);
 
     if (tag) {
       const blogpost = new Blog();
@@ -728,8 +719,7 @@ router.post(
   '/savesorts/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -746,7 +736,7 @@ router.post(
 
     cube.DefaultSorts = req.body.sorts;
     cube.ShowUnsorted = !!req.body.showOther;
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
     return res.status(200).send({
       success: 'true',
     });

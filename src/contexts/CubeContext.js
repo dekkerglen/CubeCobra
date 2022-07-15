@@ -1,5 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
+
+import UserContext from 'contexts/UserContext';
 
 const CubeContext = React.createContext({
   cube: {},
@@ -10,54 +12,37 @@ const CubeContext = React.createContext({
   updateCubeCards: () => {},
 });
 
-export const CubeContextProvider = ({ initialCube, canEdit, ...props }) => {
+export const CubeContextProvider = ({ initialCube, cards, children }) => {
   const [cube, setCube] = useState({
     ...initialCube,
-    cards: initialCube.cards ? initialCube.cards.map((card, index) => ({ ...card, index })) : [],
+    cards,
   });
 
-  const updateCubeCard = useCallback((index, newCard) => {
-    setCube((currentCube) => {
-      const newCube = { ...currentCube };
-      newCube.cards = [...newCube.cards];
-      newCube.cards[index] = newCard;
-      return newCube;
-    });
-  }, []);
+  const user = useContext(UserContext);
 
-  const updateCubeCards = useCallback((newCards) => {
-    setCube((currentCube) => {
-      const newCube = { ...currentCube };
-      newCube.cards = [...newCube.cards];
-      for (const card of newCards) {
-        newCube.cards[card.index] = card;
-      }
-      return newCube;
-    });
-  }, []);
+  const canEdit = user && cube.Owner === user.Id;
 
-  const cubeID = cube._id;
+  const hasCustomImages = cards.boards
+    .find((board) => board.name === 'Mainboard')
+    .cards.some((card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0));
 
-  const hasCustomImages = cube.cards.some(
-    (card) => (card.imgUrl && card.imgUrl.length > 0) || (card.imgBackUrl && card.imgBackUrl.length > 0),
-  );
+  const value = { cube, canEdit, hasCustomImages, setCube };
 
-  const value = { cube, canEdit, cubeID, hasCustomImages, setCube, updateCubeCard, updateCubeCards };
-
-  return <CubeContext.Provider value={value} {...props} />;
+  return <CubeContext.Provider value={value}>{children}</CubeContext.Provider>;
 };
 
 CubeContextProvider.propTypes = {
   initialCube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object),
   }),
-  canEdit: PropTypes.bool,
-  cubeID: PropTypes.string.isRequired,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 CubeContextProvider.defaultProps = {
   initialCube: {},
-  canEdit: false,
 };
 
 export default CubeContext;

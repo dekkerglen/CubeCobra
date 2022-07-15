@@ -1,6 +1,5 @@
 const express = require('express');
 const { body } = require('express-validator');
-const miscutil = require('../../dist/utils/Util');
 const carddb = require('../../serverjs/cards');
 const { buildDeck } = require('../../dist/drafting/deckutil');
 const { render } = require('../../serverjs/render');
@@ -12,13 +11,7 @@ const { ensureAuth } = require('../middleware');
 const { createDeckFromDraft } = require('../../serverjs/deckUtil');
 const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
-const {
-  buildIdQuery,
-  abbreviate,
-  addDeckCardAnalytics,
-  removeDeckCardAnalytics,
-  isCubeViewable,
-} = require('../../serverjs/cubefn');
+const { abbreviate, addDeckCardAnalytics, removeDeckCardAnalytics, isCubeViewable } = require('../../serverjs/cubefn');
 
 const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper');
 
@@ -26,7 +19,6 @@ const { exportToMtgo, createPool, rotateArrayLeft } = require('./helper');
 const Cube = require('../../dynamo/models/cube');
 const Deck = require('../../models/deck');
 const User = require('../../dynamo/models/user');
-const CubeAnalytic = require('../../models/cubeAnalytic');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 
@@ -438,8 +430,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    const oldCube = await Cube.getById(base.cube);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(base.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -509,7 +500,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     }
 
     await deck.save();
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     return res.redirect(`/cube/deck/deckbuilder/${deck._id}`);
   } catch (err) {
@@ -592,8 +583,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
       req.flash('danger', 'Draft not found');
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
-    const oldCube = await Cube.getById(draft.cube);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(draft.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -661,7 +651,7 @@ router.post('/submitgriddeck/:id', body('skipDeckbuilder').toBoolean(), async (r
     await addDeckCardAnalytics(cube, deck, carddb);
 
     await deck.save();
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     if (req.body.skipDeckbuilder) {
       return res.redirect(`/cube/deck/${deck._id}`);
@@ -725,8 +715,7 @@ router.get('/redraft/:id/:seat', async (req, res) => {
 
 router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
   try {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found.');
@@ -824,7 +813,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
 
     cube.numDecks += 1;
     await addDeckCardAnalytics(cube, deck, carddb);
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     return res.redirect(`/cube/deck/deckbuilder/${deck._id}`);
   } catch (err) {

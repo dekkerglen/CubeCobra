@@ -172,13 +172,14 @@ export function getCubeId(cube) {
 }
 
 export function getCubeDescription(cube) {
+  const overridePrefixes =
+    cube.CategoryPrefixes && cube.CategoryPrefixes.length > 0 ? `${cube.CategoryPrefixes.join(' ')} ` : '';
+
   if (cube.CategoryOverride) {
-    const overridePrefixes =
-      cube.CategoryPrefixes && cube.CategoryPrefixes.length > 0 ? `${cube.CategoryPrefixes.join(' ')} ` : '';
     return `${cube.CardCount} Card ${overridePrefixes}${cube.CategoryOverride} Cube`;
   }
 
-  return `${cube.CardCount} Card Cube`;
+  return `${cube.CardCount} Card ${overridePrefixes}Cube`;
 }
 
 export function isInternalURL(to) {

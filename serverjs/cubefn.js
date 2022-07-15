@@ -17,7 +17,7 @@ const ELO_SPEED = 1 / 128;
 const CUBE_ELO_SPEED = 4;
 
 function getCubeId(cube) {
-  if (cube.shortID) return cube.shortID;
+  if (cube.ShortId) return cube.ShortId;
   return cube._id;
 }
 
@@ -25,7 +25,7 @@ function buildIdQuery(id) {
   if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
     return { _id: id };
   }
-  return { shortID: id.toLowerCase() };
+  return { ShortId: id.toLowerCase() };
 }
 
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];

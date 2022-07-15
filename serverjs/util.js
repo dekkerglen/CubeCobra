@@ -97,14 +97,14 @@ function newCard(cardDetails, tags, defaultStatus = 'Owned') {
   };
 }
 
-function addCardToCube(cube, cardDetails, tags) {
+function addCardToBoard(board, cube, cardDetails, tags) {
   if (cardDetails.error) {
     winston.error('Attempted to add invalid card to cube.');
     return;
   }
 
-  const card = newCard(cardDetails, tags, cube.defaultStatus || 'Owned');
-  cube.cards.push(card);
+  const card = newCard(cardDetails, tags, cube.DefaultStatus || 'Owned');
+  board.push(card);
 }
 
 function fromEntries(entries) {
@@ -181,7 +181,7 @@ module.exports = {
   },
   binaryInsert,
   newCard,
-  addCardToCube,
+  addCardToCube: addCardToBoard,
   arraysEqual(a, b) {
     if (a === b) return true;
     if (a == null || b == null) return false;

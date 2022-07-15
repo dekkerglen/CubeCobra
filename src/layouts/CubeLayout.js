@@ -3,7 +3,6 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-import UserContext from 'contexts/UserContext';
 import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { getCubeDescription, getCubeId } from 'utils/Util';
@@ -31,11 +30,10 @@ CubeNavItem.defaultProps = {
   children: false,
 };
 
-const CubeLayout = ({ cube, activeLink, children }) => {
-  const user = useContext(UserContext);
+const CubeLayout = ({ cube, cards, activeLink, children }) => {
   const subtitle = getCubeDescription(cube);
   return (
-    <CubeContextProvider cubeID={cube.Id} initialCube={cube} canEdit={user && cube.Owner === user.Id}>
+    <CubeContextProvider initialCube={cube} cards={cards}>
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
           <div className="nav-item px-lg-4 px-3 text-sm-start text-center font-weight-boldish mt-auto mb-2">
@@ -70,10 +68,16 @@ CubeLayout.propTypes = {
   cube: CubePropType.isRequired,
   activeLink: PropTypes.string.isRequired,
   children: PropTypes.node,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }),
 };
 
 CubeLayout.defaultProps = {
   children: false,
+  cards: {
+    boards: [],
+  },
 };
 
 export default CubeLayout;

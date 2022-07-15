@@ -4,7 +4,7 @@ require('dotenv').config();
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const serialize = require('serialize-javascript');
-const Cube = require('../models/cube');
+const Cube = require('../dynamo/models/cube');
 
 const { NODE_ENV } = process.env;
 
@@ -79,20 +79,12 @@ if (NODE_ENV === 'production') {
 
 const getPage = (page) => pages[page] || pages.Loading;
 
-const getCubes = (req, callback) => {
+const getCubes = async (req, callback) => {
   if (!req.user) {
     callback([]);
   } else {
-    Cube.find({ owner: req.user.Id }, '_id name')
-      .sort({ date_updated: -1 })
-      .lean()
-      .exec((err, docs) => {
-        if (err) {
-          callback([]);
-        } else {
-          callback(docs);
-        }
-      });
+    const query = await Cube.getByOwner(req.user.Id);
+    callback(query.items);
   }
 };
 

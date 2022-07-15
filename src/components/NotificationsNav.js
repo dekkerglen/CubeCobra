@@ -9,25 +9,26 @@ import useMount from 'hooks/UseMount';
 const NotificationsNav = () => {
   const [items, setItems] = useState([]);
 
-  useMount(async () => {
-    const response = await csrfFetch(`/user/getusernotifications`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        lastKey: null,
-      }),
-    });
-    console.log(response);
+  useMount(() => {
+    const fetch = async () => {
+      const response = await csrfFetch(`/user/getusernotifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lastKey: null,
+        }),
+      });
 
-    if (response.ok) {
-      const json = await response.json();
-      console.log(json);
-      if (json.success === 'true') {
-        setItems([...items, ...json.notifications]);
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success === 'true') {
+          setItems([...items, ...json.notifications]);
+        }
       }
-    }
+    };
+    fetch();
   });
 
   const clear = async () => {

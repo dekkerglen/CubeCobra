@@ -45,6 +45,7 @@ import QRCodeModal from 'components/QRCodeModal';
 import Username from 'components/Username';
 
 const FollowersModalLink = withModal('a', FollowersModal);
+const CubeOverviewModalLink = withModal(NavLink, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(NavLink, CubeSettingsModal);
 const DeleteCubeModalLink = withModal(NavLink, DeleteCubeModal);
 const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
@@ -62,7 +63,7 @@ const PrivateCubeIcon = () => (
   </Tooltip>
 );
 
-const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
+const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
   const user = useContext(UserContext);
 
   const [alerts, setAlerts] = useState([]);
@@ -104,11 +105,9 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
     });
   };
 
-  console.log(cubeState);
-
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cubeState} activeLink="overview">
+      <CubeLayout cards={cards} cube={cubeState} activeLink="overview">
         {user && cubeState.Owner === user.Id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
@@ -119,17 +118,19 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
             <UncontrolledCollapse navbar id="cubeOverviewNavbarCollapse" toggler="#cubeOverviewNavbarToggler">
               <Nav navbar>
                 <NavItem>
-                  <CubeOverviewModal
-                    cube={cubeState}
-                    cubeID={cubeState.Id}
-                    onError={(message) => addAlert('danger', message)}
-                    onCubeUpdate={onCubeUpdate}
-                  />
+                  <CubeOverviewModalLink
+                    modalProps={{
+                      cube: cubeState,
+                      cubeID: cubeState.Id,
+                      onError: (message) => addAlert('danger', message),
+                      onCubeUpdate,
+                    }}
+                  >
+                    Edit Overview
+                  </CubeOverviewModalLink>
                 </NavItem>
                 <NavItem>
-                  <CubeSettingsModalLink cube={cubeState} modalProps={{ addAlert, onCubeUpdate }}>
-                    Edit Settings
-                  </CubeSettingsModalLink>
+                  <CubeSettingsModalLink modalProps={{ addAlert, onCubeUpdate }}>Edit Settings</CubeSettingsModalLink>
                 </NavItem>
                 <NavItem>
                   <CustomizeBasicsModalLink
@@ -203,7 +204,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                       </Tooltip>
                     </TextBadge>
                     <CubeIdModalLink
-                      modalProps={{ fullID: cube.Id, shortID: getCubeId(cubeState), alert: addAlert }}
+                      modalProps={{ fullID: cube.Id, ShortId: getCubeId(cubeState), alert: addAlert }}
                       aria-label="Show Cube IDs"
                       className="ms-1 pt-1"
                     >
@@ -220,7 +221,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                 <p className="mb-1">{getCubeDescription(cubeState)}</p>
                 <h6 className="mb-2">
                   <i>
-                    Designed by
+                    {'Designed by '}
                     <Username userId={cubeState.Owner} />
                   </i>{' '}
                   • <a href={`/cube/rss/${cubeState.Id}`}>RSS</a> •{' '}
@@ -261,11 +262,7 @@ const CubeOverview = ({ post, priceOwned, pricePurchase, cube, followed, followe
                     action={`/cube/${cubeState.Featured ? 'unfeature/' : 'feature/'}${cubeState.Id}`}
                     className="mt-2"
                   >
-                    <Button
-                      color="accent"
-                      type="submit"
-                      disabled={!cubeState.Featured && cubeState.Visibility === 'pu'}
-                    >
+                    <Button color="accent" type="submit" disabled={cubeState.Visibility !== 'pu'}>
                       {' '}
                       {cubeState.Featured ? 'Remove from Featured' : 'Add to Featured'}
                     </Button>
@@ -319,13 +316,16 @@ CubeOverview.propTypes = {
   post: PropTypes.shape({
     _id: PropTypes.string.isRequired,
   }),
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
   cube: CubePropType.isRequired,
   followed: PropTypes.bool.isRequired,
   followers: PropTypes.arrayOf(
     PropTypes.shape({
-      _id: PropTypes.string.isRequired,
+      Id: PropTypes.string.isRequired,
     }),
   ),
   loginCallback: PropTypes.string,

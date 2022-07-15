@@ -23,13 +23,14 @@ const convertVisibility = (cube) => {
 };
 
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
-  const { cube, cubeID, setCube } = useContext(CubeContext);
+  const { cube, setCube } = useContext(CubeContext);
   const [visibility, setVisibility] = useState(convertVisibility(cube));
   const formRef = useRef();
 
   const handleSave = useCallback(async () => {
     const formObject = formDataObject(formRef.current);
-    const response = await postJson(`/cube/api/settings/${cubeID}`, formObject);
+    console.log(formObject);
+    const response = await postJson(`/cube/api/settings/${cube.Id}`, formObject);
     const json = await response.json();
     // eslint-disable-next-line no-underscore-dangle
     delete formObject._csrf;
@@ -37,13 +38,17 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
       onCubeUpdate({ ...cube, ...formObject });
       setCube((current) => ({ ...current, ...formObject }));
     } else {
-      for (const error of json.errors) {
-        addAlert('danger', error);
+      console.log(json);
+      if (json.errors) {
+        for (const error of json.errors) {
+          addAlert('danger', error);
+        }
+      } else {
+        addAlert('danger', json.message);
       }
-      addAlert('danger', json.message);
     }
     toggle();
-  }, [toggle, addAlert, onCubeUpdate, cube, cubeID, setCube, formRef]);
+  }, [toggle, addAlert, onCubeUpdate, cube, setCube, formRef]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
@@ -52,50 +57,50 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
         <CSRFForm innerRef={formRef}>
           <FormGroup check>
             <Input
-              id="privatePrices"
-              name="privatePrices"
+              id="PrivatePrices"
+              name="PrivatePrices"
               type="checkbox"
               defaultChecked={cube.PriceVisibility === 'pr'}
             />
-            <Label for="privatePrices">Hide Total Prices</Label>
+            <Label for="PrivatePrices">Hide Total Prices</Label>
           </FormGroup>
           <FormGroup check>
             <Input
-              id="disableNotifications"
-              name="disableNotifications"
+              id="DisableNotifications"
+              name="DisableNotifications"
               type="checkbox"
               defaultChecked={cube.DisableNotifications || false}
             />
-            <Label for="disableNotifications">Disable Draft Notifications</Label>
+            <Label for="DisableNotifications">Disable Draft Notifications</Label>
           </FormGroup>
           <FormGroup>
-            <Label for="visibility">Cube Visibility</Label>
+            <Label for="Visibility">Cube Visibility</Label>
             <Input
-              id="visibility"
-              name="visibility"
+              id="Visibility"
+              name="Visibility"
               type="select"
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
             >
-              <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
-              <option value="private">Private</option>
+              <option value="pu">Public</option>
+              <option value="un">Unlisted</option>
+              <option value="pr">Private</option>
             </Input>
             <FormText>{visibilityHelp[visibility]}</FormText>
           </FormGroup>
           <FormGroup>
-            <Label for="defaultStatus">Default Status</Label>
-            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.DefaultStatus || false}>
+            <Label for="DefaultStatus">Default Status</Label>
+            <Input id="DefaultStatus" name="DefaultStatus" type="select" defaultValue={cube.DefaultStatus || false}>
               {['Owned', 'Not Owned'].map((status) => (
                 <option key={status}>{status}</option>
               ))}
             </Input>
           </FormGroup>
           <FormGroup>
-            <Label for="defaultPrinting">Default Printing</Label>
+            <Label for="DefaultPrinting">Default Printing</Label>
             <Input
-              id="defaultPrinting"
-              name="defaultPrinting"
+              id="DefaultPrinting"
+              name="DefaultPrinting"
               type="select"
               defaultValue={cube.DefaultPrinting || false}
             >

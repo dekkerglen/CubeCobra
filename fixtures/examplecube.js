@@ -656,7 +656,7 @@ const exampleCube = {
     },
   ],
   tag_colors: [],
-  shortID: '2',
+  ShortId: '2',
   name: 'lkjglkejrge',
   owner: '5d671c495c4dcdeca1a2f7c8',
   description: 'This is a brand new cube!',

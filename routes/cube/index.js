@@ -18,7 +18,6 @@ const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
-  setCubeType,
   buildIdQuery,
   abbreviate,
   CSVtoCards,
@@ -42,7 +41,6 @@ const User = require('../../dynamo/models/user');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const CubeAnalytic = require('../../models/cubeAnalytic');
-const { fromEntries } = require('../../serverjs/util');
 const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
 
 const router = express.Router();
@@ -77,7 +75,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       ImageArtist: details.artist,
       Description: 'This is a brand new cube!',
       Date: Date.now().valueOf(),
-      Visibility: Cube.VISIBLITY.PUBLIC,
+      Visibility: Cube.VISIBILITY.PUBLIC,
       PriceVisibility: Cube.PRICE_VISIBLITY.PUBLIC,
       Featured: false,
       TagColors: [],
@@ -149,7 +147,7 @@ router.get('/clone/:id', async (req, res) => {
       ImageArtist: source.ImageArtist,
       Description: `Cloned from [${source.Name}](/c/${source.Id})\n\n${source.Description}`,
       Date: Date.now().valueOf(),
-      Visibility: Cube.VISIBLITY.PUBLIC,
+      Visibility: Cube.VISIBILITY.PUBLIC,
       PriceVisibility: Cube.PRICE_VISIBLITY.PUBLIC,
       Featured: false,
       TagColors: source.TagColors,
@@ -198,8 +196,7 @@ router.get('/view/:id', (req, res) => {
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -232,7 +229,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       message = 'Custom format successfully edited.';
     }
 
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
     req.flash('success', message);
     return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
@@ -245,8 +242,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const { user } = req;
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
@@ -263,7 +259,7 @@ router.post(
     }
 
     await User.update(user);
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     res.status(200).send({
       success: 'true',
@@ -275,8 +271,7 @@ router.post(
   '/unfollow/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -290,7 +285,7 @@ router.post(
     user.FollowedCubes = user.FollowedCubes.filter((id) => cube.Id !== id);
 
     await User.update(user);
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     return res.status(200).send({
       success: 'true',
@@ -307,8 +302,7 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
       return res.redirect(redirect);
     }
 
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -320,7 +314,7 @@ router.post('/feature/:id', ensureAuth, async (req, res) => {
     }
 
     cube.Featured = true;
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
     return res.redirect(redirect);
@@ -338,8 +332,7 @@ router.post('/unfeature/:id', ensureAuth, async (req, res) => {
       return res.redirect(redirect);
     }
 
-    const oldCube = await Cube.getById(req.params.id);
-    const cube = Cube.deepClone(oldCube);
+    const cube = await Cube.getById(req.params.id);
 
     if (!cube) {
       req.flash('danger', 'Cube not found');
@@ -347,7 +340,7 @@ router.post('/unfeature/:id', ensureAuth, async (req, res) => {
     }
 
     cube.Featured = false;
-    await Cube.update(oldCube, cube);
+    await Cube.update(cube);
 
     req.flash('success', 'Cube updated successfully.');
     return res.redirect(redirect);
@@ -365,8 +358,8 @@ router.get('/overview/:id', async (req, res) => {
       return res.redirect('404');
     }
 
-    const cubeCards = await Cube.getCards(cube.Id);
-    const mainboard = cubeCards.boards.find((b) => b.type === 'Mainboard');
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.boards.find((b) => b.name === 'Mainboard');
 
     const blogs = await Blog.find({
       cube: cube.Id,
@@ -385,12 +378,7 @@ router.get('/overview/:id', async (req, res) => {
       delete follower.Email;
     }
 
-    // calc cube prices
-    for (const card of mainboard.cards) {
-      card.details = {
-        ...carddb.cardFromId(card.cardID, 'name prices'),
-      };
-    }
+    // calculate cube prices
     const nameToCards = {};
     for (const card of mainboard.cards) {
       if (!nameToCards[card.details.name]) {
@@ -436,6 +424,7 @@ router.get('/overview/:id', async (req, res) => {
       'CubeOverviewPage',
       {
         cube,
+        cards,
         post: blogs && blogs.length > 0 ? fillBlogpostChangelog(blogs[0]) : null,
         followed: req.user && cube.UsersFollowing && cube.UsersFollowing.some((id) => req.user.Id === id),
         followers,
@@ -539,23 +528,16 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       return res.redirect('/404');
     }
 
-    let cubeACards = Cube.deepClone(await Cube.getCards(cubeA.Id));
-    let cubeBCards = Cube.deepClone(await Cube.getCards(cubeB.Id));
+    const cubeACards = await Cube.getCards(cubeA.Id);
+    const cubeBCards = await Cube.getCards(cubeB.Id);
 
     const mainboardA = cubeACards.find((c) => c.Type === 'Mainboard');
     const mainboardB = cubeBCards.find((c) => c.Type === 'Mainboard');
 
     const pids = new Set();
     const cardNames = new Set();
-    const addDetails = (cards) => {
-      cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        card.index = index;
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
+    const countIds = (cards) => {
+      cards.forEach((card) => {
         if (card.details.tcgplayer_id) {
           pids.add(card.details.tcgplayer_id);
         }
@@ -564,8 +546,8 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       return cards;
     };
 
-    cubeACards = addDetails(mainboardA.cards);
-    cubeBCards = addDetails(mainboardB.cards);
+    countIds(mainboardA.cards);
+    countIds(mainboardB.cards);
 
     const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeACards, cubeBCards);
 
@@ -607,29 +589,13 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
 router.get('/list/:id', async (req, res) => {
   try {
-    const fields =
-      'cards maybe card_count name owner type tag_colors default_sorts default_show_unsorted overrideCategory categoryOverride categoryPrefixes image_uri shortID isPrivate';
-    const cube = await Cube.findOne(buildIdQuery(req.params.id), fields).lean();
+    const cube = await Cube.getById(req.params.id);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
 
-    const addDetails = (cards) => {
-      cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        card.index = index;
-        if (!card.type_line) {
-          card.type_line = card.details.type;
-        }
-      });
-      return cards;
-    };
-
-    cube.cards = addDetails(cube.cards);
-    cube.maybe = addDetails(cube.maybe ? cube.maybe : []);
+    const cards = await Cube.getCards(req.params.id);
 
     return render(
       req,
@@ -637,6 +603,7 @@ router.get('/list/:id', async (req, res) => {
       'CubeListPage',
       {
         cube,
+        cards,
         defaultView: req.query.view || 'table',
         defaultPrimarySort: req.query.s1 || '',
         defaultSecondarySort: req.query.s2 || '',
@@ -644,15 +611,15 @@ router.get('/list/:id', async (req, res) => {
         defaultQuaternarySort: req.query.s4 || '',
         defaultShowUnsorted: req.query.so || '',
         defaultFilterText: req.query.f || '',
-        defaultTagColors: cube.tag_colors || [],
+        defaultTagColors: cube.TagColors || [],
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       },
       {
-        title: `${abbreviate(cube.name)} - List`,
+        title: `${abbreviate(cube.Name)} - List`,
         metadata: generateMeta(
-          `Cube Cobra List: ${cube.name}`,
-          miscutil.getCubeDescription(cube),
-          cube.image_uri,
+          `Cube Cobra List: ${cube.Name}`,
+          cube.Description,
+          cube.ImageUri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
       },
@@ -664,7 +631,7 @@ router.get('/list/:id', async (req, res) => {
 
 router.get('/playtest/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -692,11 +659,11 @@ router.get('/playtest/:id', async (req, res) => {
         decks,
       },
       {
-        title: `${abbreviate(cube.name)} - Playtest`,
+        title: `${abbreviate(cube.Name)} - Playtest`,
         metadata: generateMeta(
-          `Cube Cobra Playtest: ${cube.name}`,
-          miscutil.getCubeDescription(cube),
-          cube.image_uri,
+          `Cube Cobra Playtest: ${cube.Name}`,
+          cube.Description,
+          cube.ImageUri,
           `https://cubecobra.com/cube/playtest/${req.params.id}`,
         ),
       },
@@ -708,31 +675,23 @@ router.get('/playtest/:id', async (req, res) => {
 
 router.get('/analysis/:id', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('404');
     }
 
-    const pids = new Set();
-    const cardNames = new Set();
-    const addDetails = (cards) => {
-      cards.forEach((card, index) => {
-        card.details = {
-          ...carddb.cardFromId(card.cardID),
-        };
-        card.index = index;
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
+    const cards = await Cube.getCards(req.params.id);
 
+    const tokens = {};
+    for (const board of cards) {
+      for (const card of board.cards)
         if (card.details.tokens) {
-          card.details.tokens = card.details.tokens
-            .filter((tokenId) => tokenId !== card.cardID)
-            .map((tokenId) => {
+          for (const tokenId in card.details.tokens) {
+            if (!tokens[tokenId]) {
               const tokenDetails = carddb.cardFromId(tokenId);
-              return {
+              tokens[tokenId] = {
                 tags: [],
                 status: 'Not Owned',
                 colors: tokenDetails.color_identity,
@@ -743,15 +702,10 @@ router.get('/analysis/:id', async (req, res) => {
                 finish: 'Non-foil',
                 details: tokenDetails,
               };
-            });
+            }
+          }
         }
-
-        cardNames.add(card.details.name);
-      });
-      return cards;
-    };
-    cube.cards = addDetails(cube.cards || []);
-    cube.maybe = addDetails(cube.maybe || []);
+    }
 
     const cubeAnalytics = await CubeAnalytic.findOne({ cube: cube._id });
 
@@ -761,6 +715,8 @@ router.get('/analysis/:id', async (req, res) => {
       'CubeAnalysisPage',
       {
         cube,
+        cards,
+        tokens,
         cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
         defaultNav: req.query.nav,
@@ -790,14 +746,18 @@ router.get('/samplepack/:id', (req, res) => {
 
 router.get('/samplepack/:id/:seed', async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/playtest/404');
     }
+
+    const cards = await Cube.getCards(req.params.id);
+
     let pack;
     try {
-      pack = await generatePack(cube, carddb, req.params.seed);
+      pack = await generatePack(cube, cards, carddb, req.params.seed);
     } catch (err) {
       req.flash('danger', err.message);
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -816,10 +776,10 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
         cube,
       },
       {
-        title: `${abbreviate(cube.name)} - Sample Pack`,
+        title: `${abbreviate(cube.Name)} - Sample Pack`,
         metadata: generateMeta(
           'Cube Cobra Sample Pack',
-          `A sample pack from ${cube.name}`,
+          `A sample pack from ${cube.Name}`,
           `https://cubecobra.com/cube/samplepackimage/${req.params.id}/${pack.seed}.png`,
           `https://cubecobra.com/cube/samplepack/${req.params.id}/${pack.seed}`,
           CARD_WIDTH * width,
@@ -835,15 +795,19 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 router.get('/samplepackimage/:id/:seed', async (req, res) => {
   try {
     req.params.seed = req.params.seed.replace('.png', '');
-    const cube = await Cube.findOne(buildIdQuery(req.params.id)).lean();
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/playtest/404');
     }
+
+    const cards = await Cube.getCards(req.params.id);
+
     const imageBuffer = await cachePromise(`/samplepack/${req.params.id}/${req.params.seed}`, async () => {
       let pack;
       try {
-        pack = await generatePack(cube, carddb, req.params.seed);
+        pack = await generatePack(cube, cards, carddb, req.params.seed);
       } catch (err) {
         req.flash('danger', err.message);
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -875,12 +839,14 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
 router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(buildIdQuery(req.params.id));
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
-    if (!cube.owner.equals(req.user.Id)) {
+
+    if (!cube.Owner.equals(req.user.Id)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -901,12 +867,14 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
     const items = req.files.document.data.toString('utf8'); // the uploaded file object
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
-    if (!cube.owner.equals(req.user.Id)) {
+
+    if (!cube.Owner.equals(req.user.Id)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -925,17 +893,21 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
     const items = req.files.document.data.toString('utf8'); // the uploaded file object
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
-    // We need a copy of cards we can mutate to be able to populate details for the comparison.
-    const { cards } = await Cube.findOne(buildIdQuery(req.params.id), 'cards isPrivate owner').lean();
+
+    const cube = await Cube.getById(req.params.id);
+    // use this to maintain customized fields
+    const cards = await Cube.getCards(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
     }
-    if (!cube.owner.equals(req.user.Id)) {
+
+    if (!cube.Owner.equals(req.user.Id)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
+
     const lines = items.match(/[^\r\n]+/g);
     if (lines) {
       const changelog = [];
@@ -962,10 +934,9 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
             return card;
           });
 
-        const cubeCards = addDetails(cards);
         const newDetails = addDetails(newCards);
 
-        const { onlyA, onlyB } = await compareCubes(cubeCards, newDetails);
+        const { onlyA, onlyB } = await compareCubes(cards, newDetails);
         changelog.push(
           ...onlyA.map(({ cardID }) => {
             return { addedID: null, removedID: cardID };
@@ -1004,22 +975,21 @@ router.post(
 
       const numCards = numPacks * 9;
 
-      const cube = await Cube.findOne(
-        buildIdQuery(req.params.id),
-        '_id name draft_formats cards owner basics isPrivate',
-      ).lean();
+      const cube = await Cube.getById(req.params.id);
+      const cubeCards = await Cube.getCards(req.params.id);
+      const mainboard = cubeCards.boards.find((board) => board.type === 'Mainboard');
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
 
-      if (cube.cards.length < numCards) {
+      if (mainboard.cards.length < numCards) {
         req.flash('danger', `Not enough cards, need ${numCards} cards for a ${numPacks} pack grid draft.`);
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      const source = shuffle(cube.cards)
+      const source = shuffle(mainboard.cards)
         .slice(0, numCards)
         .map((card, index) => {
           card.index = index;
@@ -1028,7 +998,7 @@ router.post(
 
       const gridDraft = new GridDraft();
       gridDraft.draftType = type;
-      gridDraft.cube = cube._id;
+      gridDraft.cube = cube.Id;
 
       const packs = [];
       const cards = [];
@@ -1096,22 +1066,22 @@ router.post(
 
       const numCards = packs * cards;
 
-      const cube = await Cube.findOne(
-        buildIdQuery(req.params.id),
-        '_id name basics cards owner numDecks disableNotifications isPrivate',
-      );
+      const cube = await Cube.getById(req.params.id);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
 
-      if (cube.cards.length < numCards) {
+      const cubeCards = await Cube.getCards(req.params.id);
+      const mainboard = cubeCards.boards.find((board) => board.type === 'Mainboard');
+
+      if (mainboard.cards.length < numCards) {
         req.flash('danger', `Not enough cards, need ${numCards} cards for sealed with ${packs} packs of ${cards}.`);
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      const source = shuffle(cube.cards).slice(0, numCards);
+      const source = shuffle(mainboard.cards).slice(0, numCards);
       const pool = createPool();
       const cardsArray = [];
       for (const card of source) {
@@ -1148,20 +1118,20 @@ router.post(
       }
 
       const deck = new Deck();
-      deck.cube = cube._id;
-      deck.cubeOwner = cube.owner;
+      deck.cube = cube.Id;
+      deck.cubeOwner = cube.Owner;
       deck.date = Date.now();
-      deck.cubename = cube.name;
+      deck.cubename = cube.Name;
       deck.seats = [];
       deck.owner = user.Id;
-      addBasics(cardsArray, cube.basics, deck);
+      addBasics(cardsArray, cube.Basics, deck);
       deck.cards = cardsArray;
 
       deck.seats.push({
         userid: user.Id,
         username: user.Username,
         pickorder: cardsArray.map((item, index) => index),
-        name: `Sealed from ${cube.name}`,
+        name: `Sealed from ${cube.Name}`,
         description: '',
         deck: pool,
         sideboard: createPool(),
@@ -1175,14 +1145,14 @@ router.post(
 
       await cube.save();
 
-      const cubeOwner = await User.getById(cube.owner);
+      const cubeOwner = await User.getById(cube.Owner);
 
       if (!cube.disableNotifications) {
         await util.addNotification(
           cubeOwner,
           user,
           `/cube/deck/${deck._id}`,
-          `${user.Username} built a sealed deck from your cube: ${cube.name}`,
+          `${user.Username} built a sealed deck from your cube: ${cube.Name}`,
         );
       }
 
@@ -1212,17 +1182,17 @@ router.post(
   }),
   async (req, res) => {
     try {
-      const cube = await Cube.findOne(
-        buildIdQuery(req.params.id),
-        '_id name draft_formats cards basics useCubeElo isPrivate owner',
-      ).lean();
+      const cube = await Cube.getById(req.params.id);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Cube not found');
         return res.redirect('/404');
       }
 
-      if (cube.cards.length === 0) {
+      const cubeCards = await Cube.getCards(req.params.id);
+      const mainboard = cubeCards.boards.find((board) => board.type === 'Mainboard');
+
+      if (mainboard.cards.length === 0) {
         // This is a 4XX error, not a 5XX error
         req.flash('danger', 'This cube has no cards!');
         return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
@@ -1230,21 +1200,6 @@ router.post(
 
       const params = req.body;
 
-      let eloOverrideDict = {};
-      if (cube.useCubeElo) {
-        const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-        if (analytic) {
-          eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-        }
-      }
-
-      // insert card details everywhere that needs them
-      for (const card of cube.cards) {
-        card.details = carddb.cardFromId(card.cardID);
-        if (eloOverrideDict[card.details.name_lower]) {
-          card.details.elo = eloOverrideDict[card.details.name_lower];
-        }
-      }
       // setup draft
       const format = createdraft.getDraftFormat(params, cube);
 
@@ -1253,7 +1208,7 @@ router.post(
       try {
         populated = createdraft.createDraft(
           format,
-          cube.cards,
+          mainboard.cards,
           params.seats,
           req.user
             ? req.user
@@ -1270,8 +1225,8 @@ router.post(
 
       draft.initial_state = populated.initial_state;
       draft.seats = populated.seats;
-      draft.cube = cube._id;
-      addBasics(populated.cards, cube.basics, draft);
+      draft.cube = cube.Id;
+      addBasics(populated.cards, cube.Basics, draft);
       draft.cards = populated.cards;
 
       await draft.save();
@@ -1293,7 +1248,7 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findById(draft.cube).lean();
+    const cube = await Cube.getById(draft.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -1306,22 +1261,6 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      if (analytic) {
-        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-      }
-    }
-
-    // insert card details everywhere that needs them
-    for (const card of draft.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-      if (eloOverrideDict[card.details.name_lower]) {
-        card.details.elo = eloOverrideDict[card.details.name_lower];
-      }
-    }
-
     return render(
       req,
       res,
@@ -1331,11 +1270,11 @@ router.get('/griddraft/:id', async (req, res) => {
         initialDraft: draft,
       },
       {
-        title: `${abbreviate(cube.name)} - Grift Draft`,
+        title: `${abbreviate(cube.Name)} - Grift Draft`,
         metadata: generateMeta(
-          `Cube Cobra Grid Draft: ${cube.name}`,
-          miscutil.getCubeDescription(cube),
-          cube.image_uri,
+          `Cube Cobra Grid Draft: ${cube.Name}`,
+          cube.Description,
+          cube.ImageUri,
           `https://cubecobra.com/cube/griddraft/${req.params.id}`,
         ),
       },
@@ -1353,27 +1292,11 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cube = await Cube.findById(draft.cube).lean();
+    const cube = await Cube.getById(draft.cube);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/404');
-    }
-
-    let eloOverrideDict = {};
-    if (cube.useCubeElo) {
-      const analytic = await CubeAnalytic.findOne({ cube: cube._id });
-      if (analytic) {
-        eloOverrideDict = fromEntries(analytic.cards.map((c) => [c.cardName, c.elo]));
-      }
-    }
-
-    // insert card details everywhere that needs them
-    for (const card of draft.cards) {
-      card.details = carddb.cardFromId(card.cardID);
-      if (eloOverrideDict[card.details.name_lower]) {
-        card.details.elo = eloOverrideDict[card.details.name_lower];
-      }
     }
 
     return render(
@@ -1385,11 +1308,11 @@ router.get('/draft/:id', async (req, res) => {
         initialDraft: draft,
       },
       {
-        title: `${abbreviate(cube.name)} - Draft`,
+        title: `${abbreviate(cube.Name)} - Draft`,
         metadata: generateMeta(
-          `Cube Cobra Draft: ${cube.name}`,
-          miscutil.getCubeDescription(cube),
-          cube.image_uri,
+          `Cube Cobra Draft: ${cube.Name}`,
+          cube.Description,
+          cube.ImageUri,
           `https://cubecobra.com/cube/draft/${encodeURIComponent(req.params.id)}`,
         ),
       },
@@ -1399,154 +1322,11 @@ router.get('/draft/:id', async (req, res) => {
   }
 });
 
-// Edit Submit POST Route
-router.post('/edit/:id', ensureAuth, async (req, res) => {
-  try {
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return res.redirect('/cube/list/404');
-    }
-
-    const viewQuery = req.query.view || 'table';
-    const scaleQuery = req.query.scale || 'medium';
-
-    if (!cube.owner.equals(req.user.Id)) {
-      req.flash('danger', 'Only cube owner may edit.');
-      return res.redirect(`
-      /cube/list/${encodeURIComponent(req.params.id)}?view=${encodeURIComponent(viewQuery)}&scale=${encodeURIComponent(
-        scaleQuery,
-      )}`);
-    }
-
-    cube.date_updated = Date.now();
-    cube.updated_string = cube.date_updated.toLocaleString('en-US');
-
-    const edits = req.body.body.split(';');
-    const removes = new Set();
-    const adds = [];
-    const changelog = [];
-
-    for (const edit of edits) {
-      if (edit.charAt(0) === '+') {
-        // add id
-        const id = edit.substring(1);
-        const details = carddb.cardFromId(id);
-        if (!details) {
-          req.logger.error({
-            message: `Card not found: ${edit}`,
-          });
-        } else {
-          adds.push(details);
-          changelog.push({ addedID: id, removedID: null });
-        }
-      } else if (edit.charAt(0) === '-') {
-        // remove id
-        const [indexOutStr, outID] = edit.substring(1).split('$');
-        const indexOut = parseInt(indexOutStr, 10);
-
-        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-          req.flash('danger', `Unable to remove card due to invalid index: ${carddb.cardFromId(outID).name}`);
-        } else {
-          const card = cube.cards[indexOut];
-          if (card.cardID === outID) {
-            removes.add(indexOut);
-            changelog.push({ addedID: null, removedID: outID });
-          } else {
-            req.flash('danger', `Unable to remove card due outdated index: ${carddb.cardFromId(outID).name}`);
-          }
-        }
-      } else if (edit.charAt(0) === '/') {
-        const [outStr, inID] = edit.substring(1).split('>');
-        const detailsIn = carddb.cardFromId(inID);
-        if (!detailsIn) {
-          req.logger.error({
-            message: `Card not found: ${edit}`,
-          });
-        } else {
-          adds.push(detailsIn);
-        }
-
-        const [indexOutStr, outID] = outStr.split('$');
-        const indexOut = parseInt(indexOutStr, 10);
-        if (!Number.isInteger(indexOut) || indexOut < 0 || indexOut >= cube.cards.length) {
-          req.flash('danger', `Unable to replace card due to invalid index: ${carddb.cardFromId(outID).name}`);
-          changelog.push({ addedID: inID, removedID: null });
-        } else {
-          const cardOut = cube.cards[indexOut];
-          if (cardOut.cardID === outID) {
-            removes.add(indexOut);
-            changelog.push({ addedID: inID, removedID: outID });
-          } else {
-            req.flash('danger', `Unable to replace card due outdated index: ${carddb.cardFromId(outID).name}`);
-            changelog.push({ addedID: inID, removedID: null });
-          }
-        }
-      } else {
-        req.flash('danger', 'Bad request format, all operations must be add, remove, or replace.');
-        return res.redirect(
-          `/cube/list/${encodeURIComponent(req.params.id)}?view=${encodeURIComponent(
-            viewQuery,
-          )}&scale=${encodeURIComponent(scaleQuery)}`,
-        );
-      }
-    }
-
-    // Filter out removed and invalid cards, and add new cards.
-    const newCards = adds.map((add) => util.newCard(add, [], cube.defaultStatus));
-    cube.cards = cube.cards.filter((card, index) => card.cardID && !removes.has(index)).concat(newCards);
-    cube.maybe = cube.maybe.filter((maybeCard) => !adds.some((addedCard) => addedCard._id === maybeCard.cardID));
-
-    const blogpost = new Blog();
-    blogpost.title = req.body.title;
-    if (req.body.blog.length > 0) {
-      blogpost.markdown = req.body.blog.substring(0, 10000);
-    }
-    blogpost.changed_cards = changelog;
-    blogpost.owner = cube.owner;
-    blogpost.date = Date.now();
-    blogpost.cube = cube._id;
-    blogpost.dev = 'false';
-    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.owner_name;
-    blogpost.cubename = cube.name;
-
-    cube = setCubeType(cube, carddb);
-
-    await Promise.all([blogpost.save(), cube.save()]);
-
-    if (req.body.mentions) {
-      const owner = await User.getById(req.user.Id);
-      const mentions = req.body.mentions.toLowerCase().split(';');
-
-      for (const mention of mentions) {
-        const query = await User.getByUsername(mention);
-
-        if (query.items.length === 1) {
-          await util.addNotification(
-            query.items,
-            owner,
-            `/cube/blog/blogpost/${blogpost._id}`,
-            `${cube.owner_name} mentioned you in their blog post`,
-          );
-        }
-      }
-    }
-
-    req.flash('success', 'Cube Updated');
-    return res.redirect(
-      `/cube/list/${encodeURIComponent(req.params.id)}?updated=true&view=${encodeURIComponent(
-        viewQuery,
-      )}&scale=${encodeURIComponent(scaleQuery)}`,
-    );
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
-  }
-});
-
 router.post('/resize/:id/:size', async (req, res) => {
   try {
-    let cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
+    const cards = await Cube.getCards(req.params.id);
+    const mainboard = cards.boards.find((board) => board.type === 'Mainboard');
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(400).send({
@@ -1555,7 +1335,7 @@ router.post('/resize/:id/:size', async (req, res) => {
       });
     }
 
-    if (!cube.owner.equals(req.user.Id)) {
+    if (!cube.Owner.equals(req.user.Id)) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
@@ -1577,10 +1357,6 @@ router.post('/resize/:id/:size', async (req, res) => {
     }
     const { cuts, additions } = await response.json();
 
-    // use this instead if you want debug data
-    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
-    // const cuts = { ...additions };
-
     const pids = new Set();
     const cardNames = new Set();
 
@@ -1599,16 +1375,16 @@ router.post('/resize/:id/:size', async (req, res) => {
 
     const newSize = parseInt(req.params.size, 10);
 
-    if (newSize === cube.cards.length) {
+    if (newSize === mainboard.cards.length) {
       req.flash('success', 'Your cube is already this size!');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
 
     // we sort the reverse way depending on adding or removing
-    let list = Object.entries(newSize > cube.cards.length ? additions : cuts)
+    let list = Object.entries(newSize > mainboard.cards.length ? additions : cuts)
       .sort((a, b) => {
-        if (a[1] > b[1]) return newSize > cube.cards.length ? -1 : 1;
-        if (a[1] < b[1]) return newSize > cube.cards.length ? 1 : -1;
+        if (a[1] > b[1]) return newSize > mainboard.cards.length ? -1 : 1;
+        if (a[1] < b[1]) return newSize > mainboard.cards.length ? 1 : -1;
         return 0;
       })
       .map(formatTuple);
@@ -1622,44 +1398,42 @@ router.post('/resize/:id/:size', async (req, res) => {
         `/cube/list/${encodeURIComponent(req.params.id)}`,
       );
     }
-    list = (filter ? list.filter(filter) : list).slice(0, Math.abs(newSize - cube.cards.length));
+    list = (filter ? list.filter(filter) : list).slice(0, Math.abs(newSize - mainboard.cards.length));
 
     const changelog = [];
-    if (newSize > cube.cards.length) {
+    if (newSize > mainboard.cards.length) {
       // we add to cube
       const toAdd = list.map((card) => {
         changelog.push({ addedID: card.details._id, removedID: null });
         return util.newCard(card.details);
       });
-      cube.cards = cube.cards.concat(toAdd);
+      mainboard.cards.push(toAdd);
     } else {
       // we cut from cube
       for (const card of list) {
-        for (let i = 0; i < cube.cards.length; i += 1) {
-          if (carddb.cardFromId(cube.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
+        for (let i = 0; i < mainboard.cards.length; i += 1) {
+          if (carddb.cardFromId(mainboard.cards[i].cardID).name === carddb.cardFromId(card.cardID).name) {
             changelog.push({ addedID: null, removedID: card.cardID });
-            cube.cards.splice(i, 1);
-            i = cube.cards.length;
+            mainboard.cards.splice(i, 1);
+            i = mainboard.cards.length;
           }
         }
       }
     }
 
-    cube = setCubeType(cube, carddb);
-
     const blogpost = new Blog();
     blogpost.title = 'Resize - Automatic Post';
     blogpost.changed_cards = changelog;
-    blogpost.owner = cube.owner;
+    blogpost.owner = cube.Owner;
     blogpost.date = Date.now();
-    blogpost.cube = cube._id;
+    blogpost.cube = cube.Id;
     blogpost.dev = 'false';
     blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
     blogpost.username = cube.owner_name;
     blogpost.cubename = cube.name;
 
     await blogpost.save();
-    await cube.save();
+    await Cube.updateCards(cube.Id, cards);
 
     req.flash('success', 'Cube Resized succesfully.');
     return res.redirect(`/cube/list/${req.params.id}`);
@@ -1670,16 +1444,18 @@ router.post('/resize/:id/:size', async (req, res) => {
 
 router.post('/remove/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.findOne(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
+
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/overview/404');
     }
-    if (!cube.owner.equals(req.user.Id)) {
+    if (!cube.Owner.equals(req.user.Id)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${encodeURIComponent(req.params.id)}`);
     }
-    await Cube.deleteOne(buildIdQuery(req.params.id));
+
+    await Cube.deleteById(req.params.id);
 
     req.flash('success', 'Cube Removed');
     return res.redirect('/dashboard');
@@ -1691,35 +1467,38 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
 router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), async (req, res) => {
   try {
     const { cubeid, index } = req.params;
-    const cube = await Cube.findOne(buildIdQuery(cubeid));
+
+    const cube = await Cube.getById(cubeid);
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
         success: 'false',
         message: 'No such cube.',
       });
     }
-    if (!cube.owner.equals(req.user.Id)) {
+
+    if (!cube.Owner.equals(req.user.Id)) {
       return res.status(401).send({
         success: 'false',
         message: 'Not authorized.',
       });
     }
-    if (index < 0 || index >= cube.draft_formats.length) {
+    if (index < 0 || index >= cube.DraftFormats.length) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid request format.',
       });
     }
 
-    cube.draft_formats.splice(index, 1);
+    cube.DraftFormats.splice(index, 1);
     // update defaultFormat if necessary
     if (index === cube.defaultDraftFormat) {
-      cube.defaultDraftFormat = -1;
+      cube.DefaultDraftFormat = -1;
     } else if (index < cube.defaultDraftFormat) {
-      cube.defaultDraftFormat -= 1;
+      cube.DefaultDraftFormat -= 1;
     }
 
-    await cube.save();
+    await Cube.update(cube);
+
     return res.status(200).send({
       success: 'true',
     });
@@ -1739,20 +1518,20 @@ router.post(
     const cubeid = req.params.id;
     const formatId = parseInt(req.params.formatId, 10);
 
-    const cube = await Cube.findOne(buildIdQuery(cubeid));
+    const cube = await Cube.getById(cubeid);
     if (
       !isCubeViewable(cube, req.user) ||
-      !cube.owner.equals(req.user.Id) ||
+      !cube.Owner.equals(req.user.Id) ||
       !Number.isInteger(formatId) ||
-      formatId >= cube.draft_formats.length ||
+      formatId >= cube.DraftFormats.length ||
       formatId < -1
     ) {
       return res.sendStatus(401);
     }
 
-    cube.defaultDraftFormat = formatId;
+    cube.DefaultDraftFormat = formatId;
 
-    await cube.save();
+    await Cube.update(cube);
     return res.status(200).send({
       success: 'true',
     });

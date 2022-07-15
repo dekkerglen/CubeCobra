@@ -24,7 +24,7 @@ const fixturesPath = 'fixtures';
 const cubeName = '"Galaxy Brain" Cube!!! :)';
 const sanitizedCubeName = 'GalaxyBrainCube';
 const exampleCube = exampleCubeWithName(cubeName);
-const cubeID = exampleCube.shortID;
+const cubeID = exampleCube.ShortId;
 
 const app = express();
 app.use('/', router);

@@ -1,5 +1,5 @@
 const FeaturedCubes = require('../models/featuredCubes');
-const Cube = require('../models/cube');
+const Cube = require('../dynamo/models/cube');
 const Patron = require('../models/patron');
 
 const TRY_COUNT = 5;
@@ -52,15 +52,20 @@ async function rotateFeatured() {
 
   const [old1, old2, new1, new2] = update.return;
   const messages = [];
-  const removeOld = await Cube.updateMany({ _id: { $in: [old1.cubeID, old2.cubeID] } }, { isFeatured: false });
-  if (removeOld.n !== 2)
-    messages.push(`Expected to match 2 currently featured cubes, ${removeOld.n} cubes matched instead`);
-  if (removeOld.nModified !== 2)
-    messages.push(`Expected to remove 2 featured cubes, ${removeOld.nModified} cubes removed instead`);
 
-  const addNew = await Cube.updateMany({ _id: { $in: [new1.cubeID, new2.cubeID] } }, { isFeatured: true });
-  if (addNew.n !== 2) messages.push(`Expected to match 2 cubes to feature, ${addNew.n} cubes matched instead`);
-  if (addNew.nModified !== 2) messages.push(`Expected to set 2 featured cubes, ${addNew.nModified} cubes set instead`);
+  const cube1 = await Cube.getById(old1.cubeID);
+  const cube2 = await Cube.getById(old2.cubeID);
+  cube1.featured = false;
+  cube2.featured = false;
+  await Cube.update(cube1);
+  await Cube.update(cube2);
+
+  const cube3 = await Cube.getById(new1.cubeID);
+  const cube4 = await Cube.getById(new2.cubeID);
+  cube3.featured = true;
+  cube4.featured = true;
+  await Cube.update(cube3);
+  await Cube.update(cube4);
 
   return { success: 'true', messages, removed: [old1, old2], added: [new1, new2] };
 }

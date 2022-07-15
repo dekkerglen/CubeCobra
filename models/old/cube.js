@@ -9,7 +9,7 @@ const cubeSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  shortID: {
+  ShortId: {
     // hashrow this
     type: String,
     required: true,
@@ -162,7 +162,7 @@ const cubeSchema = mongoose.Schema({
 });
 
 cubeSchema.index({
-  shortID: 1,
+  ShortId: 1,
 });
 
 cubeSchema.index({
@@ -242,8 +242,8 @@ cubeSchema.index({
 const Cube = mongoose.model('Cube', cubeSchema);
 Cube.CURRENT_SCHEMA_VERSION = 1;
 Cube.LAYOUT_FIELDS =
-  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri shortID';
+  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri ShortId';
 Cube.PREVIEW_FIELDS =
-  '_id shortID name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
+  '_id ShortId name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
 
 module.exports = Cube;

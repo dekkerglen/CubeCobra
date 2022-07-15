@@ -29,11 +29,11 @@ const Username = ({ userId, defaultName, nolink }) => {
   }, [userId]);
 
   if (nolink) {
-    return <>{name || <Spinner className="position-absolute" size="sm" />}</>;
+    return <>{name || <Spinner size="sm" />}</>;
   }
   return (
     <a data-sublink href={`/user/view/${userId}`}>
-      {name || <Spinner className="position-absolute" size="sm" />}
+      {name || <Spinner size="sm" />}
     </a>
   );
 };
@@ -45,7 +45,7 @@ Username.propTypes = {
 };
 
 Username.defaultProps = {
-  defaultName: 'User',
+  defaultName: null,
   nolink: false,
 };
 

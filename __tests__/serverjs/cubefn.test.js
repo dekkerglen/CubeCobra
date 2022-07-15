@@ -20,13 +20,13 @@ afterEach(() => {
   carddb.unloadCardDb();
 });
 
-test('getCubeId returns shortID when defined', () => {
+test('getCubeId returns ShortId when defined', () => {
   const testCube = {
-    shortID: 'bbb',
+    ShortId: 'bbb',
     _id: 'c',
   };
   const result = cubefn.getCubeId(testCube);
-  expect(result).toBe(testCube.shortID);
+  expect(result).toBe(testCube.ShortId);
 });
 
 test('getCubeId returns _id when other ID fields are not present', () => {
@@ -43,10 +43,10 @@ test('buildIdQuery returns a simple query when passed a 24-character alphanumeri
   expect(result._id).toBe(testId);
 });
 
-test('buildIdQuery returns a shortID query when passed a non-alphanumeric string', () => {
+test('buildIdQuery returns a ShortId query when passed a non-alphanumeric string', () => {
   const testId = 'a1a-a1a1a1a1a1a1a1a1a1a1';
   const result = cubefn.buildIdQuery(testId);
-  expect(result.shortID).toBe(testId);
+  expect(result.ShortId).toBe(testId);
 });
 
 test('cardsAreEquivalent returns true for two equivalent cards', () => {

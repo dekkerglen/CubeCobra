@@ -1,11 +1,11 @@
 const carddb = require('../../serverjs/cards');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
-const { setCubeType, CSVtoCards } = require('../../serverjs/cubefn');
+const { CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
-const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../models/blog');
+const Cube = require('../../dynamo/models/cube');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -20,7 +20,7 @@ const CARD_WIDTH = 488;
 const CSV_HEADER =
   'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
 
-async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
+async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
   try {
     const blogpost = new Blog();
     blogpost.title = 'Cube Bulk Import - Automatic Post';
@@ -36,6 +36,7 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
     if (missing.length > 0) {
       return render(req, res, 'BulkUploadPage', {
         cube,
+        cards,
         canEdit: true,
         cubeID: req.params.id,
         missing,
@@ -50,6 +51,8 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
     }
     await blogpost.save();
 
+    await Cube.updateCards(cube.Id, cards);
+
     req.flash('success', 'All cards successfully added.');
     return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
@@ -58,6 +61,10 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
 }
 
 async function bulkUpload(req, res, list, cube) {
+  const cards = Cube.deepClone(await Cube.getCards(cube.Id));
+  const mainboard = cards.boards.find((board) => board.name === 'Mainboard');
+  const maybeboard = cards.boards.find((board) => board.name === 'Maybeboard');
+
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
   const added = [];
@@ -73,8 +80,10 @@ async function bulkUpload(req, res, list, cube) {
           return { addedID: card.cardID, removedID: null };
         }),
       );
-      cube.cards.push(...newCards);
-      cube.maybe.push(...newMaybe);
+
+      mainboard.cards.push(...newCards);
+      maybeboard.cards.push(...newMaybe);
+
       added.concat(newCards, newMaybe);
     } else {
       // upload is in TXT format
@@ -106,7 +115,7 @@ async function bulkUpload(req, res, list, cube) {
             selectedId = matchingItem || potentialIds[0];
           }
         } else {
-          const selectedCard = carddb.getMostReasonable(name, cube.defaultPrinting);
+          const selectedCard = carddb.getMostReasonable(name, cube.DefaultPrinting);
           selectedId = selectedCard ? selectedCard._id : null;
         }
 
@@ -114,7 +123,7 @@ async function bulkUpload(req, res, list, cube) {
           const details = carddb.cardFromId(selectedId);
           if (!details.error) {
             for (let i = 0; i < count; i++) {
-              util.addCardToCube(cube, details);
+              util.addCardToCube(mainboard, cube, details);
               added.push(details);
               changelog.push({ addedID: selectedId, removedID: null });
             }
@@ -125,7 +134,7 @@ async function bulkUpload(req, res, list, cube) {
       }
     }
   }
-  await updateCubeAndBlog(req, res, cube, changelog, added, missing);
+  await updateCubeAndBlog(req, res, cube, cards, changelog, added, missing);
 }
 
 function writeCard(res, card, maybe) {

@@ -34,7 +34,6 @@ const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 const MainLayout = ({ children, loginCallback }) => {
   const user = useContext(UserContext);
   const [expanded, toggle] = useToggle(false);
-
   return (
     <div className="flex-container flex-vertical viewport">
       <Navbar color="dark" expand="md" container="xl" dark className="my-0">
@@ -107,8 +106,8 @@ const MainLayout = ({ children, loginCallback }) => {
                     </DropdownToggle>
                     <DropdownMenu end>
                       {user.cubes.map((item) => (
-                        <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item._id}`}>
-                          {item.name}
+                        <DropdownItem key={`dropdown_cube_${item.Name}`} href={`/cube/overview/${item.Id}`}>
+                          {item.Name}
                         </DropdownItem>
                       ))}
                       <DropdownItem divider />
