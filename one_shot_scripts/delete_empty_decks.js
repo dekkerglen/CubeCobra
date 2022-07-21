@@ -16,12 +16,19 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const batchSize = 10000;
+const batchSize = 1000;
 let deleted = 0;
 
 const processDeck = async (deck) => {
   try {
-    if (deck.seats[0].pickorder.length === 0) {
+    let cardCount = 0;
+    for (const row of deck.seats[0].deck) {
+      for (const col of row) {
+        cardCount += col.length;
+      }
+    }
+
+    if (cardCount === 0) {
       await Deck.deleteOne({ _id: deck._id });
       deleted += 1;
     }
