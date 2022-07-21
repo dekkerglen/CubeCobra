@@ -73,21 +73,11 @@ const EditCollapse = ({ cubeView, ...props }) => {
   const { cube, changes, addCard, removeCard, swapCard, changedCards, discardAllChanges, commitChanges } =
     useContext(CubeContext);
 
-  const handleChange = useCallback(
-    (event) => {
-      return {
-        add: setAddValue,
-        remove: setRemoveValue,
-      }[event.target.name](event.target.value);
-    },
-    [setAddValue, setRemoveValue],
-  );
-
   const handleAdd = useCallback(
-    async (event) => {
+    async (event, match) => {
       event.preventDefault();
       try {
-        const card = await getCard(cube.DefaultPrinting, addValue, setAlerts);
+        const card = await getCard(cube.DefaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
@@ -99,18 +89,18 @@ const EditCollapse = ({ cubeView, ...props }) => {
         console.error(e);
       }
     },
-    [cube.DefaultPrinting, cube.DefaultStatus, addValue, addCard, activeBoard],
+    [cube.DefaultPrinting, cube.DefaultStatus, addCard, activeBoard],
   );
 
   const handleRemoveReplace = useCallback(
-    async (event) => {
+    async (event, match) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
         const board = changedCards[activeBoard];
         for (let i = 0; i < board.length; i++) {
-          if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === removeValue.toLowerCase()) {
+          if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
             removeIndex = i;
           }
         }
@@ -118,7 +108,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         if (removeIndex === -1) {
           setAlerts((items) => [
             ...items,
-            { color: 'danger', message: `Couldn't find a card with name "${removeValue}" in "${activeBoard}".` },
+            { color: 'danger', message: `Couldn't find a card with name "${match}" in "${activeBoard}".` },
           ]);
           return;
         }
@@ -148,7 +138,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         console.error(e);
       }
     },
-    [addValue, changedCards, activeBoard, removeValue, cube.DefaultPrinting, cube.DefaultStatus, swapCard, removeCard],
+    [addValue, changedCards, activeBoard, cube.DefaultPrinting, cube.DefaultStatus, swapCard, removeCard],
   );
 
   const submit = useCallback(
@@ -187,14 +177,14 @@ const EditCollapse = ({ cubeView, ...props }) => {
               innerRef={addRef}
               name="add"
               value={addValue}
-              onChange={handleChange}
+              setValue={setAddValue}
               onSubmit={handleAdd}
               placeholder="Card to Add"
               autoComplete="off"
               data-lpignore
               className="square-right"
             />
-            <Button color="accent" disabled={addValue.length === 0} onClick={handleAdd}>
+            <Button color="accent" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
               Add
             </Button>
           </InputGroup>
@@ -209,14 +199,18 @@ const EditCollapse = ({ cubeView, ...props }) => {
               innerRef={removeRef}
               name="remove"
               value={removeValue}
-              onChange={handleChange}
+              setValue={setRemoveValue}
               onSubmit={handleRemoveReplace}
               placeholder="Card to Remove"
               autoComplete="off"
               data-lpignore
               className="square-right"
             />
-            <Button color="accent" disabled={removeValue.length === 0} onClick={handleRemoveReplace}>
+            <Button
+              color="accent"
+              disabled={removeValue.length === 0}
+              onClick={(e) => handleRemoveReplace(e, removeValue)}
+            >
               Remove/Replace
             </Button>
           </InputGroup>

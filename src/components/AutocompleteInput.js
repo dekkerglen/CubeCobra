@@ -189,11 +189,10 @@ const fetchTree = async (treeUrl, treePath) => {
 };
 
 const AutocompleteInput = forwardRef(
-  ({ treeUrl, treePath, defaultValue, value, onChange, onSubmit, wrapperClassName, cubeId, ...props }, ref) => {
+  ({ treeUrl, treePath, defaultValue, value, setValue, onSubmit, wrapperClassName, cubeId, ...props }, ref) => {
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
-    const [inputValue, setInputValue] = useState(defaultValue || '');
     const { hideCard } = useContext(AutocardContext);
 
     useEffect(() => {
@@ -212,34 +211,21 @@ const AutocompleteInput = forwardRef(
 
     const handleChange = useCallback(
       (event) => {
-        setInputValue(event.target.value);
+        setValue(event.target.value);
         setVisible(true);
         hideCard();
-        if (onChange) {
-          onChange(event);
-        }
       },
-      [hideCard, onChange],
+      [hideCard, setValue],
     );
 
     const acceptSuggestion = useCallback(
       (newValue) => {
-        const target = {
-          name: props.name,
-          value: newValue,
-        };
-        setInputValue(newValue);
+        setValue(newValue);
         setVisible(false);
         hideCard();
         setPosition(-1);
-        if (onChange) {
-          onChange({
-            target,
-            currentTarget: target,
-          });
-        }
       },
-      [hideCard, onChange, props.name],
+      [hideCard, setValue],
     );
 
     const handleClickSuggestion = useCallback(
@@ -251,12 +237,11 @@ const AutocompleteInput = forwardRef(
     );
 
     // Replace curly quotes with straight quotes. Needed for iOS.
-    const normalizedValue = inputValue.replace(/[\u2018\u2019\u201C\u201D]/g, (c) =>
+    const normalizedValue = value.replace(/[\u2018\u2019\u201C\u201D]/g, (c) =>
       '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1),
     );
     const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
-    const showMatches =
-      visible && inputValue && matches.length > 0 && !(matches.length === 1 && matches[0] === inputValue);
+    const showMatches = visible && value && matches.length > 0 && !(matches.length === 1 && matches[0] === value);
 
     const handleKeyDown = useCallback(
       (event) => {
@@ -286,7 +271,7 @@ const AutocompleteInput = forwardRef(
 
     return (
       <>
-        <Input ref={ref} value={inputValue} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
+        <Input ref={ref} value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
