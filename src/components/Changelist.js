@@ -1,82 +1,190 @@
-﻿import React, { useCallback, useContext } from 'react';
+﻿/* eslint-disable react/no-array-index-key */
+/* eslint-disable jsx-a11y/anchor-is-valid */
+import React, { useContext, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 
-import { Badge, Input } from 'reactstrap';
+import { Row, Col, Spinner } from 'reactstrap';
 
-import ChangelistContext from 'contexts/ChangelistContext';
-import withAutocard from './WithAutocard';
+import CubeContext from 'contexts/CubeContext';
+import withAutocard from 'components/WithAutocard';
+
+import { PlusCircleIcon, XCircleIcon, PlayIcon, GearIcon, ArrowRightIcon } from '@primer/octicons-react';
 
 const TextAutocard = withAutocard('span');
 
-const CloseButton = ({ changeId, close }) => (
-  <a href="#" className="clickx" data-change-id={changeId} onClick={close}>
+const RemoveButton = ({ onClick }) => (
+  <a href="#" className="clickx" onClick={onClick}>
     ×
   </a>
 );
 
-const Add = ({ card, changeId, close }) => (
-  <li>
-    <CloseButton changeId={changeId} close={close} /> <Badge color="success">+</Badge>{' '}
-    <TextAutocard card={card}>{card.details.name}</TextAutocard>
-  </li>
-);
+RemoveButton.propTypes = {
+  onClick: PropTypes.func.isRequired,
+};
 
-const Remove = ({ card, changeId, close }) => (
-  <li>
-    <CloseButton changeId={changeId} close={close} /> <Badge color="unsafe">-</Badge>{' '}
-    <TextAutocard card={card}>{card.details.name}</TextAutocard>
-  </li>
-);
+const Add = ({ cardId, revert }) => {
+  const [loading, setLoading] = useState(true);
+  const [card, setCard] = useState({});
 
-const Replace = ({ cards, changeId, close }) => (
-  <li>
-    <CloseButton changeId={changeId} close={close} /> <Badge color="primary">→</Badge>{' '}
-    <TextAutocard card={cards[0]}>{cards[0].details.name}</TextAutocard>
-    {' > '}
-    <TextAutocard card={cards[1]}>{cards[1].details.name}</TextAutocard>
-  </li>
-);
-
-const Changelist = () => {
-  const { changes, removeChange } = useContext(ChangelistContext);
-  const close = useCallback(
-    (event) => {
-      event.preventDefault();
-
-      const target = event.target;
-      const changeId = parseInt(target.getAttribute('data-change-id'));
-      removeChange(changeId);
-    },
-    [removeChange],
-  );
-
-  const getId = (card) => card.details._id || card.cardID;
-
-  const changelistData = changes
-    .map((change) => {
-      if (change.add) {
-        return '+' + (change.add.details._id || change.add.cardID);
-      } else if (change.remove) {
-        return '-' + change.remove.index + '$' + getId(change.remove);
-      } else if (change.replace) {
-        return `/${change.replace[0].index + '$' + getId(change.replace[0])}>${getId(change.replace[1])}`;
+  useEffect(() => {
+    const getData = async () => {
+      const response = await fetch(`/cube/api/getcardfromid/${cardId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCard(data.card);
+        setLoading(false);
       }
-    })
-    .join(';');
+      return null;
+    };
+    getData();
+  }, [cardId]);
 
   return (
+    <li>
+      <RemoveButton onClick={revert} />
+      <span className="mx-1" style={{ color: 'green' }}>
+        <PlusCircleIcon />
+      </span>
+      {!loading ? <TextAutocard card={{ details: card }}>{card.name}</TextAutocard> : <Spinner size="sm" />}
+    </li>
+  );
+};
+
+Add.propTypes = {
+  revert: PropTypes.func.isRequired,
+  cardId: PropTypes.string.isRequired,
+};
+
+const Remove = ({ card, revert }) => (
+  <li>
+    <RemoveButton onClick={revert} />
+    <span className="mx-1" style={{ color: 'red' }}>
+      <XCircleIcon />
+    </span>
+    <TextAutocard card={card}>{card.details.name}</TextAutocard>
+  </li>
+);
+
+Remove.propTypes = {
+  revert: PropTypes.func.isRequired,
+  card: PropTypes.shape({
+    details: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+};
+
+const Edit = ({ card, revert }) => (
+  <li>
+    <RemoveButton onClick={revert} />
+    <span className="mx-1" style={{ color: 'orange' }}>
+      <GearIcon />
+    </span>
+    <TextAutocard card={card}>{card.details.name}</TextAutocard>
+  </li>
+);
+
+Edit.propTypes = {
+  revert: PropTypes.func.isRequired,
+  card: PropTypes.shape({
+    details: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+};
+
+const Swap = ({ cardIdToAdd, cardToRemove, revert }) => {
+  const [loading, setLoading] = useState(true);
+  const [cardToAdd, setCard] = useState({});
+
+  useEffect(() => {
+    const getData = async () => {
+      const response = await fetch(`/cube/api/getcardfromid/${cardIdToAdd}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCard(data.card);
+        setLoading(false);
+      }
+      return null;
+    };
+    getData();
+  }, [cardIdToAdd]);
+
+  return (
+    <li>
+      <RemoveButton onClick={revert} />
+      <span className="mx-1" style={{ color: 'blue' }}>
+        <PlayIcon />
+      </span>
+      <TextAutocard card={cardToRemove}>{cardToRemove.details.name}</TextAutocard>
+      <ArrowRightIcon className="mx-1" />
+      {!loading ? <TextAutocard card={{ details: cardToAdd }}>{cardToAdd.name}</TextAutocard> : <Spinner size="sm" />}
+    </li>
+  );
+};
+
+Swap.propTypes = {
+  revert: PropTypes.func.isRequired,
+  cardIdToAdd: PropTypes.string.isRequired,
+  cardToRemove: PropTypes.shape({
+    details: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+};
+
+const Changelist = () => {
+  const { cube, changedCards, changes, revertAdd, revertRemove, revertSwap, revertEdit } = useContext(CubeContext);
+  return (
     <>
-      <ul className="changelist">
-        {changes.map((change) => {
-          if (change.add) {
-            return <Add key={change.id} card={change.add} changeId={change.id} close={close} />;
-          } else if (change.remove) {
-            return <Remove key={change.id} card={change.remove} changeId={change.id} close={close} />;
-          } else if (change.replace) {
-            return <Replace key={change.id} cards={change.replace} changeId={change.id} close={close} />;
-          }
-        })}
-      </ul>
-      <Input type="hidden" name="body" value={changelistData} />
+      {Object.entries(changes).map(([board, { adds, removes, swaps, edits }]) => (
+        <div key={board}>
+          <h6>
+            <Row>
+              <Col>{board} Changelist</Col>
+              <Col className="col-sm-auto">
+                <div className="text-secondary">
+                  +{(adds || []).length}, -{(removes || []).length},{' '}
+                  {cube.cards[board].length + (adds || []).length - (removes || []).length} Total
+                </div>
+              </Col>
+            </Row>
+          </h6>
+          <div className="changelist-container mb-2">
+            <ul className="changelist">
+              {adds &&
+                adds.map((card, index) => (
+                  <Add key={card.cardID} cardId={card.cardID} revert={() => revertAdd(index, board)} />
+                ))}
+              {removes &&
+                removes.map((remove, index) => (
+                  <Remove
+                    key={changedCards[board][remove.index].cardID}
+                    card={changedCards[board][remove.index]}
+                    revert={() => revertRemove(index, board)}
+                  />
+                ))}
+              {swaps &&
+                swaps.map((swap, index) => (
+                  <Swap
+                    key={changedCards[board][swap.index].cardID}
+                    cardToRemove={changedCards[board][swap.index]}
+                    cardIdToAdd={swap.card.cardID}
+                    revert={() => revertSwap(index, board)}
+                  />
+                ))}
+              {edits &&
+                edits.map((edit, index) => (
+                  <Edit
+                    key={edit.oldCard.cardID}
+                    card={changedCards[board][edit.index]}
+                    revert={() => revertEdit(index, board)}
+                  />
+                ))}
+            </ul>
+          </div>
+        </div>
+      ))}
     </>
   );
 };

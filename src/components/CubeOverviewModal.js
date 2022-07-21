@@ -27,6 +27,7 @@ import LoadingButton from 'components/LoadingButton';
 import TagInput from 'components/TagInput';
 import { TagContextProvider } from 'contexts/TagContext';
 import TextEntry from 'components/TextEntry';
+import MtgImage from './MtgImage';
 
 const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   const [state, setState] = useState(JSON.parse(JSON.stringify(cube)));
@@ -48,9 +49,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
       const image = event.target.value;
       setImagename(image);
       if (imageDict[image.toLowerCase()]) {
-        const url = imageDict[image.toLowerCase()].uri;
-        const { artist } = imageDict[image.toLowerCase()];
-        setState({ ...state, ImageName: image, ImageUri: url, ImageArtist: artist });
+        setState({ ...state, ImageName: image });
       }
     },
     [imageDict, setState, state],
@@ -176,8 +175,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
               <Col xs="12" sm="6" md="6" lg="6">
                 <Card>
                   <CardHeader>Preview</CardHeader>
-                  <img className="card-img-top w-100" src={state.ImageUri} alt={state.ImageUri} />
-                  <CardBody>Art by: {state.ImageArtist}</CardBody>
+                  <MtgImage cardname={state.ImageName} showArtist />
                 </Card>
               </Col>
             </Row>

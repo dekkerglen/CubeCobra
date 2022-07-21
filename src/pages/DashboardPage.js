@@ -67,9 +67,7 @@ const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
               </Row>
             </CardBody>
             {featuredPosition !== 'left' && (
-              <CardFooter>
-                {user.cubes.length > 2 && <a href={`/user/view/${user.cubes[0].owner}`}>View All</a>}
-              </CardFooter>
+              <CardFooter>{user.cubes.length > 2 && <a href={`/user/view/${user.Id}`}>View All</a>}</CardFooter>
             )}
           </Card>
           {featuredPosition === 'left' && (

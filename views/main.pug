@@ -36,16 +36,6 @@ html(lang='en')
 			script(async='' src='https://s.nitropay.com/ads-860.js')
 
 	body
-		#autocardPopup.d-none
-			.autocard-background
-				.row.g-0
-					.col.position-relative.card-border
-						img.foilOverlay(src='/content/foilOverlay.png')
-						img#autocardImageFront(src='', alt='')
-					.col.position-relative.card-border
-						img.foilOverlay(src='/content/foilOverlay.png')
-						img#autocardImageBack(src='', alt='')
-				#autocardTags.row.g-0.p-1
 		include dynamic_flash
 		#react-root !{reactHTML}
 		noscript
@@ -66,8 +56,3 @@ html(lang='en')
 		script(type='text/javascript').
 			window.reactProps = !{reactProps};
 		script(src='/js/'+page+'.bundle.js')
-
-		script(src='/js/autocard.js')
-		script(type='text/javascript').
-			autocard_init('autocard');
-			autocard_init('dynamic-autocard');

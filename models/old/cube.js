@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./shared/cardSchema');
-const stepsSchema = require('./shared/stepsSchema');
+const cardSchema = require('../shared/cardSchema');
+const stepsSchema = require('../shared/stepsSchema');
 
 const cubeSchema = mongoose.Schema({
   name: {
@@ -9,7 +9,7 @@ const cubeSchema = mongoose.Schema({
     type: String,
     required: true,
   },
-  ShortId: {
+  shortID: {
     // hashrow this
     type: String,
     required: true,
@@ -162,7 +162,7 @@ const cubeSchema = mongoose.Schema({
 });
 
 cubeSchema.index({
-  ShortId: 1,
+  shortID: 1,
 });
 
 cubeSchema.index({
@@ -242,8 +242,8 @@ cubeSchema.index({
 const Cube = mongoose.model('Cube', cubeSchema);
 Cube.CURRENT_SCHEMA_VERSION = 1;
 Cube.LAYOUT_FIELDS =
-  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri ShortId';
+  '_id owner name type card_count overrideCategory categoryOverride categoryPrefixes image_uri shortID';
 Cube.PREVIEW_FIELDS =
-  '_id ShortId name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
+  '_id shortID name card_count type overrideCategory categoryOverride categoryPrefixes image_name image_artist image_uri owner owner_name image_uri';
 
 module.exports = Cube;

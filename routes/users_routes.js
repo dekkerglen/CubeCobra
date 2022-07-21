@@ -8,9 +8,7 @@ const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const carddb = require('../serverjs/cards');
 const { render } = require('../serverjs/render');
-const { buildIdQuery } = require('../serverjs/cubefn');
 
 // Bring in models
 const User = require('../dynamo/models/user');
@@ -738,12 +736,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
     user.UsernameLower = req.body.username.toLowerCase();
     user.About = req.body.body;
     if (req.body.image) {
-      const imageData = carddb.imagedict[req.body.image];
-      if (imageData) {
-        user.Image = imageData.uri;
-        user.Artist = imageData.artist;
-        user.ImageName = req.body.image.replace(/ \[[^\]]*\]$/, '');
-      }
+      user.ImageName = req.body.image;
     }
     await User.update(user);
 
@@ -832,7 +825,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     req.flash('danger', 'Cube not found');
     return res.redirect(redirect);
   }
-  if (!cube.Owner === req.user.Id) {
+  if (cube.Owner !== req.user.Id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
     return res.redirect(redirect);
   }

@@ -17,7 +17,6 @@ const { ensureAuth, csrfProtection } = require('./middleware');
 const CardHistory = require('../models/cardHistory');
 const Cube = require('../dynamo/models/cube');
 
-const { buildIdQuery } = require('../serverjs/cubefn');
 const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
@@ -261,7 +260,7 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
 
     const cards = await Cube.getCards(req.params.cubeid);
 
-    const main = cards.boards.filter((board) => board.name === 'Mainboard');
+    const main = cards.Mainboard;
 
     const found = main
       .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))

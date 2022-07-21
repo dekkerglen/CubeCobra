@@ -1,3 +1,6 @@
+// dotenv
+require('dotenv').config();
+
 const _ = require('lodash');
 const createClient = require('../util');
 const s3 = require('../s3client');
@@ -23,8 +26,6 @@ const FIELDS = {
   DEFAULT_DRAFT_FORMAT: 'DefaultDraftFormat',
   NUM_DECKS: 'NumDecks',
   DESCRIPTION: 'Description',
-  IMAGE_URI: 'ImageUri',
-  IMAGE_ARTIST: 'ImageArtist',
   IMAGE_NAME: 'ImageName',
   DATE: 'Date',
   DEFAULT_SORTS: 'DefaultSorts',
@@ -92,30 +93,43 @@ const addDetails = (cards) => {
     };
     card.index = index;
   });
-  return cards;
 };
 
 const stripDetails = (cards) => {
   cards.forEach((card) => {
     delete card.details;
     delete card.index;
+    delete card.board;
   });
-  return cards;
 };
 
 const getCards = async (id) => {
-  const res = await s3
-    .getObject({
-      Bucket: 'cubecobra',
-      Key: `cube/${id}.json`,
-    })
-    .promise();
+  try {
+    const res = await s3
+      .getObject({
+        Bucket: process.env.DATA_BUCKET,
+        Key: `cube/${id}.json`,
+      })
+      .promise();
 
-  const cards = JSON.parse(res.Body.toString());
-  for (const board of cards.boards) {
-    board.cards = addDetails(board.cards);
+    const cards = JSON.parse(res.Body.toString());
+    for (const [board, list] of Object.entries(cards)) {
+      if (board !== 'id') {
+        addDetails(list);
+        for (let i = 0; i < list.length; i++) {
+          [i].index = i;
+          list[i].board = board;
+        }
+      }
+    }
+    return cards;
+  } catch (e) {
+    console.log(e);
+    return {
+      Mainboard: [],
+      Maybeboard: [],
+    };
   }
-  return cards;
 };
 
 module.exports = {
@@ -126,7 +140,7 @@ module.exports = {
     const oldMetadata = (await client.get(id)).Item;
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 
-    const main = newCards.boards.filter((board) => board.name === 'Mainboard');
+    const main = newCards.Mainboard;
     newMetadata.CardCount = main.cards.length;
 
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
@@ -152,21 +166,26 @@ module.exports = {
     await cubeHash.batchPut(hashesToPut);
 
     // strip details from cards
-    for (const board of newCards.boards) {
-      board.cards = stripDetails(board.cards);
+    for (const [board, list] of Object.entries(newCards)) {
+      if (board !== 'id') {
+        stripDetails(list);
+      }
     }
 
     await s3
       .upload({
-        Bucket: 'cubecobra',
+        Bucket: process.env.DATA_BUCKET,
         Key: `cube/${id}.json`,
         Body: JSON.stringify(newCards),
       })
       .promise();
   },
   deleteById: async (id) => {
-    await client.delete(id);
-    await s3.deleteObject({ Bucket: 'cubecobra', Key: `cube/${id}.json` }).promise();
+    const document = (await client.get(id)).Item;
+    const hashes = getHashRowsForMetadata(document);
+    await cubeHash.batchDelete(hashes.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: id })));
+    await client.delete({ Id: id });
+    await s3.deleteObject({ Bucket: process.env.DATA_BUCKET, Key: `cube/${id}.json` }).promise();
   },
   getById: async (id) => {
     const byId = await client.get(id);
@@ -285,13 +304,15 @@ module.exports = {
   },
   putCards: async (document) => {
     // strip cards
-    for (const board of document.boards) {
-      board.cards = stripDetails(board.cards);
+    for (const [board, list] of Object.entries(document)) {
+      if (board !== 'id') {
+        stripDetails(list);
+      }
     }
 
     return s3
       .upload({
-        Bucket: 'cubecobra',
+        Bucket: process.env.DATA_BUCKET,
         Key: `cube/${document}.json`,
         Body: JSON.stringify(document),
       })
@@ -301,8 +322,10 @@ module.exports = {
   batchPutCards: async (documents) => {
     // strip cards
     for (const document of documents) {
-      for (const board of document.boards) {
-        board.cards = stripDetails(board.cards);
+      for (const [board, list] of Object.entries(document)) {
+        if (board !== 'id') {
+          stripDetails(list);
+        }
       }
     }
 
@@ -310,7 +333,7 @@ module.exports = {
       documents.map((document) =>
         s3
           .upload({
-            Bucket: 'cubecobra',
+            Bucket: process.env.DATA_BUCKET,
             Key: `cube/${document.id}.json`,
             Body: JSON.stringify(document),
           })
@@ -321,7 +344,7 @@ module.exports = {
   createTable: async () => client.createTable(),
   convertCubeToMetadata: (cube) => ({
     [FIELDS.ID]: `${cube._id}`,
-    [FIELDS.SHORT_ID]: cube.ShortId,
+    [FIELDS.SHORT_ID]: cube.shortID,
     [FIELDS.OWNER]: `${cube.owner}`,
     [FIELDS.VISIBILITY]: getVisibility(cube.isListed, cube.isPrivate),
     [FIELDS.PRICE_VISIBLITY]: cube.privatePrices ? PRICE_VISIBLITY.PRIVATE : PRICE_VISIBLITY.PUBLIC,
@@ -332,8 +355,6 @@ module.exports = {
     [FIELDS.DEFAULT_DRAFT_FORMAT]: cube.defaultDraftFormat,
     [FIELDS.NUM_DECKS]: cube.numDecks,
     [FIELDS.DESCRIPTION]: cube.description,
-    [FIELDS.IMAGE_URI]: cube.image_uri,
-    [FIELDS.IMAGE_ARTIST]: cube.image_artist,
     [FIELDS.IMAGE_NAME]: cube.image_name,
     [FIELDS.DATE]: cube.date_updated.valueOf(),
     [FIELDS.DEFAULT_SORTS]: cube.default_sorts,
@@ -370,34 +391,26 @@ module.exports = {
   convertCubeToCards: (cube) => {
     return {
       id: `${cube._id}`,
-      boards: [
-        {
-          name: 'Mainboard',
-          cards: cube.cards.map((card) => {
-            delete card._id;
-            delete card.details;
-            if (card.addedTmsp) {
-              card.addedTmsp = card.addedTmsp.valueOf();
-            } else {
-              card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
-            }
-            return card;
-          }),
-        },
-        {
-          name: 'Maybeboard',
-          cards: cube.maybe.map((card) => {
-            delete card._id;
-            delete card.details;
-            if (card.addedTmsp) {
-              card.addedTmsp = card.addedTmsp.valueOf();
-            } else {
-              card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
-            }
-            return card;
-          }),
-        },
-      ],
+      Mainboard: cube.cards.map((card) => {
+        delete card._id;
+        delete card.details;
+        if (card.addedTmsp) {
+          card.addedTmsp = card.addedTmsp.valueOf();
+        } else {
+          card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
+        }
+        return card;
+      }),
+      Maybeboard: cube.maybe.map((card) => {
+        delete card._id;
+        delete card.details;
+        if (card.addedTmsp) {
+          card.addedTmsp = card.addedTmsp.valueOf();
+        } else {
+          card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
+        }
+        return card;
+      }),
     };
   },
   VISIBILITY,

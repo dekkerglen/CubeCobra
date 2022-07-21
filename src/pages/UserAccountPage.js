@@ -141,7 +141,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
   let image;
   if (result) {
     image = {
-      name: imageValue.replace(/ \[[^\]]*\]$/, ''),
+      name: imageValue,
       ...result,
     };
   } else {

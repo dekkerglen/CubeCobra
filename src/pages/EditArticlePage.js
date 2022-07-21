@@ -89,9 +89,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Input type="hidden" name="articleid" value={article.Id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Save
@@ -103,9 +101,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Input type="hidden" name="articleid" value={article.Id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Button type="submit" outline color="accent" block>
                   Submit for Review

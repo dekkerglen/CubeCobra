@@ -453,11 +453,7 @@ const ListView = ({ cards }) => {
 };
 
 ListView.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
 };
 
 export default ListView;

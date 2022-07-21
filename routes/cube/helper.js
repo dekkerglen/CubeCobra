@@ -62,8 +62,8 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
 async function bulkUpload(req, res, list, cube) {
   const cards = Cube.deepClone(await Cube.getCards(cube.Id));
-  const mainboard = cards.boards.find((board) => board.name === 'Mainboard');
-  const maybeboard = cards.boards.find((board) => board.name === 'Maybeboard');
+  const mainboard = cards.Mainboard;
+  const maybeboard = cards.Maybeboard;
 
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
@@ -81,8 +81,8 @@ async function bulkUpload(req, res, list, cube) {
         }),
       );
 
-      mainboard.cards.push(...newCards);
-      maybeboard.cards.push(...newMaybe);
+      mainboard.push(...newCards);
+      maybeboard.push(...newMaybe);
 
       added.concat(newCards, newMaybe);
     } else {

@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import useMount from 'hooks/UseMount';
@@ -9,6 +9,7 @@ import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
 import { setupPicks, getCardCol, draftStateToTitle } from 'drafting/draftutil';
+import AutocardContext from 'contexts/AutocardContext';
 
 import { callApi } from 'utils/CSRF';
 
@@ -49,6 +50,7 @@ const CubeDraft = ({ draft, socket }) => {
   const [loading, setLoading] = React.useState(true);
   const [stepQueue, setStepQueue] = React.useState([]);
   const [trashed, setTrashed] = React.useState([]);
+  const { hideCard } = useContext(AutocardContext);
 
   const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
@@ -66,8 +68,7 @@ const CubeDraft = ({ draft, socket }) => {
 
   const makePick = useCallback(
     async (pick) => {
-      // eslint-disable-next-line no-undef
-      /* global */ autocard_hide_card();
+      hideCard();
 
       if (stepQueue[1] === 'pass' || pack.length < 1) {
         tryPopPack();
@@ -80,7 +81,7 @@ const CubeDraft = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
     },
-    [stepQueue, pack, draft._id, tryPopPack],
+    [hideCard, stepQueue, pack, draft._id, tryPopPack],
   );
 
   const updatePack = async (data) => {

@@ -6,7 +6,7 @@ const filterutil = require('../../dist/filtering/FilterCards');
 const carddb = require('../../serverjs/cards');
 const util = require('../../serverjs/util');
 
-const { buildIdQuery, isCubeViewable } = require('../../serverjs/cubefn');
+const { isCubeViewable } = require('../../serverjs/cubefn');
 const { writeCard, CSV_HEADER, exportToMtgo } = require('./helper');
 
 // Bring in models
@@ -43,20 +43,20 @@ router.get('/cubecobra/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
-    const mainboard = cards.boards.find((b) => b.name === 'Mainboard');
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.Mainboard;
 
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
 
-    mainboard.cards = sortCardsByQuery(req, mainboard.cards);
+    mainboard = sortCardsByQuery(req, mainboard);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       res.write(`${card.details.full_name}\r\n`);
     }
     return res.end();
@@ -74,26 +74,26 @@ router.get('/csv/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
-    const mainboard = cards.boards.find((b) => b.name === 'Mainboard') || [];
-    const maybeboard = cards.boards.find((b) => b.name === 'Maybeboard') || [];
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.Mainboard;
+    const maybeboard = cards.Maybeboard;
 
-    for (const card of [...mainboard.cards, ...maybeboard.cards]) {
+    for (const card of [...mainboard, ...maybeboard]) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
 
-    mainboard.cards = sortCardsByQuery(req, mainboard.cards);
+    mainboard = sortCardsByQuery(req, mainboard);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
 
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       writeCard(res, card, false);
     }
-    for (const card of maybeboard.cards) {
+    for (const card of maybeboard) {
       writeCard(res, card, true);
     }
 
@@ -112,15 +112,15 @@ router.get('/forge/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
-    const mainboard = cards.boards.find((b) => b.name === 'Mainboard') || [];
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.Mainboard;
 
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
 
-    mainboard.cards = sortCardsByQuery(req, mainboard.cards);
+    mainboard = sortCardsByQuery(req, mainboard);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -128,7 +128,7 @@ router.get('/forge/:id', async (req, res) => {
     res.write('[metadata]\r\n');
     res.write(`Name=${cube.Name}\r\n`);
     res.write('[Main]\r\n');
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       res.write(`1 ${card.details.name}|${card.details.set.toUpperCase()}\r\n`);
     }
     return res.end();
@@ -146,18 +146,18 @@ router.get('/mtgo/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
-    const mainboard = cards.boards.find((b) => b.name === 'Mainboard') || [];
-    const maybeboard = cards.boards.find((b) => b.name === 'Maybeboard') || [];
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.Mainboard;
+    const maybeboard = cards.Maybeboard;
 
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
 
-    mainboard.cards = sortCardsByQuery(req, mainboard.cards);
+    mainboard = sortCardsByQuery(req, mainboard);
 
-    return exportToMtgo(res, cube.Name, mainboard.cards, maybeboard.cards);
+    return exportToMtgo(res, cube.Name, mainboard, maybeboard);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -172,20 +172,20 @@ router.get('/xmage/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
-    const mainboard = cards.boards.find((b) => b.name === 'Mainboard') || [];
+    const cards = await Cube.getCards(cube.Id);
+    const mainboard = cards.Mainboard;
 
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
       card.details = details;
     }
 
-    mainboard.cards = sortCardsByQuery(req, mainboard.cards);
+    mainboard = sortCardsByQuery(req, mainboard);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    for (const card of mainboard.cards) {
+    for (const card of mainboard) {
       res.write(`1 [${card.details.set.toUpperCase()}:${card.details.collector_number}] ${card.details.name}\r\n`);
     }
     return res.end();
@@ -203,24 +203,26 @@ router.get('/plaintext/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(req.params.id);
+    const cards = await Cube.getCards(cube.Id);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
-    for (const board of cards.boards) {
-      for (const card of board.cards) {
-        const details = carddb.cardFromId(card.cardID);
-        card.details = details;
-      }
-      board.cards = sortCardsByQuery(req, board.cards);
+    for (const [boardname, list] of Object.entries(cards)) {
+      if (boardname !== 'id') {
+        for (const card of list) {
+          const details = carddb.cardFromId(card.cardID);
+          card.details = details;
+        }
+        const sorted = sortCardsByQuery(req, list);
 
-      res.write(`# ${board.name}\r\n`);
-      for (const card of board.cards) {
-        res.write(`${card.details.name}\r\n`);
+        res.write(`# ${boardname}\r\n`);
+        for (const card of sorted) {
+          res.write(`${card.details.name}\r\n`);
+        }
+        res.write(`\r\n`);
       }
-      res.write(`\r\n`);
     }
 
     return res.end();

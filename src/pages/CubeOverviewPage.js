@@ -43,6 +43,7 @@ import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
 import CubeIdModal from 'components/CubeIdModal';
 import QRCodeModal from 'components/QRCodeModal';
 import Username from 'components/Username';
+import MtgImage from 'components/MtgImage';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeOverviewModalLink = withModal(NavLink, CubeOverviewModal);
@@ -150,7 +151,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </CustomizeBasicsModalLink>
                 </NavItem>
                 <NavItem>
-                  <DeleteCubeModalLink modalProps={{ cubeId: cubeState.Id, cubeName: cube.Name }}>
+                  <DeleteCubeModalLink modalProps={{ cubeId: cubeState.Id, cubeName: cubeState.Name }}>
                     Delete Cube
                   </DeleteCubeModalLink>
                 </NavItem>
@@ -213,10 +214,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </Col>
                 </Row>
               </CardHeader>
-              <div className="position-relative">
-                <img className="card-img-top w-100" alt={cubeState.ImageName} src={cubeState.ImageUri} />
-                <em className="cube-preview-artist">Art by {cubeState.ImageArtist}</em>
-              </div>
+              <MtgImage cardname={cubeState.ImageName} showArtist />
               <CardBody className="pt-2 px-3 pb-3">
                 <p className="mb-1">{getCubeDescription(cubeState)}</p>
                 <h6 className="mb-2">

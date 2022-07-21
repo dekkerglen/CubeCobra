@@ -2,18 +2,17 @@
 const express = require('express');
 
 const { ensureAuth } = require('../middleware');
-const carddb = require('../../serverjs/cards');
 const util = require('../../serverjs/util');
 const { render } = require('../../serverjs/render');
 const generateMeta = require('../../serverjs/meta');
-const miscutil = require('../../dist/utils/Util');
 
-const { setCubeType, buildIdQuery, abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
+const { abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../models/blog');
 const User = require('../../dynamo/models/user');
 const { fillBlogpostChangelog } = require('../../serverjs/blogpostUtils');
+const { getImageData } = require('../../serverjs/util');
 
 const router = express.Router();
 
@@ -118,7 +117,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
 
     const blog = await Blog.findById(req.params.id);
 
-    if (!req.blog.owner.equals(user.Id)) {
+    if (!blog.owner.equals(req.user.Id)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -189,6 +188,8 @@ router.get('/:id/:page', async (req, res) => {
     const [blogs, count] = await Promise.all([blogsQ, countQ]);
     blogs.forEach(fillBlogpostChangelog);
 
+    const imagedata = getImageData(cube.ImageName);
+
     return render(
       req,
       res,
@@ -204,7 +205,7 @@ router.get('/:id/:page', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Blog: ${cube.Name}`,
           cube.Description,
-          cube.ImageUri,
+          imagedata.uri,
           `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),
       },

@@ -5,7 +5,6 @@ import CubePropType from 'proptypes/CubePropType';
 
 import Query from 'utils/Query';
 
-import CardModalForm from 'components/CardModalForm';
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
@@ -70,9 +69,7 @@ const CubeComparePage = ({
             />
             <DynamicFlash />
             <ErrorBoundary>
-              <CardModalForm>
-                <CompareView cards={filteredCards} {...props} />
-              </CardModalForm>
+              <CompareView cards={filteredCards} {...props} />
             </ErrorBoundary>
           </TagContextProvider>
         </DisplayContextProvider>

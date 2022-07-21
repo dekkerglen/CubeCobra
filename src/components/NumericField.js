@@ -22,9 +22,14 @@ NumericField.propTypes = {
   name: PropTypes.string.isRequired,
   humanName: PropTypes.string.isRequired,
   placeholder: PropTypes.string.isRequired,
-  valueOp: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
+  valueOp: PropTypes.string,
+  value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
+};
+
+NumericField.defaultProps = {
+  valueOp: '=',
+  value: '',
 };
 
 export default NumericField;

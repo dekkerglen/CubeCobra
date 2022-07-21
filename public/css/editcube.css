@@ -36,6 +36,7 @@
 	padding: 0;
 	border: 1px solid var(--border);
 	background-color: var(--bg);
+	margin-top: 2.4rem;
 }
 
 .autocomplete-list li {

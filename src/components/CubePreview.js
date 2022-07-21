@@ -8,9 +8,9 @@ import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 
 import { getCubeDescription, getCubeId } from 'utils/Util';
+import MtgImage from 'components/MtgImage';
 
 const CubePreview = ({ cube }) => {
-  console.log(cube);
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -23,8 +23,7 @@ const CubePreview = ({ cube }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <img className="w-100" alt={cube.ImageName} src={cube.ImageUri} />
-        <em className="cube-preview-artist">Art by {cube.ImageArtist}</em>
+        <MtgImage cardname={cube.ImageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
         <a href={`/cube/overview/${encodeURIComponent(getCubeId(cube))}`} className="stretched-link">

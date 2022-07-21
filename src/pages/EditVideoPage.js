@@ -89,9 +89,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="videoid" value={video.Id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
@@ -104,9 +102,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Input type="hidden" name="videoid" value={video.Id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
                 <Button type="submit" outline color="accent" block>

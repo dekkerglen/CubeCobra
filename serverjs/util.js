@@ -2,6 +2,8 @@ const shuffleSeed = require('shuffle-seed');
 const { winston } = require('./cloudwatch');
 const Notification = require('../dynamo/models/notification');
 
+const carddb = require('./cards');
+
 function hasProfanity(text) {
   if (!text) return false;
 
@@ -165,6 +167,13 @@ function flatten(arr, n) {
   return toNonNullArray([].concat(...mapNonNull(arr, (a) => flatten(a, n - 1))));
 }
 
+// uri
+// artist
+// id
+function getImageData(imagename) {
+  return carddb.imagedict[imagename.toLowerCase()] || carddb.imagedict['doubling cube [10e-321]'];
+}
+
 module.exports = {
   shuffle(array, seed) {
     if (!seed) {
@@ -206,4 +215,5 @@ module.exports = {
   toNonNullArray,
   flatten,
   mapNonNull,
+  getImageData,
 };

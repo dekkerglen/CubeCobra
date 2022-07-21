@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Collapse, Nav, Navbar } from 'reactstrap';
 
@@ -11,6 +11,7 @@ import Pack from 'components/Pack';
 import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation from 'drafting/DraftLocation';
+import AutocardContext from 'contexts/AutocardContext';
 
 const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;
@@ -28,6 +29,8 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
 
   // State for showing loading while waiting for next pick.
   const [picking, setPicking] = useState(null);
+  const { hideCard } = useContext(AutocardContext);
+
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
   // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picks = useMemo(
@@ -69,14 +72,14 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
   const handleClickCard = useCallback(
     async (event) => {
       event.preventDefault();
-      /* eslint-disable-line no-undef */ autocard_hide_card();
+      hideCard();
       const cardPackIndex = parseInt(event.currentTarget.getAttribute('data-index'), 10);
       const cardIndex = cardsInPack[cardPackIndex];
       setPicking(cardPackIndex);
       await takeCard(cardIndex);
       setPicking(null);
     },
-    [cardsInPack, setPicking, takeCard],
+    [cardsInPack, hideCard, takeCard],
   );
   return (
     <>

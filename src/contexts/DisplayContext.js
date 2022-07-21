@@ -2,6 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import useLocalStorage from 'hooks/useLocalStorage';
 
 const DisplayContext = React.createContext({
   showCustomImages: true,
@@ -11,6 +12,8 @@ const DisplayContext = React.createContext({
 
 export const DisplayContextProvider = ({ cubeID, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useState(true);
+  const [openCollapse, setOpenCollapse] = useLocalStorage(null);
+
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages(!showCustomImages);
   }, [showCustomImages]);
@@ -38,6 +41,8 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     toggleCompressedView,
     showMaybeboard,
     toggleShowMaybeboard,
+    openCollapse,
+    setOpenCollapse,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

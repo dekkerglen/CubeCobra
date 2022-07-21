@@ -7,11 +7,10 @@ import { Row, Col } from 'reactstrap';
 import { countGroup, sortDeep } from 'utils/Sort';
 
 import AutocardListGroup from 'components/AutocardListGroup';
-import AutocardListItem from 'components/AutocardListItem';
 import DisplayContext from 'contexts/DisplayContext';
 import SortContext from 'contexts/SortContext';
 
-const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
+const TableView = ({ cards, noGroupModal, className, ...props }) => {
   const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const { compressedView } = useContext(DisplayContext);
 
@@ -39,7 +38,6 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
                 key={label}
                 heading={`${label} (${countGroup(row)})`}
                 cards={row}
-                rowTag={rowTag}
                 noGroupModal={noGroupModal}
                 sort={tertiary}
                 orderedSort={quaternary}
@@ -55,13 +53,11 @@ const TableView = ({ cards, rowTag, noGroupModal, className, ...props }) => {
 
 TableView.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
-  rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   className: PropTypes.string,
 };
 
 TableView.defaultProps = {
-  rowTag: AutocardListItem,
   noGroupModal: false,
   className: null,
 };

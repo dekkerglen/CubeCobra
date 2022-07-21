@@ -15,7 +15,7 @@ const Episode = require('../models/old/podcastEpisode');
 const Podcast = require('../models/old/podcast');
 const Article = require('../models/old/article');
 const User = require('../models/old/user');
-const Cube = require('../models/cube');
+const Cube = require('../models/old/cube');
 
 const migrations = [
   // {
@@ -45,7 +45,7 @@ const migrations = [
     source: Cube,
     conversions: [
       [cube.convertCubeToMetadata, cube.batchPut],
-      // [cube.convertCubeToCards, cube.batchPutCards],
+      [cube.convertCubeToCards, cube.batchPutCards],
       [
         (c) => cubeHash.getHashRowsForCube(cube.convertCubeToMetadata(c), cube.convertCubeToCards(c)),
         cubeHash.batchPut,
@@ -64,10 +64,10 @@ const batchSize = 25;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
     const count = await mongo.countDocuments();
-    const cursor = mongo.find().skip(5275).lean().cursor();
+    const cursor = mongo.find().lean().cursor();
 
     // batch them by batchSize
-    for (let i = 5275; i < count; i += batchSize) {
+    for (let i = 0; i < count; i += batchSize) {
       console.log(`Finished: ${i} of ${count} items`);
       const items = [];
       for (let j = 0; j < batchSize; j++) {

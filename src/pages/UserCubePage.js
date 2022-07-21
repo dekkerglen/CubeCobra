@@ -12,10 +12,12 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import Markdown from 'components/Markdown';
+import MtgImage from 'components/MtgImage';
 
 const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => {
   const user = useContext(UserContext);
 
+  console.log(owner);
   return (
     <MainLayout loginCallback={loginCallback}>
       <UserLayout user={owner} followers={followers} following={following} activeLink="view">
@@ -29,10 +31,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
             <Row className="mb-3">
               {owner.Image && (
                 <Col xs={4} lg={3}>
-                  <div className="position-relative">
-                    <img width="100%" className="border" src={owner.Image} alt={owner.ImageName} />
-                    <em className="cube-preview-artist">Art by {owner.Artist}</em>
-                  </div>
+                  <MtgImage cardname={owner.ImageName} showArtist />
                 </Col>
               )}
               <Col xs={owner.Image ? 8 : 12} lg={owner.Image ? 9 : 12}>

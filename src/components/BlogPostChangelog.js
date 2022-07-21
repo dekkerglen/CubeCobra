@@ -1,17 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
+import withAutocard from 'components/WithAutocard';
 
-const CardHtml = ({ card }) => (
-  // eslint-disable-next-line jsx-a11y/anchor-is-valid
-  <a className="dynamic-autocard" card={card.image_normal} card_flip={card.image_flip}>
-    {card.name}
-  </a>
-);
-
-CardHtml.propTypes = {
-  card: CardPropType.isRequired,
-};
+const CardHtml = withAutocard('a');
 
 const BlogPostChangelog = ({ cards }) => (
   <>

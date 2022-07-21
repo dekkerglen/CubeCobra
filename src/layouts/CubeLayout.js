@@ -30,10 +30,10 @@ CubeNavItem.defaultProps = {
   children: false,
 };
 
-const CubeLayout = ({ cube, cards, activeLink, children }) => {
+const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict }) => {
   const subtitle = getCubeDescription(cube);
   return (
-    <CubeContextProvider initialCube={cube} cards={cards}>
+    <CubeContextProvider initialCube={cube} cards={cards} loadVersionDict={loadVersionDict}>
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
           <div className="nav-item px-lg-4 px-3 text-sm-start text-center font-weight-boldish mt-auto mb-2">
@@ -71,6 +71,7 @@ CubeLayout.propTypes = {
   cards: PropTypes.shape({
     boards: PropTypes.arrayOf(PropTypes.object),
   }),
+  loadVersionDict: PropTypes.bool,
 };
 
 CubeLayout.defaultProps = {
@@ -78,6 +79,7 @@ CubeLayout.defaultProps = {
   cards: {
     boards: [],
   },
+  loadVersionDict: false,
 };
 
 export default CubeLayout;

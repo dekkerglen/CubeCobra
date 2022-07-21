@@ -17,7 +17,6 @@ const Content = require('../dynamo/models/content');
 const FeaturedCubes = require('../models/featuredCubes');
 const Cube = require('../dynamo/models/cube');
 const { render } = require('../serverjs/render');
-const { buildIdQuery } = require('../serverjs/cubefn');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 const notice = require('../dynamo/models/notice');

@@ -5,6 +5,7 @@ import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
 import TimeAgo from 'react-timeago';
+import MtgImage from 'components/MtgImage';
 
 const VideoPreview = ({ video }) => {
   const [hover, setHover] = useState(false);
@@ -19,7 +20,7 @@ const VideoPreview = ({ video }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <img className="content-preview-img" alt={video.Title} src={video.Image} />
+        <MtgImage cardname={video.ImageName} />
         <h6 className="content-preview-banner video-preview-bg">
           <strong>Video</strong>
         </h6>

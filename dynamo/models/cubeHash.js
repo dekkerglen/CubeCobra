@@ -42,11 +42,14 @@ const client = createClient({
 });
 
 const hashShortId = (metadata) => {
-  return `shortid:${metadata.ShortId}`;
+  if (!metadata.ShortId || metadata.ShortId.length === 0) {
+    return [];
+  }
+  return [`shortid:${metadata.ShortId}`];
 };
 
 const hashFeatured = (metadata) => {
-  return `featured:${metadata.Featured}`;
+  return [`featured:${metadata.Featured}`];
 };
 
 const hashCategories = (metadata) => {
@@ -90,9 +93,11 @@ const hashKeywords = (metadata) => {
 const hashOracles = (cards) => {
   const res = [];
 
-  for (const board of cards.boards) {
-    for (const card of board.cards) {
-      res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
+  for (const [boardname, list] of Object.entries(cards)) {
+    if (boardname !== 'id') {
+      for (const card of list) {
+        res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
+      }
     }
   }
 
@@ -102,8 +107,8 @@ const hashOracles = (cards) => {
 const getHashesForMetadata = (metadata) => {
   return [
     ...new Set([
-      hashShortId(metadata),
-      hashFeatured(metadata),
+      ...hashShortId(metadata),
+      ...hashFeatured(metadata),
       ...hashCategories(metadata),
       ...hashTags(metadata),
       ...hashKeywords(metadata),

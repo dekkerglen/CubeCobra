@@ -16,7 +16,6 @@ const {
   saveDraftAnalytics,
   isCubeViewable,
 } = require('../../serverjs/cubefn');
-const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
@@ -55,8 +54,8 @@ router.post(
   body('ShortId', 'Custom URL must contain only alphanumeric characters, dashes, and underscores.').matches(
     /^[A-Za-z0-9_-]*$/,
   ),
-  body('ShortId', `Custom URL may not be empty or longer than 100 characters.`).isLength({
-    min: 1,
+  body('ShortId', `Custom URL may not be longer than 100 characters.`).isLength({
+    min: 0,
     max: 100,
   }),
   body('ShortId', 'Custom URL may not use profanity.').custom((value) => !util.hasProfanity(value)),
@@ -101,14 +100,7 @@ router.post(
     }
 
     cube.Name = updatedCube.Name;
-
-    const image = carddb.imagedict[updatedCube.ImageName.toLowerCase()];
-
-    if (image) {
-      cube.ImageUri = updatedCube.ImageUri;
-      cube.ImageArtist = updatedCube.ImageArtist;
-      cube.ImageName = updatedCube.ImageName;
-    }
+    cube.ImageName = updatedCube.ImageName;
 
     if (updatedCube.Description !== null) {
       cube.Description = updatedCube.Description;
@@ -167,7 +159,9 @@ router.post(
 router.post(
   '/settings/:id',
   ensureAuth,
-  body('PriceVisibility').isIn(Object.entries(Cube.PRICE_VISIBLITY).map((entry) => entry[1])),
+  body('PriceVisibility', 'Invalid Price Visibility').isIn(
+    Object.entries(Cube.PRICE_VISIBLITY).map((entry) => entry[1]),
+  ),
   body('DisableNotifications').toBoolean(),
   body('DefaultStatus', 'Status must be valid.').isIn(['Owned', 'Not Owned']),
   body('DefaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
@@ -183,7 +177,7 @@ router.post(
       });
     }
 
-    if (!cube.Owner === req.user.Id) {
+    if (cube.Owner !== req.user.Id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -191,29 +185,10 @@ router.post(
     }
 
     const update = req.body;
-    for (const field of ['PriceVisibility', 'DisableNotifications', 'DefaultStatus', 'DefaultPrinting', 'Visibility']) {
+    for (const field of ['Visibility', 'PriceVisibility', 'DisableNotifications', 'DefaultStatus', 'DefaultPrinting']) {
       if (update[field] !== undefined) {
         cube[field] = update[field];
       }
-    }
-
-    // convert visibility value to indicators
-    switch (req.body.Visibility) {
-      case Cube.VISIBILITY.PRIVATE:
-        if (cube.Featured || (await isInFeaturedQueue(cube))) {
-          req.flash('danger', 'Cannot set a cube in featured queue as private');
-        } else {
-          cube.Visibility = req.body.Visibility;
-        }
-        break;
-      case 'unlisted':
-        cube.Visibility = req.body.Visibility;
-        break;
-      case 'public':
-        cube.Visibility = req.body.Visibility;
-        break;
-      default:
-        break; // can't occur due to the validation above
     }
 
     await Cube.update(cube);
@@ -258,11 +233,15 @@ router.get(
       });
     }
 
-    const cubeCards = Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(cube.Id);
 
     const cardnames = [];
-    for (const card of cubeCards) {
-      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
+    for (const [boardname, list] of Object.entries(cubeCards)) {
+      if (boardname !== 'id') {
+        for (const card of list) {
+          util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
+        }
+      }
     }
 
     const result = util.turnToTree(cardnames);
@@ -285,7 +264,7 @@ router.get(
       });
     }
 
-    const cubeCards = Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(cube.Id);
     const tags = cubeCardTags(cubeCards);
 
     return res.status(200).send({
@@ -359,7 +338,7 @@ router.get(
       });
     }
 
-    const cubeCards = Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(cube.Id);
 
     const tagColors = buildTagColors(cube, cubeCards);
     const tags = tagColors.map((item) => item.tag);
@@ -437,7 +416,7 @@ router.get(
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(cube.Id);
 
     const names = cubeCards.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
@@ -455,7 +434,7 @@ router.get(
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(cube.Id);
 
     res.contentType('application/json');
     return res.status(200).send(JSON.stringify({ ...cube, cards: cubeCards }));
@@ -484,19 +463,12 @@ router.post(
   }),
 );
 
-router.get(
-  '/getcardforcube/:id/:name',
+router.post(
+  '/getcardforcube',
   util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.getById(req.params.id);
+    const { name, defaultPrinting } = req.body;
 
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Not Found',
-      });
-    }
-
-    const card = carddb.getMostReasonable(req.params.name, cube.DefaultPrinting);
+    const card = carddb.getMostReasonable(name, defaultPrinting);
     if (card) {
       return res.status(200).send({
         success: 'true',
@@ -567,15 +539,12 @@ router.post(
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ _id, full_name, image_normal, image_flip, prices, elo }) => ({
+        versions.map(({ _id, full_name, image_normal, image_flip, prices }) => ({
           _id,
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
           image_normal,
           image_flip,
-          price: prices.usd,
-          price_foil: prices.usd_foil,
-          price_etched: prices.usd_etched,
-          elo,
+          prices,
         })),
       ]),
     );
@@ -666,7 +635,7 @@ router.post(
     }
 
     const cubeCards = await Cube.getCards(req.params.id);
-    const mainboard = cubeCards.boards.find((board) => board.name === 'Mainboard');
+    const mainboard = cubeCards.Mainboard;
 
     let tag = null;
     if (req.body.packid) {
@@ -677,7 +646,7 @@ router.post(
     }
 
     if (tag) {
-      mainboard.cards.push(
+      mainboard.push(
         ...req.body.cards.map((id) => {
           const c = util.newCard(carddb.cardFromId(id));
           c.tags = [tag];
@@ -686,7 +655,7 @@ router.post(
         }),
       );
     } else {
-      mainboard.cards.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+      mainboard.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
 
     await Cube.updateCards(req.params.id, cubeCards);
@@ -833,5 +802,14 @@ router.get(
     });
   }),
 );
+
+router.post('/imagedata', async (req, res) => {
+  const { cardname } = req.body;
+  const data = util.getImageData(cardname);
+  return res.status(200).send({
+    success: 'true',
+    data,
+  });
+});
 
 module.exports = router;

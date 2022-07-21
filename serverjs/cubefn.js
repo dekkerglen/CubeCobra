@@ -614,7 +614,7 @@ const methods = {
     });
   },
   generatePack: async (cube, cards, carddb, seed) => {
-    const main = cards.boards.filter((board) => board.name === 'Mainboard')[0];
+    const main = cards.Mainboard;
 
     if (!seed) {
       seed = Date.now().toString();

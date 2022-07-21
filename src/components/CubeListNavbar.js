@@ -26,7 +26,6 @@ import {
   FormGroup,
 } from 'reactstrap';
 
-import CardModalContext from 'contexts/CardModalContext';
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
@@ -41,13 +40,13 @@ import { QuestionIcon } from '@primer/octicons-react';
 import Tooltip from 'components/Tooltip';
 
 const PasteBulkModal = ({ isOpen, toggle }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="pasteBulkModalTitle">
       <ModalHeader id="pasteBulkModalTitle" toggle={toggle}>
         Bulk Upload - Paste Text
       </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/bulkupload/${cube.Id}`}>
         <ModalBody>
           <p>
             Acceptable formats are:
@@ -83,13 +82,13 @@ PasteBulkModal.propTypes = {
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 
 const UploadBulkModal = ({ isOpen, toggle }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
       <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
         Bulk Upload - Upload File
       </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} encType="multipart/form-data">
+      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cube.Id}`} encType="multipart/form-data">
         <ModalBody>
           <p>
             Acceptable files are:
@@ -123,13 +122,13 @@ UploadBulkModal.propTypes = {
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 
 const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadReplacementModalTitle">
       <ModalHeader id="uploadReplacementModalTitle" toggle={toggle}>
         Bulk Upload - Replace with CSV File Upload
       </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} encType="multipart/form-data">
+      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cube.Id}`} encType="multipart/form-data">
         <ModalBody>
           <p>
             Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
@@ -184,11 +183,11 @@ SelectEmptyModal.propTypes = {
 };
 
 const CompareCollapse = (props) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   const [compareID, setCompareID] = useState('');
   const handleChange = useCallback((event) => setCompareID(event.target.value), []);
 
-  const targetUrl = `/cube/compare/${cubeID}/to/${compareID}`;
+  const targetUrl = `/cube/compare/${cube.Id}/to/${compareID}`;
 
   return (
     <Collapse {...props}>
@@ -218,8 +217,6 @@ const CubeListNavbar = ({
   cards,
   cubeView,
   setCubeView,
-  openCollapse,
-  setOpenCollapse,
   defaultPrimarySort,
   defaultSecondarySort,
   defaultTertiarySort,
@@ -240,10 +237,9 @@ const CubeListNavbar = ({
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
-  const { canEdit, cubeID, hasCustomImages } = useContext(CubeContext);
+  const { canEdit, hasCustomImages, cube } = useContext(CubeContext);
   const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
   const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
-  const openCardModal = useContext(CardModalContext);
   const {
     showCustomImages,
     toggleShowCustomImages,
@@ -251,6 +247,8 @@ const CubeListNavbar = ({
     toggleCompressedView,
     showMaybeboard,
     toggleShowMaybeboard,
+    openCollapse,
+    setOpenCollapse,
   } = useContext(DisplayContext);
 
   const toggle = useCallback(() => setIsOpen((open) => !open), []);
@@ -271,7 +269,7 @@ const CubeListNavbar = ({
         if (groupModalCards.length === 0) {
           setSelectEmptyModalOpen(true);
         } else if (groupModalCards.length === 1) {
-          openCardModal(groupModalCards[0]);
+          // openCardModal(groupModalCards[0]);
         } else if (groupModalCards.length > 1) {
           openGroupModal();
         }
@@ -279,7 +277,7 @@ const CubeListNavbar = ({
         setCubeView('list');
       }
     },
-    [groupModalCards, openCardModal, openGroupModal, cubeView, setCubeView],
+    [groupModalCards, openGroupModal, cubeView, setCubeView],
   );
 
   const handleOpenCollapse = useCallback(
@@ -324,12 +322,10 @@ const CubeListNavbar = ({
         </div>
         <Collapse isOpen={isOpen} navbar>
           <Nav className="ms-auto" navbar>
-            {!canEdit ? (
-              ''
-            ) : (
+            {canEdit && (
               <NavItem>
                 <NavLink href="#" data-target="edit" onClick={handleOpenCollapse}>
-                  Add/Remove
+                  Edit
                 </NavLink>
               </NavItem>
             )}
@@ -348,9 +344,7 @@ const CubeListNavbar = ({
                 Compare
               </NavLink>
             </NavItem>
-            {!canEdit ? (
-              ''
-            ) : (
+            {canEdit && (
               <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
                 <NavLink href="#" onClick={handleMassEdit}>
                   {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
@@ -396,12 +390,14 @@ const CubeListNavbar = ({
                     <DropdownItem disabled>Export</DropdownItem>
                   </>
                 )}
-                <DropdownItem href={`/cube/clone/${cubeID}`}>Clone Cube</DropdownItem>
-                <DropdownItem href={`/cube/download/plaintext/${cubeID}?${urlSegment}`}>Card Names (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cubeID}?${urlSegment}`}>Comma-Separated (.csv)</DropdownItem>
-                <DropdownItem href={`/cube/download/forge/${cubeID}?${urlSegment}`}>Forge (.dck)</DropdownItem>
-                <DropdownItem href={`/cube/download/mtgo/${cubeID}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/xmage/${cubeID}?${urlSegment}`}>XMage (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/clone/${cube.Id}`}>Clone Cube</DropdownItem>
+                <DropdownItem href={`/cube/download/plaintext/${cube.Id}?${urlSegment}`}>
+                  Card Names (.txt)
+                </DropdownItem>
+                <DropdownItem href={`/cube/download/csv/${cube.Id}?${urlSegment}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem href={`/cube/download/forge/${cube.Id}?${urlSegment}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cube.Id}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/xmage/${cube.Id}?${urlSegment}`}>XMage (.dck)</DropdownItem>
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
@@ -428,7 +424,7 @@ const CubeListNavbar = ({
           </Nav>
         </Collapse>
       </Navbar>
-      {!canEdit ? '' : <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
+      {canEdit && <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
       <SortCollapse
         defaultPrimarySort={defaultPrimarySort}
         defaultSecondarySort={defaultSecondarySort}
@@ -445,7 +441,7 @@ const CubeListNavbar = ({
         defaultFilterText={defaultFilterText}
         filter={filter}
         setFilter={setFilter}
-        numCards={cards.length}
+        numCards={cards.Mainboard.length}
         isOpen={openCollapse === 'filter'}
       />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
@@ -456,11 +452,11 @@ const CubeListNavbar = ({
 };
 
 CubeListNavbar.propTypes = {
-  cards: PropTypes.arrayOf(CardPropType).isRequired,
+  cards: PropTypes.shape({
+    Mainboard: PropTypes.arrayOf(CardPropType).isRequired,
+  }).isRequired,
   cubeView: PropTypes.string.isRequired,
   setCubeView: PropTypes.func.isRequired,
-  openCollapse: PropTypes.string,
-  setOpenCollapse: PropTypes.func.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,
   defaultSecondarySort: PropTypes.string.isRequired,
   defaultTertiarySort: PropTypes.string.isRequired,
@@ -477,7 +473,6 @@ CubeListNavbar.propTypes = {
 };
 
 CubeListNavbar.defaultProps = {
-  openCollapse: null,
   sorts: null,
   filter: null,
   className: null,

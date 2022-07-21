@@ -88,9 +88,9 @@ export const pickRate = ({ picks, passes }) => {
   return picks + passes > 0 ? picks / (picks + passes) : 0;
 };
 
-export const cardTags = (card) => card.tags;
+export const cardTags = (card) => card.tags || [];
 
-export const cardFinish = (card) => card.finish;
+export const cardFinish = (card) => card.finish || 'Non-foil';
 
 export const cardStatus = (card) => card.status;
 

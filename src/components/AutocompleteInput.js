@@ -1,96 +1,15 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+/* eslint-disable react/prop-types */
+/* eslint-disable react/no-array-index-key */
+/* eslint-disable no-use-before-define */
+import React, { forwardRef, useCallback, useEffect, useMemo, useState, useContext } from 'react';
 
 import { Input } from 'reactstrap';
 import withAutocard from 'components/WithAutocard';
+import AutocardContext from 'contexts/AutocardContext';
 
 const AutocardLi = withAutocard('li');
 
-function getAllMatches(names, current) {
-  const posts = getPosts(names, current);
-  const words = treeToWords(posts, 10).slice(0, 10);
-
-  for (let i = 0; i < words.length; i++) {
-    words[i] = current + words[i];
-    words[i] = words[i].substr(0, words[i].length - 1);
-  }
-  return words;
-}
-
-function getPosts(names, current) {
-  if (current == '') {
-    return names;
-  } else {
-    const character = current.charAt(0);
-    const sub = current.substr(1, current.length);
-
-    //please don't try to understand why this works
-    if (
-      character.toUpperCase() != character.toLowerCase() &&
-      names[character.toUpperCase()] &&
-      names[character.toLowerCase()]
-    ) {
-      if (names[character.toUpperCase()][sub.charAt(0)]) {
-        const upper = getPosts(names[character.toUpperCase()], sub);
-        if (names[character.toLowerCase()]) {
-          const lower = getPosts(names[character.toLowerCase()], sub);
-          const res = deepmerge(upper, lower);
-          return res;
-        } else {
-          return upper;
-        }
-      } else {
-        const lower = getPosts(names[character.toLowerCase()], sub);
-        if (names[character.toUpperCase()]) {
-          const upper = getPosts(names[character.toUpperCase()], sub);
-          const res = deepmerge(upper, lower);
-          return res;
-        } else {
-          return lower;
-        }
-      }
-    } else if (names[character.toUpperCase()]) {
-      return getPosts(names[character.toUpperCase()], sub);
-    } else if (names[character.toLowerCase()]) {
-      return getPosts(names[character.toLowerCase()], sub);
-    } else {
-      return {};
-    }
-  }
-}
-
-function treeToWords(tree, max) {
-  if (isEmpty(tree)) {
-    return [];
-  } else {
-    const words = [];
-    for (const prop in tree) {
-      if (tree.hasOwnProperty(prop)) {
-        if (isEmpty(tree[prop])) {
-          words.push(prop);
-        }
-        const wordlets = treeToWords(tree[prop], max);
-        for (let i = 0; i < wordlets.length; i++) {
-          words.push(prop + wordlets[i]);
-        }
-      }
-      if (words.length > max) {
-        return words;
-      }
-    }
-    return words;
-  }
-}
-
-function isEmpty(obj) {
-  for (const prop in obj) {
-    if (obj.hasOwnProperty(prop)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-//Deepmerge utility
+// Deepmerge utility
 function isMergeableObject(val) {
   const nonNullObject = val && typeof val === 'object';
 
@@ -108,20 +27,6 @@ function emptyTarget(val) {
 function cloneIfNecessary(value, optionsArgument) {
   const clone = optionsArgument && optionsArgument.clone === true;
   return clone && isMergeableObject(value) ? deepmerge(emptyTarget(value), value, optionsArgument) : value;
-}
-
-function defaultArrayMerge(target, source, optionsArgument) {
-  const destination = target.slice();
-  source.forEach(function (e, i) {
-    if (typeof destination[i] === 'undefined') {
-      destination[i] = cloneIfNecessary(e, optionsArgument);
-    } else if (isMergeableObject(e)) {
-      destination[i] = deepmerge(target[i], e, optionsArgument);
-    } else if (target.indexOf(e) === -1) {
-      destination.push(cloneIfNecessary(e, optionsArgument));
-    }
-  });
-  return destination;
 }
 
 function mergeObject(target, source, optionsArgument) {
@@ -152,9 +57,106 @@ function deepmerge(target, source, optionsArgument) {
     return Array.isArray(target)
       ? arrayMerge(target, source, optionsArgument)
       : cloneIfNecessary(source, optionsArgument);
-  } else {
-    return mergeObject(target, source, optionsArgument);
   }
+  return mergeObject(target, source, optionsArgument);
+}
+
+function defaultArrayMerge(target, source, optionsArgument) {
+  const destination = target.slice();
+  source.forEach(function (e, i) {
+    if (typeof destination[i] === 'undefined') {
+      destination[i] = cloneIfNecessary(e, optionsArgument);
+    } else if (isMergeableObject(e)) {
+      destination[i] = deepmerge(target[i], e, optionsArgument);
+    } else if (target.indexOf(e) === -1) {
+      destination.push(cloneIfNecessary(e, optionsArgument));
+    }
+  });
+  return destination;
+}
+
+function getPosts(names, current) {
+  if (current === '') {
+    return names;
+  }
+  const character = current.charAt(0);
+  const sub = current.substr(1, current.length);
+
+  // please don't try to understand why this works
+  if (
+    character.toUpperCase() !== character.toLowerCase() &&
+    names[character.toUpperCase()] &&
+    names[character.toLowerCase()]
+  ) {
+    if (names[character.toUpperCase()][sub.charAt(0)]) {
+      const upper = getPosts(names[character.toUpperCase()], sub);
+      if (names[character.toLowerCase()]) {
+        const lower = getPosts(names[character.toLowerCase()], sub);
+        const res = deepmerge(upper, lower);
+        return res;
+      }
+      return upper;
+    }
+    const lower = getPosts(names[character.toLowerCase()], sub);
+    if (names[character.toUpperCase()]) {
+      const upper = getPosts(names[character.toUpperCase()], sub);
+      const res = deepmerge(upper, lower);
+      return res;
+    }
+    return lower;
+  }
+  if (names[character.toUpperCase()]) {
+    return getPosts(names[character.toUpperCase()], sub);
+  }
+  if (names[character.toLowerCase()]) {
+    return getPosts(names[character.toLowerCase()], sub);
+  }
+  return {};
+}
+
+function getAllMatches(names, current) {
+  const posts = getPosts(names, current);
+  const words = treeToWords(posts, 10).slice(0, 10);
+
+  for (let i = 0; i < words.length; i++) {
+    words[i] = current + words[i];
+    words[i] = words[i].substr(0, words[i].length - 1);
+  }
+  return words;
+}
+
+function treeToWords(tree, max) {
+  if (isEmpty(tree)) {
+    return [];
+  }
+  const words = [];
+  // eslint-disable-next-line guard-for-in
+  for (const prop in tree) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (tree.hasOwnProperty(prop)) {
+      if (isEmpty(tree[prop])) {
+        words.push(prop);
+      }
+      const wordlets = treeToWords(tree[prop], max);
+      for (let i = 0; i < wordlets.length; i++) {
+        words.push(prop + wordlets[i]);
+      }
+    }
+    if (words.length > max) {
+      return words;
+    }
+  }
+  return words;
+}
+
+function isEmpty(obj) {
+  for (const prop in obj) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (obj.hasOwnProperty(prop)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 deepmerge.all = function deepmergeAll(array, optionsArgument) {
@@ -191,11 +193,8 @@ const AutocompleteInput = forwardRef(
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
-    let [inputValue, setInputValue] = useState(defaultValue || '');
-
-    if (typeof value !== 'undefined') {
-      inputValue = value;
-    }
+    const [inputValue, setInputValue] = useState(defaultValue || '');
+    const { hideCard } = useContext(AutocardContext);
 
     useEffect(() => {
       const wrapper = async () => {
@@ -209,16 +208,18 @@ const AutocompleteInput = forwardRef(
         }
       };
       wrapper();
-    }, [treeUrl]);
+    }, [treePath, treeUrl]);
 
     const handleChange = useCallback(
       (event) => {
         setInputValue(event.target.value);
         setVisible(true);
-        autocard_hide_card(); /* GLOBAL */
-        onChange && onChange(event);
+        hideCard();
+        if (onChange) {
+          onChange(event);
+        }
       },
-      [onChange],
+      [hideCard, onChange],
     );
 
     const acceptSuggestion = useCallback(
@@ -229,15 +230,16 @@ const AutocompleteInput = forwardRef(
         };
         setInputValue(newValue);
         setVisible(false);
-        autocard_hide_card(); /* GLOBAL */
+        hideCard();
         setPosition(-1);
-        onChange &&
+        if (onChange) {
           onChange({
             target,
             currentTarget: target,
           });
+        }
       },
-      [onChange, props.name],
+      [hideCard, onChange, props.name],
     );
 
     const handleClickSuggestion = useCallback(
@@ -258,21 +260,21 @@ const AutocompleteInput = forwardRef(
 
     const handleKeyDown = useCallback(
       (event) => {
-        if (event.keyCode == 40) {
+        if (event.keyCode === 40) {
           // DOWN key
           event.preventDefault();
-          setPosition((position) => (position < 9 ? position + 1 : position));
-        } else if (event.keyCode == 38) {
+          setPosition((p) => (p < 9 ? p + 1 : p));
+        } else if (event.keyCode === 38) {
           // UP key
           event.preventDefault();
-          setPosition((position) => (position > -1 ? position - 1 : position));
-        } else if (event.keyCode == 9 || event.keyCode == 13) {
+          setPosition((p) => (p > -1 ? p - 1 : p));
+        } else if (event.keyCode === 9 || event.keyCode === 13) {
           // TAB or ENTER key
           if (showMatches) {
             const goodPosition = position >= 0 && position < matches.length ? position : 0;
             const match = matches[goodPosition];
             acceptSuggestion(match);
-            if (event.keyCode == 13 && onSubmit) {
+            if (event.keyCode === 13 && onSubmit) {
               // ENTER key
               onSubmit(event, match);
             }
@@ -283,14 +285,14 @@ const AutocompleteInput = forwardRef(
     );
 
     return (
-      <div className={wrapperClassName}>
+      <>
         <Input ref={ref} value={inputValue} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
         {showMatches && (
           <ul className="autocomplete-list">
             {matches.map((match, index) => (
               <AutocardLi
                 inModal
-                front={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
+                image={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
                 key={index}
                 onClick={handleClickSuggestion}
                 className={index === position ? 'active' : undefined}
@@ -300,7 +302,7 @@ const AutocompleteInput = forwardRef(
             ))}
           </ul>
         )}
-      </div>
+      </>
     );
   },
 );

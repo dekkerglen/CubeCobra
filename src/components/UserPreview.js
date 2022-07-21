@@ -5,6 +5,7 @@ import { Card } from 'reactstrap';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
+import MtgImage from 'components/MtgImage';
 
 const UserPreview = ({ user }) => {
   const [hover, setHover] = useState(false);
@@ -13,7 +14,9 @@ const UserPreview = ({ user }) => {
   const handleClick = useCallback((event) => {
     window.location.href = event.currentTarget.getAttribute('data-href');
   }, []);
-  const followers = user.UsersFollowing.length;
+  console.log(user);
+
+  const followers = (user.UsersFollowing || []).length;
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
@@ -25,9 +28,7 @@ const UserPreview = ({ user }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <img className="w-100" src={user.Image} />
-        <em className="cube-preview-artist">Art by {user.Artist}</em>
+        <MtgImage cardname={user.ImageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">
@@ -46,6 +47,7 @@ UserPreview.propTypes = {
     Image: PropTypes.string.isRequired,
     Artist: PropTypes.string.isRequired,
     UsersFollowing: PropTypes.arrayOf(PropTypes.string.isRequired),
+    ImageName: PropTypes.string.isRequired,
   }).isRequired,
 };
 

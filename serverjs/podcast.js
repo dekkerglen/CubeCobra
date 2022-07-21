@@ -17,22 +17,22 @@ const updatePodcast = async (podcast) => {
 
   const guids = items.map((episode) => episode.PodcastGuid);
 
-  const filtered = episodes.filter((episode) => !guids.includes(episode.guid));
+  const filtered = episodes.filter((episode) => !guids.includes(episode.PodcastGuid));
 
   await Promise.all(
     filtered.map((episode) => {
       const podcastEpisode = {
-        Title: episode.title,
-        Description: episode.description,
-        Url: episode.source,
+        Title: episode.Title,
+        Description: episode.Description,
+        Url: episode.Url,
         Date: new Date(episode.date).valueOf(),
-        Owner: podcast.owner,
-        Image: podcast.image,
-        Username: podcast.username,
-        PodcastId: podcast._id,
-        PodcastName: podcast.title,
-        PodcastGuid: episode.guid,
-        PodcastLink: episode.link,
+        Owner: podcast.Owner,
+        Image: podcast.Image,
+        Username: podcast.Username,
+        PodcastId: podcast.Id,
+        PodcastName: podcast.Title,
+        PodcastGuid: episode.PodcastGuid,
+        PodcastLink: episode.Url,
       };
 
       return Content.put(podcastEpisode, Content.TYPES.EPISODE);

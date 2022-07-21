@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useContext, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from 'reactstrap';
@@ -6,7 +6,6 @@ import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import Changelist from 'components/Changelist';
-import ChangelistContext, { ChangelistContextProvider } from 'contexts/ChangelistContext';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import CubeLayout from 'layouts/CubeLayout';
@@ -17,8 +16,6 @@ import RenderToRoot from 'utils/RenderToRoot';
 const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
   const [addValue, setAddValue] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { addChange } = useContext(ChangelistContext);
 
   const addInput = useRef();
   const formRef = useRef();
@@ -34,7 +31,6 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
         if (!card) {
           return;
         }
-        addChange({ add: { details: card } });
         setAddValue('');
         setLoading(false);
         if (addInput.current) {
@@ -44,7 +40,7 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput, cube],
+    [addValue, addInput, cube],
   );
 
   return (
@@ -121,14 +117,7 @@ BulkUploadPageRaw.propTypes = {
 const BulkUploadPage = ({ cube, added, loginCallback, ...props }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
-    <ChangelistContextProvider
-      cubeID={cube.Id}
-      noSave
-      initialChanges={added.map((details, index) => ({ add: { details }, id: index }))}
-      setOpenCollapse={() => {}}
-    >
-      <BulkUploadPageRaw cube={cube} {...props} />
-    </ChangelistContextProvider>
+    <BulkUploadPageRaw cube={cube} {...props} />
   </MainLayout>
 );
 

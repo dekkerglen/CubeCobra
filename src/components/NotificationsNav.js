@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
 
+import { BellFillIcon } from '@primer/octicons-react';
 import { csrfFetch } from 'utils/CSRF';
 import LinkButton from 'components/LinkButton';
 import useMount from 'hooks/UseMount';
@@ -42,7 +43,9 @@ const NotificationsNav = () => {
     <UncontrolledDropdown nav inNavbar>
       <DropdownToggle nav caret>
         {items.length > 0 && <Badge color="unsafe">{items.length > 30 ? '30+' : items.length}</Badge>}
-        <img className="notification-icon" src="/content/notification.png" alt="notifications" />
+        <span className="notification-wrapper">
+          <BellFillIcon size={20} />
+        </span>
       </DropdownToggle>
       <DropdownMenu className="dropdown-no-green pb-0 mb-0" end>
         <CardHeader>

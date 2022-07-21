@@ -10,6 +10,8 @@ const generateMeta = require('../serverjs/meta');
 const Notice = require('../dynamo/models/notice');
 const Content = require('../dynamo/models/content');
 
+const { getImageData } = require('../serverjs/util');
+
 const ensureContentCreator = ensureRole('ContentCreator');
 
 const router = express.Router();
@@ -149,6 +151,8 @@ router.get('/article/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
+  const imageDetails = getImageData(article.ImageName);
+
   return render(
     req,
     res,
@@ -159,7 +163,7 @@ router.get('/article/:id', async (req, res) => {
       metadata: generateMeta(
         article.Title,
         article.Short || 'An article posted to Cube Cobra',
-        article.Image,
+        imageDetails.uri,
         `https://cubecobra.com/content/article/${req.params.id}`,
       ),
     },
@@ -232,6 +236,8 @@ router.get('/video/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
+  const imageDetails = getImageData(video.ImageName);
+
   return render(
     req,
     res,
@@ -242,7 +248,7 @@ router.get('/video/:id', async (req, res) => {
       metadata: generateMeta(
         video.Title,
         video.Short || 'A video posted to Cube Cobra',
-        video.Smage,
+        imageDetails.uri,
         `https://cubecobra.com/content/video/${req.params.id}`,
       ),
     },
@@ -337,7 +343,7 @@ router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/editarticle', ensureContentCreator, async (req, res) => {
-  const { articleid, title, image, imagename, artist, body, short } = req.body;
+  const { articleid, title, imagename, body, short } = req.body;
 
   const article = await Content.getById(articleid);
 
@@ -353,9 +359,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
 
   article.Title = title.substring(0, 1000);
   article.Short = short.substring(0, 1000);
-  article.Image = image.substring(0, 1000);
   article.ImageName = imagename.substring(0, 1000);
-  article.Artist = artist.substring(0, 1000);
   article.Body = body.substring(0, 1000000);
 
   await Content.update(article);
@@ -391,7 +395,7 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/editvideo', ensureContentCreator, async (req, res) => {
-  const { videoid, title, image, imagename, artist, body, url, short } = req.body;
+  const { videoid, title, imagename, body, url, short } = req.body;
 
   const video = await Content.getById(videoid);
 
@@ -407,9 +411,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 
   video.Title = title.substring(0, 1000);
   video.Short = short.substring(0, 1000);
-  video.Image = image.substring(0, 1000);
   video.ImageName = imagename.substring(0, 1000);
-  video.Artist = artist.substring(0, 1000);
   video.Url = url.substring(0, 1000);
   video.Body = body.substring(0, 1000000);
 
@@ -419,7 +421,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/submitarticle', ensureContentCreator, async (req, res) => {
-  const { articleid, title, image, imagename, artist, body, short } = req.body;
+  const { articleid, title, imagename, body, short } = req.body;
 
   const article = await Content.getById(articleid);
 
@@ -435,9 +437,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
 
   article.Title = title.substring(0, 1000);
   article.Short = short.substring(0, 1000);
-  article.Image = image.substring(0, 1000);
   article.ImageName = imagename.substring(0, 1000);
-  article.Artist = artist.substring(0, 1000);
   article.Body = body.substring(0, 1000000);
   article.Status = Content.STATUS.IN_REVIEW;
 
@@ -470,7 +470,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
   podcast.Title = fields.title;
   podcast.Description = fields.description;
   podcast.PodcastLink = fields.url;
-  podcast.Image = fields.image;
+  podcast.Image = fields.Image;
   podcast.Status = 'inReview';
 
   await Content.update(podcast);
@@ -483,7 +483,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
 });
 
 router.post('/submitvideo', ensureContentCreator, async (req, res) => {
-  const { videoid, title, image, imagename, artist, body, url, short } = req.body;
+  const { videoid, title, imagename, body, url, short } = req.body;
 
   const video = await Content.getById(videoid);
 
@@ -499,9 +499,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
 
   video.Title = title.substring(0, 1000);
   video.Short = short.substring(0, 1000);
-  video.Image = image.substring(0, 1000);
   video.ImageName = imagename.substring(0, 1000);
-  video.Artist = artist.substring(0, 1000);
   video.Url = url.substring(0, 1000);
   video.Body = body.substring(0, 1000000);
   video.Status = 'inReview';

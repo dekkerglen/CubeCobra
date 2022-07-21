@@ -9,9 +9,15 @@ import { sortDeep } from 'utils/Sort';
 import AutocardListItem from 'components/AutocardListItem';
 import CubeContext from 'contexts/CubeContext';
 import GroupModalContext from 'contexts/GroupModalContext';
+import withModal from 'components/WithModal';
 
-const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, rowTag, noGroupModal }) => {
-  const RowTag = rowTag;
+import GroupModal from 'components/GroupModal';
+import withCardModal from 'components/WithCardModal';
+
+const CardGroupModalLink = withModal(ListGroupItem, GroupModal);
+const CardModalLink = withCardModal(AutocardListItem);
+
+const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, noGroupModal }) => {
   const sorted = sortDeep(cards, showOther, orderedSort, sort);
   const { canEdit } = useContext(CubeContext);
   const { openGroupModal, setGroupModalCards } = useContext(GroupModalContext);
@@ -26,19 +32,25 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, rowTa
   );
   return (
     <ListGroup className="list-outline">
-      <ListGroupItem
+      <CardGroupModalLink
         tag="div"
         className={`list-group-heading${canGroupModal ? ' clickable' : ''}`}
         onClick={canGroupModal ? handleClick : undefined}
       >
         {heading}
-      </ListGroupItem>
+      </CardGroupModalLink>
       {sorted.map(([, group]) =>
         group.map((card, index) => (
-          <RowTag
-            key={card._id || (typeof card.index === 'undefined' ? index : card.index)}
+          <CardModalLink
+            key={card.index}
             card={card}
+            altClick={() => {
+              window.open(`/tool/card/${card.cardID}`);
+            }}
             className={index === 0 ? 'cmc-group' : undefined}
+            modalProps={{
+              card,
+            }}
           />
         )),
       )}
@@ -48,7 +60,6 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther, rowTa
 
 AutocardListGroup.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
-  rowTag: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
   noGroupModal: PropTypes.bool,
   heading: PropTypes.node.isRequired,
   sort: PropTypes.string,
@@ -57,7 +68,6 @@ AutocardListGroup.propTypes = {
 };
 
 AutocardListGroup.defaultProps = {
-  rowTag: AutocardListItem,
   noGroupModal: false,
   sort: 'Mana Value Full',
   orderedSort: 'Alphabetical',

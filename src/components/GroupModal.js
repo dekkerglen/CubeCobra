@@ -24,7 +24,6 @@ import { fromEntries } from 'utils/Util';
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardEtchedPrice } from 'utils/Card';
 
 import AutocardListItem from 'components/AutocardListItem';
-import ChangelistContext from 'contexts/ChangelistContext';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import CubeContext from 'contexts/CubeContext';
 import GroupModalContext from 'contexts/GroupModalContext';
@@ -53,7 +52,6 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
   const [formValues, setFormValues] = useState(DEFAULT_FORM_VALUES);
 
   const { cube, updateCubeCards } = useContext(CubeContext);
-  const { addChanges } = useContext(ChangelistContext);
 
   const open = useCallback(() => {
     setFormValues(DEFAULT_FORM_VALUES);
@@ -72,9 +70,9 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
   });
 
   const handleChange = useCallback((event) => {
-    const target = event.target;
+    const { target } = event;
     const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
-    const name = target.name;
+    const { name } = target;
     const extra = {};
     if (name === 'addTags') {
       extra.deleteTags = false;
@@ -190,14 +188,9 @@ const GroupModal = ({ cubeID, canEdit, children, ...props }) => {
   const handleRemoveAll = useCallback(
     (event) => {
       event.preventDefault();
-      addChanges(
-        cardIndices.map((index) => ({
-          remove: cube.cards[index],
-        })),
-      );
       close();
     },
-    [addChanges, cardIndices, cube, close],
+    [close],
   );
 
   const cards = cardIndices.map((index) => cube.cards[index]);

@@ -338,6 +338,8 @@ router.get('/deckbuilder/:id', async (req, res) => {
       card.details = carddb.cardFromId(card.cardID);
     }
 
+    const imagedata = util.getImageData(cube.ImageName);
+
     return render(
       req,
       res,
@@ -351,7 +353,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.Name}`,
           cube.Description,
-          cube.ImageUri,
+          imagedata.uri,
           `https://cubecobra.com/cube/draft/${req.params.id}`,
         ),
       },
@@ -391,6 +393,8 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
 
     const [numDecks, decks] = await Promise.all([numDecksq, decksq]);
 
+    const imagedata = util.getImageData(cube.ImageName);
+
     return render(
       req,
       res,
@@ -406,7 +410,7 @@ router.get('/decks/:cubeid/:page', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Decks: ${cube.Name}`,
           cube.Description,
-          cube.ImageUri,
+          imagedata.uri,
           `https://cubecobra.com/user/decks/${encodeURIComponent(req.params.cubeid)}`,
         ),
       },
@@ -723,7 +727,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     }
 
     const cubeCards = Cube.getCards(cube);
-    const mainboard = cubeCards.boards.filter((b) => b.name === 'Mainboard')[0];
+    const mainboard = cubeCards.Mainboard;
 
     if (cube.Owner !== req.user.Id) {
       req.flash('danger', 'Not Authorized');
@@ -760,7 +764,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         const normalizedName = cardutil.normalizeName(item);
         const potentialIds = carddb.getIdsFromName(normalizedName);
         if (potentialIds && potentialIds.length > 0) {
-          const inCube = mainboard.cards.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
+          const inCube = mainboard.find((card) => carddb.cardFromId(card.cardID).name_lower === normalizedName);
           if (inCube) {
             selected = {
               finish: inCube.finish,
@@ -863,6 +867,8 @@ router.get('/:id', async (req, res) => {
       drafter = deckUser.Username;
     }
 
+    const imagedata = util.getImageData(cube.imgUrl);
+
     return render(
       req,
       res,
@@ -877,7 +883,7 @@ router.get('/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.Name}`,
           cube.Description,
-          cube.ImageUri,
+          imagedata.uri,
           `https://cubecobra.com/cube/deck/${req.params.id}`,
         ),
       },
