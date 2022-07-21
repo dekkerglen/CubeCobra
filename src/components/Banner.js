@@ -1,10 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 
-import { Col, Card, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
 import Advertisment from 'components/Advertisment';
 
-const BANNER_RATE = 5; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE = 3; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options = [
   <>
@@ -41,19 +40,39 @@ const options = [
 ];
 
 const Banner = () => {
+  const [option, setOption] = useState(-1);
   const user = useContext(UserContext);
 
-  const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
+  useEffect(() => {
+    setOption(Math.floor(Math.random() * 3 * BANNER_RATE)); // 3 previously options.length
+  }, []);
+
+  if (option === -1) {
+    return <></>;
+  }
+
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+
   if (option < options.length) {
     return (
-      <Col xs="12" className="py-2">
-        <Card>
-          <CardBody className="bg-advert">{options[option]}</CardBody>
-        </Card>
-      </Col>
+      <div className="centered">
+        <a href="https://www.mtgcubecon.com/redirect/cubecobra" target="_blank" rel="noreferrer">
+          <img src={`/content/cubeconbanner${option + 1}.png`} alt="Buy tickets for cube con today!" />
+        </a>
+      </div>
     );
   }
+
+  // if (option < options.length) {
+  //   return (
+  //     <Col xs="12" className="py-2">
+  //       <Card>
+  //         <CardBody className="bg-advert">{options[option]}</CardBody>
+  //       </Card>
+  //     </Col>
+  //   );
+  // }
+
   return (
     <div className="py-2">
       <Advertisment placementId="banner" size="desktop" media="banner" demo />
