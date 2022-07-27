@@ -82,7 +82,7 @@
     "html-to-text": "^5.1.1",
     "http": "0.0.1-security",
     "jest-environment-jsdom-sixteen": "^1.0.3",
-    "jquery-ui": "^1.13.0",
+    "jquery-ui": "^1.13.2",
     "jquery-ui-dist": "^1.12.1",
     "jsdom": "^16.5.0",
     "micromark": "^2.10.1",
