@@ -7,6 +7,23 @@ const documentClient = require('./documentClient');
 
 const tableName = (name) => `${process.env.DYNAMO_PREFIX}_${name}`;
 
+const doWithRetries = async (promise, retries = 3) => {
+  let result;
+  for (let i = 0; i < retries; i++) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      result = await promise();
+      break;
+    } catch (e) {
+      // exponential backoff and jitter
+      const delay = Math.floor(Math.random() * 2 ** i) + 1;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, delay * 100));
+    }
+  }
+  return result;
+};
+
 module.exports = function createClient(config) {
   return {
     createTable: async () => {
@@ -78,24 +95,28 @@ module.exports = function createClient(config) {
       return client.createTable(params).promise();
     },
     get: async (id) => {
-      return documentClient
-        .get({
-          TableName: tableName(config.name),
-          Key: {
-            [config.partitionKey]: id,
-          },
-        })
-        .promise();
+      return doWithRetries(
+        documentClient
+          .get({
+            TableName: tableName(config.name),
+            Key: {
+              [config.partitionKey]: id,
+            },
+          })
+          .promise(),
+      );
     },
     getByKey: async (key) => {
-      return documentClient
-        .get({
-          TableName: tableName(config.name),
-          Key: {
-            ...key,
-          },
-        })
-        .promise();
+      return doWithRetries(
+        documentClient
+          .get({
+            TableName: tableName(config.name),
+            Key: {
+              ...key,
+            },
+          })
+          .promise(),
+      );
     },
     put: async (Item) => {
       if (!Item[config.partitionKey]) {
@@ -104,19 +125,21 @@ module.exports = function createClient(config) {
           ...Item,
         };
       }
-      await documentClient.put({ TableName: tableName(config.name), Item }).promise();
+      await doWithRetries(documentClient.put({ TableName: tableName(config.name), Item }).promise());
       return Item[config.partitionKey];
     },
     query: async (params) => {
-      return documentClient.query({ TableName: tableName(config.name), Limit: 36, ...params }).promise();
+      return doWithRetries(documentClient.query({ TableName: tableName(config.name), Limit: 36, ...params })).promise();
     },
     delete: async (key) => {
-      return documentClient
-        .delete({
-          TableName: tableName(config.name),
-          Key: key,
-        })
-        .promise();
+      return doWithRetries(
+        documentClient
+          .delete({
+            TableName: tableName(config.name),
+            Key: key,
+          })
+          .promise(),
+      );
     },
     batchGet: async (ids) => {
       if (ids.length === 0) {
@@ -134,7 +157,7 @@ module.exports = function createClient(config) {
           },
         };
         // eslint-disable-next-line no-await-in-loop
-        const result = await documentClient.batchGet(params).promise();
+        const result = await doWithRetries(documentClient.batchGet(params).promise());
         results.push(...result.Responses[tableName(config.name)]);
       }
       return results;
@@ -154,7 +177,7 @@ module.exports = function createClient(config) {
         };
         batches.push(params);
       }
-      await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
+      await doWithRetries(Promise.all(batches.map((params) => documentClient.batchWrite(params).promise())));
     },
     batchDelete: async (keys) => {
       const batches = [];
@@ -173,7 +196,7 @@ module.exports = function createClient(config) {
         };
         batches.push(params);
       }
-      await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
+      await doWithRetries(Promise.all(batches.map((params) => documentClient.batchWrite(params).promise())));
     },
   };
 };

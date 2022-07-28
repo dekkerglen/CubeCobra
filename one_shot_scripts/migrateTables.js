@@ -14,6 +14,8 @@ const blog = require('../dynamo/models/blog');
 const cardHistory = require('../dynamo/models/cardhistory');
 const card = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
+const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
+const draft = require('../dynamo/models/draft');
 
 const Video = require('../models/old/video');
 const Episode = require('../models/old/podcastEpisode');
@@ -25,6 +27,8 @@ const Blog = require('../models/blog');
 const CardHistory = require('../models/cardhistory');
 const CardRating = require('../models/cardrating');
 const Comment = require('../models/comment');
+const CubeAnalytic = require('../models/cubeAnalytic');
+const Deck = require('../models/deck');
 
 const migrations = [
   // {
@@ -70,16 +74,28 @@ const migrations = [
   //     [card.convertCardHistory, card.updateWithCubedWith],
   //   ],
   // }
+  // {
+  //   source: Comment,
+  //   conversions: [
+  //     [comment.convertComment, comment.batchPut],
+  //   ],
+  // },
+  // {
+  //   source: CubeAnalytic,
+  //   conversions: [
+  //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
+  //   ],
+  // },
   {
-    source: Comment,
+    source: Deck,
     conversions: [
-      [comment.convertComment, comment.batchPut],
+      [draft.convertDeck, draft.batchPut],
     ],
   }
 ];
 
 const batchSize = 25;
-const skip = 0;
+const skip = 6750;
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);
@@ -88,12 +104,12 @@ const skip = 0;
     const mongo = migration.source;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
-    const count = await mongo.countDocuments();
+    const count = 485958;// await mongo.countDocuments();
     const cursor = mongo.find().skip(skip).lean().cursor();
 
     // batch them by batchSize
     for (let i = skip; i < count; i += batchSize) {
-      console.log(`Finished: ${i} of ${count} items`);
+      console.log(`${mongo.collection.collectionName}: Finished: ${i} of ${count} items`);
       const items = [];
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {

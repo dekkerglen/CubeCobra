@@ -12,6 +12,8 @@ const blog = require('../dynamo/models/blog');
 const cardHistory = require('../dynamo/models/cardhistory');
 const cardMetadata = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
+const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
+const draft = require('../dynamo/models/draft');
 
 const tables = [
   // content,
@@ -24,7 +26,9 @@ const tables = [
   // blog,
   //cardHistory,
   // cardMetadata,
-  comment
+  //comment,
+  // cubeAnalytic,
+  draft,
 ];
 
 (async () => {
