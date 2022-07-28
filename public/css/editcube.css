@@ -12,8 +12,8 @@
 }
 
 .changelist-container {
-	max-height: 19rem;
 	overflow: auto;
+	max-height: 500px;
 }
 
 .changelist {

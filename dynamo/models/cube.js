@@ -141,7 +141,7 @@ module.exports = {
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 
     const main = newCards.Mainboard;
-    newMetadata.CardCount = main.cards.length;
+    newMetadata.CardCount = main.length;
 
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
     const newHashes = getHashRowsForCube(newMetadata, newCards);
@@ -158,9 +158,6 @@ module.exports = {
       return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
     });
 
-    console.log(hashesToDelete);
-    console.log(hashesToPut);
-
     // put hashes to delete
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: id })));
     await cubeHash.batchPut(hashesToPut);
@@ -172,6 +169,7 @@ module.exports = {
       }
     }
 
+    await client.put(newMetadata);
     await s3
       .upload({
         Bucket: process.env.DATA_BUCKET,

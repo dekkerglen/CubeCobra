@@ -1,6 +1,7 @@
 const shuffleSeed = require('shuffle-seed');
 const { winston } = require('./cloudwatch');
 const Notification = require('../dynamo/models/notification');
+const cardutil = require('../dist/utils/Card');
 
 const carddb = require('./cards');
 
@@ -171,7 +172,26 @@ function flatten(arr, n) {
 // artist
 // id
 function getImageData(imagename) {
-  return carddb.imagedict[imagename.toLowerCase()] || carddb.imagedict['doubling cube [10e-321]'];
+  const exact = carddb.imagedict[imagename.toLowerCase()];
+
+  if (exact) {
+    return exact;
+  }
+
+  const name = cardutil.normalizeName(imagename);
+  const ids = carddb.nameToId[name];
+  if (ids) {
+    const byName = carddb.cardFromId(ids[0]);
+    if (byName._id) {
+      return {
+        uri: byName.art_crop,
+        artist: byName.artist,
+        id: byName._id,
+      };
+    }
+  }
+
+  return carddb.imagedict['doubling cube [10e-321]'];
 }
 
 module.exports = {

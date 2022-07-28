@@ -43,7 +43,7 @@ const MassBuyButton = ({ cards, ...props }) => (
         .filter((x) => x)
         .join('||')}
     />
-    <Button type="submit" color="secondary" {...props} />
+    <Button type="submit" color="primary" {...props} />
   </Form>
 );
 

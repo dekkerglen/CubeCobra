@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
@@ -31,7 +31,7 @@ CubeNavItem.defaultProps = {
 };
 
 const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict }) => {
-  const subtitle = getCubeDescription(cube);
+  const subtitle = useMemo(() => getCubeDescription(cube), [cube]);
   return (
     <CubeContextProvider initialCube={cube} cards={cards} loadVersionDict={loadVersionDict}>
       <div className="mb-3">

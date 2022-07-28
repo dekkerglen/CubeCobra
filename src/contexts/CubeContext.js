@@ -8,6 +8,7 @@ import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
 import { normalizeName } from 'utils/Card';
 import CardModal from 'components/CardModal';
+import GroupModal from 'components/GroupModal';
 
 const CubeContext = React.createContext({
   cube: {},
@@ -17,6 +18,20 @@ const CubeContext = React.createContext({
   updateCubeCard: () => {},
   updateCubeCards: () => {},
 });
+
+export const TAG_COLORS = [
+  ['None', null],
+  ['Red', 'red'],
+  ['Brown', 'brown'],
+  ['Orange', 'orange'],
+  ['Yellow', 'yellow'],
+  ['Green', 'green'],
+  ['Turquoise', 'turquoise'],
+  ['Blue', 'blue'],
+  ['Purple', 'purple'],
+  ['Violet', 'violet'],
+  ['Pink', 'pink'],
+];
 
 const getDetails = async (cardId) => {
   console.log(cardId);
@@ -35,6 +50,7 @@ const getDetails = async (cardId) => {
 };
 
 export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict }) => {
+  const user = useContext(UserContext);
   const [cube, setCube] = useState({
     ...initialCube,
     cards,
@@ -43,6 +59,10 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [changes, setChanges] = useLocalStorage(`cube-changes-${cube.Id}`, {});
   const [modalSelection, setModalSelection] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [tagColors, setTagColors] = useState(cube.TagColors);
+  const [showTagColors, setShowTagColors] = useState(user ? !user.HideTagColors : false);
+  const [alerts, setAlerts] = useState([]);
+
   const toggle = useCallback(
     (event) => {
       if (event) {
@@ -51,6 +71,47 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       setModalOpen(!modalOpen);
     },
     [modalOpen],
+  );
+
+  const updateTagColors = useCallback(
+    (colors) => {
+      return csrfFetch(`/cube/api/savetagcolors/${cube.Id}`, {
+        method: 'POST',
+        body: JSON.stringify(tagColors),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then((response) => {
+        if (response.ok) {
+          setTagColors(colors);
+        } else {
+          console.error('Request failed.');
+        }
+      });
+    },
+    [cube.Id, tagColors],
+  );
+
+  const updateShowTagColors = useCallback(
+    (showColors) => {
+      return csrfFetch('/cube/api/saveshowtagcolors', {
+        method: 'POST',
+        body: JSON.stringify({
+          show_tag_colors: showColors,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then((response) => {
+        if (response.ok) {
+          setShowTagColors(showColors);
+          window.globalShowTagColors = showTagColors;
+        } else {
+          console.error('Request failed.');
+        }
+      });
+    },
+    [showTagColors],
   );
 
   useEffect(() => {
@@ -92,8 +153,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     };
     getData();
   }, [cube.cards, loadVersionDict]);
-
-  const user = useContext(UserContext);
 
   const addCard = useCallback(
     (cardId, board) => {
@@ -173,6 +232,11 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
   const editCard = useCallback(
     (index, card, board) => {
+      // don't push an edit if this card is marked for delete
+      if (changes[board] && changes[board].removes && changes[board].removes.some((remove) => remove.index === index)) {
+        return;
+      }
+
       const newChanges = JSON.parse(JSON.stringify(changes));
 
       if (!newChanges[board]) {
@@ -232,6 +296,15 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const removeCard = useCallback(
     (index, board) => {
       const newChanges = JSON.parse(JSON.stringify(changes));
+
+      // if this card has already been removed, don't remove it again
+      if (
+        newChanges[board] &&
+        newChanges[board].removes &&
+        newChanges[board].removes.some((remove) => remove.index === index)
+      ) {
+        return;
+      }
 
       if (!newChanges[board]) {
         newChanges[board] = {};
@@ -351,47 +424,192 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setChanges({});
   }, [setChanges]);
 
-  const commitChanges = useCallback(async () => {
-    const newCards = JSON.parse(JSON.stringify(changedCards));
+  const commitChanges = useCallback(
+    async (title, blog) => {
+      const result = await csrfFetch(`/cube/api/commit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          blog,
+          changes,
+          id: cube.Id,
+        }),
+      });
 
-    for (const [board] of Object.entries(changes)) {
-      // swaps
-      if (changes[board].swaps) {
-        for (const swap of changes[board].swaps) {
-          newCards[board][swap.index] = swap.card;
-          newCards[board][swap.index].details = await getDetails(swap.card.cardID);
+      if (result.status === 200) {
+        const newCards = JSON.parse(JSON.stringify(changedCards));
+
+        for (const [board] of Object.entries(changes)) {
+          // swaps
+          if (changes[board].swaps) {
+            for (const swap of changes[board].swaps) {
+              newCards[board][swap.index] = swap.card;
+              newCards[board][swap.index].details = await getDetails(swap.card.cardID);
+            }
+          }
+          // removes
+          if (changes[board].removes) {
+            // sort removals desc
+            const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
+            for (const remove of sorted) {
+              newCards[board].splice(remove.index, 1);
+            }
+          }
+          // adds
+          if (changes[board].adds) {
+            for (const add of changes[board].adds) {
+              newCards[board].push({
+                ...add,
+              });
+              newCards[board][newCards[board].length - 1].details = await getDetails(add.cardID);
+            }
+          }
+
+          for (let i = 0; i < newCards[board].length; i++) {
+            newCards[board][i].index = i;
+            newCards[board][i].board = board;
+          }
+        }
+
+        setChanges({});
+        setModalSelection([]);
+        setCube({
+          ...cube,
+          cards: newCards,
+        });
+      } else {
+        console.log(result);
+        setAlerts([{ type: 'error', message: `Failed to commit changes: ${result.message}` }]);
+      }
+    },
+    [cube, changedCards, setCube, setChanges],
+  );
+
+  const bulkEditCard = useCallback(
+    (list) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      for (const edit of list) {
+        if (!newChanges[edit.board]) {
+          newChanges[edit.board] = {};
+        }
+        if (!newChanges[edit.board].edits) {
+          newChanges[edit.board].edits = [];
+        }
+
+        // don't push an edit if this card is marked for delete
+        if (
+          !changes[edit.board] ||
+          !changes[edit.board].removes ||
+          !changes[edit.board].removes.some((remove) => remove.index === edit.index)
+        ) {
+          const card = cube.cards[edit.board][edit.index];
+
+          const oldCard = JSON.parse(JSON.stringify(cube.cards[edit.board][edit.index]));
+          delete oldCard.details;
+          delete oldCard.index;
+          delete oldCard.board;
+
+          const newCard = {
+            ...card,
+            ...edit,
+            markedForDelete: false,
+            editIndex: newChanges[edit.board].edits.length,
+          };
+          delete newCard.details;
+          delete newCard.index;
+          delete newCard.board;
+
+          // if this card has already been edited, overwrite the edit
+          const index = newChanges[edit.board].edits.findIndex((e) => e.index === edit.index);
+          if (index !== -1) {
+            newChanges[edit.board].edits[index].newCard = newCard;
+          } else {
+            newChanges[edit.board].edits.push({ index: edit.index, newCard, oldCard });
+          }
         }
       }
-      // removes
-      if (changes[board].removes) {
-        // sort removals desc
-        const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
-        for (const remove of sorted) {
-          newCards[board].splice(remove.index, 1);
+      setChanges(newChanges);
+    },
+    [cube, changes, setChanges],
+  );
+
+  const bulkRevertEdit = useCallback(
+    (list) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      for (const edit of list) {
+        if (!newChanges[edit.board]) {
+          newChanges[edit.board] = {};
         }
-      }
-      // adds
-      if (changes[board].adds) {
-        for (const add of changes[board].adds) {
-          newCards[board].push({
-            ...add,
-          });
-          newCards[board][newCards[board].length - 1].details = await getDetails(add.cardID);
+        if (!newChanges[edit.board].edits) {
+          newChanges[edit.board].edits = [];
+        }
+
+        const editIndex = newChanges[edit.board].edits.findIndex((e) => e.index === edit.index);
+        if (editIndex !== -1) {
+          newChanges[edit.board].edits.splice(editIndex, 1);
         }
       }
 
-      for (let i = 0; i < newCards[board].length; i++) {
-        newCards[board][i].index = i;
-        newCards[board][i].board = board;
-      }
-    }
+      setChanges(newChanges);
+    },
+    [cube, changes, setChanges],
+  );
 
-    setCube({
-      ...cube,
-      cards: newCards,
-    });
-    setChanges({});
-  }, [cube, changedCards, setCube, setChanges]);
+  const bulkRemoveCard = useCallback(
+    (list) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      for (const remove of list) {
+        if (!newChanges[remove.board]) {
+          newChanges[remove.board] = {};
+        }
+        if (!newChanges[remove.board].removes) {
+          newChanges[remove.board].removes = [];
+        }
+
+        // if this card has been edited, remove the edit
+        if (newChanges[remove.board].edits) {
+          const editIndex = newChanges[remove.board].edits.findIndex((e) => e.index === remove.index);
+          if (editIndex !== -1) {
+            newChanges[remove.board].edits.splice(editIndex, 1);
+          }
+        }
+
+        newChanges[remove.board].removes.push({ index: remove.index });
+      }
+
+      setChanges(newChanges);
+    },
+    [cube, changes, setChanges],
+  );
+
+  const bulkRevertRemove = useCallback(
+    (list) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      for (const remove of list) {
+        if (!newChanges[remove.board]) {
+          newChanges[remove.board] = {};
+        }
+        if (!newChanges[remove.board].removes) {
+          newChanges[remove.board].removes = [];
+        }
+
+        const removeIndex = newChanges[remove.board].removes.findIndex((e) => e.index === remove.index);
+        if (removeIndex !== -1) {
+          newChanges[remove.board].removes.splice(removeIndex, 1);
+        }
+      }
+
+      setChanges(newChanges);
+    },
+    [cube, changes, setChanges],
+  );
 
   const canEdit = user && cube.Owner === user.Id;
 
@@ -407,6 +625,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       }),
     [cards],
   );
+
   const value = {
     cube,
     changedCards,
@@ -428,6 +647,16 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     toggle,
     setModalSelection,
     setModalOpen,
+    tagColors,
+    showTagColors,
+    updateTagColors,
+    updateShowTagColors,
+    bulkEditCard,
+    bulkRevertEdit,
+    bulkRemoveCard,
+    bulkRevertRemove,
+    alerts,
+    setAlerts,
   };
 
   return (
@@ -445,6 +674,22 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             revertEdit={revertEdit}
             revertRemove={revertRemove}
             removeCard={removeCard}
+            tagColors={tagColors}
+          />
+        )}
+        {modalSelection && Array.isArray(modalSelection) && (
+          <GroupModal
+            cards={modalSelection.map((s) => changedCards[s.board][s.index])}
+            isOpen={modalOpen}
+            toggle={toggle}
+            canEdit={canEdit}
+            bulkEditCard={bulkEditCard}
+            bulkRevertEdit={bulkRevertEdit}
+            bulkRemoveCard={bulkRemoveCard}
+            bulkRevertRemove={bulkRevertRemove}
+            removeCard={removeCard}
+            setModalSelection={setModalSelection}
+            tagColors={tagColors}
           />
         )}
       </>

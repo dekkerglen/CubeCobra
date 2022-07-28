@@ -11,21 +11,10 @@ import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SortContextProvider } from 'contexts/SortContext';
-import { TAG_COLORS, TagContextProvider } from 'contexts/TagContext';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const deduplicateTags = (tagColors) => {
-  const used = new Set();
-  const result = [];
-  for (const tagColor of tagColors) {
-    if (!used.has(tagColor.tag)) {
-      result.push(tagColor);
-      used.add(tagColor.tag);
-    }
-  }
-  return result;
-};
+import { TAG_COLORS } from 'contexts/CubeContext';
 
 const CubeComparePage = ({
   cards,
@@ -40,38 +29,26 @@ const CubeComparePage = ({
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState(null);
 
-  const defaultTagSet = new Set([].concat(...cards.map((card) => card.tags)));
-  const defaultTags = [...defaultTagSet].map((tag) => ({
-    id: tag,
-    text: tag,
-  }));
   const filteredCards = filter ? cards.filter(filter) : cards;
   return (
     <MainLayout loginCallback={loginCallback}>
       <SortContextProvider defaultSorts={defaultSorts}>
         <DisplayContextProvider>
-          <TagContextProvider
-            cubeID={cube._id}
-            defaultTagColors={deduplicateTags(defaultTagColors)}
-            defaultShowTagColors={defaultShowTagColors}
-            defaultTags={defaultTags}
-          >
-            <CubeCompareNavbar
-              cubeA={cube}
-              cubeAID={cube._id}
-              cubeB={cubeB}
-              cubeBID={cubeB._id}
-              cards={filteredCards}
-              openCollapse={openCollapse}
-              setOpenCollapse={setOpenCollapse}
-              filter={filter}
-              setFilter={setFilter}
-            />
-            <DynamicFlash />
-            <ErrorBoundary>
-              <CompareView cards={filteredCards} {...props} />
-            </ErrorBoundary>
-          </TagContextProvider>
+          <CubeCompareNavbar
+            cubeA={cube}
+            cubeAID={cube._id}
+            cubeB={cubeB}
+            cubeBID={cubeB._id}
+            cards={filteredCards}
+            openCollapse={openCollapse}
+            setOpenCollapse={setOpenCollapse}
+            filter={filter}
+            setFilter={setFilter}
+          />
+          <DynamicFlash />
+          <ErrorBoundary>
+            <CompareView cards={filteredCards} {...props} />
+          </ErrorBoundary>
         </DisplayContextProvider>
       </SortContextProvider>
     </MainLayout>

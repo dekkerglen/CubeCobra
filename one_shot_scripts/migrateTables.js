@@ -9,6 +9,11 @@ const notification = require('../dynamo/models/notification');
 const user = require('../dynamo/models/user');
 const cube = require('../dynamo/models/cube');
 const cubeHash = require('../dynamo/models/cubeHash');
+const changelog = require('../dynamo/models/changelog');
+const blog = require('../dynamo/models/blog');
+const cardHistory = require('../dynamo/models/cardhistory');
+const card = require('../dynamo/models/cardMetadata');
+const comment = require('../dynamo/models/comment');
 
 const Video = require('../models/old/video');
 const Episode = require('../models/old/podcastEpisode');
@@ -16,6 +21,10 @@ const Podcast = require('../models/old/podcast');
 const Article = require('../models/old/article');
 const User = require('../models/old/user');
 const Cube = require('../models/old/cube');
+const Blog = require('../models/blog');
+const CardHistory = require('../models/cardhistory');
+const CardRating = require('../models/cardrating');
+const Comment = require('../models/comment');
 
 const migrations = [
   // {
@@ -41,20 +50,36 @@ const migrations = [
   //     [user.convertUser, user.batchPut],
   //   ],
   // },
+  // {
+  //   source: Blog,
+  //   conversions: [
+  //     [changelog.getChangelogFromBlog, changelog.batchPut],
+  //     [blog.convertBlog, blog.batchPut],
+  //   ],
+  // },
+  // {
+  //   source: CardRating,
+  //   conversions: [
+  //     [card.convertCardRating, card.batchPut],
+  //   ]
+  // },
+  // {
+  //   source: CardHistory,
+  //   conversions: [
+  //     [cardHistory.convertCardHistory, cardHistory.batchPut],
+  //     [card.convertCardHistory, card.updateWithCubedWith],
+  //   ],
+  // }
   {
-    source: Cube,
+    source: Comment,
     conversions: [
-      [cube.convertCubeToMetadata, cube.batchPut],
-      [cube.convertCubeToCards, cube.batchPutCards],
-      [
-        (c) => cubeHash.getHashRowsForCube(cube.convertCubeToMetadata(c), cube.convertCubeToCards(c)),
-        cubeHash.batchPut,
-      ],
+      [comment.convertComment, comment.batchPut],
     ],
-  },
+  }
 ];
 
 const batchSize = 25;
+const skip = 0;
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);
@@ -64,10 +89,10 @@ const batchSize = 25;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
     const count = await mongo.countDocuments();
-    const cursor = mongo.find().lean().cursor();
+    const cursor = mongo.find().skip(skip).lean().cursor();
 
     // batch them by batchSize
-    for (let i = 0; i < count; i += batchSize) {
+    for (let i = skip; i < count; i += batchSize) {
       console.log(`Finished: ${i} of ${count} items`);
       const items = [];
       for (let j = 0; j < batchSize; j++) {

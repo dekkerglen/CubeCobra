@@ -175,11 +175,13 @@ export function getCubeDescription(cube) {
   const overridePrefixes =
     cube.CategoryPrefixes && cube.CategoryPrefixes.length > 0 ? `${cube.CategoryPrefixes.join(' ')} ` : '';
 
+  const { CardCount } = cube;
+
   if (cube.CategoryOverride) {
-    return `${cube.CardCount} Card ${overridePrefixes}${cube.CategoryOverride} Cube`;
+    return `${CardCount} Card ${overridePrefixes}${cube.CategoryOverride} Cube`;
   }
 
-  return `${cube.CardCount} Card ${overridePrefixes}Cube`;
+  return `${CardCount} Card ${overridePrefixes}Cube`;
 }
 
 export function isInternalURL(to) {
@@ -207,6 +209,46 @@ export function isSamePageURL(to) {
     return false;
   }
 }
+export function getCardColorClass(card) {
+  const type = card.type_line || card.details.type;
+  const colors = card.colors || card.details.color_identity;
+  if (type.toLowerCase().includes('land')) {
+    return 'lands';
+  }
+  if (colors.length === 0) {
+    return 'colorless';
+  }
+  if (colors.length > 1) {
+    return 'multi';
+  }
+  if (colors.length === 1 && [...'WUBRGC'].includes(colors[0])) {
+    return {
+      W: 'white',
+      U: 'blue',
+      B: 'black',
+      R: 'red',
+      G: 'green',
+      C: 'colorless',
+    }[colors[0]];
+  }
+  return 'colorless';
+}
+
+export function getCardTagColorClass(tagColors, card) {
+  const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
+  if (tagColor && tagColor.color) {
+    return `tag-color tag-${tagColor.color}`;
+  }
+  return getCardColorClass(card);
+}
+
+export function getTagColorClass(tagColors, tag) {
+  const tagColor = tagColors.find((tagColorB) => tag === tagColorB.tag);
+  if (tagColor && tagColor.color) {
+    return `tag-color tag-${tagColor.color}`;
+  }
+  return 'tag-no-color';
+}
 
 export default {
   arraysEqual,
@@ -227,4 +269,7 @@ export default {
   isInternalURL,
   toNullableInt,
   isSamePageURL,
+  getCardColorClass,
+  getCardTagColorClass,
+  getTagColorClass,
 };

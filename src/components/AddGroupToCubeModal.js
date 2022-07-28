@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import { csrfFetch } from 'utils/CSRF';
 import withAutocard from 'components/WithAutocard';
-import { getCardColorClass } from 'contexts/TagContext';
 import {
   Modal,
   ModalHeader,
@@ -18,6 +17,7 @@ import {
   ListGroupItem,
   Input,
 } from 'reactstrap';
+import { getCardColorClass } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
 

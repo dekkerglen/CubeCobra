@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useCallback, useContext, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 
@@ -21,6 +22,7 @@ import Changelist from 'components/Changelist';
 import DisplayContext from 'contexts/DisplayContext';
 import CubeContext from 'contexts/CubeContext';
 import TextEntry from 'components/TextEntry';
+import useLocalStorage from 'hooks/useLocalStorage';
 
 export const getCard = async (defaultprinting, name, setAlerts) => {
   if (name && name.length > 0) {
@@ -59,19 +61,33 @@ export const getCard = async (defaultprinting, name, setAlerts) => {
   return null;
 };
 
+const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
+
 const EditCollapse = ({ cubeView, ...props }) => {
-  const [alerts, setAlerts] = useState([]);
-  const [postContent, setPostContent] = useState('');
   const [addValue, setAddValue] = useState('');
-  const [activeBoard, setActiveBoard] = useState('Mainboard');
   const [removeValue, setRemoveValue] = useState('');
-  const [specifyEdition, setSpecifyEdition] = useState(false);
   const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
   const addRef = useRef();
   const removeRef = useRef();
 
-  const { cube, changes, addCard, removeCard, swapCard, changedCards, discardAllChanges, commitChanges } =
-    useContext(CubeContext);
+  const {
+    cube,
+    changes,
+    addCard,
+    removeCard,
+    swapCard,
+    changedCards,
+    discardAllChanges,
+    commitChanges,
+    alerts,
+    setAlerts,
+  } = useContext(CubeContext);
+
+  const [postContent, setPostContent] = useLocalStorage(`${cube.Id}-blogpost`, DEFAULT_BLOG_TITLE);
+  const [postTitle, setPostTitle] = useLocalStorage(`${cube.Id}-blogtitle`, '');
+  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.Id}-useMaybeboard`, 'Mainboard');
+  const [useBlog, setUseBlog] = useLocalStorage(`${cube.Id}-useBlog`, true);
+  const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.Id}-specifyEdition`, false);
 
   const handleAdd = useCallback(
     async (event, match) => {
@@ -81,7 +97,10 @@ const EditCollapse = ({ cubeView, ...props }) => {
         if (!card) {
           return;
         }
-        addCard({ cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.DefaultStatus }, activeBoard);
+        addCard(
+          { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.DefaultStatus },
+          showMaybeboard ? activeBoard : 'Mainboard',
+        );
         setAddValue('');
 
         addRef.current.focus();
@@ -89,7 +108,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         console.error(e);
       }
     },
-    [cube.DefaultPrinting, cube.DefaultStatus, addCard, activeBoard],
+    [cube.DefaultPrinting, cube.DefaultStatus, setAlerts, addCard, showMaybeboard, activeBoard],
   );
 
   const handleRemoveReplace = useCallback(
@@ -98,7 +117,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
-        const board = changedCards[activeBoard];
+        const board = changedCards[showMaybeboard ? activeBoard : 'Mainboard'];
         for (let i = 0; i < board.length; i++) {
           if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
             removeIndex = i;
@@ -108,7 +127,10 @@ const EditCollapse = ({ cubeView, ...props }) => {
         if (removeIndex === -1) {
           setAlerts((items) => [
             ...items,
-            { color: 'danger', message: `Couldn't find a card with name "${match}" in "${activeBoard}".` },
+            {
+              color: 'danger',
+              message: `Couldn't find a card with name "${match}" in "${showMaybeboard ? activeBoard : 'Mainboard'}".`,
+            },
           ]);
           return;
         }
@@ -121,10 +143,10 @@ const EditCollapse = ({ cubeView, ...props }) => {
           swapCard(
             removeIndex,
             { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.DefaultStatus },
-            activeBoard,
+            showMaybeboard ? activeBoard : 'Mainboard',
           );
         } else {
-          removeCard(removeIndex, activeBoard);
+          removeCard(removeIndex, showMaybeboard ? activeBoard : 'Mainboard');
         }
 
         setAddValue('');
@@ -138,16 +160,23 @@ const EditCollapse = ({ cubeView, ...props }) => {
         console.error(e);
       }
     },
-    [addValue, changedCards, activeBoard, cube.DefaultPrinting, cube.DefaultStatus, swapCard, removeCard],
+    [
+      addValue,
+      changedCards,
+      showMaybeboard,
+      activeBoard,
+      cube.DefaultPrinting,
+      cube.DefaultStatus,
+      swapCard,
+      removeCard,
+    ],
   );
 
-  const submit = useCallback(
-    async (event) => {
-      event.preventDefault();
-      commitChanges();
-    },
-    [commitChanges],
-  );
+  const submit = useCallback(async () => {
+    commitChanges(postContent, postTitle);
+    setPostTitle(DEFAULT_BLOG_TITLE);
+    setPostContent('');
+  }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (
     <Collapse className="px-3" {...props}>
@@ -159,7 +188,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
       <Row className="mb-2">
         {showMaybeboard && (
           <Col xs={12} md={3}>
-            <InputGroup>
+            <InputGroup className="mb-1">
               <Input disabled value="Board" />
               <Input value={activeBoard} onChange={(e) => setActiveBoard(e.target.value)} name="select" type="select">
                 <option>Mainboard</option>
@@ -169,7 +198,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </Col>
         )}
         <Col xs={12} md={3}>
-          <InputGroup>
+          <InputGroup className="mb-1">
             <AutocompleteInput
               treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
               treePath="cardnames"
@@ -190,7 +219,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </InputGroup>
         </Col>
         <Col xs={12} md={4}>
-          <InputGroup className="flex-nowrap">
+          <InputGroup className="flex-nowrap mb-1">
             <AutocompleteInput
               cubeId={cube._id}
               treeUrl={`/cube/api/cubecardnames/${cube.Id}`}
@@ -218,7 +247,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
       </Row>
       <Row className="mb-2">
         <Col xs={12} md={2}>
-          <InputGroup>
+          <InputGroup className="mb-1">
             <InputGroupText>
               <Input
                 addon
@@ -232,7 +261,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
           </InputGroup>
         </Col>
         <Col xs={12} md={2}>
-          <InputGroup>
+          <InputGroup className="mb-1">
             <InputGroupText>
               <Input
                 addon
@@ -245,35 +274,61 @@ const EditCollapse = ({ cubeView, ...props }) => {
             <Input disabled value="Use Maybeboard" />
           </InputGroup>
         </Col>
+        <Col xs={12} md={2}>
+          <InputGroup className="mb-1">
+            <InputGroupText>
+              <Input
+                addon
+                type="checkbox"
+                aria-label="Checkbox for following text input"
+                checked={useBlog}
+                onChange={() => setUseBlog(!useBlog)}
+              />
+            </InputGroupText>
+            <Input disabled value="Create Blog Post" />
+          </InputGroup>
+        </Col>
       </Row>
       <Collapse isOpen={Object.entries(changes).length > 0} className="pt-1">
         <Row>
-          <Col>
+          <Col xs="12" md="6">
             <Changelist />
           </Col>
-          <Col>
-            <h6>Blog Post</h6>
-            <FormGroup>
-              <Label className="visually-hidden">Blog Title</Label>
-              <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
-            </FormGroup>
-            <FormGroup>
-              <Label className="visually-hidden">Blog Body</Label>
-              <TextEntry
-                name="blog"
-                value={postContent}
-                onChange={(event) => setPostContent(event.target.value)}
-                maxLength={10000}
-              />
-            </FormGroup>
-          </Col>
+          {useBlog && (
+            <Col xs="12" md="6">
+              <h6>Blog Post</h6>
+              <FormGroup>
+                <Label className="visually-hidden">Blog Title</Label>
+                <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
+              </FormGroup>
+              <FormGroup>
+                <Label className="visually-hidden">Blog Body</Label>
+                <TextEntry
+                  name="blog"
+                  value={postContent}
+                  onChange={(event) => setPostContent(event.target.value)}
+                  maxLength={10000}
+                />
+              </FormGroup>
+            </Col>
+          )}
         </Row>
         <Row className="mb-2">
-          <Col>
-            <Button color="accent" className="me-2" onClick={submit}>
+          <Col xs="6" md="3">
+            <Button color="accent" block className="me-2" onClick={submit}>
               Save Changes
             </Button>
-            <Button color="unsafe" onClick={discardAllChanges}>
+          </Col>
+          <Col xs="6" md="3">
+            <Button
+              color="unsafe"
+              block
+              onClick={() => {
+                discardAllChanges();
+                setPostTitle(DEFAULT_BLOG_TITLE);
+                setPostContent('');
+              }}
+            >
               Discard All
             </Button>
           </Col>

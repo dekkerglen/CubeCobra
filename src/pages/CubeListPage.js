@@ -7,11 +7,9 @@ import CubeListNavbar from 'components/CubeListNavbar';
 import CurveView from 'components/CurveView';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import GroupModal from 'components/GroupModal';
 import ListView from 'components/ListView';
 import { SortContextProvider } from 'contexts/SortContext';
 import TableView from 'components/TableView';
-import { TagContextProvider } from 'contexts/TagContext';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -22,14 +20,13 @@ import CubePropType from 'proptypes/CubePropType';
 const CubeListPageRaw = ({
   defaultFilterText,
   defaultView,
-  defaultShowTagColors,
   defaultPrimarySort,
   defaultSecondarySort,
   defaultTertiarySort,
   defaultQuaternarySort,
   defaultShowUnsorted,
 }) => {
-  const { cube, changedCards, canEdit } = useContext(CubeContext);
+  const { cube, changedCards } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', defaultView);
@@ -42,12 +39,6 @@ const CubeListPageRaw = ({
       tagList.push(...new Set([].concat(...list.map((card) => card.tags))));
     }
   }
-  const defaultTagSet = [...new Set(tagList)];
-
-  const defaultTags = [...defaultTagSet].map((tag) => ({
-    id: tag,
-    text: tag,
-  }));
 
   const filteredCards = useMemo(() => {
     if (filter) {
@@ -62,66 +53,56 @@ const CubeListPageRaw = ({
 
   return (
     <SortContextProvider defaultSorts={cube.DefaultSorts} showOther={!!cube.ShowUnsorted}>
-      <TagContextProvider
-        cubeID={cube.Id}
-        defaultTagColors={cube.TagColors}
-        defaultShowTagColors={defaultShowTagColors}
-        defaultTags={defaultTags}
-      >
-        <GroupModal cubeID={cube.Id} canEdit={canEdit}>
-          <CubeListNavbar
-            cubeView={cubeView}
-            setCubeView={setCubeView}
-            defaultPrimarySort={defaultPrimarySort}
-            defaultSecondarySort={defaultSecondarySort}
-            defaultTertiarySort={defaultTertiarySort}
-            defaultQuaternarySort={defaultQuaternarySort}
-            defaultShowUnsorted={defaultShowUnsorted}
-            sorts={sorts}
-            setSorts={setSorts}
-            defaultSorts={cube.DefaultSorts}
-            cubeDefaultShowUnsorted={cube.ShowUnsorted}
-            defaultFilterText={defaultFilterText}
-            filter={filter}
-            setFilter={setFilter}
-            cards={filteredCards}
-            className="mb-3"
-          />
-          <DynamicFlash />
-          {Object.entries(filteredCards)
-            .map(([boardname, boardcards]) => (
-              <ErrorBoundary key={boardname}>
-                {(showMaybeboard || boardname !== 'Maybeboard') && (
-                  <>
-                    {boardname !== 'Mainboard' && <h4>{boardname}</h4>}
-                    {boardcards.length === 0 &&
-                      (filter ? (
-                        <h5 className="mt-1 mb-3">No cards match filter.</h5>
-                      ) : (
-                        <h5 className="mt-1 mb-3">This board is empty.</h5>
-                      ))}
-                    {
-                      {
-                        table: <TableView cards={boardcards} />,
-                        spoiler: <VisualSpoiler cards={boardcards} />,
-                        curve: <CurveView cards={boardcards} />,
-                        list: <ListView cards={boardcards} />,
-                      }[cubeView]
-                    }
-                    {boardname === 'Maybeboard' && <hr />}
-                  </>
-                )}
-              </ErrorBoundary>
-            ))
-            .reverse()}
-        </GroupModal>
-      </TagContextProvider>
+      <CubeListNavbar
+        cubeView={cubeView}
+        setCubeView={setCubeView}
+        defaultPrimarySort={defaultPrimarySort}
+        defaultSecondarySort={defaultSecondarySort}
+        defaultTertiarySort={defaultTertiarySort}
+        defaultQuaternarySort={defaultQuaternarySort}
+        defaultShowUnsorted={defaultShowUnsorted}
+        sorts={sorts}
+        setSorts={setSorts}
+        defaultSorts={cube.DefaultSorts}
+        cubeDefaultShowUnsorted={cube.ShowUnsorted}
+        defaultFilterText={defaultFilterText}
+        filter={filter}
+        setFilter={setFilter}
+        cards={filteredCards}
+        className="mb-3"
+      />
+      <DynamicFlash />
+      {Object.entries(filteredCards)
+        .map(([boardname, boardcards]) => (
+          <ErrorBoundary key={boardname}>
+            {(showMaybeboard || boardname !== 'Maybeboard') && (
+              <>
+                {boardname !== 'Mainboard' && <h4>{boardname}</h4>}
+                {boardcards.length === 0 &&
+                  (filter ? (
+                    <h5 className="mt-1 mb-3">No cards match filter.</h5>
+                  ) : (
+                    <h5 className="mt-1 mb-3">This board is empty.</h5>
+                  ))}
+                {
+                  {
+                    table: <TableView cards={boardcards} />,
+                    spoiler: <VisualSpoiler cards={boardcards} />,
+                    curve: <CurveView cards={boardcards} />,
+                    list: <ListView cards={boardcards} />,
+                  }[cubeView]
+                }
+                {boardname === 'Maybeboard' && <hr />}
+              </>
+            )}
+          </ErrorBoundary>
+        ))
+        .reverse()}
     </SortContextProvider>
   );
 };
 
 CubeListPageRaw.propTypes = {
-  defaultShowTagColors: PropTypes.bool.isRequired,
   defaultFilterText: PropTypes.string.isRequired,
   defaultView: PropTypes.string.isRequired,
   defaultPrimarySort: PropTypes.string.isRequired,

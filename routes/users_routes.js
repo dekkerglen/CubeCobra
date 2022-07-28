@@ -471,7 +471,7 @@ router.get('/view/:id', async (req, res) => {
     const followers = await User.batchGet(user.UsersFollowing);
 
     for (const follower of followers) {
-      delete follower.UsersFollowing; // don't leak this info
+      // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }
@@ -561,7 +561,7 @@ router.get('/decks/:userid/:page', async (req, res) => {
     const followers = await User.batchGet(user.UsersFollowing);
 
     for (const follower of followers) {
-      delete follower.UsersFollowing; // don't leak this info
+      // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }
@@ -610,7 +610,7 @@ router.get('/blog/:userid/:page', async (req, res) => {
     const followers = await User.batchGet(user.UsersFollowing);
 
     for (const follower of followers) {
-      delete follower.UsersFollowing; // don't leak this info
+      // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }
@@ -790,7 +790,7 @@ router.get('/social', ensureAuth, async (req, res) => {
     const followedUsers = await User.batchGet(req.user.FollowedUsers);
 
     for (const follower of [...followers, ...followedUsers]) {
-      delete follower.UsersFollowing; // don't leak this info
+      // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }

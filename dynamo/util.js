@@ -87,6 +87,16 @@ module.exports = function createClient(config) {
         })
         .promise();
     },
+    getByKey: async (key) => {
+      return documentClient
+        .get({
+          TableName: tableName(config.name),
+          Key: {
+            ...key,
+          },
+        })
+        .promise();
+    },
     put: async (Item) => {
       if (!Item[config.partitionKey]) {
         Item = {

@@ -31,7 +31,6 @@ import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
-import GroupModalContext from 'contexts/GroupModalContext';
 import SortCollapse from 'components/SortCollapse';
 import SortContext from 'contexts/SortContext';
 import TagColorsModal from 'components/TagColorsModal';
@@ -238,7 +237,6 @@ const CubeListNavbar = ({
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
   const { canEdit, hasCustomImages, cube } = useContext(CubeContext);
-  const { groupModalCards, openGroupModal } = useContext(GroupModalContext);
   const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
   const {
     showCustomImages,
@@ -262,23 +260,9 @@ const CubeListNavbar = ({
     [setCubeView],
   );
 
-  const handleMassEdit = useCallback(
-    (event) => {
-      event.preventDefault();
-      if (cubeView === 'list') {
-        if (groupModalCards.length === 0) {
-          setSelectEmptyModalOpen(true);
-        } else if (groupModalCards.length === 1) {
-          // openCardModal(groupModalCards[0]);
-        } else if (groupModalCards.length > 1) {
-          openGroupModal();
-        }
-      } else {
-        setCubeView('list');
-      }
-    },
-    [groupModalCards, openGroupModal, cubeView, setCubeView],
-  );
+  const handleMassEdit = useCallback((event) => {
+    event.preventDefault();
+  }, []);
 
   const handleOpenCollapse = useCallback(
     (event) => {

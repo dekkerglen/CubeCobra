@@ -29,7 +29,6 @@ import {
   cardCmc,
   cardType,
   cardRarity,
-  cardImageBackUrl,
   cardColorIdentity,
   cardColorCategory,
   cardTags,
@@ -46,7 +45,18 @@ import CardPropType from 'proptypes/CardPropType';
 
 const LoadingInput = withLoading(Input, []);
 
-const CardModal = ({ isOpen, toggle, card, canEdit, versionDict, editCard, revertEdit, revertRemove, removeCard }) => {
+const CardModal = ({
+  isOpen,
+  toggle,
+  card,
+  canEdit,
+  versionDict,
+  editCard,
+  revertEdit,
+  revertRemove,
+  removeCard,
+  tagColors,
+}) => {
   const [versions, setVersions] = useState(null);
   const [tagInput, setTagInput] = useState('');
 
@@ -68,6 +78,7 @@ const CardModal = ({ isOpen, toggle, card, canEdit, versionDict, editCard, rever
 
   const updateField = useCallback(
     (field, value) => {
+      console.log(field, value);
       editCard(card.index, { ...card, [field]: value }, card.board);
     },
     [card, editCard],
@@ -296,7 +307,7 @@ const CardModal = ({ isOpen, toggle, card, canEdit, versionDict, editCard, rever
                   <Input
                     type="text"
                     name="imgBackUrl"
-                    value={cardImageBackUrl(card)}
+                    value={card.imgBackUrl || ''}
                     onChange={(event) => updateField('imgBackUrl', event.target.value)}
                   />
                 </InputGroup>
@@ -305,7 +316,7 @@ const CardModal = ({ isOpen, toggle, card, canEdit, versionDict, editCard, rever
                   <ColorChecksAddon
                     prefix="color"
                     values={cardColorIdentity(card)}
-                    onChange={(event) => updateField('color', event.target.value)}
+                    setValues={(colors) => updateField('colors', colors)}
                   />
                 </InputGroup>
                 <InputGroup className="mb-3">
@@ -358,6 +369,7 @@ const CardModal = ({ isOpen, toggle, card, canEdit, versionDict, editCard, rever
                     newTags.splice(newIndex, 0, tag);
                     updateField('tags', newTags);
                   }}
+                  tagColors={tagColors}
                 />
               </fieldset>
             </Col>
@@ -380,11 +392,13 @@ CardModal.propTypes = {
   revertEdit: PropTypes.func.isRequired,
   revertRemove: PropTypes.func.isRequired,
   removeCard: PropTypes.func.isRequired,
+  tagColors: PropTypes.arrayOf(PropTypes.string),
 };
 
 CardModal.defaultProps = {
   canEdit: false,
   versionDict: {},
+  tagColors: [],
 };
 
 export default CardModal;

@@ -7,14 +7,24 @@ const user = require('../dynamo/models/user');
 const notice = require('../dynamo/models/notice');
 const cubeMetadata = require('../dynamo/models/cube');
 const cubeHash = require('../dynamo/models/cubeHash');
+const cubeChangelog = require('../dynamo/models/changelog');
+const blog = require('../dynamo/models/blog');
+const cardHistory = require('../dynamo/models/cardhistory');
+const cardMetadata = require('../dynamo/models/cardMetadata');
+const comment = require('../dynamo/models/comment');
 
 const tables = [
   // content,
   // notification,
   // user,
   // notice,
-  cubeMetadata,
-  cubeHash,
+  //cubeMetadata,
+  //cubeHash,
+  // cubeChangelog,
+  // blog,
+  //cardHistory,
+  // cardMetadata,
+  comment
 ];
 
 (async () => {

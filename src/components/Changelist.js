@@ -3,14 +3,16 @@
 import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Row, Col, Spinner } from 'reactstrap';
+import { Row, Col, Spinner, Card } from 'reactstrap';
 
 import CubeContext from 'contexts/CubeContext';
 import withAutocard from 'components/WithAutocard';
+import withCardModal from 'components/WithCardModal';
 
 import { PlusCircleIcon, XCircleIcon, PlayIcon, GearIcon, ArrowRightIcon } from '@primer/octicons-react';
 
 const TextAutocard = withAutocard('span');
+const CardModalLink = withCardModal(TextAutocard);
 
 const RemoveButton = ({ onClick }) => (
   <a href="#" className="clickx" onClick={onClick}>
@@ -61,13 +63,24 @@ const Remove = ({ card, revert }) => (
     <span className="mx-1" style={{ color: 'red' }}>
       <XCircleIcon />
     </span>
-    <TextAutocard card={card}>{card.details.name}</TextAutocard>
+    <CardModalLink
+      card={card}
+      altClick={() => {
+        window.open(`/tool/card/${card.cardID}`);
+      }}
+      modalProps={{
+        card,
+      }}
+    >
+      {card.details.name}
+    </CardModalLink>
   </li>
 );
 
 Remove.propTypes = {
   revert: PropTypes.func.isRequired,
   card: PropTypes.shape({
+    cardID: PropTypes.string.isRequired,
     details: PropTypes.shape({
       name: PropTypes.string.isRequired,
     }).isRequired,
@@ -80,13 +93,24 @@ const Edit = ({ card, revert }) => (
     <span className="mx-1" style={{ color: 'orange' }}>
       <GearIcon />
     </span>
-    <TextAutocard card={card}>{card.details.name}</TextAutocard>
+    <CardModalLink
+      card={card}
+      altClick={() => {
+        window.open(`/tool/card/${card.cardID}`);
+      }}
+      modalProps={{
+        card,
+      }}
+    >
+      {card.details.name}
+    </CardModalLink>
   </li>
 );
 
 Edit.propTypes = {
   revert: PropTypes.func.isRequired,
   card: PropTypes.shape({
+    cardID: PropTypes.string.isRequired,
     details: PropTypes.shape({
       name: PropTypes.string.isRequired,
     }).isRequired,
@@ -136,9 +160,9 @@ Swap.propTypes = {
 const Changelist = () => {
   const { cube, changedCards, changes, revertAdd, revertRemove, revertSwap, revertEdit } = useContext(CubeContext);
   return (
-    <>
+    <div>
       {Object.entries(changes).map(([board, { adds, removes, swaps, edits }]) => (
-        <div key={board}>
+        <div key={board} className="mb-2">
           <h6>
             <Row>
               <Col>{board} Changelist</Col>
@@ -150,7 +174,7 @@ const Changelist = () => {
               </Col>
             </Row>
           </h6>
-          <div className="changelist-container mb-2">
+          <Card className="changelist-container p-2">
             <ul className="changelist">
               {adds &&
                 adds.map((card, index) => (
@@ -182,10 +206,10 @@ const Changelist = () => {
                   />
                 ))}
             </ul>
-          </div>
+          </Card>
         </div>
       ))}
-    </>
+    </div>
   );
 };
 

@@ -14,7 +14,6 @@ const UserPreview = ({ user }) => {
   const handleClick = useCallback((event) => {
     window.location.href = event.currentTarget.getAttribute('data-href');
   }, []);
-  console.log(user);
 
   const followers = (user.UsersFollowing || []).length;
   return (

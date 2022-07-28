@@ -812,4 +812,52 @@ router.post('/imagedata', async (req, res) => {
   });
 });
 
+router.post('/commit', async (req, res) => {
+  const { id, changes } = req.body;
+
+  const cube = await Cube.getById(id);
+
+  if (cube.Owner !== req.user.Id) {
+    return res.status(403).send({
+      success: 'false',
+      message: 'Unauthorized',
+    });
+  }
+
+  // TODO: blogpost
+
+  const cards = await Cube.getCards(cube.Id);
+
+  for (const [board] of Object.entries(changes)) {
+    // swaps
+    if (changes[board].swaps) {
+      for (const swap of changes[board].swaps) {
+        cards[board][swap.index] = swap.card;
+      }
+    }
+    // removes
+    if (changes[board].removes) {
+      // sort removals desc
+      const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
+      for (const remove of sorted) {
+        cards[board].splice(remove.index, 1);
+      }
+    }
+    // adds
+    if (changes[board].adds) {
+      for (const add of changes[board].adds) {
+        cards[board].push({
+          ...add,
+        });
+      }
+    }
+  }
+
+  await Cube.updateCards(cube.Id, cards);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
 module.exports = router;

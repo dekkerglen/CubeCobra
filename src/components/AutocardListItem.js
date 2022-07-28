@@ -1,9 +1,9 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import cx from 'classnames';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
+import { getCardColorClass } from 'utils/Util';
 
-import TagContext from 'contexts/TagContext';
 import withAutocard from 'components/WithAutocard';
 
 const AutocardDiv = withAutocard('li');
@@ -11,14 +11,8 @@ const AutocardDiv = withAutocard('li');
 const CARD_NAME_FALLBACK = 'Unidentified Card';
 const CARD_ID_FALLBACK = 'undefined';
 
-/** 2020-11-18 struesdell:
- *  Added noOp callback to allow props to fall through without passing undefined to children.
- */
 const noOp = () => undefined;
 
-/** 2020-11-18 struesdell:
- *  Pulled out className constants for maintainability
- */
 const styles = {
   root: 'card-list-item list-group-item',
   name: 'card-list-item_name',
@@ -26,11 +20,6 @@ const styles = {
 };
 
 const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...props }) => {
-  const { cardColorClass } = useContext(TagContext);
-
-  /** 2020-11-18 struesdell:
-   *  Replaced destructuring with `useMemo` tuple to minimize rerenders
-   */
   const [cardName, cardId] = useMemo(
     () => (card && card.details ? [card.details.name, card.details._id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
@@ -50,11 +39,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
     [openCardToolWindow],
   );
 
-  /** 2020-11-18 struesdell:
-   *  Memoized card color (WUBRG) derivation to minimize rerenders
-   *  @note: tag coloring is handled by AutocardDiv automatically.
-   */
-  const colorClassname = useMemo(() => cardColorClass(card), [card, cardColorClass]);
+  const colorClassname = useMemo(() => getCardColorClass(card), [card]);
 
   return (
     <AutocardDiv
@@ -65,8 +50,8 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
       role="button"
       {...props}
     >
-      <span className={styles.name}>{cardName}</span>
       <span className={styles.children}>{children}</span>
+      <span className={styles.name}>{cardName}</span>
     </AutocardDiv>
   );
 };

@@ -9,10 +9,8 @@ import { csrfFetch } from 'utils/CSRF';
 import { getLabels, sortDeep } from 'utils/Sort';
 
 import CubeContext from 'contexts/CubeContext';
-import GroupModalContext from 'contexts/GroupModalContext';
 import PagedTable from 'components/PagedTable';
 import SortContext from 'contexts/SortContext';
-import TagContext from 'contexts/TagContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';
@@ -78,7 +76,6 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
   });
 
   const { cubeID, updateCubeCard } = useContext(CubeContext);
-  const { cardColorClass } = useContext(TagContext);
 
   const { index } = card;
 
@@ -254,7 +251,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
   });
 
   return (
-    <tr className={cardColorClass(card)}>
+    <tr className={getCardColorClass(card)}>
       <td>
         <Input type="checkbox" data-index={index} checked={checked} onChange={onCheck} className="mx-auto" />
       </td>
@@ -338,8 +335,7 @@ const ListView = ({ cards }) => {
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [checked, setChecked] = useState([]);
 
-  const { cube } = useContext(CubeContext);
-  const { setGroupModalCards } = useContext(GroupModalContext);
+  const { cube, setModalSelection } = useContext(CubeContext);
   const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
 
   const { addAlert, alerts } = useAlerts();
@@ -373,13 +369,13 @@ const ListView = ({ cards }) => {
 
       if (value) {
         setChecked(cards.map(({ index }) => index));
-        setGroupModalCards(cards);
+        setModalSelection(cards);
       } else {
         setChecked([]);
-        setGroupModalCards([]);
+        setModalSelection([]);
       }
     },
-    [cards, setGroupModalCards],
+    [cards, setModalSelection],
   );
 
   const handleCheck = useCallback(
@@ -396,12 +392,12 @@ const ListView = ({ cards }) => {
           newChecked = checked.filter((testIndex) => testIndex !== index);
         }
         setChecked(newChecked);
-        setGroupModalCards(
+        setModalSelection(
           newChecked.map((cardIndex) => cards.find((card) => card.index === cardIndex)).filter((x) => x),
         );
       }
     },
-    [checked, cards, setGroupModalCards],
+    [checked, setModalSelection, cards],
   );
 
   const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
