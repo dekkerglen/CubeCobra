@@ -44,7 +44,7 @@ const client = createClient({
 
 module.exports = {
   getById: async (id) => (await client.get(id)).Item,
-  getByCubeId: async (cubeId, lastKey) => {
+  getByCubeId: async (cubeId, limit, lastKey) => {
     const result = await client.query({
       IndexName: 'ByCube',
       KeyConditionExpression: `#p1 = :cubeId`,
@@ -56,13 +56,14 @@ module.exports = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: limit || 36,
     });
     return {
       items: result.Items,
-      lastEvaluatedKey: result.LastEvaluatedKey,
+      lastKey: result.LastEvaluatedKey,
     };
   },
-  getByOwner: async (owner, lastKey) => {
+  getByOwner: async (owner, limit, lastKey) => {
     const result = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: `#p1 = :owner`,
@@ -74,15 +75,17 @@ module.exports = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: limit || 36,
     });
     return {
       items: result.Items,
-      lastEvaluatedKey: result.LastEvaluatedKey,
+      lastKey: result.LastEvaluatedKey,
     };
   },
   put: async (document) => {
-    return client.put({
-      [FIELDS.ID]: document[FIELDS.ID] || uuid(),
+    const id = document[FIELDS.ID] || uuid();
+    client.put({
+      [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
       [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
       [FIELDS.OWNER]: document[FIELDS.OWNER],
@@ -90,6 +93,10 @@ module.exports = {
       [FIELDS.TITLE]: document[FIELDS.TITLE],
       [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
     });
+    return id;
+  },
+  delete: async (id) => {
+    await client.delete(id);
   },
   batchPut: async (documents) => {
     await client.batchPut(

@@ -15,7 +15,7 @@ const User = require('../dynamo/models/user');
 const PasswordReset = require('../models/passwordreset');
 const Cube = require('../dynamo/models/cube');
 const Deck = require('../models/deck');
-const Blog = require('../models/blog');
+const Blog = require('../dynamo/models/blog');
 const Patron = require('../models/patron');
 const FeaturedCubes = require('../models/featuredCubes');
 const Notification = require('../dynamo/models/notification');
@@ -23,7 +23,6 @@ const Notification = require('../dynamo/models/notification');
 const router = express.Router();
 
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
-const { fillBlogpostChangelog } = require('../serverjs/blogpostUtils');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
@@ -566,7 +565,6 @@ router.get('/decks/:userid/:page', async (req, res) => {
       delete follower.Email;
     }
 
-    delete user.UsersFollowing; // don't leak this info
     delete user.PasswordHash;
     delete user.Email;
 
@@ -583,56 +581,28 @@ router.get('/decks/:userid/:page', async (req, res) => {
   }
 });
 
-router.get('/blog/:userid', (req, res) => {
-  res.redirect(`/user/blog/${req.params.userid}/0`);
-});
-
-router.get('/blog/:userid/:page', async (req, res) => {
+router.get('/blog/:userid', async (req, res) => {
   try {
-    const pagesize = 30;
-
     const user = await User.getById(req.params.userid);
-
-    const postsq = Blog.find({
-      owner: user.Id,
-    })
-      .sort({
-        date: -1,
-      })
-      .skip(Math.max(req.params.page, 0) * pagesize)
-      .limit(pagesize)
-      .lean();
-
-    const numBlogsq = Blog.countDocuments({
-      owner: user.Id,
-    });
-
+    const posts = await Blog.getByOwner(req.params.userid, 10);
     const followers = await User.batchGet(user.UsersFollowing);
 
-    for (const follower of followers) {
+    for (const follower of [user, ...followers]) {
       // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }
 
-    const [posts, numBlogs] = await Promise.all([postsq, numBlogsq]);
-    posts.forEach(fillBlogpostChangelog);
-
-    delete user.UsersFollowing; // don't leak this info
-    delete user.PasswordHash;
-    delete user.Email;
     return render(
       req,
       res,
       'UserBlogPage',
       {
         owner: user,
-        posts,
-        canEdit: req.user && req.user.Id === user.Id,
+        posts: posts.items,
+        lastKey: posts.lastKey,
         followers,
         following: req.user && req.user.FollowedUsers.some((id) => id === user.Id),
-        pages: Math.ceil(numBlogs / pagesize),
-        activePage: Math.max(req.params.page, 0),
       },
       {
         title: user.Username,
@@ -641,6 +611,17 @@ router.get('/blog/:userid/:page', async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
+});
+
+router.post('/getmoreblogs', ensureAuth, async (req, res) => {
+  const { lastKey, owner } = req.body;
+  const posts = await Blog.getByOwner(owner, 10, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    posts: posts.items,
+    lastKey: posts.lastKey,
+  });
 });
 
 // account page

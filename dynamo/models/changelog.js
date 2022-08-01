@@ -37,7 +37,78 @@ const evictOldest = () => {
   delete changelogCache[oldest[0][0]];
 };
 
-const getChangelog = async (id) => {
+const sanitizeChangelog = (changelog) => {
+  for (const [, value] of Object.entries(changelog)) {
+    if (value.adds) {
+      for (let i = 0; i < value.adds.length; i++) {
+        delete value.adds[i].details;
+      }
+    }
+    if (value.removes) {
+      for (let i = 0; i < value.removes.length; i++) {
+        delete value.removes[i].oldCard.details;
+      }
+    }
+    if (value.swaps) {
+      for (let i = 0; i < value.swaps.length; i++) {
+        delete value.swaps[i].oldCard.details;
+        delete value.swaps[i].card.details;
+      }
+    }
+    if (value.edits) {
+      for (let i = 0; i < value.edits.length; i++) {
+        delete value.edits[i].oldCard.details;
+        delete value.edits[i].newCard.details;
+      }
+    }
+  }
+  return changelog;
+};
+
+const enrichChangelog = (changelog) => {
+  for (const [, value] of Object.entries(changelog)) {
+    if (value.adds) {
+      for (let i = 0; i < value.adds.length; i++) {
+        value.adds[i].details = {
+          ...carddb.cardFromId(value.adds[i].cardID),
+        };
+      }
+    }
+    if (value.removes) {
+      for (let i = 0; i < value.removes.length; i++) {
+        value.removes[i].oldCard.details = {
+          ...carddb.cardFromId(value.removes[i].oldCard.cardID),
+        };
+        value.removes[i].card.details = {
+          ...carddb.cardFromId(value.removes[i].card.cardID),
+        };
+      }
+    }
+    if (value.swaps) {
+      for (let i = 0; i < value.swaps.length; i++) {
+        value.swaps[i].oldCard.details = {
+          ...carddb.cardFromId(value.swaps[i].oldCard.cardID),
+        };
+        value.swaps[i].card.details = {
+          ...carddb.cardFromId(value.swaps[i].card.cardID),
+        };
+      }
+    }
+    if (value.edits) {
+      for (let i = 0; i < value.edits.length; i++) {
+        value.edits[i].oldCard.details = {
+          ...carddb.cardFromId(value.edits[i].oldCard.cardID),
+        };
+        value.edits[i].newCard.details = {
+          ...carddb.cardFromId(value.edits[i].newCard.cardID),
+        };
+      }
+    }
+  }
+  return changelog;
+};
+
+const getChangelog = async (cubeId, id) => {
   if (changelogCache[id]) {
     return changelogCache[id].document;
   }
@@ -45,7 +116,7 @@ const getChangelog = async (id) => {
   const res = await s3
     .getObject({
       Bucket: process.env.DATA_BUCKET,
-      Key: `changelog/cubeId/${id}.json`,
+      Key: `changelog/${cubeId}/${id}.json`,
     })
     .promise();
   const changelog = JSON.parse(res.Body.toString());
@@ -59,7 +130,7 @@ const getChangelog = async (id) => {
     document: changelog,
   };
 
-  return changelog;
+  return enrichChangelog(changelog);
 };
 
 const parseHtml = (html) => {
@@ -80,14 +151,14 @@ const parseHtml = (html) => {
           changelog.Mainboard.adds = [];
         }
         if (ids) {
-          changelog.Mainboard.adds.push(ids[0]);
+          changelog.Mainboard.adds.push({ cardID: ids[0] });
         }
       } else if (operator === '-' || operator === '–') {
         if (!changelog.Mainboard.removes) {
           changelog.Mainboard.removes = [];
         }
         if (ids) {
-          changelog.Mainboard.removes.push({ oldCard: ids[0] });
+          changelog.Mainboard.removes.push({ oldCard: { cardID: ids[0] } });
         }
       }
     } else if (tokens.length === 3) {
@@ -102,8 +173,8 @@ const parseHtml = (html) => {
 
         if (addedIds && removedIds) {
           changelog.Mainboard.swaps.push({
-            oldCard: addedIds[0],
-            card: removedIds[0],
+            oldCard: { cardID: removedIds[0] },
+            card: { cardID: addedIds[0] },
           });
         }
       }
@@ -141,7 +212,7 @@ module.exports = {
       .putObject({
         Bucket: process.env.DATA_BUCKET,
         Key: `changelog/${cubeId}/${id}.json`,
-        Body: JSON.stringify(changelog),
+        Body: JSON.stringify(sanitizeChangelog(changelog)),
       })
       .promise();
     await client.put({
@@ -151,6 +222,7 @@ module.exports = {
         [FIELDS.DATE]: Date.now().valueOf(),
       },
     });
+    return id;
   },
   batchPut: async (documents) => {
     await client.batchPut(
@@ -166,7 +238,7 @@ module.exports = {
           .putObject({
             Bucket: process.env.DATA_BUCKET,
             Key: `changelog/${document.cubeId}/${document.id}.json`,
-            Body: JSON.stringify(document.changelog),
+            Body: JSON.stringify(sanitizeChangelog(document.changelog)),
           })
           .promise(),
       ),
@@ -181,29 +253,29 @@ module.exports = {
       changelog = {
         Mainboard: {},
       };
-      for (const { removed, added } of blog.changed_cards) {
-        if (added && removed) {
+      for (const { removedID, addedID } of blog.changed_cards) {
+        if (addedID && removedID) {
           // swap
           if (!changelog.Mainboard.swaps) {
             changelog.Mainboard.swaps = [];
           }
           changelog.Mainboard.swaps.push({
-            card: added,
-            oldCard: removed,
+            card: { cardID: addedID },
+            oldCard: { cardID: removedID },
           });
-        } else if (added) {
+        } else if (addedID) {
           // add
           if (!changelog.Mainboard.adds) {
             changelog.Mainboard.adds = [];
           }
-          changelog.Mainboard.adds.push(added);
-        } else if (removed) {
+          changelog.Mainboard.adds.push({ cardID: addedID });
+        } else if (removedID) {
           // remove
           if (!changelog.Mainboard.removes) {
             changelog.Mainboard.removes = [];
           }
           changelog.Mainboard.removes.push({
-            oldCard: removed,
+            oldCard: { cardID: removedID },
           });
         }
       }

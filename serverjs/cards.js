@@ -158,7 +158,8 @@ function reasonableCard(card) {
     card.tcgplayer_id &&
     card.set !== 'myb' &&
     card.set !== 'mb1' &&
-    card.collector_number.indexOf('★') === -1
+    card.collector_number.indexOf('★') === -1 &&
+    card.layout !== 'art_series'
   );
 }
 

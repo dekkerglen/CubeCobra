@@ -359,7 +359,7 @@ router.get('/overview/:id', async (req, res) => {
     const followers = await User.batchGet(cube.UsersFollowing);
 
     for (const follower of followers) {
-       // don't leak this info
+      // don't leak this info
       delete follower.PasswordHash;
       delete follower.Email;
     }

@@ -10,12 +10,7 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const VideosPage = ({ loginCallback, videos, lastKey }) => {
   const [items, setItems] = useState(videos);

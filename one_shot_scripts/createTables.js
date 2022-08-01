@@ -14,6 +14,10 @@ const cardMetadata = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
+const package = require('../dynamo/models/package');
+const packageHash = require('../dynamo/models/packageHash');
+const patron = require('../dynamo/models/patron');
+const passwordReset = require('../dynamo/models/passwordReset');
 
 const tables = [
   // content,
@@ -22,13 +26,17 @@ const tables = [
   // notice,
   //cubeMetadata,
   //cubeHash,
-  // cubeChangelog,
+  cubeChangelog,
   // blog,
   //cardHistory,
   // cardMetadata,
   //comment,
   // cubeAnalytic,
-  draft,
+  // draft,
+  // package,
+  // packageHash,
+  // patron,
+  // passwordReset,
 ];
 
 (async () => {

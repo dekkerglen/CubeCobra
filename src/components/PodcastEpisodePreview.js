@@ -4,19 +4,12 @@ import PodcastPropType from 'proptypes/PodcastPropType';
 import { Card } from 'reactstrap';
 import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/AspectRatioBox';
-import htmlToText from 'html-to-text';
 import Username from 'components/Username';
 
 const PodcastEpisodePreview = ({ episode }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  const short = htmlToText
-    .fromString(episode.Body, {
-      wordwrap: 130,
-    })
-    .substring(0, 200);
-
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
@@ -36,7 +29,7 @@ const PodcastEpisodePreview = ({ episode }) => {
           <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{episode.Title}</h6>
         </a>
         <small>
-          <p className="mb-0">{`${short}...`}</p>
+          <p className="mb-0">{episode.Short}</p>
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>

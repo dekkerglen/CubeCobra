@@ -5,7 +5,7 @@ import BlogPostPropType from 'proptypes/BlogPostPropType';
 
 import TimeAgo from 'react-timeago';
 
-import { Card, CardHeader, Row, Col, CardBody, CardText } from 'reactstrap';
+import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 
 import UserContext from 'contexts/UserContext';
 import BlogContextMenu from 'components/BlogContextMenu';
@@ -19,15 +19,17 @@ const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
 
-  const html = post.html === 'undefined' ? null : post.html;
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.id === post.owner;
+  const canEdit = user && user.Id === post.Owner;
+
+  const hasChangelist = post.ChangelistId;
+  const hasBody = post.Body && post.Body.length > 0;
 
   return (
     <Card className="shadowed rounded-0 mb-3">
       <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <h5 className="card-title">
-          <a href={`/cube/blog/blogpost/${post._id}`}>{post.title}</a>
+          <a href={`/cube/blog/blogpost/${post.Id}`}>{post.Title}</a>
           <div className="float-sm-end">
             {canEdit && (
               <>
@@ -36,62 +38,65 @@ const BlogPost = ({ post, noScroll }) => {
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
                   post={post}
-                  cubeID={post.cube}
+                  cubeID={post.CubeId}
                 />
               </>
             )}
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <Username userId={post.owner} defaultName={post.username} />
+          <Username userId={post.Owner} />
           {' posted to '}
-          {post.dev === 'true' ? (
-            <a href="/dev/blog/0">Developer Blog</a>
+          {post.CubeId === 'DEVBLOG' ? (
+            <a href="/dev/blog">Developer Blog</a>
           ) : (
-            <a href={`/cube/overview/${post.cube}`}>{post.cubename}</a>
+            <a href={`/cube/overview/${post.CubeId}`}>Cube</a>
           )}
           {' - '}
-          <TimeAgo date={post.date} />
+          <TimeAgo date={post.Date} />
         </h6>
       </CardHeader>
-      <div style={scrollStyle}>
-        {(post.changed_cards?.length || post.changelist) && (html || post.markdown) ? (
-          <Row className="g-0">
-            <Col className="col-12 col-l-5 col-md-4 col-sm-12 blog-post-border">
-              <CardBody className="py-2">
-                {post.changed_cards?.length ? (
-                  <BlogPostChangelog cards={post.changed_cards} />
-                ) : (
-                  <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />
-                )}
+      {hasChangelist && hasBody && (
+        <Row className="g-0">
+          <Col xs={12} md={4}>
+            <div style={scrollStyle}>
+              <CardBody>
+                <BlogPostChangelog changelogId={post.ChangelistId} cubeId={post.CubeId} />
               </CardBody>
-            </Col>
-            <Col className="col-l-7 col-m-6">
-              <CardBody className="py-2">
-                {post.markdown ? (
-                  <Markdown markdown={post.markdown} limited />
-                ) : (
-                  <CardText dangerouslySetInnerHTML={{ __html: html }} />
-                )}
+            </div>
+          </Col>
+          <Col xs={12} md={8}>
+            <div style={scrollStyle}>
+              <CardBody>
+                <Markdown markdown={post.Body} limited />
               </CardBody>
-            </Col>
-          </Row>
-        ) : (
-          <CardBody className="py-2">
-            {post.changed_cards?.length > 0 && <BlogPostChangelog cards={post.changed_cards} />}
-            {post.changelist && <CardText dangerouslySetInnerHTML={{ __html: post.changelist }} />}
-            {post.body && <CardText>{post.body}</CardText>}
-            {(html || post.markdown) &&
-              (post.markdown ? (
-                <Markdown markdown={post.markdown} limited />
-              ) : (
-                <CardText dangerouslySetInnerHTML={{ __html: html }} />
-              ))}
+            </div>
+          </Col>
+        </Row>
+      )}
+      {!hasChangelist && hasBody && (
+        <div style={scrollStyle}>
+          <CardBody>
+            <Markdown markdown={post.Body} limited />
           </CardBody>
-        )}
-      </div>
+        </div>
+      )}
+      {hasChangelist && !hasBody && (
+        <div style={scrollStyle}>
+          <CardBody>
+            <BlogPostChangelog changelogId={post.ChangelistId} cubeId={post.CubeId} />
+          </CardBody>
+        </div>
+      )}
+      {!hasChangelist && !hasBody && (
+        <div style={scrollStyle}>
+          <CardBody>
+            <h5>Uh oh, there doesn't seem to be anything here.</h5>
+          </CardBody>
+        </div>
+      )}
       <div className="border-top">
-        <CommentsSection parentType="blog" parent={post._id} collapse={false} />
+        <CommentsSection parentType="blog" parent={post.Id} collapse={false} />
       </div>
     </Card>
   );

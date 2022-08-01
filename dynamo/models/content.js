@@ -1,5 +1,7 @@
 const sanitizeHtml = require('sanitize-html');
+const htmlToText = require('html-to-text');
 const createClient = require('../util');
+const s3 = require('../s3client');
 
 const removeSpan = (text) =>
   sanitizeHtml(text, {
@@ -77,8 +79,62 @@ const client = createClient({
   FIELDS,
 });
 
+// LRU cache for content bodies
+const bodyCache = {};
+const MAX_CACHE_SIZE = 1000;
+
+const evictOldest = () => {
+  const oldest = Object.entries(bodyCache).sort(([, valuea], [, valueb]) => valuea.date.localeCompare(valueb.date));
+  delete bodyCache[oldest[0][0]];
+};
+
+const addBody = async (content) => {
+  if (content.status === STATUS.PUBLISHED) {
+    if (bodyCache[content.id]) {
+      return bodyCache[content.id].document;
+    }
+  }
+  try {
+    const res = await s3
+      .getObject({
+        Bucket: process.env.DATA_BUCKET,
+        Key: `content/${content.Id}.json`,
+      })
+      .promise();
+
+    const document = JSON.parse(res.Body.toString());
+
+    if (content.status === STATUS.PUBLISHED) {
+      if (Object.keys(bodyCache).length >= MAX_CACHE_SIZE) {
+        evictOldest();
+      }
+
+      bodyCache[content.id] = {
+        date: new Date(),
+        document,
+      };
+    }
+
+    return document;
+  } catch (e) {
+    return '';
+  }
+};
+
+const putBody = async (content) => {
+  if (content.Body && content.Body.length > 0) {
+    await s3
+      .putObject({
+        Bucket: process.env.DATA_BUCKET,
+        Key: `content/${content.Id}.json`,
+        Body: JSON.stringify(content.Body),
+      })
+      .promise();
+  }
+};
+
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
+  getById: async (id) => addBody((await client.get(id)).Item),
   getByStatus: async (status, lastKey) => {
     const result = await client.query({
       IndexName: 'ByStatus',
@@ -139,16 +195,32 @@ module.exports = {
     }
     document[FIELDS.TYPE_STATUS_COMP] = `${document.Type}:${document.Status}`;
     document[FIELDS.TYPE_OWNER_COMP] = `${document.Type}:${document.Owner}`;
+
+    await putBody(document);
+    delete document.Body;
     return client.put(document);
   },
-  put: async (document, type) =>
+  put: async (document, type) => {
+    await putBody(document);
+
+    delete document.Body;
+
     client.put({
       [FIELDS.TYPE]: type,
       [FIELDS.TYPE_OWNER_COMP]: `${type}:${document.Owner}`,
       [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.Status}`,
       ...document,
-    }),
-  batchPut: async (documents) => client.batchPut(documents),
+    });
+  },
+  batchPut: async (documents) => {
+    await Promise.all(
+      documents.map(async (document) => {
+        await putBody(document);
+        delete document.Body;
+      }),
+    );
+    client.batchPut(documents);
+  },
   createTable: async () => client.createTable(),
   convertVideo: (video) => ({
     [FIELDS.ID]: `${video._id}`,
@@ -196,6 +268,11 @@ module.exports = {
     [FIELDS.USERNAME]: episode.username,
     [FIELDS.TYPE_STATUS_COMP]: `${TYPES.EPISODE}:${STATUS.PUBLISHED}`,
     [FIELDS.TYPE_OWNER_COMP]: `${TYPES.EPISODE}:${episode.owner}`,
+    [FIELDS.SHORT]: htmlToText
+      .fromString(removeSpan(episode.description), {
+        wordwrap: 130,
+      })
+      .substring(0, 200),
   }),
   convertPodcast: (podcast) => ({
     [FIELDS.ID]: `${podcast._id}`,

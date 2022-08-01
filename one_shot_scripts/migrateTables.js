@@ -16,6 +16,10 @@ const card = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
+const package = require('../dynamo/models/package');
+const packageHash = require('../dynamo/models/packageHash');
+const patron = require('../dynamo/models/patron');
+const passwordReset = require('../dynamo/models/passwordReset');
 
 const Video = require('../models/old/video');
 const Episode = require('../models/old/podcastEpisode');
@@ -29,6 +33,11 @@ const CardRating = require('../models/cardrating');
 const Comment = require('../models/comment');
 const CubeAnalytic = require('../models/cubeAnalytic');
 const Deck = require('../models/deck');
+const Draft = require('../models/draft');
+const Package = require('../models/package');
+const Patron = require('../models/patron');
+const PasswordReset = require('../models/passwordReset');
+
 
 const migrations = [
   // {
@@ -54,13 +63,13 @@ const migrations = [
   //     [user.convertUser, user.batchPut],
   //   ],
   // },
-  // {
-  //   source: Blog,
-  //   conversions: [
-  //     [changelog.getChangelogFromBlog, changelog.batchPut],
-  //     [blog.convertBlog, blog.batchPut],
-  //   ],
-  // },
+  {
+    source: Blog,
+    conversions: [
+      [changelog.getChangelogFromBlog, changelog.batchPut],
+      // [blog.convertBlog, blog.batchPut],
+    ],
+  },
   // {
   //   source: CardRating,
   //   conversions: [
@@ -86,16 +95,49 @@ const migrations = [
   //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
   //   ],
   // },
-  {
-    source: Deck,
-    conversions: [
-      [draft.convertDeck, draft.batchPut],
-    ],
-  }
+  // {
+  //   source: Deck,
+  //   conversions: [
+  //     [draft.convertDeck, draft.batchPut],
+  //   ],
+  // },
+  // {
+  //   source: Draft,
+  //   conversions: [
+  //     [draft.convertDraft, draft.updateDeckWithDraft],
+  //   ],
+  // },
+  // {
+  //   source: Cube,
+  //   conversions: [
+  //     [cube.convertCubeToMetadata, cube.batchPut],
+  //     [cube.convertCubeToCards, cube.batchPutCards],
+  //     [
+  //       (c) => cubeHash.getHashRowsForCube(cube.convertCubeToMetadata(c), cube.convertCubeToCards(c)),
+  //       cubeHash.batchPut,
+  //     ],
+  //   ],
+  // },
+  // {
+  //   source: Package,
+  //   conversions: [
+  //     [package.convertPackage, package.batchPut],
+  //     [
+  //       (p) => packageHash.getHashRows(package.convertPackage(p)),
+  //       packageHash.batchPut,
+  //     ]
+  //   ],
+  // },
+  // {
+  //   source: Patron,
+  //   conversions: [
+  //     [patron.convertPatron, patron.batchPut],
+  //   ],
+  // }
 ];
 
 const batchSize = 25;
-const skip = 6750;
+const skip = 0;
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);
@@ -104,7 +146,7 @@ const skip = 6750;
     const mongo = migration.source;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
-    const count = 485958;// await mongo.countDocuments();
+    const count = await mongo.countDocuments();
     const cursor = mongo.find().skip(skip).lean().cursor();
 
     // batch them by batchSize

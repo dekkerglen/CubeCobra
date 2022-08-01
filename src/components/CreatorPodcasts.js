@@ -6,12 +6,7 @@ import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import PodcastPreview from 'components/PodcastPreview';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const CreatorPodcasts = ({ podcasts, lastKey }) => {
   const [items, setItems] = useState(podcasts);

@@ -126,7 +126,7 @@ const CubeListPage = ({
   loginCallback,
 }) => (
   <MainLayout loginCallback={loginCallback}>
-    <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict>
+    <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards>
       <DisplayContextProvider cubeID={cube.Id}>
         <CubeListPageRaw
           defaultShowTagColors={defaultShowTagColors}

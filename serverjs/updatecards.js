@@ -617,6 +617,11 @@ function convertName(card, isExtra) {
     // but other double face to use the first name
     str = str.substring(0, str.indexOf('/')); // first name
   }
+
+  if (card.layout === 'art_series') {
+    str = `${str} Art Card`;
+  }
+
   return str.trim();
 }
 

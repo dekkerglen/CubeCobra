@@ -47,7 +47,9 @@ const client = createClient({
 });
 
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
+  getById: async (id) => {
+    return (await client.get(id)).Item;
+  },
   getByUsername: async (username, lastKey) => {
     const result = await client.query({
       IndexName: 'ByUsername',

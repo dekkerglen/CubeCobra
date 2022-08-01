@@ -6,12 +6,7 @@ import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import VideoPreview from 'components/VideoPreview';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const CreatorVideos = ({ videos, lastKey }) => {
   const [items, setItems] = useState(videos);

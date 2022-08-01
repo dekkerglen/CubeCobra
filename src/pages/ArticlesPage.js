@@ -10,15 +10,15 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
+import { wait } from 'utils/Util';
 
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+const loader = (
+  <div className="centered py-3 my-4">
+    <Spinner className="position-absolute" />
+  </div>
+);
 
 const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
-  console.log(articles);
   const [items, setItems] = useState(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -45,12 +45,6 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
       }
     }
   }, [items, setItems, currentLastKey]);
-
-  const loader = (
-    <div className="centered py-3 my-4">
-      <Spinner className="position-absolute" />
-    </div>
-  );
 
   return (
     <MainLayout loginCallback={loginCallback}>

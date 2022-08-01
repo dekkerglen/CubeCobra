@@ -49,7 +49,7 @@ const getDetails = async (cardId) => {
   return json.card;
 };
 
-export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict }) => {
+export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict, useChangedCards }) => {
   const user = useContext(UserContext);
   const [cube, setCube] = useState({
     ...initialCube,
@@ -155,14 +155,14 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   }, [cube.cards, loadVersionDict]);
 
   const addCard = useCallback(
-    (cardId, board) => {
+    (card, board) => {
       const newChanges = JSON.parse(JSON.stringify(changes));
 
       if (!newChanges[board]) {
         newChanges[board] = {};
       }
       const adds = newChanges[board].adds || [];
-      adds.push(cardId);
+      adds.push(card);
       newChanges[board].adds = adds;
       setChanges(newChanges);
     },
@@ -387,6 +387,11 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
   const changedCards = useMemo(() => {
     const changed = JSON.parse(JSON.stringify(cube.cards));
+
+    if (!useChangedCards) {
+      return changed;
+    }
+
     for (const [board] of Object.entries(changes)) {
       if (changes[board].edits) {
         for (let i = 0; i < changes[board].edits.length; i++) {
@@ -704,11 +709,13 @@ CubeContextProvider.propTypes = {
   cards: PropTypes.shape({}).isRequired,
   children: PropTypes.node.isRequired,
   loadVersionDict: PropTypes.bool,
+  useChangedCards: PropTypes.bool,
 };
 
 CubeContextProvider.defaultProps = {
   initialCube: {},
   loadVersionDict: false,
+  useChangedCards: false,
 };
 
 export default CubeContext;

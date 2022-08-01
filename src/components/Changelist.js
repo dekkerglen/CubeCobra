@@ -9,7 +9,8 @@ import CubeContext from 'contexts/CubeContext';
 import withAutocard from 'components/WithAutocard';
 import withCardModal from 'components/WithCardModal';
 
-import { PlusCircleIcon, XCircleIcon, PlayIcon, GearIcon, ArrowRightIcon } from '@primer/octicons-react';
+import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
+import CardPropType from 'proptypes/CardPropType';
 
 const TextAutocard = withAutocard('span');
 const CardModalLink = withCardModal(TextAutocard);
@@ -24,22 +25,24 @@ RemoveButton.propTypes = {
   onClick: PropTypes.func.isRequired,
 };
 
-const Add = ({ cardId, revert }) => {
+const Add = ({ card, revert }) => {
   const [loading, setLoading] = useState(true);
-  const [card, setCard] = useState({});
+  const [details, setDetails] = useState({});
+
+  console.log(card);
 
   useEffect(() => {
     const getData = async () => {
-      const response = await fetch(`/cube/api/getcardfromid/${cardId}`);
+      const response = await fetch(`/cube/api/getcardfromid/${card.cardID}`);
       if (response.ok) {
         const data = await response.json();
-        setCard(data.card);
+        setDetails(data.card);
         setLoading(false);
       }
       return null;
     };
     getData();
-  }, [cardId]);
+  }, [card]);
 
   return (
     <li>
@@ -47,21 +50,21 @@ const Add = ({ cardId, revert }) => {
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
-      {!loading ? <TextAutocard card={{ details: card }}>{card.name}</TextAutocard> : <Spinner size="sm" />}
+      {!loading ? <TextAutocard card={{ details }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
     </li>
   );
 };
 
 Add.propTypes = {
   revert: PropTypes.func.isRequired,
-  cardId: PropTypes.string.isRequired,
+  card: CardPropType.isRequired,
 };
 
 const Remove = ({ card, revert }) => (
   <li>
     <RemoveButton onClick={revert} />
     <span className="mx-1" style={{ color: 'red' }}>
-      <XCircleIcon />
+      <NoEntryIcon />
     </span>
     <CardModalLink
       card={card}
@@ -91,7 +94,7 @@ const Edit = ({ card, revert }) => (
   <li>
     <RemoveButton onClick={revert} />
     <span className="mx-1" style={{ color: 'orange' }}>
-      <GearIcon />
+      <ToolsIcon />
     </span>
     <CardModalLink
       card={card}
@@ -117,44 +120,40 @@ Edit.propTypes = {
   }).isRequired,
 };
 
-const Swap = ({ cardIdToAdd, cardToRemove, revert }) => {
+const Swap = ({ card, oldCard, revert }) => {
   const [loading, setLoading] = useState(true);
-  const [cardToAdd, setCard] = useState({});
+  const [details, setDetails] = useState({});
 
   useEffect(() => {
     const getData = async () => {
-      const response = await fetch(`/cube/api/getcardfromid/${cardIdToAdd}`);
+      const response = await fetch(`/cube/api/getcardfromid/${card.cardID}`);
       if (response.ok) {
         const data = await response.json();
-        setCard(data.card);
+        setDetails(data.card);
         setLoading(false);
       }
       return null;
     };
     getData();
-  }, [cardIdToAdd]);
+  }, [card.cardID]);
 
   return (
     <li>
       <RemoveButton onClick={revert} />
       <span className="mx-1" style={{ color: 'blue' }}>
-        <PlayIcon />
+        <ArrowSwitchIcon />
       </span>
-      <TextAutocard card={cardToRemove}>{cardToRemove.details.name}</TextAutocard>
+      <TextAutocard card={oldCard}>{oldCard.details.name}</TextAutocard>
       <ArrowRightIcon className="mx-1" />
-      {!loading ? <TextAutocard card={{ details: cardToAdd }}>{cardToAdd.name}</TextAutocard> : <Spinner size="sm" />}
+      {!loading ? <TextAutocard card={{ details }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
     </li>
   );
 };
 
 Swap.propTypes = {
   revert: PropTypes.func.isRequired,
-  cardIdToAdd: PropTypes.string.isRequired,
-  cardToRemove: PropTypes.shape({
-    details: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  card: CardPropType.isRequired,
+  oldCard: CardPropType.isRequired,
 };
 
 const Changelist = () => {
@@ -177,14 +176,12 @@ const Changelist = () => {
           <Card className="changelist-container p-2">
             <ul className="changelist">
               {adds &&
-                adds.map((card, index) => (
-                  <Add key={card.cardID} cardId={card.cardID} revert={() => revertAdd(index, board)} />
-                ))}
+                adds.map((card, index) => <Add key={card.cardID} card={card} revert={() => revertAdd(index, board)} />)}
               {removes &&
                 removes.map((remove, index) => (
                   <Remove
-                    key={changedCards[board][remove.index].cardID}
-                    card={changedCards[board][remove.index]}
+                    key={remove.oldCard.cardID}
+                    card={{ ...remove.oldCard, details: changedCards[board][remove.index].details }}
                     revert={() => revertRemove(index, board)}
                   />
                 ))}
@@ -192,8 +189,8 @@ const Changelist = () => {
                 swaps.map((swap, index) => (
                   <Swap
                     key={changedCards[board][swap.index].cardID}
-                    cardToRemove={changedCards[board][swap.index]}
-                    cardIdToAdd={swap.card.cardID}
+                    oldCard={{ ...swap.oldCard, details: changedCards[board][swap.index].details }}
+                    card={swap.card}
                     revert={() => revertSwap(index, board)}
                   />
                 ))}
@@ -201,7 +198,7 @@ const Changelist = () => {
                 edits.map((edit, index) => (
                   <Edit
                     key={edit.oldCard.cardID}
-                    card={changedCards[board][edit.index]}
+                    card={{ ...edit.newCard, details: changedCards[board][edit.index].details }}
                     revert={() => revertEdit(index, board)}
                   />
                 ))}

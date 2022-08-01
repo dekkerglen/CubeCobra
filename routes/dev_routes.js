@@ -1,74 +1,55 @@
 const express = require('express');
-const util = require('../serverjs/util');
 
-const { ensureAuth, csrfProtection } = require('./middleware');
+const { csrfProtection, ensureRole } = require('./middleware');
 const { render } = require('../serverjs/render');
 
-// Bring in models
-const User = require('../dynamo/models/user');
-const Blog = require('../models/blog');
+const Blog = require('../dynamo/models/blog');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get('/blog', (req, res) => {
-  res.redirect('/dev/blog/0');
-});
-
-const PAGESIZE = 10;
-
-router.get('/blog/:id', async (req, res) => {
-  const blogs = await Blog.find({
-    dev: 'true',
-  })
-    .sort({ date: -1 })
-    .skip(PAGESIZE * req.params.id)
-    .limit(PAGESIZE);
-
-  const count = await Blog.countDocuments({ dev: 'true' });
-
-  for (const item of blogs) {
-    if (!item.date_formatted) {
-      item.date_formatted = item.date.toLocaleString('en-US');
-    }
-  }
+router.get('/blog', async (req, res) => {
+  const blogs = await Blog.getByCubeId('DEVBLOG', 10);
 
   return render(req, res, 'DevBlog', {
-    blogs,
-    pages: Math.ceil(count / PAGESIZE),
-    activePage: req.params.id,
+    blogs: blogs.items,
+    lastKey: blogs.lastKey,
   });
 });
 
-router.post('/blogpost', ensureAuth, async (req, res) => {
+router.post('/getmoreblogs', async (req, res) => {
+  const { lastKey } = req.body;
+  const blogs = await Blog.getByCubeId('DEVBLOG', 10, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    blogs: blogs.items,
+    lastKey: blogs.lastKey,
+  });
+});
+
+router.post('/blogpost', ensureRole('Admin'), async (req, res) => {
   try {
-    const user = await User.getById(req.user.Id);
+    const blogpost = {
+      Body: req.body.body,
+      Owner: req.user.Id,
+      Date: Date.now().valueOf(),
+      CubeId: 'DEVBLOG',
+      Title: req.body.title,
+    };
 
-    if (user && util.isAdmin(user)) {
-      const blogpost = new Blog();
-      blogpost.title = req.body.title;
-      if (req.body.html && req.body.html.length > 0) {
-        blogpost.html = req.body.html;
-      } else {
-        blogpost.body = req.body.body;
-      }
-      blogpost.owner = user.Id;
-      blogpost.date = Date.now();
-      blogpost.dev = 'true';
-      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
+    await Blog.put(blogpost);
 
-      await blogpost.save();
-
-      req.flash('success', 'Blog post successful');
-      res.redirect('/dev/blog');
-    }
-  } catch (err) {
-    res.status(500).send({
-      success: 'false',
-      message: err,
+    return res.status(200).send({
+      success: 'true',
+      blogpost,
     });
-    req.logger.error(err);
+  } catch (err) {
+    return res.status(500).send({
+      success: 'true',
+      error: err.message,
+    });
   }
 });
 

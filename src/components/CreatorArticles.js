@@ -6,12 +6,7 @@ import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import ArticlePreview from 'components/ArticlePreview';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const CreatorArticles = ({ articles, lastKey }) => {
   console.log(articles, lastKey);

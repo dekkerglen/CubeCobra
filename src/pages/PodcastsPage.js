@@ -11,12 +11,7 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
   console.log(episodes);

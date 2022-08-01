@@ -10,7 +10,7 @@ const Comment = require('../models/comment');
 const User = require('../dynamo/models/user');
 const Deck = require('../models/deck');
 const Content = require('../dynamo/models/content');
-const Blog = require('../models/blog');
+const Blog = require('../dynamo/models/blog');
 const Package = require('../models/package');
 const Notice = require('../dynamo/models/notice');
 const { render } = require('../serverjs/render');
@@ -39,7 +39,7 @@ const getReplyContext = {
     return [comment.owner, 'comment'];
   },
   blog: async (id) => {
-    const blog = await Blog.findById(id);
+    const blog = await Blog.getById(id);
     return [blog.owner, 'blogpost'];
   },
   deck: async (id) => {

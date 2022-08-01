@@ -12,7 +12,7 @@ const FIELDS = {
   DATE: 'Date',
   SEATS: 'Seats',
   BASICS: 'Basics',
-  SEED: 'Seed',
+  TYPE: 'Type',
 };
 
 const client = createClient({
@@ -257,6 +257,7 @@ module.exports = {
       [FIELDS.OWNER]: document.Owner,
       [FIELDS.CUBE_OWNER]: document.CubeOwner,
       [FIELDS.DATE]: document.Date,
+      [FIELDS.TYPE]: document.Type,
     }));
 
     await client.batchPut(items);
@@ -317,6 +318,63 @@ module.exports = {
     } catch (e) {
       return [];
     }
+  },
+  updateDeckWithDraft: async (drafts) => {
+    await Promise.all(
+      drafts.map(async (draft) => {
+        try {
+          const seats = await getSeats(draft.Id);
+
+          if (Object.entries(seats).length === 0) {
+            return;
+          }
+
+          let cards = null;
+          console.log(draft, seats);
+          for (let i = 0; i < draft.Seats.length; i++) {
+            seats.Seats[i].Trashorder = draft.Seats[i].Trashorder;
+
+            for (let j = 0; j < seats.Seats[i].Trashorder.length; j++) {
+              const card = seats.Seats[i].Trashorder[j];
+              if (typeof card === 'object' && card !== null) {
+                // only load cards if we need them
+                if (cards === null) {
+                  // eslint-disable-next-line no-await-in-loop
+                  cards = await getCards(draft.Id);
+                }
+
+                seats.Seats[i].Trashorder[j] = cards.findIndex((c) => c.cardID === card.cardID);
+              }
+            }
+          }
+          await s3
+            .putObject({
+              Bucket: process.env.DATA_BUCKET,
+              Key: `seats/${draft.Id}.json`,
+              Body: JSON.stringify(seats),
+            })
+            .promise();
+        } catch (e) {
+          console.log(e);
+        }
+      }),
+    );
+  },
+  convertDraft: (draft) => {
+    // trashorder
+
+    if (!draft.seats || !draft.seats[0] || !draft.seats[0].trashorder || draft.seats[0].trashorder.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        Id: `${draft._id}`,
+        Seats: draft.seats.map((seat) => ({
+          Trashorder: seat.trashorder.filter((value) => value),
+        })),
+      },
+    ];
   },
   FIELDS,
 };

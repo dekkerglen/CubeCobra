@@ -10,12 +10,7 @@ import MainLayout from 'layouts/MainLayout';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const Notifications = ({ notifications, lastKey, loginCallback }) => {
   const [items, setItems] = useState(notifications);

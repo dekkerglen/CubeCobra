@@ -12,12 +12,7 @@ import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
-
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
   const [items, setItems] = useState(content);

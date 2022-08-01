@@ -1,6 +1,7 @@
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const User = require('../dynamo/models/user');
+const { getUserFromId } = require('../serverjs/cache');
 
 module.exports = (passport) => {
   // Local Strategy
@@ -34,7 +35,7 @@ module.exports = (passport) => {
   });
 
   passport.deserializeUser(async (id, done) => {
-    const user = await User.getById(id);
+    const user = await getUserFromId(id);
     done(null, user);
   });
 };

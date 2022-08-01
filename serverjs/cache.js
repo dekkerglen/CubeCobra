@@ -19,22 +19,37 @@ const flattenObject = (object) => {
   return result;
 };
 
+const unpack = (object) => {
+  const result = {};
+  for (const [key, value] of Object.entries(object)) {
+    if (key.includes(':')) {
+      const [newKey, newValue] = key.split(':');
+      if (!result[newKey]) {
+        result[newKey] = [];
+      }
+      result[newKey].push(newValue);
+    } else {
+      result[key] = value;
+    }
+  }
+
+  return result;
+};
+
 const getUserFromId = async (id) => {
-  const entryExixts = await exists(`user:${id}`);
+  const entryExixts = await exists(`usercache:${id}`);
   if (!entryExixts) {
     const user = await User.getById(id);
 
-    delete user.UsersFollowing; // don't leak this info
     delete user.PasswordHash;
     delete user.Email;
 
     const flattened = flattenObject(user);
-    hmset(`user:${id}`, flattened);
-    expire(`user:${id}`, 60 * 60 * 24); // 1 day
-    return hgetall(`user:${id}`);
+    await hmset(`usercache:${id}`, flattened);
+    await expire(`usercache:${id}`, 60 * 60 * 24); // 1 day
   }
 
-  return hgetall(`user:${id}`);
+  return unpack(await hgetall(`usercache:${id}`));
 };
 
 module.exports = {

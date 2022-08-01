@@ -534,7 +534,7 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
 
 router.get('/newpodcast', ensureContentCreator, async (req, res) => {
   const podcast = {
-    tTtle: 'New Podcast',
+    Title: 'New Podcast',
     Owner: `${req.user.Id}`,
     Image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',

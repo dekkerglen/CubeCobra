@@ -9,11 +9,7 @@ import { csrfFetch } from 'utils/CSRF';
 import { Spinner } from 'reactstrap';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-const wait = async (ms) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
+import { wait } from 'utils/Util';
 
 const Feed = ({ items }) => {
   const [feedItems, setFeedItems] = useState(items);

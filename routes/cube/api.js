@@ -23,7 +23,8 @@ const CubeHash = require('../../dynamo/models/cubeHash');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
 const Package = require('../../models/package');
-const Blog = require('../../models/blog');
+const Blog = require('../../dynamo/models/blog');
+const Changelog = require('../../dynamo/models/changelog');
 
 const router = express.Router();
 
@@ -645,15 +646,15 @@ router.post(
       }
     }
 
+    const adds = req.body.cards.map((id) => {
+      const c = util.newCard(carddb.cardFromId(id));
+      c.tags = [tag];
+      c.notes = `Added from package "${tag}": ${process.env.HOST}/packages/${req.body.packid}`;
+      return c;
+    });
+
     if (tag) {
-      mainboard.push(
-        ...req.body.cards.map((id) => {
-          const c = util.newCard(carddb.cardFromId(id));
-          c.tags = [tag];
-          c.notes = `Added from package "${tag}": ${process.env.HOST}/packages/${req.body.packid}`;
-          return c;
-        }),
-      );
+      mainboard.push(...adds);
     } else {
       mainboard.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
@@ -661,21 +662,20 @@ router.post(
     await Cube.updateCards(req.params.id, cubeCards);
 
     if (tag) {
-      const blogpost = new Blog();
-      blogpost.title = `Added Package "${tag}"`;
-      blogpost.changed_cards = req.body.cards.map((card) => {
-        return { addedID: card, removedID: null };
-      });
-      blogpost.markdown = `Add from the package [${tag}](/packages/${req.body.packid})`;
-      blogpost.owner = cube.owner;
-      blogpost.date = Date.now();
-      blogpost.cube = cube._id;
-      blogpost.dev = 'false';
-      blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-      blogpost.username = cube.owner_name;
-      blogpost.cubename = cube.name;
+      const changelist = {
+        Mainboard: { adds },
+      };
 
-      await blogpost.save();
+      const ChangelistId = await Changelog.put(changelist, cube.Id);
+
+      await Blog.put({
+        Body: `Add from the package [${tag}](/packages/${req.body.packid})`,
+        Owner: req.user.Id,
+        Date: new Date().valueOf(),
+        CubeId: cube.Id,
+        Title: `Added Package "${tag}"`,
+        ChangelistId,
+      });
     }
 
     return res.status(200).send({
