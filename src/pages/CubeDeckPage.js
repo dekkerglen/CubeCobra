@@ -61,7 +61,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube._id}>
+        <DisplayContextProvider cubeID={cube.Id}>
           <Navbar expand="md" light className="usercontrols mb-3">
             <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
@@ -69,7 +69,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               </Label>
               <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
                 {deck.seats.map((seat, index) => (
-                  <option key={seat._id} value={index}>
+                  <option key={seat.Title} value={index}>
                     {seat.username ? seat.username : seat.name}
                   </option>
                 ))}

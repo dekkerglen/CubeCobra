@@ -93,14 +93,14 @@ const DeckbuilderNavbar = ({
             <NavLink href="#" onClick={saveDeck}>
               Save Deck
             </NavLink>
-            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck._id}`}>
+            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck.Id}`}>
               <Input type="hidden" name="draftraw" value={stripped} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />
             </CSRFForm>
           </NavItem>
           <NavItem>
-            <DeleteDeckModalLink modalProps={{ deckID: deck._id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
+            <DeleteDeckModalLink modalProps={{ deckID: deck.Id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
           </NavItem>
           <NavItem>
             <BasicsModalLink

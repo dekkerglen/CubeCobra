@@ -45,11 +45,11 @@ class BlogContextMenu extends React.Component {
             {value}
           </DropdownToggle>
           <DropdownMenu end>
-            <DropdownItem onClick={() => onEdit(post._id)}>Edit</DropdownItem>
+            <DropdownItem onClick={() => onEdit(post.Id)}>Edit</DropdownItem>
             <DropdownItem onClick={this.openDeleteModal}>Delete</DropdownItem>
           </DropdownMenu>
         </Dropdown>
-        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={deleteModalOpen} postID={post._id} />
+        <BlogDeleteModal toggle={this.toggleDeleteModal} isOpen={deleteModalOpen} postID={post.Id} />
       </>
     );
   }

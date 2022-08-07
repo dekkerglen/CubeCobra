@@ -78,13 +78,21 @@ module.exports = function createClient(config) {
       return client.createTable(params).promise();
     },
     get: async (id) => {
-      console.log(id);
+      console.log(tableName(config.name), id);
       return documentClient
         .get({
           TableName: tableName(config.name),
           Key: {
             [config.partitionKey]: id,
           },
+        })
+        .promise();
+    },
+    scan: async (params) => {
+      return documentClient
+        .scan({
+          TableName: tableName(config.name),
+          ...params,
         })
         .promise();
     },
@@ -105,7 +113,6 @@ module.exports = function createClient(config) {
           ...Item,
         };
       }
-      console.log(Item);
       await documentClient.put({ TableName: tableName(config.name), Item }).promise();
       return Item[config.partitionKey];
     },
@@ -178,6 +185,14 @@ module.exports = function createClient(config) {
         batches.push(params);
       }
       await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
+    },
+    uopdate: async (params) => {
+      return documentClient
+        .update({
+          TableName: tableName(config.name),
+          ...params,
+        })
+        .promise();
     },
   };
 };

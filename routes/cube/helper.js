@@ -4,8 +4,9 @@ const util = require('../../serverjs/util');
 const { CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
-const Blog = require('../../models/blog');
 const Cube = require('../../dynamo/models/cube');
+const Blog = require('../../dynamo/models/blog');
+const Changelog = require('../../dynamo/models/changelog');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -22,17 +23,6 @@ const CSV_HEADER =
 
 async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
   try {
-    const blogpost = new Blog();
-    blogpost.title = 'Cube Bulk Import - Automatic Post';
-    blogpost.changed_cards = changelog;
-    blogpost.owner = cube.Owner;
-    blogpost.date = Date.now();
-    blogpost.cube = cube.Id;
-    blogpost.dev = 'false';
-    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = '';
-    blogpost.cubename = cube.Name;
-
     if (missing.length > 0) {
       return render(req, res, 'BulkUploadPage', {
         cube,
@@ -46,10 +36,18 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
           image_normal,
           image_flip,
         })),
-        blogpost: blogpost.toObject(),
       });
     }
-    await blogpost.save();
+
+    const ChangelistId = await Changelog.put(changelog, cube.Id);
+
+    await Blog.put({
+      Owner: req.user.Id,
+      Date: new Date().valueOf(),
+      CubeId: cube.Id,
+      Title: 'Cube Bulk Import - Automatic Post',
+      ChangelistId,
+    });
 
     await Cube.updateCards(cube.Id, cards);
 
@@ -221,19 +219,19 @@ const shuffle = (a) => {
   return a;
 };
 
-const addBasics = (cardsArray, basics, collection = null) => {
+const addBasics = (document, basics) => {
   const populatedBasics = basics.map((cardID) => {
     const details = carddb.cardFromId(cardID);
     const populatedCard = {
       cardID: details._id,
-      index: cardsArray.length,
+      index: document.Cards.length,
       isUnlimited: true,
       type_line: details.type,
     };
-    cardsArray.push(populatedCard);
+    document.Cards.push(populatedCard);
     return populatedCard;
   });
-  if (collection) collection.basics = populatedBasics.map(({ index }) => index);
+  document.Basics = populatedBasics.map(({ index }) => index);
 };
 
 const createPool = () => {

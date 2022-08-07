@@ -6,13 +6,13 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util');
-const Comment = require('../models/comment');
+const Comment = require('../dynamo/models/comment');
 const User = require('../dynamo/models/user');
-const Deck = require('../models/deck');
 const Content = require('../dynamo/models/content');
 const Blog = require('../dynamo/models/blog');
-const Package = require('../models/package');
+const Package = require('../dynamo/models/package');
 const Notice = require('../dynamo/models/notice');
+const Draft = require('../dynamo/models/draft');
 const { render } = require('../serverjs/render');
 
 const router = express.Router();
@@ -22,20 +22,19 @@ router.use(csrfProtection);
 router.get(
   '/:type/:parent',
   util.wrapAsyncApi(async (req, res) => {
-    const comments = await Comment.find({
-      $and: [{ parent: req.params.parent }, { parentType: req.params.type }],
-    }).lean();
+    const comments = await Comment.queryByParentAndType(req.params.parent, req.params.type);
 
     return res.status(200).send({
       success: 'true',
-      comments,
+      comments: comments.items,
+      lastKey: comments.lastKey,
     });
   }),
 );
 
 const getReplyContext = {
   comment: async (id) => {
-    const comment = await Comment.findById(id);
+    const comment = await Comment.getById(id);
     return [comment.owner, 'comment'];
   },
   blog: async (id) => {
@@ -43,7 +42,7 @@ const getReplyContext = {
     return [blog.owner, 'blogpost'];
   },
   deck: async (id) => {
-    const deck = await Deck.findById(id);
+    const deck = await Draft.getById(id);
     return [deck.owner, 'deck'];
   },
   article: async (id) => {
@@ -63,7 +62,7 @@ const getReplyContext = {
     return [episode.Owner, 'podcast episode'];
   },
   package: async (id) => {
-    const pack = await Package.findById(id);
+    const pack = await Package.getById(id);
     return [pack.userid, 'card package'];
   },
   default: async () => null, // nobody gets a notification for this
@@ -86,21 +85,15 @@ router.post(
       });
     }
 
-    const comment = new Comment();
+    const comment = {
+      Owner: poster.Id,
+      Body: req.body.comment.substring(0, 5000),
+      Date: Date.now() - 1000,
+      Parent: req.params.parent.substring(0, 500),
+      Type: req.params.type,
+    };
 
-    comment.parent = req.params.parent.substring(0, 500);
-    comment.parentType = req.params.type;
-    comment.owner = poster.Id;
-    comment.ownerName = poster.Username;
-    comment.image = poster.Image;
-    comment.artist = poster.Artist;
-    comment.updated = false;
-    comment.content = req.body.comment.substring(0, 5000);
-    // the -1000 is to prevent weird time display error
-    comment.timePosted = Date.now() - 1000;
-    comment.date = Date.now() - 1000;
-
-    await comment.save();
+    await Comment.put();
 
     const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
 
@@ -110,7 +103,7 @@ router.post(
       await util.addNotification(
         owner,
         poster,
-        `/comment/${comment._id}`,
+        `/comment/${comment.Id}`,
         `${poster.username} left a comment in response to your ${type}.`,
       );
     }
@@ -141,39 +134,24 @@ router.post(
   '/edit',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const newComment = req.body.comment;
+    const { id, content, remove } = req.body.comment;
 
-    const comment = await Comment.findById(newComment._id);
+    const document = await Comment.getById(id);
 
-    if (!comment.owner.equals(req.user.Id)) {
+    if (document.Owner !== req.user.Id) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
       });
     }
 
-    if (
-      ![null, comment.owner].includes(newComment.owner) ||
-      ![null, comment.ownerName].includes(newComment.ownerName)
-    ) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Invalid comment update.',
-      });
+    document.Body = content.substring(0, 5000);
+
+    if (remove) {
+      document.Owner = null;
     }
 
-    comment.owner = newComment.owner;
-    comment.ownerName = newComment.ownerName;
-    comment.image = newComment.owner
-      ? req.user.image
-      : 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
-    comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
-    comment.updated = true;
-    comment.content = newComment.content.substring(0, 5000);
-    // the -1000 is to prevent weird time display error
-    comment.timePosted = Date.now() - 1000;
-
-    await comment.save();
+    await Comment.update(document);
 
     return res.status(200).send({
       success: 'true',
@@ -208,7 +186,7 @@ router.post(
 router.get(
   '/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const comment = await Comment.findById(req.params.id).lean();
+    const comment = await Comment.getById(req.params.id);
 
     return render(
       req,

@@ -1,15 +1,13 @@
 const express = require('express');
 
 const util = require('../serverjs/util');
-
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
-const Deck = require('../models/deck');
+const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
-const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 
@@ -28,19 +26,10 @@ router.get('/explore', async (req, res) => {
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
   const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.CubeId));
 
-  const decks = await Deck.find()
-    .lean()
-    .sort({
-      date: -1,
-    })
-    .limit(10)
-    .exec();
-
-  const drafted = await Cube.batchGet([...new Set(decks.map((deck) => `${deck.cube}`))]);
   return render(req, res, 'ExplorePage', {
     recents: recents.sort((a, b) => b.Date - a.Date).slice(0, 12),
     featured,
-    drafted: drafted.slice(0, 12),
+    drafted: [],
     popular: popular.sort((a, b) => b.UsersFollowing.length - a.UsersFollowing.length).slice(0, 12),
   });
 });
@@ -57,20 +46,13 @@ router.get('/random', async (req, res) => {
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const posts = await getBlogFeedItems(req.user, 0, 10);
+    const posts = []; // TODO: reimplement feed
 
     const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
     const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
 
     const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
-    const decks = await Deck.find({
-      cubeOwner: req.user.Id,
-    })
-      .sort({
-        date: -1,
-      })
-      .lean()
-      .limit(12);
+    const decks = await Draft.getByCubeOwner(req.user.Id);
 
     return render(req, res, 'DashboardPage', {
       posts,
@@ -83,37 +65,13 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   }
 });
 
-router.get('/dashboard/decks/:page', async (req, res) => {
+router.get('/dashboard/decks/:page', ensureAuth, async (req, res) => {
   try {
-    const pagesize = 30;
-    const { page } = req.params;
-    const { user } = req;
-    if (!user) {
-      return res.redirect('/landing');
-    }
-
-    const decks = await Deck.find({
-      cubeOwner: user.Id,
-    })
-      .sort({
-        date: -1,
-      })
-      .skip(pagesize * page)
-      .limit(pagesize)
-      .lean()
-      .exec();
-
-    const numDecks = await Deck.countDocuments({
-      cubeOwner: user.Id,
-    })
-      .lean()
-      .exec();
+    const decks = await Draft.getByCubeOwner(req.user.Id);
 
     return render(req, res, 'RecentDraftsPage', {
-      decks,
-      currentPage: parseInt(page, 10),
-      totalPages: Math.ceil(numDecks / pagesize),
-      count: numDecks,
+      decks: decks.items,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     req.logger.error(err);

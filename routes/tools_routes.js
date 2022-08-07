@@ -7,17 +7,15 @@ const { winston } = require('../serverjs/cloudwatch');
 const carddb = require('../serverjs/cards');
 const cardutil = require('../dist/utils/Card');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort');
-const getBlankCardHistory = require('../src/utils/BlankCardHistory');
 const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta');
 const util = require('../serverjs/util');
 const { render } = require('../serverjs/render');
-const { ensureAuth, csrfProtection } = require('./middleware');
+const { csrfProtection } = require('./middleware');
 
-const CardHistory = require('../models/cardHistory');
+const CardHistory = require('../dynamo/models/cardHistory');
+const CardMetadata = require('../dynamo/models/cardMetadata');
 const Cube = require('../dynamo/models/cube');
-
-const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 
@@ -180,15 +178,13 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    let data = await CardHistory.findOne({ oracleId: card.oracle_id });
-    // id is valid but has no matching history
-    if (!data) {
-      data = getBlankCardHistory(id);
-    }
+    const history = await CardHistory.getByOracle(card.oracle_id);
+    const metadata = await CardMetadata.getByOracle(card.oracle_id);
+
     const related = {};
 
     for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
-      related[category] = data.cubedWith[category].map((oracle) =>
+      related[category] = metadata.cubedWith[category].map((oracle) =>
         carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
       );
     }
@@ -199,7 +195,8 @@ router.get('/card/:id', async (req, res) => {
       'CardPage',
       {
         card,
-        data,
+        history: history.items,
+        lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card._id)
           .map((cardid) => carddb.cardFromId(cardid)),
@@ -326,15 +323,6 @@ router.get('/searchcards', async (req, res) => {
       title: 'Search Cards',
     },
   );
-});
-
-router.get('/getfeeditems/:skip', ensureAuth, async (req, res) => {
-  const skip = Number.parseInt(req.params.skip, 10) || 0;
-  const items = await getBlogFeedItems(req.user, skip, 10);
-  return res.status(200).send({
-    success: 'true',
-    items,
-  });
 });
 
 module.exports = router;

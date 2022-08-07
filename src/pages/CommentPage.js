@@ -50,7 +50,7 @@ const CommentPage = ({ comment, loginCallback }) => {
         </CardHeader>
         <Comment comment={content} index={0} noReplies editComment={setContent} />
         <div className="border-top">
-          <CommentsSection parentType="comment" parent={content._id} />
+          <CommentsSection parentType="comment" parent={content.Id} />
         </div>
       </Card>
     </MainLayout>

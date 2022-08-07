@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const express = require('express');
 
 const bcrypt = require('bcryptjs');
@@ -12,13 +13,13 @@ const { render } = require('../serverjs/render');
 
 // Bring in models
 const User = require('../dynamo/models/user');
-const PasswordReset = require('../models/passwordreset');
+const PasswordReset = require('../dynamo/models/passwordReset');
 const Cube = require('../dynamo/models/cube');
-const Deck = require('../models/deck');
 const Blog = require('../dynamo/models/blog');
-const Patron = require('../models/patron');
-const FeaturedCubes = require('../models/featuredCubes');
+const Patron = require('../dynamo/models/patron');
+const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Notification = require('../dynamo/models/notification');
+const Draft = require('../dynamo/models/draft');
 
 const router = express.Router();
 
@@ -42,11 +43,6 @@ function checkPasswordsMatch(value, { req }) {
 
   return true;
 }
-
-function addMinutes(date, minutes) {
-  return new Date(new Date(date).getTime() + minutes * 60000);
-}
-
 router.use(csrfProtection);
 
 router.get('/notification/:id', ensureAuth, async (req, res) => {
@@ -165,15 +161,15 @@ router.post(
         return render(req, res, 'LostPasswordPage');
       }
       const recoveryEmail = req.body.email.toLowerCase();
-      await PasswordReset.deleteOne({
-        email: recoveryEmail,
-      });
 
-      const passwordReset = new PasswordReset();
-      passwordReset.expires = addMinutes(Date.now(), 15);
-      passwordReset.email = recoveryEmail;
-      passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
-      await passwordReset.save();
+      const user = await User.getByEmail(recoveryEmail);
+
+      const passwordReset = {
+        Owner: user.Id,
+        Date: new Date(),
+      };
+
+      await PasswordReset.put(passwordReset);
 
       const smtpTransport = mailer.createTransport({
         name: 'CubeCobra.com',
@@ -217,15 +213,13 @@ router.post(
   },
 );
 
-router.get('/passwordreset/:id', (req, res) => {
-  // create a password reset page and return it here
-  PasswordReset.findById(req.params.id, (err, passwordreset) => {
-    if (!passwordreset || Date.now() > passwordreset.expires) {
-      req.flash('danger', 'Password recovery link expired');
-      return res.redirect('/');
-    }
-    return render(req, res, 'PasswordResetPage');
-  });
+router.get('/passwordreset/:id', async (req, res) => {
+  const document = await PasswordReset.getById();
+  if (!document || Date.now().valueOf() > document.Date + 6 * 60 * 60 * 1000) {
+    req.flash('danger', 'Password recovery link expired');
+    return res.redirect('/');
+  }
+  return render(req, res, 'PasswordResetPage');
 });
 
 router.post(
@@ -530,27 +524,9 @@ router.post('/getmorenotifications', ensureAuth, async (req, res) => {
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const { userid } = req.params;
-    const pagesize = 30;
 
     const user = await User.getById(userid);
-
-    const decksQ = Deck.find(
-      {
-        owner: userid,
-      },
-      '_id seats date cube owner cubeOwner',
-    )
-      .sort({
-        date: -1,
-      })
-      .skip(pagesize * Math.max(req.params.page, 0))
-      .limit(pagesize)
-      .lean();
-    const numDecksQ = Deck.countDocuments({
-      owner: userid,
-    });
-
-    const [numDecks, decks] = await Promise.all([numDecksQ, decksQ]);
+    const decks = await Draft.getByOwner(userid);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -572,9 +548,8 @@ router.get('/decks/:userid/:page', async (req, res) => {
       owner: user,
       followers,
       following: req.user && req.user.FollowedUsers.some((id) => id === user.Id),
-      decks: decks || [],
-      pages: Math.ceil(numDecks / pagesize),
-      activePage: Math.max(req.params.page, 0),
+      decks: decks.items,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -626,12 +601,24 @@ router.post('/getmoreblogs', ensureAuth, async (req, res) => {
 
 // account page
 router.get('/account', ensureAuth, async (req, res) => {
-  const patron = await Patron.findOne({ user: req.user.Id });
-  const featured = await FeaturedCubes.getSingleton();
-  const i = featured.queue.findIndex((f) => f.ownerID.equals(req.user.Id));
+  const patron = await Patron.getById(req.user.Id);
+
+  const entireQueue = [];
+
+  if (patron) {
+    let lastKey;
+
+    do {
+      const result = await FeaturedQueue.querySortedByDate(lastKey);
+      lastKey = result.lastKey;
+      entireQueue.push(...result.items);
+    } while (lastKey);
+  }
+
+  const i = entireQueue.findIndex((f) => f.Owner === req.user.Id);
   let myFeatured;
   if (i !== -1) {
-    const cube = await Cube.getById(featured.queue[i].cubeID);
+    const cube = await Cube.getById(entireQueue[i].cubeID);
     myFeatured = { cube, position: i + 1 };
   }
 
@@ -816,7 +803,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
-  const patron = await Patron.findOne({ user: req.user.Id }).lean();
+  const patron = await Patron.getById(req.user.Id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return res.redirect(redirect);

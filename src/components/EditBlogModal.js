@@ -30,7 +30,7 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
             defaultValue={post ? post.title : ''}
           />
           <Label className="mt-3">Body:</Label>
-          {post && <Input type="hidden" name="id" value={post._id} />}
+          {post && <Input type="hidden" name="id" value={post.Id} />}
           <TextEntry name="markdown" value={markdown} onChange={(e) => setMarkdown(e.target.value)} maxLength={10000} />
           <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>
@@ -51,7 +51,7 @@ EditBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   post: BlogPostPropType,
-  cubeID: PropTypes.string.isRequired, // usually equal to post._id, needs to be a separate prop for new posts
+  cubeID: PropTypes.string.isRequired,
 };
 
 EditBlogModal.defaultProps = {

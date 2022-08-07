@@ -13,7 +13,7 @@ const CommentList = ({ comments, startIndex, editComment }) => (
       .reverse()
       .map((comment, index) => (
         <Comment
-          key={`comment-${comment._id}`}
+          key={`comment-${comment.Id}`}
           comment={comment}
           index={startIndex + comments.length - index}
           editComment={editComment}

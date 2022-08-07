@@ -47,7 +47,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
         </Card>
         <Row className="my-3">
           {cubes.map((cube) => (
-            <Col key={cube._id} className="mt-3" xs={6} sm={4} md={3}>
+            <Col key={cube.Id} className="mt-3" xs={6} sm={4} md={3}>
               <CubePreview cube={cube} />
             </Col>
           ))}

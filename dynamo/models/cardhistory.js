@@ -3,9 +3,14 @@ require('dotenv').config();
 
 const createClient = require('../util');
 
-const cardutil = require('../../dist/utils/Card');
+const TYPES = {
+  MONTH: 'month',
+  WEEK: 'week',
+  DAY: 'day',
+};
 
 const FIELDS = {
+  ORACLE_TYPE_COMP: 'OTComp',
   ORACLE_ID: 'OracleId',
   DATE: 'Date',
   ELO: 'Elo',
@@ -21,24 +26,38 @@ const FIELDS = {
   PEASANT: 'Peasant',
   LEGACY: 'Legacy',
   MODERN: 'Modern',
-  STANDARD: 'Standard',
   VINTAGE: 'Vintage',
   TOTAL: 'Total',
 };
 
 const client = createClient({
   name: 'CARD_HISTORY',
-  partitionKey: FIELDS.ORACLE_ID,
+  partitionKey: FIELDS.ORACLE_TYPE_COMP,
   sortKey: FIELDS.DATE,
   attributes: {
-    [FIELDS.ORACLE_ID]: 'S',
+    [FIELDS.ORACLE_TYPE_COMP]: 'S',
     [FIELDS.DATE]: 'N',
   },
   FIELDS,
 });
 
 module.exports = {
-  getByCardName: async (name) => (await client.get(cardutil.normalizeName(name))).Item,
+  getByOracleAndType: async (oracle, type, limit, lastKey) => {
+    const result = await client.query({
+      KeyConditionExpression: `${FIELDS.ORACLE_TYPE_COMP} = :oracle`,
+      ExpressionAttributeValues: {
+        ':oracle': `${oracle}:${type}`,
+      },
+      ExclusiveStartKey: lastKey,
+      ScanIndexForward: false,
+      Limit: limit || 100,
+    });
+
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   put: async (document) => {
     return client.put(document);
   },
@@ -105,4 +124,5 @@ module.exports = {
     return items;
   },
   FIELDS,
+  TYPES,
 };

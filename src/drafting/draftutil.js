@@ -56,8 +56,8 @@ const flattenSteps = (steps) => {
   return res;
 };
 
-export const getStepList = (draft) =>
-  draft.initial_state[0]
+export const getStepList = (initialState) =>
+  initialState[0]
     .map((pack, packIndex) => [
       ...flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
         pack: packIndex + 1,
@@ -88,16 +88,16 @@ export const nextStep = (draft, seat, cardsPicked) => {
   return null;
 };
 
-export const getDrafterState = (draft, seatNumber, pickNumber) => {
+export const getDrafterState = (seats, seatNumber, pickNumber) => {
   // build list of steps and match to pick and pack number
-  const steps = getStepList(draft);
+  const steps = getStepList(seats.InitialState);
 
   // build a list of states for each seat
   const states = [];
-  for (let i = 0; i < draft.seats.length; i++) {
+  for (let i = 0; i < seats.Seats.length; i++) {
     const picksList = [];
-    const pickQueue = draft.seats[i].pickorder.slice();
-    const trashQueue = draft.seats[i].trashorder.slice();
+    const pickQueue = seats.Seats.seats[i].Pickorder.slice();
+    const trashQueue = seats.Seats.seats[i].Trashorder.slice();
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
@@ -119,8 +119,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     states.push({
       picked: [],
       trashed: [],
-      pickQueue: draft.seats[i].pickorder.slice(),
-      trashQueue: draft.seats[i].trashorder.slice(),
+      pickQueue: seats.Seats.seats[i].Pickorder.slice(),
+      trashQueue: seats.Seats.seats[i].Trashorder.slice(),
       cardsInPack: [],
       picksList,
     });
@@ -136,8 +136,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
-      for (let i = 0; i < draft.initial_state.length; i++) {
-        packsWithCards[i] = draft.initial_state[i][step.pack - 1].cards.slice();
+      for (let i = 0; i < seats.InitialState.length; i++) {
+        packsWithCards[i] = seats.InitialState[i][step.pack - 1].cards.slice();
       }
 
       offset = 0;
@@ -150,7 +150,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       seat.pack = step.pack;
 
       if (step.action === 'pick' || step.action === 'pickrandom') {
-        seat.cardsInPack = packsWithCards[(i + offset) % draft.seats.length].slice();
+        seat.cardsInPack = packsWithCards[(i + offset) % seats.seats.length].slice();
 
         const picked = seat.pickQueue.pop();
         seat.picked.push(picked);

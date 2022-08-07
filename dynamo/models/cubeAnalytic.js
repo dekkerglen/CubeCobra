@@ -1,3 +1,5 @@
+/* eslint-disable prefer-destructuring */
+/* eslint-disable no-await-in-loop */
 // dotenv
 require('dotenv').config();
 
@@ -11,7 +13,6 @@ const FIELDS = {
   ORACLE: 'Oracle',
   PICKS: 'Picks',
   PASSES: 'Passes',
-  ELO: 'Elo',
   MAINBOARDS: 'Mainboards',
   SIDEBOARDS: 'Sideboards',
 };
@@ -30,8 +31,62 @@ const client = createClient({
 module.exports = {
   getByCubeIdAndOracle: async (cubeId, oracle) =>
     (await client.getByKey({ [FIELDS.CUBE_ID]: cubeId, [FIELDS.ORACLE]: oracle })).Item,
+  getByCubeId: async (cubeId) => {
+    let lastKey;
+    const items = [];
+
+    do {
+      const res = await client.query({
+        KeyConditionExpression: '#cubeId = :cubeId',
+        ExpressionAttributeNames: {
+          '#cubeId': FIELDS.CUBE_ID,
+        },
+        ExpressionAttributeValues: {
+          ':cubeId': cubeId,
+        },
+        ExclusiveStartKey: lastKey,
+        Limit: 10000,
+      });
+
+      items.push(...res.Items);
+      lastKey = res.LastEvaluatedKey;
+    } while (lastKey);
+
+    return Object.fromEntries(items.map((item) => [item[FIELDS.ORACLE], item]));
+  },
   put: async (document) => {
     return client.put(document);
+  },
+  pushUpdates: async (updates) => {
+    const groupedByOracle = {};
+    for (const field of ['mainboards', 'sideboards', 'picks', 'passes']) {
+      for (const entry of Object.entries(updates[field])) {
+        groupedByOracle[entry[0]] = groupedByOracle[entry[0]] || {};
+        groupedByOracle[entry[0]][field] = entry[1];
+      }
+    }
+
+    await Promise.all(
+      Object.entries(groupedByOracle).map(async ([oracle, update]) => {
+        // INCREMENT
+        await client.update({
+          Key: { [FIELDS.CUBE_ID]: update.cube, [FIELDS.ORACLE]: oracle },
+          UpdateExpression: 'ADD #mainboards :mainboards, #sideboards :sideboards, #picks :picks, #passes :passes',
+          ExpressionAttributeNames: {
+            '#mainboards': FIELDS.MAINBOARDS,
+            '#sideboards': FIELDS.SIDEBOARDS,
+            '#picks': FIELDS.PICKS,
+            '#passes': FIELDS.PASSES,
+          },
+          ExpressionAttributeValues: {
+            ':mainboards': update.mainboards || 0,
+            ':sideboards': update.sideboards || 0,
+            ':picks': update.picks || 0,
+            ':passes': update.passes || 0,
+          },
+        });
+      }),
+    );
   },
   batchPut: async (documents) => {
     const items = [];

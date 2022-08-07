@@ -19,9 +19,6 @@ const AdminDashboardPage = ({ loginCallback, noticeCount, contentInReview }) => 
         <ButtonLink href="/admin/notices" block outline color="accent">
           {`Notices (${noticeCount})`}
         </ButtonLink>
-        <ButtonLink href="/admin/comments" block outline color="accent">
-          Recent Comments
-        </ButtonLink>
         <ButtonLink href="/admin/reviewcontent" block outline color="accent">
           {`Review Content (${contentInReview})`}
         </ButtonLink>

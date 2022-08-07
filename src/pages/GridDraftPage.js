@@ -237,7 +237,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
             method="POST"
             action={`/cube/deck/submitgriddeck/${initialDraft.cube}`}
           >
-            <Input type="hidden" name="body" value={initialDraft._id} />
+            <Input type="hidden" name="body" value={initialDraft.Id} />
           </CSRFForm>
           <DndProvider>
             <ErrorBoundary>

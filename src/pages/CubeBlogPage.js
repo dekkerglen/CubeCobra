@@ -27,20 +27,19 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
     // intentionally wait to avoid too many DB queries
     await wait(2000);
 
-    const response = await csrfFetch(`/blog/getmoreblogsbycube`, {
+    const response = await csrfFetch(`/cube/blog/getmoreblogsbycube`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        cube,
+        cube: cube.Id,
         lastKey: currentLastKey,
       }),
     });
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.posts]);
         setLastKey(json.lastKey);
@@ -63,7 +62,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
         <DynamicFlash />
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.length > 0 ? (
-            items.map((post) => <BlogPost key={post._id} post={post} />)
+            items.map((post) => <BlogPost key={post.Id} post={post} />)
           ) : (
             <h5>No blog posts for this cube.</h5>
           )}

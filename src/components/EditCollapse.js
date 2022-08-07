@@ -221,7 +221,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         <Col xs={12} md={4}>
           <InputGroup className="flex-nowrap mb-1">
             <AutocompleteInput
-              cubeId={cube._id}
+              cubeId={cube.Id}
               treeUrl={`/cube/api/cubecardnames/${cube.Id}`}
               treePath="cardnames"
               type="text"

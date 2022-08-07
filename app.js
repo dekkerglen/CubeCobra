@@ -19,8 +19,6 @@ const socketio = require('socket.io');
 const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards');
 const carddb = require('./serverjs/cards');
-const CardRating = require('./models/cardrating');
-const CardHistory = require('./models/cardHistory');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
 
@@ -224,14 +222,7 @@ app.use((err, req, res, next) => {
 // scryfall updates this data at 9, so his will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
-
-  let ratings = [];
-  let histories = [];
-  if (process.env.USE_S3 !== 'true') {
-    ratings = await CardRating.find({}, 'name elo embedding').lean();
-    histories = await CardHistory.find({}, 'oracleId current.total current.picks').lean();
-  }
-  updatedb.updateCardbase(ratings, histories);
+  updatedb.updateCardbase();
 });
 
 // Start server after carddb is initialized.

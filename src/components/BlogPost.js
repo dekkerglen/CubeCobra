@@ -22,7 +22,7 @@ const BlogPost = ({ post, noScroll }) => {
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
   const canEdit = user && user.Id === post.Owner;
 
-  const hasChangelist = post.ChangelistId;
+  const hasChangelist = post.Changelog;
   const hasBody = post.Body && post.Body.length > 0;
 
   return (
@@ -58,10 +58,10 @@ const BlogPost = ({ post, noScroll }) => {
       </CardHeader>
       {hasChangelist && hasBody && (
         <Row className="g-0">
-          <Col xs={12} md={4}>
+          <Col xs={12} md={4} className="border-end">
             <div style={scrollStyle}>
               <CardBody>
-                <BlogPostChangelog changelogId={post.ChangelistId} cubeId={post.CubeId} />
+                <BlogPostChangelog changelog={post.Changelog} cubeId={post.CubeId} />
               </CardBody>
             </div>
           </Col>
@@ -84,7 +84,7 @@ const BlogPost = ({ post, noScroll }) => {
       {hasChangelist && !hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <BlogPostChangelog changelogId={post.ChangelistId} cubeId={post.CubeId} />
+            <BlogPostChangelog changelog={post.Changelog} cubeId={post.CubeId} />
           </CardBody>
         </div>
       )}

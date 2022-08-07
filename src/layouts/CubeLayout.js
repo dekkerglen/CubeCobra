@@ -52,6 +52,9 @@ const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useCha
             <CubeNavItem link="list" activeLink={activeLink}>
               List
             </CubeNavItem>
+            <CubeNavItem link="history" activeLink={activeLink}>
+              History
+            </CubeNavItem>
             <CubeNavItem link="playtest" activeLink={activeLink}>
               Playtest
             </CubeNavItem>

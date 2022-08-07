@@ -4,7 +4,6 @@ require('dotenv').config();
 const express = require('express');
 const { fromEntries } = require('../serverjs/util');
 const { lpush } = require('../serverjs/redis');
-const { getUserFromId } = require('../serverjs/cache');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const {
   setup,
@@ -22,8 +21,7 @@ const {
   tryBotPicks,
 } = require('../serverjs/multiplayerDrafting');
 
-const Draft = require('../models/draft');
-const Deck = require('../models/deck');
+const Draft = require('../dynamo/models/draft');
 
 const router = express.Router();
 
@@ -61,23 +59,20 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
     });
   }
 
-  const draft = await Draft.findById(draftid);
+  const draft = await Draft.getById(draftid);
 
   const seatOrder = await getLobbySeatOrder(draftid);
 
   const seatToPlayer = fromEntries(Object.entries(seatOrder).map(([player, seat]) => [parseInt(seat, 10), player]));
 
-  for (let i = 0; i < draft.seats.length; i++) {
+  for (let i = 0; i < draft.Seats.length; i++) {
     if (seatToPlayer[i]) {
-      const user = await getUserFromId(seatToPlayer[i]);
-
-      draft.seats[i].userid = seatToPlayer[i];
-      draft.seats[i].bot = false;
-      draft.seats[i].name = user.Username;
+      draft.Seats[i].Owner = seatToPlayer[i];
+      draft.Seats[i].Bot = false;
     }
   }
 
-  await draft.save();
+  await Draft.put(draft);
 
   await setup(draft);
 
@@ -177,20 +172,21 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
         await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
       }
 
-      const deck = await Deck.findOne({ draft: draftId });
+      const deck = await Draft.getById(draftId);
 
-      if (!deck.seats[seat].userid.equals(req.user.id)) {
+      if (deck.Seats[seat].Owner !== req.user.Id) {
         return res.status(401).send({
           success: 'false',
         });
       }
 
-      deck.seats[seat].deck = drafted;
-      deck.seats[seat].sideboard = sideboard;
-      await deck.save();
+      deck.Seats[seat].deck = drafted;
+      deck.Seats[seat].sideboard = sideboard;
+      await Draft.put(deck);
+
       return res.status(200).send({
         success: 'true',
-        deck: deck._id,
+        deck: deck.Id,
       });
     } catch (err) {
       req.logger.info(`Error saving deck, retry ${retry}`);

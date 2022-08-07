@@ -39,7 +39,7 @@ const useToggle = (type, parent) => {
     const clone = JSON.parse(JSON.stringify(comments));
 
     for (let i = 0; i < clone.length; i++) {
-      if (clone[i]._id === comment._id) {
+      if (clone[i].Id === comment.Id) {
         clone[i] = comment;
       }
     }

@@ -25,7 +25,7 @@ const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, 
         {decks.length > 0 ? (
           <CardBody className="p-0">
             {decks.map((deck) => (
-              <DeckPreview key={deck._id} deck={deck} nextURL={`/user/decks/${owner.Id}/${activePage}`} />
+              <DeckPreview key={deck.Id} deck={deck} nextURL={`/user/decks/${owner.Id}/${activePage}`} />
             ))}
           </CardBody>
         ) : (

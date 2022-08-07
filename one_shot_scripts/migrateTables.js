@@ -4,39 +4,40 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const carddb = require('../serverjs/cards');
 
-const content = require('../dynamo/models/content');
-const notification = require('../dynamo/models/notification');
-const user = require('../dynamo/models/user');
-const cube = require('../dynamo/models/cube');
-const cubeHash = require('../dynamo/models/cubeHash');
-const changelog = require('../dynamo/models/changelog');
-const blog = require('../dynamo/models/blog');
-const cardHistory = require('../dynamo/models/cardhistory');
-const card = require('../dynamo/models/cardMetadata');
-const comment = require('../dynamo/models/comment');
-const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
-const draft = require('../dynamo/models/draft');
-const package = require('../dynamo/models/package');
-const packageHash = require('../dynamo/models/packageHash');
-const patron = require('../dynamo/models/patron');
-const passwordReset = require('../dynamo/models/passwordReset');
+// const content = require('../dynamo/models/content');
+// const notification = require('../dynamo/models/notification');
+// const user = require('../dynamo/models/user');
+// const cube = require('../dynamo/models/cube');
+// const cubeHash = require('../dynamo/models/cubeHash');
+// const changelog = require('../dynamo/models/changelog');
+// const blog = require('../dynamo/models/blog');
+// const cardHistory = require('../dynamo/models/cardhistory');
+// const card = require('../dynamo/models/cardMetadata');
+// const comment = require('../dynamo/models/comment');
+// const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
+// const draft = require('../dynamo/models/draft');
+// const package = require('../dynamo/models/package');
+// const patron = require('../dynamo/models/patron');
+// const passwordReset = require('../dynamo/models/passwordReset');
+const featuredQueue = require('../dynamo/models/featuredQueue');
 
-const Video = require('../models/old/video');
-const Episode = require('../models/old/podcastEpisode');
-const Podcast = require('../models/old/podcast');
-const Article = require('../models/old/article');
-const User = require('../models/old/user');
-const Cube = require('../models/old/cube');
-const Blog = require('../models/blog');
-const CardHistory = require('../models/cardhistory');
-const CardRating = require('../models/cardrating');
-const Comment = require('../models/comment');
-const CubeAnalytic = require('../models/cubeAnalytic');
-const Deck = require('../models/deck');
-const Draft = require('../models/draft');
-const Package = require('../models/package');
-const Patron = require('../models/patron');
-const PasswordReset = require('../models/passwordReset');
+// const Video = require('../models/old/video');
+// const Episode = require('../models/old/podcastEpisode');
+// const Podcast = require('../models/old/podcast');
+// const Article = require('../models/old/article');
+// const User = require('../models/old/user');
+// const Cube = require('../models/old/cube');
+// const Blog = require('../models/blog');
+// const CardHistory = require('../models/cardhistory');
+// const CardRating = require('../models/cardrating');
+// const Comment = require('../models/old/comment');
+// const CubeAnalytic = require('../models/cubeAnalytic');
+// const Deck = require('../models/deck');
+// const Draft = require('../models/draft');
+// const Package = require('../models/package');
+// const Patron = require('../models/patron');
+// const PasswordReset = require('../models/passwordReset');
+const FeaturedQueue = require('../models/old/featuredCubes');
 
 
 const migrations = [
@@ -63,13 +64,13 @@ const migrations = [
   //     [user.convertUser, user.batchPut],
   //   ],
   // },
-  {
-    source: Blog,
-    conversions: [
-      [changelog.getChangelogFromBlog, changelog.batchPut],
-      // [blog.convertBlog, blog.batchPut],
-    ],
-  },
+  // {
+  //   source: Blog,
+  //   conversions: [
+  //     [changelog.getChangelogFromBlog, changelog.batchPut],
+  //     // [blog.convertBlog, blog.batchPut],
+  //   ],
+  // },
   // {
   //   source: CardRating,
   //   conversions: [
@@ -122,10 +123,6 @@ const migrations = [
   //   source: Package,
   //   conversions: [
   //     [package.convertPackage, package.batchPut],
-  //     [
-  //       (p) => packageHash.getHashRows(package.convertPackage(p)),
-  //       packageHash.batchPut,
-  //     ]
   //   ],
   // },
   // {
@@ -134,6 +131,12 @@ const migrations = [
   //     [patron.convertPatron, patron.batchPut],
   //   ],
   // }
+  {
+    source: FeaturedQueue,
+    conversions: [
+      [featuredQueue.convertQueue, featuredQueue.batchPut],
+    ],
+  }
 ];
 
 const batchSize = 25;

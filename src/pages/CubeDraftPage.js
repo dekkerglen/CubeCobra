@@ -24,7 +24,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
   const [message, setMessage] = useState('');
 
   const start = async () => {
-    await callApi('/multiplayer/startdraft', { draft: initialDraft._id });
+    await callApi('/multiplayer/startdraft', { draft: initialDraft.Id });
   };
 
   useMount(() => {
@@ -38,7 +38,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
           setState(data.state);
         });
 
-        const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
+        const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft.Id });
         const json = await res.json();
         if (json.initialized) {
           if (!json.seats[user.id]) {
@@ -52,7 +52,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
           setState('staging');
         }
 
-        socket.emit('joinLobby', { draftId: initialDraft._id });
+        socket.emit('joinLobby', { draftId: initialDraft.Id });
       }
     };
     run();
@@ -61,7 +61,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube._id}>
+        <DisplayContextProvider cubeID={cube.Id}>
           {state === 'loading' && (
             <div className="centered py-3">
               <Spinner className="position-absolute" />

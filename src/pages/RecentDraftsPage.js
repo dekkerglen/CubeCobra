@@ -37,7 +37,7 @@ const RecentDraftsPage = ({ decks, currentPage, totalPages, count, loginCallback
           </CardHeader>
           <CardBody className="p-0">
             {decks.length > 0 ? (
-              decks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" canEdit />)
+              decks.map((deck) => <DeckPreview key={deck.Id} deck={deck} nextURL="/dashboard" canEdit />)
             ) : (
               <p className="m-2">
                 Nobody has drafted your cubes! Perhaps try reaching out on the{' '}

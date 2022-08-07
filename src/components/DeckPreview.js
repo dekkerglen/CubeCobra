@@ -48,8 +48,8 @@ const DeckPreview = ({ deck, nextURL }) => {
 
   const handleClick = useKeyHandlers(
     useCallback(() => {
-      window.location.href = `/cube/deck/${deck._id}`;
-    }, [deck._id]),
+      window.location.href = `/cube/deck/${deck.Id}`;
+    }, [deck.Id]),
   );
 
   const openDeleteModal = (event) => {
@@ -65,7 +65,7 @@ const DeckPreview = ({ deck, nextURL }) => {
     <Row className="deck-preview mx-0" {...handleClick}>
       <Col xs={canEdit ? 11 : 12} className="ps-0">
         <h6 className="mb-0 text-muted">
-          <a href={`/cube/deck/${deck._id}`} title={fullName}>
+          <a href={`/cube/deck/${deck.Id}`} title={fullName}>
             {name}
           </a>{' '}
           by{' '}
@@ -97,7 +97,7 @@ const DeckPreview = ({ deck, nextURL }) => {
             <DeckDeleteModal
               toggle={closeDeleteModal}
               isOpen={deleteModalOpen}
-              deckID={deck._id}
+              deckID={deck.Id}
               cubeID={deck.cube}
               nextURL={nextURL}
             />

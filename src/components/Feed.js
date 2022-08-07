@@ -28,10 +28,10 @@ const Feed = ({ items }) => {
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        const ids = new Set(feedItems.map((item) => item._id));
+        const ids = new Set(feedItems.map((item) => item.Id));
         const newFeedItems = [...feedItems];
         for (const item of json.items) {
-          if (!ids.has(item._id)) {
+          if (!ids.has(item.Id)) {
             newFeedItems.push(item);
           }
         }
@@ -49,7 +49,7 @@ const Feed = ({ items }) => {
   return (
     <InfiniteScroll dataLength={feedItems.length} next={fetchMoreData} hasMore loader={loader}>
       {feedItems.map((item) => (
-        <BlogPost key={item._id} post={item} />
+        <BlogPost key={item.Id} post={item} />
       ))}
     </InfiniteScroll>
   );

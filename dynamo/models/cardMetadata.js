@@ -9,7 +9,7 @@ const carddb = require('../../serverjs/cards');
 const FIELDS = {
   ORACLE_ID: 'OracleId',
   CUBED_WITH: 'CubedWith',
-  EMBEDDING: 'Embedding',
+  DRAFTED_WITH: 'DraftedWith',
 };
 
 const client = createClient({
@@ -22,7 +22,7 @@ const client = createClient({
 });
 
 module.exports = {
-  getByCardName: async (name) => (await client.get(cardutil.normalizeName(name))).Item,
+  getByOracle: async (oracle) => (await client.get(oracle)).Item,
   put: async (document) => {
     return client.put(document);
   },

@@ -1,3 +1,4 @@
+const uuid = require('uuid/v4');
 const createClient = require('../util');
 
 const FIELDS = {
@@ -17,7 +18,14 @@ const client = createClient({
 
 module.exports = {
   getById: async (id) => (await client.get(id)).Item,
-  put: async (document) => client.put(document),
+  put: async (document) => {
+    const id = document[FIELDS.ID] || uuid();
+    await client.put({
+      [FIELDS.ID]: id,
+      [FIELDS.OWNER]: document[FIELDS.OWNER],
+      [FIELDS.DATE]: document[FIELDS.DATE],
+    });
+  },
   batchPut: async (documents) => {
     await client.batchPut(documents);
   },

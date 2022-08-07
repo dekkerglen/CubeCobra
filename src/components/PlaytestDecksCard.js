@@ -19,7 +19,7 @@ const PlaytestDecksCard = ({ decks, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck._id} deck={deck} />
+          <DeckPreview key={deck.Id} deck={deck} />
         ))}
       </CardBody>
       <CardFooter>

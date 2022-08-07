@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./shared/cardSchema');
+const cardSchema = require('../shared/cardSchema');
 
 // data for each seat, human or bot
 const SeatDeck = {

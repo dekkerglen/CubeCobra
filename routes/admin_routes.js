@@ -12,9 +12,9 @@ const { ensureRole, csrfProtection, flashValidationErrors } = require('./middlew
 
 const User = require('../dynamo/models/user');
 const Notice = require('../dynamo/models/notice');
-const Comment = require('../models/comment');
+const Comment = require('../dynamo/models/comment');
 const Content = require('../dynamo/models/content');
-const FeaturedCubes = require('../models/featuredCubes');
+const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const { render } = require('../serverjs/render');
 const util = require('../serverjs/util');
@@ -37,21 +37,8 @@ router.get('/dashboard', ensureAdmin, async (req, res) => {
   });
 });
 
-const PAGE_SIZE = 24;
-
 router.get('/comments', async (req, res) => {
   return res.redirect('/admin/notices');
-});
-
-router.get('/comments/:page', ensureAdmin, async (req, res) => {
-  const count = await Comment.countDocuments();
-  const comments = await Comment.find()
-    .sort({ timePosted: -1 })
-    .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
-    .limit(PAGE_SIZE)
-    .lean();
-
-  return render(req, res, 'AdminCommentsPage', { comments, count, page: Math.max(req.params.page, 0) });
 });
 
 router.get('/reviewcontent', ensureAdmin, async (req, res) => {
@@ -216,19 +203,14 @@ router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
 
 router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
-  const comment = await Comment.findById(report.Subject);
+  const comment = await Comment.getById(report.Subject);
 
-  comment.owner = null;
-  comment.ownerName = null;
-  comment.image =
-    'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
-  comment.artist = 'Allan Pollack';
-  comment.updated = true;
-  comment.content = '[removed by moderator]';
+  comment.Owner = null;
+  comment.Body = '[removed by moderator]';
   // the -1000 is to prevent weird time display error
-  comment.timePosted = Date.now() - 1000;
+  comment.Date = Date.now() - 1000;
 
-  await comment.save();
+  await Comment.update(comment);
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect('/admin/notices');
@@ -328,14 +310,13 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedCubes.getSingleton();
-  const ids = featured.queue.map((f) => f.cubeID);
+  const featured = await FeaturedQueue.querySortedByDate();
+  const ids = featured.items.queue.map((f) => f.CubeId);
   const cubes = await Cube.batchGet(ids.map((id) => `${id}`));
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes,
-    daysBetweenRotations: featured.daysBetweenRotations,
-    lastRotation: featured.lastRotation,
+    lastRotation: featured.items[0].FeaturedOn,
   });
 });
 

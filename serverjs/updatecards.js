@@ -907,17 +907,13 @@ const downloadFromS3 = async (basePath = 'private') => {
   winston.info('Finished downloading files from S3...');
 };
 
-async function updateCardbase(ratings, histories, basePath = 'private', defaultPath = null, allPath = null) {
+async function updateCardbase(basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
   winston.info('Updating cardbase, this might take a little while...');
 
-  if (process.env.USE_S3 === 'true') {
-    await downloadFromS3(basePath, defaultPath, allPath);
-  } else {
-    await downloadFromScryfall(ratings, histories, basePath, defaultPath, allPath);
-  }
+  await downloadFromS3(basePath, defaultPath, allPath);
 }
 
 module.exports = {
@@ -939,4 +935,5 @@ module.exports = {
   convertCmc,
   getTokens,
   getFaceAttributeSource,
+  downloadFromScryfall,
 };

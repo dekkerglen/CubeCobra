@@ -246,13 +246,9 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
       const oldCard = JSON.parse(JSON.stringify(cube.cards[board][index]));
       delete oldCard.details;
-      delete oldCard.index;
-      delete oldCard.board;
 
       const newCard = JSON.parse(JSON.stringify(card));
       delete newCard.details;
-      delete newCard.index;
-      delete newCard.board;
 
       // if this card has already been edited, overwrite the edit
       const editIndex = edits.findIndex((e) => e.index === index);
@@ -313,8 +309,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
       const oldCard = JSON.parse(JSON.stringify(cube.cards[board][index]));
       delete oldCard.details;
-      delete oldCard.index;
-      delete oldCard.board;
 
       removes.push({ index, oldCard });
       newChanges[board].removes = removes;

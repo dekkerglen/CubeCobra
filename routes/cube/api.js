@@ -13,16 +13,15 @@ const {
   generatePack,
   buildTagColors,
   cubeCardTags,
-  saveDraftAnalytics,
+  updateDeckCardAnalytics,
   isCubeViewable,
 } = require('../../serverjs/cubefn');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
 const CubeHash = require('../../dynamo/models/cubeHash');
-const Draft = require('../../models/draft');
-const GridDraft = require('../../models/gridDraft');
-const Package = require('../../models/package');
+const Draft = require('../../dynamo/models/draft');
+const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
 
@@ -640,7 +639,7 @@ router.post(
 
     let tag = null;
     if (req.body.packid) {
-      const pack = await Package.findById(req.body.packid);
+      const pack = await Package.getById(req.body.packid);
       if (pack) {
         tag = pack.title;
       }
@@ -712,27 +711,29 @@ router.post(
   }),
 );
 
-router.post('/submitdraft/:id', async (req, res) => {
-  const draft = await Draft.findOne({
-    _id: req.body._id,
-  });
-  draft.seats = req.body.seats;
-  await draft.save();
+router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
+  const draft = await Draft.getById(req.body.id);
 
-  await saveDraftAnalytics(draft, 0, carddb);
+  if (!draft) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Draft not found',
+    });
+  }
 
-  return res.status(200).send({
-    success: 'true',
-  });
-});
+  const { seat, owner } = req.body;
 
-router.post('/submitgriddraft/:id', async (req, res) => {
-  await GridDraft.updateOne(
-    {
-      _id: req.body._id,
-    },
-    req.body,
-  );
+  const index = draft.seats.findIndex(({ Owner }) => Owner === owner);
+  if (index === -1) {
+    return res.status(403).send({
+      success: 'false',
+      message: 'Unauthorized',
+    });
+  }
+  await updateDeckCardAnalytics(draft.CubeId, draft.seats, index, seat, draft.Cards, carddb);
+
+  draft.seats[index].seat = seat;
+  await Draft.put(draft);
 
   return res.status(200).send({
     success: 'true',

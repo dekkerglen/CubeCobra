@@ -1,10 +1,16 @@
 // dotenv
 require('dotenv').config();
 
+const uuid = require('uuid/v4');
+
 const createClient = require('../util');
+const { getUserFromId } = require('../../serverjs/cache');
+const util = require('../../serverjs/util');
 
 const FIELDS = {
-  PPT_COMP: 'PPTComp',
+  ID: 'Id',
+  PARENT: 'Parent',
+  TYPE: 'Type',
   OWNER: 'Owner',
   BODY: 'Body',
   DATE: 'Date',
@@ -12,16 +18,50 @@ const FIELDS = {
 
 const client = createClient({
   name: 'COMMENTS',
-  partitionKey: FIELDS.PPT_COMP,
-  sortKey: FIELDS.DATE,
+  partitionKey: FIELDS.ID,
+  indexes: [
+    {
+      name: 'ByParent',
+      partitionKey: FIELDS.PARENT,
+      sortKey: FIELDS.DATE,
+    },
+  ],
   attributes: {
-    [FIELDS.PPT_COMP]: 'S',
+    [FIELDS.ID]: 'S',
     [FIELDS.DATE]: 'N',
+    [FIELDS.PARENT]: 'S',
   },
   FIELDS,
 });
 
+const hydrate = async (item) => {
+  if (!item.Owner) {
+    return {
+      ...item,
+      User: {
+        Id: '404',
+        Username: 'Anonymous',
+      },
+      ImageData: {
+        uri: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+        artist: 'Allan Pollack',
+        id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
+      },
+    };
+  }
+
+  const user = await getUserFromId(item.Owner);
+  const ImageData = util.getImageData(user.ImageName);
+
+  return {
+    ...item,
+    User: user,
+    ImageData,
+  };
+};
+
 module.exports = {
+  getById: async (id) => hydrate((await client.get(id)).Item),
   queryByParentAndType: async (parent, type, lastKey) => {
     const pptComp = `${parent}:${type}`;
     const res = await client.query({
@@ -37,18 +77,22 @@ module.exports = {
     });
 
     return {
-      items: res.Items,
+      items: res.Items.map(hydrate),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
   put: async (document) => {
+    const id = document[FIELDS.ID] || uuid();
     return client.put({
-      [FIELDS.PPT_COMP]: `${document.Parent}:${document.ParentType}`,
+      [FIELDS.ID]: id,
       [FIELDS.DATE]: document.Date,
       [FIELDS.BODY]: document.Body,
       [FIELDS.OWNER]: document.Owner,
+      [FIELDS.PARENT]: document.Parent,
+      [FIELDS.TYPE]: document.Type,
     });
   },
+  update: async (document) => client.put(document),
   batchPut: async (documents) => {
     await client.batchPut(documents);
   },
@@ -56,10 +100,12 @@ module.exports = {
   convertComment: (comment) => {
     return [
       {
+        [FIELDS.ID]: `${comment._id}`,
         [FIELDS.OWNER]: `${comment.owner}`,
         [FIELDS.BODY]: comment.content,
         [FIELDS.DATE]: comment.date.valueOf(),
-        [FIELDS.PPT_COMP]: `${comment.parent}:${comment.parentType}`,
+        [FIELDS.PARENT]: `${comment.parent}`,
+        [FIELDS.TYPE]: `${comment.parentType}`,
       },
     ];
   },

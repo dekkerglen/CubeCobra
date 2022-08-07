@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-const cardSchema = require('./shared/cardSchema');
-const stepsSchema = require('./shared/stepsSchema');
+const cardSchema = require('../shared/cardSchema');
+const stepsSchema = require('../shared/stepsSchema');
 
 // Details on each pack, how to draft and what's in it.
 const Pack = {

@@ -65,5 +65,8 @@ module.exports = {
       [FIELDS.LEVEL]: LEVELS.findIndex((level) => level === document.level),
     };
   },
+  deleteById: async (id) => client.delete(id),
   FIELDS,
+  STATUSES,
+  LEVELS,
 };

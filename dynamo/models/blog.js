@@ -4,7 +4,7 @@ require('dotenv').config();
 const uuid = require('uuid/v4');
 const TurndownService = require('turndown');
 const createClient = require('../util');
-const { getChangelogFromBlog } = require('./changelog');
+const Changelog = require('./changelog');
 
 const turndownService = new TurndownService();
 
@@ -42,8 +42,23 @@ const client = createClient({
   FIELDS,
 });
 
+const hydrateChangelog = async (document) => {
+  if (!document.ChangelistId) {
+    return document;
+  }
+
+  const changelog = await Changelog.getById(document.CubeId, document.ChangelistId);
+
+  delete document.ChangelistId;
+
+  return {
+    ...document,
+    Changelog: changelog,
+  };
+};
+
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
+  getById: async (id) => hydrateChangelog((await client.get(id)).Item),
   getByCubeId: async (cubeId, limit, lastKey) => {
     const result = await client.query({
       IndexName: 'ByCube',
@@ -59,7 +74,7 @@ module.exports = {
       Limit: limit || 36,
     });
     return {
-      items: result.Items,
+      items: await Promise.all(result.Items.map(hydrateChangelog)),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -78,7 +93,7 @@ module.exports = {
       Limit: limit || 36,
     });
     return {
-      items: result.Items,
+      items: await Promise.all(result.Items.map(hydrateChangelog)),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -113,7 +128,7 @@ module.exports = {
   },
   createTable: async () => client.createTable(),
   convertBlog: (blog) => {
-    const changelog = getChangelogFromBlog(blog);
+    const changelog = Changelog.getChangelogFromBlog(blog);
     let body = blog.markdown || blog.body || '';
 
     if (blog.dev === 'true') {

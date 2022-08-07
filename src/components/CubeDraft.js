@@ -17,7 +17,7 @@ import { Card } from 'reactstrap';
 
 const fetchPicks = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpicks', {
-    draft: draft._id,
+    draft: draft.Id,
     seat,
   });
   const json = await res.json();
@@ -32,7 +32,7 @@ const fetchPicks = async (draft, seat) => {
 
 const fetchPack = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpack', {
-    draft: draft._id,
+    draft: draft.Id,
     seat,
   });
   const json = await res.json();
@@ -79,9 +79,9 @@ const CubeDraft = ({ draft, socket }) => {
         setLoading(false);
       }
 
-      await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
+      await callApi('/multiplayer/draftpick', { draft: draft.Id, seat, pick });
     },
-    [hideCard, stepQueue, pack, draft._id, tryPopPack],
+    [hideCard, stepQueue, pack, draft.Id, tryPopPack],
   );
 
   const updatePack = async (data) => {
@@ -95,16 +95,16 @@ const CubeDraft = ({ draft, socket }) => {
 
   useMount(() => {
     const run = async () => {
-      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft._id });
+      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.Id });
       const seatJson = await getSeat.json();
       seat = seatJson.seat;
 
-      socket.emit('joinDraft', { draftId: draft._id, seat });
+      socket.emit('joinDraft', { draftId: draft.Id, seat });
 
       socket.on('draft', async (data) => {
         if (data.finished === 'true') {
           const res = await callApi('/multiplayer/editdeckbydraft', {
-            draftId: draft._id,
+            draftId: draft.Id,
             seat,
             drafted: staticPicks,
             sideboard: setupPicks(1, 8),
@@ -130,7 +130,7 @@ const CubeDraft = ({ draft, socket }) => {
             console.log(status);
             if (status === 'in_progress') {
               const res = await callApi('/multiplayer/trybotpicks', {
-                draft: draft._id,
+                draft: draft.Id,
               });
               const json = await res.json();
               console.log(json);

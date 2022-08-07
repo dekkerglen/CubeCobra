@@ -1,6 +1,7 @@
 // dotenv
 require('dotenv').config();
 
+const uuid = require('uuid/v4');
 const createClient = require('../util');
 const s3 = require('../s3client');
 
@@ -10,9 +11,14 @@ const FIELDS = {
   OWNER: 'Owner',
   CUBE_OWNER: 'CubeOwner',
   DATE: 'Date',
-  SEATS: 'Seats',
-  BASICS: 'Basics',
   TYPE: 'Type',
+};
+
+const TYPES = {
+  GRID: 'g',
+  DRAFT: 'd',
+  UPLOAD: 'u',
+  SEALED: 's',
 };
 
 const client = createClient({
@@ -109,6 +115,7 @@ const addS3Fields = async (document) => {
     ...document,
     Seats: seats.Seats,
     Basics: seats.Basics,
+    InitialState: seats.InitialState,
     Cards: cards,
   };
 };
@@ -117,9 +124,8 @@ const addS3Fields = async (document) => {
 const sanitize = (document) => {
   const cards = document.Cards;
   for (const seat of document.Seats) {
-    // deck
     if (seat.Deck) {
-      for (const row of seat.Deck) {
+      for (const row of seat.Mainboard) {
         for (const col of row) {
           for (let i = 0; i < col.length; i++) {
             const card = col[i];
@@ -131,7 +137,6 @@ const sanitize = (document) => {
       }
     }
 
-    // sideboard
     if (seat.Sideboard) {
       for (const row of seat.Sideboard) {
         for (const col of row) {
@@ -145,7 +150,6 @@ const sanitize = (document) => {
       }
     }
 
-    // pickorder
     if (seat.Pickorder) {
       for (let i = 0; i < seat.Pickorder.length; i++) {
         const card = seat.Pickorder[i];
@@ -154,9 +158,31 @@ const sanitize = (document) => {
         }
       }
     }
+
+    if (seat.Trashorder) {
+      for (let i = 0; i < seat.Trashorder.length; i++) {
+        const card = seat.Trashorder[i];
+        if (typeof card === 'object' && card !== null) {
+          seat.Trashorder[i] = cards.findIndex((c) => c.cardID === card.cardID);
+        }
+      }
+    }
   }
 
   return document;
+};
+
+const draftIsCompleted = (draft) => {
+  let numCards = 0;
+  for (const seat of draft.Seats) {
+    if (seat.Deck) {
+      numCards += seat.Deck.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
+    }
+    if (seat.Sideboard) {
+      numCards += seat.Sideboard.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
+    }
+  }
+  return numCards > 0;
 };
 
 module.exports = {
@@ -175,7 +201,7 @@ module.exports = {
     });
 
     return {
-      items: res.Items,
+      items: res.Items.filter((item) => draftIsCompleted(item)),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -193,7 +219,7 @@ module.exports = {
     });
 
     return {
-      items: res.Items,
+      items: res.Items.filter((item) => draftIsCompleted(item)),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -211,13 +237,14 @@ module.exports = {
     });
 
     return {
-      items: res.Items,
+      items: res.Items.filter((item) => draftIsCompleted(item)),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
   put: async (document) => {
+    const id = document.Id || uuid();
     await client.put({
-      [FIELDS.ID]: document.Id,
+      [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document.CubeId,
       [FIELDS.OWNER]: document.Owner,
       [FIELDS.CUBE_OWNER]: document.CubeOwner,
@@ -227,7 +254,7 @@ module.exports = {
     await s3
       .putObject({
         Bucket: process.env.DATA_BUCKET,
-        Key: `cardlist/${document.Id}.json`,
+        Key: `cardlist/${id}.json`,
         Body: JSON.stringify(document.Cards),
       })
       .promise();
@@ -235,10 +262,12 @@ module.exports = {
     await s3
       .putObject({
         Bucket: process.env.DATA_BUCKET,
-        Key: `seats/${document.Id}.json`,
-        Body: JSON.stringify({ Seats: document.Seats, Basics: document.Basics }),
+        Key: `seats/${id}.json`,
+        Body: JSON.stringify({ Seats: document.Seats, Basics: document.Basics, InitialState: document.InitialState }),
       })
       .promise();
+
+    return id;
   },
   batchPut: async (documents) => {
     const filtered = [];
@@ -275,7 +304,11 @@ module.exports = {
           .putObject({
             Bucket: process.env.DATA_BUCKET,
             Key: `seats/${document.Id}.json`,
-            Body: JSON.stringify({ Seats: document.Seats, Basics: document.Basics }),
+            Body: JSON.stringify({
+              Seats: document.Seats,
+              Basics: document.Basics,
+              InitialState: document.InitialState,
+            }),
           })
           .promise();
       }),
@@ -301,17 +334,19 @@ module.exports = {
         [FIELDS.CUBE_OWNER]: `${deck.cubeOwner}`,
         [FIELDS.OWNER]: `${deck.owner}`,
         [FIELDS.DATE]: deck.date.valueOf(),
-        [FIELDS.SEATS]: deck.seats.map((seat) => ({
+        Basics: deck.basics.map((card) => parseInt(card, 10)),
+        Cards: deck.cards,
+        Seats: deck.seats.map((seat) => ({
           Owner: `${seat.userid}`,
-          Bot: seat.bot,
-          Title: seat.name,
-          Body: seat.description,
-          Deck: seat.deck,
+          Mainboard: seat.deck,
           Sideboard: seat.sideboard,
           Pickorder: seat.pickorder,
+          Trashorder: seat.trashorder,
+          Title: seat.name,
+          Body: seat.description,
+          Bot: seat.bot,
         })),
-        [FIELDS.BASICS]: deck.basics,
-        Cards: deck.cards,
+        InitialState: deck.initial_state,
       });
 
       return [doc];
@@ -330,7 +365,6 @@ module.exports = {
           }
 
           let cards = null;
-          console.log(draft, seats);
           for (let i = 0; i < draft.Seats.length; i++) {
             seats.Seats[i].Trashorder = draft.Seats[i].Trashorder;
 
@@ -376,5 +410,7 @@ module.exports = {
       },
     ];
   },
+  delete: async (id) => client.delete(id),
   FIELDS,
+  TYPES,
 };

@@ -54,7 +54,7 @@ const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
               <Row className="g-0">
                 {user.cubes.length > 0 ? (
                   user.cubes.slice(0, 4).map((cube) => (
-                    <Col key={cube._id} xs="12" sm="12" md="12" lg="6">
+                    <Col key={cube.Id} xs="12" sm="12" md="12" lg="6">
                       <CubePreview cube={cube} />
                     </Col>
                   ))
@@ -95,7 +95,7 @@ const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
             </CardHeader>
             <CardBody className="p-0">
               {decks.length > 0 ? (
-                filteredDecks.map((deck) => <DeckPreview key={deck._id} deck={deck} nextURL="/dashboard" canEdit />)
+                filteredDecks.map((deck) => <DeckPreview key={deck.Id} deck={deck} nextURL="/dashboard" canEdit />)
               ) : (
                 <p className="m-2">
                   Nobody has drafted your cubes! Perhaps try reaching out on the{' '}

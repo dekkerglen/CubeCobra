@@ -1336,3 +1336,27 @@ div.advertisement-div > div:not(.report-link) {
 	padding-bottom: 0;
 	margin-bottom: 0;
 }
+
+.rightArrowBox:after {
+	content: ' ';
+	width:0px;
+	height:0px;
+	border-left: 1.6rem solid var(--border-light);
+	border-top: 1.4rem solid transparent;
+	border-bottom: 1.4rem solid transparent;
+	border-right: 1.6rem solid transparent;
+	position:absolute;
+	left: 100%;
+}
+
+.leftArrowBox:after {
+	content: ' ';
+	width:0px;
+	height:0px;
+	border-left: 1.6rem solid transparent;
+	border-top: 1.4rem solid transparent;
+	border-bottom: 1.4rem solid transparent;
+	border-right: 1.6rem solid var(--border-light);
+	position:absolute;
+	right: 100%;
+}

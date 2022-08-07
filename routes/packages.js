@@ -4,78 +4,24 @@ const { render } = require('../serverjs/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const carddb = require('../serverjs/cards');
 
-const Package = require('../models/package');
+const Package = require('../dynamo/models/package');
 const User = require('../dynamo/models/user');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-const PAGE_SIZE = 20;
+router.post('/getpackages', async (req, res) => {
+  const { status, keywords, lastKey, ascending } = req.body;
 
-const getPackages = async (req, res, filter) => {
-  try {
-    if (!['votes', 'date'].includes(req.params.sort)) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Invalid Sort, please use either "votes" or "date"',
-        packages: [],
-        total: 0,
-      });
-    }
+  const packages = await Package.querySortedByDate(status, keywords, ascending, lastKey);
 
-    if (req.params.filter && req.params.filter.length > 0) {
-      filter = {
-        $and: [
-          filter,
-          {
-            $or: req.params.filter
-              .toLowerCase()
-              .split(' ')
-              .map((f) => ({ keywords: f })),
-          },
-        ],
-      };
-    }
-
-    const total = await Package.countDocuments(filter);
-
-    const sort = {};
-    sort[req.params.sort] = req.params.direction;
-
-    const packages = await Package.find(filter)
-      .sort(sort)
-      .skip(Math.max(req.params.page, 0) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean();
-    return res.status(200).send({
-      success: 'true',
-      packages,
-      total,
-    });
-  } catch (err) {
-    req.logger.error(err);
-    return res.status(500).send({
-      success: 'false',
-      packages: [],
-      total: 0,
-    });
-  }
-};
-
-router.get('/approved/:page/:sort/:direction/:filter', async (req, res) => getPackages(req, res, { approved: true }));
-
-router.get('/pending/:page/:sort/:direction/:filter', async (req, res) => getPackages(req, res, { approved: false }));
-
-router.get('/yourpackages/:page/:sort/:direction/:filter', async (req, res) =>
-  getPackages(req, res, { userid: req.user.Id }),
-);
-
-router.get('/approved/:page/:sort/:direction', async (req, res) => getPackages(req, res, { approved: true }));
-
-router.get('/pending/:page/:sort/:direction', async (req, res) => getPackages(req, res, { approved: false }));
-
-router.get('/yourpackages/:page/:sort/:direction', async (req, res) => getPackages(req, res, { userid: req.user.Id }));
+  return res.status(200).send({
+    success: true,
+    packages: packages.items,
+    lastKey: packages.lastKey,
+  });
+});
 
 router.get('/browse', async (req, res) => {
   return render(req, res, 'BrowsePackagesPage', {});
@@ -120,20 +66,21 @@ router.post('/submit', ensureAuth, async (req, res) => {
     });
   }
 
-  const pack = new Package();
-
-  pack.title = packageName;
-  pack.date = new Date();
-  pack.userid = poster.Id;
-  pack.username = poster.Username;
-  pack.cards = cards;
-  pack.keywords = packageName
-    .toLowerCase()
-    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
-    .split(' ');
+  const pack = {
+    Title: packageName,
+    Date: new Date().valueOf(),
+    Owner: poster.Id,
+    Status: 's',
+    Cards: cards,
+    Voters: [],
+    Keywords: packageName
+      .toLowerCase()
+      .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+      .split(' '),
+  };
 
   for (const card of cards) {
-    pack.keywords.push(
+    pack.Keywords.push(
       ...carddb
         .cardFromId(card)
         .name_lower.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
@@ -142,9 +89,9 @@ router.post('/submit', ensureAuth, async (req, res) => {
   }
 
   // make distinct
-  pack.keywords = pack.keywords.filter((value, index, self) => self.indexOf(value) === index);
+  pack.Keywords = pack.Keywords.filter((value, index, self) => self.indexOf(value) === index);
 
-  await pack.save();
+  await Package.put(pack);
 
   return res.status(200).send({
     success: 'true',
@@ -152,14 +99,10 @@ router.post('/submit', ensureAuth, async (req, res) => {
 });
 
 router.get('/upvote/:id', ensureAuth, async (req, res) => {
-  const pack = await Package.findById(req.params.id);
-  const user = await User.getById(req.user.Id);
+  const pack = await Package.getById(req.params.id);
 
-  if (!pack.voters.includes(user.Id)) {
-    pack.voters.push(user.Id);
-    pack.votes += 1;
-    await pack.save();
-  }
+  pack.Voters = [...new Set([...pack.Voters, req.user.Id])];
+  await Package.put(pack);
 
   return res.status(200).send({
     success: 'true',
@@ -168,14 +111,10 @@ router.get('/upvote/:id', ensureAuth, async (req, res) => {
 });
 
 router.get('/downvote/:id', ensureAuth, async (req, res) => {
-  const pack = await Package.findById(req.params.id);
-  const user = await User.getById(req.user.Id);
+  const pack = await Package.getById(req.params.id);
 
-  if (pack.voters.includes(user.Id)) {
-    pack.voters = pack.voters.filter((uid) => !user.Id === uid);
-    pack.votes -= 1;
-    await pack.save();
-  }
+  pack.Voters = pack.Voters.filter((voter) => voter !== req.user.Id);
+  await Package.put(pack);
 
   return res.status(200).send({
     success: 'true',
@@ -184,11 +123,10 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
 });
 
 router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
-  const pack = await Package.findById(req.params.id);
+  const pack = await Package.getById(req.params.id);
 
-  pack.approved = true;
-
-  await pack.save();
+  pack.Status = Package.STATUSES.APPROVED;
+  await Package.put(pack);
 
   return res.status(200).send({
     success: 'true',
@@ -196,11 +134,10 @@ router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
 });
 
 router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
-  const pack = await Package.findById(req.params.id);
+  const pack = await Package.getById(req.params.id);
 
-  pack.approved = false;
-
-  await pack.save();
+  pack.Status = Package.STATUSES.SUBMITTED;
+  await Package.put(pack);
 
   return res.status(200).send({
     success: 'true',
@@ -208,7 +145,7 @@ router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
 });
 
 router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
-  await Package.deleteOne({ _id: req.params.id });
+  await Package.delete(req.params.id);
 
   return res.status(200).send({
     success: 'true',
@@ -216,10 +153,8 @@ router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const pack = await Package.findById(req.params.id);
-
   return render(req, res, 'PackagePage', {
-    pack,
+    pack: await Package.getById(req.params.id),
   });
 });
 

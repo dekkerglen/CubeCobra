@@ -36,9 +36,9 @@ const CubeComparePage = ({
         <DisplayContextProvider>
           <CubeCompareNavbar
             cubeA={cube}
-            cubeAID={cube._id}
+            cubeAID={cube.Id}
             cubeB={cubeB}
-            cubeBID={cubeB._id}
+            cubeBID={cubeB.Id}
             cards={filteredCards}
             openCollapse={openCollapse}
             setOpenCollapse={setOpenCollapse}

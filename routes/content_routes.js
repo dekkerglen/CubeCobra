@@ -462,7 +462,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
 
   if (podcast.Status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
-    return res.redirect(`/content/podcast/${podcast._id}`);
+    return res.redirect(`/content/podcast/${podcast.Id}`);
   }
 
   podcast.Url = rss;

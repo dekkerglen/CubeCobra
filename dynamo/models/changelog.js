@@ -65,7 +65,7 @@ const sanitizeChangelog = (changelog) => {
   return changelog;
 };
 
-const enrichChangelog = (changelog) => {
+const hydrateChangelog = (changelog) => {
   for (const [, value] of Object.entries(changelog)) {
     if (value.adds) {
       for (let i = 0; i < value.adds.length; i++) {
@@ -78,9 +78,6 @@ const enrichChangelog = (changelog) => {
       for (let i = 0; i < value.removes.length; i++) {
         value.removes[i].oldCard.details = {
           ...carddb.cardFromId(value.removes[i].oldCard.cardID),
-        };
-        value.removes[i].card.details = {
-          ...carddb.cardFromId(value.removes[i].card.cardID),
         };
       }
     }
@@ -130,7 +127,7 @@ const getChangelog = async (cubeId, id) => {
     document: changelog,
   };
 
-  return enrichChangelog(changelog);
+  return hydrateChangelog(changelog);
 };
 
 const parseHtml = (html) => {
@@ -186,7 +183,7 @@ const parseHtml = (html) => {
 
 module.exports = {
   getById: getChangelog,
-  getByCubeId: async (cubeId, lastKey) => {
+  getByCubeId: async (cubeId, limit, lastKey) => {
     const result = await client.query({
       KeyConditionExpression: `#p1 = :cubeId`,
       ExpressionAttributeValues: {
@@ -197,13 +194,20 @@ module.exports = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: limit || 36,
     });
 
-    const items = await Promise.all(result.Items.map((item) => getChangelog(item[FIELDS.ID])));
+    const items = await Promise.all(
+      result.Items.map(async (item) => ({
+        cubeId,
+        date: item.Date,
+        changelog: await getChangelog(cubeId, item[FIELDS.ID]),
+      })),
+    );
 
     return {
       items,
-      lastEvaluatedKey: result.LastEvaluatedKey,
+      lastKey: result.LastEvaluatedKey,
     };
   },
   put: async (changelog, cubeId) => {
