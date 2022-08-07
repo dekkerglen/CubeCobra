@@ -167,7 +167,7 @@ const GroupModal = ({
       <ModalBody>
         <Row>
           <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
-            <Row className="w-100 g-0" style={{ 'overflow-y': 'auto', flexShrink: 1 }}>
+            <Row className="w-100 g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
               <ListGroup className="list-outline w-100">
                 {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal inModal>

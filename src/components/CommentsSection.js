@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { Collapse, Spinner } from 'reactstrap';
+import { Collapse, Button, Spinner } from 'reactstrap';
 
 import UserContext from 'contexts/UserContext';
 import CommentList from 'components/PagedCommentList';
@@ -10,25 +10,16 @@ import CommentEntry from 'components/CommentEntry';
 import useToggle from 'hooks/UseToggle';
 import useComments from 'hooks/UseComments';
 
-const CommentsSection = ({ parent, parentType, collapse }) => {
+const CommentsSection = ({ parent, collapse, parentType }) => {
   const user = useContext(UserContext);
-  const userid = user && user.id;
 
   const [expanded, toggle] = useToggle(!collapse);
   const [replyExpanded, toggleReply] = useToggle(false);
-  const [comments, addComment, loading, editComment] = useComments(parentType, parent);
-
-  if (loading) {
-    return (
-      <div className="centered py-3">
-        <Spinner className="position-absolute" />
-      </div>
-    );
-  }
+  const [comments, addComment, loading, editComment, hasMore, getMore] = useComments(parent, parentType);
 
   return (
     <>
-      {userid && (
+      {user && (
         <div className="p-2 border-bottom">
           <Collapse isOpen={!replyExpanded}>
             <h6>
@@ -54,6 +45,18 @@ const CommentsSection = ({ parent, parentType, collapse }) => {
           <Collapse isOpen={expanded}>
             <CommentList comments={comments} editComment={editComment} />
           </Collapse>
+          {loading && hasMore && (
+            <div className="centered m-1">
+              <Spinner />
+            </div>
+          )}
+          {hasMore && (
+            <div className="p-1">
+              <Button outline block color="primary" onClick={getMore} disabled={loading}>
+                View More...
+              </Button>
+            </div>
+          )}
         </>
       )}
     </>
@@ -62,8 +65,8 @@ const CommentsSection = ({ parent, parentType, collapse }) => {
 
 CommentsSection.propTypes = {
   parent: PropTypes.string.isRequired,
-  parentType: PropTypes.string.isRequired,
   collapse: PropTypes.bool,
+  parentType: PropTypes.string.isRequired,
 };
 
 CommentsSection.defaultProps = {

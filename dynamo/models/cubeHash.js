@@ -61,7 +61,7 @@ const hashCategories = (metadata) => {
 
   res.push(`category:${metadata.CategoryOverride}`);
 
-  for (const prefix of metadata.CategoryPrefixes) {
+  for (const prefix of metadata.CategoryPrefixes || []) {
     res.push(`category:${prefix.toLowerCase()}`);
   }
 

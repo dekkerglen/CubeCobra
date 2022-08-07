@@ -44,6 +44,9 @@ import CubeIdModal from 'components/CubeIdModal';
 import QRCodeModal from 'components/QRCodeModal';
 import Username from 'components/Username';
 import MtgImage from 'components/MtgImage';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
+import UserPropType from 'proptypes/UserPropType';
+import CardPropType from 'proptypes/CardPropType';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeOverviewModalLink = withModal(NavLink, CubeOverviewModal);
@@ -311,21 +314,15 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
 };
 
 CubeOverview.propTypes = {
-  post: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }),
+  post: BlogPostPropType,
   cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
+    boards: PropTypes.arrayOf(CardPropType),
   }).isRequired,
   priceOwned: PropTypes.number,
   pricePurchase: PropTypes.number,
   cube: CubePropType.isRequired,
   followed: PropTypes.bool.isRequired,
-  followers: PropTypes.arrayOf(
-    PropTypes.shape({
-      Id: PropTypes.string.isRequired,
-    }),
-  ),
+  followers: PropTypes.arrayOf(UserPropType),
   loginCallback: PropTypes.string,
 };
 

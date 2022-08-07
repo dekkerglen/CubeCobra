@@ -24,6 +24,7 @@ const Draft = require('../../dynamo/models/draft');
 const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
+const feed = require('../../dynamo/models/feed');
 
 const router = express.Router();
 
@@ -140,10 +141,10 @@ router.post(
       }
 
       cube.CategoryOverride = updatedCube.CategoryOverride;
-      cube.CategoryPrefixes = updatedCube.CategoryOverride;
+      cube.CategoryPrefixes = updatedCube.CategoryPrefixes;
     } else {
       cube.CategoryOverride = null;
-      cube.categoryPrefixes = [];
+      cube.CategoryPrefixes = [];
     }
 
     // cube tags
@@ -667,7 +668,7 @@ router.post(
 
       const ChangelistId = await Changelog.put(changelist, cube.Id);
 
-      await Blog.put({
+      const id = await Blog.put({
         Body: `Add from the package [${tag}](/packages/${req.body.packid})`,
         Owner: req.user.Id,
         Date: new Date().valueOf(),
@@ -675,6 +676,17 @@ router.post(
         Title: `Added Package "${tag}"`,
         ChangelistId,
       });
+
+      const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
+
+      const feedItems = followers.map((user) => ({
+        Id: id,
+        To: user,
+        Date: new Date(),
+        Type: feed.TYPES.BLOG,
+      }));
+
+      await feed.put(feedItems);
     }
 
     return res.status(200).send({

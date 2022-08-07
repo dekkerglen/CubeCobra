@@ -11,6 +11,7 @@ const { abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
 const User = require('../../dynamo/models/user');
+const Feed = require('../../dynamo/models/feed');
 const { getImageData } = require('../../serverjs/util');
 
 const router = express.Router();
@@ -62,6 +63,17 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       CubeId: cube.Id,
       Title: req.body.title,
     });
+
+    const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing, ...(req.body.mentions || [])])];
+
+    const feedItems = followers.map((userId) => ({
+      Id: id,
+      To: userId,
+      Date: new Date().valueOf(),
+      Type: Blog.TYPES.BLOG,
+    }));
+
+    await Feed.batchPut(feedItems);
 
     // mentions are only added for new posts and ignored on edits
     if (req.body.mentions) {

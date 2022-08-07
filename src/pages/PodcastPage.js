@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -43,7 +43,7 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
 
 PodcastPage.propTypes = {
   loginCallback: PropTypes.string,
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 

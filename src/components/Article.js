@@ -1,5 +1,5 @@
 import React from 'react';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -29,7 +29,7 @@ const Article = ({ article }) => {
   );
 };
 Article.propTypes = {
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 
 export default Article;

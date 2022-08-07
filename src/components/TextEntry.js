@@ -57,7 +57,7 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
 
 TextEntry.propTypes = {
   name: PropTypes.string,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
   maxLength: PropTypes.number,
 };
@@ -65,6 +65,7 @@ TextEntry.propTypes = {
 TextEntry.defaultProps = {
   name: 'hiddentextarea',
   maxLength: 1000,
+  value: '',
 };
 
 export default TextEntry;

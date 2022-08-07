@@ -93,7 +93,7 @@ const BlogPostChangelog = ({ changelog }) => {
             </Row>
           </h6>
           <ul className="changelist">
-            {adds && adds.map((card) => <Add key={card} card={card} />)}
+            {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
             {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}
             {swaps &&
               swaps.map((swap) => (

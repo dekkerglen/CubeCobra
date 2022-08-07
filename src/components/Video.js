@@ -1,5 +1,5 @@
 import React from 'react';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -35,7 +35,7 @@ const Video = ({ video }) => {
   );
 };
 Video.propTypes = {
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 export default Video;

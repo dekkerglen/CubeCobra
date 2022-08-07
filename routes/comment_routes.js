@@ -19,31 +19,18 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get(
-  '/:type/:parent',
-  util.wrapAsyncApi(async (req, res) => {
-    const comments = await Comment.queryByParentAndType(req.params.parent, req.params.type);
-
-    return res.status(200).send({
-      success: 'true',
-      comments: comments.items,
-      lastKey: comments.lastKey,
-    });
-  }),
-);
-
 const getReplyContext = {
   comment: async (id) => {
     const comment = await Comment.getById(id);
-    return [comment.owner, 'comment'];
+    return [comment.Owner, 'comment'];
   },
   blog: async (id) => {
     const blog = await Blog.getById(id);
-    return [blog.owner, 'blogpost'];
+    return [blog.Owner, 'blogpost'];
   },
   deck: async (id) => {
     const deck = await Draft.getById(id);
-    return [deck.owner, 'deck'];
+    return [deck.Owner, 'deck'];
   },
   article: async (id) => {
     const article = await Content.getById(id);
@@ -63,22 +50,33 @@ const getReplyContext = {
   },
   package: async (id) => {
     const pack = await Package.getById(id);
-    return [pack.userid, 'card package'];
+    return [pack.Owner, 'card package'];
   },
   default: async () => null, // nobody gets a notification for this
 };
 
 router.post(
-  '/:type/:parent',
+  '/getcomments',
+  util.wrapAsyncApi(async (req, res) => {
+    const { parent, lastKey } = req.body;
+    const comments = await Comment.queryByParentAndType(parent, lastKey);
+
+    return res.status(200).send({
+      success: 'true',
+      comments: comments.items,
+      lastKey: comments.lastKey,
+    });
+  }),
+);
+
+router.post(
+  '/addcomment',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const poster = await User.getById(req.user.Id);
+    const { body, mentions = [], parent, type } = req.body;
+    const { user } = req;
 
-    if (
-      !['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(
-        req.params.type,
-      )
-    ) {
+    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(type)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',
@@ -86,46 +84,50 @@ router.post(
     }
 
     const comment = {
-      Owner: poster.Id,
-      Body: req.body.comment.substring(0, 5000),
+      Owner: user.Id,
+      Body: body.substring(0, 5000),
       Date: Date.now() - 1000,
-      Parent: req.params.parent.substring(0, 500),
-      Type: req.params.type,
+      Parent: parent.substring(0, 500),
+      Type: type,
     };
 
-    await Comment.put();
+    const id = await Comment.put(comment);
 
-    const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
+    const [ownerid] = await getReplyContext[type](parent);
 
     const owner = await User.getById(ownerid);
 
     if (owner) {
       await util.addNotification(
         owner,
-        poster,
+        user,
         `/comment/${comment.Id}`,
-        `${poster.username} left a comment in response to your ${type}.`,
+        `${user.Username} left a comment in response to your ${type}.`,
       );
     }
 
-    if (req.body.mentions) {
-      const mentions = req.body.mentions.split(';');
-      for (const mention of mentions) {
-        const query = await User.getByUsername(mention);
-        if (query.items.length === 1) {
-          await util.addNotification(
-            query.items[0],
-            poster,
-            `/comment/${comment._id}`,
-            `${poster.Username} mentioned you in their comment`,
-          );
-        }
+    for (const mention of mentions) {
+      const query = await User.getByUsername(mention);
+      if (query.items.length === 1) {
+        await util.addNotification(
+          query.items[0],
+          user,
+          `/comment/${comment._id}`,
+          `${user.Username} mentioned you in their comment`,
+        );
       }
     }
 
+    const ImageData = util.getImageData(user.ImageName);
+
     return res.status(200).send({
       success: 'true',
-      comment,
+      comment: {
+        ImageData,
+        User: req.user,
+        Id: id,
+        ...comment,
+      },
     });
   }),
 );

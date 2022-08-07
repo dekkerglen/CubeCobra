@@ -24,13 +24,12 @@ ColorCheckButton.propTypes = {
   size: PropTypes.string,
   color: PropTypes.string.isRequired,
   short: PropTypes.string.isRequired,
-  checked: PropTypes.bool,
+  checked: PropTypes.bool.isRequired,
   setChecked: PropTypes.func.isRequired,
 };
 
 ColorCheckButton.defaultProps = {
   size: 'sm',
-  checked: false,
 };
 
 export const ColorChecksControl = ({ colorless, prefix, size, values, setValues, style }) => {
@@ -51,8 +50,8 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
           color={color}
           short={short}
           checked={values.map((tuple) => tuple[1]).includes(color)}
-          onChange={(event) => {
-            if (event.target.checked) {
+          setChecked={(checked) => {
+            if (checked) {
               setValues([...values, short]);
             } else {
               setValues(values.filter((tuple) => tuple[1] !== short));
@@ -68,7 +67,7 @@ ColorChecksControl.propTypes = {
   colorless: PropTypes.bool,
   prefix: PropTypes.string,
   size: PropTypes.string,
-  values: PropTypes.shape([]),
+  values: PropTypes.arrayOf(PropTypes.string),
   setValues: PropTypes.func.isRequired,
   style: PropTypes.shape({}),
 };
@@ -94,6 +93,7 @@ export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues })
     <>
       {colors.map(([color, short]) => (
         <ColorCheckButton
+          key={short}
           prefix={prefix}
           size={size}
           color={color}
@@ -116,7 +116,7 @@ ColorChecksAddon.propTypes = {
   colorless: PropTypes.bool,
   prefix: PropTypes.string,
   size: PropTypes.string,
-  values: PropTypes.arrayOf(PropTypes.string).isRequired,
+  values: PropTypes.arrayOf(PropTypes.string),
   setValues: PropTypes.func.isRequired,
 };
 
@@ -124,4 +124,5 @@ ColorChecksAddon.defaultProps = {
   colorless: false,
   prefix: 'color',
   size: 'sm',
+  values: [],
 };

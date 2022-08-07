@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -8,37 +8,38 @@ import { csrfFetch } from 'utils/CSRF';
 
 import { Spinner } from 'reactstrap';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
+import UserContext from 'contexts/UserContext';
 
 import { wait } from 'utils/Util';
 
-const Feed = ({ items }) => {
+const Feed = ({ items, lastKey }) => {
+  const user = useContext(UserContext);
   const [feedItems, setFeedItems] = useState(items);
+  const [currentLastKey, setCurrentLastKey] = useState(lastKey);
 
-  const fetchMoreData = async () => {
+  const fetchMoreData = useCallback(async () => {
     // intentionally wait to avoid too many DB queries
     await wait(2000);
 
-    const response = await csrfFetch(`/tool/getfeeditems/${feedItems.length}`, {
-      method: 'GET',
+    const response = await csrfFetch(`/getmorefeeditems`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+        user: user.Id,
+      }),
     });
 
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        const ids = new Set(feedItems.map((item) => item.Id));
-        const newFeedItems = [...feedItems];
-        for (const item of json.items) {
-          if (!ids.has(item.Id)) {
-            newFeedItems.push(item);
-          }
-        }
-        setFeedItems(newFeedItems);
+        setFeedItems([...items, ...json.items]);
+        setCurrentLastKey(json.lastKey);
       }
     }
-  };
+  }, [currentLastKey, items, user.Id]);
 
   const loader = (
     <div className="centered py-3 my-4">
@@ -47,7 +48,13 @@ const Feed = ({ items }) => {
   );
 
   return (
-    <InfiniteScroll dataLength={feedItems.length} next={fetchMoreData} hasMore loader={loader}>
+    <InfiniteScroll
+      dataLength={feedItems.length}
+      next={fetchMoreData}
+      hasMore={currentLastKey}
+      loader={loader}
+      endMessage="You've reached the end of the feed!"
+    >
       {feedItems.map((item) => (
         <BlogPost key={item.Id} post={item} />
       ))}
@@ -57,6 +64,11 @@ const Feed = ({ items }) => {
 
 Feed.propTypes = {
   items: PropTypes.arrayOf(BlogPostPropType).isRequired,
+  lastKey: PropTypes.string,
+};
+
+Feed.defaultProps = {
+  lastKey: null,
 };
 
 export default Feed;

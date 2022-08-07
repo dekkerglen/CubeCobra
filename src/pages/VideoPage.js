@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -36,7 +36,7 @@ const VideoPage = ({ loginCallback, video }) => {
 
 VideoPage.propTypes = {
   loginCallback: PropTypes.string,
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 VideoPage.defaultProps = {

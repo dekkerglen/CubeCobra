@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 import BlogDeleteModal from 'components/BlogDeleteModal';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
 
 class BlogContextMenu extends React.Component {
   constructor(props) {
@@ -56,9 +57,7 @@ class BlogContextMenu extends React.Component {
 }
 
 BlogContextMenu.propTypes = {
-  post: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  post: BlogPostPropType.isRequired,
   value: PropTypes.string.isRequired,
   onEdit: PropTypes.func.isRequired,
 };

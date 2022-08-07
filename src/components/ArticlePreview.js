@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -46,6 +46,6 @@ const ArticlePreview = ({ article }) => {
 };
 
 ArticlePreview.propTypes = {
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 export default ArticlePreview;

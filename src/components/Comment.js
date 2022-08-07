@@ -15,6 +15,7 @@ import {
   Input,
 } from 'reactstrap';
 
+import { ClippyIcon } from '@primer/octicons-react';
 import UserContext from 'contexts/UserContext';
 import LinkButton from 'components/LinkButton';
 import CommentContextMenu from 'components/CommentContextMenu';
@@ -23,16 +24,17 @@ import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
 import Markdown from 'components/Markdown';
+import DomainContext from 'contexts/DomainContext';
 
 const maxDepth = 4;
 
 const Comment = ({ comment, index, depth, noReplies, editComment }) => {
   const user = useContext(UserContext);
-  const userid = user && user.id;
+  const domain = useContext(DomainContext);
 
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
-  const [comments, addComment, , editChildComment] = useComments('comment', comment.Id);
+  const [comments, addComment, , editChildComment] = useComments(comment.Id, 'comment');
   const [loaded, setLoaded] = useState(false);
   const [shareModalOpen, toggleShareModal] = useToggle(false);
   const [reportModalOpen, toggleReportModal] = useToggle(false);
@@ -58,7 +60,16 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       <Modal isOpen={shareModalOpen} toggle={toggleShareModal} size="md">
         <ModalHeader toggle={toggle}>Share this Comment</ModalHeader>
         <ModalBody>
-          <a href={`/comment/${comment.Id}`}>Link to Comment</a>
+          <InputGroup>
+            <Input className="bg-white monospaced" value={`https://${domain}/comment/${comment.Id}`} readOnly />
+            <Button
+              className="btn-sm input-group-button"
+              onClick={() => navigator.clipboard.writeText(`https://${domain}/comment/${comment.Id}`)}
+              aria-label="Copy Short ID"
+            >
+              <ClippyIcon size={16} />
+            </Button>
+          </InputGroup>
         </ModalBody>
       </Modal>
       <Modal isOpen={reportModalOpen} toggle={toggleReportModal} size="lg">
@@ -105,7 +116,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               <div>
                 {comment.User.Username ? (
                   <a href={`/user/view/${comment.Owner}`}>
-                    <small>{comment.Owner.Username}</small>
+                    <small>{comment.User.Username}</small>
                   </a>
                 ) : (
                   <small>Anonymous</small>
@@ -117,7 +128,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   </small>
                 )}
               </div>
-              {comment.Owner === userid && (
+              {comment.Owner === user.Id && (
                 <div>
                   <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                     <small>...</small>
@@ -140,7 +151,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               toggle={() => setIsEdit(false)}
             />
             <div>
-              {!noReplies && userid && (
+              {!noReplies && user && (
                 <LinkButton onClick={toggleReply}>
                   <small>Reply</small>
                 </LinkButton>

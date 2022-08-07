@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card, Row, Col, CardBody } from 'reactstrap';
 
@@ -48,7 +48,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
 
 PodcastEpisodePage.propTypes = {
   loginCallback: PropTypes.string,
-  episode: PodcastPropType.isRequired,
+  episode: ContentPropType.isRequired,
 };
 
 PodcastEpisodePage.defaultProps = {

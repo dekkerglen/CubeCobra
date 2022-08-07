@@ -68,11 +68,11 @@ const numFields = [
 ];
 const colorFields = ['color', 'identity'];
 
-const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply, ...props }) => {
+const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => {
   const { cube } = useContext(CubeContext);
   const cubeId = cube ? cube.Id : null;
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
+    <Modal isOpen={isOpen} toggle={toggle} size="lg">
       <Form
         onSubmit={(e) => {
           e.preventDefault();
@@ -130,7 +130,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply, ...pr
               colorless
               prefix="identity"
               values={values.colorIdentity}
-              onChange={(v) => updateValue(v, 'colorIdentity')}
+              setValues={(v) => updateValue(v, 'colorIdentity')}
             />
             <Input
               type="select"
@@ -179,7 +179,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply, ...pr
             onChange={(event) => updateValue(event.target.value, 'set')}
           />
           {cubeId && (
-            <InputGroup className="mb-3" {...props}>
+            <InputGroup className="mb-3">
               <InputGroupText>Tag</InputGroupText>
               <AutocompleteInput
                 treeUrl={`/cube/api/cubecardtags/${cubeId}`}
@@ -319,7 +319,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply, ...pr
             setValue={(value) => updateValue(value, 'rarity')}
             setOperator={(operator) => updateValue(operator, 'rarityOp')}
           />
-          <InputGroup className="mb-3" {...props}>
+          <InputGroup className="mb-3">
             <InputGroupText>Legality</InputGroupText>
             <Input
               type="select"
@@ -417,8 +417,6 @@ AdvancedFilterModal.propTypes = {
     legalityOp: PropTypes.string,
     artist: PropTypes.string,
   }).isRequired,
-  onChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
   updateValue: PropTypes.func.isRequired,
 };
 

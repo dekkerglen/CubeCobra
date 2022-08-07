@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Nav, CardBody, Card, TabContent, TabPane, Input, FormGroup, Row, Col, Label, Button } from 'reactstrap';
 
@@ -112,7 +112,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
 
 EditPodcastPage.propTypes = {
   loginCallback: PropTypes.string,
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
 };
 
 EditPodcastPage.defaultProps = {

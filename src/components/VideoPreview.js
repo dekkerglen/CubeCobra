@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -46,6 +46,6 @@ const VideoPreview = ({ video }) => {
 };
 
 VideoPreview.propTypes = {
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 export default VideoPreview;

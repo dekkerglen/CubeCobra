@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Card } from 'reactstrap';
 import TimeAgo from 'react-timeago';
@@ -45,7 +45,7 @@ const PodcastEpisodePreview = ({ episode }) => {
 };
 
 PodcastEpisodePreview.propTypes = {
-  episode: PodcastPropType.isRequired,
+  episode: ContentPropType.isRequired,
 };
 
 export default PodcastEpisodePreview;

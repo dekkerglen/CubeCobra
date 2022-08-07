@@ -29,12 +29,13 @@ TagInput.propTypes = {
   addTag: PropTypes.func.isRequired,
   deleteTag: PropTypes.func.isRequired,
   reorderTag: PropTypes.func.isRequired,
-  suggestions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  suggestions: PropTypes.arrayOf(PropTypes.string),
   tagColors: PropTypes.arrayOf(PropTypes.shape({ tag: PropTypes.string, color: PropTypes.string })),
 };
 
 TagInput.defaultProps = {
   tagColors: [],
+  suggestions: [],
 };
 
 export default TagInput;

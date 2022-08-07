@@ -17,7 +17,8 @@ require('dotenv').config();
 // const package = require('../dynamo/models/package');
 // const patron = require('../dynamo/models/patron');
 // const passwordReset = require('../dynamo/models/passwordReset');
-const featuredQueue = require('../dynamo/models/featuredQueue');
+// const featuredQueue = require('../dynamo/models/featuredQueue');
+// const feed = require('../dynamo/models/feed');
 
 const tables = [
   // content,
@@ -36,7 +37,8 @@ const tables = [
   // package,
   // patron,
   // passwordReset,
-  featuredQueue,
+  // featuredQueue,
+  // feed
 ];
 
 (async () => {

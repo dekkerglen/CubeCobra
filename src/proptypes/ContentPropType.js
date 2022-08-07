@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 
-const ArticlePropType = PropTypes.shape({
+const ContentPropType = PropTypes.shape({
   Id: PropTypes.string.isRequired,
-  Date: PropTypes.string.isRequired,
+  Date: PropTypes.number.isRequired,
   Status: PropTypes.string.isRequired,
   Owner: PropTypes.string.isRequired,
   Type: PropTypes.string.isRequired,
@@ -16,6 +16,10 @@ const ArticlePropType = PropTypes.shape({
   Image: PropTypes.string,
   ImageName: PropTypes.string,
   Username: PropTypes.string,
+  PodcastName: PropTypes.string,
+  PodcastId: PropTypes.string,
+  PodcastGuid: PropTypes.string,
+  PodcastLink: PropTypes.string,
 });
 
-export default ArticlePropType;
+export default ContentPropType;

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { Col, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
 
 import UserPreview from 'components/UserPreview';
+import UserPropType from 'proptypes/UserPropType';
 
 const FollowersModal = ({ followers, isOpen, toggle }) => (
   <Modal size="lg" isOpen={isOpen} toggle={toggle}>
@@ -11,7 +12,7 @@ const FollowersModal = ({ followers, isOpen, toggle }) => (
     <ModalBody>
       <Row className="justify-content-center">
         {followers.map((follower) => (
-          <Col key={follower._id} xs={6} sm={4} lg={3}>
+          <Col key={follower.Id} xs={6} sm={4} lg={3}>
             <UserPreview user={follower} />
           </Col>
         ))}
@@ -21,11 +22,7 @@ const FollowersModal = ({ followers, isOpen, toggle }) => (
 );
 
 FollowersModal.propTypes = {
-  followers: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  followers: PropTypes.arrayOf(UserPropType).isRequired,
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
 };

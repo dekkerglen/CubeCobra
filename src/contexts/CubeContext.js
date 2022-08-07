@@ -56,12 +56,13 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     cards,
   });
   const [versionDict, setVersionDict] = useState({});
-  const [changes, setChanges] = useLocalStorage(`cube-changes-${cube.Id}`, {});
+  const [changes, setChanges] = useLocalStorage(`cubecobra-changes-${cube.Id}`, {});
   const [modalSelection, setModalSelection] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [tagColors, setTagColors] = useState(cube.TagColors);
   const [showTagColors, setShowTagColors] = useState(user ? !user.HideTagColors : false);
   const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const toggle = useCallback(
     (event) => {
@@ -425,6 +426,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
   const commitChanges = useCallback(
     async (title, blog) => {
+      setLoading(true);
       const result = await csrfFetch(`/cube/api/commit`, {
         method: 'POST',
         headers: {
@@ -480,9 +482,9 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           cards: newCards,
         });
       } else {
-        console.log(result);
         setAlerts([{ type: 'error', message: `Failed to commit changes: ${result.message}` }]);
       }
+      setLoading(false);
     },
     [cube, changedCards, setCube, setChanges],
   );
@@ -579,7 +581,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           }
         }
 
-        newChanges[remove.board].removes.push({ index: remove.index });
+        newChanges[remove.board].removes.push({ index: remove.index, oldCard: cube.cards[remove.board][remove.index] });
       }
 
       setChanges(newChanges);

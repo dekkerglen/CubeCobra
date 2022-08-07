@@ -174,6 +174,9 @@ const sanitize = (document) => {
 
 const draftIsCompleted = (draft) => {
   let numCards = 0;
+  if (!draft.Seats) {
+    return false;
+  }
   for (const seat of draft.Seats) {
     if (seat.Deck) {
       numCards += seat.Deck.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
@@ -189,6 +192,7 @@ module.exports = {
   getById: async (id) => addS3Fields((await client.get(id)).Item),
   getByOwner: async (owner, lastKey) => {
     const res = await client.query({
+      IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
       ExpressionAttributeNames: {
         '#owner': FIELDS.CUBE_OWNER,
@@ -207,6 +211,7 @@ module.exports = {
   },
   getByCube: async (cubeId, lastKey) => {
     const res = await client.query({
+      IndexName: 'ByCube',
       KeyConditionExpression: '#cubeId = :cubeId',
       ExpressionAttributeNames: {
         '#cubeId': FIELDS.CUBE_ID,
@@ -225,6 +230,7 @@ module.exports = {
   },
   getByCubeOwner: async (cubeOwner, lastKey) => {
     const res = await client.query({
+      IndexName: 'ByCubeOwner',
       KeyConditionExpression: '#cubeOwner = :cubeOwner',
       ExpressionAttributeNames: {
         '#cubeOwner': FIELDS.CUBE_OWNER,

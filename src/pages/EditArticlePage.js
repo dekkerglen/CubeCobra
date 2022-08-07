@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import {
   Spinner,
@@ -260,7 +260,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
 
 EditArticlePage.propTypes = {
   loginCallback: PropTypes.string,
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 
 EditArticlePage.defaultProps = {

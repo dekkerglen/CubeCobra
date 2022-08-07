@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import {
   Spinner,
@@ -272,7 +272,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
 
 EditVideoPage.propTypes = {
   loginCallback: PropTypes.string,
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 EditVideoPage.defaultProps = {

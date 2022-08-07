@@ -5,6 +5,7 @@ const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
 const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
+const Feed = require('../dynamo/models/feed');
 
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
@@ -46,7 +47,7 @@ router.get('/random', async (req, res) => {
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const posts = []; // TODO: reimplement feed
+    const posts = await Feed.getByTo(req.user.Id);
 
     const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
     const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
@@ -55,8 +56,9 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const decks = await Draft.getByCubeOwner(req.user.Id);
 
     return render(req, res, 'DashboardPage', {
-      posts,
-      decks,
+      posts: posts.items,
+      lastKey: posts.lastKey,
+      decks: decks.items,
       content: content.items.filter((item) => item.Type !== 'p'),
       featured,
     });
@@ -65,7 +67,19 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   }
 });
 
-router.get('/dashboard/decks/:page', ensureAuth, async (req, res) => {
+router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
+  const { lastKey, user } = req.body;
+
+  const result = await Feed.getByTo(user, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    items: result.items,
+    lastKey: result.lastKey,
+  });
+});
+
+router.get('/dashboard/decks', ensureAuth, async (req, res) => {
   try {
     const decks = await Draft.getByCubeOwner(req.user.Id);
 

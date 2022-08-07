@@ -6,6 +6,7 @@ const { CSVtoCards } = require('../../serverjs/cubefn');
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
+const Feed = require('../../dynamo/models/feed');
 const Changelog = require('../../dynamo/models/changelog');
 
 const DEFAULT_BASICS = [
@@ -41,13 +42,24 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
     const ChangelistId = await Changelog.put(changelog, cube.Id);
 
-    await Blog.put({
+    const id = await Blog.put({
       Owner: req.user.Id,
       Date: new Date().valueOf(),
       CubeId: cube.Id,
       Title: 'Cube Bulk Import - Automatic Post',
       ChangelistId,
     });
+
+    const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
+
+    const feedItems = followers.map((user) => ({
+      Id: id,
+      To: user,
+      Date: new Date().valueOf(),
+      Type: Blog.TYPES.BLOG,
+    }));
+
+    await Feed.batchPut(feedItems);
 
     await Cube.updateCards(cube.Id, cards);
 

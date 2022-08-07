@@ -23,7 +23,7 @@ import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
+const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured }) => {
   const user = useContext(UserContext);
   // where featured cubes are positioned on the screen
   let featuredPosition;
@@ -112,7 +112,7 @@ const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
       <Row>
         <Col xs="12" md="8">
           <h5 className="mt-3">Feed</h5>
-          <Feed items={posts} />
+          <Feed items={posts} lastKey={lastKey} />
         </Col>
         <Col className="d-none d-md-block mt-3" md="4">
           <Row>
@@ -129,7 +129,7 @@ const DashboardPage = ({ posts, decks, loginCallback, content, featured }) => {
               </Row>
             </Col>
             {content.map((item) => (
-              <Col className="mb-3" xs="12">
+              <Col key={item.Id} className="mb-3" xs="12">
                 {item.Type === 'a' && <ArticlePreview article={item} />}
                 {item.Type === 'v' && <VideoPreview video={item} />}
                 {item.Type === 'e' && <PodcastEpisodePreview episode={item} />}
@@ -148,11 +148,13 @@ DashboardPage.propTypes = {
   content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   loginCallback: PropTypes.string,
   featured: PropTypes.arrayOf(CubePropType),
+  lastKey: PropTypes.string,
 };
 
 DashboardPage.defaultProps = {
   loginCallback: '/',
   featured: [],
+  lastKey: null,
 };
 
 export default RenderToRoot(DashboardPage);

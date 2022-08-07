@@ -1,7 +1,7 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import CommentsSection from 'components/CommentsSection';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
@@ -49,7 +49,7 @@ const Podcast = ({ podcast, episodes }) => {
   );
 };
 Podcast.propTypes = {
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})),
 };
 

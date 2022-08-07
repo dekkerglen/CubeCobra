@@ -10,8 +10,6 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
   const toggle = () => setIsOpen(!isOpen);
   const Heading = `h${header?.hLevel ?? 4}`;
 
-  console.log(cubes);
-
   return (
     <Card {...props}>
       <CardHeader className="cubes-card-header">

@@ -43,7 +43,7 @@ const hydrate = async (item) => {
         Username: 'Anonymous',
       },
       ImageData: {
-        uri: 'https://img.scryfall.com/cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
+        uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
         artist: 'Allan Pollack',
         id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
       },
@@ -62,23 +62,24 @@ const hydrate = async (item) => {
 
 module.exports = {
   getById: async (id) => hydrate((await client.get(id)).Item),
-  queryByParentAndType: async (parent, type, lastKey) => {
-    const pptComp = `${parent}:${type}`;
-    const res = await client.query({
-      KeyConditionExpression: '#pptComp = :pptComp',
-      ExpressionAttributeNames: {
-        '#pptComp': FIELDS.PPT_COMP,
-      },
+  queryByParentAndType: async (parent, lastKey) => {
+    const result = await client.query({
+      IndexName: 'ByParent',
+      KeyConditionExpression: `#p1 = :parent`,
       ExpressionAttributeValues: {
-        ':pptComp': pptComp,
+        ':parent': parent,
+      },
+      ExpressionAttributeNames: {
+        '#p1': FIELDS.PARENT,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: 10,
     });
 
     return {
-      items: res.Items.map(hydrate),
-      lastEvaluatedKey: res.LastEvaluatedKey,
+      items: await Promise.all(result.Items.map(hydrate)),
+      lastKey: result.LastEvaluatedKey,
     };
   },
   put: async (document) => {

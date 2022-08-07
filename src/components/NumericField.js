@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 
 import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
-const NumericField = ({ name, humanName, placeholder, operator, value, setValue, setOperator, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
+const NumericField = ({ name, humanName, placeholder, operator, value, setValue, setOperator }) => (
+  <InputGroup className="mb-3">
     <InputGroupText>{humanName}</InputGroupText>
     <Input
       type="select"
@@ -36,7 +36,6 @@ NumericField.propTypes = {
   placeholder: PropTypes.string.isRequired,
   operator: PropTypes.string,
   value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
   setValue: PropTypes.func.isRequired,
   setOperator: PropTypes.func.isRequired,
 };
