@@ -173,7 +173,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
     );
   // eslint-disable-next-line
   const mutations = fromEntries(Object.entries(MUTATIONS).map(([name, mutation]) => [name, useMutateFormat(mutation)]));
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
 
   const errorsInFormat = useMemo(() => getErrorsInFormat(format), [format]);
   const packsJson = useMemo(() => !errorsInFormat && serializeFormat(format), [errorsInFormat, format]);
@@ -277,7 +277,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               {error}
             </Alert>
           ))}
-        <CSRFForm method="POST" action={`/cube/format/add/${cubeID}`}>
+        <CSRFForm method="POST" action={`/cube/format/add/${cube.Id}`}>
           <Input type="hidden" name="serializedFormat" value={packsJson} />
           <Input type="hidden" name="id" value={formatIndex} />
           <Button color={errorsInFormat ? 'error' : 'accent'} type="submit" disabled={!!errorsInFormat}>

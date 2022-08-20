@@ -19,12 +19,12 @@ const CustomDraftCard = ({
   defaultDraftFormat,
   ...props
 }) => {
-  const { cubeID, canEdit } = useContext(CubeContext);
+  const { cube, canEdit } = useContext(CubeContext);
   const { index } = format;
 
   return (
     <Card {...props}>
-      <CSRFForm method="POST" key="createDraft" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm method="POST" key="createDraft" action={`/cube/startdraft/${cube.Id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             {defaultDraftFormat === index && 'Default Format: '}

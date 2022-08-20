@@ -557,15 +557,6 @@ router.get('/list/:id', async (req, res) => {
       {
         cube,
         cards,
-        defaultView: req.query.view || 'table',
-        defaultPrimarySort: req.query.s1 || '',
-        defaultSecondarySort: req.query.s2 || '',
-        defaultTertiarySort: req.query.s3 || '',
-        defaultQuaternarySort: req.query.s4 || '',
-        defaultShowUnsorted: req.query.so || '',
-        defaultFilterText: req.query.f || '',
-        defaultTagColors: cube.TagColors || [],
-        defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
       },
       {
         title: `${abbreviate(cube.Name)} - List`,
@@ -715,7 +706,6 @@ router.get('/analysis/:id', async (req, res) => {
         defaultNav: req.query.nav,
         defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
         defaultFormatId: Number(req.query.formatId),
-        defaultFilterText: req.query.f,
         defaultTab: req.query.tab ? Number(req.query.tab) : 0,
       },
       {

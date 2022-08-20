@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
 
 import {
   Button,
@@ -32,7 +31,6 @@ import DisplayContext from 'contexts/DisplayContext';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
 import SortCollapse from 'components/SortCollapse';
-import SortContext from 'contexts/SortContext';
 import TagColorsModal from 'components/TagColorsModal';
 import withModal from 'components/WithModal';
 import { QuestionIcon } from '@primer/octicons-react';
@@ -212,32 +210,25 @@ const CompareCollapse = (props) => {
   );
 };
 
-const CubeListNavbar = ({
-  cards,
-  cubeView,
-  setCubeView,
-  defaultPrimarySort,
-  defaultSecondarySort,
-  defaultTertiarySort,
-  defaultQuaternarySort,
-  defaultShowUnsorted,
-  sorts,
-  setSorts,
-  defaultSorts,
-  cubeDefaultShowUnsorted,
-  defaultFilterText,
-  filter,
-  setFilter,
-  className,
-}) => {
+const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
   const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
-  const { canEdit, hasCustomImages, cube } = useContext(CubeContext);
-  const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
+  const {
+    canEdit,
+    hasCustomImages,
+    cube,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    sortQuaternary,
+    setShowUnsorted,
+    filterInput,
+  } = useContext(CubeContext);
+
   const {
     showCustomImages,
     toggleShowCustomImages,
@@ -280,15 +271,14 @@ const CubeListNavbar = ({
   const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
   const enc = encodeURIComponent;
-  const sortUrlSegment = `primary=${enc(primary)}&secondary=${enc(secondary)}&tertiary=${enc(
-    tertiary,
-  )}&quaternary=${enc(quaternary)}&showother=${enc(showOther)}`;
-  const filterString = filter?.stringify ?? '';
-  const filterUrlSegment = filterString ? `&filter=${enc(filterString)}` : '';
+  const sortUrlSegment = `primary=${enc(sortPrimary)}&secondary=${enc(sortSecondary)}&tertiary=${enc(
+    sortTertiary,
+  )}&quaternary=${enc(sortQuaternary)}&showother=${enc(cube.ShowUnsorted)}`;
+  const filterUrlSegment = filterInput.length > 0 ? `&filter=${enc(filterInput)}` : '';
   const urlSegment = `${isSortUsed ? sortUrlSegment : ''}${isFilterUsed ? filterUrlSegment : ''}`;
 
   return (
-    <div className={`usercontrols${className ? ` ${className}` : ''}`}>
+    <div className="usercontrols">
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
@@ -354,8 +344,8 @@ const CubeListNavbar = ({
                 <DropdownItem onClick={toggleShowMaybeboard}>
                   {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
                 </DropdownItem>
-                <DropdownItem onClick={() => changeSort({ showOther: !showOther })}>
-                  {showOther ? 'Hide Unsorted Cards' : 'Show Unsorted Cards'}
+                <DropdownItem onClick={() => setShowUnsorted(cube.ShowUnsorted)}>
+                  {cube.ShowUnsorted ? 'Hide Unsorted Cards' : 'Show Unsorted Cards'}
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
@@ -409,25 +399,8 @@ const CubeListNavbar = ({
         </Collapse>
       </Navbar>
       {canEdit && <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
-      <SortCollapse
-        defaultPrimarySort={defaultPrimarySort}
-        defaultSecondarySort={defaultSecondarySort}
-        defaultTertiarySort={defaultTertiarySort}
-        defaultQuaternarySort={defaultQuaternarySort}
-        defaultShowUnsorted={defaultShowUnsorted}
-        sorts={sorts}
-        setSorts={setSorts}
-        defaultSorts={defaultSorts}
-        cubeDefaultShowUnsorted={cubeDefaultShowUnsorted}
-        isOpen={openCollapse === 'sort'}
-      />
-      <FilterCollapse
-        defaultFilterText={defaultFilterText}
-        filter={filter}
-        setFilter={setFilter}
-        numCards={cards.Mainboard.length}
-        isOpen={openCollapse === 'filter'}
-      />
+      <SortCollapse isOpen={openCollapse === 'sort'} />
+      <FilterCollapse isOpen={openCollapse === 'filter'} />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
       <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
       <SelectEmptyModal isOpen={selectEmptyModalOpen} toggle={handleToggleSelectEmptyModal} />
@@ -436,31 +409,8 @@ const CubeListNavbar = ({
 };
 
 CubeListNavbar.propTypes = {
-  cards: PropTypes.shape({
-    Mainboard: PropTypes.arrayOf(CardPropType).isRequired,
-  }).isRequired,
   cubeView: PropTypes.string.isRequired,
   setCubeView: PropTypes.func.isRequired,
-  defaultPrimarySort: PropTypes.string.isRequired,
-  defaultSecondarySort: PropTypes.string.isRequired,
-  defaultTertiarySort: PropTypes.string.isRequired,
-  defaultQuaternarySort: PropTypes.string.isRequired,
-  defaultShowUnsorted: PropTypes.string.isRequired,
-  sorts: PropTypes.arrayOf(PropTypes.string),
-  setSorts: PropTypes.func.isRequired,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
-  cubeDefaultShowUnsorted: PropTypes.bool,
-  defaultFilterText: PropTypes.string.isRequired,
-  filter: PropTypes.func,
-  setFilter: PropTypes.func.isRequired,
-  className: PropTypes.string,
-};
-
-CubeListNavbar.defaultProps = {
-  sorts: null,
-  filter: null,
-  className: null,
-  cubeDefaultShowUnsorted: false,
 };
 
 export default CubeListNavbar;

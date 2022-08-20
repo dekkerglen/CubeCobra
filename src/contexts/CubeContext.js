@@ -9,6 +9,9 @@ import { csrfFetch } from 'utils/CSRF';
 import { normalizeName } from 'utils/Card';
 import CardModal from 'components/CardModal';
 import GroupModal from 'components/GroupModal';
+import useQueryParam from 'hooks/useQueryParam';
+
+import { makeFilter } from 'filtering/FilterCards';
 
 const CubeContext = React.createContext({
   cube: {},
@@ -63,6 +66,13 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [showTagColors, setShowTagColors] = useState(user ? !user.HideTagColors : false);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sortPrimary, setSortPrimary] = useQueryParam('s1', cube.DefaultSorts[0] || 'Color Category');
+  const [sortSecondary, setSortSecondary] = useQueryParam('s2', cube.DefaultSorts[1] || 'Types-Multicolor');
+  const [sortTertiary, setSortTertiary] = useQueryParam('s3', cube.DefaultSorts[2] || 'Mana Value');
+  const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', cube.DefaultSorts[3] || 'Alphabetical');
+  const [filterInput, setFilterInput] = useQueryParam('f', '');
+  const [filterValid, setFilterValid] = useState(true);
+  const [cardFilter, setCardFilter] = useState({ fn: () => true });
 
   const toggle = useCallback(
     (event) => {
@@ -383,42 +393,50 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const changedCards = useMemo(() => {
     const changed = JSON.parse(JSON.stringify(cube.cards));
 
-    if (!useChangedCards) {
-      return changed;
-    }
-
-    for (const [board] of Object.entries(changes)) {
-      if (changes[board].edits) {
-        for (let i = 0; i < changes[board].edits.length; i++) {
-          const edit = changes[board].edits[i];
-          const card = changed[board][edit.index];
-          changed[board][edit.index] = {
-            ...card,
-            ...edit.newCard,
-            markedForDelete: false,
-            editIndex: i,
-          };
-
-          if (versionDict[normalizeName(card.details.name)] && edit.newCard.cardID !== card.cardID) {
-            const newDetails = versionDict[normalizeName(card.details.name)].find((v) => v._id === edit.newCard.cardID);
-            changed[board][edit.index].details = {
-              ...card.details,
-              ...newDetails,
+    if (useChangedCards) {
+      for (const [board] of Object.entries(changes)) {
+        if (changes[board].edits) {
+          for (let i = 0; i < changes[board].edits.length; i++) {
+            const edit = changes[board].edits[i];
+            const card = changed[board][edit.index];
+            changed[board][edit.index] = {
+              ...card,
+              ...edit.newCard,
+              markedForDelete: false,
+              editIndex: i,
             };
+
+            if (versionDict[normalizeName(card.details.name)] && edit.newCard.cardID !== card.cardID) {
+              const newDetails = versionDict[normalizeName(card.details.name)].find(
+                (v) => v._id === edit.newCard.cardID,
+              );
+              changed[board][edit.index].details = {
+                ...card.details,
+                ...newDetails,
+              };
+            }
+          }
+        }
+        if (changes[board].removes) {
+          for (let i = changes[board].removes.length - 1; i >= 0; i--) {
+            const remove = changes[board].removes[i];
+            changed[board][remove.index].markedForDelete = true;
+            changed[board][remove.index].removeIndex = i;
+            delete changed[board][remove.index].editIndex;
           }
         }
       }
-      if (changes[board].removes) {
-        for (let i = changes[board].removes.length - 1; i >= 0; i--) {
-          const remove = changes[board].removes[i];
-          changed[board][remove.index].markedForDelete = true;
-          changed[board][remove.index].removeIndex = i;
-          delete changed[board][remove.index].editIndex;
-        }
-      }
     }
-    return changed;
-  }, [changes, cube.cards, versionDict]);
+
+    // console.log(filter);
+    console.log(changed);
+
+    return Object.fromEntries(
+      Object.entries(changed)
+        .filter(([boardname]) => boardname !== 'id')
+        .map(([boardname, list]) => [boardname, list.filter(cardFilter.fn)]),
+    );
+  }, [changes, cube.cards, versionDict, cardFilter]);
 
   const discardAllChanges = useCallback(() => {
     setChanges({});
@@ -627,6 +645,78 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [cards],
   );
 
+  const setShowUnsorted = useCallback(
+    async (value) => {
+      setLoading(true);
+      setCube({
+        ...cube,
+        ShowUnsorted: value,
+      });
+
+      await csrfFetch(`/cube/api/savesorts/${cube.Id}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          sorts: cube.DefaultSorts,
+          showUnsorted: value,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setLoading(false);
+    },
+    [cube, setCube],
+  );
+
+  const saveSorts = useCallback(async () => {
+    setLoading(true);
+    setCube({
+      ...cube,
+      DefaultSorts: [sortPrimary, sortSecondary, sortTertiary, sortQuaternary],
+    });
+    await csrfFetch(`/cube/api/savesorts/${cube.Id}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        sorts: [sortPrimary, sortSecondary, sortTertiary, sortQuaternary],
+        showUnsorted: cube.ShowUnsorted,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    setLoading(false);
+  }, [cube, setCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary]);
+
+  const resetSorts = useCallback(() => {
+    setSortPrimary(cube.DefaultSorts[0] || 'Color Category');
+    setSortSecondary(cube.DefaultSorts[1] || 'Types-Multicolor');
+    setSortTertiary(cube.DefaultSorts[2] || 'Mana Value');
+    setSortQuaternary(cube.DefaultSorts[3] || 'Alphabetical');
+  }, [cube, setCube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+
+  useEffect(
+    (overrideFilter) => {
+      const input = overrideFilter ?? filterInput;
+      if ((input ?? '') === '') {
+        setCardFilter({ fn: () => true });
+        return;
+      }
+
+      const { filter, err } = makeFilter(input);
+      if (err) {
+        setFilterValid(false);
+        return;
+      }
+
+      console.log(filter);
+
+      setFilterValid(true);
+      setCardFilter({ fn: filter });
+    },
+    [filterInput, setCardFilter],
+  );
+
   const value = {
     cube,
     changedCards,
@@ -658,6 +748,22 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     bulkRevertRemove,
     alerts,
     setAlerts,
+    loading,
+    setShowUnsorted,
+    saveSorts,
+    resetSorts,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    sortQuaternary,
+    setSortPrimary,
+    setSortSecondary,
+    setSortTertiary,
+    setSortQuaternary,
+    // filter,
+    filterInput,
+    setFilterInput,
+    filterValid,
   };
 
   return (

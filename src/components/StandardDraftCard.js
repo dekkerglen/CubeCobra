@@ -11,11 +11,11 @@ const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
 const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
-  const { cubeID, canEdit } = useContext(CubeContext);
+  const { cube, canEdit } = useContext(CubeContext);
 
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startdraft/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/startdraft/${cube.Id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             {defaultDraftFormat === -1 && 'Default Format: '}Standard Draft

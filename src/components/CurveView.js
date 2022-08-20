@@ -7,7 +7,7 @@ import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
 import AutocardListGroup from 'components/AutocardListGroup';
-import SortContext from 'contexts/SortContext';
+import CubeContext from 'contexts/CubeContext';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 
@@ -59,13 +59,13 @@ ColorCard.propTypes = {
 };
 
 const CurveView = ({ cards, ...props }) => {
-  const { primary, showOther } = useContext(SortContext);
+  const { sorts, cube } = useContext(CubeContext);
 
   // We call the groups color and type even though they might be other sorts.
   return (
     <Row {...props}>
       <Col>
-        {sortDeep(cards, showOther, 'Alphabetical', primary).map(([color, group]) => (
+        {sortDeep(cards, cube.ShowUnsorted, 'Alphabetical', sorts[0]).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
         ))}
       </Col>

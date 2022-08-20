@@ -24,7 +24,7 @@ const Draft = require('../../dynamo/models/draft');
 const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
-const feed = require('../../dynamo/models/feed');
+const Feed = require('../../dynamo/models/feed');
 
 const router = express.Router();
 
@@ -683,10 +683,10 @@ router.post(
         Id: id,
         To: user,
         Date: new Date(),
-        Type: feed.TYPES.BLOG,
+        Type: Feed.TYPES.BLOG,
       }));
 
-      await feed.put(feedItems);
+      await Feed.put(feedItems);
     }
 
     return res.status(200).send({
@@ -700,6 +700,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
+    const { sorts, showUnsorted } = req.body;
 
     if (!isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -714,9 +715,10 @@ router.post(
       });
     }
 
-    cube.DefaultSorts = req.body.sorts;
-    cube.ShowUnsorted = !!req.body.showOther;
+    cube.DefaultSorts = sorts || [];
+    cube.ShowUnsorted = showUnsorted || false;
     await Cube.update(cube);
+
     return res.status(200).send({
       success: 'true',
     });
@@ -826,7 +828,7 @@ router.post('/imagedata', async (req, res) => {
 });
 
 router.post('/commit', async (req, res) => {
-  const { id, changes } = req.body;
+  const { id, changes, title, blog } = req.body;
 
   const cube = await Cube.getById(id);
 
@@ -837,7 +839,30 @@ router.post('/commit', async (req, res) => {
     });
   }
 
+  const changelogId = await Changelog.put(changes, cube.Id);
+
   // TODO: blogpost
+  if (title) {
+    const blogId = await Blog.put({
+      Body: blog,
+      Owner: req.user.Id,
+      Date: new Date().valueOf(),
+      CubeId: cube.Id,
+      Title: title,
+      ChangelistId: changelogId,
+    });
+
+    const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
+
+    const feedItems = followers.map((user) => ({
+      Id: blogId,
+      To: user,
+      Date: new Date().valueOf(),
+      Type: Feed.TYPES.BLOG,
+    }));
+
+    await Feed.batchPut(feedItems);
+  }
 
   const cards = await Cube.getCards(cube.Id);
 
@@ -846,6 +871,15 @@ router.post('/commit', async (req, res) => {
     if (changes[board].swaps) {
       for (const swap of changes[board].swaps) {
         cards[board][swap.index] = swap.card;
+      }
+    }
+    // edits
+    if (changes[board].edits) {
+      for (const edit of changes[board].edits) {
+        cards[board][edit.index] = {
+          ...cards[board][edit.index],
+          ...edit.newCard,
+        };
       }
     }
     // removes

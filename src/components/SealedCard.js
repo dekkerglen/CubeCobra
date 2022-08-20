@@ -10,10 +10,10 @@ const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
 const SealedCard = () => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startsealed/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/startsealed/${cube.Id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             Standard Sealed

@@ -5,14 +5,15 @@ import CardPropType from 'proptypes/CardPropType';
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import { sortDeep } from 'utils/Sort';
 
-import SortContext from 'contexts/SortContext';
 import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
 import useQueryParam from 'hooks/useQueryParam';
+import CubeContext from 'contexts/CubeContext';
 
 const VisualSpoiler = ({ cards }) => {
-  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
-  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
+
+  const sorted = sortDeep(cards, cube.ShowUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
   const cardList = sorted
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);

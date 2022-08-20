@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { Spinner, Card, CardBody, Row, Col, CardHeader } from 'reactstrap';
 import BlogPostChangelog from 'components/BlogPostChangelog';
+import CubeContext from 'contexts/CubeContext';
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -42,6 +43,8 @@ const formatDate = (date) => {
 };
 
 const CubeHistory = ({ changes, lastKey }) => {
+  const { cube } = useContext(CubeContext);
+
   const [items, setItems] = useState(changes);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -78,8 +81,20 @@ const CubeHistory = ({ changes, lastKey }) => {
     }
   }, [currentLastKey, items]);
 
+  const endMessage = (
+    <div className="centered">
+      <h5>{`${cube.Name} was created`}</h5>
+    </div>
+  );
+
   return (
-    <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+    <InfiniteScroll
+      dataLength={items.length}
+      next={fetchMoreData}
+      hasMore={currentLastKey != null}
+      loader={loader}
+      endMessage={endMessage}
+    >
       <div className="d-block d-sm-none">
         {items.length > 0 ? (
           items.map((changelog) => (

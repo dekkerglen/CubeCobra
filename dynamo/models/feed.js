@@ -22,7 +22,7 @@ const client = createClient({
   attributes: {
     [FIELDS.ID]: 'S',
     [FIELDS.TO]: 'S',
-    [FIELDS.DATE]: 'S',
+    [FIELDS.DATE]: 'N',
   },
   FIELDS,
 });

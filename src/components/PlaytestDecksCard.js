@@ -9,7 +9,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 import { Card, CardHeader, CardTitle, CardBody, CardFooter } from 'reactstrap';
 
 const PlaytestDecksCard = ({ decks, ...props }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Card {...props}>
       <CardHeader>
@@ -23,7 +23,7 @@ const PlaytestDecksCard = ({ decks, ...props }) => {
         ))}
       </CardBody>
       <CardFooter>
-        <a href={`/cube/deck/decks/${cubeID}`}>View all</a>
+        <a href={`/cube/deck/decks/${cube.Id}`}>View all</a>
       </CardFooter>
     </Card>
   );

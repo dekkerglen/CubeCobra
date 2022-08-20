@@ -8,13 +8,13 @@ import { countGroup, sortDeep } from 'utils/Sort';
 
 import AutocardListGroup from 'components/AutocardListGroup';
 import DisplayContext from 'contexts/DisplayContext';
-import SortContext from 'contexts/SortContext';
+import CubeContext from 'contexts/CubeContext';
 
 const TableView = ({ cards, noGroupModal, className, ...props }) => {
-  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
   const { compressedView } = useContext(DisplayContext);
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
-  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary);
+  const sorted = sortDeep(cards, cube.ShowUnsorted, sortQuaternary, sortPrimary, sortSecondary);
 
   return (
     <div className={`table-view-container${className ? ` ${className}` : ''}`}>
@@ -39,9 +39,9 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
                 heading={`${label} (${countGroup(row)})`}
                 cards={row}
                 noGroupModal={noGroupModal}
-                sort={tertiary}
-                orderedSort={quaternary}
-                showOther={showOther}
+                sort={sortTertiary}
+                orderedSort={sortQuaternary}
+                showOther={cube.ShowUnsorted}
               />
             ))}
           </Col>

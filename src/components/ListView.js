@@ -10,11 +10,11 @@ import { getLabels, sortDeep } from 'utils/Sort';
 
 import CubeContext from 'contexts/CubeContext';
 import PagedTable from 'components/PagedTable';
-import SortContext from 'contexts/SortContext';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import withLoading from 'components/WithLoading';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
+import { getCardColorClass } from 'utils/Util';
 
 const colorCombos = [
   'C',
@@ -75,7 +75,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
     colors: (card.colors || []).join('') || 'C',
   });
 
-  const { cubeID, updateCubeCard } = useContext(CubeContext);
+  const { cube, updateCubeCard } = useContext(CubeContext);
 
   const { index } = card;
 
@@ -90,7 +90,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
       }
 
       try {
-        const response = await csrfFetch(`/cube/api/updatecard/${cubeID}`, {
+        const response = await csrfFetch(`/cube/api/updatecard/${cube.Id}`, {
           method: 'POST',
           body: JSON.stringify({
             src: card,
@@ -129,7 +129,7 @@ const ListViewRow = ({ card, versions, versionsLoading, checked, onCheck, addAle
         throw err;
       }
     },
-    [cubeID, card, updateCubeCard, addAlert],
+    [card, cube.Id, addAlert, updateCubeCard],
   );
 
   const addTag = useCallback(
@@ -335,8 +335,7 @@ const ListView = ({ cards }) => {
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [checked, setChecked] = useState([]);
 
-  const { cube, setModalSelection } = useContext(CubeContext);
-  const { primary, secondary, tertiary, quaternary, showOther } = useContext(SortContext);
+  const { cube, setModalSelection, sorts } = useContext(CubeContext);
 
   const { addAlert, alerts } = useAlerts();
 
@@ -400,7 +399,7 @@ const ListView = ({ cards }) => {
     [checked, setModalSelection, cards],
   );
 
-  const sorted = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
+  const sorted = sortDeep(cards, cube.ShowUnsorted, sorts[3], sorts[0], sorts[1], sorts[2]);
 
   const rows = sorted.map(([, group1]) =>
     group1.map(([, group2]) =>

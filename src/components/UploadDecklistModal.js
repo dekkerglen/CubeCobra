@@ -7,10 +7,10 @@ import CSRFForm from 'components/CSRFForm';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Input, Button } from 'reactstrap';
 
 const UploadDecklistModal = ({ isOpen, toggle }) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadDecklistModalTitle">
-      <CSRFForm method="POST" action={`/cube/deck/uploaddecklist/${cubeID}`}>
+      <CSRFForm method="POST" action={`/cube/deck/uploaddecklist/${cube.Id}`}>
         <ModalHeader toggle={toggle} id="uploadDecklistModalTitle">
           Upload Decklist
         </ModalHeader>

@@ -63,7 +63,7 @@ export const getCard = async (defaultprinting, name, setAlerts) => {
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
-const EditCollapse = ({ cubeView, ...props }) => {
+const EditCollapse = ({ isOpen }) => {
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
   const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
@@ -81,6 +81,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
     commitChanges,
     alerts,
     setAlerts,
+    loading,
   } = useContext(CubeContext);
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.Id}-blogpost`, DEFAULT_BLOG_TITLE);
@@ -173,13 +174,13 @@ const EditCollapse = ({ cubeView, ...props }) => {
   );
 
   const submit = useCallback(async () => {
-    commitChanges(postContent, postTitle);
+    commitChanges(postTitle, postContent);
     setPostTitle(DEFAULT_BLOG_TITLE);
     setPostContent('');
   }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (
-    <Collapse className="px-3" {...props}>
+    <Collapse className="px-3" isOpen={isOpen}>
       {alerts.map(({ color, message }) => (
         <UncontrolledAlert color={color} className="mt-2">
           {message}
@@ -315,7 +316,7 @@ const EditCollapse = ({ cubeView, ...props }) => {
         </Row>
         <Row className="mb-2">
           <Col xs="6" md="3">
-            <Button color="accent" block className="me-2" onClick={submit}>
+            <Button color="accent" block className="me-2" onClick={submit} disabled={loading}>
               Save Changes
             </Button>
           </Col>
@@ -339,7 +340,11 @@ const EditCollapse = ({ cubeView, ...props }) => {
 };
 
 EditCollapse.propTypes = {
-  cubeView: PropTypes.string.isRequired,
+  isOpen: PropTypes.bool,
+};
+
+EditCollapse.defaultProps = {
+  isOpen: false,
 };
 
 export default EditCollapse;

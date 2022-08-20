@@ -10,7 +10,6 @@ import CubeCompareNavbar from 'components/CubeCompareNavbar';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { SortContextProvider } from 'contexts/SortContext';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
@@ -32,25 +31,23 @@ const CubeComparePage = ({
   const filteredCards = filter ? cards.filter(filter) : cards;
   return (
     <MainLayout loginCallback={loginCallback}>
-      <SortContextProvider defaultSorts={defaultSorts}>
-        <DisplayContextProvider>
-          <CubeCompareNavbar
-            cubeA={cube}
-            cubeAID={cube.Id}
-            cubeB={cubeB}
-            cubeBID={cubeB.Id}
-            cards={filteredCards}
-            openCollapse={openCollapse}
-            setOpenCollapse={setOpenCollapse}
-            filter={filter}
-            setFilter={setFilter}
-          />
-          <DynamicFlash />
-          <ErrorBoundary>
-            <CompareView cards={filteredCards} {...props} />
-          </ErrorBoundary>
-        </DisplayContextProvider>
-      </SortContextProvider>
+      <DisplayContextProvider>
+        <CubeCompareNavbar
+          cubeA={cube}
+          cubeAID={cube.Id}
+          cubeB={cubeB}
+          cubeBID={cubeB.Id}
+          cards={filteredCards}
+          openCollapse={openCollapse}
+          setOpenCollapse={setOpenCollapse}
+          filter={filter}
+          setFilter={setFilter}
+        />
+        <DynamicFlash />
+        <ErrorBoundary>
+          <CompareView cards={filteredCards} {...props} />
+        </ErrorBoundary>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

@@ -220,11 +220,9 @@ module.exports = {
       })
       .promise();
     await client.put({
-      Item: {
-        [FIELDS.ID]: id,
-        [FIELDS.CUBE_ID]: cubeId,
-        [FIELDS.DATE]: Date.now().valueOf(),
-      },
+      [FIELDS.ID]: id,
+      [FIELDS.CUBE_ID]: cubeId,
+      [FIELDS.DATE]: new Date().valueOf(),
     });
     return id;
   },
