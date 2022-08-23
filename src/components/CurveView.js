@@ -59,13 +59,13 @@ ColorCard.propTypes = {
 };
 
 const CurveView = ({ cards, ...props }) => {
-  const { sorts, cube } = useContext(CubeContext);
+  const { sortPrimary, cube } = useContext(CubeContext);
 
   // We call the groups color and type even though they might be other sorts.
   return (
     <Row {...props}>
       <Col>
-        {sortDeep(cards, cube.ShowUnsorted, 'Alphabetical', sorts[0]).map(([color, group]) => (
+        {sortDeep(cards, cube.ShowUnsorted, 'Alphabetical', sortPrimary).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
         ))}
       </Col>

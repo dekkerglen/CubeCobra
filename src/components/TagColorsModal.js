@@ -2,7 +2,7 @@
 import React, { useContext, useCallback, useMemo } from 'react';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { Col, Form, Input, Label, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
+import { Col, Input, Label, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
 
 import { arrayMove, getTagColorClass } from 'utils/Util';
 import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
@@ -68,15 +68,17 @@ const TagColorsModal = ({ isOpen, toggle }) => {
     [tagColors, updateTagColors],
   );
 
-  const editableRows = useMemo(() => {
-    tagColors.map(({ tag, color }) => {
-      const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
-      return {
-        element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={handleChangeColor} />,
-        key: tag,
-      };
-    });
-  }, [tagColors, handleChangeColor]);
+  const editableRows = useMemo(
+    () =>
+      tagColors.map(({ tag, color }) => {
+        const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
+        return {
+          element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={handleChangeColor} />,
+          key: tag,
+        };
+      }),
+    [tagColors, handleChangeColor],
+  );
 
   const staticRows = useMemo(() => {
     tagColors.map(({ tag }) => {
@@ -93,17 +95,15 @@ const TagColorsModal = ({ isOpen, toggle }) => {
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
       <ModalBody>
-        <Form className="mb-2">
-          <Label>
-            <Input
-              type="checkbox"
-              className="me-1"
-              checked={showTagColors}
-              onChange={(e) => updateShowTagColors(e.target.checked)}
-            />
-            Show Tag Colors in Card List
-          </Label>
-        </Form>
+        <Label>
+          <Input
+            type="checkbox"
+            className="me-1"
+            checked={showTagColors}
+            onChange={(e) => updateShowTagColors(e.target.checked)}
+          />
+          Show Tag Colors in Card List
+        </Label>
         {!canEdit ? (
           ''
         ) : (

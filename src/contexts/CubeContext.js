@@ -37,7 +37,6 @@ export const TAG_COLORS = [
 ];
 
 const getDetails = async (cardId) => {
-  console.log(cardId);
   const response = await csrfFetch(`/cube/api/getcardfromid/${cardId}`, {
     method: 'GET',
   });
@@ -48,7 +47,6 @@ const getDetails = async (cardId) => {
   if (json.success !== 'true' || !json.card) {
     return {};
   }
-  console.log(json.card);
   return json.card;
 };
 
@@ -73,6 +71,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [filterInput, setFilterInput] = useQueryParam('f', '');
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
+  const [filterResult, setFilterResult] = useState('');
 
   const toggle = useCallback(
     (event) => {
@@ -428,14 +427,32 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       }
     }
 
-    // console.log(filter);
-    console.log(changed);
+    let changedLength = 0;
+    for (const [board] of Object.entries(changed)) {
+      if (board !== 'id') {
+        changedLength += changed[board].length;
+      }
+    }
 
-    return Object.fromEntries(
+    const result = Object.fromEntries(
       Object.entries(changed)
         .filter(([boardname]) => boardname !== 'id')
         .map(([boardname, list]) => [boardname, list.filter(cardFilter.fn)]),
     );
+    let newLength = 0;
+    for (const [board] of Object.entries(result)) {
+      if (board !== 'id') {
+        newLength += result[board].length;
+      }
+    }
+
+    if (filterInput !== '') {
+      setFilterResult(`Filtered ${changedLength} cards to ${newLength}`);
+    } else {
+      setFilterResult('');
+    }
+
+    return result;
   }, [changes, cube.cards, versionDict, cardFilter]);
 
   const discardAllChanges = useCallback(() => {
@@ -709,8 +726,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         return;
       }
 
-      console.log(filter);
-
       setFilterValid(true);
       setCardFilter({ fn: filter });
     },
@@ -760,10 +775,10 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setSortSecondary,
     setSortTertiary,
     setSortQuaternary,
-    // filter,
     filterInput,
     setFilterInput,
     filterValid,
+    filterResult,
   };
 
   return (

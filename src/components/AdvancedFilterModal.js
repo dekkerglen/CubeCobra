@@ -342,7 +342,7 @@ AdvancedFilterModal.propTypes = {
     cmc: PropTypes.number,
     cmcOp: PropTypes.string,
     colorOp: PropTypes.string,
-    color: PropTypes.string,
+    color: PropTypes.arrayOf(PropTypes.string),
     type: PropTypes.string,
     colorIdentity: PropTypes.string,
     colorIdentityOp: PropTypes.string,

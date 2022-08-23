@@ -25,6 +25,7 @@ const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
 const Feed = require('../../dynamo/models/feed');
+const User = require('../../dynamo/models/user');
 
 const router = express.Router();
 
@@ -291,9 +292,11 @@ router.post(
   body('show_tag_colors').toBoolean(),
   jsonValidationErrors,
   util.wrapAsyncApi(async (req, res) => {
-    req.user.HideTagColors = !req.body.show_tag_colors;
-    await req.user.save();
+    const user = await User.getById(req.user.Id);
 
+    user.HideTagColors = !req.body.show_tag_colors;
+
+    await User.update(user);
     return res.status(200).send({
       success: 'true',
     });

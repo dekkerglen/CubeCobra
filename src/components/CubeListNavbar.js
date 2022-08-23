@@ -34,47 +34,8 @@ import SortCollapse from 'components/SortCollapse';
 import TagColorsModal from 'components/TagColorsModal';
 import withModal from 'components/WithModal';
 import { QuestionIcon } from '@primer/octicons-react';
+import PasteBulkModal from 'components/PasteBulkModal';
 import Tooltip from 'components/Tooltip';
-
-const PasteBulkModal = ({ isOpen, toggle }) => {
-  const { cube } = useContext(CubeContext);
-  return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="pasteBulkModalTitle">
-      <ModalHeader id="pasteBulkModalTitle" toggle={toggle}>
-        Bulk Upload - Paste Text
-      </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkupload/${cube.Id}`}>
-        <ModalBody>
-          <p>
-            Acceptable formats are:
-            <br />• one card name per line, or
-            <br />• one card name per line prepended with #x, such as &quot;2x island&quot;
-          </p>
-          <Input
-            type="textarea"
-            maxLength="20000"
-            rows="10"
-            placeholder="Paste Cube Here (max length 20000)"
-            name="body"
-          />
-        </ModalBody>
-        <ModalFooter>
-          <Button color="accent" type="submit">
-            Upload
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </CSRFForm>
-    </Modal>
-  );
-};
-
-PasteBulkModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
 
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 
@@ -156,29 +117,6 @@ UploadBulkReplaceModal.propTypes = {
 
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
 
-const SelectEmptyModal = ({ isOpen, toggle }) => (
-  <Modal isOpen={isOpen} toggle={toggle} labelledBy="selectEmptyTitle">
-    <ModalHeader id="selectEmptyTitle" toggle={toggle}>
-      Cannot Edit Selected
-    </ModalHeader>
-    <ModalBody>
-      <p className="mb-0">
-        No cards are selected. To select and edit multiple cards, use the 'List View' and check the desired cards.
-      </p>
-    </ModalBody>
-    <ModalFooter>
-      <Button color="secondary" onClick={toggle}>
-        Close
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
-
-SelectEmptyModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
 const CompareCollapse = (props) => {
   const { cube } = useContext(CubeContext);
   const [compareID, setCompareID] = useState('');
@@ -213,7 +151,6 @@ const CompareCollapse = (props) => {
 const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
-  const [selectEmptyModalOpen, setSelectEmptyModalOpen] = useState(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
@@ -251,10 +188,6 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
     [setCubeView],
   );
 
-  const handleMassEdit = useCallback((event) => {
-    event.preventDefault();
-  }, []);
-
   const handleOpenCollapse = useCallback(
     (event) => {
       event.preventDefault();
@@ -268,7 +201,6 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
 
   const handleOpenTagColorsModal = useCallback(() => setTagColorsModalOpen(true), []);
   const handleToggleTagColorsModal = useCallback(() => setTagColorsModalOpen(false), []);
-  const handleToggleSelectEmptyModal = useCallback(() => setSelectEmptyModalOpen(false), []);
 
   const enc = encodeURIComponent;
   const sortUrlSegment = `primary=${enc(sortPrimary)}&secondary=${enc(sortSecondary)}&tertiary=${enc(
@@ -318,13 +250,6 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                 Compare
               </NavLink>
             </NavItem>
-            {canEdit && (
-              <NavItem className={cubeView === 'list' ? undefined : 'd-none d-lg-block'}>
-                <NavLink href="#" onClick={handleMassEdit}>
-                  {cubeView === 'list' ? 'Edit Selected' : 'Mass Edit'}
-                </NavLink>
-              </NavItem>
-            )}
             <UncontrolledDropdown nav inNavbar>
               <DropdownToggle nav caret>
                 Display
@@ -344,7 +269,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                 <DropdownItem onClick={toggleShowMaybeboard}>
                   {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
                 </DropdownItem>
-                <DropdownItem onClick={() => setShowUnsorted(cube.ShowUnsorted)}>
+                <DropdownItem onClick={() => setShowUnsorted(!cube.ShowUnsorted)}>
                   {cube.ShowUnsorted ? 'Hide Unsorted Cards' : 'Show Unsorted Cards'}
                 </DropdownItem>
               </DropdownMenu>
@@ -403,7 +328,6 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
       <FilterCollapse isOpen={openCollapse === 'filter'} />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
       <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
-      <SelectEmptyModal isOpen={selectEmptyModalOpen} toggle={handleToggleSelectEmptyModal} />
     </div>
   );
 };

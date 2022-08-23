@@ -40,10 +40,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import withLoading from 'components/WithLoading';
 import CardPropType from 'proptypes/CardPropType';
-
-const LoadingInput = withLoading(Input, []);
 
 const CardModal = ({
   isOpen,
@@ -61,24 +58,15 @@ const CardModal = ({
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
-    const getData = async () => {
-      while (Object.entries(versionDict).length === 0) {
-        // eslint-disable-next-line no-await-in-loop
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-
-      if (!versionDict[normalizeName(card.details.name)]) {
-        setVersions(null);
-      } else {
-        setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v._id, v])));
-      }
-    };
-    getData();
+    if (!versionDict[normalizeName(card.details.name)]) {
+      setVersions(null);
+    } else {
+      setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v._id, v])));
+    }
   }, [card, versionDict]);
 
   const updateField = useCallback(
     (field, value) => {
-      console.log(field, value);
       editCard(card.index, { ...card, [field]: value }, card.board);
     },
     [card, editCard],
@@ -214,13 +202,12 @@ const CardModal = ({
               <fieldset disabled={disabled}>
                 <InputGroup className="mb-3">
                   <InputGroupText>Version (Set and #)</InputGroupText>
-                  <LoadingInput
+                  <Input
                     type="select"
                     name="version"
                     id="cardModalVersion"
                     value={card.cardID}
                     onChange={(e) => updateField('cardID', e.target.value)}
-                    spinnerSize="sm"
                   >
                     {Object.entries(versions).map(([key, value]) => {
                       return (
@@ -229,7 +216,7 @@ const CardModal = ({
                         </option>
                       );
                     })}
-                  </LoadingInput>
+                  </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
                   <InputGroupText>Status</InputGroupText>

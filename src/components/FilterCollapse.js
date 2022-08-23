@@ -1,7 +1,7 @@
-import React, { useCallback, useState, useMemo, useContext } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Col, Row, Collapse, Form, Input, InputGroup, InputGroupText } from 'reactstrap';
+import { Button, Col, Row, Collapse, Input, InputGroup, InputGroupText } from 'reactstrap';
 
 import { ColorChecksControl } from 'components/ColorCheck';
 
@@ -53,7 +53,7 @@ const FilterCollapse = ({ isOpen }) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [values, setValues] = useState({});
 
-  const { filter, setFilter, changedCards, filterInput, setFilterInput, filterValid } = useContext(CubeContext);
+  const { filterInput, setFilterInput, filterValid, filterResult } = useContext(CubeContext);
 
   const applyAdvanced = useCallback(async () => {
     // Advanced Filter change. Render to filter input.
@@ -69,17 +69,12 @@ const FilterCollapse = ({ isOpen }) => {
       }
     }
     for (const name of colorFields) {
-      const colors = [];
       const op = values[`${name}Op`] || '=';
-      for (const color of [...'WUBRG']) {
-        if (values[name + color]) {
-          colors.push(color);
-        }
-      }
-      if (colors.length > 0) {
-        tokens.push(`${name}${op}${colors.join('')}`);
+      if (values[name] && values[name].length > 0) {
+        tokens.push(`${name}${op}${values[name].join('')}`);
       }
     }
+    console.log(tokens);
     setFilterInput(tokens.join(' '));
     setAdvancedOpen(false);
   }, [setFilterInput, values]);
@@ -114,8 +109,8 @@ const FilterCollapse = ({ isOpen }) => {
 
   const reset = useCallback(() => {
     setFilterInput('');
-    setFilter(null, '');
-  }, [setFilter, setFilterInput]);
+    setValues({});
+  }, [setFilterInput]);
 
   const updateValue = useCallback(
     (value, name) => {
@@ -126,25 +121,11 @@ const FilterCollapse = ({ isOpen }) => {
     [values],
   );
 
-  const appliedText = useMemo(() => {
-    const set = new Set();
-
-    for (const [board, list] of Object.entries(changedCards)) {
-      for (const card of list) {
-        set.add(`${board} ${card.index}`);
-      }
-    }
-
-    const numCards = set.size;
-
-    return `Filtered to ${numCards} card${numCards === 1 ? '' : 's'}`;
-  }, [changedCards]);
-
   return (
     <Collapse className="px-3" isOpen={isOpen}>
       <Row>
         <Col>
-          <InputGroup className="mb-3">
+          <InputGroup>
             <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
             <Input
               type="text"
@@ -157,9 +138,12 @@ const FilterCollapse = ({ isOpen }) => {
               onChange={(event) => setFilterInput(event.target.value)}
             />
           </InputGroup>
+          <small>
+            Having trouble using filter syntax? Check out our <a href="/filters">syntax guide</a>.
+          </small>
         </Col>
       </Row>
-      <Form className="row ps-2">
+      <Row className="mt-2">
         <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
           <ColorChecksControl
             size="sm"
@@ -228,12 +212,16 @@ const FilterCollapse = ({ isOpen }) => {
             Quick Filter
           </Button>
         </Col>
-      </Form>
-      <Row>
-        <Col>
-          <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
-        </Col>
       </Row>
+      {filterResult && filterResult.length > 0 && (
+        <Row>
+          <Col>
+            <p>
+              <em>{filterResult}</em>
+            </p>
+          </Col>
+        </Row>
+      )}
       <Row>
         <Col>
           <Button color="unsafe" className="me-2 mb-3" onClick={reset}>
@@ -241,9 +229,6 @@ const FilterCollapse = ({ isOpen }) => {
           </Button>
           <Button color="primary" className="me-2 mb-3" onClick={() => setAdvancedOpen(true)}>
             Advanced...
-          </Button>
-          <Button color="secondary" className="me-2 mb-3" href="/filters">
-            Syntax Guide
           </Button>
         </Col>
       </Row>
