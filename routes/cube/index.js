@@ -1726,4 +1726,47 @@ router.post(
   }),
 );
 
+router.get('/submitdecklist/:cubeid', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.findOne(buildIdQuery(req.params.cubeid)).lean();
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return res.redirect('/404');
+    }
+    if (!req.user._id.equals(cube.owner)) {
+      req.flash('danger', 'Not Authorized');
+      return res.redirect(`/cube/overview/${encodeURIComponent(req.params.cubeid)}`);
+    }
+
+    // add details to cards
+    cube.cards = cube.cards.map((card, index) => {
+      const details = carddb.cardFromId(card.cardID);
+      return {
+        ...card,
+        index,
+        details,
+      };
+    });
+
+    return render(
+      req,
+      res,
+      'SubmitDeckPage',
+      {
+        cube,
+      },
+      {
+        title: `${abbreviate(cube.name)} - Submit Deck`,
+        metadata: generateMeta(
+          `Submit a deck to ${abbreviate(cube.name)}`,
+          cube.image_uri,
+          `https://cubecobra.com/cube/submitdecklist/${req.params.cubeid}`,
+        ),
+      },
+    );
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.cubeid)}`);
+  }
+});
+
 module.exports = router;

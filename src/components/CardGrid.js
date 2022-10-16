@@ -11,6 +11,7 @@ function cardImage(Tag, card, cardProps, linkDetails) {
 }
 
 const CardGrid = ({ cardList, Tag, colProps, cardProps, linkDetails, ...props }) => {
+  console.log(cardList);
   return (
     <Row className="justify-content-center g-0" {...props}>
       {cardList.map((card, cardIndex) => (

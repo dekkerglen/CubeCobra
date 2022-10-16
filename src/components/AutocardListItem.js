@@ -26,7 +26,7 @@ const styles = {
   children: 'card-list-item_children',
 };
 
-const AutocardListItem = ({ card, noCardModal, inModal, className, children }) => {
+const AutocardListItem = ({ card, noCardModal, inModal, className, children, checkbox, checked, onClick }) => {
   const { cardColorClass } = useContext(TagContext);
   const openCardModal = useContext(CardModalContext);
 
@@ -50,9 +50,13 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
       }
 
       event.preventDefault();
-      openCardModal(card);
+      if (onClick) {
+        onClick(event);
+      } else {
+        openCardModal(card);
+      }
     },
-    [card, openCardModal, openCardToolWindow],
+    [card, onClick, openCardModal, openCardToolWindow],
   );
 
   const handleAuxClick = useCallback(
@@ -80,6 +84,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children }) =
       inModal={inModal}
       role="button"
     >
+      {checkbox && <input type="checkbox" className="card-list-item-checkbox pr-1" checked={checked} />}
       <span className={styles.name}>{cardName}</span>
       <span className={styles.children}>{children}</span>
     </AutocardDiv>
@@ -91,12 +96,18 @@ AutocardListItem.propTypes = {
   inModal: PropTypes.bool,
   className: PropTypes.string,
   children: PropTypes.node,
+  checkbox: PropTypes.bool,
+  checked: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 AutocardListItem.defaultProps = {
   noCardModal: false,
   inModal: false,
   className: '',
   children: undefined,
+  checkbox: false,
+  checked: false,
+  onClick: undefined,
 };
 
 export default AutocardListItem;

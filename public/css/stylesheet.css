@@ -719,8 +719,18 @@ body.busy-cursor {
 	border-radius: 4.72% / 3.37%;
 }
 
+.col-1-2 {
+	flex: 0 0 10%;
+	max-width: 10%;
+}
+
 @media (min-width: 768px) {	
 	@media (max-width: 991.98px) {
+		.col-md-1-2 {
+			flex: 0 0 10%;
+			max-width: 10%;
+		}
+
 		.col-md-1-5 {
 			flex: 0 0 12.5%;
 			max-width: 12.5%;
@@ -740,6 +750,11 @@ body.busy-cursor {
 
 @media (min-width: 992px) {
 	@media (max-width: 1119.98px) {
+		.col-lg-1-2 {
+			flex: 0 0 10%;
+			max-width: 10%;
+		}
+
 		.col-lg-1-5 {
 			flex: 0 0 12.5%;
 			max-width: 12.5%;
@@ -758,6 +773,11 @@ body.busy-cursor {
 }
 
 @media (min-width: 1200px) {
+	.col-xl-1-2 {
+		flex: 0 0 10%;
+		max-width: 10%;
+	}
+
 	.col-xl-1-5 {
 		flex: 0 0 12.5%;
 		max-width: 12.5%;
@@ -1335,4 +1355,10 @@ div.advertisement-div > div:not(.report-link) {
 #notice-alert .markdown p:last-child {
 	padding-bottom: 0;
 	margin-bottom: 0;
+}
+
+.card-list-item-checkbox {
+	vertical-align: middle;
+  position: relative;
+  bottom: 1px;
 }

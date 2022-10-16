@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import PropTypes from 'prop-types';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
@@ -9,7 +9,10 @@ import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
+import CardGrid from 'components/CardGrid';
+import CardImage from 'components/CardImage';
 import { makeSubtitle } from 'utils/Card';
+import { sortDeep } from 'utils/Sort';
 import Username from 'components/Username';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
@@ -85,6 +88,20 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
     row.splice(startCut, row.length - startCut);
   }
 
+  const sorted = useMemo(() => {
+    const deep = sortDeep(
+      seat.deck.flat(2).map((cardIndex) => deck.cards[cardIndex]),
+      true,
+      'Unsorted',
+      'Color Category',
+      'Mana Value Full',
+      'Unsorted',
+    );
+    return deep
+      .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
+      .flat(4);
+  }, [deck.cards, seat.deck]);
+
   return (
     <Card>
       <CardHeader>
@@ -103,6 +120,31 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
             <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={draft} />
           ) : (
             <h4>This deck does not have a related draft log.</h4>
+          )}
+        </CardBody>
+      )}
+      {view === 'visual' && (
+        <CardBody>
+          <h4>Mainboard</h4>
+          <CardGrid
+            cardList={sorted}
+            Tag={CardImage}
+            colProps={{ className: 'col-1-2' }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
+          {seat.sideboard.flat(2).length > 0 && (
+            <>
+              <hr className="my-4" />
+              <h4 className="mt-4">Sideboard</h4>
+              <CardGrid
+                cardList={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])}
+                Tag={CardImage}
+                colProps={{ className: 'col-1-2' }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+            </>
           )}
         </CardBody>
       )}

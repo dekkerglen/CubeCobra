@@ -26,8 +26,11 @@ const { isInFeaturedQueue } = require('../../serverjs/featuredQueue');
 const Cube = require('../../models/cube');
 const Draft = require('../../models/draft');
 const GridDraft = require('../../models/gridDraft');
+const Deck = require('../../models/deck');
 const Package = require('../../models/package');
 const Blog = require('../../models/blog');
+
+const { addBasics } = require('./helper');
 
 const router = express.Router();
 
@@ -1091,5 +1094,86 @@ router.get(
     });
   }),
 );
+
+router.post('/submitdeckchecklist', ensureAuth, async (req, res) => {
+  const { deck, cubeId } = req.body;
+
+  try {
+    const cube = await Cube.findOne(buildIdQuery(cubeId)).lean();
+
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+      });
+    }
+
+    // only owners can submit deckchecklist
+
+    if (!req.user._id.equals(cube.owner)) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+    const newDeck = new Deck();
+
+    const deckStacks = [[], []];
+    const sideStacks = [[]];
+
+    for (let i = 0; i < 8; i++) {
+      deckStacks[0].push([]);
+      deckStacks[1].push([]);
+      sideStacks[0].push([]);
+    }
+
+    for (let i = 0; i < deck.length; i++) {
+      const card = cube.cards[deck[i]];
+
+      const details = carddb.cardFromId(card.cardID);
+
+      let offset = 0;
+      if (!details.type.toLowerCase().includes('creature')) {
+        offset += 1;
+      }
+
+      const col = Math.min(7, details.cmc);
+
+      deckStacks[offset][col].push(i);
+    }
+
+    newDeck.cube = cube._id;
+    newDeck.cubeOwner = cube.owner;
+    newDeck.date = Date.now();
+    newDeck.cubename = cube.name;
+    newDeck.draft = null;
+    newDeck.seats = [
+      {
+        userid: req.user._id,
+        username: req.user.username,
+        name: `${req.user.username}'s Deck`,
+        description: 'This deck was submitted from the deck checklist.',
+        deck: deckStacks,
+        sideboard: sideStacks,
+      },
+    ];
+    newDeck.owner = req.user._id;
+    newDeck.cards = deck.map((card) => cube.cards[card]);
+
+    addBasics(newDeck.cards, cube.basics, newDeck);
+
+    await newDeck.save();
+
+    return res.status(200).send({
+      success: 'true',
+      deckid: newDeck._id,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: 'false',
+      message: err.message,
+    });
+  }
+});
 
 module.exports = router;

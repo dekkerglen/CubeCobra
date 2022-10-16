@@ -141,6 +141,11 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
               <NavItem>
                 <UploadDecklistModalLink className="clickable">Upload Decklist</UploadDecklistModalLink>
               </NavItem>
+              <NavItem>
+                <NavLink href={`/cube/submitdecklist/${cube._id}`} className="clickable">
+                  Submit Decklist
+                </NavLink>
+              </NavItem>
             </Nav>
           </Navbar>
         ) : (
