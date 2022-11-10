@@ -24,6 +24,11 @@ Optionally, you can also run MongoDB using docker
 docker run --name cubecobra -p 27017:27017 -d mongo:4.2
 ```
 
+Redis Server: 
+* Windows: https://github.com/microsoftarchive/redis
+* Mac: `brew install redis`
+* Linux: `apt-get install redis`
+
 VSCode (strongly recommended, but not required): https://code.visualstudio.com/
 ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
 
