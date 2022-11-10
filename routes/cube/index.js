@@ -115,7 +115,7 @@ router.get('/clone/:id', async (req, res) => {
       return res.redirect('/cube/list/404');
     }
 
-    const sourceCards = await Cube.getCards(req.params.id);
+    const sourceCards = await Cube.getCards(source.Id);
 
     const cube = {
       Id: uuid(),
@@ -150,7 +150,7 @@ router.get('/clone/:id', async (req, res) => {
       id: cube.Id,
     });
 
-    const sourceOwner = await User.getById(source.owner);
+    const sourceOwner = await User.getById(source.Owner);
 
     if (!source.disableNotifications) {
       await util.addNotification(

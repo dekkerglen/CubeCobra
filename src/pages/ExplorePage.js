@@ -10,7 +10,6 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => {
-  console.log(recents, featured, drafted, popular);
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />

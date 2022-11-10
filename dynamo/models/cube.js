@@ -309,10 +309,8 @@ module.exports = {
   put: async (document) => {
     const hashRows = getHashRowsForMetadata(document);
 
-    console.log(hashRows);
     await cubeHash.batchPut(hashRows);
 
-    console.log(document);
     return client.put({
       ...document,
     });
@@ -328,7 +326,7 @@ module.exports = {
     return s3
       .upload({
         Bucket: process.env.DATA_BUCKET,
-        Key: `cube/${document}.json`,
+        Key: `cube/${document.id}.json`,
         Body: JSON.stringify(document),
       })
       .promise();

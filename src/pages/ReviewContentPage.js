@@ -9,7 +9,6 @@ import RenderToRoot from 'utils/RenderToRoot';
 import ButtonLink from 'components/ButtonLink';
 
 const ReviewContentPage = ({ loginCallback, content }) => {
-  console.log(content);
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />

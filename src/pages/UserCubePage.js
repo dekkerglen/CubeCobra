@@ -16,8 +16,6 @@ import MtgImage from 'components/MtgImage';
 
 const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => {
   const user = useContext(UserContext);
-
-  console.log(owner);
   return (
     <MainLayout loginCallback={loginCallback}>
       <UserLayout user={owner} followers={followers} following={following} activeLink="view">

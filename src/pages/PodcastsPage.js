@@ -14,7 +14,6 @@ import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
 const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
-  console.log(episodes);
   const [items, setItems] = useState(episodes);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -34,7 +33,6 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.episodes]);
         setLastKey(json.lastKey);

@@ -66,8 +66,6 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
   const onlyACopyTemp = onlyA.slice(0);
   const onlyBCopyTemp = onlyB.slice(0);
 
-  console.log(cards, both, onlyA, onlyB);
-
   for (const columnLabel of Object.keys(columns)) {
     let onlyACount = 0;
     let onlyBCount = 0;

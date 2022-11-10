@@ -44,8 +44,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const handleMoveCard = useCallback(
     (source, target) => {
-      console.log(source, target);
-
       if (source.equals(target)) {
         return;
       }
@@ -83,7 +81,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const [name, setName] = useState(initialDeck.seats[seat].name);
   const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
-  console.log(deck);
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider cubeID={cube.Id}>

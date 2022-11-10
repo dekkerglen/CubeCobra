@@ -10,7 +10,6 @@ import RenderToRoot from 'utils/RenderToRoot';
 import TimeAgo from 'react-timeago';
 
 const NoticePage = ({ loginCallback, notices }) => {
-  console.log(notices);
   const applications = notices.filter((notice) => notice.Type === 'a');
   const reports = notices.filter((notice) => notice.Type === 'cr');
 

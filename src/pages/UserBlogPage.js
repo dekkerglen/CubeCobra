@@ -39,7 +39,6 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.posts]);
         setLastKey(json.lastKey);

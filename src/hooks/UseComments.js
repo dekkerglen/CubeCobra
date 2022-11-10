@@ -79,7 +79,6 @@ const useToggle = (parent, type) => {
         }),
       });
       const result = await response.json();
-      console.log(result);
       setComments(result.comments);
       setLastKey(result.lastKey);
       setLoading(false);
@@ -104,7 +103,6 @@ const useToggle = (parent, type) => {
       }),
     });
 
-    console.log(response);
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {

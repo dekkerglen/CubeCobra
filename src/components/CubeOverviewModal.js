@@ -56,9 +56,6 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   const submit = useCallback(
     async (event) => {
       event.preventDefault();
-
-      console.log('submitting', state);
-
       const response = await csrfFetch('/cube/api/editoverview', {
         method: 'POST',
         body: JSON.stringify(state),

@@ -38,7 +38,6 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.articles]);
         setLastKey(json.lastKey);

@@ -28,7 +28,6 @@ const CreatorArticles = ({ articles, lastKey }) => {
       }),
     });
 
-    console.log(response);
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {

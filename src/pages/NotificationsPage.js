@@ -29,11 +29,9 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
         lastKey: currentLastKey,
       }),
     });
-    console.log(response);
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.notifications]);
         setLastKey(json.lastKey);

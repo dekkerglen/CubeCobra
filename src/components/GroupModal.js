@@ -137,7 +137,6 @@ const GroupModal = ({
       }
     }
 
-    console.log(updates);
     bulkEditCard(updates);
     setModalSelection([]);
     toggle();

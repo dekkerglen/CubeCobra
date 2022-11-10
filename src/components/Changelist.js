@@ -29,8 +29,6 @@ const Add = ({ card, revert }) => {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState({});
 
-  console.log(card);
-
   useEffect(() => {
     const getData = async () => {
       const response = await fetch(`/cube/api/getcardfromid/${card.cardID}`);

@@ -133,8 +133,6 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
-    console.log({ newGridDraft, seatIndex, cardIndices });
-
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
@@ -174,11 +172,9 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
   const drafterStates = useMemo(() => {
-    console.log(gridDraft);
     return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
   }, [gridDraft]);
   const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
-  console.log(seatNum);
   const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);

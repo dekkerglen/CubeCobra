@@ -74,7 +74,6 @@ const FilterCollapse = ({ isOpen }) => {
         tokens.push(`${name}${op}${values[name].join('')}`);
       }
     }
-    console.log(tokens);
     setFilterInput(tokens.join(' '));
     setAdvancedOpen(false);
   }, [setFilterInput, values]);

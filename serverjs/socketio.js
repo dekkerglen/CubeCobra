@@ -12,8 +12,6 @@ const setup = (io) => {
   io.on('connection', (socket) => {
     socket.on('joinLobby', ({ draftId }) => {
       const onDraftUpdate = async (data) => {
-        // eslint-disable-next-line no-console
-        console.log('onDraftUpdate', data);
         socket.emit('draft', data);
       };
 

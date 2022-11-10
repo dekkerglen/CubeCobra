@@ -60,7 +60,6 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
       setCardName('');
       setPackageName('');
     } else {
-      console.log(json);
       onError(`Error creating package: ${json.message}`);
     }
     toggle();

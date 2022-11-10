@@ -24,15 +24,12 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
     const json = await response.json();
     if (response.ok) {
       onCubeUpdate(state);
-    } else {
-      console.log(json);
-      if (json.errors) {
-        for (const error of json.errors) {
-          addAlert('danger', error);
-        }
-      } else {
-        addAlert('danger', json.message);
+    } else if (json.errors) {
+      for (const error of json.errors) {
+        addAlert('danger', error);
       }
+    } else {
+      addAlert('danger', json.message);
     }
     toggle();
   }, [cube.Id, toggle, onCubeUpdate, state, addAlert]);

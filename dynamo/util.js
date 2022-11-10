@@ -78,6 +78,10 @@ module.exports = function createClient(config) {
       return client.createTable(params).promise();
     },
     get: async (id) => {
+      if (!id) {
+        throw new Error(`Error getting item from table ${config.name} with, id is null`);
+      }
+
       try {
         return documentClient
           .get({

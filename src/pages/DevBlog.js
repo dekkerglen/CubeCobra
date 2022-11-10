@@ -39,7 +39,6 @@ const DevBlogEntry = ({ items, setItems }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([json.blogpost, ...items]);
         setTitle('');
@@ -93,7 +92,6 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.blogs]);
         setLastKey(json.lastKey);

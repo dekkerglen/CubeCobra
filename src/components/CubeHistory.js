@@ -73,7 +73,6 @@ const CubeHistory = ({ changes, lastKey }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.posts]);
         setLastKey(json.lastKey);

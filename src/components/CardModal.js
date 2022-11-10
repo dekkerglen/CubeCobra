@@ -74,7 +74,6 @@ const CardModal = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
-  console.log(card);
   return (
     <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
       <ModalHeader id="cardModalHeader" toggle={toggle}>

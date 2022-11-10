@@ -32,7 +32,6 @@ const VideosPage = ({ loginCallback, videos, lastKey }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.videos]);
         setLastKey(json.lastKey);
