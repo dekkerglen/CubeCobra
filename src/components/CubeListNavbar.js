@@ -12,10 +12,6 @@ import {
   Form,
   Input,
   Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   Nav,
   NavItem,
   NavLink,
@@ -25,7 +21,6 @@ import {
   FormGroup,
 } from 'reactstrap';
 
-import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import EditCollapse from 'components/EditCollapse';
@@ -35,86 +30,12 @@ import TagColorsModal from 'components/TagColorsModal';
 import withModal from 'components/WithModal';
 import { QuestionIcon } from '@primer/octicons-react';
 import PasteBulkModal from 'components/PasteBulkModal';
+import UploadBulkModal from 'components/UploadBulkModal';
+import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
 import Tooltip from 'components/Tooltip';
 
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
-
-const UploadBulkModal = ({ isOpen, toggle }) => {
-  const { cube } = useContext(CubeContext);
-  return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadBulkModalTitle">
-      <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
-        Bulk Upload - Upload File
-      </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cube.Id}`} encType="multipart/form-data">
-        <ModalBody>
-          <p>
-            Acceptable files are:
-            <br />• .txt (plaintext) with one card name per line, or
-            <br />• .csv with the same format as our .csv export (columns may be omitted and re-arranged, default values
-            may be used).
-          </p>
-          <Input type="file" id="uploadBulkFile" name="document" />
-          <Label for="uploadBulkFile" className="visually-hidden">
-            Choose file
-          </Label>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="accent" type="submit">
-            Upload
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </CSRFForm>
-    </Modal>
-  );
-};
-
-UploadBulkModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
-
-const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
-  const { cube } = useContext(CubeContext);
-  return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadReplacementModalTitle">
-      <ModalHeader id="uploadReplacementModalTitle" toggle={toggle}>
-        Bulk Upload - Replace with CSV File Upload
-      </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cube.Id}`} encType="multipart/form-data">
-        <ModalBody>
-          <p>
-            Replaces all cards in your cube and Maybeboard. Acceptable files are .csv files with the exact format as our
-            .csv export.
-          </p>
-          <Input type="file" id="uploadReplacementFile" name="document" />
-          <Label for="uploadReplacementFile" className="visually-hidden">
-            Choose file
-          </Label>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="accent" type="submit">
-            Upload
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </CSRFForm>
-    </Modal>
-  );
-};
-
-UploadBulkReplaceModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
 
 const CompareCollapse = (props) => {
@@ -258,7 +179,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                 <DropdownItem onClick={handleOpenTagColorsModal}>
                   {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
-                {!hasCustomImages && (
+                {hasCustomImages && (
                   <DropdownItem onClick={toggleShowCustomImages}>
                     {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
                   </DropdownItem>

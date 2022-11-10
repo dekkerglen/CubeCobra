@@ -18,13 +18,6 @@ function getCubeId(cube) {
   return cube.Id;
 }
 
-function buildIdQuery(id) {
-  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
-    return { _id: id };
-  }
-  return { ShortId: id.toLowerCase() };
-}
-
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
 
 function intToLegality(val) {
@@ -268,19 +261,19 @@ function CSVtoCards(csvString, carddb) {
 
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];
-  const onlyA = cardsA.slice(0);
-  const onlyB = cardsB.slice(0);
-  const aNames = onlyA.map((card) => card.details.name);
-  const bNames = onlyB.map((card) => card.details.name);
-  for (const card of cardsA) {
-    if (bNames.includes(card.details.name)) {
+  const onlyA = cardsA.Mainboard.slice(0);
+  const onlyB = cardsB.Mainboard.slice(0);
+  const aOracles = onlyA.map((card) => card.details.oracle_id);
+  const bOracles = onlyB.map((card) => card.details.oracle_id);
+  for (const card of cardsA.Mainboard) {
+    if (bOracles.includes(card.details.oracle_id)) {
       inBoth.push(card);
 
-      onlyA.splice(aNames.indexOf(card.details.name), 1);
-      onlyB.splice(bNames.indexOf(card.details.name), 1);
+      onlyA.splice(aOracles.indexOf(card.details.oracle_id), 1);
+      onlyB.splice(bOracles.indexOf(card.details.oracle_id), 1);
 
-      aNames.splice(aNames.indexOf(card.details.name), 1);
-      bNames.splice(bNames.indexOf(card.details.name), 1);
+      aOracles.splice(aOracles.indexOf(card.details.oracle_id), 1);
+      bOracles.splice(bOracles.indexOf(card.details.oracle_id), 1);
     }
   }
 
@@ -289,8 +282,8 @@ async function compareCubes(cardsA, cardsB) {
     inBoth,
     onlyA,
     onlyB,
-    aNames,
-    bNames,
+    aOracles,
+    bOracles,
     allCards,
   };
 }
@@ -475,7 +468,6 @@ const methods = {
   },
   newCardAnalytics,
   getEloAdjustment,
-  buildIdQuery,
   getCubeId,
   intToLegality,
   legalityToInt,

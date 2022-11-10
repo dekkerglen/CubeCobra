@@ -30,7 +30,7 @@ class CubeCompareNavbar extends Component {
 
   handleOpenCollapse(event) {
     event.preventDefault();
-    const target = event.target;
+    const { target } = event;
     const collapse = target.getAttribute('data-target');
     const { setOpenCollapse } = this.props;
     setOpenCollapse((openCollapse) => (openCollapse === collapse ? null : collapse));
@@ -56,11 +56,11 @@ class CubeCompareNavbar extends Component {
               <h6 className="my-3" style={{ color: '#218937' }}>
                 <span className="text-muted">Base Cube:</span>{' '}
                 <a href={`/cube/list/${cubeAID}`} className="me-3" style={{ color: '#218937' }}>
-                  {cubeA.name} ({cubeA.card_count} cards)
+                  {cubeA.Name} ({cubeA.CardCount} cards)
                 </a>{' '}
                 <span className="text-muted">Comparison Cube:</span>{' '}
                 <a href={`/cube/list/${cubeBID}`} style={{ color: '#218937' }}>
-                  {cubeB.name} ({cubeB.card_count} cards)
+                  {cubeB.Name} ({cubeB.CardCount} cards)
                 </a>
               </h6>
             </li>

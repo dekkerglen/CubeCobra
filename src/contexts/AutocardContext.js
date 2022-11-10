@@ -69,8 +69,8 @@ const CardDiv = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
         {tags.length > 0 && (
           <div className="row g-0 p-1" id="autocardTags">
             {tags.map((tag) => (
-              <span key={tag.value.id} className={`tag ${tag.colorClass}`}>
-                {tag.value.text}
+              <span key={tag.value} className={`tag ${tag.colorClass}`}>
+                {tag.value}
               </span>
             ))}
           </div>

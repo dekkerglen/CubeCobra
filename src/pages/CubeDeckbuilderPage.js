@@ -86,8 +86,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   console.log(deck);
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube.Id}>
+      <DisplayContextProvider cubeID={cube.Id}>
+        <CubeLayout cube={cube} activeLink="playtest">
           <DeckbuilderNavbar
             deck={currentDeck}
             addBasics={addBasics}
@@ -147,8 +147,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
               </Card>
             </Col>
           </Row>
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

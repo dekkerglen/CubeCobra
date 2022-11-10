@@ -4,12 +4,14 @@ import React, { useContext, useState, useMemo, useCallback, useEffect } from 're
 import PropTypes from 'prop-types';
 
 import UserContext from 'contexts/UserContext';
+import DisplayContext from 'contexts/DisplayContext';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
 import { normalizeName } from 'utils/Card';
 import CardModal from 'components/CardModal';
 import GroupModal from 'components/GroupModal';
 import useQueryParam from 'hooks/useQueryParam';
+import useMount from 'hooks/UseMount';
 
 import { makeFilter } from 'filtering/FilterCards';
 
@@ -52,6 +54,7 @@ const getDetails = async (cardId) => {
 
 export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict, useChangedCards }) => {
   const user = useContext(UserContext);
+  const { setOpenCollapse } = useContext(DisplayContext);
   const [cube, setCube] = useState({
     ...initialCube,
     cards,
@@ -72,6 +75,13 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
   const [filterResult, setFilterResult] = useState('');
+
+  useMount(() => {
+    // if there are changes
+    if (Object.keys(changes).length > 0) {
+      setOpenCollapse('edit');
+    }
+  });
 
   const toggle = useCallback(
     (event) => {
@@ -270,6 +280,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
       newChanges[board].edits = edits;
       setChanges(newChanges);
+      setOpenCollapse('edit');
     },
     [changes, setChanges],
   );
@@ -334,6 +345,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       newChanges[board].edits = newEdits;
 
       setChanges(newChanges);
+      setOpenCollapse('edit');
     },
     [changes, setChanges],
   );
@@ -569,6 +581,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         }
       }
       setChanges(newChanges);
+      setOpenCollapse('edit');
     },
     [cube, changes, setChanges],
   );
@@ -620,6 +633,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       }
 
       setChanges(newChanges);
+      setOpenCollapse('edit');
     },
     [cube, changes, setChanges],
   );

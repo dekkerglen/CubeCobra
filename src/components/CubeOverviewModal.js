@@ -202,8 +202,8 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
           <br />
           <h6>Tags</h6>
           <TagInput
-            tags={state.Tags}
-            addTag={(tag) => setState({ ...state, Tags: [...state.Tags, tag] })}
+            tags={state.Tags.map((tag) => ({ text: tag, id: tag }))}
+            addTag={(tag) => setState({ ...state, Tags: [...state.Tags, tag.text] })}
             deleteTag={(index) => {
               const newTags = [...state.Tags];
               newTags.splice(index, 1);

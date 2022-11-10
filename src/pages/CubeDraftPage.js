@@ -60,8 +60,8 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube.Id}>
+      <DisplayContextProvider cubeID={cube.Id}>
+        <CubeLayout cube={cube} activeLink="playtest">
           {state === 'loading' && (
             <div className="centered py-3">
               <Spinner className="position-absolute" />
@@ -70,8 +70,8 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
           {state === 'staging' && <CubeDraftStaging draft={initialDraft} start={start} socket={socket} />}
           {state === 'drafting' && <CubeDraft draft={initialDraft} socket={socket} />}
           {state === 'error' && <CubeDraftError message={message} />}
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

@@ -60,8 +60,8 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube.Id}>
+      <DisplayContextProvider cubeID={cube.Id}>
+        <CubeLayout cube={cube} activeLink="playtest">
           <Navbar expand="md" light className="usercontrols mb-3">
             <div className="view-style-select pe-2">
               <Label className="sr-only" for="viewSelect">
@@ -157,8 +157,8 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               />
             </Col>
           </Row>
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

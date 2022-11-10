@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Button, Spinner } from 'reactstrap';
 
 const LoadingButton = ({ onClick, loading, block, outline, color, children }) => {
-  console.log(block);
   const [stateLoading, setLoading] = useState(false);
 
   const handleClick = useCallback(

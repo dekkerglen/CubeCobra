@@ -104,7 +104,7 @@ module.exports = {
       [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
       [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
       [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.BODY]: document[FIELDS.BODY].substring(0, 10000),
+      [FIELDS.BODY]: document[FIELDS.BODY] ? document[FIELDS.BODY].substring(0, 10000) : null,
       [FIELDS.TITLE]: document[FIELDS.TITLE],
       [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
     });

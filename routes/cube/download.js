@@ -44,7 +44,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.Id);
-    const mainboard = cards.Mainboard;
+    let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
@@ -75,7 +75,7 @@ router.get('/csv/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.Id);
-    const mainboard = cards.Mainboard;
+    let mainboard = cards.Mainboard;
     const maybeboard = cards.Maybeboard;
 
     for (const card of [...mainboard, ...maybeboard]) {
@@ -113,7 +113,7 @@ router.get('/forge/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.Id);
-    const mainboard = cards.Mainboard;
+    let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
@@ -147,7 +147,7 @@ router.get('/mtgo/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.Id);
-    const mainboard = cards.Mainboard;
+    let mainboard = cards.Mainboard;
     const maybeboard = cards.Maybeboard;
 
     for (const card of mainboard) {
@@ -173,7 +173,7 @@ router.get('/xmage/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.Id);
-    const mainboard = cards.Mainboard;
+    let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
@@ -205,7 +205,7 @@ router.get('/plaintext/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.Id);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 

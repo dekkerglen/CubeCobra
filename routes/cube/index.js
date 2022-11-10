@@ -16,7 +16,6 @@ const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
 const {
   generatePack,
-  buildIdQuery,
   abbreviate,
   CSVtoCards,
   compareCubes,
@@ -469,6 +468,8 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
+    const [cardsA, cardsB] = await Promise.all([Cube.getCards(cubeA.Id), Cube.getCards(cubeB.Id)]);
+
     if (!isCubeViewable(cubeA, req.user)) {
       req.flash('danger', `Base cube not found: ${idA}`);
       return res.redirect('/404');
@@ -478,30 +479,9 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cubeACards = await Cube.getCards(cubeA.Id);
-    const cubeBCards = await Cube.getCards(cubeB.Id);
+    const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 
-    const mainboardA = cubeACards.Mainboard;
-    const mainboardB = cubeBCards.Mainboard;
-
-    const pids = new Set();
-    const cardNames = new Set();
-    const countIds = (cards) => {
-      cards.forEach((card) => {
-        if (card.details.tcgplayer_id) {
-          pids.add(card.details.tcgplayer_id);
-        }
-        cardNames.add(card.details.name);
-      });
-      return cards;
-    };
-
-    countIds(mainboardA.cards);
-    countIds(mainboardB.cards);
-
-    const { aNames, bNames, inBoth, allCards } = await compareCubes(cubeACards, cubeBCards);
-
-    const imagedata = util.getImageData(cubeA.Image);
+    const imagedata = util.getImageData(cubeA.ImageName);
 
     return render(
       req,
@@ -510,19 +490,14 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       {
         cube: cubeA,
         cubeB,
-        cubeACards,
-        cubeBCards,
-        onlyA: aNames,
-        onlyB: bNames,
+        onlyA: aOracles,
+        onlyB: bOracles,
         both: inBoth.map((card) => card.details.name),
         cards: allCards.map((card, index) =>
           Object.assign(card, {
             index,
           }),
         ),
-        defaultTagColors: [...cubeA.TagColors, ...cubeB.TagColors],
-        defaultShowTagColors: !req.user || !req.user.HideTagColors,
-        defaultSorts: cubeA.DefaultSorts,
       },
       {
         title: `Comparing ${cubeA.Name} to ${cubeB.Name}`,
@@ -822,7 +797,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
 
 router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
   try {
-    const cube = await Cube.getById(buildIdQuery(req.params.id));
+    const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -892,52 +867,46 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
     }
 
     const lines = items.match(/[^\r\n]+/g);
-    if (lines) {
-      const changelog = [];
-      let missing = [];
+
+    if (lines && (lines[0].match(/,/g) || []).length > 3) {
       const added = [];
-      let newCards = [];
-      let newMaybe = [];
-      if ((lines[0].match(/,/g) || []).length > 3) {
-        ({ newCards, newMaybe, missing } = CSVtoCards(items, carddb));
-        cube.cards = newCards;
-        cube.maybe = newMaybe;
-        const addDetails = (cardList) =>
-          cardList.map((card, index) => {
-            card = {
-              ...card,
-              details: {
-                ...carddb.cardFromId(card.cardID),
-              },
-              index,
-            };
-            if (!card.type_line) {
-              card.type_line = card.details.type;
-            }
-            return card;
-          });
+      const { newCards, newMaybe, missing } = CSVtoCards(items, carddb);
 
-        const newDetails = addDetails(newCards);
+      const newList = {
+        Mainboard: newCards.map((card) => ({
+          details: carddb.cardFromId(card.cardID),
+          ...card,
+        })),
+        Maybeboard: newMaybe.map((card) => ({
+          details: carddb.cardFromId(card.cardID),
+          ...card,
+        })),
+      };
 
-        const { onlyA, onlyB } = await compareCubes(cards, newDetails);
-        changelog.push(
-          ...onlyA.map(({ cardID }) => {
-            return { addedID: null, removedID: cardID };
+      const changelog = {
+        Mainboard: {
+          adds: newList.Mainboard.map(({ cardID }) => {
+            return { cardID };
           }),
-        );
-        changelog.push(
-          ...onlyB.map(({ cardID }) => {
-            return { addedID: cardID, removedID: null };
+          removes: cards.Mainboard.map(({ cardID }) => {
+            return { oldCard: { cardID } };
           }),
-        );
-        added.push(...onlyB);
-      } else {
-        // Eventually add plaintext support here.
-        throw new Error('Invalid file format');
-      }
-      await updateCubeAndBlog(req, res, cube, changelog, added, missing);
-      return null;
+        },
+        Maybeboard: {
+          adds: newList.Maybeboard.map(({ cardID }) => {
+            return { cardID };
+          }),
+          removes: cards.Maybeboard.map(({ cardID }) => {
+            return { oldCard: { cardID } };
+          }),
+        },
+      };
+
+      added.push(...newList.Mainboard);
+
+      return updateCubeAndBlog(req, res, cube, newList, changelog, added, missing);
     }
+
     throw new Error('Received empty file');
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${req.params.id}`);

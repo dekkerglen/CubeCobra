@@ -13,18 +13,9 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-import { TAG_COLORS } from 'contexts/CubeContext';
+import { CubeContextProvider } from 'contexts/CubeContext';
 
-const CubeComparePage = ({
-  cards,
-  cube,
-  cubeB,
-  defaultTagColors,
-  defaultShowTagColors,
-  defaultSorts,
-  loginCallback,
-  ...props
-}) => {
+const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState(null);
 
@@ -32,21 +23,23 @@ const CubeComparePage = ({
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider>
-        <CubeCompareNavbar
-          cubeA={cube}
-          cubeAID={cube.Id}
-          cubeB={cubeB}
-          cubeBID={cubeB.Id}
-          cards={filteredCards}
-          openCollapse={openCollapse}
-          setOpenCollapse={setOpenCollapse}
-          filter={filter}
-          setFilter={setFilter}
-        />
-        <DynamicFlash />
-        <ErrorBoundary>
-          <CompareView cards={filteredCards} {...props} />
-        </ErrorBoundary>
+        <CubeContextProvider initialCube={cube} cards={{ Mainboard: cards }}>
+          <CubeCompareNavbar
+            cubeA={cube}
+            cubeAID={cube.Id}
+            cubeB={cubeB}
+            cubeBID={cubeB.Id}
+            cards={filteredCards}
+            openCollapse={openCollapse}
+            setOpenCollapse={setOpenCollapse}
+            filter={filter}
+            setFilter={setFilter}
+          />
+          <DynamicFlash />
+          <ErrorBoundary>
+            <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} />
+          </ErrorBoundary>
+        </CubeContextProvider>
       </DisplayContextProvider>
     </MainLayout>
   );
@@ -54,16 +47,11 @@ const CubeComparePage = ({
 
 CubeComparePage.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
+  onlyA: PropTypes.arrayOf(CardPropType).isRequired,
+  onlyB: PropTypes.arrayOf(CardPropType).isRequired,
+  both: PropTypes.arrayOf(CardPropType).isRequired,
   cube: CubePropType.isRequired,
   cubeB: CubePropType.isRequired,
-  defaultTagColors: PropTypes.arrayOf(
-    PropTypes.shape({
-      tag: PropTypes.string.isRequired,
-      color: PropTypes.oneOf(TAG_COLORS.map(([, c]) => c)),
-    }),
-  ).isRequired,
-  defaultShowTagColors: PropTypes.bool.isRequired,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string).isRequired,
   loginCallback: PropTypes.string,
 };
 

@@ -70,7 +70,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       Id: id,
       To: userId,
       Date: new Date().valueOf(),
-      Type: Blog.TYPES.BLOG,
+      Type: Feed.TYPES.BLOG,
     }));
 
     await Feed.batchPut(feedItems);

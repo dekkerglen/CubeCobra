@@ -8,7 +8,13 @@ const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const carddb = require('../../serverjs/cards');
 
-const { DEFAULT_BASICS } = require('../../routes/cube/helper');
+const DEFAULT_BASICS = [
+  '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
+  '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
+  '19e71532-3f79-4fec-974f-b0e85c7fe701',
+  '8365ab45-6d78-47ad-a6ed-282069b0fabc',
+  '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
+];
 
 const MILLISECONDS_IN_YEAR = 1000 * 60 * 60 * 24 * 365;
 

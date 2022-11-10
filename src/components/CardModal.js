@@ -74,6 +74,7 @@ const CardModal = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
+  console.log(card);
   return (
     <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
       <ModalHeader id="cardModalHeader" toggle={toggle}>
@@ -333,7 +334,7 @@ const CardModal = ({
 
                 <h5>Tags</h5>
                 <TagInput
-                  tags={cardTags(card)}
+                  tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}
                   inputValue={tagInput}
                   handleInputChange={setTagInput}
@@ -342,7 +343,7 @@ const CardModal = ({
                     setTagInput('');
                   }}
                   addTag={(tag) => {
-                    updateField('tags', [...cardTags(card), tag]);
+                    updateField('tags', [...cardTags(card), tag.text]);
                     setTagInput('');
                   }}
                   deleteTag={(index) => {

@@ -10,11 +10,11 @@ import CubeHistory from 'components/CubeHistory';
 
 const CubeHistoryPage = ({ cube, changes, lastKey, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>
-    <CubeLayout cube={cube} activeLink="history">
-      <DisplayContextProvider cubeID={cube.Id}>
+    <DisplayContextProvider cubeID={cube.Id}>
+      <CubeLayout cube={cube} activeLink="history">
         <CubeHistory changes={changes} lastKey={lastKey} />
-      </DisplayContextProvider>
-    </CubeLayout>
+      </CubeLayout>
+    </DisplayContextProvider>
   </MainLayout>
 );
 

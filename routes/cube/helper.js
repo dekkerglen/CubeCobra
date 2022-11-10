@@ -9,14 +9,6 @@ const Blog = require('../../dynamo/models/blog');
 const Feed = require('../../dynamo/models/feed');
 const Changelog = require('../../dynamo/models/changelog');
 
-const DEFAULT_BASICS = [
-  '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
-  '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
-  '19e71532-3f79-4fec-974f-b0e85c7fe701',
-  '8365ab45-6d78-47ad-a6ed-282069b0fabc',
-  '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
-];
-
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
@@ -40,30 +32,70 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
       });
     }
 
-    const ChangelistId = await Changelog.put(changelog, cube.Id);
+    if (changelog.Mainboard) {
+      if (changelog.Mainboard.adds && changelog.Mainboard.adds.length === 0) {
+        delete changelog.Mainboard.adds;
+      }
+      if (changelog.Mainboard.removes && changelog.Mainboard.removes.length === 0) {
+        delete changelog.Mainboard.removes;
+      }
+      if (changelog.Mainboard.swaps && changelog.Mainboard.swaps.length === 0) {
+        delete changelog.Mainboard.swaps;
+      }
+      if (changelog.Mainboard.edits && changelog.Mainboard.edits.length === 0) {
+        delete changelog.Mainboard.edits;
+      }
+      if (Object.keys(changelog.Mainboard).length === 0) {
+        delete changelog.Mainboard;
+      }
+    }
 
-    const id = await Blog.put({
-      Owner: req.user.Id,
-      Date: new Date().valueOf(),
-      CubeId: cube.Id,
-      Title: 'Cube Bulk Import - Automatic Post',
-      ChangelistId,
-    });
+    if (changelog.Maybeboard) {
+      if (changelog.Maybeboard.adds && changelog.Maybeboard.adds.length === 0) {
+        delete changelog.Maybeboard.adds;
+      }
+      if (changelog.Maybeboard.removes && changelog.Maybeboard.removes.length === 0) {
+        delete changelog.Maybeboard.removes;
+      }
+      if (changelog.Maybeboard.swaps && changelog.Maybeboard.swaps.length === 0) {
+        delete changelog.Maybeboard.swaps;
+      }
+      if (changelog.Maybeboard.edits && changelog.Maybeboard.edits.length === 0) {
+        delete changelog.Maybeboard.edits;
+      }
+      if (Object.keys(changelog.Maybeboard).length === 0) {
+        delete changelog.Maybeboard;
+      }
+    }
 
-    const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
+    if (Object.keys(changelog).length > 0) {
+      const ChangelistId = await Changelog.put(changelog, cube.Id);
 
-    const feedItems = followers.map((user) => ({
-      Id: id,
-      To: user,
-      Date: new Date().valueOf(),
-      Type: Blog.TYPES.BLOG,
-    }));
+      const id = await Blog.put({
+        Owner: req.user.Id,
+        Date: new Date().valueOf(),
+        CubeId: cube.Id,
+        Title: 'Cube Bulk Import - Automatic Post',
+        ChangelistId,
+      });
 
-    await Feed.batchPut(feedItems);
+      const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
 
-    await Cube.updateCards(cube.Id, cards);
+      const feedItems = followers.map((user) => ({
+        Id: id,
+        To: user,
+        Date: new Date().valueOf(),
+        Type: Feed.TYPES.BLOG,
+      }));
 
-    req.flash('success', 'All cards successfully added.');
+      await Feed.batchPut(feedItems);
+
+      await Cube.updateCards(cube.Id, cards);
+      req.flash('success', 'All cards successfully added.');
+    } else {
+      req.flash('danger', 'No changes made.');
+    }
+
     return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
@@ -71,7 +103,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 }
 
 async function bulkUpload(req, res, list, cube) {
-  const cards = Cube.deepClone(await Cube.getCards(cube.Id));
+  const cards = await Cube.getCards(cube.Id);
   const mainboard = cards.Mainboard;
   const maybeboard = cards.Maybeboard;
 
@@ -144,7 +176,14 @@ async function bulkUpload(req, res, list, cube) {
       }
     }
   }
-  await updateCubeAndBlog(req, res, cube, cards, changelog, added, missing);
+
+  const changelist = {
+    Mainboard: {
+      adds: changelog.map((change) => ({ cardID: change.addedID })),
+    },
+  };
+
+  await updateCubeAndBlog(req, res, cube, cards, changelist, added, missing);
 }
 
 function writeCard(res, card, maybe) {
@@ -280,7 +319,6 @@ module.exports = {
   CARD_HEIGHT,
   CARD_WIDTH,
   CSV_HEADER,
-  DEFAULT_BASICS,
   addBasics,
   bulkUpload,
   createPool,

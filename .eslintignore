@@ -1,11 +1,7 @@
-__tests__/helpers.js
-__tests__/src/components/CubeListPage.test.js
-
 jobs/archived/*.js
 one_shot_scripts/*.js
 
 .git
 dist
 node_modules
-public/bower_components
 src/generated

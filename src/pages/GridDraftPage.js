@@ -221,8 +221,8 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider>
+      <DisplayContextProvider>
+        <CubeLayout cube={cube} activeLink="playtest">
           <Navbar expand="xs" light className="usercontrols">
             <Collapse navbar>
               <Nav navbar>
@@ -273,8 +273,8 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
               </Card>
             </ErrorBoundary>
           </DndProvider>
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };
@@ -283,7 +283,7 @@ GridDraftPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDraft: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-    _id: PropTypes.string,
+    Id: PropTypes.string,
     ratings: PropTypes.objectOf(PropTypes.number),
     unopenedPacks: PropTypes.arrayOf().isRequired,
     initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired)).isRequired,
