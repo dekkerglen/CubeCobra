@@ -43,7 +43,7 @@ const CompareCollapse = (props) => {
   const [compareID, setCompareID] = useState('');
   const handleChange = useCallback((event) => setCompareID(event.target.value), []);
 
-  const targetUrl = `/cube/compare/${cube.Id}/to/${compareID}`;
+  const targetUrl = `/cube/compare/${cube.id}/to/${compareID}`;
 
   return (
     <Collapse {...props}>
@@ -60,7 +60,7 @@ const CompareCollapse = (props) => {
           </Col>
           <Col>
             <Button color="accent" className="mb-2" href={targetUrl}>
-              Compare Cubes
+              Compare cubes
             </Button>
           </Col>
         </Form>
@@ -126,7 +126,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const enc = encodeURIComponent;
   const sortUrlSegment = `primary=${enc(sortPrimary)}&secondary=${enc(sortSecondary)}&tertiary=${enc(
     sortTertiary,
-  )}&quaternary=${enc(sortQuaternary)}&showother=${enc(cube.ShowUnsorted)}`;
+  )}&quaternary=${enc(sortQuaternary)}&showother=${enc(cube.showUnsorted)}`;
   const filterUrlSegment = filterInput.length > 0 ? `&filter=${enc(filterInput)}` : '';
   const urlSegment = `${isSortUsed ? sortUrlSegment : ''}${isFilterUsed ? filterUrlSegment : ''}`;
 
@@ -190,8 +190,8 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                 <DropdownItem onClick={toggleShowMaybeboard}>
                   {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
                 </DropdownItem>
-                <DropdownItem onClick={() => setShowUnsorted(!cube.ShowUnsorted)}>
-                  {cube.ShowUnsorted ? 'Hide Unsorted Cards' : 'Show Unsorted Cards'}
+                <DropdownItem onClick={() => setShowUnsorted(!cube.showUnsorted)}>
+                  {cube.showUnsorted ? 'Hide Unsorted cards' : 'Show Unsorted cards'}
                 </DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
@@ -210,14 +210,14 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                     <DropdownItem disabled>Export</DropdownItem>
                   </>
                 )}
-                <DropdownItem href={`/cube/clone/${cube.Id}`}>Clone Cube</DropdownItem>
-                <DropdownItem href={`/cube/download/plaintext/${cube.Id}?${urlSegment}`}>
+                <DropdownItem href={`/cube/clone/${cube.id}`}>Clone Cube</DropdownItem>
+                <DropdownItem href={`/cube/download/plaintext/${cube.id}?${urlSegment}`}>
                   Card Names (.txt)
                 </DropdownItem>
-                <DropdownItem href={`/cube/download/csv/${cube.Id}?${urlSegment}`}>Comma-Separated (.csv)</DropdownItem>
-                <DropdownItem href={`/cube/download/forge/${cube.Id}?${urlSegment}`}>Forge (.dck)</DropdownItem>
-                <DropdownItem href={`/cube/download/mtgo/${cube.Id}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
-                <DropdownItem href={`/cube/download/xmage/${cube.Id}?${urlSegment}`}>XMage (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/csv/${cube.id}?${urlSegment}`}>Comma-Separated (.csv)</DropdownItem>
+                <DropdownItem href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</DropdownItem>
+                <DropdownItem href={`/cube/download/mtgo/${cube.id}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
+                <DropdownItem href={`/cube/download/xmage/${cube.id}?${urlSegment}`}>XMage (.dck)</DropdownItem>
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>

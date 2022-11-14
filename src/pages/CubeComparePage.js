@@ -26,9 +26,9 @@ const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both
         <CubeContextProvider initialCube={cube} cards={{ Mainboard: cards }}>
           <CubeCompareNavbar
             cubeA={cube}
-            cubeAID={cube.Id}
+            cubeAID={cube.id}
             cubeB={cubeB}
-            cubeBID={cubeB.Id}
+            cubeBID={cubeB.id}
             cards={filteredCards}
             openCollapse={openCollapse}
             setOpenCollapse={setOpenCollapse}

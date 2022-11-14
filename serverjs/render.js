@@ -82,7 +82,7 @@ const getCubes = async (req, callback) => {
   if (!req.user) {
     callback([]);
   } else {
-    const query = await Cube.getByOwner(req.user.Id);
+    const query = await Cube.getByOwner(req.user.id);
     callback(query.items);
   }
 };
@@ -91,16 +91,16 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, (cubes) => {
     reactProps.user = req.user
       ? {
-          Id: req.user.Id,
-          Username: req.user.Username,
-          Email: req.user.Email,
-          About: req.user.About,
-          Image: req.user.Image,
-          ImageName: req.user.ImageName,
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          about: req.user.about,
+          image: req.user.image,
+          imageName: req.user.imageName,
           Artist: req.user.Artist,
-          Roles: req.user.Roles,
-          Theme: req.user.Theme,
-          HideFeatured: req.user.HideFeatured,
+          roles: req.user.roles,
+          theme: req.user.theme,
+          hideFeatured: req.user.hideFeatured,
           cubes,
         }
       : null;
@@ -131,7 +131,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
       colors: `/css/${theme}.css`,
       bootstrap: `/css/bootstrap/bs-${theme}.css`,
-      patron: req.user && req.user.Roles.includes('Patron'),
+      patron: req.user && req.user.roles.includes('Patron'),
       notice: process.env.NOTICE,
     });
   });

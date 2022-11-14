@@ -31,7 +31,7 @@ const CubeCarousel = ({ cubes }) => {
       slidesSpacing={0}
     >
       {cubes.map((cube) => (
-        <CubePreview key={cube.Id} cube={cube} />
+        <CubePreview key={cube.id} cube={cube} />
       ))}
     </InfiniteCarousel>
   );

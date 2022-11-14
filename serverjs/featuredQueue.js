@@ -4,7 +4,7 @@ const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
 
 function canBeFeatured(patron) {
-  return patron && patron.Status === Patron.STATUSES.Active && patron.level > 1;
+  return patron && patron.status === Patron.STATUSES.Active && patron.level > 1;
 }
 
 async function rotateFeatured(queue) {
@@ -23,29 +23,29 @@ async function rotateFeatured(queue) {
     [owner2, old2],
   ]) {
     if (canBeFeatured(owner)) {
-      cube.Date = Date.now().valueOf();
+      cube.date = Date.now().valueOf();
       await FeaturedQueue.put(cube);
     } else {
-      await FeaturedQueue.delete(cube.CubeId);
+      await FeaturedQueue.delete(cube.cube);
     }
   }
 
   for (const cube of [new1, new2]) {
-    cube.FeaturedOn = Date.now().valueOf();
+    cube.featuredOn = Date.now().valueOf();
     await FeaturedQueue.put(cube);
   }
 
   const messages = [];
 
-  const cube1 = await Cube.getById(old1.CubeId);
-  const cube2 = await Cube.getById(old2.CubeId);
+  const cube1 = await Cube.getById(old1.cube);
+  const cube2 = await Cube.getById(old2.cube);
   cube1.featured = false;
   cube2.featured = false;
   await Cube.update(cube1);
   await Cube.update(cube2);
 
-  const cube3 = await Cube.getById(new1.CubeId);
-  const cube4 = await Cube.getById(new2.CubeId);
+  const cube3 = await Cube.getById(new1.cube);
+  const cube4 = await Cube.getById(new2.cube);
   cube3.featured = true;
   cube4.featured = true;
   await Cube.update(cube3);
@@ -56,7 +56,7 @@ async function rotateFeatured(queue) {
 
 async function isInFeaturedQueue(cube) {
   if (!cube) return false;
-  return FeaturedQueue.getById(cube.Id);
+  return FeaturedQueue.getById(cube.id);
 }
 
 module.exports = {

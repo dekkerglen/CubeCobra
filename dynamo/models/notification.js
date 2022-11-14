@@ -2,15 +2,15 @@ const uuid = require('uuid/v4');
 const createClient = require('../util');
 
 const FIELDS = {
-  ID: 'Id',
-  DATE: 'Date',
-  TO: 'To',
-  FROM: 'From',
-  URL: 'Url',
-  BODY: 'Body',
-  STATUS: 'Status',
-  FROM_USERNAME: 'FromUsername',
-  TO_STATUS_COMP: 'ToStatusComp',
+  ID: 'id',
+  DATE: 'date',
+  TO: 'to',
+  FROM: 'from',
+  URL: 'url',
+  BODY: 'body',
+  STATUS: 'status',
+  FROM_USERNAME: 'fromUsername',
+  TO_STATUS_COMP: 'toStatusComp',
 };
 
 const STATUS = {
@@ -84,12 +84,12 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
-    document[FIELDS.TO_STATUS_COMP] = `${document.To}:${document.Status}`;
+    document[FIELDS.TO_STATUS_COMP] = `${document.to}:${document.status}`;
     return client.put(document);
   },
   put: async (document) =>
     client.put({
-      [FIELDS.TO_STATUS_COMP]: `${document.To}:${STATUS.UNREAD}`,
+      [FIELDS.TO_STATUS_COMP]: `${document.to}:${STATUS.UNREAD}`,
       [FIELDS.STATUS]: STATUS.UNREAD,
       ...document,
     }),
@@ -104,13 +104,13 @@ module.exports = {
     return notifications.map((item) => ({
       [FIELDS.ID]: uuid(),
       [FIELDS.DATE]: item.date.valueOf(),
-      [FIELDS.TO]: `${user.Id}`,
+      [FIELDS.TO]: `${user._id}`,
       [FIELDS.FROM]: `${item.user_from}`,
       [FIELDS.FROM_USERNAME]: item.user_from_name,
       [FIELDS.URL]: item.url,
       [FIELDS.BODY]: item.text,
       [FIELDS.STATUS]: item[FIELDS.STATUS],
-      [FIELDS.TO_STATUS_COMP]: `${user.Id}:${item[FIELDS.STATUS]}`,
+      [FIELDS.TO_STATUS_COMP]: `${user.id}:${item[FIELDS.STATUS]}`,
     }));
   },
   STATUS,

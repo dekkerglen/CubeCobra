@@ -14,7 +14,7 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
   const { compressedView } = useContext(DisplayContext);
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
-  const sorted = sortDeep(cards, cube.ShowUnsorted, sortQuaternary, sortPrimary, sortSecondary);
+  const sorted = sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary);
 
   return (
     <div className={`table-view-container${className ? ` ${className}` : ''}`}>
@@ -41,7 +41,7 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
                 noGroupModal={noGroupModal}
                 sort={sortTertiary}
                 orderedSort={sortQuaternary}
-                showOther={cube.ShowUnsorted}
+                showOther={cube.showUnsorted}
               />
             ))}
           </Col>

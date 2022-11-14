@@ -28,10 +28,10 @@ const isValidPatreonSignature = (signature, body) => {
 
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
-    await Patron.deleteById(req.user.Id);
+    await Patron.deleteById(req.user.id);
 
-    const user = await User.getById(req.user.Id);
-    user.Roles = user.Roles.filter((role) => role !== 'Patron');
+    const user = await User.getById(req.user.id);
+    user.roles = user.roles.filter((role) => role !== 'Patron');
     user.Patron = undefined;
     await User.update(user);
 
@@ -77,10 +77,10 @@ router.post('/hook', async (req, res) => {
       });
     }
 
-    const user = await User.getById(document.Owner);
+    const user = await User.getById(document.owner);
 
     if (!user) {
-      req.logger.info(`Recieved a patreon hook without a found user: "${document.Owner}"`);
+      req.logger.info(`Recieved a patreon hook without a found user: "${document.owner}"`);
 
       return res.status(200).send({
         success: 'false',
@@ -92,18 +92,18 @@ router.post('/hook', async (req, res) => {
       const rewards = included.filter((item) => item.id === rewardId);
 
       if (rewards.length === 0) {
-        document.Level = 0;
+        document.level = 0;
       } else {
-        document.Level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
+        document.level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
       }
 
-      document.Status = Patron.STATUSES.ACTIVE;
-      if (!user.Roles.includes('Patron')) {
-        user.Roles.push('Patron');
+      document.status = Patron.STATUSES.ACTIVE;
+      if (!user.roles.includes('Patron')) {
+        user.roles.push('Patron');
       }
     } else if (action === 'pledges:delete') {
-      document.Status = Patron.STATUSES.INACTIVE;
-      user.Roles = user.Roles.filter((role) => role !== 'Patron');
+      document.status = Patron.STATUSES.INACTIVE;
+      user.roles = user.roles.filter((role) => role !== 'Patron');
     } else {
       req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
       return res.status(500).send({
@@ -156,9 +156,9 @@ router.get('/redirect', ensureAuth, (req, res) => {
       }
 
       const newPatron = {
-        Email: email,
-        Owner: req.user.Id,
-        Status: Patron.STATUSES.INACTIVE,
+        email: email,
+        owner: req.user.id,
+        status: Patron.STATUSES.INACTIVE,
       };
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
@@ -178,7 +178,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       }
 
       if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
-        newPatron.Level = 0;
+        newPatron.level = 0;
       } else {
         const rewardId = pledges[0].relationships.reward.data.id;
 
@@ -199,13 +199,13 @@ router.get('/redirect', ensureAuth, (req, res) => {
         }
       }
 
-      newPatron.Status = Patron.STATUSES.ACTIVE;
+      newPatron.status = Patron.STATUSES.ACTIVE;
 
       await Patron.put(newPatron);
 
-      const user = await User.getById(req.user.Id);
-      if (!user.Roles.includes('Patron')) {
-        user.Roles.push('Patron');
+      const user = await User.getById(req.user.id);
+      if (!user.roles.includes('Patron')) {
+        user.roles.push('Patron');
       }
       await User.update(user);
 

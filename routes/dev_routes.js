@@ -11,7 +11,7 @@ const router = express.Router();
 router.use(csrfProtection);
 
 router.get('/blog', async (req, res) => {
-  const blogs = await Blog.getByCubeId('DEVBLOG', 10);
+  const blogs = await Blog.getByCube('DEVBLOG', 10);
 
   return render(req, res, 'DevBlog', {
     blogs: blogs.items,
@@ -21,7 +21,7 @@ router.get('/blog', async (req, res) => {
 
 router.post('/getmoreblogs', async (req, res) => {
   const { lastKey } = req.body;
-  const blogs = await Blog.getByCubeId('DEVBLOG', 10, lastKey);
+  const blogs = await Blog.getByCube('DEVBLOG', 10, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -33,20 +33,20 @@ router.post('/getmoreblogs', async (req, res) => {
 router.post('/blogpost', ensureRole('Admin'), async (req, res) => {
   try {
     const blogpost = {
-      Body: req.body.body,
-      Owner: req.user.Id,
-      Date: Date.now().valueOf(),
-      CubeId: 'DEVBLOG',
-      Title: req.body.title,
+      body: req.body.body,
+      owner: req.user.id,
+      date: Date.now().valueOf(),
+      cube: 'DEVBLOG',
+      title: req.body.title,
     };
 
     const id = await Blog.put(blogpost);
 
-    const feedItems = req.user.UsersFollowing.map((user) => ({
-      Id: id,
-      To: user,
-      Date: blogpost.Date,
-      Type: Feed.TYPES.BLOG,
+    const feedItems = req.user.following.map((user) => ({
+      id: id,
+      to: user,
+      date: blogpost.date,
+      type: Feed.TYPES.BLOG,
     }));
 
     await Feed.batchPut(feedItems);

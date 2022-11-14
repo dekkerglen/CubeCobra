@@ -27,7 +27,7 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
       event.preventDefault();
       try {
         setLoading(true);
-        const card = await getCard(cube.Id, newValue || addValue);
+        const card = await getCard(cube.id, newValue || addValue);
         if (!card) {
           return;
         }
@@ -84,7 +84,7 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
                   </LoadingButton>
                 </Col>
               </Form>
-              <CSRFForm method="POST" action={`/cube/edit/${cube.Id}`} innerRef={formRef}>
+              <CSRFForm method="POST" action={`/cube/edit/${cube.id}`} innerRef={formRef}>
                 <Label>Changelist:</Label>
                 <div className="changelist-container mb-2">
                   <Changelist />

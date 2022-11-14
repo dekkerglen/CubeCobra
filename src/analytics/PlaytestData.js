@@ -57,12 +57,12 @@ const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
           columnProps={[
             {
               key: 'card',
-              title: 'Card Name',
+              title: 'Card name',
               heading: true,
               sortable: true,
               renderFn: renderCardLink,
             },
-            { key: 'elo', title: 'Cube Elo', sortable: true, heading: false },
+            { key: 'elo', title: 'Cube elo', sortable: true, heading: false },
             { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false, renderFn: renderPercent },
             { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
             { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },

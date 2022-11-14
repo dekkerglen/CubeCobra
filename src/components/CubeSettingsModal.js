@@ -20,7 +20,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
   const [state, setState] = useState(cube);
 
   const handleSave = useCallback(async () => {
-    const response = await postJson(`/cube/api/settings/${cube.Id}`, state);
+    const response = await postJson(`/cube/api/settings/${cube.id}`, state);
     const json = await response.json();
     if (response.ok) {
       onCubeUpdate(state);
@@ -32,7 +32,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
       addAlert('danger', json.message);
     }
     toggle();
-  }, [cube.Id, toggle, onCubeUpdate, state, addAlert]);
+  }, [cube.id, toggle, onCubeUpdate, state, addAlert]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
@@ -44,51 +44,51 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               id="PrivatePrices"
               name="PrivatePrices"
               type="checkbox"
-              checked={state.PriceVisibility === 'pr'}
+              checked={state.priceVisibility === 'pr'}
               onChange={(e) => {
-                setState({ ...state, PriceVisibility: e.target.checked ? 'pr' : 'pu' });
+                setState({ ...state, priceVisibility: e.target.checked ? 'pr' : 'pu' });
               }}
             />
-            <Label for="PrivatePrices">Hide Total Prices</Label>
+            <Label for="PrivatePrices">Hide Total prices</Label>
           </FormGroup>
           <FormGroup check>
             <Input
-              id="DisableNotifications"
-              name="DisableNotifications"
+              id="disableAlerts"
+              name="disableAlerts"
               type="checkbox"
-              checked={state.DisableNotifications}
+              checked={state.disableAlerts}
               onChange={(e) => {
-                setState({ ...state, DisableNotifications: e.target.checked });
+                setState({ ...state, disableAlerts: e.target.checked });
               }}
             />
-            <Label for="DisableNotifications">Disable Draft Notifications</Label>
+            <Label for="disableAlerts">Disable Draft Notifications</Label>
           </FormGroup>
           <FormGroup>
-            <Label for="Visibility">Cube Visibility</Label>
+            <Label for="visibility">Cube visibility</Label>
             <Input
-              id="Visibility"
-              name="Visibility"
+              id="visibility"
+              name="visibility"
               type="select"
-              value={state.Visibility}
+              value={state.visibility}
               onChange={(e) => {
-                setState({ ...state, Visibility: e.target.value });
+                setState({ ...state, visibility: e.target.value });
               }}
             >
               <option value="pu">Public</option>
               <option value="un">Unlisted</option>
               <option value="pr">Private</option>
             </Input>
-            <FormText>{visibilityHelp[state.Visibility]}</FormText>
+            <FormText>{visibilityHelp[state.visibility]}</FormText>
           </FormGroup>
           <FormGroup>
-            <Label for="DefaultStatus">Default Status</Label>
+            <Label for="defaultStatus">Default status</Label>
             <Input
-              id="DefaultStatus"
-              name="DefaultStatus"
+              id="defaultStatus"
+              name="defaultStatus"
               type="select"
-              value={state.DefaultStatus}
+              value={state.defaultStatus}
               onChange={(e) => {
-                setState({ ...state, DefaultStatus: e.target.value });
+                setState({ ...state, defaultStatus: e.target.value });
               }}
             >
               {['Owned', 'Not Owned'].map((status) => (
@@ -97,14 +97,14 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
             </Input>
           </FormGroup>
           <FormGroup>
-            <Label for="DefaultPrinting">Default Printing</Label>
+            <Label for="defaultPrinting">Default Printing</Label>
             <Input
-              id="DefaultPrinting"
-              name="DefaultPrinting"
+              id="defaultPrinting"
+              name="defaultPrinting"
               type="select"
-              value={state.DefaultPrinting}
+              value={state.defaultPrinting}
               onChange={(e) => {
-                setState({ ...state, DefaultPrinting: e.target.value });
+                setState({ ...state, defaultPrinting: e.target.value });
               }}
             >
               <option value="recent">Most Recent</option>

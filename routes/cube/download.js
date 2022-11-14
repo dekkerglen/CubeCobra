@@ -43,7 +43,7 @@ router.get('/cubecobra/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
     let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
@@ -53,7 +53,7 @@ router.get('/cubecobra/:id', async (req, res) => {
 
     mainboard = sortCardsByQuery(req, mainboard);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of mainboard) {
@@ -74,7 +74,7 @@ router.get('/csv/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
     let mainboard = cards.Mainboard;
     const maybeboard = cards.Maybeboard;
 
@@ -85,7 +85,7 @@ router.get('/csv/:id', async (req, res) => {
 
     mainboard = sortCardsByQuery(req, mainboard);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
@@ -112,7 +112,7 @@ router.get('/forge/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
     let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
@@ -122,11 +122,11 @@ router.get('/forge/:id', async (req, res) => {
 
     mainboard = sortCardsByQuery(req, mainboard);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('[metadata]\r\n');
-    res.write(`Name=${cube.Name}\r\n`);
+    res.write(`name=${cube.name}\r\n`);
     res.write('[Main]\r\n');
     for (const card of mainboard) {
       res.write(`1 ${card.details.name}|${card.details.set.toUpperCase()}\r\n`);
@@ -146,7 +146,7 @@ router.get('/mtgo/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
     let mainboard = cards.Mainboard;
     const maybeboard = cards.Maybeboard;
 
@@ -157,7 +157,7 @@ router.get('/mtgo/:id', async (req, res) => {
 
     mainboard = sortCardsByQuery(req, mainboard);
 
-    return exportToMtgo(res, cube.Name, mainboard, maybeboard);
+    return exportToMtgo(res, cube.name, mainboard, maybeboard);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -172,7 +172,7 @@ router.get('/xmage/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
     let mainboard = cards.Mainboard;
 
     for (const card of mainboard) {
@@ -182,7 +182,7 @@ router.get('/xmage/:id', async (req, res) => {
 
     mainboard = sortCardsByQuery(req, mainboard);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of mainboard) {
@@ -203,9 +203,9 @@ router.get('/plaintext/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cards = await Cube.getCards(cube.Id);
+    const cards = await Cube.getCards(cube.id);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.Name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 

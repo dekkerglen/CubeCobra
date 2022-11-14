@@ -13,7 +13,7 @@ const SealedCard = () => {
   const { cube } = useContext(CubeContext);
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startsealed/${cube.Id}`}>
+      <CSRFForm method="POST" action={`/cube/startsealed/${cube.id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             Standard Sealed
@@ -25,7 +25,7 @@ const SealedCard = () => {
               {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="cards-sealed" label="Cards per Pack">
+          <LabelRow htmlFor="cards-sealed" label="cards per Pack">
             <Input type="select" name="cards" id="cards-sealed" defaultValue="15">
               {rangeOptions(5, 25)}
             </Input>

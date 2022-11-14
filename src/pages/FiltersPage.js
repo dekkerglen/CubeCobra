@@ -32,13 +32,13 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>t:instant OR t:sorcery</code>
               </td>
-              <td>Cards that are either instants or sorceries.</td>
+              <td>cards that are either instants or sorceries.</td>
             </tr>
             <tr>
               <td>
                 <code>t:instant t:tribal</code>
               </td>
-              <td>Cards that are both instants and tribal.</td>
+              <td>cards that are both instants and tribal.</td>
             </tr>
           </tbody>
         </table>
@@ -52,20 +52,20 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>goblin blood</code>
               </td>
-              <td>Cards whose names contain both &quot;blood&quot; and &quot;goblin&quot;.</td>
+              <td>cards whose names contain both &quot;blood&quot; and &quot;goblin&quot;.</td>
             </tr>
             <tr>
               <td>
                 <code>&quot;goblin blood&quot;</code>
               </td>
-              <td>Cards whose names contain exactly &quot;goblin blood&quot;.</td>
+              <td>cards whose names contain exactly &quot;goblin blood&quot;.</td>
             </tr>
             <tr>
               <td>
                 <code>o:destroy o:target o:creature</code>{' '}
               </td>
               <td>
-                Cards whose oracle text contains each of &quot;destroy&quot;, &quot;target&quot;, and
+                cards whose oracle text contains each of &quot;destroy&quot;, &quot;target&quot;, and
                 &quot;creature&quot;.
               </td>
             </tr>
@@ -73,7 +73,7 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>o:&quot;destroy target creature&quot;</code>
               </td>
-              <td>Cards whose oracle text contains exactly &quot;destroy target creature&quot;.</td>
+              <td>cards whose oracle text contains exactly &quot;destroy target creature&quot;.</td>
             </tr>
           </tbody>
         </table>
@@ -87,14 +87,14 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>t:instant OR (t:creature o:flash)</code>
               </td>
-              <td>Cards which are instants, or cards which are creatures with flash.</td>
+              <td>cards which are instants, or cards which are creatures with flash.</td>
             </tr>
             <tr>
               <td>
                 <code>(t:artifact t:creature) OR (-t:creature o:create)</code>
               </td>
               <td>
-                Cards which are artifact creatures, or cards that aren't creatures and have &quot;create&quot; in their
+                cards which are artifact creatures, or cards that aren't creatures and have &quot;create&quot; in their
                 oracle text.
               </td>
             </tr>
@@ -112,25 +112,25 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>-c:w</code>{' '}
               </td>
-              <td>Cards that are not white.</td>
+              <td>cards that are not white.</td>
             </tr>
             <tr>
               <td>
                 <code>-o:draw</code>{' '}
               </td>
-              <td>Cards which do not have draw in their oracle text.</td>
+              <td>cards which do not have draw in their oracle text.</td>
             </tr>
             <tr>
               <td>
                 <code>-t:creature</code>{' '}
               </td>
-              <td>Cards which are not creatures.</td>
+              <td>cards which are not creatures.</td>
             </tr>
             <tr>
               <td>
                 <code>-mox</code>{' '}
               </td>
-              <td>Cards whose names do not include &quot;mox&quot;.</td>
+              <td>cards whose names do not include &quot;mox&quot;.</td>
             </tr>
           </tbody>
         </table>
@@ -165,31 +165,31 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>c=wubrg</code>{' '}
               </td>
-              <td>Cards that are all 5 colors.</td>
+              <td>cards that are all 5 colors.</td>
             </tr>
             <tr>
               <td>
                 <code>{`c<esper`}</code>{' '}
               </td>
-              <td>Cards who colors are a subset of Esper (UB, WB, WU, U, B, W, or colorless).</td>
+              <td>cards who colors are a subset of Esper (UB, WB, WU, U, B, W, or colorless).</td>
             </tr>
             <tr>
               <td>
                 <code>ci:wu</code>{' '}
               </td>
-              <td>Cards whose color identities are exactly white blue.</td>
+              <td>cards whose color identities are exactly white blue.</td>
             </tr>
             <tr>
               <td>
                 <code>{'ci>azorius'}</code>
               </td>
-              <td>Cards whose color identities contain white, blue, and at least one other color.</td>
+              <td>cards whose color identities contain white, blue, and at least one other color.</td>
             </tr>
             <tr>
               <td>
                 <code>{'ci>1'}</code>{' '}
               </td>
-              <td>Cards with more than 1 color in their identity.</td>
+              <td>cards with more than 1 color in their identity.</td>
             </tr>
           </tbody>
         </table>
@@ -214,19 +214,19 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>type=legendary</code>{' '}
               </td>
-              <td>Cards that are legendary.</td>
+              <td>cards that are legendary.</td>
             </tr>
             <tr>
               <td>
                 <code>t:legendary t:creature</code>{' '}
               </td>
-              <td>Cards that are legendary creatures.</td>
+              <td>cards that are legendary creatures.</td>
             </tr>
             <tr>
               <td>
                 <code>t:sha</code>{' '}
               </td>
-              <td>Cards that are shamans, or shapeshifters, spellshapers.</td>
+              <td>cards that are shamans, or shapeshifters, spellshapers.</td>
             </tr>
           </tbody>
         </table>
@@ -251,19 +251,19 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>o:&quot;draw a card&quot;</code>{' '}
               </td>
-              <td>Cards whose oracle text contains &quot;draw a card&quot;.</td>
+              <td>cards whose oracle text contains &quot;draw a card&quot;.</td>
             </tr>
             <tr>
               <td>
                 <code>o:&quot;:&quot;</code>{' '}
               </td>
-              <td>Cards whose oracle text contains &quot;:&quot; (cards with activated abilities).</td>
+              <td>cards whose oracle text contains &quot;:&quot; (cards with activated abilities).</td>
             </tr>
             <tr>
               <td>
                 <code>s:war</code>
               </td>
-              <td>Cards from War of the Spark.</td>
+              <td>cards from War of the Spark.</td>
             </tr>
           </tbody>
         </table>
@@ -299,31 +299,31 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>m:{'{r/g}{r/g}'}</code>{' '}
               </td>
-              <td>Cards that cost two hybrid red/green mana, i.e. Burning Tree Emissary.</td>
+              <td>cards that cost two hybrid red/green mana, i.e. Burning Tree Emissary.</td>
             </tr>
             <tr>
               <td>
                 <code>m:2ww</code>{' '}
               </td>
-              <td>Cards that cost 2 generic mana, and 2 white mana.</td>
+              <td>cards that cost 2 generic mana, and 2 white mana.</td>
             </tr>
             <tr>
               <td>
                 <code>is:gold</code>
               </td>
-              <td>Cards that require two or more colors.</td>
+              <td>cards that require two or more colors.</td>
             </tr>
             <tr>
               <td>
                 <code>is:hybrid</code>
               </td>
-              <td>Cards with one or more hybrid mana symbols.</td>
+              <td>cards with one or more hybrid mana symbols.</td>
             </tr>
             <tr>
               <td>
                 <code>is:phyrexian</code>
               </td>
-              <td>Cards with one or more Phyrexian mana symbols.</td>
+              <td>cards with one or more Phyrexian mana symbols.</td>
             </tr>
           </tbody>
         </table>
@@ -346,13 +346,13 @@ const ContactPage = ({ loginCallback }) => (
                 {' '}
                 <code>{'mv>5'}</code>{' '}
               </td>
-              <td>Cards with mana value greater than 5.</td>
+              <td>cards with mana value greater than 5.</td>
             </tr>
             <tr>
               <td>
                 <code>mv=3</code>{' '}
               </td>
-              <td>Cards with mana value of exactly 3.</td>
+              <td>cards with mana value of exactly 3.</td>
             </tr>
           </tbody>
         </table>
@@ -381,18 +381,18 @@ const ContactPage = ({ loginCallback }) => (
               <td>
                 <code>{'pow>7'}</code>
               </td>
-              <td>Cards with greater than 7 power.</td>
+              <td>cards with greater than 7 power.</td>
             </tr>
             <tr>
               <td>
                 <code>{'pow<5 tou<5'}</code>
               </td>
-              <td>Cards with both less than 5 power, and less than 5 toughness.</td>
+              <td>cards with both less than 5 power, and less than 5 toughness.</td>
             </tr>
             <tr>
               <td>
                 <code>loy:3 or loy:4</code>
-                <td>Cards with a starting loyalty of 3 or 4.</td>
+                <td>cards with a starting loyalty of 3 or 4.</td>
               </td>
             </tr>
           </tbody>
@@ -513,7 +513,7 @@ const ContactPage = ({ loginCallback }) => (
           </table>
         </p>
       </Accordion>
-      <Accordion title="Tags">
+      <Accordion title="tags">
         <p>
           You can use <code>tag:</code> or <code>tags:</code> to filter cards by tag or tag count when in a cube.
         </p>
@@ -578,20 +578,20 @@ const ContactPage = ({ loginCallback }) => (
               {[
                 ['normal', 'A standard Magic card with one face'],
                 ['split', 'A split-faced card'],
-                ['flip', 'Cards that invert vertically with the flip keyword'],
+                ['flip', 'cards that invert vertically with the flip keyword'],
                 ['transform', 'Double-sided cards that transform'],
                 ['modal_dfc', 'Double-sided cards that can be played either-side'],
-                ['meld', 'Cards with meld parts printed on the backsc'],
-                ['leveler', 'Cards with Level Up'],
+                ['meld', 'cards with meld parts printed on the backsc'],
+                ['leveler', 'cards with level Up'],
                 ['saga', 'Saga-type cards'],
-                ['adventure', 'Cards with an Adventure spell part'],
+                ['adventure', 'cards with an Adventure spell part'],
                 ['planar', 'Plane and Phenomenon-type cards'],
                 ['scheme', 'Scheme-type cards'],
                 ['vanguard', 'Vanguard-type cards'],
                 ['token', 'Token cards'],
                 ['double_faced_token', 'Tokens with another token printed on the back'],
                 ['emblem', 'Emblem cards'],
-                ['augment', 'Cards with Augment'],
+                ['augment', 'cards with Augment'],
                 ['host', 'Host-type cards'],
                 ['art_series', 'Art Series collectable double-faced cards'],
                 ['double_sided', 'A Magic card with two sides that are unrelated'],
@@ -613,7 +613,7 @@ const ContactPage = ({ loginCallback }) => (
       </Accordion>
       <Accordion title="Miscellaneous">
         <p>
-          You can use <code>elo:</code> to filter cards by their Elo rating.
+          You can use <code>elo:</code> to filter cards by their elo rating.
         </p>
         <p>
           <strong>Filters for individual cubes:</strong>
@@ -634,7 +634,7 @@ const ContactPage = ({ loginCallback }) => (
                 <td>
                   <code>{'elo>1500'}</code>
                 </td>
-                <td>All cards with an Elo rating above 1500.</td>
+                <td>All cards with an elo rating above 1500.</td>
               </tr>
               <tr>
                 <td>

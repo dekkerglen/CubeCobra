@@ -13,7 +13,7 @@ import CubeContext from 'contexts/CubeContext';
 const VisualSpoiler = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
-  const sorted = sortDeep(cards, cube.ShowUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
+  const sorted = sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
   const cardList = sorted
     .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
     .flat(4);

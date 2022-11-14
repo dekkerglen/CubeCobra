@@ -10,8 +10,8 @@ import RenderToRoot from 'utils/RenderToRoot';
 import TimeAgo from 'react-timeago';
 
 const NoticePage = ({ loginCallback, notices }) => {
-  const applications = notices.filter((notice) => notice.Type === 'a');
-  const reports = notices.filter((notice) => notice.Type === 'cr');
+  const applications = notices.filter((notice) => notice.type === 'a');
+  const reports = notices.filter((notice) => notice.type === 'cr');
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -26,7 +26,7 @@ const NoticePage = ({ loginCallback, notices }) => {
               <p>
                 Details:
                 <Card>
-                  {application.Body.split('\n').map((item) => (
+                  {application.body.split('\n').map((item) => (
                     <>
                       {item}
                       <br />
@@ -36,19 +36,19 @@ const NoticePage = ({ loginCallback, notices }) => {
               </p>
               <p>
                 Submitted by by:{' '}
-                <a href={`/user/view/${application.User}`} target="_blank" rel="noopener noreferrer">
-                  {application.User}
+                <a href={`/user/view/${application.user}`} target="_blank" rel="noopener noreferrer">
+                  {application.user}
                 </a>
-                - <TimeAgo date={application.Date} />
+                - <TimeAgo date={application.date} />
               </p>
               <Row>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="accent" block outline href={`/admin/application/approve/${application.Id}`}>
+                  <ButtonLink color="accent" block outline href={`/admin/application/approve/${application.id}`}>
                     Approve
                   </ButtonLink>
                 </Col>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="unsafe" block outline href={`/admin/application/decline/${application.Id}`}>
+                  <ButtonLink color="unsafe" block outline href={`/admin/application/decline/${application.id}`}>
                     Decline
                   </ButtonLink>
                 </Col>
@@ -66,26 +66,26 @@ const NoticePage = ({ loginCallback, notices }) => {
             <CardBody>
               <p>
                 Comment:{' '}
-                <a href={`/comment/${report.Subject}`} target="_blank" rel="noopener noreferrer">
-                  {report.Subject}
+                <a href={`/comment/${report.subject}`} target="_blank" rel="noopener noreferrer">
+                  {report.subject}
                 </a>
               </p>
-              <p>Reason: {report.Body}</p>
+              <p>Reason: {report.body}</p>
               <p>
                 Reported by:{' '}
-                <a href={`/user/view/${report.User}`} target="_blank" rel="noopener noreferrer">
-                  {report.User}
+                <a href={`/user/view/${report.user}`} target="_blank" rel="noopener noreferrer">
+                  {report.user}
                 </a>
-                - <TimeAgo date={report.Date} />
+                - <TimeAgo date={report.date} />
               </p>
               <Row>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="accent" block outline href={`/admin/ignorereport/${report.Id}`}>
+                  <ButtonLink color="accent" block outline href={`/admin/ignorereport/${report.id}`}>
                     Ignore
                   </ButtonLink>
                 </Col>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="unsafe" block outline href={`/admin/removecomment/${report.Id}`}>
+                  <ButtonLink color="unsafe" block outline href={`/admin/removecomment/${report.id}`}>
                     Remove Comment
                   </ButtonLink>
                 </Col>

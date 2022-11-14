@@ -23,7 +23,7 @@ function getBlankCardHistory(id) {
       vintage: [0, 0],
       cubes: 0,
       prices: cardVersions.map((cardId) => {
-        return { ...carddb.cardFromId(cardId).prices, version: carddb.cardFromId(cardId).Id };
+        return { ...carddb.cardFromId(cardId).prices, version: carddb.cardFromId(cardId).id };
       }),
     },
     cubedWith: {

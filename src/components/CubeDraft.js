@@ -17,7 +17,7 @@ import { Card } from 'reactstrap';
 
 const fetchPicks = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpicks', {
-    draft: draft.Id,
+    draft: draft.id,
     seat,
   });
   const json = await res.json();
@@ -32,7 +32,7 @@ const fetchPicks = async (draft, seat) => {
 
 const fetchPack = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpack', {
-    draft: draft.Id,
+    draft: draft.id,
     seat,
   });
   const json = await res.json();
@@ -79,9 +79,9 @@ const CubeDraft = ({ draft, socket }) => {
         setLoading(false);
       }
 
-      await callApi('/multiplayer/draftpick', { draft: draft.Id, seat, pick });
+      await callApi('/multiplayer/draftpick', { draft: draft.id, seat, pick });
     },
-    [hideCard, stepQueue, pack, draft.Id, tryPopPack],
+    [hideCard, stepQueue, pack, draft.id, tryPopPack],
   );
 
   const updatePack = async (data) => {
@@ -95,16 +95,16 @@ const CubeDraft = ({ draft, socket }) => {
 
   useMount(() => {
     const run = async () => {
-      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.Id });
+      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.id });
       const seatJson = await getSeat.json();
       seat = seatJson.seat;
 
-      socket.emit('joinDraft', { draftId: draft.Id, seat });
+      socket.emit('joinDraft', { draftId: draft.id, seat });
 
       socket.on('draft', async (data) => {
         if (data.finished === 'true') {
           const res = await callApi('/multiplayer/editdeckbydraft', {
-            draftId: draft.Id,
+            draftId: draft.id,
             seat,
             drafted: staticPicks,
             sideboard: setupPicks(1, 8),
@@ -129,7 +129,7 @@ const CubeDraft = ({ draft, socket }) => {
           try {
             if (status === 'in_progress') {
               const res = await callApi('/multiplayer/trybotpicks', {
-                draft: draft.Id,
+                draft: draft.id,
               });
               const json = await res.json();
               status = json.result;
@@ -205,7 +205,7 @@ const CubeDraft = ({ draft, socket }) => {
       <Card className="my-3">
         <DeckStacks
           cards={picks.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
-          title="Picks"
+          title="picks"
           subtitle={makeSubtitle(picks.flat(3).map((index) => draft.cards[index]))}
           locationType={DraftLocation.PICKS}
           canDrop={(_, to) => to.type === DraftLocation.PICKS}

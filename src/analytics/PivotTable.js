@@ -24,7 +24,7 @@ const PivotTable = ({ cards, characteristics }) => {
 PivotTable.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   characteristics: PropTypes.shape({
-    'Cube Elo': PropTypes.func.isRequired,
+    'Cube elo': PropTypes.func.isRequired,
     'Mainboard Rate': PropTypes.func.isRequired,
     'Mainboard Count': PropTypes.func.isRequired,
     'Pick Rate': PropTypes.func.isRequired,

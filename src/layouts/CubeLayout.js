@@ -42,7 +42,7 @@ const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useCha
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
           <div className="nav-item px-lg-4 px-3 text-sm-start text-center font-weight-boldish mt-auto mb-2">
-            {cube.Name}
+            {cube.name}
             <span className="d-sm-inline"> ({subtitle})</span>
           </div>
           <div className="d-flex flex-row flex-wrap">

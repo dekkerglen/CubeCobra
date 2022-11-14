@@ -29,13 +29,13 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.getById(req.body.id);
 
-      if (blog.Owner !== user.Id) {
+      if (blog.owner !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
 
-      blog.Body = req.body.markdown.substring(0, 10000);
-      blog.Title = req.body.title;
+      blog.body = req.body.markdown.substring(0, 10000);
+      blog.title = req.body.title;
 
       await Blog.put(blog);
 
@@ -51,26 +51,26 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     // post new blog
-    if (cube.Owner !== user.Id) {
+    if (cube.owner !== user.id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
 
     const id = await Blog.put({
-      Body: req.body.markdown.substring(0, 10000),
-      Owner: user.Id,
-      Date: new Date().valueOf(),
-      CubeId: cube.Id,
-      Title: req.body.title,
+      body: req.body.markdown.substring(0, 10000),
+      owner: user.id,
+      date: new Date().valueOf(),
+      cube: cube.id,
+      title: req.body.title,
     });
 
-    const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing, ...(req.body.mentions || [])])];
+    const followers = [...new Set([...req.user.following, ...cube.following, ...(req.body.mentions || [])])];
 
     const feedItems = followers.map((userId) => ({
-      Id: id,
-      To: userId,
-      Date: new Date().valueOf(),
-      Type: Feed.TYPES.BLOG,
+      id,
+      to: userId,
+      date: new Date().valueOf(),
+      type: Feed.TYPES.BLOG,
     }));
 
     await Feed.batchPut(feedItems);
@@ -85,7 +85,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
             query.items[0],
             user,
             `/cube/blog/blogpost/${id}`,
-            `${user.Username} mentioned you in their blog post`,
+            `${user.username} mentioned you in their blog post`,
           );
         }
       }
@@ -102,8 +102,8 @@ router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.getById(req.params.id);
 
-    if (post.CubeId !== 'DEVBLOG') {
-      const cube = await Cube.getById(post.CubeId);
+    if (post.cube !== 'DEVBLOG') {
+      const cube = await Cube.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Blog post not found');
@@ -124,7 +124,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
     const { id } = req.params;
     const blog = await Blog.getById(id);
 
-    if (blog.Owner !== req.user.Id) {
+    if (blog.owner !== req.user.id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -143,7 +143,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
 
 router.post('/getmoreblogsbycube', async (req, res) => {
   const { lastKey, cube } = req.body;
-  const posts = await Blog.getByCubeId(cube, 10, lastKey);
+  const posts = await Blog.getByCube(cube, 10, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -161,9 +161,9 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const query = await Blog.getByCubeId(req.params.id, 10);
+    const query = await Blog.getByCube(cube.id, 10);
 
-    const imagedata = getImageData(cube.ImageName);
+    const imagedata = getImageData(cube.imageName);
 
     return render(
       req,
@@ -175,10 +175,10 @@ router.get('/:id', async (req, res) => {
         lastKey: query.lastKey,
       },
       {
-        title: `${abbreviate(cube.Name)} - Blog`,
+        title: `${abbreviate(cube.name)} - Blog`,
         metadata: generateMeta(
-          `Cube Cobra Blog: ${cube.Name}`,
-          cube.Description,
+          `Cube Cobra Blog: ${cube.name}`,
+          cube.description,
           imagedata.uri,
           `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),

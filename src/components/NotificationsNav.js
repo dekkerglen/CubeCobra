@@ -62,8 +62,8 @@ const NotificationsNav = () => {
           {items.length > 0 ? (
             items.map((notification) => (
               <div className="user-notification py-3 px-2">
-                <a className="no-underline-hover" href={`/user/notification/${notification.Id}`}>
-                  <h6 className="card-subtitle">{notification.Body}</h6>
+                <a className="no-underline-hover" href={`/user/notification/${notification.id}`}>
+                  <h6 className="card-subtitle">{notification.body}</h6>
                 </a>
               </div>
             ))

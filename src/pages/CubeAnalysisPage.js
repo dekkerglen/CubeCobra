@@ -94,14 +94,14 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
     'Mana Value': convertToCharacteristic('Mana Value', cardCmc),
     Power: convertToCharacteristic('Power', (card) => parseInt(cardPower(card), 10)),
     Toughness: convertToCharacteristic('Toughness', (card) => parseInt(cardToughness(card), 10)),
-    Elo: convertToCharacteristic('Elo', (card) => parseFloat(card.details.elo, 10)),
+    elo: convertToCharacteristic('elo', (card) => parseFloat(card.details.elo, 10)),
     Price: convertToCharacteristic('Price', (card) => parseFloat(cardPrice(card), 10)),
     'Price USD': convertToCharacteristic('Price USD', (card) => parseFloat(cardNormalPrice(card))),
     'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => parseFloat(cardFoilPrice(card))),
     'Price USD Etched': convertToCharacteristic('Price USD Etched', (card) => parseFloat(cardEtchedPrice(card))),
     'Price EUR': convertToCharacteristic('Price EUR', (card) => parseFloat(cardPriceEur(card))),
     'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => parseFloat(cardTix(card))),
-    'Cube Elo': {
+    'Cube elo': {
       get: getCubeElo,
       labels: (list) =>
         getLabels(
@@ -110,13 +110,13 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
             newcard.details.elo = getCubeElo(card);
             return newcard;
           }),
-          'Elo',
+          'elo',
         ),
       cardIsLabel: (card, label) => {
         const newcard = JSON.parse(JSON.stringify(card));
         newcard.details.elo = getCubeElo(card);
 
-        return cardIsLabel(newcard, label, 'Elo');
+        return cardIsLabel(newcard, label, 'elo');
       },
     },
     'Pick Rate': {
@@ -262,7 +262,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
   }
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cube.Id}`)
+    getData(`/cube/api/adds/${cube.id}`)
       .then(({ toCut, toAdd }) => {
         setAdds(toAdd);
         setCuts(toCut);
@@ -271,7 +271,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
       .catch(() => {
         setLoading('error');
       });
-  }, [cube.Id]);
+  }, [cube.id]);
 
   return (
     <MainLayout loginCallback={loginCallback}>

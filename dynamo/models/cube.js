@@ -19,32 +19,32 @@ const DEFAULT_BASICS = [
 const MILLISECONDS_IN_YEAR = 1000 * 60 * 60 * 24 * 365;
 
 const FIELDS = {
-  ID: 'Id',
-  SHORT_ID: 'ShortId',
-  OWNER: 'Owner',
-  NAME: 'Name',
-  VISIBILITY: 'Visibility',
-  PRICE_VISIBLITY: 'PriceVisibility',
-  FEATURED: 'Featured',
-  CATEGORY_OVERRIDE: 'CategoryOverride',
-  CATEGORY_PREFIXES: 'CategoryPrefixes',
-  TAG_COLORS: 'TagColors',
-  DEFAULT_DRAFT_FORMAT: 'DefaultDraftFormat',
-  NUM_DECKS: 'NumDecks',
-  DESCRIPTION: 'Description',
-  IMAGE_NAME: 'ImageName',
-  DATE: 'Date',
-  DEFAULT_SORTS: 'DefaultSorts',
-  SHOW_UNSORTED: 'ShowUnsorted',
-  DRAFT_FORMATS: 'DraftFormats',
-  USERS_FOLLOWING: 'UsersFollowing',
-  DEFAULT_STATUS: 'DefaultStatus',
-  DEFAULT_PRINTING: 'DefaultPrinting',
-  DISABLE_NOTIFICATIONS: 'DisableNotifications',
-  BASICS: 'Basics',
-  TAGS: 'Tags',
-  KEYWORDS: 'Keywords',
-  CARD_COUNT: 'CardCount',
+  ID: 'id',
+  SHORT_ID: 'shortId',
+  OWNER: 'owner',
+  NAME: 'name',
+  VISIBILITY: 'visibility',
+  PRICE_VISIBLITY: 'priceVisibility',
+  FEATURED: 'featured',
+  CATEGORY_OVERRIDE: 'categoryOverride',
+  CATEGORY_PREFIXES: 'categoryPrefixes',
+  TAG_COLORS: 'tagColors',
+  DEFAULT_DRAFT_FORMAT: 'defaultFormat',
+  NUM_DECKS: 'numDecks',
+  DESCRIPTION: 'description',
+  IMAGE_NAME: 'imageName',
+  DATE: 'date',
+  DEFAULT_SORTS: 'defaultSorts',
+  SHOW_UNSORTED: 'showUnsorted',
+  DRAFT_FORMATS: 'formats',
+  USERS_FOLLOWING: 'following',
+  DEFAULT_STATUS: 'defaultStatus',
+  DEFAULT_PRINTING: 'defaultPrinting',
+  DISABLE_NOTIFICATIONS: 'disableAlerts',
+  BASICS: 'basics',
+  TAGS: 'tags',
+  KEYWORDS: 'keywords',
+  CARD_COUNT: 'cardCount',
 };
 
 const VISIBILITY = {
@@ -147,7 +147,7 @@ module.exports = {
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 
     const main = newCards.Mainboard;
-    newMetadata.CardCount = main.length;
+    newMetadata.cardCount = main.length;
 
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
     const newHashes = getHashRowsForCube(newMetadata, newCards);
@@ -155,7 +155,7 @@ module.exports = {
     // get hashes to delete with deep object equality
     // delete old hash row if no new hash row has this hash
     const hashesToDelete = oldHashes.filter((oldHashRow) => {
-      return !newHashes.some((newHashRow) => oldHashRow.Hash === newHashRow.Hash);
+      return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
     });
 
     // get hashes to put with deep object equality
@@ -165,7 +165,7 @@ module.exports = {
     });
 
     // put hashes to delete
-    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: id })));
+    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: id })));
     await cubeHash.batchPut(hashesToPut);
 
     // strip details from cards
@@ -187,8 +187,8 @@ module.exports = {
   deleteById: async (id) => {
     const document = (await client.get(id)).Item;
     const hashes = getHashRowsForMetadata(document);
-    await cubeHash.batchDelete(hashes.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: id })));
-    await client.delete({ Id: id });
+    await cubeHash.batchDelete(hashes.map((hashRow) => ({ hash: hashRow.hash, cube: id })));
+    await client.delete({ id });
     await s3.deleteObject({ Bucket: process.env.DATA_BUCKET, Key: `cube/${id}.json` }).promise();
   },
   getById: async (id) => {
@@ -199,7 +199,7 @@ module.exports = {
 
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
     if (byShortId.items.length > 0) {
-      const cubeId = byShortId.items[0].CubeId;
+      const cubeId = byShortId.items[0].cube;
       const query = await client.get(cubeId);
       return query.Item;
     }
@@ -275,7 +275,7 @@ module.exports = {
     };
   },
   update: async (document) => {
-    const oldDocument = (await client.get(document.Id)).Item;
+    const oldDocument = (await client.get(document.id)).Item;
 
     if (_.isEqual(oldDocument, document)) {
       return;
@@ -291,7 +291,7 @@ module.exports = {
     // get hashes to delete with deep object equality
     // delete old hash row if no new hash row has this hash
     const hashesToDelete = oldHashes.filter((oldHashRow) => {
-      return !newHashes.some((newHashRow) => oldHashRow.Hash === newHashRow.Hash);
+      return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
     });
 
     // get hashes to put with deep object equality
@@ -301,7 +301,7 @@ module.exports = {
     });
 
     // put hashes to delete
-    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ Hash: hashRow.Hash, CubeId: document.Id })));
+    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: document.id })));
     await cubeHash.batchPut(hashesToPut);
 
     await client.put(document);

@@ -114,7 +114,7 @@ const serializeFormat = (rawFormat) => {
 const getErrorsInFormat = (format) => {
   const errors = [];
   if (!format?.packs) return ['Internal error in the format.'];
-  if (!format.title.trim()) errors.push('Title must not be empty.');
+  if (!format.title.trim()) errors.push('title must not be empty.');
   if (format.packs.length === 0) errors.push('Format must have at least 1 pack.');
 
   if (format.defaultSeats !== undefined) {
@@ -190,7 +190,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               type="text"
               maxLength="200"
               name="title"
-              placeholder="Title"
+              placeholder="title"
               value={format.title}
               onChange={mutations.changeTitle}
             />
@@ -236,7 +236,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
             </FormGroup>
           </Col>
         </Row>
-        <h6>Description</h6>
+        <h6>description</h6>
         <TextEntry
           name="markdown"
           value={format.markdown ?? format.html ?? ''}
@@ -252,7 +252,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         </FormText>
         <FormText className="mt-3 mb-1">
           Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.
-          3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). Tags can be
+          3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). tags can be
           specified <code>tag:yourtagname</code> or simply <code>yourtagname</code>. <code>*</code> can be used to match
           any card.
         </FormText>
@@ -277,7 +277,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
               {error}
             </Alert>
           ))}
-        <CSRFForm method="POST" action={`/cube/format/add/${cube.Id}`}>
+        <CSRFForm method="POST" action={`/cube/format/add/${cube.id}`}>
           <Input type="hidden" name="serializedFormat" value={packsJson} />
           <Input type="hidden" name="id" value={formatIndex} />
           <Button color={errorsInFormat ? 'error' : 'accent'} type="submit" disabled={!!errorsInFormat}>

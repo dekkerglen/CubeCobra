@@ -4,39 +4,37 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const carddb = require('../serverjs/cards');
 
-// const content = require('../dynamo/models/content');
-// const notification = require('../dynamo/models/notification');
-// const user = require('../dynamo/models/user');
-// const cube = require('../dynamo/models/cube');
-// const cubeHash = require('../dynamo/models/cubeHash');
-// const changelog = require('../dynamo/models/changelog');
-// const blog = require('../dynamo/models/blog');
-// const cardHistory = require('../dynamo/models/cardhistory');
-// const card = require('../dynamo/models/cardMetadata');
-// const comment = require('../dynamo/models/comment');
-// const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
-// const draft = require('../dynamo/models/draft');
-// const package = require('../dynamo/models/package');
-// const patron = require('../dynamo/models/patron');
-// const passwordReset = require('../dynamo/models/passwordReset');
+const content = require('../dynamo/models/content');
+const notification = require('../dynamo/models/notification');
+const user = require('../dynamo/models/user');
+const cube = require('../dynamo/models/cube');
+const cubeHash = require('../dynamo/models/cubeHash');
+const changelog = require('../dynamo/models/changelog');
+const blog = require('../dynamo/models/blog');
+const cardHistory = require('../dynamo/models/cardhistory');
+const card = require('../dynamo/models/cardMetadata');
+const comment = require('../dynamo/models/comment');
+const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
+const draft = require('../dynamo/models/draft');
+const package = require('../dynamo/models/package');
+const patron = require('../dynamo/models/patron');
 const featuredQueue = require('../dynamo/models/featuredQueue');
 
-// const Video = require('../models/old/video');
-// const Episode = require('../models/old/podcastEpisode');
-// const Podcast = require('../models/old/podcast');
-// const Article = require('../models/old/article');
-// const User = require('../models/old/user');
-// const Cube = require('../models/old/cube');
-// const Blog = require('../models/blog');
-// const CardHistory = require('../models/cardhistory');
-// const CardRating = require('../models/cardrating');
-// const Comment = require('../models/old/comment');
-// const CubeAnalytic = require('../models/cubeAnalytic');
-// const Deck = require('../models/deck');
-// const Draft = require('../models/draft');
-// const Package = require('../models/package');
-// const Patron = require('../models/patron');
-// const PasswordReset = require('../models/passwordReset');
+const Video = require('../models/old/video');
+const Episode = require('../models/old/podcastEpisode');
+const Podcast = require('../models/old/podcast');
+const Article = require('../models/old/article');
+const User = require('../models/old/user');
+const Cube = require('../models/old/cube');
+const Blog = require('../models/old/blog');
+const CardHistory = require('../models/old/cardhistory');
+const CardRating = require('../models/old/cardrating');
+const Comment = require('../models/old/comment');
+const CubeAnalytic = require('../models/old/cubeAnalytic');
+const Deck = require('../models/old/deck');
+const Draft = require('../models/old/draft');
+const Package = require('../models/old/package');
+const Patron = require('../models/old/patron');
 const FeaturedQueue = require('../models/old/featuredCubes');
 
 
@@ -57,45 +55,45 @@ const migrations = [
   //   source: Article,
   //   conversions: [[content.convertArticle, content.batchPut]],
   // },
-  // {
-  //   source: User,
-  //   conversions: [
-  //     [notification.getNotificationsFromUser, notification.batchPut],
-  //     [user.convertUser, user.batchPut],
-  //   ],
-  // },
+  {
+    source: User,
+    conversions: [
+      [notification.getNotificationsFromUser, notification.batchPut],
+      // [user.convertUser, user.batchPut],
+    ],
+  },
   // {
   //   source: Blog,
   //   conversions: [
   //     [changelog.getChangelogFromBlog, changelog.batchPut],
-  //     // [blog.convertBlog, blog.batchPut],
+  //     [blog.convertBlog, blog.batchPut],
   //   ],
   // },
-  // {
-  //   source: CardRating,
-  //   conversions: [
-  //     [card.convertCardRating, card.batchPut],
-  //   ]
-  // },
-  // {
+  {
+    source: CardRating,
+    conversions: [
+      [card.convertCardRating, card.batchPut],
+    ]
+  },
+  // { 
   //   source: CardHistory,
   //   conversions: [
   //     [cardHistory.convertCardHistory, cardHistory.batchPut],
   //     [card.convertCardHistory, card.updateWithCubedWith],
   //   ],
-  // }
+  // },
   // {
   //   source: Comment,
   //   conversions: [
   //     [comment.convertComment, comment.batchPut],
   //   ],
   // },
-  // {
-  //   source: CubeAnalytic,
-  //   conversions: [
-  //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
-  //   ],
-  // },
+  {
+    source: CubeAnalytic,
+    conversions: [
+      [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
+    ],
+  },
   // {
   //   source: Deck,
   //   conversions: [
@@ -130,13 +128,13 @@ const migrations = [
   //   conversions: [
   //     [patron.convertPatron, patron.batchPut],
   //   ],
+  // },
+  // {
+  //   source: FeaturedQueue,
+  //   conversions: [
+  //     [featuredQueue.convertQueue, featuredQueue.batchPut],
+  //   ],
   // }
-  {
-    source: FeaturedQueue,
-    conversions: [
-      [featuredQueue.convertQueue, featuredQueue.batchPut],
-    ],
-  }
 ];
 
 const batchSize = 25;
@@ -151,10 +149,10 @@ const skip = 0;
     console.log(`Moving over ${mongo.collection.collectionName}`);
     const count = await mongo.countDocuments();
     const cursor = mongo.find().skip(skip).lean().cursor();
+    const starttime = new Date();
 
     // batch them by batchSize
     for (let i = skip; i < count; i += batchSize) {
-      console.log(`${mongo.collection.collectionName}: Finished: ${i} of ${count} items`);
       const items = [];
       for (let j = 0; j < batchSize; j++) {
         if (i + j < count) {
@@ -174,6 +172,12 @@ const skip = 0;
         }
         await put(converted);
       }
+      const currentTime = new Date();
+      const timeElapsed = (currentTime - starttime) / 1000;
+      const documentsRemaining = count - i;
+      const documentProcessed = i - skip;
+      const timeRemaining = (timeElapsed / documentProcessed) * documentsRemaining;
+      console.log(`${mongo.collection.collectionName}: Finished: ${i+batchSize} of ${count} items. Time elapsed: ${Math.round(timeElapsed / 36) / 100} hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`);
     }
   }
   process.exit();

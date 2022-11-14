@@ -17,7 +17,7 @@ const patronSchema = mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'],
+    enum: ['Patron', 'Cobra Hatchling', 'Coiling oracle', 'Lotus Cobra'],
     default: 'Patron',
   },
 });

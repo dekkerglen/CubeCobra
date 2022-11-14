@@ -3,15 +3,16 @@ require('dotenv').config();
 
 const uuid = require('uuid/v4');
 const createClient = require('../util');
+const carddb = require('../../serverjs/cards');
 const s3 = require('../s3client');
 
 const FIELDS = {
-  ID: 'Id',
-  CUBE_ID: 'CubeId',
-  OWNER: 'Owner',
-  CUBE_OWNER: 'CubeOwner',
-  DATE: 'Date',
-  TYPE: 'Type',
+  ID: 'id',
+  CUBE_ID: 'cube',
+  OWNER: 'owner',
+  CUBE_OWNER: 'cubeOwner',
+  DATE: 'date',
+  TYPE: 'type',
 };
 
 const TYPES = {
@@ -91,6 +92,22 @@ const getCards = async (id) => {
   }
 };
 
+const addDetails = (cards) => {
+  cards.forEach((card) => {
+    card.details = {
+      ...carddb.cardFromId(card.cardID),
+    };
+  });
+  return cards;
+};
+
+const stripDetails = (cards) => {
+  cards.forEach((card) => {
+    delete card.details;
+  });
+  return cards;
+};
+
 const getSeats = async (id) => {
   try {
     const res = await s3
@@ -108,21 +125,21 @@ const getSeats = async (id) => {
 };
 
 const addS3Fields = async (document) => {
-  const cards = await getCards(document.DraftId || document.Id);
-  const seats = await getSeats(document.DraftId || document.Id);
+  const cards = await getCards(document.DraftId || document.id);
+  const seats = await getSeats(document.DraftId || document.id);
 
   return {
     ...document,
     Seats: seats.Seats,
-    Basics: seats.Basics,
+    basics: seats.basics,
     InitialState: seats.InitialState,
-    Cards: cards,
+    cards: addDetails(cards),
   };
 };
 
 // make sure all card references use the card array
 const sanitize = (document) => {
-  const cards = document.Cards;
+  const { cards } = document;
   for (const seat of document.Seats) {
     if (seat.Deck) {
       for (const row of seat.Mainboard) {
@@ -212,12 +229,12 @@ module.exports = {
   getByCube: async (cubeId, lastKey) => {
     const res = await client.query({
       IndexName: 'ByCube',
-      KeyConditionExpression: '#cubeId = :cubeId',
+      KeyConditionExpression: '#cubeId = :cube',
       ExpressionAttributeNames: {
         '#cubeId': FIELDS.CUBE_ID,
       },
       ExpressionAttributeValues: {
-        ':cubeId': cubeId,
+        ':cube': cubeId,
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
@@ -248,20 +265,20 @@ module.exports = {
     };
   },
   put: async (document) => {
-    const id = document.Id || uuid();
+    const id = document.id || uuid();
     await client.put({
       [FIELDS.ID]: id,
-      [FIELDS.CUBE_ID]: document.CubeId,
-      [FIELDS.OWNER]: document.Owner,
-      [FIELDS.CUBE_OWNER]: document.CubeOwner,
-      [FIELDS.DATE]: document.Date,
+      [FIELDS.CUBE_ID]: document.cube,
+      [FIELDS.OWNER]: document.owner,
+      [FIELDS.CUBE_OWNER]: document.cubeOwner,
+      [FIELDS.DATE]: document.date,
     });
 
     await s3
       .putObject({
         Bucket: process.env.DATA_BUCKET,
         Key: `cardlist/${id}.json`,
-        Body: JSON.stringify(document.Cards),
+        Body: JSON.stringify(stripDetails(document.cards)),
       })
       .promise();
 
@@ -269,7 +286,7 @@ module.exports = {
       .putObject({
         Bucket: process.env.DATA_BUCKET,
         Key: `seats/${id}.json`,
-        Body: JSON.stringify({ Seats: document.Seats, Basics: document.Basics, InitialState: document.InitialState }),
+        Body: JSON.stringify({ Seats: document.Seats, basics: document.basics, InitialState: document.InitialState }),
       })
       .promise();
 
@@ -280,19 +297,19 @@ module.exports = {
     const keys = new Set();
 
     for (const document of documents) {
-      if (!keys.has(document.Id)) {
+      if (!keys.has(document.id)) {
         filtered.push(document);
-        keys.add(document.Id);
+        keys.add(document.id);
       }
     }
 
     const items = filtered.map((document) => ({
-      [FIELDS.ID]: document.Id,
-      [FIELDS.CUBE_ID]: document.CubeId,
-      [FIELDS.OWNER]: document.Owner,
-      [FIELDS.CUBE_OWNER]: document.CubeOwner,
-      [FIELDS.DATE]: document.Date,
-      [FIELDS.TYPE]: document.Type,
+      [FIELDS.ID]: document.id,
+      [FIELDS.CUBE_ID]: document.cube,
+      [FIELDS.OWNER]: document.owner,
+      [FIELDS.CUBE_OWNER]: document.cubeOwner,
+      [FIELDS.DATE]: document.date,
+      [FIELDS.TYPE]: document.type,
     }));
 
     await client.batchPut(items);
@@ -302,17 +319,17 @@ module.exports = {
         await s3
           .putObject({
             Bucket: process.env.DATA_BUCKET,
-            Key: `cardlist/${document.Id}.json`,
-            Body: JSON.stringify(document.Cards),
+            Key: `cardlist/${document.id}.json`,
+            Body: JSON.stringify(stripDetails(document.cards)),
           })
           .promise();
         await s3
           .putObject({
             Bucket: process.env.DATA_BUCKET,
-            Key: `seats/${document.Id}.json`,
+            Key: `seats/${document.id}.json`,
             Body: JSON.stringify({
               Seats: document.Seats,
-              Basics: document.Basics,
+              basics: document.basics,
               InitialState: document.InitialState,
             }),
           })
@@ -324,7 +341,7 @@ module.exports = {
   convertDeck: (deck) => {
     try {
       let cardCount = 0;
-      for (const row of deck.seats[0].deck) {
+      for (const row of deck.Seats[0].deck) {
         for (const col of row) {
           cardCount += col.length;
         }
@@ -340,16 +357,16 @@ module.exports = {
         [FIELDS.CUBE_OWNER]: `${deck.cubeOwner}`,
         [FIELDS.OWNER]: `${deck.owner}`,
         [FIELDS.DATE]: deck.date.valueOf(),
-        Basics: deck.basics.map((card) => parseInt(card, 10)),
-        Cards: deck.cards,
-        Seats: deck.seats.map((seat) => ({
-          Owner: `${seat.userid}`,
+        basics: deck.basics.map((card) => parseInt(card, 10)),
+        cards: deck.cards,
+        Seats: deck.Seats.map((seat) => ({
+          owner: `${seat.userid}`,
           Mainboard: seat.deck,
           Sideboard: seat.sideboard,
           Pickorder: seat.pickorder,
           Trashorder: seat.trashorder,
-          Title: seat.name,
-          Body: seat.description,
+          title: seat.name,
+          body: seat.description,
           Bot: seat.bot,
         })),
         InitialState: deck.initial_state,
@@ -364,7 +381,7 @@ module.exports = {
     await Promise.all(
       drafts.map(async (draft) => {
         try {
-          const seats = await getSeats(draft.Id);
+          const seats = await getSeats(draft.id);
 
           if (Object.entries(seats).length === 0) {
             return;
@@ -380,7 +397,7 @@ module.exports = {
                 // only load cards if we need them
                 if (cards === null) {
                   // eslint-disable-next-line no-await-in-loop
-                  cards = await getCards(draft.Id);
+                  cards = await getCards(draft.id);
                 }
 
                 seats.Seats[i].Trashorder[j] = cards.findIndex((c) => c.cardID === card.cardID);
@@ -390,7 +407,7 @@ module.exports = {
           await s3
             .putObject({
               Bucket: process.env.DATA_BUCKET,
-              Key: `seats/${draft.Id}.json`,
+              Key: `seats/${draft.id}.json`,
               Body: JSON.stringify(seats),
             })
             .promise();
@@ -403,14 +420,14 @@ module.exports = {
   convertDraft: (draft) => {
     // trashorder
 
-    if (!draft.seats || !draft.seats[0] || !draft.seats[0].trashorder || draft.seats[0].trashorder.length === 0) {
+    if (!draft.Seats || !draft.Seats[0] || !draft.Seats[0].trashorder || draft.Seats[0].trashorder.length === 0) {
       return [];
     }
 
     return [
       {
-        Id: `${draft._id}`,
-        Seats: draft.seats.map((seat) => ({
+        id: `${draft._id}`,
+        Seats: draft.Seats.map((seat) => ({
           Trashorder: seat.trashorder.filter((value) => value),
         })),
       },

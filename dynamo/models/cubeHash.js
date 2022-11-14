@@ -3,11 +3,11 @@ const createClient = require('../util');
 const carddb = require('../../serverjs/cards');
 
 const FIELDS = {
-  HASH: 'Hash',
-  CUBE_ID: 'CubeId',
-  NUM_FOLLOWERS: 'NumFollowers',
-  NAME: 'Name',
-  CARD_COUNT: 'CardCount',
+  HASH: 'hash',
+  CUBE_ID: 'cube',
+  NUM_FOLLOWERS: 'numFollowers',
+  NAME: 'name',
+  CARD_COUNT: 'cardCount',
 };
 
 const client = createClient({
@@ -42,26 +42,26 @@ const client = createClient({
 });
 
 const hashShortId = (metadata) => {
-  if (!metadata.ShortId || metadata.ShortId.length === 0) {
+  if (!metadata.shortId || metadata.shortId.length === 0) {
     return [];
   }
-  return [`shortid:${metadata.ShortId}`];
+  return [`shortid:${metadata.shortId}`];
 };
 
 const hashFeatured = (metadata) => {
-  return [`featured:${metadata.Featured}`];
+  return [`featured:${metadata.featured}`];
 };
 
 const hashCategories = (metadata) => {
-  if (!metadata.CategoryOverride) {
+  if (!metadata.categoryOverride) {
     return [];
   }
 
   const res = [];
 
-  res.push(`category:${metadata.CategoryOverride}`);
+  res.push(`category:${metadata.categoryOverride}`);
 
-  for (const prefix of metadata.CategoryPrefixes || []) {
+  for (const prefix of metadata.categoryPrefixes || []) {
     res.push(`category:${prefix.toLowerCase()}`);
   }
 
@@ -75,7 +75,8 @@ const hashTags = (metadata) => {
 const hashKeywords = (metadata) => {
   const res = [];
 
-  const namewords = metadata.Name.replace(/[^\w\s]/gi, '')
+  const namewords = metadata.name
+    .replace(/[^\w\s]/gi, '')
     .toLowerCase()
     .split(' ')
     .filter((keyword) => keyword.length > 0);
@@ -196,10 +197,10 @@ module.exports = {
 
     return hashes.map((hash) => ({
       [FIELDS.HASH]: hash,
-      [FIELDS.NUM_FOLLOWERS]: metadata.UsersFollowing.length,
-      [FIELDS.CARD_COUNT]: metadata.CardCount,
-      [FIELDS.NAME]: metadata.Name,
-      [FIELDS.CUBE_ID]: metadata.Id,
+      [FIELDS.NUM_FOLLOWERS]: metadata.following.length,
+      [FIELDS.CARD_COUNT]: metadata.cardCount,
+      [FIELDS.NAME]: metadata.name,
+      [FIELDS.CUBE_ID]: metadata.id,
     }));
   },
   getHashRowsForCube: (metadata, cards) => {
@@ -207,10 +208,10 @@ module.exports = {
 
     return hashes.map((hash) => ({
       [FIELDS.HASH]: hash,
-      [FIELDS.NUM_FOLLOWERS]: metadata.UsersFollowing.length,
-      [FIELDS.CARD_COUNT]: metadata.CardCount,
-      [FIELDS.NAME]: metadata.Name,
-      [FIELDS.CUBE_ID]: metadata.Id,
+      [FIELDS.NUM_FOLLOWERS]: metadata.following.length,
+      [FIELDS.CARD_COUNT]: metadata.cardCount,
+      [FIELDS.NAME]: metadata.name,
+      [FIELDS.CUBE_ID]: metadata.id,
     }));
   },
   FIELDS,

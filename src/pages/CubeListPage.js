@@ -65,7 +65,7 @@ const CubeListPageRaw = () => {
 
 const CubeListPage = ({ cube, cards, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>
-    <DisplayContextProvider cubeID={cube.Id}>
+    <DisplayContextProvider cubeID={cube.id}>
       <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards>
         <CubeListPageRaw />
       </CubeLayout>

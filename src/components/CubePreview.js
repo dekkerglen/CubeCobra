@@ -23,17 +23,17 @@ const CubePreview = ({ cube }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <MtgImage cardname={cube.ImageName} showArtist />
+        <MtgImage cardname={cube.imageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
         <a href={`/cube/overview/${encodeURIComponent(getCubeId(cube))}`} className="stretched-link">
-          <h5 className="text-muted text-ellipsis my-0" title={cube.Name}>
-            {cube.Name}
+          <h5 className="text-muted text-ellipsis my-0" title={cube.name}>
+            {cube.name}
           </h5>
         </a>
         <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
         <em className="text-muted text-ellipsis">
-          Designed by <Username userId={cube.Owner} />
+          Designed by <Username userId={cube.owner} />
         </em>
       </div>
     </Card>

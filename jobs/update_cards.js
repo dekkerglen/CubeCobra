@@ -18,7 +18,7 @@ try {
       const params = {
         Bucket: 'cubecobra',
         Key: `cards/${file}`,
-        Body: JSON.stringify(carddb[object]),
+        body: JSON.stringify(carddb[object]),
       };
       await s3.upload(params).promise();
 
@@ -28,7 +28,7 @@ try {
     const params = {
       Bucket: 'cubecobra',
       Key: `cards/manifest.json`,
-      Body: JSON.stringify({ date_exported: new Date() }),
+      body: JSON.stringify({ date_exported: new Date() }),
     };
     await s3.upload(params).promise();
 

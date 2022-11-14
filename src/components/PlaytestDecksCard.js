@@ -19,11 +19,11 @@ const PlaytestDecksCard = ({ decks, ...props }) => {
       </CardHeader>
       <CardBody className="p-0">
         {decks.map((deck) => (
-          <DeckPreview key={deck.Id} deck={deck} />
+          <DeckPreview key={deck.id} deck={deck} />
         ))}
       </CardBody>
       <CardFooter>
-        <a href={`/cube/deck/decks/${cube.Id}`}>View all</a>
+        <a href={`/cube/deck/decks/${cube.id}`}>View all</a>
       </CardFooter>
     </Card>
   );

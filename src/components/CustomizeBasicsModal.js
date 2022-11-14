@@ -9,7 +9,7 @@ import LoadingButton from 'components/LoadingButton';
 import AutocompleteInput from 'components/AutocompleteInput';
 
 const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) => {
-  const [basics, setBasics] = useState(cube.Basics.slice());
+  const [basics, setBasics] = useState(cube.basics.slice());
   const [cardName, setCardName] = useState('');
   const [imageDict, setImageDict] = useState({});
 
@@ -32,7 +32,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
   };
 
   const save = async () => {
-    const response = await csrfFetch(`/cube/api/updatebasics/${cube.Id}`, {
+    const response = await csrfFetch(`/cube/api/updatebasics/${cube.id}`, {
       method: 'POST',
       body: JSON.stringify(basics),
       headers: {
@@ -49,7 +49,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
 
   return (
     <Modal size="xl" isOpen={isOpen} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Customize Basics</ModalHeader>
+      <ModalHeader toggle={toggle}>Customize basics</ModalHeader>
       <ModalBody>
         <p>
           This set of cards will have an unlimited quantity available when constructing decks. You can use this to

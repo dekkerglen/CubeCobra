@@ -9,12 +9,13 @@ const cardutil = require('../../dist/utils/Card');
 const carddb = require('../../serverjs/cards');
 
 const FIELDS = {
-  CUBE_ID: 'CubeId',
-  ORACLE: 'Oracle',
-  PICKS: 'Picks',
-  PASSES: 'Passes',
-  MAINBOARDS: 'Mainboards',
-  SIDEBOARDS: 'Sideboards',
+  CUBE_ID: 'cube',
+  ORACLE: 'oracle',
+  PICKS: 'picks',
+  PASSES: 'passes',
+  MAINBOARDS: 'mainboards',
+  SIDEBOARDS: 'sideboards',
+  ELO: 'elo',
 };
 
 const client = createClient({
@@ -31,18 +32,18 @@ const client = createClient({
 module.exports = {
   getByCubeIdAndOracle: async (cubeId, oracle) =>
     (await client.getByKey({ [FIELDS.CUBE_ID]: cubeId, [FIELDS.ORACLE]: oracle })).Item,
-  getByCubeId: async (cubeId) => {
+  getByCube: async (cubeId) => {
     let lastKey;
     const items = [];
 
     do {
       const res = await client.query({
-        KeyConditionExpression: '#cubeId = :cubeId',
+        KeyConditionExpression: '#cubeId = :cube',
         ExpressionAttributeNames: {
           '#cubeId': FIELDS.CUBE_ID,
         },
         ExpressionAttributeValues: {
-          ':cubeId': cubeId,
+          ':cube': cubeId,
         },
         ExclusiveStartKey: lastKey,
         Limit: 10000,

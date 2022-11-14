@@ -20,25 +20,25 @@ const ArticlePreview = ({ article }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage cardname={article.ImageName} />
+        <MtgImage cardname={article.imageName} />
         <h6 className="content-preview-banner article-preview-bg">
           <strong>Article</strong>
         </h6>
       </AspectRatioBox>
       <div className="w-100 pt-1 pb-1 px-2">
-        <a href={`/content/article/${article.Id}`} className="stretched-link">
-          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{article.Title}</h6>
+        <a href={`/content/article/${article.id}`} className="stretched-link">
+          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{article.title}</h6>
         </a>
         <small>
-          <p className="mb-0">{article.Short}</p>
+          <p className="mb-0">{article.short}</p>
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-start">
-          Written by <Username userId={article.Owner} defaultName={article.Username} />
+          Written by <Username userId={article.owner} defaultName={article.username} />
         </small>
         <small className="float-end">
-          <TimeAgo date={article.Date} />
+          <TimeAgo date={article.date} />
         </small>
       </div>
     </Card>

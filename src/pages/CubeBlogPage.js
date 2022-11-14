@@ -33,7 +33,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        cube: cube.Id,
+        cube: cube.id,
         lastKey: currentLastKey,
       }),
     });
@@ -62,7 +62,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
         <DynamicFlash />
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.length > 0 ? (
-            items.map((post) => <BlogPost key={post.Id} post={post} />)
+            items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (
             <h5>No blog posts for this cube.</h5>
           )}

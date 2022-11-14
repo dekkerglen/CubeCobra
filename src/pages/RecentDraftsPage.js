@@ -27,17 +27,17 @@ const RecentDraftsPage = ({ decks, currentPage, totalPages, count, loginCallback
                   {`Displaying ${PER_PAGE * currentPage + 1}-${Math.min(
                     count,
                     PER_PAGE * (currentPage + 1),
-                  )} of ${count} Drafts of Your Cubes`}
+                  )} of ${count} Drafts of Your cubes`}
                 </h5>
                 <Paginate count={totalPages} active={currentPage} urlF={(i) => `/dashboard/decks/${i}`} />
               </>
             ) : (
-              <h5>{`Displaying all ${count} Drafts of Your Cubes`}</h5>
+              <h5>{`Displaying all ${count} Drafts of Your cubes`}</h5>
             )}
           </CardHeader>
           <CardBody className="p-0">
             {decks.length > 0 ? (
-              decks.map((deck) => <DeckPreview key={deck.Id} deck={deck} nextURL="/dashboard" canEdit />)
+              decks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" canEdit />)
             ) : (
               <p className="m-2">
                 Nobody has drafted your cubes! Perhaps try reaching out on the{' '}

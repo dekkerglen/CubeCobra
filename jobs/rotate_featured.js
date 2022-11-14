@@ -15,7 +15,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
     const { items } = queue;
 
     console.log(queue);
-    const msTimeDiff = Date.now() - items[0].FeaturedOn;
+    const msTimeDiff = Date.now() - items[0].featuredOn;
     const daysTimeDiff = msTimeDiff / MS_PER_DAY;
 
     if (daysTimeDiff >= DAYS_BETWEEN_ROTATIONS) {
@@ -28,7 +28,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
       }
 
       if (rotate.status === 'false') {
-        console.error('Featured cube rotation failed!');
+        console.error('featured cube rotation failed!');
         return;
       }
 
@@ -50,7 +50,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
       await Promise.all(notifications);
       console.log('All notifications sent');
     }
-    console.log('Featured cube rotation check finished successfully');
+    console.log('featured cube rotation check finished successfully');
   } catch (err) {
     console.error(err);
   }

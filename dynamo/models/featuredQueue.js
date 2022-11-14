@@ -1,11 +1,11 @@
 const createClient = require('../util');
 
 const FIELDS = {
-  CUBE: 'CubeId',
-  DATE: 'Date',
-  OWNER: 'OwnerId',
-  FEATURED_ON: 'FeaturedOn',
-  STATUS: 'Status',
+  CUBE: 'cube',
+  DATE: 'date',
+  OWNER: 'owner',
+  FEATURED_ON: 'featuredOn',
+  STATUS: 'status',
 };
 
 const STATUS = {

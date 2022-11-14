@@ -48,13 +48,13 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
         <Col xs="12" md="6">
           <Card>
             <CardHeader>
-              <h5>Your Cubes</h5>
+              <h5>Your cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
               <Row className="g-0">
                 {user.cubes.length > 0 ? (
                   user.cubes.slice(0, 4).map((cube) => (
-                    <Col key={cube.Id} xs="12" sm="12" md="12" lg="6">
+                    <Col key={cube.id} xs="12" sm="12" md="12" lg="6">
                       <CubePreview cube={cube} />
                     </Col>
                   ))
@@ -67,12 +67,12 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               </Row>
             </CardBody>
             {featuredPosition !== 'left' && (
-              <CardFooter>{user.cubes.length > 2 && <a href={`/user/view/${user.Id}`}>View All</a>}</CardFooter>
+              <CardFooter>{user.cubes.length > 2 && <a href={`/user/view/${user.id}`}>View All</a>}</CardFooter>
             )}
           </Card>
           {featuredPosition === 'left' && (
             <CubesCard
-              title="Featured Cubes"
+              title="featured cubes"
               cubes={featured}
               lean
               header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
@@ -83,7 +83,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           {featuredPosition === 'right' && (
             <CubesCard
               className="mb-4"
-              title="Featured Cubes"
+              title="featured cubes"
               cubes={featured}
               lean
               header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
@@ -91,11 +91,11 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           )}
           <Card>
             <CardHeader>
-              <h5>Recent Drafts of Your Cubes</h5>
+              <h5>Recent Drafts of Your cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
               {decks.length > 0 ? (
-                filteredDecks.map((deck) => <DeckPreview key={deck.Id} deck={deck} nextURL="/dashboard" canEdit />)
+                filteredDecks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" canEdit />)
               ) : (
                 <p className="m-2">
                   Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
@@ -129,10 +129,10 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               </Row>
             </Col>
             {content.map((item) => (
-              <Col key={item.Id} className="mb-3" xs="12">
-                {item.Type === 'a' && <ArticlePreview article={item} />}
-                {item.Type === 'v' && <VideoPreview video={item} />}
-                {item.Type === 'e' && <PodcastEpisodePreview episode={item} />}
+              <Col key={item.id} className="mb-3" xs="12">
+                {item.type === 'a' && <ArticlePreview article={item} />}
+                {item.type === 'v' && <VideoPreview video={item} />}
+                {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
               </Col>
             ))}
           </Row>

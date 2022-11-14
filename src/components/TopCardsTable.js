@@ -15,7 +15,7 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
   const [data, setData] = useState(cards);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: Query.get('s') || 'Elo',
+    key: Query.get('s') || 'elo',
     direction: Query.get('d') || 'descending',
   });
 
@@ -76,10 +76,10 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
       <Table responsive className="mt-lg-3">
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <HeaderCell label="Elo" fieldName="Elo" sortConfig={sortConfig} requestSort={updateSort} />
-            <HeaderCell label="Total Picks" fieldName="Pick Count" sortConfig={sortConfig} requestSort={updateSort} />
-            <HeaderCell label="Cubes" fieldName="Cube Count" sortConfig={sortConfig} requestSort={updateSort} />
+            <th scope="col">name</th>
+            <HeaderCell label="elo" fieldName="elo" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="Total picks" fieldName="Pick Count" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="cubes" fieldName="Cube Count" sortConfig={sortConfig} requestSort={updateSort} />
           </tr>
         </thead>
 

@@ -17,9 +17,9 @@ const ensureRole = (role) => async (req, res, next) => {
     return res.redirect('/user/login');
   }
 
-  const user = await User.getById(req.user.Id);
+  const user = await User.getById(req.user.id);
 
-  if (user.Roles && user.Roles.includes(role)) {
+  if (user.roles && user.roles.includes(role)) {
     return next();
   }
   return res.redirect('/404');

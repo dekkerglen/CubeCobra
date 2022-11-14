@@ -21,7 +21,7 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-/* Minimum number of picks for data to show up in Top Cards list. */
+/* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
@@ -135,7 +135,7 @@ router.get('/topcards', async (req, res) => {
         numResults,
       },
       {
-        title: 'Top Cards',
+        title: 'Top cards',
       },
     );
   } catch (err) {
@@ -320,7 +320,7 @@ router.get('/searchcards', async (req, res) => {
     'CardSearchPage',
     {},
     {
-      title: 'Search Cards',
+      title: 'Search cards',
     },
   );
 });

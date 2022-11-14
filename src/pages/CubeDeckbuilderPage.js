@@ -20,17 +20,17 @@ import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
-const getMatchingSeat = (seats, userid) =>
-  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
+const getMatchingSeat = (Seats, userid) =>
+  Seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
 
 const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const user = useContext(UserContext);
-  const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
+  const [seat] = useState(getMatchingSeat(initialDeck.Seats, user.id));
   const [deck, setDeck] = useState(
-    initialDeck.seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.Seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
   const [sideboard, setSideboard] = useState(
-    initialDeck.seats[seat].sideboard.map((row) =>
+    initialDeck.Seats[seat].sideboard.map((row) =>
       row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex])),
     ),
   );
@@ -78,12 +78,12 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
 
-  const [name, setName] = useState(initialDeck.seats[seat].name);
-  const [description, setDescription] = useState(initialDeck.seats[seat].description);
+  const [name, setName] = useState(initialDeck.Seats[seat].name);
+  const [description, setDescription] = useState(initialDeck.Seats[seat].description);
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <DisplayContextProvider cubeID={cube.Id}>
+      <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <DeckbuilderNavbar
             deck={currentDeck}
@@ -124,11 +124,11 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                 </ErrorBoundary>
                 <CardHeader className="border-top">
                   <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                    <h4 className="mb-0 me-auto">About</h4>
+                    <h4 className="mb-0 me-auto">about</h4>
                   </CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <h6>Deck Name</h6>
+                  <h6>Deck name</h6>
                   <input
                     className="form-control"
                     name="name"
@@ -138,7 +138,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     maxLength="100"
                   />
                   <br />
-                  <h6>Description</h6>
+                  <h6>description</h6>
                   <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} maxLength="10000" />
                 </CardBody>
               </Card>

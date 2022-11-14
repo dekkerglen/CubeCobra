@@ -102,12 +102,12 @@ const Cloud = ({ cards, cube, setAsfans, defaultFormatId }) => {
     <>
       <h4>Tag Cloud</h4>
       <p>
-        Tags in your cube with random colors weighted by the expected number of cards with that tag a player will open
+        tags in your cube with random colors weighted by the expected number of cards with that tag a player will open
         on average.
       </p>
       <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <InputGroup>
-        <InputGroupText>Tags to exclude</InputGroupText>
+        <InputGroupText>tags to exclude</InputGroupText>
         <TagInput
           tags={excludeList.map((t) => ({ text: t, id: t }))}
           inputValue={tagInput}

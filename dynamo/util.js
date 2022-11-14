@@ -83,7 +83,7 @@ module.exports = function createClient(config) {
       }
 
       try {
-        return documentClient
+        return await documentClient
           .get({
             TableName: tableName(config.name),
             Key: {
@@ -97,7 +97,7 @@ module.exports = function createClient(config) {
     },
     scan: async (params) => {
       try {
-        return documentClient
+        return await documentClient
           .scan({
             TableName: tableName(config.name),
             ...params,
@@ -109,7 +109,7 @@ module.exports = function createClient(config) {
     },
     getByKey: async (key) => {
       try {
-        return documentClient
+        return await documentClient
           .get({
             TableName: tableName(config.name),
             Key: {
@@ -130,23 +130,23 @@ module.exports = function createClient(config) {
           };
         }
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
-        return Item[config.partitionKey];
+        return await Item[config.partitionKey];
       } catch (error) {
         throw new Error(`Error putting item into table ${config.name}: ${error.message}`);
       }
     },
     query: async (params) => {
       try {
-        return documentClient
+        return await documentClient
           .query({ TableName: tableName(config.name), Limit: params.Limit || 36, ...params })
           .promise();
       } catch (error) {
-        throw new Error(`Error querying table ${config.name}: ${error.message}`);
+        throw new Error(`Error querying table ${config.name}: ${error.message}. Query: ${JSON.stringify(params)}`);
       }
     },
     delete: async (key) => {
       try {
-        documentClient
+        await documentClient
           .delete({
             TableName: tableName(config.name),
             Key: key,

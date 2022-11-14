@@ -23,10 +23,10 @@ const SamplePackCard = (props) => {
         </LabelRow>
       </CardBody>
       <CardFooter>
-        <Button color="accent" className="me-2" href={`/cube/samplepack/${cube.Id}`}>
+        <Button color="accent" className="me-2" href={`/cube/samplepack/${cube.id}`}>
           View Random
         </Button>
-        <Button color="accent" disabled={!seed} href={`/cube/samplepack/${cube.Id}/${seed}`}>
+        <Button color="accent" disabled={!seed} href={`/cube/samplepack/${cube.id}/${seed}`}>
           View Seeded
         </Button>
       </CardFooter>

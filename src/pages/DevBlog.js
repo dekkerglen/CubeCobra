@@ -56,11 +56,11 @@ const DevBlogEntry = ({ items, setItems }) => {
       <CardBody>
         <h5>Create New Blog Post</h5>
         <FormGroup>
-          <Label>Title:</Label>
+          <Label>title:</Label>
           <Input maxLength="200" value={title} onChange={(e) => setTitle(e.target.value)} />
         </FormGroup>
         <FormGroup>
-          <Label>Body:</Label>
+          <Label>body:</Label>
           <TextEntry name="blog" value={body} onChange={(event) => setBody(event.target.value)} maxLength={10000} />
         </FormGroup>
         <Button color="accent" block outline onClick={submit}>
@@ -105,10 +105,10 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
       <DynamicFlash />
       <div className="mt-3">
         <h3>Developer Blog</h3>
-        {user && user.Roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
+        {user && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.map((post) => (
-            <BlogPost key={post.Id} post={post} />
+            <BlogPost key={post.id} post={post} />
           ))}
         </InfiniteScroll>
       </div>

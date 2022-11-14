@@ -6,7 +6,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const mailer = require('nodemailer');
 const path = require('path');
-const Email = require('email-templates');
+const email = require('email-templates');
 const parser = require('../dist/markdown/parser');
 const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
@@ -54,15 +54,15 @@ router.get('/notices', ensureAdmin, async (req, res) => {
 router.get('/publish/:id', ensureAdmin, async (req, res) => {
   const document = await Content.getById(req.params.id);
 
-  if (document.Status !== Content.STATUS.IN_REVIEW) {
+  if (document.status !== Content.STATUS.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
     return res.redirect('/admin/reviewcontent');
   }
 
-  document.Status = Content.STATUS.PUBLISHED;
-  document.Date = new Date().valueOf();
+  document.status = Content.STATUS.PUBLISHED;
+  document.date = new Date().valueOf();
 
-  const owner = await User.getById(document.Owner);
+  const owner = await User.getById(document.owner);
 
   await Content.update(document);
 
@@ -70,11 +70,11 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     await util.addNotification(
       owner,
       req.user,
-      `/content/${document.Type}/${document.Id}`,
-      `${req.user.username} has approved and published your content: ${document.Title}`,
+      `/content/${document.type}/${document.id}`,
+      `${req.user.username} has approved and published your content: ${document.title}`,
     );
 
-    const mentions = parser.findUserLinks(document.Body).map((x) => x.toLowerCase());
+    const mentions = parser.findUserLinks(document.body).map((x) => x.toLowerCase());
     for (const username of mentions) {
       const query = await User.getByUsername(username);
 
@@ -82,7 +82,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
         await util.addNotification(
           query.items[0],
           owner,
-          `/content/${document.Type}/${document.Id}`,
+          `/content/${document.type}/${document.id}`,
           `${owner.username} mentioned you in their content`,
         );
       }
@@ -99,7 +99,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new Email({
+  const email = new email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: owner.email,
@@ -118,12 +118,12 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
   email.send({
     template: 'content_publish',
     locals: {
-      title: document.Title,
-      url: `https://cubecobra.com/content/${document.Type}/${document.Id}`,
+      title: document.title,
+      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
     },
   });
 
-  req.flash('success', `Content published: ${document.Title}`);
+  req.flash('success', `Content published: ${document.title}`);
 
   return res.redirect('/admin/reviewcontent');
 });
@@ -131,15 +131,15 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
 router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   const document = await Content.getById(req.params.id);
 
-  if (document.Status !== Content.STATUS.IN_REVIEW) {
+  if (document.status !== Content.STATUS.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
     return res.redirect('/admin/reviewcontent');
   }
 
-  document.Status = Content.STATUS.DRAFT;
-  document.Date = new Date().valueOf();
+  document.status = Content.STATUS.DRAFT;
+  document.date = new Date().valueOf();
 
-  const owner = await User.getById(document.Owner);
+  const owner = await User.getById(document.owner);
 
   await Content.update(document);
 
@@ -147,8 +147,8 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     await util.addNotification(
       owner,
       req.user,
-      `/content/${document.Type}/${document.Id}`,
-      `${req.user.username} has declined to publish your content: ${document.Title}`,
+      `/content/${document.type}/${document.id}`,
+      `${req.user.username} has declined to publish your content: ${document.title}`,
     );
   }
 
@@ -162,10 +162,10 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new Email({
+  const email = new email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: owner.Email,
+      to: owner.email,
       subject: 'Your Content was not published',
     },
     send: true,
@@ -181,12 +181,12 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   await email.send({
     template: 'content_decline',
     locals: {
-      title: document.Title,
-      url: `https://cubecobra.com/content/${document.Type}/${document.Id}`,
+      title: document.title,
+      url: `https://cubecobra.com/content/${document.type}/${document.id}`,
     },
   });
 
-  req.flash('success', `Content declined: ${document.Title}`);
+  req.flash('success', `Content declined: ${document.title}`);
 
   return res.redirect('/admin/reviewcontent');
 });
@@ -194,7 +194,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
 router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
 
-  report.Status = Notice.STATUS.PROCESSED;
+  report.status = Notice.STATUS.PROCESSED;
   await Notice.update(report);
 
   req.flash('success', 'This report has been ignored.');
@@ -203,12 +203,12 @@ router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
 
 router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
-  const comment = await Comment.getById(report.Subject);
+  const comment = await Comment.getById(report.subject);
 
-  comment.Owner = null;
-  comment.Body = '[removed by moderator]';
+  comment.owner = null;
+  comment.body = '[removed by moderator]';
   // the -1000 is to prevent weird time display error
-  comment.Date = Date.now() - 1000;
+  comment.date = Date.now() - 1000;
 
   await Comment.update(comment);
 
@@ -219,16 +219,16 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
 router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
-  const user = await User.getById(application.User);
-  if (!user.Roles) {
-    user.Roles = [];
+  const user = await User.getById(application.user);
+  if (!user.roles) {
+    user.roles = [];
   }
-  if (!user.Roles.includes(User.ROLES.CONTENT_CREATOR)) {
-    user.Roles.push(User.ROLES.CONTENT_CREATOR);
+  if (!user.roles.includes(User.ROLES.CONTENT_CREATOR)) {
+    user.roles.push(User.ROLES.CONTENT_CREATOR);
   }
   await User.update(user);
 
-  application.Status = Notice.STATUS.PROCESSED;
+  application.status = Notice.STATUS.PROCESSED;
   Notice.update(application);
 
   const smtpTransport = mailer.createTransport({
@@ -241,10 +241,10 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new Email({
+  const email = new email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: user.Email,
+      to: user.email,
       subject: 'Cube Cobra Content Creator',
     },
     send: true,
@@ -262,14 +262,14 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     locals: {},
   });
 
-  req.flash('success', `Application for ${user.Username} approved.`);
+  req.flash('success', `Application for ${user.username} approved.`);
   return res.redirect(`/admin/notices`);
 });
 
 router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
-  notice.Status = Notice.STATUS.PROCESSED;
+  notice.status = Notice.STATUS.PROCESSED;
   Notice.update(notice);
 
   const user = await User.getById(application.userid);
@@ -284,7 +284,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new Email({
+  const email = new email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: user.email,
@@ -311,12 +311,12 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
   const featured = await FeaturedQueue.querySortedByDate();
-  const ids = featured.items.queue.map((f) => f.CubeId);
+  const ids = featured.items.queue.map((f) => f.cube);
   const cubes = await Cube.batchGet(ids.map((id) => `${id}`));
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes,
-    lastRotation: featured.items[0].FeaturedOn,
+    lastRotation: featured.items[0].featuredOn,
   });
 });
 
@@ -327,7 +327,7 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   }
 
   if (rotate.success === 'false') {
-    req.flash('danger', 'Featured Cube rotation failed!');
+    req.flash('danger', 'featured Cube rotation failed!');
     return res.redirect('/admin/featuredcubes');
   }
 

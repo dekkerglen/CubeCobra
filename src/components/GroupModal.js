@@ -242,10 +242,10 @@ const GroupModal = ({
           <Col xs="8">
             <fieldset disabled={!canEdit}>
               <Label for="groupStatus">
-                <h5>Set Status of All</h5>
+                <h5>Set status of All</h5>
               </Label>
               <InputGroup className="mb-3">
-                <InputGroupText>Status</InputGroupText>
+                <InputGroupText>status</InputGroupText>
                 <Input
                   type="select"
                   id="groupStatus"
@@ -296,7 +296,7 @@ const GroupModal = ({
                 only colorless will cause the selected cards' color identity to be set to colorless.
               </FormText>
 
-              <h5 className="mt-3">Edit Tags</h5>
+              <h5 className="mt-3">Edit tags</h5>
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>

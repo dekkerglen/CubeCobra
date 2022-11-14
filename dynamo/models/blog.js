@@ -9,13 +9,13 @@ const Changelog = require('./changelog');
 const turndownService = new TurndownService();
 
 const FIELDS = {
-  ID: 'Id',
-  BODY: 'Body',
-  OWNER: 'Owner',
-  DATE: 'Date',
-  CUBE_ID: 'CubeId',
-  TITLE: 'Title',
-  CHANGELIST_ID: 'ChangelistId',
+  ID: 'id',
+  BODY: 'body',
+  OWNER: 'owner',
+  DATE: 'date',
+  CUBE_ID: 'cube',
+  TITLE: 'title',
+  CHANGELIST_ID: 'changelist',
 };
 
 const client = createClient({
@@ -43,13 +43,13 @@ const client = createClient({
 });
 
 const hydrateChangelog = async (document) => {
-  if (!document.ChangelistId) {
+  if (!document.changelist) {
     return document;
   }
 
-  const changelog = await Changelog.getById(document.CubeId, document.ChangelistId);
+  const changelog = await Changelog.getById(document.cube, document.changelist);
 
-  delete document.ChangelistId;
+  delete document.changelist;
 
   return {
     ...document,
@@ -59,12 +59,12 @@ const hydrateChangelog = async (document) => {
 
 module.exports = {
   getById: async (id) => hydrateChangelog((await client.get(id)).Item),
-  getByCubeId: async (cubeId, limit, lastKey) => {
+  getByCube: async (cube, limit, lastKey) => {
     const result = await client.query({
       IndexName: 'ByCube',
-      KeyConditionExpression: `#p1 = :cubeId`,
+      KeyConditionExpression: `#p1 = :cube`,
       ExpressionAttributeValues: {
-        ':cubeId': cubeId,
+        ':cube': cube,
       },
       ExpressionAttributeNames: {
         '#p1': FIELDS.CUBE_ID,

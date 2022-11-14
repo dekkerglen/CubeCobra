@@ -20,11 +20,11 @@ const ArticlePage = ({ loginCallback, article }) => {
       <Banner />
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === article.Owner && article.Status !== 'p' && (
+        {user && user.id === article.owner && article.status !== 'p' && (
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="accent" outline href={`/content/article/edit/${article.Id}`}>
+              <ButtonLink color="accent" outline href={`/content/article/edit/${article.id}`}>
                 Edit
               </ButtonLink>
             </h5>

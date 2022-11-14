@@ -23,7 +23,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
 
   let def = cubeContext;
   if (cubes.length > 0) {
-    def = cubes.map((cube) => cube.Id).includes(cubeContext) ? cubeContext : cubes[0].Id;
+    def = cubes.map((cube) => cube.id).includes(cubeContext) ? cubeContext : cubes[0].id;
   }
   const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? def : '');
   const [alerts, setAlerts] = useState([]);

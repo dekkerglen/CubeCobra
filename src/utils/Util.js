@@ -168,20 +168,20 @@ export function isTouchDevice() {
 }
 
 export function getCubeId(cube) {
-  return cube.ShortId || cube.Id;
+  return cube.shortId || cube.id;
 }
 
 export function getCubeDescription(cube) {
   const overridePrefixes =
-    cube.CategoryPrefixes && cube.CategoryPrefixes.length > 0 ? `${cube.CategoryPrefixes.join(' ')} ` : '';
+    cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
 
-  const { CardCount } = cube;
+  const { cardCount } = cube;
 
-  if (cube.CategoryOverride) {
-    return `${CardCount} Card ${overridePrefixes}${cube.CategoryOverride} Cube`;
+  if (cube.categoryOverride) {
+    return `${cardCount} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
   }
 
-  return `${CardCount} Card ${overridePrefixes}Cube`;
+  return `${cardCount} Card ${overridePrefixes}Cube`;
 }
 
 export function isInternalURL(to) {

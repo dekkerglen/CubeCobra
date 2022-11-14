@@ -28,7 +28,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
   const toggleVote = async () => {
     if (voted) {
       // downvote
-      const response = await csrfFetch(`/packages/downvote/${cardPackage.Id}`);
+      const response = await csrfFetch(`/packages/downvote/${cardPackage.id}`);
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
@@ -37,7 +37,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
       }
     } else {
       // upvote
-      const response = await csrfFetch(`/packages/upvote/${cardPackage.Id}`);
+      const response = await csrfFetch(`/packages/upvote/${cardPackage.id}`);
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
@@ -48,21 +48,21 @@ const CardPackage = ({ cardPackage, refresh }) => {
   };
 
   const approve = async () => {
-    const response = await csrfFetch(`/packages/approve/${cardPackage.Id}`);
+    const response = await csrfFetch(`/packages/approve/${cardPackage.id}`);
     if (response.ok) {
       refresh();
     }
   };
 
   const unapprove = async () => {
-    const response = await csrfFetch(`/packages/unapprove/${cardPackage.Id}`);
+    const response = await csrfFetch(`/packages/unapprove/${cardPackage.id}`);
     if (response.ok) {
       refresh();
     }
   };
 
   const remove = async () => {
-    const response = await csrfFetch(`/packages/remove/${cardPackage.Id}`);
+    const response = await csrfFetch(`/packages/remove/${cardPackage.id}`);
     if (response.ok) {
       refresh();
     }
@@ -74,7 +74,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
         <Row>
           <Col xs="12" sm="6">
             <h5 className="card-title">
-              <a href={`/packages/${cardPackage.Id}`}>{cardPackage.title}</a>
+              <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
               <Username userId={cardPackage.userid} defaultName={cardPackage.username} />
@@ -104,11 +104,11 @@ const CardPackage = ({ cardPackage, refresh }) => {
                 <AddGroupToCubeModalLink
                   outline
                   color="accent"
-                  modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage.Id }}
+                  modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage.id }}
                 >
                   Add To Cube
                 </AddGroupToCubeModalLink>
-                {user.Roles.includes('Admin') && (
+                {user.roles.includes('Admin') && (
                   <>
                     {cardPackage.approved ? (
                       <Button outline color="unsafe" className="mx-2" onClick={unapprove}>
@@ -140,7 +140,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
       <CardBody>
         <Row>
           {cardPackage.cards.map((cardId) => (
-            <Col key={`${cardPackage.Id}-${cardId}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
+            <Col key={`${cardPackage.id}-${cardId}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
               <Card className="mb-3">
                 <AutocardA href={`/tool/card/${cardId}`} front={`/tool/cardimage/${cardId}`} target="_blank">
                   <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
@@ -151,7 +151,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
         </Row>
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="package" parent={cardPackage.Id} collapse />
+        <CommentsSection parentType="package" parent={cardPackage.id} collapse />
       </div>
     </Card>
   );

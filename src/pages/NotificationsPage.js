@@ -55,7 +55,7 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           <CardBody className="p-0">
             {items.length > 0 ? (
-              items.map((notification) => <Notification key={notification.Id} notification={notification} />)
+              items.map((notification) => <Notification key={notification.id} notification={notification} />)
             ) : (
               <p className="m-2">
                 You don't have any notifications! Why don't you try sharing your cube on the{' '}

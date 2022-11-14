@@ -65,7 +65,7 @@ const CurveView = ({ cards, ...props }) => {
   return (
     <Row {...props}>
       <Col>
-        {sortDeep(cards, cube.ShowUnsorted, 'Alphabetical', sortPrimary).map(([color, group]) => (
+        {sortDeep(cards, cube.showUnsorted, 'Alphabetical', sortPrimary).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
         ))}
       </Col>

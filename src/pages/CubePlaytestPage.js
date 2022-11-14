@@ -62,7 +62,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/format/remove/${cube.Id}/${formatIndex}`, {
+        const response = await csrfFetch(`/cube/format/remove/${cube.id}/${formatIndex}`, {
           method: 'DELETE',
         });
         if (!response.ok) throw Error();
@@ -77,14 +77,14 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
         addAlert('danger', 'Failed to delete format.');
       }
     },
-    [addAlert, cube.Id, formats],
+    [addAlert, cube.id, formats],
   );
 
   const handleSetDefaultFormat = useCallback(
     async (event) => {
       const formatIndex = parseInt(event.target.getAttribute('data-index'), 10);
       try {
-        const response = await csrfFetch(`/cube/${cube.Id}/defaultdraftformat/${formatIndex}`, {
+        const response = await csrfFetch(`/cube/${cube.id}/defaultdraftformat/${formatIndex}`, {
           method: 'POST',
         });
 
@@ -99,7 +99,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
         addAlert('danger', 'Failed to set format as default.');
       }
     },
-    [addAlert, cube.Id],
+    [addAlert, cube.id],
   );
 
   // Sort formats alphabetically.
@@ -153,7 +153,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
             {defaultDraftFormat === -1 && <StandardDraftFormatCard />}
             {formatsSorted.map((format) => (
               <CustomDraftCard
-                key={format.Id}
+                key={format.id}
                 format={format}
                 onDeleteFormat={handleDeleteFormat}
                 onSetDefaultFormat={handleSetDefaultFormat}

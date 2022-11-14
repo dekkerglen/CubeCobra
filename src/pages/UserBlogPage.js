@@ -32,7 +32,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        owner: owner.Id,
+        owner: owner.id,
         lastKey: currentLastKey,
       }),
     });
@@ -44,7 +44,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
         setLastKey(json.lastKey);
       }
     }
-  }, [owner.Id, currentLastKey, items]);
+  }, [owner.id, currentLastKey, items]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -53,7 +53,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
         <DynamicFlash />
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.length > 0 ? (
-            items.map((post) => <BlogPost key={post.Id} post={post} />)
+            items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (
             <p>This user has no blog posts!</p>
           )}
@@ -65,8 +65,8 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
 
 UserBlogPage.propTypes = {
   owner: PropTypes.shape({
-    Id: PropTypes.string.isRequired,
-    Username: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,

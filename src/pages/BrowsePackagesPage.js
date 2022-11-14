@@ -121,7 +121,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
             )}
           </Row>
           <InputGroup className="mb-3 px-3">
-            <InputGroupText htmlFor="filterInput">Keywords</InputGroupText>
+            <InputGroupText htmlFor="filterInput">keywords</InputGroupText>
             <Input
               type="text"
               placeholder="Search for keywords or packages that include a card..."
@@ -141,7 +141,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
                 <InputGroupText>Sort: </InputGroupText>
                 <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
                   <option value="votes">Votes</option>
-                  <option value="date">Date</option>
+                  <option value="date">date</option>
                 </Input>
               </InputGroup>
             </Col>

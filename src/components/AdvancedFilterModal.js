@@ -24,7 +24,7 @@ import CubeContext from 'contexts/CubeContext';
 
 const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => {
   const { cube } = useContext(CubeContext);
-  const cubeId = cube ? cube.Id : null;
+  const cubeId = cube ? cube.id : null;
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="lg">
       <Form
@@ -37,14 +37,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
         <ModalBody>
           <TextField
             name="name"
-            humanName="Card Name"
+            humanName="Card name"
             placeholder={'Any words in the name, e.g. "Fire"'}
             value={values.name}
             onChange={(event) => updateValue(event.target.value, 'name')}
           />
           <TextField
             name="oracle"
-            humanName="Oracle Text"
+            humanName="oracle Text"
             placeholder={'Any text, e.g. "Draw a card"'}
             value={values.oracle}
             onChange={(event) => updateValue(event.target.value, 'oracle')}
@@ -153,7 +153,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
           <Row className="row-mid-padding">
             <Col md={6}>
               <InputGroup className="mb-3">
-                <InputGroupText>Status</InputGroupText>
+                <InputGroupText>status</InputGroupText>
                 <Input
                   type="select"
                   name="status"
@@ -230,7 +230,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
           </Row>
           <NumericField
             name="elo"
-            humanName="Elo"
+            humanName="elo"
             placeholder={'Any integer number, e.g. "1200"'}
             value={values.elo}
             operator={values.eloOp}

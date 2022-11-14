@@ -3,8 +3,8 @@
 // FETCH_LANDS : { [str]: [Color] }
 // COLORS : [Color]
 // BASICS : [str]
-// ORACLES : [Oracle]
-// ORACLES_BY_NAME : { [string]: Oracle }
+// ORACLES : [oracle]
+// ORACLES_BY_NAME : { [string]: oracle }
 // getSynergy : (int, int, [Card]) -> number
 // considerInCombination : ([Color], Card) -> bool
 // isPlayableLand : ([Color], Card) -> bool
@@ -21,30 +21,8 @@
 import seedrandom from 'seedrandom';
 import shuffleSeed from 'shuffle-seed';
 
-import {
-  COLOR_COMBINATIONS,
-  COLOR_INCLUSION_MAP,
-  cardCmc,
-  cardColorIdentity,
-  cardCost,
-  cardElo,
-  cardIsSpecialZoneType,
-  cardName,
-  cardType,
-} from 'utils/Card';
+import { COLOR_COMBINATIONS, COLOR_INCLUSION_MAP, cardColorIdentity, cardElo, cardName, cardType } from 'utils/Card';
 import { arraysAreEqualSets, fromEntries } from 'utils/Util';
-import probTableBase64 from 'res/probTable.b64';
-
-const probTable = (() => {
-  const isBrowser = typeof window !== 'undefined' && typeof window.atob === 'function';
-  const probTableBinary = isBrowser
-    ? window.atob(probTableBase64)
-    : Buffer.from(probTableBase64, 'base64').toString('binary');
-
-  const probTableUint8 = Uint8Array.from(probTableBinary, (c) => c.charCodeAt(0));
-
-  return new Float32Array(probTableUint8.buffer);
-})();
 
 // Maximum value each oracle can achieve.
 export const MAX_SCORE = 10;
@@ -146,136 +124,8 @@ export const isPlayableLand = (colors, card) =>
   (FETCH_LANDS[cardName(card)] && FETCH_LANDS[cardName(card)].some((c) => colors.includes(c))) ||
   colors.some((color) => cardType(card).toLowerCase().includes(BASICS_MAP[color.toLowerCase()].toLowerCase()));
 
-const t32 = new Uint32Array(1);
-const t8 = new Uint8Array(t32.buffer, 0, 4);
-const getMaskedSum = (x, m) => {
-  t32[0] = x[0] & m[0]; // eslint-disable-line
-  t32[0] += x[1] & m[1]; // eslint-disable-line
-  t32[0] += x[2] & m[2]; // eslint-disable-line
-  t32[0] += x[3] & m[3]; // eslint-disable-line
-  t32[0] += x[4] & m[4]; // eslint-disable-line
-  t32[0] += x[5] & m[5]; // eslint-disable-line
-  t32[0] += x[6] & m[6]; // eslint-disable-line
-  t32[0] += x[7] & m[7]; // eslint-disable-line
-  return t8[0] + t8[1] + t8[2] + t8[3];
-};
-
-const LANDS_DIMS = 18;
-const REQUIRED_A_DIMS = 7;
-const REQUIRED_B_DIMS = 4;
-const MAX_CMC = 8;
-
-// TODO: Use learnings from draftbot optimization to make this much faster.
-const devotionsCache = {};
-export const getCastingProbability = (card, lands) => {
-  // const name = cardName(card);
-  const name = card.cardID;
-  let colors = devotionsCache[name];
-  if ((colors ?? null) === null) {
-    colors = [];
-    const cost = cardCost(card);
-    if (!cardType(card).toLowerCase().includes('land') && !cardIsSpecialZoneType(card) && cost?.length) {
-      const colorSymbols = {};
-      for (const symbol of cost) {
-        const symbolUpper = symbol.toUpperCase();
-        if (!symbolUpper.includes('P') && !symbolUpper.includes('2')) {
-          const unsortedSymbolColors = [...COLORS].filter((char) => symbolUpper.includes(char));
-          if (unsortedSymbolColors.length > 0) {
-            const symbolColors = COLOR_COMBINATIONS.find((comb) => arraysAreEqualSets(unsortedSymbolColors, comb)).join(
-              '',
-            );
-            colorSymbols[symbolColors] = (colorSymbols[symbolColors] ?? 0) + 1;
-          }
-        }
-      }
-      colors = Object.entries(colorSymbols);
-      const cmc = Math.min(cardCmc(card), MAX_CMC);
-
-      if (colors.length > 2) {
-        const countAll = Math.min(
-          REQUIRED_A_DIMS - 1,
-          colors.reduce((acc, [, count]) => acc + count, 0),
-        );
-        colors = colors.map(([combination, count]) => [
-          new Uint32Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[combination] * 32, 8),
-          LANDS_DIMS *
-            LANDS_DIMS *
-            LANDS_DIMS *
-            REQUIRED_B_DIMS *
-            (Math.min(count, REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * cmc),
-        ]);
-        const maskAll = new Uint32Array(8);
-        for (const [arr] of colors) {
-          for (let i = 0; i < 8; i++) {
-            maskAll[i] |= arr[i]; // eslint-disable-line
-          }
-        }
-        colors.push([
-          maskAll.buffer,
-          LANDS_DIMS * LANDS_DIMS * LANDS_DIMS * REQUIRED_B_DIMS * (countAll + REQUIRED_A_DIMS * cmc),
-        ]);
-      }
-      if (colors.length === 2) {
-        if (colors[0][1] > colors[1][1]) {
-          [colors[1], colors[0]] = colors;
-        }
-        const offset =
-          LANDS_DIMS *
-          LANDS_DIMS *
-          LANDS_DIMS *
-          (Math.min(REQUIRED_B_DIMS - 1, colors[1][1]) +
-            REQUIRED_B_DIMS * (Math.min(REQUIRED_A_DIMS - 1, colors[0][1]) + REQUIRED_A_DIMS * cmc));
-        const maskA = new Uint32Array(
-          COLOR_COMBINATION_INTERSECTS.buffer,
-          COLOR_COMBINATION_INDICES[colors[0][0]] * 32,
-          8,
-        );
-        const maskB = new Uint32Array(
-          COLOR_COMBINATION_INTERSECTS.buffer,
-          COLOR_COMBINATION_INDICES[colors[1][0]] * 32,
-          8,
-        );
-        const c0 = new Uint32Array(8);
-        const c1 = new Uint32Array(8);
-        const c2 = new Uint32Array(8);
-        for (let i = 0; i < 8; i++) {
-          c0[i] = maskA[i] & ~maskB[i]; // eslint-disable-line
-          c1[i] = ~maskA[i] & maskB[i]; // eslint-disable-line
-          c2[i] = maskA[i] & maskB[i]; // eslint-disable-line
-        }
-        colors = [[c0, c1, c2], offset];
-      }
-      if (colors.length === 1) {
-        colors = [
-          [
-            new Uint32Array(COLOR_COMBINATION_INTERSECTS.buffer, COLOR_COMBINATION_INDICES[colors[0][0]] * 32, 8),
-            LANDS_DIMS *
-              LANDS_DIMS *
-              LANDS_DIMS *
-              REQUIRED_B_DIMS *
-              (Math.min(colors[0][1], REQUIRED_A_DIMS - 1) + REQUIRED_A_DIMS * Math.min(cardCmc(card), MAX_CMC)),
-          ],
-        ];
-      }
-    }
-    devotionsCache[name] = colors;
-  }
-  if (colors.length === 2) {
-    const [[maskA, maskB, maskAB], offset] = colors;
-    const landCountA = getMaskedSum(lands, maskA);
-    const landCountB = getMaskedSum(lands, maskB);
-    const landCountAB = getMaskedSum(lands, maskAB);
-    return probTable[offset + landCountA + LANDS_DIMS * (landCountB + LANDS_DIMS * landCountAB)];
-  }
-  // This is probably a really poor approximation for 3+ colors,
-  // it probably underestimates, but could easily overestimate as well.
-  let result = 1;
-  for (const [mask, offset] of colors) {
-    const landCount = getMaskedSum(lands, mask);
-    const prob = probTable[offset + landCount];
-    result *= prob;
-  }
-  return result;
+export const getCastingProbability = () => {
+  return 1;
 };
 
 const sum = (arr) => {
@@ -322,7 +172,7 @@ export const ORACLES = Object.freeze(
   [
     {
       title: 'Rating',
-      tooltip: 'The rating based on the Elo and current color commitments.',
+      tooltip: 'The rating based on the elo and current color commitments.',
       perConsideredCard: true,
       weights: [
         [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],

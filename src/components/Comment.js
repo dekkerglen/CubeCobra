@@ -34,7 +34,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
-  const [comments, addComment, , editChildComment] = useComments(comment.Id, 'comment');
+  const [comments, addComment, , editChildComment] = useComments(comment.id, 'comment');
   const [loaded, setLoaded] = useState(false);
   const [shareModalOpen, toggleShareModal] = useToggle(false);
   const [reportModalOpen, toggleReportModal] = useToggle(false);
@@ -42,7 +42,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   const remove = () => {
     editComment({
-      id: comment.Id,
+      id: comment.id,
       content: '[deleted]',
       remove: true,
     });
@@ -50,7 +50,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   const edit = (content) => {
     editComment({
-      id: comment.Id,
+      id: comment.id,
       content,
     });
   };
@@ -61,11 +61,11 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
         <ModalHeader toggle={toggle}>Share this Comment</ModalHeader>
         <ModalBody>
           <InputGroup>
-            <Input className="bg-white monospaced" value={`https://${domain}/comment/${comment.Id}`} readOnly />
+            <Input className="bg-white monospaced" value={`https://${domain}/comment/${comment.id}`} readOnly />
             <Button
               className="btn-sm input-group-button"
-              onClick={() => navigator.clipboard.writeText(`https://${domain}/comment/${comment.Id}`)}
-              aria-label="Copy Short ID"
+              onClick={() => navigator.clipboard.writeText(`https://${domain}/comment/${comment.id}`)}
+              aria-label="Copy short ID"
             >
               <ClippyIcon size={16} />
             </Button>
@@ -91,7 +91,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               name="info"
               placeholder="Put any additional comments here."
             />
-            <Input type="hidden" name="commentid" value={comment.Id} />
+            <Input type="hidden" name="commentid" value={comment.id} />
           </ModalBody>
           <ModalFooter>
             <Button color="accent">Submit Report</Button>
@@ -102,7 +102,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
         </CSRFForm>
       </Modal>
       <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
-        <a href={`/user/view/${comment.Owner}`}>
+        <a href={`/user/view/${comment.owner}`}>
           <img
             className="profile-thumbnail"
             src={comment.ImageData.uri}
@@ -114,21 +114,21 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
           <div className="flex-container flex-direction-col">
             <div className="flex-container flex-space-between">
               <div>
-                {comment.User.Username ? (
-                  <a href={`/user/view/${comment.Owner}`}>
-                    <small>{comment.User.Username}</small>
+                {comment.user.username ? (
+                  <a href={`/user/view/${comment.owner}`}>
+                    <small>{comment.user.username}</small>
                   </a>
                 ) : (
                   <small>Anonymous</small>
                 )}
-                {comment.Date && (
+                {comment.date && (
                   <small>
                     {' '}
-                    - <TimeAgo date={comment.Date} />
+                    - <TimeAgo date={comment.date} />
                   </small>
                 )}
               </div>
-              {comment.Owner === user.Id && (
+              {comment.owner === user.id && (
                 <div>
                   <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                     <small>...</small>
@@ -138,7 +138,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
             </div>
             <Collapse isOpen={!isEdit}>
               <div className="mb-0">
-                <Markdown markdown={comment.Body} limited />
+                <Markdown markdown={comment.body} limited />
               </div>
             </Collapse>
             <CommentEntry
@@ -147,7 +147,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                 setIsEdit(false);
               }}
               expanded={isEdit}
-              defaultValue={comment.Body}
+              defaultValue={comment.body}
               toggle={() => setIsEdit(false)}
             />
             <div>
@@ -168,7 +168,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                 </LinkButton>
               )}
               {!noReplies && comments.length > 0 && depth >= maxDepth && (
-                <a className="m-2" href={`/comment/${comment.Id}`}>
+                <a className="m-2" href={`/comment/${comment.id}`}>
                   <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
                 </a>
               )}
@@ -197,7 +197,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   .reverse()
                   .map((item, pos) => (
                     <Comment
-                      key={`comment-${comment.Id}`}
+                      key={`comment-${comment.id}`}
                       comment={item}
                       index={index + comments.length - pos}
                       depth={depth + 1}
@@ -205,7 +205,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                     />
                   ))}
                 {comments.length > 10 && (
-                  <a className="m-2" href={`/comment/${comment.Id}`}>
+                  <a className="m-2" href={`/comment/${comment.id}`}>
                     View All...
                   </a>
                 )}

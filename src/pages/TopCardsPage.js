@@ -24,12 +24,12 @@ const TopCardsPage = ({ data, numResults, loginCallback }) => {
       <div className="usercontrols pt-3 mb-3">
         <Row className="pb-3 me-1">
           <Col xs="6">
-            <h3 className="mx-3">Top Cards</h3>
+            <h3 className="mx-3">Top cards</h3>
           </Col>
           <Col xs="6">
             <div className="text-end">
               <ButtonLink outline color="accent" href="/tool/searchcards">
-                Search All Cards
+                Search All cards
               </ButtonLink>{' '}
               <ButtonLink outline color="accent" href="/packages/browse">
                 View Card Packages

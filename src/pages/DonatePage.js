@@ -33,7 +33,7 @@ const ContactPage = ({ loginCallback }) => (
             supporters
           </li>
           <li>
-            A place for your cube on the <strong>Featured Cubes</strong> list (from $5/month)
+            A place for your cube on the <strong>featured cubes</strong> list (from $5/month)
           </li>
           <li>
             Ability to submit high priority feature requests that will be prioritized by the developers (from $15/month)

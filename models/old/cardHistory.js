@@ -40,7 +40,7 @@ const cardHistorySchema = mongoose.Schema({
   versions: [String], // Card IDs for all versions of this card.
   current: Datapoint,
   cubedWith: {
-    // Oracle ID
+    // oracle ID
     synergistic: [String],
     top: [String],
     creatures: [String],

@@ -10,7 +10,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
   const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadDecklistModalTitle">
-      <CSRFForm method="POST" action={`/cube/deck/uploaddecklist/${cube.Id}`}>
+      <CSRFForm method="POST" action={`/cube/deck/uploaddecklist/${cube.id}`}>
         <ModalHeader toggle={toggle} id="uploadDecklistModalTitle">
           Upload Decklist
         </ModalHeader>

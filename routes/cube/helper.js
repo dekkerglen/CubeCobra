@@ -12,7 +12,7 @@ const Changelog = require('../../dynamo/models/changelog');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,Maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
 
 async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
   try {
@@ -69,28 +69,28 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
     }
 
     if (Object.keys(changelog).length > 0) {
-      const ChangelistId = await Changelog.put(changelog, cube.Id);
+      const changelist = await Changelog.put(changelog, cube.id);
 
       const id = await Blog.put({
-        Owner: req.user.Id,
-        Date: new Date().valueOf(),
-        CubeId: cube.Id,
-        Title: 'Cube Bulk Import - Automatic Post',
-        ChangelistId,
+        owner: req.user.id,
+        date: new Date().valueOf(),
+        cube: cube.id,
+        title: 'Cube Bulk Import - Automatic Post',
+        changelist,
       });
 
-      const followers = [...new Set([...req.user.UsersFollowing, ...cube.UsersFollowing])];
+      const followers = [...new Set([...req.user.following, ...cube.following])];
 
       const feedItems = followers.map((user) => ({
-        Id: id,
-        To: user,
-        Date: new Date().valueOf(),
-        Type: Feed.TYPES.BLOG,
+        id,
+        to: user,
+        date: new Date().valueOf(),
+        type: Feed.TYPES.BLOG,
       }));
 
       await Feed.batchPut(feedItems);
 
-      await Cube.updateCards(cube.Id, cards);
+      await Cube.updateCards(cube.id, cards);
       req.flash('success', 'All cards successfully added.');
     } else {
       req.flash('danger', 'No changes made.');
@@ -103,7 +103,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 }
 
 async function bulkUpload(req, res, list, cube) {
-  const cards = await Cube.getCards(cube.Id);
+  const cards = await Cube.getCards(cube.id);
   const mainboard = cards.Mainboard;
   const maybeboard = cards.Maybeboard;
 
@@ -157,7 +157,7 @@ async function bulkUpload(req, res, list, cube) {
             selectedId = matchingItem || potentialIds[0];
           }
         } else {
-          const selectedCard = carddb.getMostReasonable(name, cube.DefaultPrinting);
+          const selectedCard = carddb.getMostReasonable(name, cube.defaultPrinting);
           selectedId = selectedCard ? selectedCard._id : null;
         }
 
@@ -273,16 +273,29 @@ const shuffle = (a) => {
 const addBasics = (document, basics) => {
   const populatedBasics = basics.map((cardID) => {
     const details = carddb.cardFromId(cardID);
-    const populatedCard = {
-      cardID: details._id,
-      index: document.Cards.length,
-      isUnlimited: true,
-      type_line: details.type,
-    };
-    document.Cards.push(populatedCard);
-    return populatedCard;
+    if (document.cards) {
+      const populatedCard = {
+        cardID: details._id,
+        index: document.cards.length,
+        isUnlimited: true,
+        type_line: details.type,
+      };
+      document.cards.push(populatedCard);
+      return populatedCard;
+    }
+    if (document.cards) {
+      const populatedCard = {
+        cardID: details._id,
+        index: document.cards.length,
+        isUnlimited: true,
+        type_line: details.type,
+      };
+      document.cards.push(populatedCard);
+      return populatedCard;
+    }
+    throw new Error('Document must contains cards to add basics');
   });
-  document.Basics = populatedBasics.map(({ index }) => index);
+  document.basics = populatedBasics.map(({ index }) => index);
 };
 
 const createPool = () => {

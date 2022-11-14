@@ -1,13 +1,13 @@
 const createClient = require('../util');
 
 const FIELDS = {
-  ID: 'Id',
-  DATE: 'Date',
+  ID: 'id',
+  DATE: 'date',
   USER: 'User',
-  BODY: 'Body',
-  STATUS: 'Status',
-  TYPE: 'Type',
-  SUBJECT: 'Subject',
+  BODY: 'body',
+  STATUS: 'status',
+  TYPE: 'type',
+  SUBJECT: 'subject',
 };
 
 const TYPE = {

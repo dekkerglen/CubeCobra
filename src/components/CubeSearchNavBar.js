@@ -121,21 +121,21 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
         <ModalBody>
           <TextField
             name="keyword"
-            humanName="Keywords"
+            humanName="keywords"
             placeholder={'Any text in the name or tags, e.g. "Innistrad"'}
             value={keyword}
             onChange={handleChange}
           />
           <TextField
             name="owner"
-            humanName="Owner Name"
+            humanName="owner name"
             placeholder={'Any text in the owner name, e.g. "TimFReilly"'}
             value={owner}
             onChange={handleChange}
           />
           <TextField
             name="tag"
-            humanName="Cube Tags"
+            humanName="Cube tags"
             placeholder={'Any tag on a cube, e.g. "2 player"'}
             value={tag}
             onChange={handleChange}
@@ -150,7 +150,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
           />
           <NumericField
             name="cards"
-            humanName="Number of Cards"
+            humanName="Number of cards"
             placeholder={'Any value, e.g. "360"'}
             value={cards}
             valueOp={cardsOp}
@@ -166,7 +166,7 @@ const AdvancedSearchModal = ({ isOpen, toggle }) => {
           {/* TODO: use autocomplete here */}
           <TextField
             name="include"
-            humanName="Cubes that include the card:"
+            humanName="cubes that include the card:"
             placeholder={'Any full card name, e.g. "Ambush Viper"'}
             value={include}
             onChange={handleChange}
@@ -197,7 +197,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
   const [searchOrder, setSearchIndex] = useState(order || 'date');
 
   const searchOptions = [
-    ['Date Updated', 'date'],
+    ['date Updated', 'date'],
     ['Alphabetical', 'alpha'],
     ['Popularity', 'pop'],
   ];
@@ -232,7 +232,7 @@ const CubeSearchNavBar = ({ query, order, title }) => {
           <Input
             className="form-control me-sm-2"
             type="search"
-            placeholder="Search Cubes..."
+            placeholder="Search cubes..."
             aria-label="Search"
             value={queryText}
             onChange={handleChange}

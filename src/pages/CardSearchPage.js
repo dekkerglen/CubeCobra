@@ -32,7 +32,7 @@ const CardSearchPage = ({ loginCallback }) => {
   const [filter, setFilter] = useState(Query.get('f') || '');
   const [count, setCount] = useState(Query.get('m') || '');
   const [distinct, setDistinct] = useState(Query.get('di') || 'names');
-  const [sort, setSort] = useState(Query.get('s') || 'Elo');
+  const [sort, setSort] = useState(Query.get('s') || 'elo');
   const [direction, setDirection] = useState(Query.get('d') || 'descending');
 
   useEffect(() => {
@@ -98,12 +98,12 @@ const CardSearchPage = ({ loginCallback }) => {
       <div className="usercontrols pt-3">
         <Row className="pb-3 me-1">
           <Col xs="6">
-            <h3 className="mx-3">Search Cards</h3>
+            <h3 className="mx-3">Search cards</h3>
           </Col>
           <Col xs="6">
             <div className="text-end">
               <ButtonLink outline color="accent" href="/tool/topcards">
-                View Top Cards
+                View Top cards
               </ButtonLink>{' '}
               <ButtonLink outline color="accent" href="/packages/browse">
                 View Card Packages

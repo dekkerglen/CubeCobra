@@ -7,7 +7,7 @@ import Advertisment from 'components/Advertisment';
 const MobileBanner = ({ placementId }) => {
   const user = useContext(UserContext);
 
-  if (user && Array.isArray(user.Roles) && user.Roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   return <Advertisment placementId={placementId} size="mobile" media="mobile" demo format="anchor" />;
 };
 

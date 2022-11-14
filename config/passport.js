@@ -18,7 +18,7 @@ module.exports = (passport) => {
       const user = queryResult.items[0];
 
       // Match password
-      return bcrypt.compare(password, user.PasswordHash, (err, isMatch) => {
+      return bcrypt.compare(password, user.passwordHash, (err, isMatch) => {
         if (err) throw err;
         if (isMatch) {
           return done(null, user);
@@ -31,7 +31,7 @@ module.exports = (passport) => {
   );
 
   passport.serializeUser((user, done) => {
-    done(null, user.Id);
+    done(null, user.id);
   });
 
   passport.deserializeUser(async (id, done) => {

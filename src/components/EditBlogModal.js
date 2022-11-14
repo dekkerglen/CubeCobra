@@ -20,7 +20,7 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
           Edit Blog Post
         </ModalHeader>
         <ModalBody>
-          <Label>Title:</Label>
+          <Label>title:</Label>
           <Input
             required
             minLength={5}
@@ -29,8 +29,8 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
             type="text"
             defaultValue={post ? post.title : ''}
           />
-          <Label className="mt-3">Body:</Label>
-          {post && <Input type="hidden" name="id" value={post.Id} />}
+          <Label className="mt-3">body:</Label>
+          {post && <Input type="hidden" name="id" value={post.id} />}
           <TextEntry name="markdown" value={markdown} onChange={(e) => setMarkdown(e.target.value)} maxLength={10000} />
           <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>

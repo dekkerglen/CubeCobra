@@ -287,7 +287,7 @@ const finishDraft = async (draftId, draft) => {
     const sideboard = setupPicks(1, 8);
     for (const cardIndex of picks) {
       const col = getCardCol(draft, cardIndex);
-      const row = cardType(draft.Cards[cardIndex]).toLowerCase().includes('creature') ? 0 : 1;
+      const row = cardType(draft.cards[cardIndex]).toLowerCase().includes('creature') ? 0 : 1;
       drafted[row][col].push(parseInt(cardIndex, 10));
     }
 
@@ -295,19 +295,19 @@ const finishDraft = async (draftId, draft) => {
     draft.Seats[i].Mainboard = drafted;
   }
 
-  await draft.put(draft);
+  await Draft.put(draft);
   await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);
 };
 
 const createLobby = async (draft, hostUser) => {
-  const lobbylist = lobbyPlayersRef(draft.Id);
-  const lobbyorder = lobbyOrderRef(draft.Id);
-  const lobby = lobbyRef(draft.Id);
+  const lobbylist = lobbyPlayersRef(draft.id);
+  const lobbyorder = lobbyOrderRef(draft.id);
+  const lobby = lobbyRef(draft.id);
 
-  await hmset(lobby, ['seats', `${draft.Seats.length}`, 'host', `${hostUser.Id}`]);
-  await hmset(lobbyorder, [`${hostUser.Id}`, '0']);
-  await rpush(lobbylist, `${hostUser.Id}`);
+  await hmset(lobby, ['seats', `${draft.Seats.length}`, 'host', `${hostUser.id}`]);
+  await hmset(lobbyorder, [`${hostUser.id}`, '0']);
+  await rpush(lobbylist, `${hostUser.id}`);
 };
 
 const getLobbySeatOrder = async (draftId) => hgetall(lobbyOrderRef(draftId));
@@ -334,11 +334,11 @@ const addPlayerToLobby = async (userId, draftId) => {
 
 const setup = async (draft) => {
   // check if the draft is already setup
-  const initialized = await hget(draftRef(draft.Id), 'initialized');
+  const initialized = await hget(draftRef(draft.id), 'initialized');
 
   if (!initialized) {
     // setup the draft metadata
-    await hmset(draftRef(draft.Id), [
+    await hmset(draftRef(draft.id), [
       'seats',
       draft.Seats.length,
       'currentPack',
@@ -355,44 +355,44 @@ const setup = async (draft) => {
 
     // push all the oracle ids to redis
     await rpush(
-      draftCardsRef(draft.Id),
+      draftCardsRef(draft.id),
       draft.cards.map((card) => card.cardID),
     );
-    await expire(draftCardsRef(draft.Id), 60 * 60 * 24 * 2); // expire in 2 days
+    await expire(draftCardsRef(draft.id), 60 * 60 * 24 * 2); // expire in 2 days
 
     // push all the basic indexes to redis
-    await rpush(draftBasicsRef(draft.Id), draft.Basics);
-    await expire(draftBasicsRef(draft.Id), 60 * 60 * 24 * 2); // expire in 2 days
+    await rpush(draftBasicsRef(draft.id), draft.basics);
+    await expire(draftBasicsRef(draft.id), 60 * 60 * 24 * 2); // expire in 2 days
 
     // create a list of steps for each seat
-    const stepList = getStepList(draft);
+    const stepList = getStepList(draft.InitialState);
     for (let i = 0; i < draft.Seats.length; i++) {
       for (const step of stepList) {
-        await lpush(stepsQueueRef(draft.Id, i), step.action);
+        await lpush(stepsQueueRef(draft.id, i), step.action);
       }
     }
 
     // create a pack contents for each pack
     for (let i = 0; i < draft.InitialState.length; i++) {
       for (let j = 0; j < draft.InitialState[i].length; j++) {
-        const pack = packRef(draft.Id, i, j);
+        const pack = packRef(draft.id, i, j);
         await rpush(pack, draft.InitialState[i][j].cards);
         await expire(pack, 60 * 60 * 24 * 2); // 2 days
       }
     }
 
-    const seats = await getLobbySeatOrder(draft.Id);
+    const seats = await getLobbySeatOrder(draft.id);
     const playerSeats = Object.entries(seats).map(([, val]) => val);
 
     // save which seats are bot seats
     for (let i = 0; i < draft.Seats.length; i++) {
       if (!playerSeats.includes(`${i}`)) {
-        await lpush(draftBotSeatsRef(draft.Id), i);
+        await lpush(draftBotSeatsRef(draft.id), i);
       }
     }
 
     // open the first pack
-    await openPack(draft.Id);
+    await openPack(draft.id);
   }
 };
 

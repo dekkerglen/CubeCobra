@@ -211,7 +211,7 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
   const cards = ids.map((id) => ({
     details: cardFromId(id),
   }));
-  cards.sort(SortFunctions[ORDERED_SORTS['Release Date']]);
+  cards.sort(SortFunctions[ORDERED_SORTS['Release date']]);
 
   ids = cards.map((card) => card.details._id);
 

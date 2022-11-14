@@ -32,7 +32,7 @@ const DownTimePage = () => (
             </a>
           </Col>
           <Col xs="12" sm="4">
-            <strong>Email</strong>
+            <strong>email</strong>
           </Col>
           <Col xs="12" sm="8" className="mb-3">
             <a href="mailto:support@cubecobra.com">support@cubecobra.com</a>

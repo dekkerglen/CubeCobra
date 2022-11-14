@@ -82,7 +82,7 @@ const CubeHistory = ({ changes, lastKey }) => {
 
   const endMessage = (
     <div className="centered">
-      <h5>{`${cube.Name} was created`}</h5>
+      <h5>{`${cube.name} was created`}</h5>
     </div>
   );
 

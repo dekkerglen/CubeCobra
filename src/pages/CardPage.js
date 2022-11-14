@@ -277,7 +277,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
             <CardBody className="breakdown p-1">
               <p>
                 Played in {cardPopularity({ details: card })}%
-                <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
+                <span className="percent">{cardCubeCount({ details: card })}</span> cubes total.
               </p>
               <AddModal color="accent" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
@@ -309,7 +309,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 </TextBadge>
               )}
               {Number.isFinite(cardElo({ details: card })) && (
-                <TextBadge name="Elo" className="mt-1" fill>
+                <TextBadge name="elo" className="mt-1" fill>
                   {cardElo({ details: card }).toFixed(0)}
                 </TextBadge>
               )}
@@ -321,7 +321,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 Card
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
-                Elo
+                elo
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
                 Price
@@ -402,13 +402,13 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               </TabPane>
               <TabPane tabId="1">
                 <CardBody>
-                  <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
+                  <Graph unit="elo" data={data.history} yFunc={(point) => point.elo} />
                 </CardBody>
               </TabPane>
               <TabPane tabId="2">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupText>Price Type: </InputGroupText>
+                    <InputGroupText>Price type: </InputGroupText>
                     <Input
                       id="priceType"
                       type="select"
@@ -432,7 +432,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               <TabPane tabId="3">
                 <CardBody>
                   <InputGroup className="mb-3">
-                    <InputGroupText>Cube Type: </InputGroupText>
+                    <InputGroupText>Cube type: </InputGroupText>
                     <Input
                       id="cubeType"
                       type="select"
@@ -446,15 +446,15 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="standard">Standard</option>
                       <option value="peasant">Peasant</option>
                       <option value="pauper">Pauper</option>
-                      <option value="size180">1-180 Cards</option>
-                      <option value="size360">181-360 Cards</option>
-                      <option value="size450">361-450 Cards</option>
-                      <option value="size540">451-540 Cards</option>
-                      <option value="size720">541+ Cards</option>
+                      <option value="size180">1-180 cards</option>
+                      <option value="size360">181-360 cards</option>
+                      <option value="size450">361-450 cards</option>
+                      <option value="size540">451-540 cards</option>
+                      <option value="size720">541+ cards</option>
                     </Input>
                   </InputGroup>
                   <Graph
-                    unit="Percent of Cubes"
+                    unit="Percent of cubes"
                     data={data.history}
                     yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
                     yRange={[0, 100]}
@@ -493,7 +493,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink outline color="accent" block href={`/search/card:"${card.name}"/0`} target="_blank">
-                        {`Cubes with ${card.name}`}
+                        {`cubes with ${card.name}`}
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
@@ -682,7 +682,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
           <h4>Often Drafted With</h4>
         </CardHeader>
         <CardBody>
-          <h4>Most Synergistic Cards</h4>
+          <h4>Most Synergistic cards</h4>
           <CardGrid
             cardList={related.synergistic.map((item) => ({ details: item }))}
             Tag={CardImage}
@@ -691,7 +691,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
             linkDetails
           />
           <hr />
-          <h4>Top Cards</h4>
+          <h4>Top cards</h4>
           <CardGrid
             cardList={related.top.map((item) => ({ details: item }))}
             Tag={CardImage}

@@ -20,16 +20,16 @@ const BlogPost = ({ post, noScroll }) => {
   const [editOpen, setEditOpen] = useState(false);
 
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.Id === post.Owner;
+  const canEdit = user && user.id === post.owner;
 
   const hasChangelist = post.Changelog;
-  const hasBody = post.Body && post.Body.length > 0;
+  const hasBody = post.body && post.body.length > 0;
 
   return (
     <Card className="shadowed rounded-0 mb-3">
       <CardHeader className="ps-4 pe-0 pt-2 pb-0">
         <h5 className="card-title">
-          <a href={`/cube/blog/blogpost/${post.Id}`}>{post.Title}</a>
+          <a href={`/cube/blog/blogpost/${post.id}`}>{post.title}</a>
           <div className="float-sm-end">
             {canEdit && (
               <>
@@ -38,22 +38,22 @@ const BlogPost = ({ post, noScroll }) => {
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
                   post={post}
-                  cubeID={post.CubeId}
+                  cubeID={post.cube}
                 />
               </>
             )}
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <Username userId={post.Owner} />
+          <Username userId={post.owner} />
           {' posted to '}
-          {post.CubeId === 'DEVBLOG' ? (
+          {post.cube === 'DEVBLOG' ? (
             <a href="/dev/blog">Developer Blog</a>
           ) : (
-            <a href={`/cube/overview/${post.CubeId}`}>Cube</a>
+            <a href={`/cube/overview/${post.cube}`}>Cube</a>
           )}
           {' - '}
-          <TimeAgo date={post.Date} />
+          <TimeAgo date={post.date} />
         </h6>
       </CardHeader>
       {hasChangelist && hasBody && (
@@ -61,14 +61,14 @@ const BlogPost = ({ post, noScroll }) => {
           <Col xs={12} md={4} className="border-end">
             <div style={scrollStyle}>
               <CardBody>
-                <BlogPostChangelog changelog={post.Changelog} cubeId={post.CubeId} />
+                <BlogPostChangelog changelog={post.Changelog} cubeId={post.cube} />
               </CardBody>
             </div>
           </Col>
           <Col xs={12} md={8}>
             <div style={scrollStyle}>
               <CardBody>
-                <Markdown markdown={post.Body} limited />
+                <Markdown markdown={post.body} limited />
               </CardBody>
             </div>
           </Col>
@@ -77,14 +77,14 @@ const BlogPost = ({ post, noScroll }) => {
       {!hasChangelist && hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <Markdown markdown={post.Body} limited />
+            <Markdown markdown={post.body} limited />
           </CardBody>
         </div>
       )}
       {hasChangelist && !hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <BlogPostChangelog changelog={post.Changelog} cubeId={post.CubeId} />
+            <BlogPostChangelog changelog={post.Changelog} cubeId={post.cube} />
           </CardBody>
         </div>
       )}
@@ -96,7 +96,7 @@ const BlogPost = ({ post, noScroll }) => {
         </div>
       )}
       <div className="border-top">
-        <CommentsSection parentType="blog" parent={post.Id} collapse={false} />
+        <CommentsSection parentType="blog" parent={post.id} collapse={false} />
       </div>
     </Card>
   );

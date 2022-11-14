@@ -56,7 +56,7 @@ CompareGroup.propTypes = {
 const CompareView = ({ cards, both, onlyA, onlyB }) => {
   const { sortPrimary, sortSecondary, cube } = useContext(CubeContext);
 
-  const columns = sortIntoGroups(cards, sortPrimary, cube.ShowUnsorted);
+  const columns = sortIntoGroups(cards, sortPrimary, cube.showUnsorted);
   const columnCounts = {};
   const bothCounts = { total: 0 };
   const onlyACounts = { total: 0 };
@@ -90,7 +90,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
     onlyACounts.total += onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
     onlyBCounts.total += onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], sortSecondary, cube.ShowUnsorted);
+    columns[columnLabel] = sortIntoGroups(columns[columnLabel], sortSecondary, cube.showUnsorted);
   }
   const bothCopy = both.slice(0);
   const onlyACopy = onlyA.slice(0);
@@ -108,7 +108,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
           <Row>
             <Col xs="4">
               <h6 className="text-center">
-                In Both Cubes
+                In Both cubes
                 <br />({bothCounts.total})
               </h6>
             </Col>
@@ -127,7 +127,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
           </Row>
         </div>
       }
-      {getLabels(cards, sortPrimary, cube.ShowUnsorted)
+      {getLabels(cards, sortPrimary, cube.showUnsorted)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
           const column = columns[columnLabel];
@@ -143,7 +143,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
                   <Row>
                     <Col xs="4">
                       <h6 className="text-center">
-                        In Both Cubes
+                        In Both cubes
                         <br />({bothCounts[columnLabel]})
                       </h6>
                     </Col>
@@ -161,7 +161,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
                     </Col>
                   </Row>
                 </div>
-                {getLabels(column, sortSecondary, cube.ShowUnsorted)
+                {getLabels(column, sortSecondary, cube.showUnsorted)
                   .filter((label) => column[label])
                   .map((label) => {
                     const group = column[label];

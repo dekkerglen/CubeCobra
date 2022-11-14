@@ -32,7 +32,7 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
   const { hideCard } = useContext(AutocardContext);
 
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
-  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
+  // picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picks = useMemo(
     () => drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
     [drafted, cards],
@@ -111,7 +111,7 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
           <Card className="my-3">
             <DeckStacks
               cards={picks}
-              title="Picks"
+              title="picks"
               subtitle={makeSubtitle(picks.flat(3))}
               locationType={DraftLocation.PICKS}
               canDrop={canDrop}

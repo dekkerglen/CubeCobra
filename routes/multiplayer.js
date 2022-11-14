@@ -67,7 +67,7 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
 
   for (let i = 0; i < draft.Seats.length; i++) {
     if (seatToPlayer[i]) {
-      draft.Seats[i].Owner = seatToPlayer[i];
+      draft.Seats[i].owner = seatToPlayer[i];
       draft.Seats[i].Bot = false;
     }
   }
@@ -174,7 +174,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       const deck = await Draft.getById(draftId);
 
-      if (deck.Seats[seat].Owner !== req.user.Id) {
+      if (deck.Seats[seat].owner !== req.user.id) {
         return res.status(401).send({
           success: 'false',
         });
@@ -186,7 +186,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       return res.status(200).send({
         success: 'true',
-        deck: deck.Id,
+        deck: deck.id,
       });
     } catch (err) {
       req.logger.info(`Error saving deck, retry ${retry}`);
@@ -211,13 +211,13 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
     });
   }
 
-  const { Id } = req.user;
+  const { id } = req.user;
 
   const playerList = await getLobbyPlayers(draftid);
 
   const { seats } = lobbyMetadata;
 
-  if (playerList.slice(0, seats).includes(Id)) {
+  if (playerList.slice(0, seats).includes(id)) {
     return res.status(200).send({
       success: 'true',
       playerList: await getLobbyPlayers(draftid),
@@ -231,7 +231,7 @@ router.post('/joinlobby', ensureAuth, async (req, res) => {
     });
   }
 
-  await addPlayerToLobby(Id, draftid);
+  await addPlayerToLobby(id, draftid);
 
   return res.status(200).send({
     success: 'true',

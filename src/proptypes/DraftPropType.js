@@ -8,7 +8,7 @@ const DraftPropType = PropTypes.shape({
   cube: PropTypes.string.isRequired,
   initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.shape({}))).isRequired,
   basics: PropTypes.arrayOf(PropTypes.number).isRequired,
-  Id: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 });
 
 export default DraftPropType;

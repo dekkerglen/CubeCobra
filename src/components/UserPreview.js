@@ -15,11 +15,11 @@ const UserPreview = ({ user }) => {
     window.location.href = event.currentTarget.getAttribute('data-href');
   }, []);
 
-  const followers = (user.UsersFollowing || []).length;
+  const followers = (user.following || []).length;
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      data-href={`/user/view/${user.Id}`}
+      data-href={`/user/view/${user.id}`}
       onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
@@ -27,11 +27,11 @@ const UserPreview = ({ user }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <MtgImage cardname={user.ImageName} showArtist />
+        <MtgImage cardname={user.imageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">
-          <Username userId={user.Id} defaultName={user.Username} />
+          <Username userId={user.id} defaultName={user.username} />
         </h5>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>
@@ -41,12 +41,12 @@ const UserPreview = ({ user }) => {
 
 UserPreview.propTypes = {
   user: PropTypes.shape({
-    Id: PropTypes.string.isRequired,
-    Username: PropTypes.string.isRequired,
-    Image: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
     Artist: PropTypes.string.isRequired,
-    UsersFollowing: PropTypes.arrayOf(PropTypes.string.isRequired),
-    ImageName: PropTypes.string.isRequired,
+    following: PropTypes.arrayOf(PropTypes.string.isRequired),
+    imageName: PropTypes.string.isRequired,
   }).isRequired,
 };
 

@@ -26,12 +26,12 @@ const SortCollapse = ({ isOpen }) => {
 
   const sortsModified = useMemo(() => {
     return (
-      sortPrimary !== (cube.DefaultSorts[0] || 'Color Category') ||
-      sortSecondary !== (cube.DefaultSorts[1] || 'Types-Multicolor') ||
-      sortTertiary !== (cube.DefaultSorts[2] || 'Mana Value') ||
-      sortQuaternary !== (cube.DefaultSorts[3] || 'Alphabetical')
+      sortPrimary !== (cube.defaultSorts[0] || 'Color Category') ||
+      sortSecondary !== (cube.defaultSorts[1] || 'Types-Multicolor') ||
+      sortTertiary !== (cube.defaultSorts[2] || 'Mana Value') ||
+      sortQuaternary !== (cube.defaultSorts[3] || 'Alphabetical')
     );
-  }, [sortPrimary, cube.DefaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
+  }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
   return (
     <Collapse isOpen={isOpen}>
@@ -106,7 +106,7 @@ const SortCollapse = ({ isOpen }) => {
           <Col>
             <p className="my-2">
               <em>
-                Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
+                cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
                 each item once.
               </em>
             </p>
@@ -125,12 +125,12 @@ const SortCollapse = ({ isOpen }) => {
               </Button>
             )}
             <Button
-              color={cube.ShowUnsorted ? 'unsafe' : 'primary'}
+              color={cube.showUnsorted ? 'unsafe' : 'primary'}
               className="me-sm-2 mb-3"
-              onClick={() => setShowUnsorted(!cube.ShowUnsorted)}
+              onClick={() => setShowUnsorted(!cube.showUnsorted)}
             >
               <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-                {cube.ShowUnsorted ? 'Hide' : 'Show'} Unsorted Cards
+                {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
               </Tooltip>
             </Button>
           </Col>

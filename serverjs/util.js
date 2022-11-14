@@ -106,7 +106,7 @@ function addCardToBoard(board, cube, cardDetails, tags) {
     return;
   }
 
-  const card = newCard(cardDetails, tags, cube.DefaultStatus || 'Owned');
+  const card = newCard(cardDetails, tags, cube.defaultStatus || 'Owned');
   board.push(card);
 }
 
@@ -124,12 +124,12 @@ async function addNotification(to, from, url, text) {
   }
 
   await Notification.put({
-    Date: new Date().valueOf(),
-    To: `${to.Id}`,
-    From: `${from.Id}`,
-    FromUsername: from.Username,
-    Url: url,
-    Body: text,
+    date: new Date().valueOf(),
+    to: `${to.id}`,
+    from: `${from.id}`,
+    fromUsername: from.username,
+    url,
+    body: text,
   });
 }
 
@@ -227,7 +227,7 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.Roles.includes('Admin');
+    return user && user.roles.includes('Admin');
   },
   addNotification,
   wrapAsyncApi,

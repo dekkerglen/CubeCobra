@@ -15,7 +15,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
 
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startdraft/${cube.Id}`}>
+      <CSRFForm method="POST" action={`/cube/startdraft/${cube.id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             {defaultDraftFormat === -1 && 'Default Format: '}Standard Draft
@@ -27,7 +27,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
               {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="cards" label="Cards per Pack">
+          <LabelRow htmlFor="cards" label="cards per Pack">
             <Input type="select" name="cards" id="cards" defaultValue="15">
               {rangeOptions(1, 25)}
             </Input>

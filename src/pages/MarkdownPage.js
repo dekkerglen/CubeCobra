@@ -29,7 +29,7 @@ const MarkdownPage = ({ loginCallback }) => (
             <a href="#formatting">Basic Formatting</a>
           </li>
           <li>
-            <a href="#cards">Linking Cards</a>
+            <a href="#cards">Linking cards</a>
           </li>
           <li>
             <a href="#symbols">Symbols</a>
@@ -65,7 +65,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </p>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="cards">Linking Cards</h5>
+        <h5 id="cards">Linking cards</h5>
         <p>
           There are multiple ways to link cards. To link a card with autocard, you can use double square brackets to
           wrap a card name, like so:

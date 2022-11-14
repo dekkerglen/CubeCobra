@@ -7,7 +7,7 @@ import Advertisment from 'components/Advertisment';
 const SideBanner = ({ placementId }) => {
   const user = useContext(UserContext);
 
-  if (user && Array.isArray(user.Roles) && user.Roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   return <Advertisment placementId={placementId} size="side" media="desktop" format="sticky-stack" />;
 };
 

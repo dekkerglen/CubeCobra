@@ -2,15 +2,15 @@ const uuid = require('uuid/v4');
 const createClient = require('../util');
 
 const FIELDS = {
-  ID: 'Id',
-  TITLE: 'Title',
-  DATE: 'Date',
-  OWNER: 'Owner',
-  STATUS: 'Status',
-  CARDS: 'Cards',
-  VOTERS: 'Voters',
-  KEYWORDS: 'Keywords',
-  VOTECOUNT: 'VoteCount',
+  ID: 'id',
+  TITLE: 'title',
+  DATE: 'date',
+  OWNER: 'owner',
+  STATUS: 'status',
+  CARDS: 'cards',
+  VOTERS: 'voters',
+  KEYWORDS: 'keywords',
+  VOTECOUNT: 'voteCount',
 };
 
 const STATUSES = {
@@ -35,6 +35,9 @@ const client = createClient({
   ],
   attributes: {
     [FIELDS.ID]: 'S',
+    [FIELDS.STATUS]: 'S',
+    [FIELDS.VOTECOUNT]: 'N',
+    [FIELDS.DATE]: 'N',
   },
   FIELDS,
 });

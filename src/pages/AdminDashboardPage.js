@@ -23,7 +23,7 @@ const AdminDashboardPage = ({ loginCallback, noticeCount, contentInReview }) => 
           {`Review Content (${contentInReview})`}
         </ButtonLink>
         <ButtonLink href="/admin/featuredcubes" block outline color="accent">
-          Featured Cubes Queue
+          featured cubes Queue
         </ButtonLink>
       </CardBody>
     </Card>

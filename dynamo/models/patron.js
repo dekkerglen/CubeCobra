@@ -1,10 +1,10 @@
 const createClient = require('../util');
 
 const FIELDS = {
-  OWNER: 'Owner',
-  EMAIL: 'Email',
-  STATUS: 'Status',
-  LEVEL: 'Level',
+  OWNER: 'owner',
+  EMAIL: 'email',
+  STATUS: 'status',
+  LEVEL: 'level',
 };
 
 const STATUSES = {
@@ -12,7 +12,7 @@ const STATUSES = {
   INACTIVE: 'i',
 };
 
-const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
+const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling oracle', 'Lotus Cobra'];
 
 const client = createClient({
   name: 'PATRON',
@@ -36,7 +36,7 @@ module.exports = {
     (
       await client.query({
         IndexName: 'ByEmail',
-        KeyConditionExpression: 'Email = :email',
+        KeyConditionExpression: 'email = :email',
         ExpressionAttributeValues: {
           ':email': email,
         },
@@ -48,8 +48,8 @@ module.exports = {
     const items = [];
 
     for (const document of documents) {
-      if (!keys.has(document.Owner)) {
-        keys.add(document.Owner);
+      if (!keys.has(document.owner)) {
+        keys.add(document.owner);
         items.push(document);
       }
     }

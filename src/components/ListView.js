@@ -114,7 +114,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
           value={cardStatus(card)}
           onChange={(event) => updateField('status', event.target.value)}
         >
-          {getLabels(null, 'Status').map((status) => (
+          {getLabels(null, 'status').map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
@@ -238,7 +238,7 @@ const ListView = ({ cards }) => {
     [checked],
   );
 
-  const sorted = sortDeep(cards, cube.ShowUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
+  const sorted = sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
 
   const rows = sorted.map(([, group1]) =>
     group1.map(([, group2]) =>
@@ -285,14 +285,14 @@ const ListView = ({ cards }) => {
             <th className="align-middle">
               <Input type="checkbox" className="d-block mx-auto" onChange={handleCheckAll} />
             </th>
-            <th>Name</th>
+            <th>name</th>
             <th>Version</th>
             <th>Type</th>
-            <th>Status</th>
+            <th>status</th>
             <th>Finish</th>
             <th>MV</th>
             <th>Color</th>
-            <th>Tags</th>
+            <th>tags</th>
           </tr>
         </thead>
       </PagedTable>

@@ -60,17 +60,17 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     cards,
   });
   const [versionDict, setVersionDict] = useState({});
-  const [changes, setChanges] = useLocalStorage(`cubecobra-changes-${cube.Id}`, {});
+  const [changes, setChanges] = useLocalStorage(`cubecobra-changes-${cube.id}`, {});
   const [modalSelection, setModalSelection] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [tagColors, setTagColors] = useState(cube.TagColors);
-  const [showTagColors, setShowTagColors] = useState(user ? !user.HideTagColors : false);
+  const [tagColors, setTagColors] = useState(cube.tagColors);
+  const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sortPrimary, setSortPrimary] = useQueryParam('s1', cube.DefaultSorts[0] || 'Color Category');
-  const [sortSecondary, setSortSecondary] = useQueryParam('s2', cube.DefaultSorts[1] || 'Types-Multicolor');
-  const [sortTertiary, setSortTertiary] = useQueryParam('s3', cube.DefaultSorts[2] || 'Mana Value');
-  const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', cube.DefaultSorts[3] || 'Alphabetical');
+  const [sortPrimary, setSortPrimary] = useQueryParam('s1', cube.defaultSorts[0] || 'Color Category');
+  const [sortSecondary, setSortSecondary] = useQueryParam('s2', cube.defaultSorts[1] || 'Types-Multicolor');
+  const [sortTertiary, setSortTertiary] = useQueryParam('s3', cube.defaultSorts[2] || 'Mana Value');
+  const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', cube.defaultSorts[3] || 'Alphabetical');
   const [filterInput, setFilterInput] = useQueryParam('f', '');
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
@@ -95,7 +95,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
   const updateTagColors = useCallback(
     (colors) => {
-      return csrfFetch(`/cube/api/savetagcolors/${cube.Id}`, {
+      return csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
         method: 'POST',
         body: JSON.stringify(tagColors),
         headers: {
@@ -109,7 +109,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         }
       });
     },
-    [cube.Id, tagColors],
+    [cube.id, tagColors],
   );
 
   const updateShowTagColors = useCallback(
@@ -483,7 +483,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           title,
           blog,
           changes,
-          id: cube.Id,
+          id: cube.id,
         }),
       });
 
@@ -661,7 +661,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [cube, changes, setChanges],
   );
 
-  const canEdit = user && cube.Owner === user.Id;
+  const canEdit = user && cube.owner === user.id;
 
   const hasCustomImages = useMemo(
     () =>
@@ -681,13 +681,13 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       setLoading(true);
       setCube({
         ...cube,
-        ShowUnsorted: value,
+        showUnsorted: value,
       });
 
-      await csrfFetch(`/cube/api/savesorts/${cube.Id}`, {
+      await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
         method: 'POST',
         body: JSON.stringify({
-          sorts: cube.DefaultSorts,
+          sorts: cube.defaultSorts,
           showUnsorted: value,
         }),
         headers: {
@@ -704,13 +704,13 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setLoading(true);
     setCube({
       ...cube,
-      DefaultSorts: [sortPrimary, sortSecondary, sortTertiary, sortQuaternary],
+      defaultSorts: [sortPrimary, sortSecondary, sortTertiary, sortQuaternary],
     });
-    await csrfFetch(`/cube/api/savesorts/${cube.Id}`, {
+    await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
       method: 'POST',
       body: JSON.stringify({
         sorts: [sortPrimary, sortSecondary, sortTertiary, sortQuaternary],
-        showUnsorted: cube.ShowUnsorted,
+        showUnsorted: cube.showUnsorted,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -720,10 +720,10 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   }, [cube, setCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary]);
 
   const resetSorts = useCallback(() => {
-    setSortPrimary(cube.DefaultSorts[0] || 'Color Category');
-    setSortSecondary(cube.DefaultSorts[1] || 'Types-Multicolor');
-    setSortTertiary(cube.DefaultSorts[2] || 'Mana Value');
-    setSortQuaternary(cube.DefaultSorts[3] || 'Alphabetical');
+    setSortPrimary(cube.defaultSorts[0] || 'Color Category');
+    setSortSecondary(cube.defaultSorts[1] || 'Types-Multicolor');
+    setSortTertiary(cube.defaultSorts[2] || 'Mana Value');
+    setSortQuaternary(cube.defaultSorts[3] || 'Alphabetical');
   }, [cube, setCube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   useEffect(

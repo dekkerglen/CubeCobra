@@ -71,7 +71,7 @@ export const getStepList = (initialState) =>
     .flat();
 
 export const nextStep = (draft, seat, cardsPicked) => {
-  const steps = getStepList(draft);
+  const steps = getStepList(draft.InitialState);
 
   let picks = 0;
 
@@ -239,7 +239,7 @@ export const draftStateToTitle = (draft, picks, trashed, loading, stepQueue) => 
   let pack = 1;
   let pick = 1;
 
-  const steplist = getStepList(draft);
+  const steplist = getStepList(draft.InitialState);
   let pickCount = 0;
   let trashCount = 0;
 

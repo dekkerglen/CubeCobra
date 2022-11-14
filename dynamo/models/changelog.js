@@ -8,9 +8,9 @@ const carddb = require('../../serverjs/cards');
 const cardutil = require('../../dist/utils/Card');
 
 const FIELDS = {
-  CUBE_ID: 'CubeId',
-  DATE: 'Date',
-  ID: 'Id',
+  CUBE_ID: 'cube',
+  DATE: 'date',
+  ID: 'id',
 };
 
 const client = createClient({
@@ -183,11 +183,11 @@ const parseHtml = (html) => {
 
 module.exports = {
   getById: getChangelog,
-  getByCubeId: async (cubeId, limit, lastKey) => {
+  getByCube: async (cubeId, limit, lastKey) => {
     const result = await client.query({
-      KeyConditionExpression: `#p1 = :cubeId`,
+      KeyConditionExpression: `#p1 = :cube`,
       ExpressionAttributeValues: {
-        ':cubeId': cubeId,
+        ':cube': cubeId,
       },
       ExpressionAttributeNames: {
         '#p1': FIELDS.CUBE_ID,
@@ -200,7 +200,7 @@ module.exports = {
     const items = await Promise.all(
       result.Items.map(async (item) => ({
         cubeId,
-        date: item.Date,
+        date: item.date,
         changelog: await getChangelog(cubeId, item[FIELDS.ID]),
       })),
     );

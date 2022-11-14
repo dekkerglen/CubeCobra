@@ -72,7 +72,7 @@ const AddCubeModal = ({ isOpen, toggle }) => (
       <ModalBody>
         <InputGroup>
           <InputGroupText>Cube ID</InputGroupText>
-          <Input type="text" name="cubeId" placeholder="Short or long ID of the cube." />
+          <Input type="text" name="cubeId" placeholder="short or long ID of the cube." />
         </InputGroup>
       </ModalBody>
       <ModalFooter>
@@ -94,7 +94,7 @@ AddCubeModal.propTypes = {
 
 const RotateModal = ({ isOpen, toggle }) => (
   <Modal isOpen={isOpen} toggle={toggle} size="xs">
-    <ModalHeader>Rotate Featured Cubes</ModalHeader>
+    <ModalHeader>Rotate featured cubes</ModalHeader>
     <ModalBody>
       <p>You are about to rotate the featured cubes. Are you sure?</p>
       <CSRFForm method="POST" action="/admin/featuredcubes/rotate">
@@ -126,7 +126,7 @@ const MoveModal = ({ isOpen, toggle, cube, index }) => (
       </FormGroup>
       <CSRFForm method="POST" action="/admin/featuredcubes/move" id="move-cube-form">
         <Input id="move-cube-from" type="hidden" name="from" value={index + 1} />
-        <Input type="hidden" name="cubeId" value={cube?.Id} />
+        <Input type="hidden" name="cubeId" value={cube?.id} />
         <FormGroup>
           <Label for="move-cube-to">New position in queue</Label>
           <Input id="move-cube-to" type="number" name="to" placeholder={index + 1} />
@@ -174,7 +174,7 @@ const QueueItem = ({ cube, index, onMove }) => (
             <Row className="justify-content-end pt-3">
               <Col xs={4} md={12}>
                 <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
-                  <input type="hidden" name="cubeId" value={cube.Id} />
+                  <input type="hidden" name="cubeId" value={cube.id} />
                   <Button type="submit" color="unsafe" outline disabled={index < 2}>
                     Remove
                   </Button>
@@ -245,7 +245,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
       ))}
       <Card>
         <CardHeader>
-          <h4>Featured Cubes Queue</h4>
+          <h4>featured cubes Queue</h4>
         </CardHeader>
         <CardBody>
           <Row>
@@ -268,7 +268,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
                 Add Cube to Queue
               </AddCubeButton>
               <RotateButton outline color="secondary">
-                Rotate Featured Cubes
+                Rotate featured cubes
               </RotateButton>
             </Col>
           </Row>

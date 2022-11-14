@@ -112,7 +112,7 @@ const CardModal = ({
                   </TextBadge>
                 )}
                 {Number.isFinite(cardElo(card)) && (
-                  <TextBadge name="Elo" className="mt-2">
+                  <TextBadge name="elo" className="mt-2">
                     {cardElo(card).toFixed(0)}
                   </TextBadge>
                 )}
@@ -219,7 +219,7 @@ const CardModal = ({
                   </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>Status</InputGroupText>
+                  <InputGroupText>status</InputGroupText>
                   <Input
                     type="select"
                     name="status"
@@ -227,7 +227,7 @@ const CardModal = ({
                     value={cardStatus(card)}
                     onChange={(event) => updateField('status', event.target.value)}
                   >
-                    {getLabels(null, 'Status').map((status) => (
+                    {getLabels(null, 'status').map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>
@@ -281,7 +281,7 @@ const CardModal = ({
                   </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>Image URL</InputGroupText>
+                  <InputGroupText>image URL</InputGroupText>
                   <Input
                     type="text"
                     name="imgUrl"
@@ -290,7 +290,7 @@ const CardModal = ({
                   />
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>Image Back URL</InputGroupText>
+                  <InputGroupText>image Back URL</InputGroupText>
                   <Input
                     type="text"
                     name="imgBackUrl"
@@ -331,7 +331,7 @@ const CardModal = ({
                   />
                 </InputGroup>
 
-                <h5>Tags</h5>
+                <h5>tags</h5>
                 <TagInput
                   tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}

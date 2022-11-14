@@ -38,12 +38,12 @@ const EditArticlePage = ({ loginCallback, article }) => {
   const user = useContext(UserContext);
 
   const [tab, setTab] = useQueryParam('tab', '0');
-  const [body, setBody] = useState(article.Body);
-  const [title, setTitle] = useState(article.Title);
-  const [short, setShort] = useState(article.Short || '');
-  const [imageName, setImageName] = useState(article.ImageName);
+  const [body, setBody] = useState(article.body);
+  const [title, setTitle] = useState(article.title);
+  const [short, setShort] = useState(article.short || '');
+  const [imageName, setImageName] = useState(article.imageName);
   const [imageArtist, setImageArtist] = useState(article.Artist);
-  const [imageUri, setImageUri] = useState(article.Image);
+  const [imageUri, setImageUri] = useState(article.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +67,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
   }, [imageName, imageDict]);
 
   const hasChanges =
-    article.Body !== body || article.Title !== title || article.ImageName !== imageName || article.Short !== short;
+    article.body !== body || article.title !== title || article.imageName !== imageName || article.short !== short;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -86,7 +86,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editarticle" autoComplete="off">
-                <Input type="hidden" name="articleid" value={article.Id} />
+                <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="imagename" value={imageName} />
@@ -98,7 +98,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitarticle" autoComplete="off">
-                <Input type="hidden" name="articleid" value={article.Id} />
+                <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="imagename" value={imageName} />
@@ -125,17 +125,17 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={CONVERT_STATUS[article.Status]} />
+                    <Input disabled value={CONVERT_STATUS[article.status]} />
                   </Col>
                 </Row>
               </FormGroup>
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Title:</Label>
+                    <Label>title:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -145,7 +145,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Short Description:</Label>
+                    <Label>short description:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
@@ -168,7 +168,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
                       onSubmit={(event) => event.preventDefault()}
-                      placeholder="Cardname for Image"
+                      placeholder="Cardname for image"
                       autoComplete="off"
                       data-lpignore
                     />
@@ -212,28 +212,28 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Col xs="12" sm="6" md="4" className="mb-3">
                   <ArticlePreview
                     article={{
-                      Username: user.Username,
-                      Title: title,
-                      Body: body,
-                      Short: short,
+                      username: user.username,
+                      title,
+                      body,
+                      short,
                       Artist: imageArtist,
-                      ImageName: imageName,
-                      Image: imageUri,
-                      Date: article.Date,
+                      imageName,
+                      image: imageUri,
+                      date: article.date,
                     }}
                   />
                 </Col>
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <ArticlePreview
                     article={{
-                      Username: user.Username,
-                      Title: title,
-                      Body: body,
-                      Short: short,
+                      username: user.username,
+                      title,
+                      body,
+                      short,
                       Artist: imageArtist,
-                      ImageName: imageName,
-                      Image: imageUri,
-                      Date: article.Date,
+                      imageName,
+                      image: imageUri,
+                      date: article.date,
                     }}
                   />
                 </Col>
@@ -241,14 +241,14 @@ const EditArticlePage = ({ loginCallback, article }) => {
             </CardBody>
             <Article
               article={{
-                Username: user.Username,
-                Title: title,
-                Body: body,
-                Short: short,
+                username: user.username,
+                title,
+                body,
+                short,
                 Artist: imageArtist,
-                ImageName: imageName,
-                Image: imageUri,
-                Date: article.Date,
+                imageName,
+                image: imageUri,
+                date: article.date,
               }}
             />
           </TabPane>

@@ -34,7 +34,6 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
 
     if (response.ok) {
       const json = await response.json();
-      console.log(json);
       if (json.success === 'true') {
         setItems([...items, ...json.content]);
         setLastKey(json.lastKey);
@@ -63,9 +62,9 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
           </Col>
           {items.map((item) => (
             <Col className="mb-3" xs="6" md="4">
-              {item.Type === 'a' && <ArticlePreview article={item} />}
-              {item.Type === 'v' && <VideoPreview video={item} />}
-              {item.Type === 'e' && <PodcastEpisodePreview episode={item} />}
+              {item.type === 'a' && <ArticlePreview article={item} />}
+              {item.type === 'v' && <VideoPreview video={item} />}
+              {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
             </Col>
           ))}
         </Row>

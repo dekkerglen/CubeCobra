@@ -13,7 +13,7 @@ const UploadBulkModal = ({ isOpen, toggle }) => {
       <ModalHeader id="uploadBulkModalTitle" toggle={toggle}>
         Bulk Upload - Upload File
       </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cube.Id}`} encType="multipart/form-data">
+      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cube.id}`} encType="multipart/form-data">
         <ModalBody>
           <p>
             Acceptable files are:

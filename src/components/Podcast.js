@@ -14,19 +14,19 @@ const Podcast = ({ podcast, episodes }) => {
   return (
     <>
       <CardHeader>
-        <h1>{podcast.Title}</h1>
+        <h1>{podcast.title}</h1>
         <h6>
-          By <Username userId={podcast.Owner} defaultName={podcast.Username} />
+          By <Username userId={podcast.owner} defaultName={podcast.username} />
         </h6>
       </CardHeader>
       <Row>
         <Col xs="12" sm="4">
           <AspectRatioBox ratio={1} className="text-ellipsis">
-            <img className="w-100" alt={podcast.Title} src={podcast.Image} />
+            <img className="w-100" alt={podcast.title} src={podcast.image} />
           </AspectRatioBox>
         </Col>
         <Col xs="12" sm="8">
-          <CardBody dangerouslySetInnerHTML={{ __html: podcast.Description }} />
+          <CardBody dangerouslySetInnerHTML={{ __html: podcast.description }} />
         </Col>
       </Row>
       <CardBody className="border-top">
@@ -43,7 +43,7 @@ const Podcast = ({ podcast, episodes }) => {
         )}
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="podcast" parent={podcast.Id} collapse={false} />
+        <CommentsSection parentType="podcast" parent={podcast.id} collapse={false} />
       </div>
     </>
   );

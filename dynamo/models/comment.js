@@ -8,12 +8,12 @@ const { getUserFromId } = require('../../serverjs/cache');
 const util = require('../../serverjs/util');
 
 const FIELDS = {
-  ID: 'Id',
-  PARENT: 'Parent',
-  TYPE: 'Type',
-  OWNER: 'Owner',
-  BODY: 'Body',
-  DATE: 'Date',
+  ID: 'id',
+  PARENT: 'parent',
+  TYPE: 'type',
+  OWNER: 'owner',
+  BODY: 'body',
+  DATE: 'date',
 };
 
 const client = createClient({
@@ -35,12 +35,12 @@ const client = createClient({
 });
 
 const hydrate = async (item) => {
-  if (!item.Owner) {
+  if (!item.owner) {
     return {
       ...item,
-      User: {
-        Id: '404',
-        Username: 'Anonymous',
+      user: {
+        id: '404',
+        username: 'Anonymous',
       },
       ImageData: {
         uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
@@ -50,12 +50,12 @@ const hydrate = async (item) => {
     };
   }
 
-  const user = await getUserFromId(item.Owner);
-  const ImageData = util.getImageData(user.ImageName);
+  const user = await getUserFromId(item.owner);
+  const ImageData = util.getImageData(user.imageName);
 
   return {
     ...item,
-    User: user,
+    user,
     ImageData,
   };
 };
@@ -86,11 +86,11 @@ module.exports = {
     const id = document[FIELDS.ID] || uuid();
     return client.put({
       [FIELDS.ID]: id,
-      [FIELDS.DATE]: document.Date,
-      [FIELDS.BODY]: document.Body,
-      [FIELDS.OWNER]: document.Owner,
-      [FIELDS.PARENT]: document.Parent,
-      [FIELDS.TYPE]: document.Type,
+      [FIELDS.DATE]: document.date,
+      [FIELDS.BODY]: document.body,
+      [FIELDS.OWNER]: document.owner,
+      [FIELDS.PARENT]: document.parent,
+      [FIELDS.TYPE]: document.type,
     });
   },
   update: async (document) => client.put(document),

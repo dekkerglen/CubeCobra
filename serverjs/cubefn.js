@@ -14,8 +14,8 @@ const ELO_SPEED = 1 / 128;
 const CUBE_ELO_SPEED = 4;
 
 function getCubeId(cube) {
-  if (cube.ShortId) return cube.ShortId;
-  return cube.Id;
+  if (cube.shortId) return cube.shortId;
+  return cube.id;
 }
 
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
@@ -147,15 +147,15 @@ function abbreviate(name) {
 }
 
 function buildTagColors(cube, cards) {
-  const { TagColors } = cube;
-  const tags = TagColors.map((item) => item.tag);
-  const notFound = TagColors.map((item) => item.tag);
+  const { tagColors } = cube;
+  const tags = tagColors.map((item) => item.tag);
+  const notFound = tagColors.map((item) => item.tag);
 
   for (const card of cards) {
     for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
-        TagColors.push({
+        tagColors.push({
           tag,
           color: null,
         });
@@ -166,7 +166,7 @@ function buildTagColors(cube, cards) {
   }
 
   const tmp = [];
-  for (const color of TagColors) {
+  for (const color of tagColors) {
     if (!notFound.includes(color.tag)) tmp.push(color);
   }
 
@@ -311,7 +311,7 @@ const newCardAnalytics = (cardName, elo) => {
 
 const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards, carddb) => {
   const updates = {
-    cube: cubeId,
+    ':cube': cubeId,
     mainboards: {},
     sideboards: {},
     picks: {},
@@ -319,8 +319,8 @@ const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards
   };
 
   // we don't want to revert deck analytics for decks have not been built
-  if (oldseats && oldseats.seats[seatNum].sideboard.flat().length > 0) {
-    for (const row of oldseats.seats[0].deck) {
+  if (oldseats && oldseats.Seats[seatNum].sideboard.flat().length > 0) {
+    for (const row of oldseats.Seats[0].deck) {
       for (const col of row) {
         for (const ci of col) {
           const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
@@ -331,7 +331,7 @@ const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards
         }
       }
     }
-    for (const row of oldseats.seats[seatNum].sideboard) {
+    for (const row of oldseats.Seats[seatNum].sideboard) {
       for (const col of row) {
         for (const ci of col) {
           const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
@@ -418,8 +418,8 @@ function cachePromise(key, callback) {
 
 function isCubeViewable(cube, user) {
   if (!cube) return false;
-  if (cube.Visibility !== 'pu') return true;
-  return user && (cube.Owner === user.Id || util.isAdmin(user));
+  if (cube.visibility !== 'pu') return true;
+  return user && (cube.owner === user.id || util.isAdmin(user));
 }
 
 const methods = {
@@ -455,7 +455,7 @@ const methods = {
       seed = Date.now().toString();
     }
     main.cards = main.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
-    const formatId = cube.DefaultDraftFormat === undefined ? -1 : cube.DefaultDraftFormat;
+    const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
     const draft = createDraft(format, main.cards, 1, { username: 'Anonymous' }, false, seed);
     return {

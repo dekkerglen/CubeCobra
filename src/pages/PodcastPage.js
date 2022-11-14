@@ -18,18 +18,18 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === podcast.Owner && (
+        {user && user.id === podcast.owner && (
           <CardHeader>
             <h5>
-              {podcast.Status !== 'p' && (
+              {podcast.status !== 'p' && (
                 <>
                   <em className="pe-3">*Draft*</em>
-                  <ButtonLink color="accent" outline href={`/content/podcast/edit/${podcast.Id}`}>
+                  <ButtonLink color="accent" outline href={`/content/podcast/edit/${podcast.id}`}>
                     Edit
                   </ButtonLink>
                 </>
               )}
-              <ButtonLink color="primary" outline href={`/content/podcast/update/${podcast.Id}`}>
+              <ButtonLink color="primary" outline href={`/content/podcast/update/${podcast.id}`}>
                 Fetch Episodes
               </ButtonLink>
             </h5>

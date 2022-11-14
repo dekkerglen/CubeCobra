@@ -28,7 +28,7 @@ const Feed = ({ items, lastKey }) => {
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        user: user.Id,
+        user: user.id,
       }),
     });
 
@@ -39,7 +39,7 @@ const Feed = ({ items, lastKey }) => {
         setCurrentLastKey(json.lastKey);
       }
     }
-  }, [currentLastKey, items, user.Id]);
+  }, [currentLastKey, items, user.id]);
 
   const loader = (
     <div className="centered py-3 my-4">
@@ -56,7 +56,7 @@ const Feed = ({ items, lastKey }) => {
       endMessage="You've reached the end of the feed!"
     >
       {feedItems.map((item) => (
-        <BlogPost key={item.Id} post={item} />
+        <BlogPost key={item.id} post={item} />
       ))}
     </InfiniteScroll>
   );

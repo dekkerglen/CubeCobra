@@ -63,8 +63,8 @@ const MainLayout = ({ children, loginCallback }) => {
                 Cube
               </DropdownToggle>
               <DropdownMenu end>
-                <DropdownItem href="/explore">Explore Cubes</DropdownItem>
-                <DropdownItem href="/search">Search Cubes</DropdownItem>
+                <DropdownItem href="/explore">Explore cubes</DropdownItem>
+                <DropdownItem href="/search">Search cubes</DropdownItem>
                 <DropdownItem href="/random">Random Cube</DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
@@ -73,8 +73,8 @@ const MainLayout = ({ children, loginCallback }) => {
                 Cards
               </DropdownToggle>
               <DropdownMenu end>
-                <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
-                <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
+                <DropdownItem href="/tool/topcards">Top cards</DropdownItem>
+                <DropdownItem href="/tool/searchcards">Search cards</DropdownItem>
                 <DropdownItem href="/packages/browse">Packages</DropdownItem>
                 <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
                 <DropdownItem href="/filters">Filter Syntax</DropdownItem>
@@ -106,8 +106,8 @@ const MainLayout = ({ children, loginCallback }) => {
                     </DropdownToggle>
                     <DropdownMenu end>
                       {user.cubes.map((item) => (
-                        <DropdownItem key={`dropdown_cube_${item.Name}`} href={`/cube/overview/${item.Id}`}>
-                          {item.Name}
+                        <DropdownItem key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item.id}`}>
+                          {item.name}
                         </DropdownItem>
                       ))}
                       <DropdownItem divider />
@@ -117,14 +117,14 @@ const MainLayout = ({ children, loginCallback }) => {
                 )}
                 <UncontrolledDropdown nav inNavbar>
                   <DropdownToggle nav caret>
-                    {user.Username}
+                    {user.username}
                   </DropdownToggle>
                   <DropdownMenu end>
-                    <DropdownItem href={`/user/view/${user.Id}`}>Your Profile</DropdownItem>
-                    {user.Roles && user.Roles.includes('Admin') && (
+                    <DropdownItem href={`/user/view/${user.id}`}>Your Profile</DropdownItem>
+                    {user.roles && user.roles.includes('Admin') && (
                       <DropdownItem href="/admin/dashboard">Admin Page</DropdownItem>
                     )}
-                    {user.Roles && user.Roles.includes('ContentCreator') && (
+                    {user.roles && user.roles.includes('ContentCreator') && (
                       <DropdownItem href="/content/creators">Content Creator Dashboard</DropdownItem>
                     )}
                     <CreateCubeModalLink>Create A New Cube</CreateCubeModalLink>

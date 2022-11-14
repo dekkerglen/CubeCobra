@@ -9,7 +9,6 @@ import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
 const CreatorArticles = ({ articles, lastKey }) => {
-  console.log(articles, lastKey);
   const [items, setItems] = useState(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 

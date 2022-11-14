@@ -29,7 +29,7 @@ import MtgImage from 'components/MtgImage';
 
 const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   const [state, setState] = useState(JSON.parse(JSON.stringify(cube)));
-  const [imagename, setImagename] = useState(cube.ImageName);
+  const [imagename, setImagename] = useState(cube.imageName);
   const [imageDict, setImageDict] = useState({});
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
       const image = event.target.value;
       setImagename(image);
       if (imageDict[image.toLowerCase()]) {
-        setState({ ...state, ImageName: image });
+        setState({ ...state, imageName: image });
       }
     },
     [imageDict, setState, state],
@@ -66,8 +66,8 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
       const json = await response.json();
       if (response.ok) {
         onCubeUpdate(state);
-        if (cube.ShortId !== state.ShortId) {
-          window.location.href = `/cube/overview/${encodeURIComponent(state.ShortId || state.Id)}`;
+        if (cube.shortId !== state.shortId) {
+          window.location.href = `/cube/overview/${encodeURIComponent(state.shortId || state.id)}`;
         }
       } else if (json.message) {
         onError(json.message);
@@ -85,16 +85,16 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
     <Modal size="lg" isOpen={isOpen} toggle={toggle}>
       <ModalHeader toggle={toggle}>Edit Overview</ModalHeader>
 
-      <form method="POST" action={`/cube/editoverview/${state.Id}`} autoComplete="off">
+      <form method="POST" action={`/cube/editoverview/${state.id}`} autoComplete="off">
         <ModalBody>
-          <h6>Cube Name</h6>
+          <h6>Cube name</h6>
           <input
             className="form-control"
             name="name"
             type="text"
-            value={state.Name}
+            value={state.name}
             required
-            onChange={(event) => setState({ ...state, Name: event.target.value })}
+            onChange={(event) => setState({ ...state, name: event.target.value })}
           />
           <br />
           <h6>Category</h6>
@@ -110,8 +110,8 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
                           type="radio"
                           name="categoryOverride"
                           value={label}
-                          checked={state.CategoryOverride === label}
-                          onChange={(event) => setState({ ...state, CategoryOverride: event.target.value })}
+                          checked={state.categoryOverride === label}
+                          onChange={(event) => setState({ ...state, categoryOverride: event.target.value })}
                         />{' '}
                         {label || <i>[None]</i>}
                       </Label>
@@ -140,14 +140,14 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
                     id={`categoryPrefix${label}`}
                     value={label}
                     type="checkbox"
-                    checked={(state.CategoryPrefixes || []).includes(label)}
+                    checked={(state.categoryPrefixes || []).includes(label)}
                     onChange={(event) => {
                       if (event.target.checked) {
-                        setState({ ...state, CategoryPrefixes: [...(state.CategoryPrefixes || []), label] });
+                        setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
                       } else {
                         setState({
                           ...state,
-                          CategoryPrefixes: (state.CategoryPrefixes || []).filter((x) => x !== label),
+                          categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
                         });
                       }
                     }}
@@ -159,12 +159,12 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
               ))}
             </Col>
           </Row>
-          <h6>Image</h6>
+          <h6>image</h6>
           <Row>
             <Col xs="12" sm="6" md="6" lg="6">
               <Card>
                 <CardHeader>Preview</CardHeader>
-                <MtgImage cardname={state.ImageName} showArtist />
+                <MtgImage cardname={state.imageName} showArtist />
               </Card>
             </Col>
           </Row>
@@ -177,16 +177,16 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             name="remove"
             value={imagename}
             onChange={changeImage}
-            placeholder="Cardname for Image"
+            placeholder="Cardname for image"
             autoComplete="off"
             data-lpignore
           />
           <br />
-          <h6>Description</h6>
+          <h6>description</h6>
           <TextEntry
             name="blog"
-            value={state.Description}
-            onChange={(event) => setState({ ...state, Description: event.target.value })}
+            value={state.description}
+            onChange={(event) => setState({ ...state, description: event.target.value })}
             maxLength={100000}
           />
           <FormText>
@@ -197,30 +197,30 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             .
           </FormText>
           <br />
-          <h6>Tags</h6>
+          <h6>tags</h6>
           <TagInput
-            tags={state.Tags.map((tag) => ({ text: tag, id: tag }))}
-            addTag={(tag) => setState({ ...state, Tags: [...state.Tags, tag.text] })}
+            tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
+            addTag={(tag) => setState({ ...state, tags: [...state.tags, tag.text] })}
             deleteTag={(index) => {
-              const newTags = [...state.Tags];
+              const newTags = [...state.tags];
               newTags.splice(index, 1);
-              setState({ ...state, Tags: newTags });
+              setState({ ...state, tags: newTags });
             }}
             reorderTag={(tag, currInex, newIndex) => {
-              const newTags = [...state.Tags];
+              const newTags = [...state.tags];
               newTags.splice(newIndex, 0, newTags.splice(currInex, 1)[0]);
-              setState({ ...state, Tags: newTags });
+              setState({ ...state, tags: newTags });
             }}
           />
           <br />
-          <h6>Short ID</h6>
+          <h6>short ID</h6>
           <input
             className="form-control"
-            id="ShortId"
-            name="ShortId"
+            id="shortId"
+            name="shortId"
             type="text"
-            value={state.ShortId}
-            onChange={(event) => setState({ ...state, ShortId: event.target.value })}
+            value={state.shortId}
+            onChange={(event) => setState({ ...state, shortId: event.target.value })}
             required
             placeholder="Give this cube an easy to remember URL."
           />

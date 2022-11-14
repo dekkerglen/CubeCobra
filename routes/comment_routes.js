@@ -22,35 +22,35 @@ router.use(csrfProtection);
 const getReplyContext = {
   comment: async (id) => {
     const comment = await Comment.getById(id);
-    return [comment.Owner, 'comment'];
+    return [comment.owner, 'comment'];
   },
   blog: async (id) => {
     const blog = await Blog.getById(id);
-    return [blog.Owner, 'blogpost'];
+    return [blog.owner, 'blogpost'];
   },
   deck: async (id) => {
     const deck = await Draft.getById(id);
-    return [deck.Owner, 'deck'];
+    return [deck.owner, 'deck'];
   },
   article: async (id) => {
     const article = await Content.getById(id);
-    return [article.Owner, 'article'];
+    return [article.owner, 'article'];
   },
   podcast: async (id) => {
     const podcast = await Content.getById(id);
-    return [podcast.Owner, 'podcast'];
+    return [podcast.owner, 'podcast'];
   },
   video: async (id) => {
     const video = await Content.getById(id);
-    return [video.Owner, 'video'];
+    return [video.owner, 'video'];
   },
   episode: async (id) => {
     const episode = await Content.getById(id);
-    return [episode.Owner, 'podcast episode'];
+    return [episode.owner, 'podcast episode'];
   },
   package: async (id) => {
     const pack = await Package.getById(id);
-    return [pack.Owner, 'card package'];
+    return [pack.owner, 'card package'];
   },
   default: async () => null, // nobody gets a notification for this
 };
@@ -84,11 +84,11 @@ router.post(
     }
 
     const comment = {
-      Owner: user.Id,
-      Body: body.substring(0, 5000),
-      Date: Date.now() - 1000,
-      Parent: parent.substring(0, 500),
-      Type: type,
+      owner: user.id,
+      body: body.substring(0, 5000),
+      date: Date.now() - 1000,
+      parent: parent.substring(0, 500),
+      type,
     };
 
     const id = await Comment.put(comment);
@@ -101,8 +101,8 @@ router.post(
       await util.addNotification(
         owner,
         user,
-        `/comment/${comment.Id}`,
-        `${user.Username} left a comment in response to your ${type}.`,
+        `/comment/${comment.id}`,
+        `${user.username} left a comment in response to your ${type}.`,
       );
     }
 
@@ -113,19 +113,19 @@ router.post(
           query.items[0],
           user,
           `/comment/${comment._id}`,
-          `${user.Username} mentioned you in their comment`,
+          `${user.username} mentioned you in their comment`,
         );
       }
     }
 
-    const ImageData = util.getImageData(user.ImageName);
+    const ImageData = util.getImageData(user.imageName);
 
     return res.status(200).send({
       success: 'true',
       comment: {
         ImageData,
-        User: req.user,
-        Id: id,
+        user: req.user,
+        id,
         ...comment,
       },
     });
@@ -140,17 +140,17 @@ router.post(
 
     const document = await Comment.getById(id);
 
-    if (document.Owner !== req.user.Id) {
+    if (document.owner !== req.user.id) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
       });
     }
 
-    document.Body = content.substring(0, 5000);
+    document.body = content.substring(0, 5000);
 
     if (remove) {
-      document.Owner = null;
+      document.owner = null;
     }
 
     await Comment.update(document);
@@ -167,11 +167,11 @@ router.post(
     const { commentid, info, reason } = req.body;
 
     const report = {
-      Subject: commentid,
-      Body: `${reason}\n\n${info}`,
-      User: req.user ? req.user.Id : null,
-      Date: Date.now().valueOf(),
-      Type: Notice.TYPE.COMMENT_REPORT,
+      subject: commentid,
+      body: `${reason}\n\n${info}`,
+      user: req.user ? req.user.id : null,
+      date: Date.now().valueOf(),
+      type: Notice.TYPE.COMMENT_REPORT,
     };
 
     await Notice.put(report);

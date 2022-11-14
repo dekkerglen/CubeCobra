@@ -14,33 +14,33 @@ const updatePodcast = async (podcast) => {
   const existingGuids = episodes.map((episode) => episode.guid);
 
   let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
-  let items = result.items.filter((item) => existingGuids.includes(item.PodcastGuid));
+  let items = result.items.filter((item) => existingGuids.includes(item.podcastGuid));
 
   while (result.lastKey) {
     // eslint-disable-next-line no-await-in-loop
     result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
-    items = [...episodes, ...result.items.filter((item) => existingGuids.includes(item.PodcastGuid))];
+    items = [...episodes, ...result.items.filter((item) => existingGuids.includes(item.podcastGuid))];
   }
 
-  const guids = items.map((episode) => episode.PodcastGuid);
+  const guids = items.map((episode) => episode.podcastGuid);
 
-  const filtered = episodes.filter((episode) => !guids.includes(episode.PodcastGuid));
+  const filtered = episodes.filter((episode) => !guids.includes(episode.podcastGuid));
 
   await Promise.all(
     filtered.map((episode) => {
       const podcastEpisode = {
-        Title: episode.title,
-        Body: removeSpan(episode.description),
-        Url: episode.Url,
-        Date: new Date(episode.date).valueOf(),
-        Owner: podcast.Owner,
-        Image: podcast.Image,
-        Username: podcast.Username,
-        PodcastId: podcast.Id,
-        PodcastName: podcast.Title,
-        PodcastGuid: episode.PodcastGuid,
-        PodcastLink: episode.Url,
-        Short: htmlToText
+        title: episode.title,
+        body: removeSpan(episode.description),
+        url: episode.url,
+        date: new Date(episode.date).valueOf(),
+        owner: podcast.owner,
+        image: podcast.image,
+        username: podcast.username,
+        podcast: podcast.id,
+        podcastName: podcast.title,
+        podcastGuid: episode.podcastGuid,
+        podcastLink: episode.url,
+        short: htmlToText
           .fromString(removeSpan(episode.description), {
             wordwrap: 130,
           })
@@ -51,7 +51,7 @@ const updatePodcast = async (podcast) => {
     }),
   );
 
-  podcast.Date = new Date().valueOf();
+  podcast.date = new Date().valueOf();
   await Content.update(podcast);
 };
 

@@ -21,9 +21,9 @@ const CONVERT_STATUS = {
 
 const EditPodcastPage = ({ loginCallback, podcast }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
-  const [rss, setRss] = useState(podcast.Url);
+  const [rss, setRss] = useState(podcast.url);
 
-  const hasChanges = podcast.Url !== rss;
+  const hasChanges = podcast.url !== rss;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -42,7 +42,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast.Id} />
+                <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Update
@@ -51,7 +51,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast.Id} />
+                <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" outline color="accent" block>
                   Submit for Review
@@ -75,10 +75,10 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={CONVERT_STATUS[podcast.Status]} />
+                    <Input disabled value={CONVERT_STATUS[podcast.status]} />
                   </Col>
                 </Row>
               </FormGroup>

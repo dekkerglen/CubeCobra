@@ -10,12 +10,12 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
-const MongoDBStore = require('connect-mongodb-session')(session);
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
+const DynamoDBStore = require('dynamodb-store');
 const { winston } = require('./serverjs/cloudwatch');
 const updatedb = require('./serverjs/updatecards');
 const carddb = require('./serverjs/cards');
@@ -41,18 +41,6 @@ db.on('error', (err) => {
 
 // Init app
 const app = express();
-
-const store = new MongoDBStore(
-  {
-    uri: process.env.MONGODB_URL,
-    collection: 'session_data',
-  },
-  (err) => {
-    if (err) {
-      winston.error('Store failed to connect to mongoDB.', { error: err });
-    }
-  },
-);
 
 // gzip middleware
 app.use(compression());
@@ -109,7 +97,7 @@ app.use((req, res, next) => {
 // upload file middleware
 app.use(fileUpload());
 
-// Body parser middleware
+// body parser middleware
 app.use(
   bodyParser.urlencoded({
     limit: '200mb',
@@ -132,18 +120,34 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'dist')));
 app.use('/jquery-ui', express.static(`${__dirname}/node_modules/jquery-ui-dist/`));
 
-const sessionOptions = {
-  secret: process.env.SESSION,
-  store,
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
-  },
-};
-
 // Express session middleware
-app.use(session(sessionOptions));
+app.use(
+  session({
+    secret: process.env.SESSION,
+    store: new DynamoDBStore({
+      table: {
+        name: `${process.env.DYNAMO_PREFIX}_SESSIONS`,
+        hashKey: `id`,
+        hashPrefix: ``,
+        readCapacityUnits: 10,
+        writeCapacityUnits: 10,
+      },
+      dynamoConfig: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION,
+      },
+      keepExpired: false,
+      touchInterval: 30000,
+      ttl: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+    }),
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+    },
+  }),
+);
 
 // Express messages middleware
 app.use(require('connect-flash')());
@@ -222,7 +226,7 @@ app.use((err, req, res, next) => {
 // scryfall updates this data at 9, so his will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
   winston.info('String midnight cardbase update...');
-  updatedb.updateCardbase();
+  await updatedb.updateCardbase();
 });
 
 // Start server after carddb is initialized.

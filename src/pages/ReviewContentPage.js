@@ -20,16 +20,16 @@ const ReviewContentPage = ({ loginCallback, content }) => {
           <CardBody className="border-top">
             <Row>
               <Col xs="12" sm="4">
-                <p>Type: {document.Type}</p>
-                <a href={`/content/${document.Type}/${document.Id}`}>{document.Title}</a>
+                <p>type: {document.type}</p>
+                <a href={`/content/${document.type}/${document.id}`}>{document.title}</a>
               </Col>
               <Col xs="12" sm="4">
-                <ButtonLink color="accent" outline block href={`/admin/publish/${document.Id}`}>
+                <ButtonLink color="accent" outline block href={`/admin/publish/${document.id}`}>
                   Publish
                 </ButtonLink>
               </Col>
               <Col xs="12" sm="4">
-                <ButtonLink color="unsafe" outline block href={`/admin/removereview/${document.Id}`}>
+                <ButtonLink color="unsafe" outline block href={`/admin/removereview/${document.id}`}>
                   Remove from Reviews
                 </ButtonLink>
               </Col>

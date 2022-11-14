@@ -15,7 +15,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
       <ModalHeader id="pasteBulkModalTitle" toggle={toggle}>
         Bulk Upload - Paste Text
       </ModalHeader>
-      <CSRFForm method="POST" action={`/cube/bulkupload/${cube.Id}`} encType="multipart/form-data">
+      <CSRFForm method="POST" action={`/cube/bulkupload/${cube.id}`} encType="multipart/form-data">
         <ModalBody>
           <p>
             Acceptable formats are:

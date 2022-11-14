@@ -4,7 +4,7 @@ import { csrfFetch } from 'utils/CSRF';
 
 import { Spinner } from 'reactstrap';
 
-const Username = ({ userId, defaultName, nolink }) => {
+const username = ({ userId, defaultName, nolink }) => {
   const [name, setName] = useState(defaultName);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const Username = ({ userId, defaultName, nolink }) => {
     };
 
     getData().then((result) => {
-      setName(result.user.Username);
+      setName(result.user.username);
     });
   }, [userId]);
 
@@ -38,15 +38,15 @@ const Username = ({ userId, defaultName, nolink }) => {
   );
 };
 
-Username.propTypes = {
+username.propTypes = {
   userId: PropTypes.string.isRequired,
   defaultName: PropTypes.string,
   nolink: PropTypes.bool,
 };
 
-Username.defaultProps = {
+username.defaultProps = {
   defaultName: null,
   nolink: false,
 };
 
-export default Username;
+export default username;

@@ -260,8 +260,8 @@ const run = async () => {
   const cubes = [];
   let lastKey;
   do {
-    const scan = await Cube.scan(lastKey, ['Id']);
-    cubes.push(...scan.items.map((item) => item.Id));
+    const scan = await Cube.scan(lastKey, ['id']);
+    cubes.push(...scan.items.map((item) => item.id));
     lastKey = scan.lastKey;
   } while (lastKey);
 };

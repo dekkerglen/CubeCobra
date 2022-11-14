@@ -2,9 +2,9 @@ const uuid = require('uuid/v4');
 const createClient = require('../util');
 
 const FIELDS = {
-  ID: 'Id',
-  OWNER: 'Owner',
-  DATE: 'Date',
+  ID: 'id',
+  OWNER: 'owner',
+  DATE: 'date',
 };
 
 const client = createClient({

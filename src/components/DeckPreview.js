@@ -40,16 +40,16 @@ const DeckPreview = ({ deck, nextURL }) => {
    */
   const [fullName, name] = useMemo(
     () =>
-      deck && deck.seats && deck.seats[0].name
-        ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
+      deck && deck.Seats && deck.Seats[0].name
+        ? [deck.Seats[0].name, truncateToLength(MAX_LENGTH, deck.Seats[0].name)]
         : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
     [deck],
   );
 
   const handleClick = useKeyHandlers(
     useCallback(() => {
-      window.location.href = `/cube/deck/${deck.Id}`;
-    }, [deck.Id]),
+      window.location.href = `/cube/deck/${deck.id}`;
+    }, [deck.id]),
   );
 
   const openDeleteModal = (event) => {
@@ -65,12 +65,12 @@ const DeckPreview = ({ deck, nextURL }) => {
     <Row className="deck-preview mx-0" {...handleClick}>
       <Col xs={canEdit ? 11 : 12} className="ps-0">
         <h6 className="mb-0 text-muted">
-          <a href={`/cube/deck/${deck.Id}`} title={fullName}>
+          <a href={`/cube/deck/${deck.id}`} title={fullName}>
             {name}
           </a>{' '}
           by{' '}
-          {deck.seats[0].userid ? (
-            <Username userId={deck.seats[0].userid} defaultName={deck.seats[0].username} />
+          {deck.Seats[0].userid ? (
+            <Username userId={deck.Seats[0].userid} defaultName={deck.Seats[0].username} />
           ) : (
             'Anonymous'
           )}{' '}
@@ -97,7 +97,7 @@ const DeckPreview = ({ deck, nextURL }) => {
             <DeckDeleteModal
               toggle={closeDeleteModal}
               isOpen={deleteModalOpen}
-              deckID={deck.Id}
+              deckID={deck.id}
               cubeID={deck.cube}
               nextURL={nextURL}
             />

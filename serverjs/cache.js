@@ -41,8 +41,8 @@ const getUserFromId = async (id) => {
   if (!entryExixts) {
     const user = await User.getById(id);
 
-    delete user.PasswordHash;
-    delete user.Email;
+    delete user.passwordHash;
+    delete user.email;
 
     const flattened = flattenObject(user);
     await hmset(`usercache:${id}`, flattened);

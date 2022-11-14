@@ -84,22 +84,22 @@ const EditCollapse = ({ isOpen }) => {
     loading,
   } = useContext(CubeContext);
 
-  const [postContent, setPostContent] = useLocalStorage(`${cube.Id}-blogpost`, DEFAULT_BLOG_TITLE);
-  const [postTitle, setPostTitle] = useLocalStorage(`${cube.Id}-blogtitle`, '');
-  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.Id}-useMaybeboard`, 'Mainboard');
-  const [useBlog, setUseBlog] = useLocalStorage(`${cube.Id}-useBlog`, true);
-  const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.Id}-specifyEdition`, false);
+  const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
+  const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
+  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'Mainboard');
+  const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
+  const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
   const handleAdd = useCallback(
     async (event, match) => {
       event.preventDefault();
       try {
-        const card = await getCard(cube.DefaultPrinting, match, setAlerts);
+        const card = await getCard(cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
         addCard(
-          { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.DefaultStatus },
+          { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
           showMaybeboard ? activeBoard : 'Mainboard',
         );
         setAddValue('');
@@ -109,7 +109,7 @@ const EditCollapse = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [cube.DefaultPrinting, cube.DefaultStatus, setAlerts, addCard, showMaybeboard, activeBoard],
+    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, showMaybeboard, activeBoard],
   );
 
   const handleRemoveReplace = useCallback(
@@ -137,13 +137,13 @@ const EditCollapse = ({ isOpen }) => {
         }
 
         if (replace) {
-          const card = await getCard(cube.DefaultPrinting, addValue, setAlerts);
+          const card = await getCard(cube.defaultPrinting, addValue, setAlerts);
           if (!card) {
             return;
           }
           swapCard(
             removeIndex,
-            { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.DefaultStatus },
+            { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
             showMaybeboard ? activeBoard : 'Mainboard',
           );
         } else {
@@ -166,8 +166,8 @@ const EditCollapse = ({ isOpen }) => {
       changedCards,
       showMaybeboard,
       activeBoard,
-      cube.DefaultPrinting,
-      cube.DefaultStatus,
+      cube.defaultPrinting,
+      cube.defaultStatus,
       swapCard,
       removeCard,
     ],
@@ -222,8 +222,8 @@ const EditCollapse = ({ isOpen }) => {
         <Col xs={12} md={4}>
           <InputGroup className="flex-nowrap mb-1">
             <AutocompleteInput
-              cubeId={cube.Id}
-              treeUrl={`/cube/api/cubecardnames/${cube.Id}`}
+              cubeId={cube.id}
+              treeUrl={`/cube/api/cubecardnames/${cube.id}`}
               treePath="cardnames"
               type="text"
               innerRef={removeRef}
@@ -299,11 +299,11 @@ const EditCollapse = ({ isOpen }) => {
             <Col xs="12" md="6">
               <h6>Blog Post</h6>
               <FormGroup>
-                <Label className="visually-hidden">Blog Title</Label>
+                <Label className="visually-hidden">Blog title</Label>
                 <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
               </FormGroup>
               <FormGroup>
-                <Label className="visually-hidden">Blog Body</Label>
+                <Label className="visually-hidden">Blog body</Label>
                 <TextEntry
                   name="blog"
                   value={postContent}

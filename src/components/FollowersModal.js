@@ -12,7 +12,7 @@ const FollowersModal = ({ followers, isOpen, toggle }) => (
     <ModalBody>
       <Row className="justify-content-center">
         {followers.map((follower) => (
-          <Col key={follower.Id} xs={6} sm={4} lg={3}>
+          <Col key={follower.id} xs={6} sm={4} lg={3}>
             <UserPreview user={follower} />
           </Col>
         ))}

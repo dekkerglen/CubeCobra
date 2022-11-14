@@ -29,7 +29,7 @@ const CreateCubeModal = ({ isOpen, toggle }) => {
           <FormGroup>
             <Row>
               <Col sm="3">
-                <Label>Cube Name:</Label>
+                <Label>Cube name:</Label>
               </Col>
               <Col sm="9">
                 <Input maxLength="1000" name="name" type="text" />

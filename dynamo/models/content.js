@@ -9,25 +9,25 @@ const removeSpan = (text) =>
   });
 
 const FIELDS = {
-  ID: 'Id',
-  DATE: 'Date',
-  STATUS: 'Status',
-  OWNER: 'Owner',
-  TYPE: 'Type',
-  TYPE_STATUS_COMP: 'TypeStatusComp',
-  TYPE_OWNER_COMP: 'TypeOwnerComp',
+  ID: 'id',
+  DATE: 'date',
+  STATUS: 'status',
+  OWNER: 'owner',
+  TYPE: 'type',
+  TYPE_STATUS_COMP: 'typeStatusComp',
+  TYPE_OWNER_COMP: 'typeOwnerComp',
   // optional FIELDS
-  TITLE: 'Title',
-  BODY: 'Body',
-  SHORT: 'Short',
-  URL: 'Url',
-  IMAGE_LINK: 'Image',
-  IMAGE_NAME: 'ImageName',
-  USERNAME: 'Username',
-  PODCAST_NAME: 'PodcastName',
-  PODCAST_ID: 'PodcastId',
-  PODCAST_GUID: 'PodcastGuid',
-  PODCAST_LINK: 'PodcastLink',
+  TITLE: 'title',
+  BODY: 'body',
+  SHORT: 'short',
+  URL: 'url',
+  IMAGE_LINK: 'image',
+  IMAGE_NAME: 'imageName',
+  USERNAME: 'username',
+  PODCAST_NAME: 'podcastName',
+  PODCAST_ID: 'podcast',
+  PODCAST_GUID: 'podcastGuid',
+  PODCAST_LINK: 'podcastLink',
 };
 
 const CONVERT_STATUS = {
@@ -98,7 +98,7 @@ const addBody = async (content) => {
     const res = await s3
       .getObject({
         Bucket: process.env.DATA_BUCKET,
-        Key: `content/${content.Id}.json`,
+        Key: `content/${content.id}.json`,
       })
       .promise();
 
@@ -122,12 +122,12 @@ const addBody = async (content) => {
 };
 
 const putBody = async (content) => {
-  if (content.Body && content.Body.length > 0) {
+  if (content.body && content.body.length > 0) {
     await s3
       .putObject({
         Bucket: process.env.DATA_BUCKET,
-        Key: `content/${content.Id}.json`,
-        Body: JSON.stringify(content.Body),
+        Key: `content/${content.id}.json`,
+        Body: JSON.stringify(content.body),
       })
       .promise();
   }
@@ -193,22 +193,22 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
-    document[FIELDS.TYPE_STATUS_COMP] = `${document.Type}:${document.Status}`;
-    document[FIELDS.TYPE_OWNER_COMP] = `${document.Type}:${document.Owner}`;
+    document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
+    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
 
     await putBody(document);
-    delete document.Body;
+    delete document.body;
     return client.put(document);
   },
   put: async (document, type) => {
     await putBody(document);
 
-    delete document.Body;
+    delete document.body;
 
     client.put({
       [FIELDS.TYPE]: type,
-      [FIELDS.TYPE_OWNER_COMP]: `${type}:${document.Owner}`,
-      [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.Status}`,
+      [FIELDS.TYPE_OWNER_COMP]: `${type}:${document.owner}`,
+      [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.status}`,
       ...document,
     });
   },
@@ -216,7 +216,7 @@ module.exports = {
     await Promise.all(
       documents.map(async (document) => {
         await putBody(document);
-        delete document.Body;
+        delete document.body;
       }),
     );
     client.batchPut(documents);

@@ -22,16 +22,16 @@ router.get('/explore', async (req, res) => {
   const recents = recentsQuery.items;
 
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
-  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
+  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
-  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.CubeId));
+  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
 
   return render(req, res, 'ExplorePage', {
-    recents: recents.sort((a, b) => b.Date - a.Date).slice(0, 12),
+    recents: recents.sort((a, b) => b.date - a.date).slice(0, 12),
     featured,
     drafted: [],
-    popular: popular.sort((a, b) => b.UsersFollowing.length - a.UsersFollowing.length).slice(0, 12),
+    popular: popular.sort((a, b) => b.following.length - a.following.length).slice(0, 12),
   });
 });
 
@@ -42,24 +42,24 @@ router.get('/random', async (req, res) => {
 
   const query = await Cube.getByVisibilityBefore(Cube.VISIBILITY.PUBLIC, random);
 
-  res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].Id)}`);
+  res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].id)}`);
 });
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const posts = await Feed.getByTo(req.user.Id);
+    const posts = await Feed.getByTo(req.user.id);
 
     const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
-    const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.CubeId));
+    const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
     const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
-    const decks = await Draft.getByCubeOwner(req.user.Id);
+    const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'DashboardPage', {
       posts: posts.items,
       lastKey: posts.lastKey,
       decks: decks.items,
-      content: content.items.filter((item) => item.Type !== 'p'),
+      content: content.items.filter((item) => item.type !== 'p'),
       featured,
     });
   } catch (err) {
@@ -81,7 +81,7 @@ router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
 
 router.get('/dashboard/decks', ensureAuth, async (req, res) => {
   try {
-    const decks = await Draft.getByCubeOwner(req.user.Id);
+    const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'RecentDraftsPage', {
       decks: decks.items,
@@ -238,7 +238,7 @@ router.get('/privacy', (req, res) => {
       },
       {
         label: 'Types of Data Collected',
-        text: 'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: Email address, Cookies and Usage Data',
+        text: 'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: email address, Cookies and Usage Data',
       },
       {
         label: '',
@@ -615,7 +615,7 @@ router.get('/ourstory', (req, res) => {
     title: 'Our Story',
     content: [
       {
-        label: 'About the Creator',
+        label: 'about the Creator',
         text: "My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me. I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features. With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, as I believe that is the best route for the quality and longevity of the project.",
       },
       {
@@ -660,7 +660,7 @@ router.get('/faq', (req, res) => {
       },
       {
         label: 'How can I put my lands into my guild sections?',
-        text: 'From your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
+        text: 'from your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
       },
     ],
   });

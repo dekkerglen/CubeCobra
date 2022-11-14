@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const path = require('path'); // eslint-disable-line import/no-extraneous-dependencies
 const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
@@ -137,8 +138,8 @@ async function downloadDefaultCards(basePath = 'private', defaultSourcePath = nu
     }
   }
 
-  if (!defaultUrl) throw new Error('URL for Default Cards not found in /bulk-data response');
-  if (!allUrl) throw new Error('URL for All Cards not found in /bulk-data response');
+  if (!defaultUrl) throw new Error('URL for Default cards not found in /bulk-data response');
+  if (!allUrl) throw new Error('URL for All cards not found in /bulk-data response');
 
   return Promise.all([
     downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
@@ -701,7 +702,7 @@ function convertCard(card, isExtra) {
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
   newcard._id = convertId(card, isExtra);
-  // reversible cards have a separate Oracle ID on each face
+  // reversible cards have a separate oracle ID on each face
   newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
   newcard.cmc = convertCmc(card, isExtra, faceAttributeSource);
   newcard.legalities = convertLegalities(card, isExtra);
@@ -797,7 +798,7 @@ function writeCatalog(basePath = 'private') {
   pendingWrites.push(writeFile(path.join(basePath, 'cardimages.json'), JSON.stringify(catalog.cardimages)));
   const allWritesPromise = Promise.all(pendingWrites);
   allWritesPromise.then(() => {
-    winston.info('All JSON files saved.');
+    console.info('All JSON files saved.');
   });
   return allWritesPromise;
 }
@@ -810,8 +811,8 @@ function saveEnglishCard(card) {
 }
 
 async function saveAllCards(ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) {
-  winston.info('Fetching Elo...');
-  // create Elo dict
+  console.info('Fetching elo...');
+  // create elo dict
   for (const rating of ratings) {
     catalog.elodict[rating.name] = rating.elo;
     if (rating.embedding && rating.embedding.length === 64) {
@@ -832,7 +833,7 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
     catalog.historyDict[history.oracleId] = history.current;
   }
 
-  winston.info('Processing cards...');
+  console.info('Processing cards...');
   await new Promise((resolve) =>
     fs
       .createReadStream(defaultPath || path.resolve(basePath, 'cards.json'))
@@ -841,7 +842,7 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
       .on('close', resolve),
   );
 
-  winston.info('Creating language mappings...');
+  console.info('Creating language mappings...');
   await new Promise((resolve) =>
     fs
       .createReadStream(allPath || path.resolve(basePath, 'all-cards.json'))
@@ -850,7 +851,7 @@ async function saveAllCards(ratings = [], histories = [], basePath = 'private', 
       .on('close', resolve),
   );
 
-  winston.info('Saving cardbase files...');
+  console.info('Saving cardbase files...');
   await writeCatalog(basePath);
 }
 
@@ -861,7 +862,7 @@ const downloadFromScryfall = async (
   defaultPath = null,
   allPath = null,
 ) => {
-  winston.info('Downloading files from scryfall...');
+  console.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
     await module.exports.downloadDefaultCards(basePath, defaultPath, allPath);
@@ -872,7 +873,7 @@ const downloadFromScryfall = async (
     return;
   }
 
-  winston.info('Creating objects...');
+  console.info('Creating objects...');
   try {
     await saveAllCards(ratings, histories, basePath, defaultPath, allPath);
   } catch (error) {
@@ -881,11 +882,11 @@ const downloadFromScryfall = async (
     winston.error('Cardbase update may not have fully completed');
   }
 
-  winston.info('Finished cardbase update...');
+  console.info('Finished cardbase update...');
 };
 
 const downloadFromS3 = async (basePath = 'private') => {
-  winston.info('Downloading files from S3...');
+  console.info('Downloading files from S3...');
 
   const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -904,14 +905,14 @@ const downloadFromS3 = async (basePath = 'private') => {
     }),
   );
 
-  winston.info('Finished downloading files from S3...');
+  console.info('Finished downloading files from S3...');
 };
 
 async function updateCardbase(basePath = 'private', defaultPath = null, allPath = null) {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
-  winston.info('Updating cardbase, this might take a little while...');
+  console.info('Updating cardbase, this might take a little while...');
 
   await downloadFromS3(basePath, defaultPath, allPath);
 }

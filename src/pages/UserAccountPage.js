@@ -49,7 +49,7 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
         <ModalBody>
           <Input type="select" id="featuredCube" name="cubeId">
             {cubes.map((cube) => (
-              <option value={cube.Id}>{cube.name}</option>
+              <option value={cube.id}>{cube.name}</option>
             ))}
           </Input>
         </ModalBody>
@@ -180,7 +180,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
             </NavItem>
             <NavItem>
               <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>
-                Update Email
+                Update email
               </NavLink>
             </NavItem>
             <NavItem>
@@ -203,12 +203,12 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                   <CSRFForm method="POST" action="/user/updateuserinfo">
                     <div className="mb-3">
                       <dl className="row">
-                        <dt className="col-sm-3">Username</dt>
+                        <dt className="col-sm-3">username</dt>
                         <dd className="col-sm-9">
-                          <Input name="username" defaultValue={user.Username} />
+                          <Input name="username" defaultValue={user.username} />
                         </dd>
-                        <dt className="col-sm-3">Email</dt>
-                        <dd className="col-sm-9">{user.Email}</dd>
+                        <dt className="col-sm-3">email</dt>
+                        <dd className="col-sm-9">{user.email}</dd>
                         <dt className="col-sm-3">Profile Pic</dt>
                         <dd className="col-sm-9">
                           <Row>
@@ -228,7 +228,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 value={imageValue}
                                 onChange={handleChangeImage}
                                 onSubmit={handleSubmitImage}
-                                placeholder="Cardname for Image"
+                                placeholder="Cardname for image"
                                 autoComplete="off"
                                 data-lpignore
                               />
@@ -236,7 +236,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                             </Col>
                           </Row>
                         </dd>
-                        <dt className="col-sm-3">About</dt>
+                        <dt className="col-sm-3">about</dt>
                         <dd className="col-sm-9">
                           <TextEntry maxLength={2500} onChange={handleChangeMarkdown} name="body" value={markdown} />
                         </dd>
@@ -292,10 +292,10 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                   <CSRFForm method="POST" action="/user/updateemail">
                     <FormGroup row>
                       <Label for="email" sm={4}>
-                        New Email:
+                        New email:
                       </Label>
                       <Col sm={8}>
-                        <Input id="email" name="email" type="email" defaultValue={user.Email} />
+                        <Input id="email" name="email" type="email" defaultValue={user.email} />
                       </Col>
                     </FormGroup>
                     <FormGroup row>
@@ -318,7 +318,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                 <CardBody>
                   <CSRFForm method="POST" action="/user/changedisplay">
                     <InputGroup className="mb-3">
-                      <InputGroupText>Theme</InputGroupText>
+                      <InputGroupText>theme</InputGroupText>
                       <Input type="select" id="theme" name="theme" defaultValue={user.theme}>
                         <option value="default">Default</option>
                         <option value="dark">Dark Mode</option>
@@ -331,7 +331,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         type="checkbox"
                         defaultChecked={user.hide_featured || false}
                       />
-                      <Label for="hideFeatured">Hide Featured Cubes</Label>
+                      <Label for="hideFeatured">Hide featured cubes</Label>
                     </FormGroup>
                     <Button block outline color="accent" type="submit">
                       Update
@@ -345,7 +345,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
               <Card>
                 {patron ? (
                   <CardBody>
-                    {user.Roles.includes('Patron') ? (
+                    {user.roles.includes('Patron') ? (
                       <p>
                         Your account is linked at the <b>{patron.level}</b> level.
                       </p>
@@ -354,7 +354,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     )}
                     <Card className="my-3">
                       <CardHeader>
-                        <h5>Featured Cube</h5>
+                        <h5>featured Cube</h5>
                       </CardHeader>
                       <CardBody>
                         {' '}
@@ -383,7 +383,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                               </RemoveFeaturedButton>
                             </Col>
                           </Row>
-                        ) : ['Coiling Oracle', 'Lotus Cobra'].includes(patron.level) ? (
+                        ) : ['Coiling oracle', 'Lotus Cobra'].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
                             <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
@@ -392,7 +392,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                           </>
                         ) : (
                           <p>
-                            Patrons subscribed at the <b>Coiling Oracle</b> level and above get to feature their cube as
+                            Patrons subscribed at the <b>Coiling oracle</b> level and above get to feature their cube as
                             a reward for their generous support. If you'd like to have your cube featured as well,{' '}
                             <a href="https://patreon.com/cubecobra" target="_blank" rel="noopener noreferrer">
                               upgrade your membership level.

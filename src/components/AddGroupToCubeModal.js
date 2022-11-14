@@ -22,7 +22,7 @@ import { getCardColorClass } from 'utils/Util';
 const AutocardItem = withAutocard(ListGroupItem);
 
 const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
-  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0].Id : null);
+  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState([]);

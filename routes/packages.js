@@ -58,7 +58,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
     });
   }
 
-  const poster = await User.getById(req.user.Id);
+  const poster = await User.getById(req.user.id);
   if (!poster) {
     return res.status(400).send({
       success: 'false',
@@ -67,20 +67,20 @@ router.post('/submit', ensureAuth, async (req, res) => {
   }
 
   const pack = {
-    Title: packageName,
-    Date: new Date().valueOf(),
-    Owner: poster.Id,
-    Status: 's',
-    Cards: cards,
-    Voters: [],
-    Keywords: packageName
+    title: packageName,
+    date: new Date().valueOf(),
+    owner: poster.id,
+    status: 's',
+    cards: cards,
+    voters: [],
+    keywords: packageName
       .toLowerCase()
       .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
       .split(' '),
   };
 
   for (const card of cards) {
-    pack.Keywords.push(
+    pack.keywords.push(
       ...carddb
         .cardFromId(card)
         .name_lower.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
@@ -89,7 +89,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
   }
 
   // make distinct
-  pack.Keywords = pack.Keywords.filter((value, index, self) => self.indexOf(value) === index);
+  pack.keywords = pack.keywords.filter((value, index, self) => self.indexOf(value) === index);
 
   await Package.put(pack);
 
@@ -101,7 +101,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
 router.get('/upvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.Voters = [...new Set([...pack.Voters, req.user.Id])];
+  pack.voters = [...new Set([...pack.voters, req.user.id])];
   await Package.put(pack);
 
   return res.status(200).send({
@@ -113,7 +113,7 @@ router.get('/upvote/:id', ensureAuth, async (req, res) => {
 router.get('/downvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.Voters = pack.Voters.filter((voter) => voter !== req.user.Id);
+  pack.voters = pack.voters.filter((voter) => voter !== req.user.id);
   await Package.put(pack);
 
   return res.status(200).send({
@@ -125,7 +125,7 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
 router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.Status = Package.STATUSES.APPROVED;
+  pack.status = Package.STATUSES.APPROVED;
   await Package.put(pack);
 
   return res.status(200).send({
@@ -136,7 +136,7 @@ router.get('/approve/:id', ensureRole('Admin'), async (req, res) => {
 router.get('/unapprove/:id', ensureRole('Admin'), async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-  pack.Status = Package.STATUSES.SUBMITTED;
+  pack.status = Package.STATUSES.SUBMITTED;
   await Package.put(pack);
 
   return res.status(200).send({

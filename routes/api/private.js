@@ -12,7 +12,7 @@ router.post('/userfromid', async (req, res) => {
   const { userId } = req.body;
   const user = await getUserFromId(userId);
 
-  user.ImageData = util.getImageData(user.ImageName);
+  user.ImageData = util.getImageData(user.imageName);
 
   return res.status(200).send({
     success: 'true',

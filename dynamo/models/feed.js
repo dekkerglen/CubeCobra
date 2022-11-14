@@ -2,9 +2,9 @@ const createClient = require('../util');
 const Blog = require('./blog');
 
 const FIELDS = {
-  ID: 'Id',
-  TO: 'To',
-  DATE: 'Date',
+  ID: 'id',
+  TO: 'to',
+  DATE: 'date',
   TYPE: 'Type',
 };
 
@@ -69,7 +69,7 @@ module.exports = {
     const itemsById = {};
     results.forEach(({ Items }) => {
       Items.forEach((item) => {
-        itemsById[item.Id] = item;
+        itemsById[item.id] = item;
       });
     });
 

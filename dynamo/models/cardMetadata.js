@@ -7,9 +7,10 @@ const cardutil = require('../../dist/utils/Card');
 const carddb = require('../../serverjs/cards');
 
 const FIELDS = {
-  ORACLE_ID: 'OracleId',
-  CUBED_WITH: 'CubedWith',
-  DRAFTED_WITH: 'DraftedWith',
+  ORACLE_ID: 'oracle',
+  CUBED_WITH: 'cubedWith',
+  DRAFTED_WITH: 'draftedWith',
+  EMBEDDING: 'embedding',
 };
 
 const client = createClient({
@@ -46,9 +47,9 @@ module.exports = {
     for (const item of items) {
       const document = documents.find((c) => c[FIELDS.ORACLE_ID] === item[FIELDS.ORACLE_ID]);
       if (document) {
-        item.CubedWith = document.CubedWith;
+        item.cubedWith = document.cubedWith;
       } else {
-        item.CubedWith = {
+        item.cubedWith = {
           synergistic: [],
           top: [],
           creatures: [],

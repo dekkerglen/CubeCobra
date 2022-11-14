@@ -13,7 +13,7 @@ const GridDraftCard = () => {
   const { cube } = useContext(CubeContext);
   return (
     <Card className="mb-3">
-      <CSRFForm method="POST" action={`/cube/startgriddraft/${cube.Id}`}>
+      <CSRFForm method="POST" action={`/cube/startgriddraft/${cube.id}`}>
         <CardHeader>
           <CardTitle tag="h5" className="mb-0">
             Grid Draft

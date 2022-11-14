@@ -13,23 +13,23 @@ const Video = ({ video }) => {
   return (
     <>
       <CardHeader>
-        <h1>{video.Title}</h1>
+        <h1>{video.title}</h1>
         <h6>
-          By <Username userId={video.Owner} defaultName={video.Username} />
+          By <Username userId={video.owner} defaultName={video.username} />
           {' | '}
-          <TimeAgo date={video.Date} />
+          <TimeAgo date={video.date} />
         </h6>
       </CardHeader>
       <CardBody>
         <div className="player-wrapper">
-          <ReactPlayer className="react-player" url={video.Url} width="100%" height="100%" />
+          <ReactPlayer className="react-player" url={video.url} width="100%" height="100%" />
         </div>
       </CardBody>
       <CardBody>
-        <Markdown markdown={video.Body} />
+        <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="video" parent={video.Id} collapse={false} />
+        <CommentsSection parentType="video" parent={video.id} collapse={false} />
       </div>
     </>
   );

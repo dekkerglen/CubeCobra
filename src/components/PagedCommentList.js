@@ -9,7 +9,7 @@ const CommentList = ({ comments, editComment }) => (
   <PagedList
     pageSize={10}
     rows={comments.map((comment, index) => (
-      <Comment key={`comment-${comment.Id}`} comment={comment} index={index} editComment={editComment} />
+      <Comment key={`comment-${comment.id}`} comment={comment} index={index} editComment={editComment} />
     ))}
   />
 );

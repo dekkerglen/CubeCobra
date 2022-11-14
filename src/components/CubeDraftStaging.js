@@ -34,7 +34,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
 
   const seats = [];
 
-  for (let i = 0; i < draft.seats.length; i++) {
+  for (let i = 0; i < draft.Seats.length; i++) {
     let seat = BOT_NAME;
 
     for (const [key, value] of Object.entries(order)) {
@@ -60,9 +60,9 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
         // TODO: if there is a collision, reassign a seat and make and API call to reflect the change
       });
 
-      await callApi('/multiplayer/joinlobby', { draft: draft.Id });
+      await callApi('/multiplayer/joinlobby', { draft: draft.id });
 
-      const res = await callApi('/multiplayer/getlobbyseats', { draft: draft.Id });
+      const res = await callApi('/multiplayer/getlobbyseats', { draft: draft.id });
       const json = await res.json();
 
       setOrder(json.seats);
@@ -90,7 +90,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
 
     // TODO: make API call to update seat orders
     await callApi('/multiplayer/updatelobbyseats', {
-      draftid: draft.Id,
+      draftid: draft.id,
       order: newSeats,
     });
 
@@ -132,11 +132,11 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
           <>
             <p>Use the following link to invite players to your draft:</p>
             <InputGroup>
-              <Input className="bg-white monospaced" value={`https://${domain}/d/${draft.Id}`} readOnly />
+              <Input className="bg-white monospaced" value={`https://${domain}/d/${draft.id}`} readOnly />
               <Button
                 className="btn-sm input-group-button"
-                onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft.Id}`)}
-                aria-label="Copy Short ID"
+                onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft.id}`)}
+                aria-label="Copy short ID"
               >
                 <ClippyIcon size={16} />
               </Button>
@@ -145,13 +145,13 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
             <i>Click and drag seats to reposition players and bots.</i>
             <Row className="g-0">
               <Col xs={3}>
-                {draft.seats.map((seat, i) => (
+                {draft.Seats.map((seat, i) => (
                   <div className="pb-3" key={i}>{`Seat ${i + 1}`}</div>
                 ))}
               </Col>
               <Col xs={9} className="tag-color-container">
                 <div className="tag-color-row pb-3">
-                  <LockIcon size={16} /> {user.Username}
+                  <LockIcon size={16} /> {user.username}
                 </div>
                 <SortableList onSortEnd={onSortEnd} items={editableRows} />
               </Col>

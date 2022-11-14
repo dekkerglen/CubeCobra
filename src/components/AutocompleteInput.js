@@ -16,7 +16,7 @@ function isMergeableObject(val) {
   return (
     nonNullObject &&
     Object.prototype.toString.call(val) !== '[object RegExp]' &&
-    Object.prototype.toString.call(val) !== '[object Date]'
+    Object.prototype.toString.call(val) !== '[object date]'
   );
 }
 

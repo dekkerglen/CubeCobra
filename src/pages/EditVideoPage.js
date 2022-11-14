@@ -38,13 +38,13 @@ const EditVideoPage = ({ loginCallback, video }) => {
   const user = useContext(UserContext);
 
   const [tab, setTab] = useQueryParam('tab', '0');
-  const [body, setBody] = useState(video.Body);
-  const [short, setShort] = useState(video.Short);
-  const [url, setUrl] = useState(video.Url);
-  const [title, setTitle] = useState(video.Title);
-  const [imageName, setImageName] = useState(video.ImageName);
+  const [body, setBody] = useState(video.body);
+  const [short, setShort] = useState(video.short);
+  const [url, setUrl] = useState(video.url);
+  const [title, setTitle] = useState(video.title);
+  const [imageName, setImageName] = useState(video.imageName);
   const [imageArtist, setImageArtist] = useState(video.Artist);
-  const [imageUri, setImageUri] = useState(video.Image);
+  const [imageUri, setImageUri] = useState(video.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +67,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
     }
   }, [imageName, imageDict]);
 
-  const hasChanges = video.Body !== body || video.Url !== url || video.Title !== title || video.ImageName !== imageName;
+  const hasChanges = video.body !== body || video.url !== url || video.title !== title || video.imageName !== imageName;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -86,7 +86,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editvideo" autoComplete="off">
-                <Input type="hidden" name="videoid" value={video.Id} />
+                <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="imagename" value={imageName} />
@@ -99,7 +99,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitvideo" autoComplete="off">
-                <Input type="hidden" name="videoid" value={video.Id} />
+                <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
                 <Input type="hidden" name="imagename" value={imageName} />
@@ -127,17 +127,17 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={CONVERT_STATUS[video.Status]} />
+                    <Input disabled value={CONVERT_STATUS[video.status]} />
                   </Col>
                 </Row>
               </FormGroup>
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Title:</Label>
+                    <Label>title:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -157,7 +157,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Short Description:</Label>
+                    <Label>short description:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
@@ -180,7 +180,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
                       onSubmit={(event) => event.preventDefault()}
-                      placeholder="Cardname for Image"
+                      placeholder="Cardname for image"
                       autoComplete="off"
                       data-lpignore
                     />
@@ -223,28 +223,28 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 <Col xs="12" sm="6" md="4" className="mb-3">
                   <VideoPreview
                     video={{
-                      username: user.Username,
+                      username: user.username,
                       title,
                       body,
                       short,
                       artist: imageArtist,
                       imagename: imageName,
                       image: imageUri,
-                      date: video.Date,
+                      date: video.date,
                     }}
                   />
                 </Col>
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <VideoPreview
                     video={{
-                      username: user.Username,
+                      username: user.username,
                       title,
                       body,
                       short,
                       artist: imageArtist,
                       imagename: imageName,
                       image: imageUri,
-                      date: video.Date,
+                      date: video.date,
                     }}
                   />
                 </Col>
@@ -252,14 +252,14 @@ const EditVideoPage = ({ loginCallback, video }) => {
             </CardBody>
             <Video
               video={{
-                username: user.Username,
+                username: user.username,
                 title,
                 body,
                 short,
                 artist: imageArtist,
                 imagename: imageName,
                 image: imageUri,
-                date: video.Date,
+                date: video.date,
                 url,
               }}
             />

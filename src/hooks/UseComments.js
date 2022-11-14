@@ -44,12 +44,12 @@ const useToggle = (parent, type) => {
       const clone = JSON.parse(JSON.stringify(comments));
 
       for (let i = 0; i < clone.length; i++) {
-        if (clone[i].Id === comment.id) {
+        if (clone[i].id === comment.id) {
           if (comment.remove) {
-            clone[i].Body = '[deleted]';
-            clone[i].User = {
-              Id: '404',
-              Username: 'Anonymous',
+            clone[i].body = '[deleted]';
+            clone[i].user = {
+              id: '404',
+              username: 'Anonymous',
             };
             clone[i].ImageData = {
               uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
@@ -57,7 +57,7 @@ const useToggle = (parent, type) => {
               id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
             };
           } else {
-            clone[i].Body = comment.content;
+            clone[i].body = comment.content;
           }
         }
       }

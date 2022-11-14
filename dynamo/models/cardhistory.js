@@ -11,23 +11,23 @@ const TYPES = {
 
 const FIELDS = {
   ORACLE_TYPE_COMP: 'OTComp',
-  ORACLE_ID: 'OracleId',
-  DATE: 'Date',
-  ELO: 'Elo',
-  PICKS: 'Picks',
-  CUBES: 'Cubes',
-  PRICES: 'Prices',
-  SIZE180: 'Size180',
-  SIZE360: 'Size360',
-  SIZE450: 'Size450',
-  SIZE540: 'Size540',
-  SIZE720: 'Size720',
-  PAUPER: 'Pauper',
-  PEASANT: 'Peasant',
-  LEGACY: 'Legacy',
-  MODERN: 'Modern',
-  VINTAGE: 'Vintage',
-  TOTAL: 'Total',
+  ORACLE_ID: 'oracle',
+  DATE: 'date',
+  ELO: 'elo',
+  PICKS: 'picks',
+  CUBES: 'cubes',
+  PRICES: 'prices',
+  SIZE180: 'size180',
+  SIZE360: 'size360',
+  SIZE450: 'size450',
+  SIZE540: 'size540',
+  SIZE720: 'size720',
+  PAUPER: 'pauper',
+  PEASANT: 'peasant',
+  LEGACY: 'legacy',
+  MODERN: 'modern',
+  VINTAGE: 'vintage',
+  TOTAL: 'total',
 };
 
 const client = createClient({
@@ -72,11 +72,12 @@ module.exports = {
       const { data } = datapoint;
 
       // 2020-6-16
-      if (datapoint.date) {
+      if (datapoint.date && history.oracle_id) {
         const [year, month, day] = datapoint.date.split('-');
         const date = new Date(year, month - 1, day);
 
         res.push({
+          [FIELDS.ORACLE_TYPE_COMP]: `${history.oracle_id}:${TYPES.DAY}`,
           [FIELDS.ORACLE_ID]: history.oracleId,
           [FIELDS.DATE]: date.valueOf(),
           [FIELDS.ELO]: data.elo,
@@ -103,7 +104,6 @@ module.exports = {
           [FIELDS.PEASANT]: data.peasant,
           [FIELDS.LEGACY]: data.legacy,
           [FIELDS.MODERN]: data.modern,
-          [FIELDS.STANDARD]: data.standard,
           [FIELDS.VINTAGE]: data.vintage,
           [FIELDS.TOTAL]: data.total,
         });
@@ -114,7 +114,7 @@ module.exports = {
     const items = [];
 
     for (const item of res) {
-      const key = `${item[FIELDS.CARD_NAME]}-${item[FIELDS.DATE]}`;
+      const key = `${item[FIELDS.ORACLE_TYPE_COMP]}-${item[FIELDS.DATE]}`;
       if (!keys.has(key)) {
         keys.add(key);
         items.push(item);

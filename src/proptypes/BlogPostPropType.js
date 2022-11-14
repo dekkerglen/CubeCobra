@@ -1,13 +1,13 @@
 import PropTypes from 'prop-types';
 
 const BlogPostPropType = PropTypes.shape({
-  Id: PropTypes.string.isRequired,
-  Body: PropTypes.string.isRequired,
-  Owner: PropTypes.string.isRequired,
-  Date: PropTypes.number.isRequired,
-  Title: PropTypes.string,
-  CubeId: PropTypes.string.isRequired,
-  ChangelistId: PropTypes.string,
+  id: PropTypes.string.isRequired,
+  body: PropTypes.string.isRequired,
+  owner: PropTypes.string.isRequired,
+  date: PropTypes.number.isRequired,
+  title: PropTypes.string,
+  cube: PropTypes.string.isRequired,
+  changelist: PropTypes.string,
 });
 
 export default BlogPostPropType;
