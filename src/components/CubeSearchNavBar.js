@@ -1,219 +1,27 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader, Navbar, Input, CardBody } from 'reactstrap';
+import { Button, Navbar, Input, CardBody } from 'reactstrap';
 
-import TextField from 'components/TextField';
-import NumericField from 'components/NumericField';
-import SelectField from 'components/SelectField';
 import Banner from 'components/Banner';
 
-const AdvancedSearchModal = ({ isOpen, toggle }) => {
-  const [keyword, setKeyword] = useState('');
-  const [owner, setOwner] = useState('');
-  const [tag, setTag] = useState('');
-  const [decks, setDecks] = useState('');
-  const [cards, setCards] = useState('');
-  const [include, setInclude] = useState('');
-  const [category, setCategory] = useState('');
-
-  const [decksOp, setDecksOp] = useState('=');
-  const [cardsOp, setCardsOp] = useState('=');
-
-  const Categories = [
-    '',
-    'Vintage',
-    'Legacy+',
-    'Legacy',
-    'Modern',
-    'Pioneer',
-    'Historic',
-    'Standard',
-    'Set',
-    'Powered',
-    'Unpowered',
-    'Pauper',
-    'Peasant',
-    'Budget',
-    'Silver-bordered',
-    'Commander',
-    'Judge Tower',
-    'Multiplayer',
-    'Battle Box',
-  ];
-  const handleChange = (event) => {
-    const { target } = event;
-    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
-    const key = target.name;
-
-    switch (key) {
-      case 'keyword':
-        setKeyword(value);
-        break;
-      case 'owner':
-        setOwner(value);
-        break;
-      case 'tag':
-        setTag(value);
-        break;
-      case 'decks':
-        setDecks(value);
-        break;
-      case 'cards':
-        setCards(value);
-        break;
-      case 'decksOp':
-        setDecksOp(value);
-        break;
-      case 'cardsOp':
-        setCardsOp(value);
-        break;
-      case 'category':
-        setCategory(value);
-        break;
-      case 'include':
-        setInclude(value);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const submit = () => {
-    let queryText = '';
-
-    if (keyword.length > 0) {
-      queryText += `"${keyword}" `;
-    }
-    if (owner.length > 0) {
-      queryText += `owner:"${owner}" `;
-    }
-    if (tag.length > 0) {
-      queryText += `tag:"${tag}" `;
-    }
-    if (decks.length > 0) {
-      queryText += `decks${decksOp}${decks} `;
-    }
-    if (cards.length > 0) {
-      queryText += `cards${cardsOp}${cards} `;
-    }
-    if (category.length > 0) {
-      queryText += `category:"${category}" `;
-    }
-    if (include.length > 0) {
-      queryText += `card:"${include}" `;
-    }
-
-    if (queryText.length > 0) {
-      window.location.href = `/search/${encodeURIComponent(queryText.trim())}/0`;
-    } else {
-      window.location.href = '/search';
-    }
-  };
-
-  return (
-    <>
-      <Button color="accent" onClick={toggle}>
-        Advanced...
-      </Button>
-      <Modal size="lg" isOpen={isOpen} toggle={toggle}>
-        <ModalHeader toggle={toggle}>Advanced Search</ModalHeader>
-        <ModalBody>
-          <TextField
-            name="keyword"
-            humanName="keywords"
-            placeholder={'Any text in the name or tags, e.g. "Innistrad"'}
-            value={keyword}
-            onChange={handleChange}
-          />
-          <TextField
-            name="owner"
-            humanName="owner name"
-            placeholder={'Any text in the owner name, e.g. "TimFReilly"'}
-            value={owner}
-            onChange={handleChange}
-          />
-          <TextField
-            name="tag"
-            humanName="Cube tags"
-            placeholder={'Any tag on a cube, e.g. "2 player"'}
-            value={tag}
-            onChange={handleChange}
-          />
-          <NumericField
-            name="decks"
-            humanName="Number of Decks"
-            placeholder={'Any value, e.g. "2"'}
-            value={decks}
-            valueOp={decksOp}
-            onChange={handleChange}
-          />
-          <NumericField
-            name="cards"
-            humanName="Number of cards"
-            placeholder={'Any value, e.g. "360"'}
-            value={cards}
-            valueOp={cardsOp}
-            onChange={handleChange}
-          />
-          <SelectField
-            name="category"
-            humanName="Cube Category"
-            value={category}
-            onChange={handleChange}
-            options={Categories}
-          />
-          {/* TODO: use autocomplete here */}
-          <TextField
-            name="include"
-            humanName="cubes that include the card:"
-            placeholder={'Any full card name, e.g. "Ambush Viper"'}
-            value={include}
-            onChange={handleChange}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <Button color="accent" onClick={submit}>
-            Search
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </>
-  );
-};
-
-AdvancedSearchModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
-const CubeSearchNavBar = ({ query, order, title }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const CubeSearchNavBar = ({ query, order, title, ascending }) => {
   const [queryText, setQuery] = useState(query || '');
-  const toggle = () => setIsOpen((open) => !open);
-  const [searchOrder, setSearchIndex] = useState(order || 'date');
+  const [searchOrder, setSearchIndex] = useState(order || 'pop');
+  const [searchAscending, setSearchAscending] = useState(ascending || false);
 
   const searchOptions = [
-    ['date Updated', 'date'],
-    ['Alphabetical', 'alpha'],
     ['Popularity', 'pop'],
+    ['Alphabetical', 'alpha'],
+    ['Card Count', 'cards'],
   ];
-
-  const handleChangeSearch = (event) => {
-    setSearchIndex(event.target.value);
-  };
-
-  const handleChange = (event) => {
-    setQuery(event.target.value);
-  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (queryText && queryText.length > 0) {
-      window.location.href = `/search/${encodeURIComponent(queryText)}/0?order=${searchOrder}`;
+      window.location.href = `/search/${encodeURIComponent(
+        queryText,
+      )}?order=${searchOrder}&ascending=${searchAscending}`;
     } else {
       window.location.href = `/search`;
     }
@@ -235,20 +43,28 @@ const CubeSearchNavBar = ({ query, order, title }) => {
             placeholder="Search cubes..."
             aria-label="Search"
             value={queryText}
-            onChange={handleChange}
+            onChange={(event) => setQuery(event.target.value)}
           />
           <h6 className="noBreak me-2 pt-2">Sorted by:</h6>
-          <Input type="select" id="viewSelect" value={searchOrder} onChange={handleChangeSearch}>
+          <Input type="select" id="viewSelect" value={searchOrder} onChange={(e) => setSearchIndex(e.target.value)}>
             {searchOptions.map((search) => (
               <option key={search[1]} value={search[1]}>
                 {search[0]}
               </option>
             ))}
           </Input>
+          <Input
+            type="select"
+            id="orderSelect"
+            value={searchAscending}
+            onChange={(e) => setSearchAscending(e.target.value)}
+          >
+            <option value="true">Ascending</option>
+            <option value="false">Descending</option>
+          </Input>
           <Button color="accent" className="mx-2">
             Search
           </Button>
-          <AdvancedSearchModal isOpen={isOpen} toggle={toggle} setQuery={setQuery} />
         </Navbar>
       </form>
     </div>
@@ -259,12 +75,14 @@ CubeSearchNavBar.propTypes = {
   query: PropTypes.string,
   order: PropTypes.string,
   title: PropTypes.string,
+  ascending: PropTypes.bool,
 };
 
 CubeSearchNavBar.defaultProps = {
   title: null,
   query: '',
-  order: 'date',
+  order: 'pop',
+  ascending: false,
 };
 
 export default CubeSearchNavBar;

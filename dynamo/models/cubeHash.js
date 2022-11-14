@@ -94,12 +94,11 @@ const hashKeywords = (metadata) => {
 const hashOracles = (cards) => {
   const res = [];
 
-  for (const [boardname, list] of Object.entries(cards)) {
-    if (boardname !== 'id') {
-      for (const card of list) {
-        res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
-      }
-    }
+  for (const card of cards.Mainboard) {
+    res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
+  }
+  for (const card of cards.Mainboard) {
+    res.push(`maybe:${carddb.cardFromId(card.cardID).oracle_id}`);
   }
 
   return res;
@@ -124,61 +123,79 @@ const getHashesForCube = (metadata, cards) => {
   return [...new Set([...getHashesForCards(cards), ...getHashesForMetadata(metadata)])];
 };
 
+const getSortedByFollowers = async (hash, ascending, lastKey) => {
+  const result = await client.query({
+    IndexName: 'SortedByFollowers',
+    KeyConditionExpression: `#p1 = :hash`,
+    ExpressionAttributeValues: {
+      ':hash': hash,
+    },
+    ExpressionAttributeNames: {
+      '#p1': FIELDS.HASH,
+    },
+    ExclusiveStartKey: lastKey,
+    ScanIndexForward: ascending,
+  });
+  return {
+    items: result.Items,
+    lastKey: result.LastEvaluatedKey,
+  };
+};
+
+const getSortedByName = async (hash, ascending, lastKey) => {
+  const result = await client.query({
+    IndexName: 'SortedByName',
+    KeyConditionExpression: `#p1 = :hash`,
+    ExpressionAttributeValues: {
+      ':hash': hash,
+    },
+    ExpressionAttributeNames: {
+      '#p1': FIELDS.HASH,
+    },
+    ExclusiveStartKey: lastKey,
+    ScanIndexForward: ascending,
+  });
+  return {
+    items: result.Items,
+    lastKey: result.LastEvaluatedKey,
+  };
+};
+
+const getSortedByCardCount = async (hash, ascending, lastKey) => {
+  const result = await client.query({
+    IndexName: 'SortedByCardCount',
+    KeyConditionExpression: `#p1 = :hash`,
+    ExpressionAttributeValues: {
+      ':hash': hash,
+    },
+    ExpressionAttributeNames: {
+      '#p1': FIELDS.HASH,
+    },
+    ExclusiveStartKey: lastKey,
+    ScanIndexForward: ascending,
+  });
+  return {
+    items: result.Items,
+    lastKey: result.LastEvaluatedKey,
+  };
+};
+
 module.exports = {
-  getSortedByFollowers: async (hash, ascending, lastKey) => {
-    const result = await client.query({
-      IndexName: 'SortedByFollowers',
-      KeyConditionExpression: `#p1 = :hash`,
-      ExpressionAttributeValues: {
-        ':hash': hash,
-      },
-      ExpressionAttributeNames: {
-        '#p1': FIELDS.HASH,
-      },
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: ascending,
-    });
-    return {
-      items: result.Items,
-      lastKey: result.LastEvaluatedKey,
-    };
+  query: async (hash, ascending, lastKey, order) => {
+    switch (order) {
+      case 'pop':
+        return getSortedByFollowers(hash, ascending, lastKey);
+      case 'alpha':
+        return getSortedByName(hash, ascending, lastKey);
+      case 'cards':
+        return getSortedByCardCount(hash, ascending, lastKey);
+      default:
+        return getSortedByFollowers(hash, ascending, lastKey);
+    }
   },
-  getSortedByName: async (hash, ascending, lastKey) => {
-    const result = await client.query({
-      IndexName: 'SortedByName',
-      KeyConditionExpression: `#p1 = :hash`,
-      ExpressionAttributeValues: {
-        ':hash': hash,
-      },
-      ExpressionAttributeNames: {
-        '#p1': FIELDS.HASH,
-      },
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: ascending,
-    });
-    return {
-      items: result.Items,
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
-  getSortedByCardCount: async (hash, ascending, lastKey) => {
-    const result = await client.query({
-      IndexName: 'SortedByFollowers',
-      KeyConditionExpression: `#p1 = :hash`,
-      ExpressionAttributeValues: {
-        ':hash': hash,
-      },
-      ExpressionAttributeNames: {
-        '#p1': FIELDS.HASH,
-      },
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: ascending,
-    });
-    return {
-      items: result.Items,
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
+  getSortedByCardCount,
+  getSortedByName,
+  getSortedByFollowers,
   update: async (document) => {
     if (!document[FIELDS.HASH] || !document[FIELDS.CUBE_ID]) {
       throw new Error('Invalid document: No partition or sort key provided');

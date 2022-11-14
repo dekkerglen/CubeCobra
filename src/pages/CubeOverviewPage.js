@@ -288,7 +288,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
             <CardFooter>
               <div className="autocard-tags">
                 {cubeState.tags.map((tag) => (
-                  <a href={`/search/tag:"${tag}"/0`}>
+                  <a href={`/search/tag:${tag}`}>
                     <span key={tag} className="tag">
                       {tag}
                     </span>

@@ -1,5 +1,6 @@
 const express = require('express');
 
+const carddb = require('../serverjs/cards');
 const util = require('../serverjs/util');
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
@@ -108,6 +109,68 @@ router.get('/search', async (req, res) => {
   return render(req, res, 'SearchPage', {
     query: '',
     cubes: [],
+  });
+});
+
+const searchCubes = async (query, order, lastKey, ascending) => {
+  let updatedQuery = query;
+  const split = updatedQuery.split(':');
+
+  if (split.length === 1 && split[0].length > 0) {
+    updatedQuery = `keywords:${updatedQuery}`;
+  } else if (split.length === 2 && split[0].length > 0 && split[1].length > 0) {
+    // removed surrounding quotes from split[1]
+    if (split[1].startsWith('"') && split[1].endsWith('"')) {
+      split[1] = split[1].substring(1, split[1].length - 1);
+    }
+    updatedQuery = `${split[0].trim()}:${split[1].trim()}`;
+  }
+
+  const [key, value] = updatedQuery.split(':');
+  if (key === 'card') {
+    // get oracle id from card name
+    const card = carddb.getMostReasonable(value);
+
+    updatedQuery = `oracle:${card ? card.oracle_id : ''}`;
+  }
+
+  const result = await CubeHash.query(updatedQuery, ascending, lastKey, order);
+
+  const items = result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : [];
+
+  // make sure items is in same order as result.items
+  const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube));
+
+  return {
+    cubes,
+    lastKey: result.lastKey,
+  };
+};
+
+router.get('/search/:query', async (req, res) => {
+  const ascending = req.query.ascending || false;
+  const order = req.query.order || 'pop';
+
+  const result = await searchCubes(req.params.query, order, null, ascending);
+
+  return render(req, res, 'SearchPage', {
+    query: req.params.query,
+    cubes: result.cubes,
+    lastKey: result.lastKey,
+    ascending,
+    order,
+  });
+});
+
+router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
+  const { lastKey, query, order, ascending } = req.body;
+
+  const result = await searchCubes(query, order, lastKey, ascending);
+
+  return res.status(200).send({
+    success: 'true',
+    cubes: result.cubes,
+    lastKey: result.lastKey,
   });
 });
 

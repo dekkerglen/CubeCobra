@@ -2,11 +2,11 @@ import React, { useState, useContext, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { Spinner } from 'reactstrap';
 
 import BlogPost from 'components/BlogPost';
 import { csrfFetch } from 'utils/CSRF';
 
-import { Spinner } from 'reactstrap';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 import UserContext from 'contexts/UserContext';
 

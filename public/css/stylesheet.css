@@ -1360,3 +1360,7 @@ div.advertisement-div > div:not(.report-link) {
 	position:absolute;
 	right: 100%;
 }
+
+.noBreak {
+	white-space: nowrap;
+}
