@@ -47,9 +47,9 @@ module.exports = {
     for (const item of items) {
       const document = documents.find((c) => c[FIELDS.ORACLE_ID] === item[FIELDS.ORACLE_ID]);
       if (document) {
-        item.cubedWith = document.cubedWith;
+        item[FIELDS.CUBED_WITH] = document.cubedWith;
       } else {
-        item.cubedWith = {
+        item[FIELDS.CUBED_WITH] = {
           synergistic: [],
           top: [],
           creatures: [],
@@ -67,6 +67,20 @@ module.exports = {
       {
         [FIELDS.ORACLE_ID]: history.oracleId,
         [FIELDS.CUBED_WITH]: history.cubedWith,
+        [FIELDS.DRAFTED_WITH]: {
+          synergistic: [],
+          top: [],
+          creatures: [],
+          spells: [],
+          other: [],
+        },
+        [FIELDS.CUBED_WITH]: {
+          synergistic: [],
+          top: [],
+          creatures: [],
+          spells: [],
+          other: [],
+        },
       },
     ];
   },

@@ -178,7 +178,7 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracle(card.oracle_id);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.DAY, 30);
     const metadata = await CardMetadata.getByOracle(card.oracle_id);
 
     const related = {};

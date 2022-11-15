@@ -59,6 +59,7 @@ const hydrateChangelog = async (document) => {
 
 module.exports = {
   getById: async (id) => hydrateChangelog((await client.get(id)).Item),
+  getUnhydrated: async (id) => (await client.get(id)).Item,
   getByCube: async (cube, limit, lastKey) => {
     const result = await client.query({
       IndexName: 'ByCube',
@@ -99,6 +100,7 @@ module.exports = {
   },
   put: async (document) => {
     const id = document[FIELDS.ID] || uuid();
+
     client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],

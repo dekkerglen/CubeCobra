@@ -162,7 +162,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
             </UncontrolledCollapse>
           </Navbar>
         ) : (
-          <Row className="mb-3" />
+          <Row />
         )}
         <DynamicFlash />
         {alerts.map(({ color, message }, index) => (
@@ -206,7 +206,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
             </Row>
           </CardHeader>
           <Row>
-            <Col md="4" className="mb-3">
+            <Col md="4" className="mb-3 ">
               <MtgImage cardname={cubeState.imageName} showArtist />
               <CardBody className="pt-2 px-3 pb-3">
                 <p className="mb-1">{getCubeDescription(cubeState)}</p>
@@ -298,7 +298,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
             </CardFooter>
           )}
         </Card>
-        <div className="mb-3">{post && <BlogPost key={post.id} post={post} />}</div>
+        <div className="my-3">{post && <BlogPost key={post.id} post={post} />}</div>
       </CubeLayout>
     </MainLayout>
   );

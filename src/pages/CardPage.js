@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPricePropType from 'proptypes/CardPricePropType';
-import CardHistoryPropType, { HistoryPropType } from 'proptypes/CardHistoryPropType';
+import CardPropType from 'proptypes/CardPropType';
+import HistoryPropType from 'proptypes/HistoryPropType';
 
 import {
   Card,
@@ -19,8 +20,6 @@ import {
   Button,
   Input,
 } from 'reactstrap';
-
-import ChartComponent from 'react-chartjs-2';
 
 import CardImage from 'components/CardImage';
 import CardGrid from 'components/CardGrid';
@@ -62,112 +61,6 @@ import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
-
-const formatDate = (date) => `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
-
-const distinct = (list) => {
-  const res = [];
-  const dates = new Set();
-  for (const item of list) {
-    const date = formatDate(item.x);
-    if (!dates.has(date)) {
-      res.push(item);
-      dates.add(date);
-    }
-  }
-  if (res.length > 0 && !dates.has(formatDate(new Date()))) {
-    res.push({
-      x: new Date(),
-      y: res[res.length - 1].y,
-    });
-  }
-  return res;
-};
-
-const Graph = ({ data, yFunc, unit, yRange }) => {
-  const plot = {
-    labels: [unit],
-    datasets: [
-      {
-        lineTension: 0,
-        pointRadius: 0,
-        fill: false,
-        borderColor: '#28A745',
-        backgroundColor: '#28A745',
-        data: distinct(
-          data
-            .map((point) => {
-              try {
-                return { x: new Date(point.date), y: yFunc(point.data) };
-              } catch (exc) {
-                return {}; // if the yFunc fails this will get filtered out
-              }
-            })
-            .filter((point) => point.y),
-        ),
-      },
-    ],
-  };
-
-  let options = {};
-
-  if (plot.datasets[0].data.length > 0) {
-    options = {
-      legend: {
-        display: false,
-      },
-      responsive: true,
-      tooltips: {
-        mode: 'index',
-        intersect: false,
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: true,
-      },
-      scales: {
-        xAxes: [
-          {
-            type: 'time',
-            distribution: 'linear',
-            time: {
-              unit: 'day',
-            },
-            ticks: {
-              min: plot.datasets[0].data[0].x,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: unit,
-            },
-            ticks: yRange ? { min: yRange[0], max: yRange[1] } : {},
-          },
-        ],
-      },
-    };
-  }
-
-  if (plot.datasets[0].data.length > 0) {
-    return <ChartComponent options={options} data={plot} type="line" />;
-  }
-  return <p>No data to show.</p>;
-};
-
-Graph.propTypes = {
-  data: HistoryPropType.isRequired,
-  yFunc: PropTypes.func.isRequired,
-  unit: PropTypes.string.isRequired,
-  yRange: PropTypes.arrayOf(PropTypes.number),
-};
-
-Graph.defaultProps = {
-  yRange: null,
-};
 
 const convertLegality = {
   legal: ['success', 'Legal'],
@@ -223,7 +116,7 @@ const getPriceTypeUnit = {
   tix: 'TIX',
 };
 
-const CardPage = ({ card, data, versions, related, loginCallback }) => {
+const CardPage = ({ card, history, versions, related, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
@@ -401,9 +294,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 </CardBody>
               </TabPane>
               <TabPane tabId="1">
-                <CardBody>
-                  <Graph unit="elo" data={data.history} yFunc={(point) => point.elo} />
-                </CardBody>
+                <CardBody />
               </TabPane>
               <TabPane tabId="2">
                 <CardBody>
@@ -422,11 +313,6 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="tix">TIX</option>
                     </Input>
                   </InputGroup>
-                  <Graph
-                    unit={getPriceTypeUnit[priceType]}
-                    data={data.history}
-                    yFunc={(point) => point.prices.filter((item) => item.version === card._id)[0][priceType]}
-                  />
                 </CardBody>
               </TabPane>
               <TabPane tabId="3">
@@ -453,23 +339,17 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <option value="size720">541+ cards</option>
                     </Input>
                   </InputGroup>
-                  <Graph
-                    unit="Percent of cubes"
-                    data={data.history}
-                    yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
-                    yRange={[0, 100]}
-                  />
                   <Row className="pt-2">
                     <Col xs="12" sm="6" md="6" lg="6">
                       <h5>By Legality:</h5>
                       <Table bordered>
                         <tbody>
-                          <CountTableRow label="Vintage" value={data.current.vintage || [0, 0]} />
-                          <CountTableRow label="Legacy" value={data.current.legacy || [0, 0]} />
-                          <CountTableRow label="Modern" value={data.current.modern || [0, 0]} />
-                          <CountTableRow label="Standard" value={data.current.standard || [0, 0]} />
-                          <CountTableRow label="Peasant" value={data.current.peasant || [0, 0]} />
-                          <CountTableRow label="Pauper" value={data.current.pauper || [0, 0]} />
+                          <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
+                          <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
+                          <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
+                          <CountTableRow label="Standard" value={history[0].standard || [0, 0]} />
+                          <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
+                          <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
                         </tbody>
                       </Table>
                     </Col>
@@ -477,11 +357,11 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <h5>By Size:</h5>
                       <Table bordered>
                         <tbody>
-                          <CountTableRow label="1-180" value={data.current.size180 || [0, 0]} />
-                          <CountTableRow label="181-360" value={data.current.size360 || [0, 0]} />
-                          <CountTableRow label="361-450" value={data.current.size450 || [0, 0]} />
-                          <CountTableRow label="451-540" value={data.current.size540 || [0, 0]} />
-                          <CountTableRow label="541+" value={data.current.size720 || [0, 0]} />
+                          <CountTableRow label="1-180" value={history[0].size180 || [0, 0]} />
+                          <CountTableRow label="181-360" value={history[0].size360 || [0, 0]} />
+                          <CountTableRow label="361-450" value={history[0].size450 || [0, 0]} />
+                          <CountTableRow label="451-540" value={history[0].size540 || [0, 0]} />
+                          <CountTableRow label="541+" value={history[0].size720 || [0, 0]} />
                         </tbody>
                       </Table>
                     </Col>
@@ -733,29 +613,8 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
 };
 
 CardPage.propTypes = {
-  card: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    elo: PropTypes.number.isRequired,
-    image_normal: PropTypes.string.isRequired,
-    image_flip: PropTypes.string,
-    scryfall_uri: PropTypes.string.isRequired,
-    tcgplayer_id: PropTypes.number.isRequired,
-    _id: PropTypes.string.isRequired,
-    set: PropTypes.string.isRequired,
-    set_name: PropTypes.string.isRequired,
-    collector_number: PropTypes.string.isRequired,
-    legalities: PropTypes.shape({}).isRequired,
-    parsed_cost: PropTypes.arrayOf(PropTypes.string).isRequired,
-    oracle_text: PropTypes.string.isRequired,
-    oracle_id: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    loyalty: PropTypes.string,
-    power: PropTypes.string,
-    toughness: PropTypes.string,
-    prices: CardPricePropType.isRequired,
-  }).isRequired,
-  data: CardHistoryPropType.isRequired,
+  card: CardPropType.isRequired,
+  history: PropTypes.arrayOf(HistoryPropType).isRequired,
   related: PropTypes.shape({
     top: PropTypes.arrayOf(
       PropTypes.shape({

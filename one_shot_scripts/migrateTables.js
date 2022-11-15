@@ -55,13 +55,13 @@ const migrations = [
   //   source: Article,
   //   conversions: [[content.convertArticle, content.batchPut]],
   // },
-  {
-    source: User,
-    conversions: [
-      [notification.getNotificationsFromUser, notification.batchPut],
-      // [user.convertUser, user.batchPut],
-    ],
-  },
+  // {
+  //   source: User,
+  //   conversions: [
+  //     [notification.getNotificationsFromUser, notification.batchPut],
+  //     // [user.convertUser, user.batchPut],
+  //   ],
+  // },
   // {
   //   source: Blog,
   //   conversions: [
@@ -69,31 +69,31 @@ const migrations = [
   //     [blog.convertBlog, blog.batchPut],
   //   ],
   // },
-  {
-    source: CardRating,
-    conversions: [
-      [card.convertCardRating, card.batchPut],
-    ]
-  },
-  // { 
-  //   source: CardHistory,
+  // {
+  //   source: CardRating,
   //   conversions: [
-  //     [cardHistory.convertCardHistory, cardHistory.batchPut],
-  //     [card.convertCardHistory, card.updateWithCubedWith],
-  //   ],
+  //     [card.convertCardRating, card.batchPut],
+  //   ]
   // },
+  { 
+    source: CardHistory,
+    conversions: [
+      [cardHistory.convertCardHistory, cardHistory.batchPut],
+      // [card.convertCardHistory, card.updateWithCubedWith],
+    ],
+  },
   // {
   //   source: Comment,
   //   conversions: [
   //     [comment.convertComment, comment.batchPut],
   //   ],
   // },
-  {
-    source: CubeAnalytic,
-    conversions: [
-      [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
-    ],
-  },
+  // {
+  //   source: CubeAnalytic,
+  //   conversions: [
+  //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
+  //   ],
+  // },
   // {
   //   source: Deck,
   //   conversions: [

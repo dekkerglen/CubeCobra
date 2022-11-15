@@ -27,7 +27,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
 
     if (req.body.id && req.body.id.length > 0) {
       // update an existing blog post
-      const blog = await Blog.getById(req.body.id);
+      const blog = await Blog.getUnhydrated(req.body.id);
 
       if (blog.owner !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');

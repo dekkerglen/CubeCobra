@@ -72,12 +72,12 @@ module.exports = {
       const { data } = datapoint;
 
       // 2020-6-16
-      if (datapoint.date && history.oracle_id) {
+      if (datapoint.date && history.oracleId) {
         const [year, month, day] = datapoint.date.split('-');
         const date = new Date(year, month - 1, day);
 
         res.push({
-          [FIELDS.ORACLE_TYPE_COMP]: `${history.oracle_id}:${TYPES.DAY}`,
+          [FIELDS.ORACLE_TYPE_COMP]: `${history.oracleId}:${TYPES.DAY}`,
           [FIELDS.ORACLE_ID]: history.oracleId,
           [FIELDS.DATE]: date.valueOf(),
           [FIELDS.ELO]: data.elo,
