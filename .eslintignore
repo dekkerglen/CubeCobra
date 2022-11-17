@@ -1,5 +1,4 @@
 jobs/archived/*.js
-one_shot_scripts/*.js
 
 .git
 dist

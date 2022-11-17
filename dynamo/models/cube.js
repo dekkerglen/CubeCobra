@@ -141,7 +141,7 @@ const getCards = async (id) => {
 module.exports = {
   getCards,
   updateCards: async (id, newCards) => {
-    const oldCards = getCards(id);
+    const oldCards = await getCards(id);
 
     const oldMetadata = (await client.get(id)).Item;
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));

@@ -210,18 +210,18 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  put: async (changelog, cubeId) => {
+  put: async (changelog, cube) => {
     const id = uuid();
     await s3
       .putObject({
         Bucket: process.env.DATA_BUCKET,
-        Key: `changelog/${cubeId}/${id}.json`,
+        Key: `changelog/${cube}/${id}.json`,
         Body: JSON.stringify(sanitizeChangelog(changelog)),
       })
       .promise();
     await client.put({
       [FIELDS.ID]: id,
-      [FIELDS.CUBE_ID]: cubeId,
+      [FIELDS.CUBE_ID]: cube,
       [FIELDS.DATE]: new Date().valueOf(),
     });
     return id;
@@ -299,6 +299,32 @@ module.exports = {
         date: date.valueOf() || Date.now().valueOf(),
       },
     ];
+  },
+  scan: async (limit, lastKey) => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit || 36,
+    });
+
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  batchGet: async (keys) => {
+    const result = await Promise.all(
+      keys.map(async (key) => {
+        const { Body } = await s3
+          .getObject({
+            Bucket: process.env.DATA_BUCKET,
+            Key: `changelog/${key.cube}/${key.id}.json`,
+          })
+          .promise();
+        return JSON.parse(Body.toString());
+      }),
+    );
+
+    return result;
   },
   FIELDS,
 };

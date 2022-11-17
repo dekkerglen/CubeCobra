@@ -16,7 +16,7 @@ const card = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
-const package = require('../dynamo/models/package');
+const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
 const featuredQueue = require('../dynamo/models/featuredQueue');
 
@@ -36,7 +36,6 @@ const Draft = require('../models/old/draft');
 const Package = require('../models/old/package');
 const Patron = require('../models/old/patron');
 const FeaturedQueue = require('../models/old/featuredCubes');
-
 
 const migrations = [
   // {
@@ -75,7 +74,7 @@ const migrations = [
   //     [card.convertCardRating, card.batchPut],
   //   ]
   // },
-  { 
+  {
     source: CardHistory,
     conversions: [
       [cardHistory.convertCardHistory, cardHistory.batchPut],
@@ -177,7 +176,11 @@ const skip = 0;
       const documentsRemaining = count - i;
       const documentProcessed = i - skip;
       const timeRemaining = (timeElapsed / documentProcessed) * documentsRemaining;
-      console.log(`${mongo.collection.collectionName}: Finished: ${i+batchSize} of ${count} items. Time elapsed: ${Math.round(timeElapsed / 36) / 100} hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`);
+      console.log(
+        `${mongo.collection.collectionName}: Finished: ${i + batchSize} of ${count} items. Time elapsed: ${
+          Math.round(timeElapsed / 36) / 100
+        } hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`,
+      );
     }
   }
   process.exit();
