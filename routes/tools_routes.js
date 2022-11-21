@@ -148,6 +148,59 @@ router.get('/randomcard', async (req, res) => {
   res.redirect(`/tool/card/${card.oracle_id}`);
 });
 
+router.post('/cardhistory', async (req, res) => {
+  try {
+    const { id, zoom, period } = req.body;
+
+    let zoomValue = 10000;
+
+    if (zoom === 'month') {
+      switch (period) {
+        case 'day':
+          zoomValue = 30;
+          break;
+        case 'week':
+          zoomValue = 4;
+          break;
+        case 'month':
+          zoomValue = 2;
+          break;
+        default:
+          zoomValue = 0;
+          break;
+      }
+    } else if (zoom === 'year') {
+      switch (period) {
+        case 'day':
+          zoomValue = 365;
+          break;
+        case 'week':
+          zoomValue = 52;
+          break;
+        case 'month':
+          zoomValue = 12;
+          break;
+        default:
+          zoomValue = 0;
+          break;
+      }
+    }
+
+    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
+
+    return res.status(200).send({
+      success: 'true',
+      data: history.items.reverse(),
+    });
+  } catch (err) {
+    req.logger.error(err);
+    return res.status(500).send({
+      success: 'false',
+      data: [],
+    });
+  }
+});
+
 router.get('/card/:id', async (req, res) => {
   try {
     let { id } = req.params;
@@ -178,7 +231,7 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.DAY, 30);
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
     const metadata = await CardMetadata.getByOracle(card.oracle_id);
 
     const related = {};
@@ -195,7 +248,7 @@ router.get('/card/:id', async (req, res) => {
       'CardPage',
       {
         card,
-        history: history.items,
+        history: history.items.reverse(),
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card._id)

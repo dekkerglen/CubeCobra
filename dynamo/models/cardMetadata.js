@@ -23,7 +23,32 @@ const client = createClient({
 });
 
 module.exports = {
-  getByOracle: async (oracle) => (await client.get(oracle)).Item,
+  getByOracle: async (oracle) => {
+    const result = await client.get(oracle);
+
+    if (result.Item) {
+      return result.Item;
+    }
+
+    return {
+      [FIELDS.ORACLE_ID]: oracle,
+      [FIELDS.CUBED_WITH]: {
+        synergistic: [],
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      [FIELDS.DRAFTED_WITH]: {
+        synergistic: [],
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      [FIELDS.EMBEDDING]: [],
+    };
+  },
   put: async (document) => {
     return client.put(document);
   },

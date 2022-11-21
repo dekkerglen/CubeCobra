@@ -15,7 +15,6 @@ const FIELDS = {
   DATE: 'date',
   ELO: 'elo',
   PICKS: 'picks',
-  CUBES: 'cubes',
   PRICES: 'prices',
   SIZE180: 'size180',
   SIZE360: 'size360',
@@ -82,7 +81,6 @@ module.exports = {
           [FIELDS.DATE]: date.valueOf(),
           [FIELDS.ELO]: data.elo,
           [FIELDS.PICKS]: data.picks,
-          [FIELDS.CUBES]: data.cubes,
           [FIELDS.PRICES]: Object.fromEntries(
             data.prices.map((item) => [
               item.version,

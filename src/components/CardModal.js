@@ -112,7 +112,7 @@ const CardModal = ({
                   </TextBadge>
                 )}
                 {Number.isFinite(cardElo(card)) && (
-                  <TextBadge name="elo" className="mt-2">
+                  <TextBadge name="Elo" className="mt-2">
                     {cardElo(card).toFixed(0)}
                   </TextBadge>
                 )}

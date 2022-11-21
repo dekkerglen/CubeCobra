@@ -14,7 +14,7 @@ const cardMetadata = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
-const package = require('../dynamo/models/package');
+const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
 const passwordReset = require('../dynamo/models/passwordReset');
 const featuredQueue = require('../dynamo/models/featuredQueue');
@@ -22,17 +22,17 @@ const feed = require('../dynamo/models/feed');
 
 const tables = [
   // content,
-  notification,
+  // notification,
   // user,
   // notice,
   // cubeMetadata,
   // cubeHash,
   // cubeChangelog,
   // blog,
-  // cardHistory,
-  cardMetadata,
+  cardHistory,
+  // cardMetadata,
   // comment,
-  cubeAnalytic,
+  // cubeAnalytic,
   // draft,
   // package,
   // patron,
@@ -46,7 +46,7 @@ const tables = [
     try {
       const result = await table.createTable();
       console.log(result);
-    } catch(e) {
+    } catch (e) {
       console.log(`Error creating table ${table}: ${e}`);
       console.error(e);
     }

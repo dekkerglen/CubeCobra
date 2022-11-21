@@ -38,6 +38,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import PlayRateGraph from 'components/PlayRateGraph';
 import Tab from 'components/Tab';
 
 import {
@@ -108,18 +109,9 @@ CardIdBadge.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-const getPriceTypeUnit = {
-  price: 'USD',
-  price_foil: 'USD',
-  price_etched: 'USD',
-  eur: 'EUR',
-  tix: 'TIX',
-};
-
 const CardPage = ({ card, history, versions, related, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [priceType, setPriceType] = useQueryParam('priceType', 'price');
-  const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
   const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   const sortedVersions = versions.sort((a, b) => {
@@ -202,7 +194,7 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
                 </TextBadge>
               )}
               {Number.isFinite(cardElo({ details: card })) && (
-                <TextBadge name="elo" className="mt-1" fill>
+                <TextBadge name="Elo" className="mt-1" fill>
                   {cardElo({ details: card }).toFixed(0)}
                 </TextBadge>
               )}
@@ -214,10 +206,7 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
                 Card
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
-                elo
-              </Tab>
-              <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
-                Price
+                Elo
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="3">
                 Play Rate
@@ -317,28 +306,7 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
               </TabPane>
               <TabPane tabId="3">
                 <CardBody>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Cube type: </InputGroupText>
-                    <Input
-                      id="cubeType"
-                      type="select"
-                      value={cubeType}
-                      onChange={(event) => setCubeType(event.target.value)}
-                    >
-                      <option value="total">All</option>
-                      <option value="vintage">Vintage</option>
-                      <option value="legacy">Legacy</option>
-                      <option value="modern">Modern</option>
-                      <option value="standard">Standard</option>
-                      <option value="peasant">Peasant</option>
-                      <option value="pauper">Pauper</option>
-                      <option value="size180">1-180 cards</option>
-                      <option value="size360">181-360 cards</option>
-                      <option value="size450">361-450 cards</option>
-                      <option value="size540">451-540 cards</option>
-                      <option value="size720">541+ cards</option>
-                    </Input>
-                  </InputGroup>
+                  <PlayRateGraph defaultHistories={history} cardId={card.oracle_id} />
                   <Row className="pt-2">
                     <Col xs="12" sm="6" md="6" lg="6">
                       <h5>By Legality:</h5>
@@ -347,7 +315,6 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
                           <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
                           <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
                           <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
-                          <CountTableRow label="Standard" value={history[0].standard || [0, 0]} />
                           <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
                           <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
                         </tbody>
@@ -373,7 +340,7 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
                       <ButtonLink outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
-                        {`cubes with ${card.name}`}
+                        {`Cubes with ${card.name}`}
                       </ButtonLink>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">

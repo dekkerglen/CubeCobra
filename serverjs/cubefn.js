@@ -63,11 +63,11 @@ function cardIsLegal(card, legality) {
   return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
 }
 
-function setCubeType(cube, carddb) {
+function getCubeTypes(cards, carddb) {
   let pauper = true;
   let peasant = false;
   let type = FORMATS.length - 1;
-  for (const card of cube.cards) {
+  for (const card of cards) {
     if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
       peasant = true;
@@ -83,6 +83,12 @@ function setCubeType(cube, carddb) {
       type -= 1;
     }
   }
+
+  return { pauper, peasant, type };
+}
+
+function setCubeType(cube, carddb) {
+  const { pauper, peasant, type } = getCubeTypes(cube.cards, carddb);
 
   cube.type = intToLegality(type);
   if (pauper) {
@@ -487,6 +493,7 @@ const methods = {
   ELO_BASE,
   ELO_SPEED,
   CUBE_ELO_SPEED,
+  getCubeTypes,
 };
 
 module.exports = methods;
