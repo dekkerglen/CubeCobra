@@ -952,7 +952,7 @@ router.post(
         cubeOwner: cube.owner,
         date: new Date(),
         type: Draft.TYPES.GRID,
-        Seats: {},
+        seats: {},
         cards: [],
         IniitalState: [],
       };
@@ -967,7 +967,7 @@ router.post(
       const pool = createPool();
 
       // add human
-      document.Seats.push({
+      document.seats.push({
         bot: false,
         name: req.user ? req.user.username : 'Anonymous',
         userid: req.user ? req.user.id : null,
@@ -978,7 +978,7 @@ router.post(
       });
 
       // add bot
-      document.Seats.push({
+      document.seats.push({
         bot: true,
         name: 'Grid Bot',
         userid: null,
@@ -1075,13 +1075,13 @@ router.post(
         cubeOwner: cube.owner,
         date: new Date().valueOf(),
         type: Draft.TYPES.SEALED,
-        Seats: [],
+        seats: [],
         cards: cardsArray,
       };
 
       addBasics(deck, cube.basics);
 
-      deck.Seats.push({
+      deck.seats.push({
         owner: user.id,
         title: `Sealed from ${cube.name}`,
         body: '',
@@ -1092,7 +1092,7 @@ router.post(
       await Draft.put(deck);
 
       cube.numDecks += 1;
-      await updateDeckCardAnalytics(cube.id, null, 0, deck.Seats[0], deck.cards, carddb);
+      await updateDeckCardAnalytics(cube.id, null, 0, deck.seats[0], deck.cards, carddb);
 
       await cube.save();
 
@@ -1176,7 +1176,7 @@ router.post(
       }
 
       draft.InitialState = populated.initial_state;
-      draft.Seats = populated.seats;
+      draft.seats = populated.seats;
       draft.cube = cube.id;
       draft.owner = req.user.id;
       draft.cubeOwner = cube.owner;

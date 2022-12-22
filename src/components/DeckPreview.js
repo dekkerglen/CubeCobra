@@ -40,8 +40,8 @@ const DeckPreview = ({ deck, nextURL }) => {
    */
   const [fullName, name] = useMemo(
     () =>
-      deck && deck.Seats && deck.Seats[0].name
-        ? [deck.Seats[0].name, truncateToLength(MAX_LENGTH, deck.Seats[0].name)]
+      deck && deck.seats && deck.seats[0].name
+        ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
         : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
     [deck],
   );
@@ -69,8 +69,8 @@ const DeckPreview = ({ deck, nextURL }) => {
             {name}
           </a>{' '}
           by{' '}
-          {deck.Seats[0].userid ? (
-            <Username userId={deck.Seats[0].userid} defaultName={deck.Seats[0].username} />
+          {deck.seats[0].userid ? (
+            <Username userId={deck.seats[0].userid} defaultName={deck.seats[0].username} />
           ) : (
             'Anonymous'
           )}{' '}

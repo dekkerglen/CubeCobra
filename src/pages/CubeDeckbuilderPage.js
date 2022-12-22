@@ -20,17 +20,17 @@ import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
-const getMatchingSeat = (Seats, userid) =>
-  Seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
+const getMatchingSeat = (seats, userid) =>
+  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
 
 const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const user = useContext(UserContext);
-  const [seat] = useState(getMatchingSeat(initialDeck.Seats, user.id));
+  const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
-    initialDeck.Seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
   );
   const [sideboard, setSideboard] = useState(
-    initialDeck.Seats[seat].sideboard.map((row) =>
+    initialDeck.seats[seat].sideboard.map((row) =>
       row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex])),
     ),
   );
@@ -78,8 +78,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   currentDeck.playerdeck = deck;
   currentDeck.playersideboard = sideboard;
 
-  const [name, setName] = useState(initialDeck.Seats[seat].name);
-  const [description, setDescription] = useState(initialDeck.Seats[seat].description);
+  const [name, setName] = useState(initialDeck.seats[seat].name);
+  const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
   return (
     <MainLayout loginCallback={loginCallback}>

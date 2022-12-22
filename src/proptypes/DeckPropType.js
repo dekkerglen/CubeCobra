@@ -6,7 +6,7 @@ const DeckPropType = PropTypes.shape({
   cube: PropTypes.string,
   owner: PropTypes.string,
   cubeOwner: PropTypes.string,
-  Seats: PropTypes.arrayOf(DeckSeatPropType),
+  seats: PropTypes.arrayOf(DeckSeatPropType),
   date: PropTypes.instanceOf(Date),
   comments: PropTypes.arrayOf(PropTypes.object),
   basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,

@@ -65,10 +65,10 @@ router.post('/startdraft', ensureAuth, async (req, res) => {
 
   const seatToPlayer = fromEntries(Object.entries(seatOrder).map(([player, seat]) => [parseInt(seat, 10), player]));
 
-  for (let i = 0; i < draft.Seats.length; i++) {
+  for (let i = 0; i < draft.seats.length; i++) {
     if (seatToPlayer[i]) {
-      draft.Seats[i].owner = seatToPlayer[i];
-      draft.Seats[i].Bot = false;
+      draft.seats[i].owner = seatToPlayer[i];
+      draft.seats[i].Bot = false;
     }
   }
 
@@ -174,14 +174,14 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       const deck = await Draft.getById(draftId);
 
-      if (deck.Seats[seat].owner !== req.user.id) {
+      if (deck.seats[seat].owner !== req.user.id) {
         return res.status(401).send({
           success: 'false',
         });
       }
 
-      deck.Seats[seat].deck = drafted;
-      deck.Seats[seat].sideboard = sideboard;
+      deck.seats[seat].deck = drafted;
+      deck.seats[seat].sideboard = sideboard;
       await Draft.put(deck);
 
       return res.status(200).send({

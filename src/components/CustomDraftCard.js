@@ -43,7 +43,7 @@ const CustomDraftCard = ({
             />
           )}
 
-          <LabelRow htmlFor={`seats-${index}`} label="Total Seats">
+          <LabelRow htmlFor={`seats-${index}`} label="Total seats">
             <Input type="select" name="seats" id={`seats-${index}`} defaultValue={format.defaultSeats ?? 8}>
               {rangeOptions(2, 17)}
             </Input>

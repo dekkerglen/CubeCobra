@@ -74,13 +74,13 @@ const migrations = [
   //     [card.convertCardRating, card.batchPut],
   //   ]
   // },
-  {
-    source: CardHistory,
-    conversions: [
-      [cardHistory.convertCardHistory, cardHistory.batchPut],
-      // [card.convertCardHistory, card.updateWithCubedWith],
-    ],
-  },
+  // {
+  //   source: CardHistory,
+  //   conversions: [
+  //     [cardHistory.convertCardHistory, cardHistory.batchPut],
+  //     // [card.convertCardHistory, card.updateWithCubedWith],
+  //   ],
+  // },
   // {
   //   source: Comment,
   //   conversions: [
@@ -93,18 +93,10 @@ const migrations = [
   //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
   //   ],
   // },
-  // {
-  //   source: Deck,
-  //   conversions: [
-  //     [draft.convertDeck, draft.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: Draft,
-  //   conversions: [
-  //     [draft.convertDraft, draft.updateDeckWithDraft],
-  //   ],
-  // },
+  {
+    source: Deck,
+    conversions: [[draft.convertDeck, draft.batchPut]],
+  },
   // {
   //   source: Cube,
   //   conversions: [
@@ -136,7 +128,7 @@ const migrations = [
   // }
 ];
 
-const batchSize = 25;
+const batchSize = 100;
 const skip = 0;
 
 (async () => {
@@ -146,8 +138,8 @@ const skip = 0;
     const mongo = migration.source;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
-    const count = await mongo.countDocuments();
-    const cursor = mongo.find().skip(skip).lean().cursor();
+    const count = await mongo.countDocuments({ _id: '5dde88af89469844a079b2f1' });
+    const cursor = mongo.find({ _id: '5dde88af89469844a079b2f1' }).skip(skip).lean().cursor();
     const starttime = new Date();
 
     // batch them by batchSize
@@ -169,7 +161,9 @@ const skip = 0;
         if (Array.isArray(converted[0])) {
           converted = converted.flat();
         }
-        await put(converted);
+        if (converted.length > 0) {
+          await put(converted);
+        }
       }
       const currentTime = new Date();
       const timeElapsed = (currentTime - starttime) / 1000;
@@ -177,9 +171,12 @@ const skip = 0;
       const documentProcessed = i - skip;
       const timeRemaining = (timeElapsed / documentProcessed) * documentsRemaining;
       console.log(
-        `${mongo.collection.collectionName}: Finished: ${i + batchSize} of ${count} items. Time elapsed: ${
-          Math.round(timeElapsed / 36) / 100
-        } hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`,
+        `${mongo.collection.collectionName}: Finished: ${Math.min(
+          i + batchSize,
+          count,
+        )} of ${count} items. Time elapsed: ${Math.round(timeElapsed / 36) / 100} hours. Time remaining: ${
+          Math.round(timeRemaining / 36) / 100
+        } hours`,
       );
     }
   }

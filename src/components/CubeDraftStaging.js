@@ -34,7 +34,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
 
   const seats = [];
 
-  for (let i = 0; i < draft.Seats.length; i++) {
+  for (let i = 0; i < draft.seats.length; i++) {
     let seat = BOT_NAME;
 
     for (const [key, value] of Object.entries(order)) {
@@ -145,7 +145,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
             <i>Click and drag seats to reposition players and bots.</i>
             <Row className="g-0">
               <Col xs={3}>
-                {draft.Seats.map((seat, i) => (
+                {draft.seats.map((seat, i) => (
                   <div className="pb-3" key={i}>{`Seat ${i + 1}`}</div>
                 ))}
               </Col>

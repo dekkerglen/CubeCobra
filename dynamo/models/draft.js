@@ -52,21 +52,8 @@ const client = createClient({
   FIELDS,
 });
 
-// LRU cache for cards
-const cardsCache = {};
-const MAX_CACHE_SIZE = 1000;
-
-const evictOldest = () => {
-  const oldest = Object.entries(cardsCache).sort(([, valuea], [, valueb]) => valuea.date.localeCompare(valueb.date));
-  delete cardsCache[oldest[0][0]];
-};
-
 const getCards = async (id) => {
   try {
-    if (cardsCache[id]) {
-      return cardsCache[id].document;
-    }
-
     const res = await s3
       .getObject({
         Bucket: process.env.DATA_BUCKET,
@@ -74,20 +61,8 @@ const getCards = async (id) => {
       })
       .promise();
 
-    const cards = JSON.parse(res.Body.toString());
-
-    if (Object.keys(cardsCache).length >= MAX_CACHE_SIZE) {
-      evictOldest();
-    }
-
-    cardsCache[id] = {
-      date: new Date(),
-      document: cards,
-    };
-
-    return cards;
+    return JSON.parse(res.Body.toString());
   } catch (e) {
-    console.log(e);
     return [];
   }
 };
@@ -119,7 +94,6 @@ const getSeats = async (id) => {
 
     return JSON.parse(res.Body.toString());
   } catch (e) {
-    console.log(e);
     return {};
   }
 };
@@ -130,7 +104,7 @@ const addS3Fields = async (document) => {
 
   return {
     ...document,
-    Seats: seats.Seats,
+    seats: seats.seats,
     basics: seats.basics,
     InitialState: seats.InitialState,
     cards: addDetails(cards),
@@ -140,49 +114,46 @@ const addS3Fields = async (document) => {
 // make sure all card references use the card array
 const sanitize = (document) => {
   const { cards } = document;
-  for (const seat of document.Seats) {
-    if (seat.Deck) {
-      for (const row of seat.Mainboard) {
-        for (const col of row) {
-          for (let i = 0; i < col.length; i++) {
-            const card = col[i];
-            if (typeof card === 'object' && card !== null) {
-              col[i] = cards.findIndex((c) => c.cardID === card.cardID);
-            }
-          }
-        }
+
+  const indexify = (card) => {
+    // if it's an array
+    if (Array.isArray(card)) {
+      return card.map((c) => indexify(c));
+    }
+
+    // if it's already index return it
+    if (typeof card === 'number') {
+      return card;
+    }
+
+    if (typeof card === 'object' && card !== null) {
+      const index = cards.findIndex((c) => c.cardID === card.cardID);
+
+      if (index === -1) {
+        return cards.findIndex((c) => c._id && c._id.equals(card.cardID));
       }
+
+      return index;
+    }
+
+    return -1;
+  };
+
+  for (const seat of document.seats) {
+    if (seat.Deck) {
+      seat.Deck = seat.Deck.map(indexify);
     }
 
     if (seat.Sideboard) {
-      for (const row of seat.Sideboard) {
-        for (const col of row) {
-          for (let i = 0; i < col.length; i++) {
-            const card = col[i];
-            if (typeof card === 'object' && card !== null) {
-              col[i] = cards.findIndex((c) => c.cardID === card.cardID);
-            }
-          }
-        }
-      }
+      seat.Sideboard = seat.Sideboard.map(indexify);
     }
 
     if (seat.Pickorder) {
-      for (let i = 0; i < seat.Pickorder.length; i++) {
-        const card = seat.Pickorder[i];
-        if (typeof card === 'object' && card !== null) {
-          seat.Pickorder[i] = cards.findIndex((c) => c.cardID === card.cardID);
-        }
-      }
+      seat.Pickorder = seat.Pickorder.map(indexify);
     }
 
     if (seat.Trashorder) {
-      for (let i = 0; i < seat.Trashorder.length; i++) {
-        const card = seat.Trashorder[i];
-        if (typeof card === 'object' && card !== null) {
-          seat.Trashorder[i] = cards.findIndex((c) => c.cardID === card.cardID);
-        }
-      }
+      seat.Trashorder = seat.Trashorder.map(indexify);
     }
   }
 
@@ -191,10 +162,10 @@ const sanitize = (document) => {
 
 const draftIsCompleted = (draft) => {
   let numCards = 0;
-  if (!draft.Seats) {
+  if (!draft.seats) {
     return false;
   }
-  for (const seat of draft.Seats) {
+  for (const seat of draft.seats) {
     if (seat.Deck) {
       numCards += seat.Deck.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
     }
@@ -207,6 +178,10 @@ const draftIsCompleted = (draft) => {
 
 module.exports = {
   getById: async (id) => addS3Fields((await client.get(id)).Item),
+  batchGet: async (ids) => {
+    const documents = await client.batchGet(ids);
+    return Promise.all(documents.map((document) => addS3Fields(document)));
+  },
   getByOwner: async (owner, lastKey) => {
     const res = await client.query({
       IndexName: 'ByOwner',
@@ -286,7 +261,7 @@ module.exports = {
       .putObject({
         Bucket: process.env.DATA_BUCKET,
         Key: `seats/${id}.json`,
-        Body: JSON.stringify({ Seats: document.Seats, basics: document.basics, InitialState: document.InitialState }),
+        Body: JSON.stringify({ seats: document.seats, basics: document.basics, InitialState: document.InitialState }),
       })
       .promise();
 
@@ -304,12 +279,12 @@ module.exports = {
     }
 
     const items = filtered.map((document) => ({
-      [FIELDS.ID]: document.id,
-      [FIELDS.CUBE_ID]: document.cube,
-      [FIELDS.OWNER]: document.owner,
-      [FIELDS.CUBE_OWNER]: document.cubeOwner,
-      [FIELDS.DATE]: document.date,
-      [FIELDS.TYPE]: document.type,
+      [FIELDS.ID]: document[FIELDS.ID],
+      [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
+      [FIELDS.OWNER]: document[FIELDS.OWNER],
+      [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
+      [FIELDS.DATE]: document[FIELDS.DATE],
+      [FIELDS.TYPE]: document[FIELDS.TYPE],
     }));
 
     await client.batchPut(items);
@@ -328,7 +303,7 @@ module.exports = {
             Bucket: process.env.DATA_BUCKET,
             Key: `seats/${document.id}.json`,
             Body: JSON.stringify({
-              Seats: document.Seats,
+              seats: document.seats,
               basics: document.basics,
               InitialState: document.InitialState,
             }),
@@ -338,10 +313,10 @@ module.exports = {
     );
   },
   createTable: async () => client.createTable(),
-  convertDeck: (deck) => {
+  convertDeck: (deck, draft, type) => {
     try {
       let cardCount = 0;
-      for (const row of deck.Seats[0].deck) {
+      for (const row of deck.seats[0].deck) {
         for (const col of row) {
           cardCount += col.length;
         }
@@ -351,6 +326,29 @@ module.exports = {
         return [];
       }
 
+      let cards = [];
+      let initialState = {};
+      let seatsForPickOrder = {};
+
+      if (type === TYPES.DRAFT) {
+        draft.initial_state.map((seat) =>
+          seat.map((pack) =>
+            pack.cards.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
+          ),
+        );
+        seatsForPickOrder = deck.seats;
+        cards = deck.cards;
+      } else if (type === TYPES.GRID) {
+        initialState = draft.initial_state.map((pack) =>
+          pack.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
+        );
+        seatsForPickOrder = draft.seats;
+        cards = draft.cards;
+      } else {
+        seatsForPickOrder = deck.seats;
+        cards = deck;
+      }
+
       const doc = sanitize({
         [FIELDS.ID]: `${deck.draft || deck._id}`,
         [FIELDS.CUBE_ID]: `${deck.cube}`,
@@ -358,82 +356,40 @@ module.exports = {
         [FIELDS.OWNER]: `${deck.owner}`,
         [FIELDS.DATE]: deck.date.valueOf(),
         basics: deck.basics.map((card) => parseInt(card, 10)),
-        cards: deck.cards,
-        Seats: deck.Seats.map((seat) => ({
+        cards,
+        seats: deck.seats.map((seat, index) => ({
           owner: `${seat.userid}`,
           Mainboard: seat.deck,
           Sideboard: seat.sideboard,
-          Pickorder: seat.pickorder,
+          Pickorder: seatsForPickOrder[index].pickorder,
           Trashorder: seat.trashorder,
           title: seat.name,
           body: seat.description,
           Bot: seat.bot,
         })),
-        InitialState: deck.initial_state,
+        InitialState: initialState,
+        [FIELDS.TYPE]: type,
       });
 
       return [doc];
     } catch (e) {
+      console.log(`Erroring converting deck ${deck._id} of type ${type}`);
+      console.log(e);
       return [];
     }
-  },
-  updateDeckWithDraft: async (drafts) => {
-    await Promise.all(
-      drafts.map(async (draft) => {
-        try {
-          const seats = await getSeats(draft.id);
-
-          if (Object.entries(seats).length === 0) {
-            return;
-          }
-
-          let cards = null;
-          for (let i = 0; i < draft.Seats.length; i++) {
-            seats.Seats[i].Trashorder = draft.Seats[i].Trashorder;
-
-            for (let j = 0; j < seats.Seats[i].Trashorder.length; j++) {
-              const card = seats.Seats[i].Trashorder[j];
-              if (typeof card === 'object' && card !== null) {
-                // only load cards if we need them
-                if (cards === null) {
-                  // eslint-disable-next-line no-await-in-loop
-                  cards = await getCards(draft.id);
-                }
-
-                seats.Seats[i].Trashorder[j] = cards.findIndex((c) => c.cardID === card.cardID);
-              }
-            }
-          }
-          await s3
-            .putObject({
-              Bucket: process.env.DATA_BUCKET,
-              Key: `seats/${draft.id}.json`,
-              Body: JSON.stringify(seats),
-            })
-            .promise();
-        } catch (e) {
-          console.log(e);
-        }
-      }),
-    );
-  },
-  convertDraft: (draft) => {
-    // trashorder
-
-    if (!draft.Seats || !draft.Seats[0] || !draft.Seats[0].trashorder || draft.Seats[0].trashorder.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        id: `${draft._id}`,
-        Seats: draft.Seats.map((seat) => ({
-          Trashorder: seat.trashorder.filter((value) => value),
-        })),
-      },
-    ];
   },
   delete: async (id) => client.delete(id),
+  scan: async (limit, lastKey) => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+      Limit: limit || 36,
+    });
+
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   FIELDS,
   TYPES,
 };

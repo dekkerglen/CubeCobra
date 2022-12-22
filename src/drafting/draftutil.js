@@ -88,16 +88,16 @@ export const nextStep = (draft, seat, cardsPicked) => {
   return null;
 };
 
-export const getDrafterState = (seats, seatNumber, pickNumber) => {
+export const getDrafterState = (draft, seatNumber, pickNumber) => {
   // build list of steps and match to pick and pack number
-  const steps = getStepList(seats.InitialState);
+  const steps = getStepList(draft.InitialState);
 
   // build a list of states for each seat
   const states = [];
-  for (let i = 0; i < seats.Seats.length; i++) {
+  for (let i = 0; i < draft.seats.length; i++) {
     const picksList = [];
-    const pickQueue = seats.Seats.seats[i].Pickorder.slice();
-    const trashQueue = seats.Seats.seats[i].Trashorder.slice();
+    const pickQueue = draft.seats[i].Pickorder.slice();
+    const trashQueue = draft.seats[i].Trashorder.slice();
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
@@ -119,8 +119,9 @@ export const getDrafterState = (seats, seatNumber, pickNumber) => {
     states.push({
       picked: [],
       trashed: [],
-      pickQueue: seats.Seats.seats[i].Pickorder.slice(),
-      trashQueue: seats.Seats.seats[i].Trashorder.slice(),
+      pickQueue: draft.seats[i].Pickorder.slice(),
+      trashQueue: draft.seats[i].Trashorder.slice(),
+      cardsPicked: [...draft.seats[i].Mainboard.flat(3), ...draft.seats[i].Sideboard.flat(3)],
       cardsInPack: [],
       picksList,
     });
@@ -136,8 +137,8 @@ export const getDrafterState = (seats, seatNumber, pickNumber) => {
     if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
-      for (let i = 0; i < seats.InitialState.length; i++) {
-        packsWithCards[i] = seats.InitialState[i][step.pack - 1].cards.slice();
+      for (let i = 0; i < draft.InitialState.length; i++) {
+        packsWithCards[i] = draft.InitialState[i][step.pack - 1].cards.slice();
       }
 
       offset = 0;
@@ -150,9 +151,20 @@ export const getDrafterState = (seats, seatNumber, pickNumber) => {
       seat.pack = step.pack;
 
       if (step.action === 'pick' || step.action === 'pickrandom') {
-        seat.cardsInPack = packsWithCards[(i + offset) % seats.seats.length].slice();
+        seat.cardsInPack = packsWithCards[(i + offset) % draft.seats.length].slice();
 
-        const picked = seat.pickQueue.pop();
+        let picked = seat.pickQueue.pop();
+
+        if (picked === -1) {
+          // try to make picked a card in the pack that exists in cardsPicked
+          for (const cardIndex of seat.cardsInPack) {
+            if (seat.cardsPicked.includes(cardIndex)) {
+              picked = cardIndex;
+              break;
+            }
+          }
+        }
+
         seat.picked.push(picked);
         seat.selection = picked;
         seat.step = step;

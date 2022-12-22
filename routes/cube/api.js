@@ -741,16 +741,16 @@ router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
 
   const { seat } = req.body;
 
-  const index = draft.Seats.findIndex(({ owner }) => owner === req.body.owner);
+  const index = draft.seats.findIndex(({ owner }) => owner === req.body.owner);
   if (index === -1) {
     return res.status(403).send({
       success: 'false',
       message: 'Unauthorized',
     });
   }
-  await updateDeckCardAnalytics(draft.cube, draft.Seats, index, seat, draft.cards, carddb);
+  await updateDeckCardAnalytics(draft.cube, draft.seats, index, seat, draft.cards, carddb);
 
-  draft.Seats[index].seat = seat;
+  draft.seats[index].seat = seat;
   await Draft.put(draft);
 
   return res.status(200).send({

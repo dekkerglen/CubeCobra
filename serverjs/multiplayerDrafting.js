@@ -280,8 +280,8 @@ const finishDraft = async (draftId, draft) => {
     const picks = await getPlayerPicks(draftId, i);
     const trash = await getPlayerTrash(draftId, i);
 
-    draft.Seats[i].Pickorder = picks;
-    draft.Seats[i].Trashorder = trash;
+    draft.seats[i].Pickorder = picks;
+    draft.seats[i].Trashorder = trash;
 
     const drafted = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);
@@ -291,8 +291,8 @@ const finishDraft = async (draftId, draft) => {
       drafted[row][col].push(parseInt(cardIndex, 10));
     }
 
-    draft.Seats[i].Sideboard = sideboard;
-    draft.Seats[i].Mainboard = drafted;
+    draft.seats[i].Sideboard = sideboard;
+    draft.seats[i].Mainboard = drafted;
   }
 
   await Draft.put(draft);
@@ -305,7 +305,7 @@ const createLobby = async (draft, hostUser) => {
   const lobbyorder = lobbyOrderRef(draft.id);
   const lobby = lobbyRef(draft.id);
 
-  await hmset(lobby, ['seats', `${draft.Seats.length}`, 'host', `${hostUser.id}`]);
+  await hmset(lobby, ['seats', `${draft.seats.length}`, 'host', `${hostUser.id}`]);
   await hmset(lobbyorder, [`${hostUser.id}`, '0']);
   await rpush(lobbylist, `${hostUser.id}`);
 };
@@ -340,7 +340,7 @@ const setup = async (draft) => {
     // setup the draft metadata
     await hmset(draftRef(draft.id), [
       'seats',
-      draft.Seats.length,
+      draft.seats.length,
       'currentPack',
       0,
       'totalPacks',
@@ -366,7 +366,7 @@ const setup = async (draft) => {
 
     // create a list of steps for each seat
     const stepList = getStepList(draft.InitialState);
-    for (let i = 0; i < draft.Seats.length; i++) {
+    for (let i = 0; i < draft.seats.length; i++) {
       for (const step of stepList) {
         await lpush(stepsQueueRef(draft.id, i), step.action);
       }
@@ -385,7 +385,7 @@ const setup = async (draft) => {
     const playerSeats = Object.entries(seats).map(([, val]) => val);
 
     // save which seats are bot seats
-    for (let i = 0; i < draft.Seats.length; i++) {
+    for (let i = 0; i < draft.seats.length; i++) {
       if (!playerSeats.includes(`${i}`)) {
         await lpush(draftBotSeatsRef(draft.id), i);
       }

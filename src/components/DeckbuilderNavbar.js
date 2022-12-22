@@ -72,16 +72,16 @@ const DeckbuilderNavbar = ({
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    let main = deck.Seats[seat].pickorder;
+    let main = deck.seats[seat].pickorder;
     if (main.length <= 0) {
-      main = [...deck.Seats[seat].deck.flat(3), ...deck.Seats[seat].sideboard.flat(3)];
+      main = [...deck.seats[seat].deck.flat(3), ...deck.seats[seat].sideboard.flat(3)];
     }
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, deck.basics);
     const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     setSideboard(newSide);
     setDeck(newDeckCards);
-  }, [deck.Seats, deck.cards, seat, deck.basics, setSideboard, setDeck]);
+  }, [deck.seats, deck.cards, seat, deck.basics, setSideboard, setDeck]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>

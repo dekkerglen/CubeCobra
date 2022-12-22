@@ -325,8 +325,8 @@ const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards
   };
 
   // we don't want to revert deck analytics for decks have not been built
-  if (oldseats && oldseats.Seats[seatNum].sideboard.flat().length > 0) {
-    for (const row of oldseats.Seats[0].deck) {
+  if (oldseats && oldseats.seats[seatNum].sideboard.flat().length > 0) {
+    for (const row of oldseats.seats[0].deck) {
       for (const col of row) {
         for (const ci of col) {
           const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
@@ -337,7 +337,7 @@ const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards
         }
       }
     }
-    for (const row of oldseats.Seats[seatNum].sideboard) {
+    for (const row of oldseats.seats[seatNum].sideboard) {
       for (const col of row) {
         for (const ci of col) {
           const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;

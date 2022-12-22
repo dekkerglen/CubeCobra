@@ -70,6 +70,7 @@
     "csurf": "^1.10.0",
     "dotenv": "^8.2.0",
     "dynamodb-store": "^1.2.0",
+    "elo-rating": "^1.0.1",
     "email-templates": "^8.0.7",
     "event-stream": "^4.0.1",
     "events": "^3.3.0",

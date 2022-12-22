@@ -32,7 +32,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
               {rangeOptions(1, 25)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="seats" label="Total Seats">
+          <LabelRow htmlFor="seats" label="Total seats">
             <Input type="select" name="seats" id="seats" defaultValue="8">
               {rangeOptions(2, 17)}
             </Input>
