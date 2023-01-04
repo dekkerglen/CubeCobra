@@ -1,4 +1,4 @@
-replace Pickorder, Mainboard, Sideboard with lowercase versions
+replace Mainboard, Sideboard with lowercase versions
 
 
 ]

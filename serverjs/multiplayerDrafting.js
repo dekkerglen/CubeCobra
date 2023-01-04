@@ -280,8 +280,8 @@ const finishDraft = async (draftId, draft) => {
     const picks = await getPlayerPicks(draftId, i);
     const trash = await getPlayerTrash(draftId, i);
 
-    draft.seats[i].Pickorder = picks;
-    draft.seats[i].Trashorder = trash;
+    draft.seats[i].pickorder = picks;
+    draft.seats[i].trashorder = trash;
 
     const drafted = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);

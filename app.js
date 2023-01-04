@@ -17,7 +17,7 @@ const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
 const DynamoDBStore = require('dynamodb-store');
 const { winston } = require('./serverjs/cloudwatch');
-const updatedb = require('./serverjs/updatecards');
+const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/cards');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
@@ -223,10 +223,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// scryfall updates this data at 9, so his will minimize staleness
+// scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  winston.info('String midnight cardbase update...');
-  await updatedb.updateCardbase();
+  winston.info('starting midnight cardbase update...');
+  await updateCardbase();
 });
 
 // Start server after carddb is initialized.

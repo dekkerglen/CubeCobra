@@ -14,7 +14,6 @@ const { render } = require('../serverjs/render');
 const { csrfProtection } = require('./middleware');
 
 const CardHistory = require('../dynamo/models/cardHistory');
-const CardMetadata = require('../dynamo/models/cardMetadata');
 const Cube = require('../dynamo/models/cube');
 
 const router = express.Router();
@@ -232,12 +231,11 @@ router.get('/card/:id', async (req, res) => {
 
     // otherwise just go to this ID.
     const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
-    const metadata = await CardMetadata.getByOracle(card.oracle_id);
 
     const related = {};
 
     for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
-      related[category] = metadata.cubedWith[category].map((oracle) =>
+      related[category] = card.cubedWith[category].map((oracle) =>
         carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
       );
     }

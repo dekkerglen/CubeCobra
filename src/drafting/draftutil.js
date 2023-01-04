@@ -96,8 +96,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   const states = [];
   for (let i = 0; i < draft.seats.length; i++) {
     const picksList = [];
-    const pickQueue = draft.seats[i].Pickorder.slice();
-    const trashQueue = draft.seats[i].Trashorder.slice();
+    const pickQueue = draft.seats[i].pickorder.slice();
+    const trashQueue = (draft.seats[i].trashorder || []).slice();
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
@@ -119,8 +119,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     states.push({
       picked: [],
       trashed: [],
-      pickQueue: draft.seats[i].Pickorder.slice(),
-      trashQueue: draft.seats[i].Trashorder.slice(),
+      pickQueue: draft.seats[i].pickorder.slice(),
+      trashQueue: (draft.seats[i].trashorder || []).slice(),
       cardsPicked: [...draft.seats[i].Mainboard.flat(3), ...draft.seats[i].Sideboard.flat(3)],
       cardsInPack: [],
       picksList,

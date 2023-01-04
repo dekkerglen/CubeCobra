@@ -567,8 +567,8 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
     for (let i = 0; i < draft.seats.length; i += 1) {
       draft.seats[i].deck = createPool();
       draft.seats[i].sideboard = createPool();
-      draft.seats[i].Pickorder = [];
-      draft.seats[i].Trashorder = [];
+      draft.seats[i].pickorder = [];
+      draft.seats[i].trashorder = [];
     }
     draft.seats[0].owner = req.user.id;
 

@@ -37,13 +37,13 @@ const skip = 0;
     const withDraft = await Promise.all(
       items.map(async (deck) => {
         if (deck.draft) {
-          const draft = await Draft.findById(deck.draft);
+          const draft = await Draft.findById(deck.draft).lean();
 
           if (draft) {
             return [deck, draft, draftModel.TYPES.DRAFT];
           }
 
-          const grid = await GridDraft.findById(deck.draft);
+          const grid = await GridDraft.findById(deck.draft).lean();
 
           if (grid) {
             return [deck, grid, draftModel.TYPES.GRID];

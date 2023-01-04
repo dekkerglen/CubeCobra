@@ -148,12 +148,12 @@ const sanitize = (document) => {
       seat.Sideboard = seat.Sideboard.map(indexify);
     }
 
-    if (seat.Pickorder) {
-      seat.Pickorder = seat.Pickorder.map(indexify);
+    if (seat.pickorder) {
+      seat.pickorder = seat.pickorder.map(indexify);
     }
 
-    if (seat.Trashorder) {
-      seat.Trashorder = seat.Trashorder.map(indexify);
+    if (seat.trashorder) {
+      seat.trashorder = seat.trashorder.map(indexify);
     }
   }
 
@@ -268,49 +268,53 @@ module.exports = {
     return id;
   },
   batchPut: async (documents) => {
-    const filtered = [];
-    const keys = new Set();
+    try {
+      const filtered = [];
+      const keys = new Set();
 
-    for (const document of documents) {
-      if (!keys.has(document.id)) {
-        filtered.push(document);
-        keys.add(document.id);
+      for (const document of documents) {
+        if (!keys.has(document.id)) {
+          filtered.push(document);
+          keys.add(document.id);
+        }
       }
+
+      const items = filtered.map((document) => ({
+        [FIELDS.ID]: document[FIELDS.ID],
+        [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
+        [FIELDS.OWNER]: document[FIELDS.OWNER],
+        [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
+        [FIELDS.DATE]: document[FIELDS.DATE],
+        [FIELDS.TYPE]: document[FIELDS.TYPE],
+      }));
+
+      await client.batchPut(items);
+
+      await Promise.all(
+        filtered.map(async (document) => {
+          await s3
+            .putObject({
+              Bucket: process.env.DATA_BUCKET,
+              Key: `cardlist/${document.id}.json`,
+              Body: JSON.stringify(stripDetails(document.cards)),
+            })
+            .promise();
+          await s3
+            .putObject({
+              Bucket: process.env.DATA_BUCKET,
+              Key: `seats/${document.id}.json`,
+              Body: JSON.stringify({
+                seats: document.seats,
+                basics: document.basics,
+                InitialState: document.InitialState,
+              }),
+            })
+            .promise();
+        }),
+      );
+    } catch (e) {
+      console.log(e);
     }
-
-    const items = filtered.map((document) => ({
-      [FIELDS.ID]: document[FIELDS.ID],
-      [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
-      [FIELDS.OWNER]: document[FIELDS.OWNER],
-      [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
-      [FIELDS.DATE]: document[FIELDS.DATE],
-      [FIELDS.TYPE]: document[FIELDS.TYPE],
-    }));
-
-    await client.batchPut(items);
-
-    await Promise.all(
-      filtered.map(async (document) => {
-        await s3
-          .putObject({
-            Bucket: process.env.DATA_BUCKET,
-            Key: `cardlist/${document.id}.json`,
-            Body: JSON.stringify(stripDetails(document.cards)),
-          })
-          .promise();
-        await s3
-          .putObject({
-            Bucket: process.env.DATA_BUCKET,
-            Key: `seats/${document.id}.json`,
-            Body: JSON.stringify({
-              seats: document.seats,
-              basics: document.basics,
-              InitialState: document.InitialState,
-            }),
-          })
-          .promise();
-      }),
-    );
   },
   createTable: async () => client.createTable(),
   convertDeck: (deck, draft, type) => {
@@ -331,22 +335,45 @@ module.exports = {
       let seatsForPickOrder = {};
 
       if (type === TYPES.DRAFT) {
-        draft.initial_state.map((seat) =>
-          seat.map((pack) =>
-            pack.cards.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
-          ),
-        );
         seatsForPickOrder = deck.seats;
         cards = deck.cards;
+        initialState = draft.initial_state.map((seat) =>
+          seat.map((pack) => {
+            if (pack.cards) {
+              return {
+                steps: pack.steps,
+                cards: pack.cards.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
+              };
+            }
+            if (typeof pack === 'object') {
+              return {
+                cards: Object.values(pack).map((packCard) =>
+                  cards.findIndex((card) => packCard.cardID === card.cardID),
+                ),
+              };
+            }
+            return {
+              cards: pack.map((packCard) => cards.findIndex((card) => packCard.cardID === card.cardID)),
+            };
+          }),
+        );
       } else if (type === TYPES.GRID) {
+        seatsForPickOrder = draft.seats;
+        cards = draft.cards;
         initialState = draft.initial_state.map((pack) =>
           pack.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
         );
-        seatsForPickOrder = draft.seats;
-        cards = draft.cards;
       } else {
         seatsForPickOrder = deck.seats;
-        cards = deck;
+        cards = deck.cards;
+      }
+
+      if (
+        !seatsForPickOrder[0].pickorder ||
+        seatsForPickOrder[0].pickorder.length === 0 ||
+        !seatsForPickOrder[0].pickorder[0].cardID
+      ) {
+        seatsForPickOrder = null;
       }
 
       const doc = sanitize({
@@ -361,8 +388,8 @@ module.exports = {
           owner: `${seat.userid}`,
           Mainboard: seat.deck,
           Sideboard: seat.sideboard,
-          Pickorder: seatsForPickOrder[index].pickorder,
-          Trashorder: seat.trashorder,
+          pickorder: seatsForPickOrder ? seatsForPickOrder[index].pickorder : null,
+          trashorder: seatsForPickOrder ? seatsForPickOrder[index].trashorder : null,
           title: seat.name,
           body: seat.description,
           Bot: seat.bot,

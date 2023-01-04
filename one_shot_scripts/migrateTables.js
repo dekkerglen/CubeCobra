@@ -12,7 +12,6 @@ const cubeHash = require('../dynamo/models/cubeHash');
 const changelog = require('../dynamo/models/changelog');
 const blog = require('../dynamo/models/blog');
 const cardHistory = require('../dynamo/models/cardhistory');
-const card = require('../dynamo/models/cardMetadata');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');

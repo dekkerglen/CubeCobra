@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
@@ -13,6 +14,14 @@ let checkpoint = 727;
 (async () => {
   await carddb.initializeCardDb();
 
+  if (!fs.existsSync('./temp')) {
+    fs.mkdirSync('./temp');
+  }
+  // create global_draft_history and cube_draft_history folders
+  if (!fs.existsSync('./temp/cubes_history')) {
+    fs.mkdirSync('./temp/cubes_history');
+  }
+
   let logsByDay = {};
   let keys = [];
   if (checkpoint < 1) {
@@ -20,6 +29,7 @@ let checkpoint = 727;
     let lastKey = null;
     let changelogs = [];
     do {
+      // eslint-disable-next-line no-await-in-loop
       const result = await ChangeLog.scan(1000000, lastKey);
       changelogs = changelogs.concat(result.items);
       lastKey = result.lastKey;
@@ -64,7 +74,7 @@ let checkpoint = 727;
 
   if (checkpoint >= 2) {
     // load the cubes
-    const loaded = JSON.parse(fs.readFileSync(`temp/cubes_${keys[checkpoint - 2]}.json`));
+    const loaded = JSON.parse(fs.readFileSync(`temp/cubes_history/${keys[checkpoint - 2]}.json`));
     Object.assign(cubes, loaded);
   }
 
@@ -99,7 +109,7 @@ let checkpoint = 727;
       }
     }
 
-    fs.writeFileSync(`temp/cubes_${keys[i]}.json`, JSON.stringify(cubes));
+    fs.writeFileSync(`temp/cubes_history/${keys[i]}.json`, JSON.stringify(cubes));
 
     //    console.log(`Processing ${logs.length} logs for day ${i + 1} of ${keys.length}`);
     console.log(
@@ -130,7 +140,7 @@ let checkpoint = 727;
     };
     const data = {};
 
-    const cubeList = JSON.parse(fs.readFileSync(`temp/cubes_${key}.json`));
+    const cubeList = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`));
 
     for (const cube of Object.values(cubeList)) {
       const cubeCards = cube.map((id) => carddb.cardFromId(id));

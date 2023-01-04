@@ -9,8 +9,7 @@ const cubeMetadata = require('../dynamo/models/cube');
 const cubeHash = require('../dynamo/models/cubeHash');
 const cubeChangelog = require('../dynamo/models/changelog');
 const blog = require('../dynamo/models/blog');
-const cardHistory = require('../dynamo/models/cardhistory');
-const cardMetadata = require('../dynamo/models/cardMetadata');
+const cardHistory = require('../dynamo/models/cardHistory');
 const comment = require('../dynamo/models/comment');
 const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
@@ -30,7 +29,6 @@ const tables = [
   // cubeChangelog,
   // blog,
   cardHistory,
-  // cardMetadata,
   // comment,
   // cubeAnalytic,
   // draft,
