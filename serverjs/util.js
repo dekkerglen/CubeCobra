@@ -3,7 +3,7 @@ const { winston } = require('./cloudwatch');
 const Notification = require('../dynamo/models/notification');
 const cardutil = require('../dist/utils/Card');
 
-const carddb = require('./cards');
+const carddb = require('./carddb');
 
 function hasProfanity(text) {
   if (!text) return false;

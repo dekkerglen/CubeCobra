@@ -7,7 +7,7 @@
 require('dotenv').config();
 
 const { winston } = require('../serverjs/cloudwatch');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 const Deck = require('../dynamo/models/draft');
 const Cube = require('../dynamo/models/cube');
 const CardHistory = require('../dynamo/models/cardHistory');
@@ -235,28 +235,28 @@ const run = async () => {
     vintage: 0,
   };
 
-  winston.info('Starting card db');
+  console.log('Starting card db');
 
   await carddb.initializeCardDb();
 
-  winston.info('finished loading cards');
+  console.log('finished loading cards');
 
-  winston.info('Started: oracles');
+  console.log('Started: oracles');
 
   const distinctOracles = carddb.allOracleIds();
   ORACLE_COUNT = distinctOracles.length;
 
-  winston.info(`Created list of ${ORACLE_COUNT} oracles`);
+  console.log(`Created list of ${ORACLE_COUNT} oracles`);
 
   const oracleToIndex = Object.fromEntries(distinctOracles.map((item, index) => [item, index]));
 
-  winston.info('creating correlation matrices...');
+  console.log('creating correlation matrices...');
 
   const cubedWith = new Int32Array(ORACLE_COUNT * ORACLE_COUNT).fill(0);
   const draftedWith = new Int32Array(ORACLE_COUNT * ORACLE_COUNT).fill(0);
 
   // process all cube objects
-  winston.info('Started: cubes');
+  console.log('Started: cubes');
   const cubes = [];
   let lastKey;
   do {
@@ -265,7 +265,7 @@ const run = async () => {
     lastKey = scan.lastKey;
   } while (lastKey);
 };
-winston.info('Loaded all cube ids');
+console.log('Loaded all cube ids');
 
 (async () => {
   await run();

@@ -4,14 +4,9 @@ const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
 const sharp = require('sharp');
-const CubeAnalytic = require('../dynamo/models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
-
-const ELO_BASE = 1200;
-const ELO_SPEED = 1 / 128;
-const CUBE_ELO_SPEED = 4;
 
 function getCubeId(cube) {
   if (cube.shortId) return cube.shortId;
@@ -294,90 +289,6 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
-const getEloAdjustment = (winner, loser, speed) => {
-  const diff = loser - winner;
-  // Expected performance for pick.
-  const expectedA = 1 / (1 + 10 ** (diff / 400));
-  const expectedB = 1 - expectedA;
-  const adjustmentA = (1 - expectedA) * speed;
-  const adjustmentB = (0 - expectedB) * speed;
-  return [adjustmentA, adjustmentB];
-};
-
-const newCardAnalytics = (cardName, elo) => {
-  return {
-    cardName,
-    picks: 0,
-    passes: 0,
-    elo,
-    mainboards: 0,
-    sideboards: 0,
-  };
-};
-
-const updateDeckCardAnalytics = async (cubeId, oldseats, seatNum, newseat, cards, carddb) => {
-  const updates = {
-    ':cube': cubeId,
-    mainboards: {},
-    sideboards: {},
-    picks: {},
-    passes: {},
-  };
-
-  // we don't want to revert deck analytics for decks have not been built
-  if (oldseats && oldseats.seats[seatNum].sideboard.flat().length > 0) {
-    for (const row of oldseats.seats[0].deck) {
-      for (const col of row) {
-        for (const ci of col) {
-          const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
-          if (!updates.mainboards[oracle]) {
-            updates.mainboards[oracle] = 0;
-          }
-          updates.mainboards[oracle] -= 1;
-        }
-      }
-    }
-    for (const row of oldseats.seats[seatNum].sideboard) {
-      for (const col of row) {
-        for (const ci of col) {
-          const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
-          if (!updates.sideboards[oracle]) {
-            updates.sideboards[oracle] = 0;
-          }
-          updates.sideboards[oracle] -= 1;
-        }
-      }
-    }
-  }
-
-  if (newseat.sideboard.flat().length > 0) {
-    for (const row of newseat.deck) {
-      for (const col of row) {
-        for (const ci of col) {
-          const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
-          if (!updates.mainboards[oracle]) {
-            updates.mainboards[oracle] = 0;
-          }
-          updates.mainboards[oracle] += 1;
-        }
-      }
-    }
-    for (const row of newseat.sideboard) {
-      for (const col of row) {
-        for (const ci of col) {
-          const oracle = carddb.cardFromId(cards[ci].cardID).oracle_id;
-          if (!updates.sideboards[oracle]) {
-            updates.sideboards[oracle] = 0;
-          }
-          updates.sideboards[oracle] += 1;
-        }
-      }
-    }
-  }
-
-  await CubeAnalytic.pushUpdates(updates);
-};
-
 const generateSamplepackImage = async (sources = [], width, height) => {
   const images = await Promise.all(
     sources.map(async (source) => {
@@ -472,8 +383,6 @@ const methods = {
       })),
     };
   },
-  newCardAnalytics,
-  getEloAdjustment,
   getCubeId,
   intToLegality,
   legalityToInt,
@@ -487,12 +396,8 @@ const methods = {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
-  updateDeckCardAnalytics,
   cachePromise,
   isCubeViewable,
-  ELO_BASE,
-  ELO_SPEED,
-  CUBE_ELO_SPEED,
   getCubeTypes,
 };
 

@@ -2,7 +2,7 @@ const express = require('express');
 
 const { render } = require('../serverjs/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 
 const Package = require('../dynamo/models/package');
 const User = require('../dynamo/models/user');
@@ -71,7 +71,7 @@ router.post('/submit', ensureAuth, async (req, res) => {
     date: new Date().valueOf(),
     owner: poster.id,
     status: 's',
-    cards: cards,
+    cards,
     voters: [],
     keywords: packageName
       .toLowerCase()

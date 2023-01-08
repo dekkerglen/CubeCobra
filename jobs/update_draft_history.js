@@ -4,13 +4,14 @@ require('dotenv').config();
 
 const EloRating = require('elo-rating');
 const fs = require('fs');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
+const CubeAnalytic = require('../dynamo/models/cubeAnalytic');
 
 const Draft = require('../dynamo/models/draft');
 const { getDrafterState } = require('../dist/drafting/draftutil');
 
-const ELO_SPEED = 0.01;
-const CUBE_ELO_SPEED = 0.25;
+const ELO_SPEED = 0.1;
+const CUBE_ELO_SPEED = 2;
 
 const adjustElo = (winnerElo, loserElo, speed) => {
   const { playerRating, opponentRating } = EloRating.calculate(winnerElo, loserElo, true);
@@ -29,7 +30,68 @@ const incrementDict = (dict, key) => {
   dict[key] += 1;
 };
 
+const loadAndProcessCubeDraftAnalytics = (cube) => {
+  const source = JSON.parse(fs.readFileSync(`./temp/cube_draft_history/${cube}`));
+
+  const cubeAnalytics = {};
+
+  for (const [key, value] of Object.entries(source.eloByCubeAndOracleId)) {
+    cubeAnalytics[key] = {
+      elo: value,
+    };
+  }
+
+  for (const [key, value] of Object.entries(source.picksByCubeAndOracleId)) {
+    if (!cubeAnalytics[key]) {
+      cubeAnalytics[key] = {};
+    }
+
+    cubeAnalytics[key].picks = value;
+  }
+
+  for (const [key, value] of Object.entries(source.passesByCubeAndOracleId)) {
+    if (!cubeAnalytics[key]) {
+      cubeAnalytics[key] = {};
+    }
+
+    cubeAnalytics[key].passes = value;
+  }
+
+  for (const [key, value] of Object.entries(source.mainboardsByCubeAndOracleId)) {
+    if (!cubeAnalytics[key]) {
+      cubeAnalytics[key] = {};
+    }
+
+    cubeAnalytics[key].mainboards = value;
+  }
+
+  for (const [key, value] of Object.entries(source.sideboardsByCubeAndOracleId)) {
+    if (!cubeAnalytics[key]) {
+      cubeAnalytics[key] = {};
+    }
+
+    cubeAnalytics[key].sideboards = value;
+  }
+
+  return cubeAnalytics;
+};
+
 (async () => {
+  // create temp folder
+  if (!fs.existsSync('./temp')) {
+    fs.mkdirSync('./temp');
+  }
+  // create global_draft_history and cube_draft_history folders
+  if (!fs.existsSync('./temp/global_draft_history')) {
+    fs.mkdirSync('./temp/global_draft_history');
+  }
+  if (!fs.existsSync('./temp/cube_draft_history')) {
+    fs.mkdirSync('./temp/cube_draft_history');
+  }
+  if (!fs.existsSync('./temp/all_drafts')) {
+    fs.mkdirSync('./temp/all_drafts');
+  }
+
   await carddb.initializeCardDb();
 
   const logsByDay = {};
@@ -47,6 +109,8 @@ const incrementDict = (dict, key) => {
   } while (lastKey);
 
   console.log('Loaded all draftlogs');
+  // save into file
+  fs.writeFileSync('./temp/draftLogs.json', JSON.stringify(draftLogs));
 
   for (const log of draftLogs) {
     const date = new Date(log.date);
@@ -54,11 +118,10 @@ const incrementDict = (dict, key) => {
 
     const key = new Date(year, month, day).valueOf();
 
-    if (!keys.includes(key)) {
+    if (!logsByDay[key]) {
       keys.push(key);
       logsByDay[key] = [];
     }
-
     logsByDay[key].push(log);
   }
 
@@ -72,39 +135,51 @@ const incrementDict = (dict, key) => {
   let isLoaded = false;
 
   let eloByOracleId = {};
-
-  // create temp folder
-  if (!fs.existsSync('./temp')) {
-    fs.mkdirSync('./temp');
-  }
-  // create global_draft_history and cube_draft_history folders
-  if (!fs.existsSync('./temp/global_draft_history')) {
-    fs.mkdirSync('./temp/global_draft_history');
-  }
-  if (!fs.existsSync('./temp/cube_draft_history')) {
-    fs.mkdirSync('./temp/cube_draft_history');
-  }
+  let picksByOracleId = {};
 
   for (let i = 0; i < keys.length; i++) {
-    if (!fs.existsSync(`./temp/global_draft_history/${keys[i]}.json`)) {
+    const key = keys[i];
+    if (fs.existsSync(`./temp/global_draft_history/${key}.json`)) {
+      console.log(`Already finished ${i + 1} / ${keys.length + 1}: for ${new Date(key)}`);
+    } else {
       if (i > 0 && !isLoaded) {
         const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${keys[i - 1]}.json`));
 
         eloByOracleId = loaded.eloByOracleId;
+        picksByOracleId = loaded.picksByOracleId;
 
         isLoaded = true;
       }
 
-      const logRows = logsByDay[keys[i]];
+      const logRows = logsByDay[key] || [];
 
       const logRowBatches = [];
-      const batchSize = 25;
+      const batchSize = 100;
       for (let j = 0; j < logRows.length; j += batchSize) {
         logRowBatches.push(logRows.slice(j, j + batchSize));
       }
 
+      let index = 0;
       for (const batch of logRowBatches) {
         const drafts = await Draft.batchGet(batch.map((row) => row.id));
+
+        // save these drafts to avoid having to load them again
+        fs.writeFileSync(
+          `./temp/all_drafts/${key}_${index}.json`,
+          JSON.stringify(
+            drafts.map((draft) =>
+              draft.seats[0].Mainboard.flat(3)
+                .map((cardIndex) => {
+                  if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
+                    return draft.cards[cardIndex].details.oracle_id;
+                  }
+                  return null;
+                })
+                .filter((oracleId) => oracleId),
+            ),
+          ),
+        );
+        index += 1;
 
         for (const draft of drafts) {
           let picksByCubeAndOracleId = {};
@@ -118,7 +193,7 @@ const incrementDict = (dict, key) => {
 
               eloByCubeAndOracleId = loaded.eloByCubeAndOracleId;
               picksByCubeAndOracleId = loaded.picksByCubeAndOracleId;
-              passesByCubeAndOracleId = loaded.eloByCubeAndOracleId;
+              passesByCubeAndOracleId = loaded.passesByCubeAndOracleId;
               mainboardsByCubeAndOracleId = loaded.mainboardsByCubeAndOracleId;
               sideboardsByCubeAndOracleId = loaded.sideboardsByCubeAndOracleId;
             }
@@ -148,6 +223,7 @@ const incrementDict = (dict, key) => {
                 }
 
                 incrementDict(picksByCubeAndOracleId, draft.cards[picked].details.oracle_id);
+                incrementDict(picksByOracleId, draft.cards[picked].details.oracle_id);
 
                 for (const card of pack) {
                   if (card < draft.cards.length && card >= 0) {
@@ -200,20 +276,41 @@ const incrementDict = (dict, key) => {
       }
 
       console.log(
-        `Finished writing ${i + 1} / ${keys.length + 1}: Processed ${logRows.length} logs for ${new Date(keys[i])}`,
+        `Finished writing ${i + 1} / ${keys.length + 1}: Processed ${logRows.length} logs for ${new Date(key)}`,
       );
 
       // and save the file locally
       await fs.promises.writeFile(
-        `./temp/global_draft_history/${keys[i]}.json`,
+        `./temp/global_draft_history/${key}.json`,
         JSON.stringify({
           eloByOracleId,
+          picksByOracleId,
         }),
       );
     }
   }
 
-  // now we have all the data, we can update the database
+  // upload the files to S3
+  const allCubes = fs.readdirSync('./temp/cube_draft_history');
+  const batches = [];
+  const batchSize = 100;
+  for (let j = 0; j < allCubes.length; j += batchSize) {
+    batches.push(allCubes.slice(j, j + batchSize));
+  }
+
+  let processed = 0;
+
+  for (const batch of batches) {
+    await CubeAnalytic.batchPut(
+      Object.fromEntries(batch.map((cube) => [cube.split('.')[0], loadAndProcessCubeDraftAnalytics(cube)])),
+    );
+
+    processed += batch.length;
+    console.log(`Uploaded ${processed} / ${allCubes.length} cube draft histories`);
+  }
+
+  console.log(`Uploaded ${allCubes.length} / ${allCubes.length} cube draft histories`);
+  console.log('Complete');
 
   process.exit();
 })();

@@ -6,7 +6,7 @@ const createClient = require('../util');
 const s3 = require('../s3client');
 const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',

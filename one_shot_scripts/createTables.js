@@ -11,7 +11,6 @@ const cubeChangelog = require('../dynamo/models/changelog');
 const blog = require('../dynamo/models/blog');
 const cardHistory = require('../dynamo/models/cardHistory');
 const comment = require('../dynamo/models/comment');
-const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
 const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
@@ -30,7 +29,6 @@ const tables = [
   // blog,
   cardHistory,
   // comment,
-  // cubeAnalytic,
   // draft,
   // package,
   // patron,

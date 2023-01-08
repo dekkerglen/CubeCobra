@@ -40,6 +40,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import PlayRateGraph from 'components/PlayRateGraph';
 import Tab from 'components/Tab';
+import EloGraph from 'components/EloGraph';
 
 import {
   cardFoilPrice,
@@ -109,9 +110,9 @@ CardIdBadge.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-const CardPage = ({ card, history, versions, related, loginCallback }) => {
+const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
-  const [priceType, setPriceType] = useQueryParam('priceType', 'price');
+  const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
   const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   const sortedVersions = versions.sort((a, b) => {
@@ -283,25 +284,8 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
                 </CardBody>
               </TabPane>
               <TabPane tabId="1">
-                <CardBody />
-              </TabPane>
-              <TabPane tabId="2">
                 <CardBody>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Price type: </InputGroupText>
-                    <Input
-                      id="priceType"
-                      type="select"
-                      value={priceType}
-                      onChange={(event) => setPriceType(event.target.value)}
-                    >
-                      <option value="price">USD</option>
-                      <option value="price_foil">USD Foil</option>
-                      <option value="price_etched">USD Etched</option>
-                      <option value="eur">EUR</option>
-                      <option value="tix">TIX</option>
-                    </Input>
-                  </InputGroup>
+                  <EloGraph defaultHistories={history} cardId={card.oracle_id} />
                 </CardBody>
               </TabPane>
               <TabPane tabId="3">
@@ -525,55 +509,94 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
         </Col>
       </Row>
       <Card className="my-3">
-        <CardHeader>
-          <h4>Often Drafted With</h4>
+        <CardHeader className="m-0 p-0 pt-2">
+          <Nav tabs>
+            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="0">
+              <h5>Often Drafted With</h5>
+            </Tab>
+            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="1">
+              <h5>Often Cubed With</h5>
+            </Tab>
+          </Nav>
         </CardHeader>
-        <CardBody>
-          <h4>Most Synergistic cards</h4>
-          <CardGrid
-            cardList={related.synergistic.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Top cards</h4>
-          <CardGrid
-            cardList={related.top.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Creatures</h4>
-          <CardGrid
-            cardList={related.creatures.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Spells</h4>
-          <CardGrid
-            cardList={related.spells.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Other</h4>
-          <CardGrid
-            cardList={related.other.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-        </CardBody>
+        {correlatedTab === '0' && (
+          <CardBody>
+            <h4>Top cards</h4>
+            <CardGrid
+              cardList={draftedWith.top.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Creatures</h4>
+            <CardGrid
+              cardList={draftedWith.creatures.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Spells</h4>
+            <CardGrid
+              cardList={draftedWith.spells.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Other</h4>
+            <CardGrid
+              cardList={draftedWith.other.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+          </CardBody>
+        )}
+        {correlatedTab === '1' && (
+          <CardBody>
+            <h4>Top cards</h4>
+            <CardGrid
+              cardList={cubedWith.top.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Creatures</h4>
+            <CardGrid
+              cardList={cubedWith.creatures.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Spells</h4>
+            <CardGrid
+              cardList={cubedWith.spells.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Other</h4>
+            <CardGrid
+              cardList={cubedWith.other.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+          </CardBody>
+        )}
       </Card>
     </MainLayout>
   );
@@ -582,7 +605,39 @@ const CardPage = ({ card, history, versions, related, loginCallback }) => {
 CardPage.propTypes = {
   card: CardPropType.isRequired,
   history: PropTypes.arrayOf(HistoryPropType).isRequired,
-  related: PropTypes.shape({
+  draftedWith: PropTypes.shape({
+    top: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    synergistic: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    creatures: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    spells: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    other: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
+  cubedWith: PropTypes.shape({
     top: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,

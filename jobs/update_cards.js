@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path'); // eslint-disable-line import/no-extraneous-dependencies
 const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
@@ -8,7 +10,7 @@ const AWS = require('aws-sdk');
 const cardutil = require('../dist/utils/Card');
 
 const util = require('../serverjs/util');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 
 const catalog = {};
 
@@ -29,7 +31,6 @@ const catalog = {};
  *     tix: Float?,
  *   },
  *   elo: Integer,
- *   embedding: [Float],
  *   digital: Boolean,
  *   isToken: Boolean,
  *   border_color: String,
@@ -120,7 +121,7 @@ function downloadFile(url, filePath) {
   });
 }
 
-async function downloadDefaultCards(basePath = 'private', defaultSourcePath = null, allSourcePath = null) {
+async function downloadDefaultCards() {
   let defaultUrl;
   let allUrl;
 
@@ -140,8 +141,8 @@ async function downloadDefaultCards(basePath = 'private', defaultSourcePath = nu
   if (!allUrl) throw new Error('URL for All cards not found in /bulk-data response');
 
   return Promise.all([
-    downloadFile(defaultUrl, defaultSourcePath || path.resolve(basePath, 'cards.json')),
-    downloadFile(allUrl, allSourcePath || path.resolve(basePath, 'all-cards.json')),
+    downloadFile(defaultUrl, './private/cards.json'),
+    downloadFile(allUrl, './private/all-cards.json'),
   ]);
 }
 
@@ -636,13 +637,35 @@ function getFaceAttributeSource(card, isExtra) {
   return faceAttributeSource;
 }
 
-function convertCard(card, isExtra) {
+function convertCard(card, metadata, isExtra) {
   const faceAttributeSource = getFaceAttributeSource(card, isExtra);
   const newcard = {};
   if (isExtra) {
     card = { ...card };
     card.card_faces = [faceAttributeSource];
   }
+
+  newcard.cubedWith = {
+    top: [],
+    creatures: [],
+    spells: [],
+    other: [],
+  };
+  newcard.draftedWith = {
+    top: [],
+    creatures: [],
+    spells: [],
+    other: [],
+  };
+
+  newcard.elo = 1200;
+
+  if (metadata) {
+    newcard.cubedWith = metadata.cubedWith;
+    newcard.draftedWith = metadata.draftedWith;
+    newcard.elo = metadata.elo;
+  }
+
   const name = convertName(card, isExtra);
   newcard.color_identity = Array.from(card.color_identity);
   newcard.set = card.set;
@@ -670,8 +693,6 @@ function convertCard(card, isExtra) {
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
 
-  newcard.elo = catalog.elodict[name] || 1200;
-
   if (catalog.historyDict[card.oracle_id]) {
     newcard.popularity = catalog.historyDict[card.oracle_id].total[1] || 0;
     newcard.popularity = newcard.popularity.toFixed(4) * 100;
@@ -683,7 +704,6 @@ function convertCard(card, isExtra) {
     newcard.pickCount = 0;
   }
 
-  newcard.embedding = catalog.embeddingdict[name] || [];
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';
   newcard.border_color = card.border_color;
@@ -801,69 +821,41 @@ function writeCatalog(basePath = 'private') {
   return allWritesPromise;
 }
 
-function saveEnglishCard(card) {
+function saveEnglishCard(card, metadata) {
   if (card.layout === 'transform') {
-    addCardToCatalog(convertCard(card, true), true);
+    addCardToCatalog(convertCard(card, metadata, true), true);
   }
-  addCardToCatalog(convertCard(card));
+  addCardToCatalog(convertCard(card, metadata));
 }
 
-async function saveAllCards(ratings = [], histories = [], basePath = 'private', defaultPath = null, allPath = null) {
-  console.info('Fetching elo...');
-  // create elo dict
-  for (const rating of ratings) {
-    catalog.elodict[rating.name] = rating.elo;
-    if (rating.embedding && rating.embedding.length === 64) {
-      let norm = rating.embedding.reduce((acc, x) => acc + x * x, 0);
-      if (norm > 0) {
-        norm = Math.sqrt(norm);
-        catalog.embeddingdict[rating.name] = rating.embedding.map((x) => x / norm);
-      } else {
-        catalog.embeddingdict[rating.name] = new Array(64).fill(0);
-      }
-    } else {
-      catalog.embeddingdict[rating.name] = new Array(64).fill(0);
-    }
-  }
-
-  // poplulating the popularity dict
-  for (const history of histories) {
-    catalog.historyDict[history.oracleId] = history.current;
-  }
-
+async function saveAllCards(metadatadict) {
   console.info('Processing cards...');
   await new Promise((resolve) =>
     fs
-      .createReadStream(defaultPath || path.resolve(basePath, 'cards.json'))
+      .createReadStream('./private/cards.json')
       .pipe(JSONStream.parse('*'))
-      .pipe(es.mapSync(saveEnglishCard))
+      .pipe(es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id])))
       .on('close', resolve),
   );
 
   console.info('Creating language mappings...');
   await new Promise((resolve) =>
     fs
-      .createReadStream(allPath || path.resolve(basePath, 'all-cards.json'))
+      .createReadStream('./private/all-cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
       .on('close', resolve),
   );
 
   console.info('Saving cardbase files...');
-  await writeCatalog(basePath);
+  await writeCatalog('./private');
 }
 
-const downloadFromScryfall = async (
-  ratings = [],
-  histories = [],
-  basePath = 'private',
-  defaultPath = null,
-  allPath = null,
-) => {
+const downloadFromScryfall = async (metadatadict) => {
   console.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
-    await downloadDefaultCards(basePath, defaultPath, allPath);
+    await downloadDefaultCards();
   } catch (error) {
     console.error('Downloading card data failed:');
     console.error(error.message, error);
@@ -873,7 +865,7 @@ const downloadFromScryfall = async (
 
   console.info('Creating objects...');
   try {
-    await saveAllCards(ratings, histories, basePath, defaultPath, allPath);
+    await saveAllCards(metadatadict);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
     console.error(error.message, error);
@@ -888,32 +880,48 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+const uploadCardDb = async () => {
+  await carddb.initializeCardDb();
+
+  for (const [file, object] of Object.entries(carddb.fileToAttribute)) {
+    console.log(`Uploading ${file}...`);
+    // eslint-disable-next-line no-await-in-loop
+    await s3
+      .upload({
+        Bucket: process.env.DATA_BUCKET,
+        Key: `cards/${file}`,
+        Body: JSON.stringify(carddb[object]),
+      })
+      .promise();
+
+    console.log(`Finished ${file}`);
+  }
+
+  console.log('Uploading manifest...');
+  await s3
+    .upload({
+      Bucket: process.env.DATA_BUCKET,
+      Key: `cards/manifest.json`,
+      Body: JSON.stringify({ date_exported: new Date() }),
+    })
+    .promise();
+  console.log('Finished manifest');
+
+  console.log('done');
+};
+
+const loadMetadatadict = async () => {
+  return fs.promises.readFile('./temp/metadatadict.json', 'utf8').then((data) => JSON.parse(data));
+};
+
 (async () => {
   try {
-    await downloadFromScryfall();
+    const metadatadict = await loadMetadatadict();
+    await downloadFromScryfall(metadatadict);
+    await uploadCardDb();
 
-    await carddb.initializeCardDb();
+    console.log('Complete');
 
-    for (const [file, object] of Object.entries(carddb.fileToAttribute)) {
-      const params = {
-        Bucket: 'cubecobra',
-        Key: `cards/${file}`,
-        body: JSON.stringify(carddb[object]),
-      };
-      // eslint-disable-next-line no-await-in-loop
-      await s3.upload(params).promise();
-
-      console.log(`Finished ${file}`);
-    }
-
-    const params = {
-      Bucket: 'cubecobra',
-      Key: `cards/manifest.json`,
-      body: JSON.stringify({ date_exported: new Date() }),
-    };
-    await s3.upload(params).promise();
-
-    console.log('done');
     process.exit();
   } catch (error) {
     console.error(error.message, error);

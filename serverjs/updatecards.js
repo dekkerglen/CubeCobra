@@ -1,6 +1,6 @@
 const fs = require('fs');
 const AWS = require('aws-sdk');
-const carddb = require('./cards');
+const carddb = require('./carddb');
 
 const downloadFromS3 = async (basePath = 'private') => {
   const s3 = new AWS.S3({
@@ -12,7 +12,7 @@ const downloadFromS3 = async (basePath = 'private') => {
     Object.keys(carddb.fileToAttribute).map(async (file) => {
       const res = await s3
         .getObject({
-          Bucket: 'cubecobra',
+          Bucket: process.env.DATA_BUCKET,
           Key: `cards/${file}`,
         })
         .promise();

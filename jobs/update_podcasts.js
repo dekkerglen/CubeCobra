@@ -17,11 +17,11 @@ const tryUpdate = async (podcast) => {
 const run = async () => {
   const podcasts = await Podcast.find({ status: 'published' });
 
-  winston.info({ message: 'Updating podcasts...' });
+  console.log({ message: 'Updating podcasts...' });
 
   await Promise.all(podcasts.map(tryUpdate));
 
-  winston.info({ message: 'Finished updating podcasts.' });
+  console.log({ message: 'Finished updating podcasts.' });
 
   // this is needed for log group to stream
   await new Promise((resolve) => {

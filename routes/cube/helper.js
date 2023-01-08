@@ -1,4 +1,4 @@
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
 const { CSVtoCards } = require('../../serverjs/cubefn');

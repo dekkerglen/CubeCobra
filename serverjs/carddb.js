@@ -1,8 +1,8 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const { winston } = require('./cloudwatch');
-const util = require('./util');
 
-const { SortFunctions, ORDERED_SORTS } = require('../dist/utils/Sort');
+const { SortFunctions } = require('../dist/utils/Sort');
 
 let data = {
   cardtree: {},
@@ -63,7 +63,7 @@ function cardFromId(id, fields) {
     details = data._carddict[id];
   } else {
     // TODO: replace this back with error. it was clogging the logs.
-    // winston.info(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
+    // console.log(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
@@ -74,7 +74,7 @@ function cardFromId(id, fields) {
     fields = fields.split(' ');
   }
 
-  return util.fromEntries(fields.map((field) => [field, details[field]]));
+  return Object.fromEntries(fields.map((field) => [field, details[field]]));
 }
 
 function getCardDetails(card) {
@@ -87,52 +87,36 @@ function getCardDetails(card) {
   return getPlaceholderCard(card.cardID);
 }
 
-function loadJSONFile(filename, attribute) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filename, 'utf8', (err, contents) => {
-      if (!err) {
-        try {
-          data[attribute] = JSON.parse(contents);
-        } catch (e) {
-          winston.error(`Error parsing json from ${filename}.`, { error: e });
-          err = e;
-        }
-      }
-      if (err) {
-        reject(err);
-      } else {
-        resolve(contents);
-      }
-    });
-  });
+async function loadJSONFile(filename, attribute) {
+  try {
+    data[attribute] = JSON.parse(await fs.promises.readFile(filename, 'utf8'));
+    console.log(`Loaded ${filename}.`);
+  } catch (e) {
+    console.error(`Error loading ${filename}.`, { error: e });
+  }
 }
 
 function registerFileWatcher(filename, attribute) {
   fs.watchFile(filename, () => {
-    winston.info(`File Changed: ${filename}`);
+    console.log(`File Changed: ${filename}`);
     loadJSONFile(filename, attribute);
   });
 }
 
-function initializeCardDb(dataRoot, skipWatchers) {
-  winston.info('Loading carddb...');
-  if (dataRoot === undefined) {
-    dataRoot = 'private';
-  }
-  const promises = [];
+async function initializeCardDb() {
+  console.log('Loading carddb...');
+
+  await Promise.all(
+    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
+  );
+
   for (const [filename, attribute] of Object.entries(fileToAttribute)) {
-    const filepath = `${dataRoot}/${filename}`;
-    promises.push(loadJSONFile(filepath, attribute));
-    if (skipWatchers !== true) {
-      registerFileWatcher(filepath, attribute);
-    }
+    registerFileWatcher(`private/${filename}`, attribute);
   }
-  return Promise.all(promises)
-    .then(() => {
-      // cache cards used in card filters
-      data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
-    })
-    .then(() => winston.info('Finished loading carddb.'));
+
+  data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
+
+  console.log('Finished loading carddb.');
 }
 
 function unloadCardDb() {
@@ -211,7 +195,15 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
   const cards = ids.map((id) => ({
     details: cardFromId(id),
   }));
-  cards.sort(SortFunctions[ORDERED_SORTS['Release date']]);
+  cards.sort((a, b) => {
+    const dateCompare = SortFunctions['Release date'](a, b);
+
+    if (dateCompare !== 0) {
+      return dateCompare;
+    }
+
+    return SortFunctions['Collector number'](a, b);
+  });
 
   ids = cards.map((card) => card.details._id);
 
@@ -227,7 +219,7 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
 function getMostReasonableById(id, printing = 'recent', filter = null) {
   const card = cardFromId(id);
   if (card.error) {
-    winston.info(`Error finding most reasonable for id ${id}`);
+    console.log(`Error finding most reasonable for id ${id}`);
     return null;
   }
   return getMostReasonable(card.name, printing, filter);

@@ -18,7 +18,7 @@ const socketio = require('socket.io');
 const DynamoDBStore = require('dynamodb-store');
 const { winston } = require('./serverjs/cloudwatch');
 const { updateCardbase } = require('./serverjs/updatecards');
-const carddb = require('./serverjs/cards');
+const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
 
@@ -31,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URL, {
 
 const db = mongoose.connection;
 db.once('open', () => {
-  winston.info('Connected to Mongo.');
+  console.log('Connected to Mongo.');
 });
 
 // Check for db errors
@@ -79,17 +79,17 @@ app.use((req, res, next) => {
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
   onFinished(res, (err, finalRes) => {
-    winston.info({
-      level: 'info',
-      type: 'request',
-      remoteAddr: req.ip,
-      requestId: req.uuid,
-      method: req.method,
-      path: req.path,
-      status: finalRes.statusCode,
-      length: finalRes.getHeader('content-length'),
-      elapsed: Date.now() - finalRes.startTime,
-    });
+    // console.log({
+    //   level: 'info',
+    //   type: 'request',
+    //   remoteAddr: req.ip,
+    //   requestId: req.uuid,
+    //   method: req.method,
+    //   path: req.path,
+    //   status: finalRes.statusCode,
+    //   length: finalRes.getHeader('content-length'),
+    //   elapsed: Date.now() - finalRes.startTime,
+    // });
   });
   next();
 });
@@ -225,14 +225,14 @@ app.use((err, req, res, next) => {
 
 // scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  winston.info('starting midnight cardbase update...');
+  console.log('starting midnight cardbase update...');
   await updateCardbase();
 });
 
 // Start server after carddb is initialized.
-carddb.initializeCardDb().then(async () => {
+carddb.initializeCardDb().then(() => {
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
-  winston.info(`Server started on port ${process.env.PORT || 5000}...`);
+  console.log(`Server started on port ${process.env.PORT || 5000}...`);
 
   // init socket io
   setup(socketio(server));

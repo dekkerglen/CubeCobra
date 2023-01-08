@@ -1,4 +1,4 @@
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 
 function getBlankCardHistory(id) {
   const card = carddb.cardFromId(id);

@@ -7,7 +7,7 @@ const RSS = require('rss');
 
 const createdraft = require('../../dist/drafting/createdraft');
 const miscutil = require('../../dist/utils/Util');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const { render } = require('../../serverjs/render');
 const { ensureAuth, csrfProtection } = require('../middleware');
 const util = require('../../serverjs/util');
@@ -20,7 +20,6 @@ const {
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
-  updateDeckCardAnalytics,
   cachePromise,
   isCubeViewable,
 } = require('../../serverjs/cubefn');
@@ -1092,7 +1091,6 @@ router.post(
       await Draft.put(deck);
 
       cube.numDecks += 1;
-      await updateDeckCardAnalytics(cube.id, null, 0, deck.seats[0], deck.cards, carddb);
 
       await cube.save();
 

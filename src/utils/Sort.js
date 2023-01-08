@@ -14,6 +14,7 @@ import {
   COLOR_COMBINATIONS,
   cardRarity,
   cardPopularity,
+  cardCollectorNumber,
 } from 'utils/Card';
 
 const COLOR_MAP = {
@@ -189,7 +190,16 @@ export const SORTS = [
   'Unsorted',
 ];
 
-export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price', 'elo', 'Release date', 'Cube Count', 'Pick Count'];
+export const ORDERED_SORTS = [
+  'Alphabetical',
+  'Mana Value',
+  'Price',
+  'elo',
+  'Release date',
+  'Cube Count',
+  'Pick Count',
+  'Collector number',
+];
 
 export const SortFunctions = {
   Alphabetical: alphaCompare,
@@ -207,6 +217,15 @@ export const SortFunctions = {
   },
   'Cube Count': (a, b) => cardCubeCount(a) - cardCubeCount(b),
   'Pick Count': (a, b) => cardPickCount(a) - cardPickCount(b),
+  'Collector number': (a, b) => {
+    if (cardCollectorNumber(a) > cardCollectorNumber(b)) {
+      return 1;
+    }
+    if (cardCollectorNumber(a) < cardCollectorNumber(b)) {
+      return -1;
+    }
+    return 0;
+  },
 };
 
 export const SortFunctionsOnDetails = (sort) => (a, b) => SortFunctions[sort]({ details: a }, { details: b });

@@ -3,7 +3,7 @@ const express = require('express');
 
 const sortutil = require('../../dist/utils/Sort');
 const filterutil = require('../../dist/filtering/FilterCards');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const util = require('../../serverjs/util');
 
 const { isCubeViewable } = require('../../serverjs/cubefn');

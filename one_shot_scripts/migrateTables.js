@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 
 const content = require('../dynamo/models/content');
 const notification = require('../dynamo/models/notification');
@@ -13,7 +13,6 @@ const changelog = require('../dynamo/models/changelog');
 const blog = require('../dynamo/models/blog');
 const cardHistory = require('../dynamo/models/cardhistory');
 const comment = require('../dynamo/models/comment');
-const cubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const draft = require('../dynamo/models/draft');
 const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
@@ -29,7 +28,6 @@ const Blog = require('../models/old/blog');
 const CardHistory = require('../models/old/cardhistory');
 const CardRating = require('../models/old/cardrating');
 const Comment = require('../models/old/comment');
-const CubeAnalytic = require('../models/old/cubeAnalytic');
 const Deck = require('../models/old/deck');
 const Draft = require('../models/old/draft');
 const Package = require('../models/old/package');
@@ -84,12 +82,6 @@ const migrations = [
   //   source: Comment,
   //   conversions: [
   //     [comment.convertComment, comment.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: CubeAnalytic,
-  //   conversions: [
-  //     [cubeAnalytic.convertCubeAnalytic, cubeAnalytic.batchPut],
   //   ],
   // },
   {

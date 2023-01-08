@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 const uuid = require('uuid/v4');
 const { cardType } = require('../dist/utils/Card');
-const carddb = require('./cards');
+const carddb = require('./carddb');
 
 const Draft = require('../dynamo/models/draft');
 

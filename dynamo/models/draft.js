@@ -1,9 +1,8 @@
-// dotenv
 require('dotenv').config();
 
 const uuid = require('uuid/v4');
 const createClient = require('../util');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const s3 = require('../s3client');
 
 const FIELDS = {

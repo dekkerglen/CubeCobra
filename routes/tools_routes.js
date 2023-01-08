@@ -3,8 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 
-const { winston } = require('../serverjs/cloudwatch');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 const cardutil = require('../dist/utils/Card');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
@@ -50,8 +49,6 @@ const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', d
 
   if (ORDERED_SORTS.includes(sort)) {
     cards.sort(SortFunctionsOnDetails(sort));
-  } else {
-    winston.info(`Sort function not found: ${sort}`);
   }
 
   if (direction === 'descending') {
@@ -68,7 +65,7 @@ const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', d
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(`pickcount>=${MIN_PICKS} ${req.query.f}`);
+    const { err, filter } = makeFilter(`${req.query.f}`);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -232,10 +229,14 @@ router.get('/card/:id', async (req, res) => {
     // otherwise just go to this ID.
     const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
 
-    const related = {};
+    const draftedWith = {};
+    const cubedWith = {};
 
-    for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
-      related[category] = card.cubedWith[category].map((oracle) =>
+    for (const category of ['top', 'spells', 'creatures', 'other']) {
+      draftedWith[category] = card.draftedWith[category].map((oracle) =>
+        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
+      );
+      cubedWith[category] = card.cubedWith[category].map((oracle) =>
         carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
       );
     }
@@ -251,7 +252,8 @@ router.get('/card/:id', async (req, res) => {
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card._id)
           .map((cardid) => carddb.cardFromId(cardid)),
-        related,
+        draftedWith,
+        cubedWith,
       },
       {
         title: `${card.name}`,

@@ -1,15 +1,14 @@
+/* eslint-disable no-loop-func */
 /* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
 const fs = require('fs');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 
 const ChangeLog = require('../dynamo/models/changelog');
 const CardHistory = require('../dynamo/models/cardHistory');
 const { getCubeTypes } = require('../serverjs/cubefn');
-
-let checkpoint = 727;
 
 (async () => {
   await carddb.initializeCardDb();
@@ -22,231 +21,210 @@ let checkpoint = 727;
     fs.mkdirSync('./temp/cubes_history');
   }
 
-  let logsByDay = {};
-  let keys = [];
-  if (checkpoint < 1) {
-    // load all changelogs into memory
-    let lastKey = null;
-    let changelogs = [];
-    do {
-      // eslint-disable-next-line no-await-in-loop
-      const result = await ChangeLog.scan(1000000, lastKey);
-      changelogs = changelogs.concat(result.items);
-      lastKey = result.lastKey;
+  const logsByDay = {};
+  const keys = [];
 
-      console.log(`Loaded ${changelogs.length} changelogs`);
-    } while (lastKey);
+  // load all changelogs into memory
+  let lastKey = null;
+  let changelogs = [];
+  do {
+    // eslint-disable-next-line no-await-in-loop
+    const result = await ChangeLog.scan(1000000, lastKey);
+    changelogs = changelogs.concat(result.items);
+    lastKey = result.lastKey;
 
-    console.log('Loaded all changelogs');
+    console.log(`Loaded ${changelogs.length} changelogs`);
+  } while (lastKey);
 
-    for (const log of changelogs) {
-      const date = new Date(log.date);
-      const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
+  console.log('Loaded all changelogs');
+  let firstKey = null;
 
-      const key = new Date(year, month, day).valueOf();
+  for (const log of changelogs) {
+    const date = new Date(log.date);
+    const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
 
-      if (!keys.includes(key)) {
-        keys.push(key);
-        logsByDay[key] = [];
-      }
+    const key = new Date(year, month, day).valueOf();
 
-      logsByDay[key].push(log);
+    if (!logsByDay[key]) {
+      logsByDay[key] = [];
     }
 
-    console.log('Buckets created');
+    if (!firstKey || key < firstKey) {
+      firstKey = key;
+    }
 
-    // sort the keys ascending
-    keys.sort((a, b) => a - b);
-
-    // save the files
-    fs.writeFileSync('temp/logsByDay.json', JSON.stringify({ logsByDay, keys }));
-    checkpoint += 1;
-  } else {
-    // load the files
-    const loaded = JSON.parse(fs.readFileSync('temp/logsByDay.json'));
-    logsByDay = loaded.logsByDay;
-    keys = loaded.keys;
+    logsByDay[key].push(log);
   }
+
+  const today = new Date();
+  const [year, month, day] = [today.getFullYear(), today.getMonth(), today.getDate()];
+  const todayKey = new Date(year, month, day).valueOf();
+
+  // get all daily keys from firstKEy to todayKey
+  for (let i = firstKey; i <= todayKey; i += 86400000) {
+    keys.push(i);
+  }
+
+  console.log('Buckets created');
+
+  // sort the keys ascending
+  keys.sort((a, b) => a - b);
+
+  // save the files
+  fs.writeFileSync('temp/logsByDay.json', JSON.stringify({ logsByDay, keys }));
 
   console.log(`Loaded ${keys.length} days of logs`);
 
-  const cubes = {};
+  let cubes = {};
 
-  if (checkpoint >= 2) {
-    // load the cubes
-    const loaded = JSON.parse(fs.readFileSync(`temp/cubes_history/${keys[checkpoint - 2]}.json`));
-    Object.assign(cubes, loaded);
-  }
-
-  for (let i = checkpoint - 1; i < keys.length; i++) {
-    const logRows = logsByDay[keys[i]];
-    const logs = await ChangeLog.batchGet(logRows);
-
-    for (let j = 0; j < logs.length; j++) {
-      const log = logs[j];
-      const logRow = logRows[j];
-
-      if (!cubes[logRow.cube]) {
-        cubes[logRow.cube] = [];
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (fs.existsSync(`./temp/cubes_history/${key}.json`)) {
+      console.log(`Already finished ${i} / ${keys.length}: for ${new Date(key)}`);
+    } else {
+      if (i > 0 && fs.existsSync(`./temp/cubes_history/${keys[i - 1]}.json`)) {
+        cubes = JSON.parse(fs.readFileSync(`./temp/cubes_history/${keys[i - 1]}.json`));
       }
 
-      if (log.Mainboard.adds) {
-        for (const add of log.Mainboard.adds) {
-          cubes[logRow.cube].push(add.cardID);
+      const logRows = logsByDay[key] || [];
+      const logs = await ChangeLog.batchGet(logRows);
+
+      for (let j = 0; j < logs.length; j++) {
+        const log = logs[j];
+        const logRow = logRows[j];
+
+        if (!cubes[logRow.cube]) {
+          cubes[logRow.cube] = [];
+        }
+
+        if (log.Mainboard.adds) {
+          for (const add of log.Mainboard.adds) {
+            cubes[logRow.cube].push(add.cardID);
+          }
+        }
+
+        if (log.Mainboard.removes) {
+          for (const remove of log.Mainboard.removes) {
+            cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(remove.oldCard.cardID), 1);
+          }
+        }
+
+        if (log.Mainboard.swaps) {
+          for (const swap of log.Mainboard.swaps) {
+            cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
+          }
         }
       }
 
-      if (log.Mainboard.removes) {
-        for (const remove of log.Mainboard.removes) {
-          cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(remove.oldCard.cardID), 1);
+      if (logRows.length > 0) {
+        fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubes));
+      }
+
+      const totals = {
+        size180: 0,
+        size360: 0,
+        size450: 0,
+        size540: 0,
+        size720: 0,
+        pauper: 0,
+        peasant: 0,
+        legacy: 0,
+        modern: 0,
+        vintage: 0,
+        total: 0,
+      };
+
+      const data = {};
+
+      for (const cube of Object.values(cubes)) {
+        const cubeCards = cube.map((id) => carddb.cardFromId(id));
+        const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
+        const { pauper, peasant, type } = getCubeTypes(
+          cubeCards.map((card) => ({ cardID: card._id })),
+          carddb,
+        );
+
+        const size = cube.length;
+
+        const categories = ['total'];
+
+        if (size <= 180) {
+          categories.push('size180');
+        } else if (size <= 360) {
+          categories.push('size360');
+        } else if (size <= 450) {
+          categories.push('size450');
+        } else if (size <= 540) {
+          categories.push('size540');
+        } else {
+          categories.push('size720');
         }
-      }
 
-      if (log.Mainboard.swaps) {
-        for (const swap of log.Mainboard.swaps) {
-          cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
+        if (pauper) {
+          categories.push('pauper');
         }
-      }
-    }
 
-    fs.writeFileSync(`temp/cubes_history/${keys[i]}.json`, JSON.stringify(cubes));
+        if (peasant) {
+          categories.push('peasant');
+        }
 
-    //    console.log(`Processing ${logs.length} logs for day ${i + 1} of ${keys.length}`);
-    console.log(
-      `Finished checkpoint ${checkpoint} / ${keys.length + 1}: Processed ${logRows.length} logs for ${new Date(
-        keys[i],
-      )}`,
-    );
-    checkpoint += 1;
-  }
-
-  const start = 1 + keys.length;
-  const end = start + keys.length;
-
-  for (let i = checkpoint; i < end; i++) {
-    const key = keys[i - start];
-    const totals = {
-      size180: 0,
-      size360: 0,
-      size450: 0,
-      size540: 0,
-      size720: 0,
-      pauper: 0,
-      peasant: 0,
-      legacy: 0,
-      modern: 0,
-      vintage: 0,
-      total: 0,
-    };
-    const data = {};
-
-    const cubeList = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`));
-
-    for (const cube of Object.values(cubeList)) {
-      const cubeCards = cube.map((id) => carddb.cardFromId(id));
-      const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-      const { pauper, peasant, type } = getCubeTypes(
-        cubeCards.map((card) => ({ cardID: card._id })),
-        carddb,
-      );
-
-      const size = cube.length;
-
-      const categories = ['total'];
-
-      if (size <= 180) {
-        categories.push('size180');
-      } else if (size <= 360) {
-        categories.push('size360');
-      } else if (size <= 450) {
-        categories.push('size450');
-      } else if (size <= 540) {
-        categories.push('size540');
-      } else {
-        categories.push('size720');
-      }
-
-      if (pauper) {
-        categories.push('pauper');
-      }
-
-      if (peasant) {
-        categories.push('peasant');
-      }
-
-      switch (type) {
-        case 0: // vintage
-          categories.push('vintage');
-          break;
-        case 1: // legacy
-          categories.push('legacy');
-          break;
-        case 2: // modern
-          categories.push('modern');
-          break;
-        case 4: // pioneer
-          categories.push('pioneer');
-          break;
-        default:
-          break;
-      }
-
-      for (const category of categories) {
-        totals[category] += 1;
-      }
-
-      for (const oracle of oracles) {
-        if (!data[oracle]) {
-          data[oracle] = {
-            total: 0,
-            size180: 0,
-            size360: 0,
-            size450: 0,
-            size540: 0,
-            size720: 0,
-            pauper: 0,
-            peasant: 0,
-            legacy: 0,
-            modern: 0,
-            vintage: 0,
-          };
+        switch (type) {
+          case 0: // vintage
+            categories.push('vintage');
+            break;
+          case 1: // legacy
+            categories.push('legacy');
+            break;
+          case 2: // modern
+            categories.push('modern');
+            break;
+          case 4: // pioneer
+            categories.push('pioneer');
+            break;
+          default:
+            break;
         }
 
         for (const category of categories) {
-          data[oracle][category] += 1;
+          totals[category] += 1;
+        }
+
+        for (const oracle of oracles) {
+          if (!data[oracle]) {
+            data[oracle] = {
+              total: 0,
+              size180: 0,
+              size360: 0,
+              size450: 0,
+              size540: 0,
+              size720: 0,
+              pauper: 0,
+              peasant: 0,
+              legacy: 0,
+              modern: 0,
+              vintage: 0,
+            };
+          }
+
+          for (const category of categories) {
+            data[oracle][category] += 1;
+          }
         }
       }
-    }
 
-    await CardHistory.batchPut(
-      Object.entries(data).map(([oracle, history]) => ({
-        [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.DAY}`,
-        [CardHistory.FIELDS.ORACLE_ID]: oracle,
-        [CardHistory.FIELDS.DATE]: key,
-        [CardHistory.FIELDS.ELO]: 1200,
-        [CardHistory.FIELDS.PICKS]: 0,
-        [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
-        [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
-        [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
-        [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
-        [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
-        [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
-        [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
-        [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
-        [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
-        [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
-        [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
-      })),
-    );
+      let oracleToElo = {};
+      try {
+        const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`);
+        oracleToElo = JSON.parse(eloFile).eloByOracleId;
+      } catch (e) {
+        console.log('No elo file found for', key);
+      }
 
-    // if key is a sunday
-    if (new Date(key).getDay() === 0) {
       await CardHistory.batchPut(
         Object.entries(data).map(([oracle, history]) => ({
-          [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.WEEK}`,
+          [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.DAY}`,
           [CardHistory.FIELDS.ORACLE_ID]: oracle,
           [CardHistory.FIELDS.DATE]: key,
-          [CardHistory.FIELDS.ELO]: 1200,
           [CardHistory.FIELDS.PICKS]: 0,
           [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
           [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
@@ -259,38 +237,63 @@ let checkpoint = 727;
           [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
           [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
           [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
+          [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
         })),
       );
+
+      // if key is a sunday
+      if (new Date(key).getDay() === 0) {
+        await CardHistory.batchPut(
+          Object.entries(data).map(([oracle, history]) => ({
+            [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.WEEK}`,
+            [CardHistory.FIELDS.ORACLE_ID]: oracle,
+            [CardHistory.FIELDS.DATE]: key,
+            [CardHistory.FIELDS.PICKS]: 0,
+            [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
+            [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
+            [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
+            [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
+            [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
+            [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
+            [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
+            [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
+            [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
+            [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
+            [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
+            [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
+          })),
+        );
+      }
+
+      // if key is first of the month
+      if (new Date(key).getDate() === 1) {
+        await CardHistory.batchPut(
+          Object.entries(data).map(([oracle, history]) => ({
+            [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.MONTH}`,
+            [CardHistory.FIELDS.ORACLE_ID]: oracle,
+            [CardHistory.FIELDS.DATE]: key,
+            [CardHistory.FIELDS.PICKS]: 0,
+            [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
+            [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
+            [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
+            [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
+            [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
+            [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
+            [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
+            [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
+            [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
+            [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
+            [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
+            [CardHistory.FIELDS.ELO]: oracleToElo[oracle],
+          })),
+        );
+      }
+
+      console.log(`Finished  ${i} / ${keys.length}: Processed ${logRows.length} logs for ${new Date(key)}`);
     }
-
-    // if key is first of the month
-    if (new Date(key).getDate() === 1) {
-      await CardHistory.batchPut(
-        Object.entries(data).map(([oracle, history]) => ({
-          [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.MONTH}`,
-          [CardHistory.FIELDS.ORACLE_ID]: oracle,
-          [CardHistory.FIELDS.DATE]: key,
-          [CardHistory.FIELDS.ELO]: 1200,
-          [CardHistory.FIELDS.PICKS]: 0,
-          [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
-          [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
-          [CardHistory.FIELDS.SIZE450]: [history.size450, totals.size450],
-          [CardHistory.FIELDS.SIZE540]: [history.size540, totals.size540],
-          [CardHistory.FIELDS.SIZE720]: [history.size720, totals.size720],
-          [CardHistory.FIELDS.PAUPER]: [history.pauper, totals.pauper],
-          [CardHistory.FIELDS.PEASANT]: [history.peasant, totals.peasant],
-          [CardHistory.FIELDS.LEGACY]: [history.legacy, totals.legacy],
-          [CardHistory.FIELDS.MODERN]: [history.modern, totals.modern],
-          [CardHistory.FIELDS.VINTAGE]: [history.vintage, totals.vintage],
-          [CardHistory.FIELDS.TOTAL]: [history.total, totals.total],
-        })),
-      );
-    }
-
-    console.log(`Pushed history for ${i - start + 1}/${keys.length}, done with checkpoint ${checkpoint} / ${end}`);
-
-    checkpoint += 1;
   }
+
+  console.log('Complete');
 
   process.exit();
 })();

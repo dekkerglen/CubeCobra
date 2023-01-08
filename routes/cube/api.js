@@ -5,17 +5,11 @@ const { body } = require('express-validator');
 const fetch = require('node-fetch');
 
 const cardutil = require('../../dist/utils/Card');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../serverjs/util');
 
-const {
-  generatePack,
-  buildTagColors,
-  cubeCardTags,
-  updateDeckCardAnalytics,
-  isCubeViewable,
-} = require('../../serverjs/cubefn');
+const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../serverjs/cubefn');
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
@@ -748,7 +742,6 @@ router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
       message: 'Unauthorized',
     });
   }
-  await updateDeckCardAnalytics(draft.cube, draft.seats, index, seat, draft.cards, carddb);
 
   draft.seats[index].seat = seat;
   await Draft.put(draft);

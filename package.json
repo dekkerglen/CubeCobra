@@ -14,7 +14,7 @@
     "prettier-head": "prettier --write $(git diff HEAD --name-only | grep -E '.js$')",
     "eslint": "eslint --no-error-on-unmatched-pattern --quiet `npm run --silent list-files`",
     "lint": "npm run prettier-base -- --check && npm run eslint",
-    "nodemon": "nodemon --ignore src --ignore public --ignore private --ignore dist/pages --ignore __tests__",
+    "nodemon": "nodemon --max-old-space-size=4096 --ignore src --ignore public --ignore private --ignore temp --ignore dist/pages --ignore __tests__",
     "webpack": "webpack --max-old-space-size=8192 --mode development --config webpack.server.js",
     "webpack-dev-server": "node --max-old-space-size=8192 node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.dev.js",
     "test-loud": "jest --detectOpenHandles  --coverage",

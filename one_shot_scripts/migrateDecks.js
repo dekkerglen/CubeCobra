@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 
 const Draft = require('../models/old/draft');
 const GridDraft = require('../models/old/gridDraft');

@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
 const generateMeta = require('../../serverjs/meta');
@@ -8,7 +8,7 @@ const cardutil = require('../../dist/utils/Card');
 const { ensureAuth } = require('../middleware');
 const { createLobby } = require('../../serverjs/multiplayerDrafting');
 
-const { abbreviate, updateDeckCardAnalytics, isCubeViewable } = require('../../serverjs/cubefn');
+const { abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
 const { exportToMtgo, createPool } = require('./helper');
 
@@ -439,7 +439,6 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     }
 
     cube.numDecks += 1;
-    await updateDeckCardAnalytics(cube.id, null, 0, deck.seats[0], deck.cards, carddb);
 
     const user = await User.getById(req.user.id);
     const baseUser = await User.getById(base.owner);
@@ -482,22 +481,11 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    const seatIndex = deck.seats.map((seat, index) => [seat, index]).find(
-      (tuple) => `${tuple[0].userid}` === `${req.user.id}`,
-    )[1];
-
-    const cube = await Cube.getById(deck.cube);
+    const seatIndex = deck.seats
+      .map((seat, index) => [seat, index])
+      .find((tuple) => `${tuple[0].userid}` === `${req.user.id}`)[1];
 
     const { main, side, title, description } = req.body;
-
-    await updateDeckCardAnalytics(
-      cube.id,
-      deck.seats,
-      seatIndex,
-      { Mainboard: main, Sideboard: side },
-      deck.cards,
-      carddb,
-    );
 
     deck.seats[seatIndex].Mainboard = main;
     deck.seats[seatIndex].Sideboard = side;
@@ -677,7 +665,6 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     };
 
     await Draft.put(deck);
-    await updateDeckCardAnalytics(cube.id, null, 0, deck.seats[0], deck.cards, carddb);
 
     cube.numDecks += 1;
     await Cube.update(cube);

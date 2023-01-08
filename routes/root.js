@@ -1,6 +1,6 @@
 const express = require('express');
 
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 const util = require('../serverjs/util');
 const Cube = require('../dynamo/models/cube');
 const CubeHash = require('../dynamo/models/cubeHash');
