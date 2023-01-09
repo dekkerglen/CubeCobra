@@ -70,6 +70,7 @@ node --max-old-space-size=4096 force_update.js
 ### Adding Analytics
 
 To build the analytics database objects, you need to run the script `populate_analytics.js`. You will likely need to add the `max-old-space-size` flag like so:
+
 ```
 node --max-old-space-size=8192 jobs/populate_analytics.js
 ```
