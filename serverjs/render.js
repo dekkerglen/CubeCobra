@@ -12,7 +12,6 @@ const pages = {};
 if (NODE_ENV === 'production') {
   pages.CardSearchPage = require('../dist/pages/CardSearchPage').default;
   pages.CommentPage = require('../dist/pages/CommentPage').default;
-  pages.CommentReportsPage = require('../dist/pages/CommentReportsPage').default;
   pages.ContactPage = require('../dist/pages/ContactPage').default;
   pages.CreatorsPage = require('../dist/pages/CreatorsPage').default;
   pages.CubeAnalysisPage = require('../dist/pages/CubeAnalysisPage').default;
@@ -64,7 +63,6 @@ if (NODE_ENV === 'production') {
   pages.VideosPage = require('../dist/pages/VideosPage').default;
   pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
   pages.ApplicationPage = require('../dist/pages/ApplicationPage').default;
-  pages.ApplicationsPage = require('../dist/pages/ApplicationsPage').default;
   pages.ArticlePage = require('../dist/pages/ArticlePage').default;
   pages.ArticlesPage = require('../dist/pages/ArticlesPage').default;
   pages.BlogPostPage = require('../dist/pages/BlogPostPage').default;
