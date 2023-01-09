@@ -6,7 +6,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const mailer = require('nodemailer');
 const path = require('path');
-const email = require('email-templates');
+const Email = require('email-templates');
 const parser = require('../dist/markdown/parser');
 const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
@@ -99,7 +99,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new email({
+  const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: owner.email,
@@ -115,7 +115,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  email.send({
+  message.send({
     template: 'content_publish',
     locals: {
       title: document.title,
@@ -162,7 +162,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new email({
+  const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: owner.email,
@@ -178,7 +178,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  await email.send({
+  await message.send({
     template: 'content_decline',
     locals: {
       title: document.title,
@@ -241,7 +241,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new email({
+  const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: user.email,
@@ -257,7 +257,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  await email.send({
+  await message.send({
     template: 'application_approve',
     locals: {},
   });
@@ -284,7 +284,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
     },
   });
 
-  const email = new email({
+  const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
       to: user.email,
@@ -300,7 +300,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
     transport: smtpTransport,
   });
 
-  await email.send({
+  await message.send({
     template: 'application_decline',
     locals: {},
   });

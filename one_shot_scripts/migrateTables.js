@@ -11,9 +11,7 @@ const cube = require('../dynamo/models/cube');
 const cubeHash = require('../dynamo/models/cubeHash');
 const changelog = require('../dynamo/models/changelog');
 const blog = require('../dynamo/models/blog');
-const cardHistory = require('../dynamo/models/cardhistory');
 const comment = require('../dynamo/models/comment');
-const draft = require('../dynamo/models/draft');
 const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
 const featuredQueue = require('../dynamo/models/featuredQueue');
@@ -25,98 +23,69 @@ const Article = require('../models/old/article');
 const User = require('../models/old/user');
 const Cube = require('../models/old/cube');
 const Blog = require('../models/old/blog');
-const CardHistory = require('../models/old/cardhistory');
-const CardRating = require('../models/old/cardrating');
 const Comment = require('../models/old/comment');
-const Deck = require('../models/old/deck');
-const Draft = require('../models/old/draft');
 const Package = require('../models/old/package');
 const Patron = require('../models/old/patron');
 const FeaturedQueue = require('../models/old/featuredCubes');
 
 const migrations = [
-  // {
-  //   source: Video,
-  //   conversions: [[content.convertVideo, content.batchPut]],
-  // },
-  // {
-  //   source: Episode,
-  //   conversions: [[content.convertEpisode, content.batchPut]],
-  // },
-  // {
-  //   source: Podcast,
-  //   conversions: [[content.convertPodcast, content.batchPut]],
-  // },
-  // {
-  //   source: Article,
-  //   conversions: [[content.convertArticle, content.batchPut]],
-  // },
-  // {
-  //   source: User,
-  //   conversions: [
-  //     [notification.getNotificationsFromUser, notification.batchPut],
-  //     // [user.convertUser, user.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: Blog,
-  //   conversions: [
-  //     [changelog.getChangelogFromBlog, changelog.batchPut],
-  //     [blog.convertBlog, blog.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: CardRating,
-  //   conversions: [
-  //     [card.convertCardRating, card.batchPut],
-  //   ]
-  // },
-  // {
-  //   source: CardHistory,
-  //   conversions: [
-  //     [cardHistory.convertCardHistory, cardHistory.batchPut],
-  //     // [card.convertCardHistory, card.updateWithCubedWith],
-  //   ],
-  // },
-  // {
-  //   source: Comment,
-  //   conversions: [
-  //     [comment.convertComment, comment.batchPut],
-  //   ],
-  // },
   {
-    source: Deck,
-    conversions: [[draft.convertDeck, draft.batchPut]],
+    source: Video,
+    conversions: [[content.convertVideo, content.batchPut]],
   },
-  // {
-  //   source: Cube,
-  //   conversions: [
-  //     [cube.convertCubeToMetadata, cube.batchPut],
-  //     [cube.convertCubeToCards, cube.batchPutCards],
-  //     [
-  //       (c) => cubeHash.getHashRowsForCube(cube.convertCubeToMetadata(c), cube.convertCubeToCards(c)),
-  //       cubeHash.batchPut,
-  //     ],
-  //   ],
-  // },
-  // {
-  //   source: Package,
-  //   conversions: [
-  //     [package.convertPackage, package.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: Patron,
-  //   conversions: [
-  //     [patron.convertPatron, patron.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: FeaturedQueue,
-  //   conversions: [
-  //     [featuredQueue.convertQueue, featuredQueue.batchPut],
-  //   ],
-  // }
+  {
+    source: Episode,
+    conversions: [[content.convertEpisode, content.batchPut]],
+  },
+  {
+    source: Podcast,
+    conversions: [[content.convertPodcast, content.batchPut]],
+  },
+  {
+    source: Article,
+    conversions: [[content.convertArticle, content.batchPut]],
+  },
+  {
+    source: User,
+    conversions: [
+      [notification.getNotificationsFromUser, notification.batchPut],
+      [user.convertUser, user.batchPut],
+    ],
+  },
+  {
+    source: Blog,
+    conversions: [
+      [changelog.getChangelogFromBlog, changelog.batchPut],
+      [blog.convertBlog, blog.batchPut],
+    ],
+  },
+  {
+    source: Comment,
+    conversions: [[comment.convertComment, comment.batchPut]],
+  },
+  {
+    source: Cube,
+    conversions: [
+      [cube.convertCubeToMetadata, cube.batchPut],
+      [cube.convertCubeToCards, cube.batchPutCards],
+      [
+        (c) => cubeHash.getHashRowsForCube(cube.convertCubeToMetadata(c), cube.convertCubeToCards(c)),
+        cubeHash.batchPut,
+      ],
+    ],
+  },
+  {
+    source: Package,
+    conversions: [[pack.convertPackage, pack.batchPut]],
+  },
+  {
+    source: Patron,
+    conversions: [[patron.convertPatron, patron.batchPut]],
+  },
+  {
+    source: FeaturedQueue,
+    conversions: [[featuredQueue.convertQueue, featuredQueue.batchPut]],
+  },
 ];
 
 const batchSize = 100;
@@ -129,8 +98,8 @@ const skip = 0;
     const mongo = migration.source;
 
     console.log(`Moving over ${mongo.collection.collectionName}`);
-    const count = await mongo.countDocuments({ _id: '5dde88af89469844a079b2f1' });
-    const cursor = mongo.find({ _id: '5dde88af89469844a079b2f1' }).skip(skip).lean().cursor();
+    const count = await mongo.countDocuments();
+    const cursor = mongo.find().skip(skip).lean().cursor();
     const starttime = new Date();
 
     // batch them by batchSize
