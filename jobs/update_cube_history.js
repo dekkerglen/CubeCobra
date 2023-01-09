@@ -7,7 +7,7 @@ const fs = require('fs');
 const carddb = require('../serverjs/carddb');
 
 const ChangeLog = require('../dynamo/models/changelog');
-const CardHistory = require('../dynamo/models/cardHistory');
+const CardHistory = require('../dynamo/models/cardhistory');
 const { getCubeTypes } = require('../serverjs/cubefn');
 
 (async () => {

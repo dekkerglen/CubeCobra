@@ -12,7 +12,7 @@ const util = require('../serverjs/util');
 const { render } = require('../serverjs/render');
 const { csrfProtection } = require('./middleware');
 
-const CardHistory = require('../dynamo/models/cardHistory');
+const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
 
 const router = express.Router();
