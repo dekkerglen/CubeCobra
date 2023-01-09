@@ -1,10 +1,11 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 
 import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler } from 'reactstrap';
 
-import FilterCollapse from './FilterCollapse';
-import SortCollapse from './SortCollapse';
-import TagColorsModal from './TagColorsModal';
+import FilterCollapse from 'components/FilterCollapse';
+import SortCollapse from 'components/SortCollapse';
+import TagColorsModal from 'components/TagColorsModal';
 
 class CubeCompareNavbar extends Component {
   constructor(props) {
@@ -19,13 +20,6 @@ class CubeCompareNavbar extends Component {
     this.handleOpenCollapse = this.handleOpenCollapse.bind(this);
     this.handleOpenTagColorsModal = this.handleOpenTagColorsModal.bind(this);
     this.handleToggleTagColorsModal = this.handleToggleTagColorsModal.bind(this);
-  }
-
-  toggle() {
-    event.preventDefault();
-    this.setState(({ isOpen }) => ({
-      isOpen: !isOpen,
-    }));
   }
 
   handleOpenCollapse(event) {
@@ -45,7 +39,14 @@ class CubeCompareNavbar extends Component {
     this.setState({ tagColorsModalOpen: false });
   }
 
+  toggle() {
+    this.setState(({ isOpen }) => ({
+      isOpen: !isOpen,
+    }));
+  }
+
   render() {
+    const { isOpen, tagColorsModalOpen } = this.state;
     const { cubeA, cubeAID, cubeB, cubeBID, cards, openCollapse, filter, setFilter } = this.props;
     return (
       <>
@@ -69,7 +70,7 @@ class CubeCompareNavbar extends Component {
         <div className="usercontrols">
           <Navbar expand="md" light>
             <NavbarToggler onClick={this.toggle} />
-            <Collapse isOpen={this.state.isOpen} navbar>
+            <Collapse isOpen={isOpen} navbar>
               <Nav navbar>
                 <NavItem>
                   <NavLink href="#" data-target="sort" onClick={this.handleOpenCollapse}>
@@ -94,14 +95,10 @@ class CubeCompareNavbar extends Component {
             filter={filter}
             setFilter={setFilter}
             numCards={cards.length}
-            isOpen={this.props.openCollapse === 'filter'}
+            isOpen={openCollapse === 'filter'}
           />
         </div>
-        <TagColorsModal
-          canEdit={false}
-          isOpen={this.state.tagColorsModalOpen}
-          toggle={this.handleToggleTagColorsModal}
-        />
+        <TagColorsModal canEdit={false} isOpen={tagColorsModalOpen} toggle={this.handleToggleTagColorsModal} />
       </>
     );
   }

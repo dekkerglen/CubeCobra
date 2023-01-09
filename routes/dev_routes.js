@@ -43,7 +43,7 @@ router.post('/blogpost', ensureRole('Admin'), async (req, res) => {
     const id = await Blog.put(blogpost);
 
     const feedItems = req.user.following.map((user) => ({
-      id: id,
+      id,
       to: user,
       date: blogpost.date,
       type: Feed.TYPES.BLOG,

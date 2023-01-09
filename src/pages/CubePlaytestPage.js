@@ -187,7 +187,7 @@ CubePlaytestPage.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.object),
     defaultDraftFormat: PropTypes.number,
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     owner: PropTypes.string.isRequired,
     draft_formats: PropTypes.arrayOf(
       PropTypes.shape({

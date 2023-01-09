@@ -79,17 +79,17 @@ app.use((req, res, next) => {
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
   onFinished(res, (err, finalRes) => {
-    // console.log({
-    //   level: 'info',
-    //   type: 'request',
-    //   remoteAddr: req.ip,
-    //   requestId: req.uuid,
-    //   method: req.method,
-    //   path: req.path,
-    //   status: finalRes.statusCode,
-    //   length: finalRes.getHeader('content-length'),
-    //   elapsed: Date.now() - finalRes.startTime,
-    // });
+    console.log({
+      level: 'info',
+      type: 'request',
+      remoteAddr: req.ip,
+      requestId: req.uuid,
+      method: req.method,
+      path: req.path,
+      status: finalRes.statusCode,
+      length: finalRes.getHeader('content-length'),
+      elapsed: Date.now() - finalRes.startTime,
+    });
   });
   next();
 });

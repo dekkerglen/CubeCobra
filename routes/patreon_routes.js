@@ -156,7 +156,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       }
 
       const newPatron = {
-        email: email,
+        email,
         owner: req.user.id,
         status: Patron.STATUSES.INACTIVE,
       };

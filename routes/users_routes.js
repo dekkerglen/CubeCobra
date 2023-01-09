@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const mailer = require('nodemailer');
 const { body } = require('express-validator');
-const email = require('email-templates');
+const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
@@ -181,7 +181,7 @@ router.post(
         },
       });
 
-      const email = new email({
+      const email = new Email({
         message: {
           from: 'Cube Cobra Team <support@cubecobra.com>',
           to: passwordReset.email,
@@ -331,7 +331,7 @@ router.post(
     }
 
     const newUser = {
-      email: email,
+      email,
       username,
       confirmed: false,
     };
@@ -354,7 +354,7 @@ router.post(
             },
           });
 
-          const confirmEmail = new email({
+          const confirmEmail = new Email({
             message: {
               from: 'Cube Cobra Team <support@cubecobra.com>',
               to: email,

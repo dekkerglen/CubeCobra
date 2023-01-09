@@ -1,7 +1,8 @@
+/* eslint-disable react/prop-types */
 import React from 'react';
 
 const ButtonLink = ({ children, outline, color = 'primary', block, ...props }) => {
-  let type = outline ? `btn-outline-${color}` : `btn-${color}`;
+  const type = outline ? `btn-outline-${color}` : `btn-${color}`;
 
   const link = (
     <a className={`btn ${type} my-1`} {...props} role="button">
