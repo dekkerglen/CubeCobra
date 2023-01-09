@@ -22,7 +22,7 @@ const LoginPage = ({ loginCallback }) => (
           <FormGroup>
             <Row>
               <Col sm="3">
-                <Label>Username or Email Address:</Label>
+                <Label>username or email Address:</Label>
               </Col>
               <Col sm="9">
                 <Input maxLength="1000" name="username" id="email" type="text" />

@@ -17,7 +17,7 @@ const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, 
     <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
       <Banner />
       <DynamicFlash />
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
+      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
       <Card>
         <CardHeader>
           <h5 className="mb-0">All Decks</h5>
@@ -25,21 +25,21 @@ const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, 
         {decks.length > 0 ? (
           <CardBody className="p-0">
             {decks.map((deck) => (
-              <DeckPreview key={deck._id} deck={deck} nextURL={`/user/decks/${owner._id}/${activePage}`} />
+              <DeckPreview key={deck.id} deck={deck} nextURL={`/user/decks/${owner.id}/${activePage}`} />
             ))}
           </CardBody>
         ) : (
           <CardBody>No decks to show.</CardBody>
         )}
       </Card>
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner._id}/${i}`} />}
+      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
     </UserLayout>
   </MainLayout>
 );
 
 UserDecksPage.propTypes = {
   owner: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

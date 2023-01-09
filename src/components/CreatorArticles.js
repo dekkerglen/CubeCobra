@@ -1,43 +1,46 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 
-import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
+import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
 
-import Loading from 'pages/Loading';
-import UserContext from 'contexts/UserContext';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import ArticlePreview from 'components/ArticlePreview';
-import Paginate from 'components/Paginate';
 import { csrfFetch } from 'utils/CSRF';
-import useQueryParam from 'hooks/useQueryParam';
+import { wait } from 'utils/Util';
 
-const PAGE_SIZE = 24;
+const CreatorArticles = ({ articles, lastKey }) => {
+  const [items, setItems] = useState(articles);
+  const [currentLastKey, setLastKey] = useState(lastKey);
 
-const CreatorArticles = () => {
-  const user = useContext(UserContext);
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
 
-  const [articles, setArticles] = useState([]);
-  const [page, setPage] = useQueryParam('page', '0');
-  const [pages, setPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+    const response = await csrfFetch(`/content/getcreatorcontent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+        type: 'a',
+      }),
+    });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/articles/${user.id}/${page}`);
-      if (!response.ok) {
-        console.log(response);
-      }
+    if (response.ok) {
       const json = await response.json();
+      if (json.success === 'true') {
+        setItems([...items, ...json.content]);
+        setLastKey(json.lastKey);
+      }
+    }
+  }, [items, setItems, currentLastKey]);
 
-      setPages(Math.ceil(json.numResults / PAGE_SIZE));
-      setArticles(json.articles);
-      setLoading(false);
-    };
-    fetchData();
-  }, [page, user]);
-
-  const updatePage = (index) => {
-    setLoading(true);
-    setPage(index);
-  };
+  const loader = (
+    <div className="centered py-3 my-4">
+      <Spinner className="position-absolute" />
+    </div>
+  );
 
   return (
     <>
@@ -50,24 +53,26 @@ const CreatorArticles = () => {
           </NavItem>
         </Nav>
       </Navbar>
-      {pages > 1 && (
-        <CardBody className="pt-0">
-          <Paginate count={pages} active={page} onClick={(i) => updatePage(i)} />
-        </CardBody>
-      )}
-      {loading ? (
-        <Loading />
-      ) : (
-        <Row className="px-3">
-          {articles.map((article) => (
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <Row className="mx-0">
+          {items.map((article) => (
             <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
               <ArticlePreview article={article} />
             </Col>
           ))}
         </Row>
-      )}
+      </InfiniteScroll>
     </>
   );
+};
+
+CreatorArticles.propTypes = {
+  articles: PropTypes.arrayOf({}).isRequired,
+  lastKey: PropTypes.shape({}),
+};
+
+CreatorArticles.defaultProps = {
+  lastKey: null,
 };
 
 export default CreatorArticles;

@@ -1,41 +1,30 @@
+/* eslint-disable react/prop-types */
 import React, { useContext, forwardRef } from 'react';
 
 import DisplayContext from 'contexts/DisplayContext';
-
-/* HOC to add autocard to another element */
-
-const handleMouseEnter = (event) => {
-  const target = event.currentTarget;
-  const front = target.getAttribute('data-front');
-  const back = target.getAttribute('data-back');
-  const tags = JSON.parse(target.getAttribute('data-tags') || '[]');
-  const foil = target.getAttribute('data-foil') === 'true';
-  const inModal = target.getAttribute('data-in-modal') === 'true';
-  if (!stopAutocard) {
-    /* global */
-    autocard_show_card(front, back, false, tags.length > 0 ? tags : null, foil, inModal);
-  }
-};
-
-const handleMouseLeave = (event) => /* global */ autocard_hide_card();
+import AutocardContext from 'contexts/AutocardContext';
 
 const withAutocard = (Tag) =>
-  forwardRef(({ card, front, back, tags, inModal, ...props }, ref) => {
+  forwardRef(({ card, image, inModal, ...props }, ref) => {
     const { showCustomImages } = useContext(DisplayContext);
-    card = card || { details: {} };
-    tags = tags || card.tags || [];
-    front = front || (showCustomImages && card.imgUrl) || card.details.image_normal;
-    back = back || (showCustomImages && card.imgBackUrl) || card.details.image_flip;
+    const { showCard, hideCard } = useContext(AutocardContext);
+
+    if (image) {
+      return (
+        <Tag
+          ref={ref}
+          onMouseEnter={() => showCard({ details: { image_normal: image } }, inModal, showCustomImages)}
+          onMouseLeave={() => hideCard()}
+          {...props}
+        />
+      );
+    }
+
     return (
       <Tag
         ref={ref}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        data-front={front}
-        data-back={back}
-        data-tags={JSON.stringify(tags)}
-        data-foil={card.finish === 'Foil'}
-        data-in-modal={!!inModal}
+        onMouseEnter={() => showCard(card, inModal, showCustomImages)}
+        onMouseLeave={() => hideCard()}
         {...props}
       />
     );

@@ -15,7 +15,7 @@ const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
 const UserLayout = ({ user, followers, following, activeLink, children }) => {
   const activeUser = useContext(UserContext);
-  const canEdit = activeUser && activeUser.id === user._id;
+  const canEdit = activeUser && activeUser.id === user.id;
 
   const numFollowers = followers.length;
   const followersText = (
@@ -38,28 +38,28 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
             followersText
           )}
           {!following && !canEdit && (
-            <Button color="accent" className="rounded-0 w-100" href={`/user/follow/${user._id}`}>
+            <Button color="accent" className="rounded-0 w-100" href={`/user/follow/${user.id}`}>
               Follow
             </Button>
           )}
           {following && !canEdit && (
-            <Button color="unsafe" outline className="rounded-0 w-100" href={`/user/unfollow/${user._id}`}>
+            <Button color="unsafe" outline className="rounded-0 w-100" href={`/user/unfollow/${user.id}`}>
               Unfollow
             </Button>
           )}
         </NavItem>
         <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'view'} href={`/user/view/${user._id}`}>
-            Cubes
+          <NavLink active={activeLink === 'view'} href={`/user/view/${user.id}`}>
+            cubes
           </NavLink>
         </NavItem>
         <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'decks'} href={`/user/decks/${user._id}`}>
+          <NavLink active={activeLink === 'decks'} href={`/user/decks/${user.id}`}>
             Decks
           </NavLink>
         </NavItem>
         <NavItem className="px-2 align-self-end">
-          <NavLink active={activeLink === 'blog'} href={`/user/blog/${user._id}`}>
+          <NavLink active={activeLink === 'blog'} href={`/user/blog/${user.id}`}>
             Blog
           </NavLink>
         </NavItem>
@@ -81,7 +81,7 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
 
 UserLayout.propTypes = {
   user: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

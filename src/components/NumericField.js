@@ -3,10 +3,16 @@ import PropTypes from 'prop-types';
 
 import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
-const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, ...props }) => (
-  <InputGroup className="mb-3" {...props}>
+const NumericField = ({ name, humanName, placeholder, operator, value, setValue, setOperator }) => (
+  <InputGroup className="mb-3">
     <InputGroupText>{humanName}</InputGroupText>
-    <Input type="select" id={`${name}Op`} name={`${name}Op`} value={valueOp} onChange={onChange}>
+    <Input
+      type="select"
+      id={`${name}Op`}
+      name={`${name}Op`}
+      value={operator}
+      onChange={(event) => setOperator(event.target.value)}
+    >
       <option value="=">equal to</option>
       <option value="<">less than</option>
       <option value=">">greater than</option>
@@ -14,7 +20,13 @@ const NumericField = ({ name, humanName, placeholder, valueOp, value, onChange, 
       <option value=">=">greater than or equal to</option>
       <option value="!=">not equal to</option>
     </Input>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
+    <Input
+      type="text"
+      name={name}
+      placeholder={placeholder}
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+    />
   </InputGroup>
 );
 
@@ -22,9 +34,15 @@ NumericField.propTypes = {
   name: PropTypes.string.isRequired,
   humanName: PropTypes.string.isRequired,
   placeholder: PropTypes.string.isRequired,
-  valueOp: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
+  operator: PropTypes.string,
+  value: PropTypes.string,
+  setValue: PropTypes.func.isRequired,
+  setOperator: PropTypes.func.isRequired,
+};
+
+NumericField.defaultProps = {
+  operator: '=',
+  value: '',
 };
 
 export default NumericField;

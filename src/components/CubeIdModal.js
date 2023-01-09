@@ -3,7 +3,7 @@ import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, Input
 import PropTypes from 'prop-types';
 import { ClippyIcon } from '@primer/octicons-react';
 
-const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
+const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
   const onCopyClick = async (id, label) => {
     await navigator.clipboard.writeText(id);
     alert('success', `${label} copied to clipboard`);
@@ -14,13 +14,13 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader>Cube ID</ModalHeader>
       <ModalBody>
-        <h6>Short ID</h6>
+        <h6>short ID</h6>
         <InputGroup>
-          <Input className="bg-white monospaced" value={shortID} readOnly />
+          <Input className="bg-white monospaced" value={shortId} readOnly />
           <Button
             className="btn-sm input-group-button"
-            onClick={() => onCopyClick(shortID, 'Short ID')}
-            aria-label="Copy Short ID"
+            onClick={() => onCopyClick(shortId, 'short ID')}
+            aria-label="Copy short ID"
           >
             <ClippyIcon size={16} />
           </Button>
@@ -53,7 +53,7 @@ const CubeIdModal = ({ toggle, isOpen, shortID, fullID, alert }) => {
 CubeIdModal.propTypes = {
   toggle: PropTypes.func.isRequired,
   isOpen: PropTypes.bool.isRequired,
-  shortID: PropTypes.string.isRequired,
+  shortId: PropTypes.string.isRequired,
   fullID: PropTypes.string.isRequired,
   alert: PropTypes.func.isRequired,
 };

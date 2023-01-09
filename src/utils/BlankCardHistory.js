@@ -1,4 +1,4 @@
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 
 function getBlankCardHistory(id) {
   const card = carddb.cardFromId(id);
@@ -23,7 +23,7 @@ function getBlankCardHistory(id) {
       vintage: [0, 0],
       cubes: 0,
       prices: cardVersions.map((cardId) => {
-        return { ...carddb.cardFromId(cardId).prices, version: carddb.cardFromId(cardId)._id };
+        return { ...carddb.cardFromId(cardId).prices, version: carddb.cardFromId(cardId).id };
       }),
     },
     cubedWith: {

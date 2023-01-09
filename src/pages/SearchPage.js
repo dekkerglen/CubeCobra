@@ -1,51 +1,76 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
+import { Row, Col, Spinner } from 'reactstrap';
 
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
-import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { csrfFetch } from 'utils/CSRF';
 
-const SearchPage = ({ cubes, query, count, perPage, page, order, loginCallback }) => {
-  const pages = Math.ceil(count / perPage);
+import { wait } from 'utils/Util';
+
+const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) => {
+  const [items, setItems] = React.useState(cubes);
+  const [currentLastKey, setCurrentLastKey] = React.useState(lastKey);
+
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
+
+    const response = await csrfFetch(`/getmoresearchitems`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+        query,
+        order,
+        ascending,
+      }),
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      if (json.success === 'true') {
+        setItems([...items, ...json.cubes]);
+        setCurrentLastKey(json.lastKey);
+      }
+    }
+  }, [ascending, currentLastKey, items, order, query]);
+
+  const loader = (
+    <div className="centered py-3 my-4">
+      <Spinner className="position-absolute" />
+    </div>
+  );
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeSearchNavBar query={query} order={order} title="Cube Search" />
+      <CubeSearchNavBar query={query} order={order} title="Cube Search" ascending={ascending} />
       <br />
       <DynamicFlash />
       {(cubes && cubes.length) > 0 ? (
-        <Card>
-          <CardHeader>
-            {pages > 1 ? (
-              <>
-                <h5>
-                  {`Displaying ${perPage * page + 1}-${Math.min(count, perPage * (page + 1))} of ${count} Results`}
-                </h5>
-                <Paginate count={pages} active={page} urlF={(i) => `/search/${query}/${i}?order=${order}`} />
-              </>
-            ) : (
-              <h5>{`Displaying all ${count} Results`}</h5>
-            )}
-          </CardHeader>
-          <Row>
-            {cubes.slice(0, 36).map((cube) => (
+        <InfiniteScroll
+          dataLength={items.length}
+          next={fetchMoreData}
+          hasMore={currentLastKey}
+          loader={loader}
+          endMessage="You've reached the end of the search."
+        >
+          <Row noGutters>
+            {items.map((cube) => (
               <Col className="pb-4" xl={3} lg={3} md={4} sm={6} xs={12}>
                 <CubePreview cube={cube} />
               </Col>
             ))}
           </Row>
-          {pages > 1 && (
-            <CardBody>
-              <Paginate count={pages} active={page} urlF={(i) => `/search/${query}/${i}?order=${order}`} />
-            </CardBody>
-          )}
-        </Card>
+        </InfiniteScroll>
       ) : (
         <h4>No Results</h4>
       )}
@@ -56,20 +81,17 @@ const SearchPage = ({ cubes, query, count, perPage, page, order, loginCallback }
 SearchPage.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,
   query: PropTypes.string,
-  count: PropTypes.number,
-  perPage: PropTypes.number,
-  page: PropTypes.number,
   order: PropTypes.string,
   loginCallback: PropTypes.string,
+  lastKey: PropTypes.shape({}).isRequired,
+  ascending: PropTypes.bool,
 };
 
 SearchPage.defaultProps = {
   query: '',
-  count: 0,
-  perPage: 0,
-  page: 0,
-  order: 'date',
+  order: 'pop',
   loginCallback: '/',
+  ascending: false,
 };
 
 export default RenderToRoot(SearchPage);

@@ -1,37 +1,57 @@
-import React, { useState, useContext } from 'react';
-
-import UserContext from 'contexts/UserContext';
+import React, { useState } from 'react';
 
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
 
+import { BellFillIcon } from '@primer/octicons-react';
 import { csrfFetch } from 'utils/CSRF';
 import LinkButton from 'components/LinkButton';
+import useMount from 'hooks/UseMount';
 
 const NotificationsNav = () => {
-  const user = useContext(UserContext);
+  const [items, setItems] = useState([]);
 
-  const [notifications, setNotifications] = useState(user.notifications);
+  useMount(() => {
+    const fetch = async () => {
+      const response = await csrfFetch(`/user/getusernotifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lastKey: null,
+        }),
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success === 'true') {
+          setItems([...items, ...json.notifications]);
+        }
+      }
+    };
+    fetch();
+  });
 
   const clear = async () => {
     await csrfFetch('/user/clearnotifications', {
       method: 'POST',
     });
-    setNotifications([]);
+    setItems([]);
   };
 
   return (
     <UncontrolledDropdown nav inNavbar>
       <DropdownToggle nav caret>
-        {notifications.length > 0 && (
-          <Badge color="unsafe">{notifications.length > 100 ? '100+' : notifications.length}</Badge>
-        )}
-        <img className="notification-icon" src="/content/notification.png" alt="notifications" />
+        {items.length > 0 && <Badge color="unsafe">{items.length > 30 ? '30+' : items.length}</Badge>}
+        <span className="notification-wrapper">
+          <BellFillIcon size={20} />
+        </span>
       </DropdownToggle>
       <DropdownMenu className="dropdown-no-green pb-0 mb-0" end>
         <CardHeader>
           <h6>
             Notifications
-            {notifications.length > 0 && (
+            {items.length > 0 && (
               <LinkButton className="card-subtitle float-end mt-0" onClick={clear}>
                 Clear All
               </LinkButton>
@@ -39,11 +59,11 @@ const NotificationsNav = () => {
           </h6>
         </CardHeader>
         <div className="sm-main-nav notification-scrollarea">
-          {notifications.length > 0 ? (
-            notifications.slice(0, 100).map((notification, index) => (
+          {items.length > 0 ? (
+            items.map((notification) => (
               <div className="user-notification py-3 px-2">
-                <a className="no-underline-hover" href={`/user/notification/${index}`}>
-                  <h6 className="card-subtitle">{notification.text}</h6>
+                <a className="no-underline-hover" href={`/user/notification/${notification.id}`}>
+                  <h6 className="card-subtitle">{notification.body}</h6>
                 </a>
               </div>
             ))

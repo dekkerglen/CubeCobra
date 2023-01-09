@@ -1,21 +1,15 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { WithContext as ReactTags } from 'react-tag-input';
 import PropTypes from 'prop-types';
 
-import TagContext from 'contexts/TagContext';
+import { getTagColorClass } from 'utils/Util';
 
-const TagInput = ({ tags, addTag, deleteTag, reorderTag, dontAddSuggestions, ...props }) => {
-  const { allSuggestions, addSuggestion, tagColorClass } = useContext(TagContext);
+const TagInput = ({ tags, addTag, deleteTag, reorderTag, suggestions, tagColors }) => {
   return (
     <ReactTags
-      tags={tags.map((tag) => ({ ...tag, className: tagColorClass(tag.text) }))}
-      suggestions={allSuggestions}
-      handleAddition={(tag) => {
-        if (!dontAddSuggestions) {
-          addSuggestion(tag);
-        }
-        addTag(tag);
-      }}
+      tags={tags.map((tag) => ({ ...tag, className: getTagColorClass(tagColors, tag.text) }))}
+      suggestions={suggestions}
+      handleAddition={addTag}
       handleDelete={deleteTag}
       handleDrag={reorderTag}
       placeholder="Tag (hit tab)..."
@@ -26,7 +20,6 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, dontAddSuggestions, ...
         tag: 'ReactTags__tag my-0',
         tagInput: 'ReactTags__tagInput m-0',
       }}
-      {...props}
     />
   );
 };
@@ -36,10 +29,13 @@ TagInput.propTypes = {
   addTag: PropTypes.func.isRequired,
   deleteTag: PropTypes.func.isRequired,
   reorderTag: PropTypes.func.isRequired,
-  dontAddSuggestions: PropTypes.bool,
+  suggestions: PropTypes.arrayOf(PropTypes.string),
+  tagColors: PropTypes.arrayOf(PropTypes.shape({ tag: PropTypes.string, color: PropTypes.string })),
 };
+
 TagInput.defaultProps = {
-  dontAddSuggestions: false,
+  tagColors: [],
+  suggestions: [],
 };
 
 export default TagInput;

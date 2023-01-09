@@ -15,6 +15,7 @@ import {
   Input,
 } from 'reactstrap';
 
+import { ClippyIcon } from '@primer/octicons-react';
 import UserContext from 'contexts/UserContext';
 import LinkButton from 'components/LinkButton';
 import CommentContextMenu from 'components/CommentContextMenu';
@@ -23,16 +24,17 @@ import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
 import Markdown from 'components/Markdown';
+import DomainContext from 'contexts/DomainContext';
 
 const maxDepth = 4;
 
 const Comment = ({ comment, index, depth, noReplies, editComment }) => {
   const user = useContext(UserContext);
-  const userid = user && user.id;
+  const domain = useContext(DomainContext);
 
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
-  const [comments, addComment, , editChildComment] = useComments('comment', comment._id);
+  const [comments, addComment, , editChildComment] = useComments(comment.id, 'comment');
   const [loaded, setLoaded] = useState(false);
   const [shareModalOpen, toggleShareModal] = useToggle(false);
   const [reportModalOpen, toggleReportModal] = useToggle(false);
@@ -40,32 +42,16 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   const remove = () => {
     editComment({
-      _id: comment._id,
-      parent: comment.parent,
-      parentType: comment.parentType,
-      owner: null,
-      ownerName: null,
+      id: comment.id,
       content: '[deleted]',
-      timePosted: new Date(),
-      updated: true,
-      image:
-        'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021',
-      artist: 'Allan Pollack',
+      remove: true,
     });
   };
 
   const edit = (content) => {
     editComment({
-      _id: comment._id,
-      parent: comment.parent,
-      parentType: comment.parentType,
-      owner: comment.owner,
-      ownerName: comment.ownerName,
+      id: comment.id,
       content,
-      timePosted: new Date(),
-      updated: true,
-      image: comment.image,
-      artist: comment.artist,
     });
   };
 
@@ -74,7 +60,16 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       <Modal isOpen={shareModalOpen} toggle={toggleShareModal} size="md">
         <ModalHeader toggle={toggle}>Share this Comment</ModalHeader>
         <ModalBody>
-          <a href={`/comment/${comment._id}`}>Link to Comment</a>
+          <InputGroup>
+            <Input className="bg-white monospaced" value={`https://${domain}/comment/${comment.id}`} readOnly />
+            <Button
+              className="btn-sm input-group-button"
+              onClick={() => navigator.clipboard.writeText(`https://${domain}/comment/${comment.id}`)}
+              aria-label="Copy short ID"
+            >
+              <ClippyIcon size={16} />
+            </Button>
+          </InputGroup>
         </ModalBody>
       </Modal>
       <Modal isOpen={reportModalOpen} toggle={toggleReportModal} size="lg">
@@ -96,7 +91,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
               name="info"
               placeholder="Put any additional comments here."
             />
-            <Input type="hidden" name="commentid" value={comment._id} />
+            <Input type="hidden" name="commentid" value={comment.id} />
           </ModalBody>
           <ModalFooter>
             <Button color="accent">Submit Report</Button>
@@ -108,35 +103,32 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       </Modal>
       <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
         <a href={`/user/view/${comment.owner}`}>
-          <img className="profile-thumbnail" src={comment.image} alt={comment.artist} title={comment.artist} />
+          <img
+            className="profile-thumbnail"
+            src={comment.ImageData.uri}
+            alt={comment.ImageData.artist}
+            title={comment.ImageData.artist}
+          />
         </a>
         <div className="flex-grow ms-2">
           <div className="flex-container flex-direction-col">
             <div className="flex-container flex-space-between">
               <div>
-                {comment.ownerName ? (
+                {comment.user.username ? (
                   <a href={`/user/view/${comment.owner}`}>
-                    <small>{comment.ownerName}</small>
+                    <small>{comment.user.username}</small>
                   </a>
                 ) : (
                   <small>Anonymous</small>
                 )}
-                {comment.timePosted &&
-                  (comment.updated ? (
-                    <em>
-                      <small>
-                        {' '}
-                        - Updated <TimeAgo date={comment.timePosted} />
-                      </small>
-                    </em>
-                  ) : (
-                    <small>
-                      {' '}
-                      - <TimeAgo date={comment.timePosted} />
-                    </small>
-                  ))}
+                {comment.date && (
+                  <small>
+                    {' '}
+                    - <TimeAgo date={comment.date} />
+                  </small>
+                )}
               </div>
-              {comment.owner === userid && (
+              {comment.owner === user.id && (
                 <div>
                   <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                     <small>...</small>
@@ -146,7 +138,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
             </div>
             <Collapse isOpen={!isEdit}>
               <div className="mb-0">
-                <Markdown markdown={comment.content} limited />
+                <Markdown markdown={comment.body} limited />
               </div>
             </Collapse>
             <CommentEntry
@@ -155,11 +147,11 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                 setIsEdit(false);
               }}
               expanded={isEdit}
-              defaultValue={comment.content}
+              defaultValue={comment.body}
               toggle={() => setIsEdit(false)}
             />
             <div>
-              {!noReplies && userid && (
+              {!noReplies && user && (
                 <LinkButton onClick={toggleReply}>
                   <small>Reply</small>
                 </LinkButton>
@@ -176,7 +168,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                 </LinkButton>
               )}
               {!noReplies && comments.length > 0 && depth >= maxDepth && (
-                <a className="m-2" href={`/comment/${comment._id}`}>
+                <a className="m-2" href={`/comment/${comment.id}`}>
                   <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
                 </a>
               )}
@@ -205,7 +197,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   .reverse()
                   .map((item, pos) => (
                     <Comment
-                      key={`comment-${comment._id}`}
+                      key={`comment-${comment.id}`}
                       comment={item}
                       index={index + comments.length - pos}
                       depth={depth + 1}
@@ -213,7 +205,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                     />
                   ))}
                 {comments.length > 10 && (
-                  <a className="m-2" href={`/comment/${comment._id}`}>
+                  <a className="m-2" href={`/comment/${comment.id}`}>
                     View All...
                   </a>
                 )}

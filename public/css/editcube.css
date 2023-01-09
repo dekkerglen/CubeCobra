@@ -12,8 +12,8 @@
 }
 
 .changelist-container {
-	max-height: 19rem;
 	overflow: auto;
+	max-height: 500px;
 }
 
 .changelist {
@@ -36,6 +36,7 @@
 	padding: 0;
 	border: 1px solid var(--border);
 	background-color: var(--bg);
+	margin-top: 2.4rem;
 }
 
 .autocomplete-list li {

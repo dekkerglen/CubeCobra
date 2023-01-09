@@ -1,185 +1,55 @@
-import React, { useCallback, useContext, useState, useRef, useEffect } from 'react';
-import { Button, Col, Collapse, Container, Input, Row, UncontrolledAlert } from 'reactstrap';
+import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { Button, Col, Collapse, Container, Input, Row } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
 import { SORTS, ORDERED_SORTS } from 'utils/Sort';
 
 import CubeContext from 'contexts/CubeContext';
-import SortContext from 'contexts/SortContext';
-import Query from 'utils/Query';
 import Tooltip from 'components/Tooltip';
 
-const SortCollapse = ({
-  defaultPrimarySort,
-  defaultSecondarySort,
-  defaultTertiarySort,
-  defaultQuaternarySort,
-  defaultShowUnsorted,
-  defaultSorts,
-  cubeDefaultShowUnsorted,
-  setSorts,
-  ...props
-}) => {
-  const [alerts, setAlerts] = useState([]);
-  const { canEdit, cubeID } = useContext(CubeContext);
-  const { primary, secondary, tertiary, quaternary, showOther, changeSort } = useContext(SortContext);
+const SortCollapse = ({ isOpen }) => {
+  const {
+    canEdit,
+    cube,
+    setShowUnsorted,
+    saveSorts,
+    resetSorts,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    sortQuaternary,
+    setSortPrimary,
+    setSortSecondary,
+    setSortTertiary,
+    setSortQuaternary,
+  } = useContext(CubeContext);
 
-  const normalizeSort = (sort) => {
-    if (sort === 'CMC') return 'Mana Value';
-    if (sort === 'CMC2') return 'Mana Value 2';
-    if (sort === 'CMC-Full') return 'Mana Value Full';
-    return sort;
-  };
-  const formSorts = (src) => {
-    const sorts = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'];
-    for (let i = 0; i < 4; i++) {
-      if (src[i]) sorts[i] = normalizeSort(src[i]);
-    }
-    return sorts;
-  };
-
-  const [defSorts, setDefSorts] = useState(formSorts(defaultSorts));
-  const [defShow, setDefShow] = useState(cubeDefaultShowUnsorted.toString());
-
-  const prevSorts = useRef(defSorts);
-  const prevShow = useRef(defShow);
-  useEffect(() => {
-    let currentPrimarySort = normalizeSort(defaultPrimarySort) ?? '';
-    let currentSecondarySort = normalizeSort(defaultSecondarySort) ?? '';
-    let currentTertiarySort = normalizeSort(defaultTertiarySort) ?? '';
-    let currentQuaternarySort = normalizeSort(defaultQuaternarySort) ?? '';
-    let currentShowUnsorted = defaultShowUnsorted ?? '';
-    if (!SORTS.includes(currentPrimarySort)) currentPrimarySort = '';
-    if (!SORTS.includes(currentSecondarySort)) currentSecondarySort = '';
-    if (!SORTS.includes(currentTertiarySort)) currentTertiarySort = '';
-    if (!ORDERED_SORTS.includes(currentQuaternarySort)) currentQuaternarySort = '';
-
-    if (
-      prevSorts[0] !== currentPrimarySort ||
-      prevSorts[1] !== currentSecondarySort ||
-      prevSorts[2] !== currentTertiarySort ||
-      prevSorts[3] !== currentQuaternarySort ||
-      prevShow.current !== currentShowUnsorted
-    ) {
-      if (!currentPrimarySort || currentPrimarySort === defSorts[0]) {
-        Query.del('s1');
-        [currentPrimarySort] = defSorts;
-      }
-      if (!currentSecondarySort || currentSecondarySort === defSorts[1]) {
-        Query.del('s2');
-        [, currentSecondarySort] = defSorts;
-      }
-      if (!currentTertiarySort || currentTertiarySort === defSorts[2]) {
-        Query.del('s3');
-        [, , currentTertiarySort] = defSorts;
-      }
-      if (!currentQuaternarySort || currentQuaternarySort === defSorts[3]) {
-        Query.del('s4');
-        [, , , currentQuaternarySort] = defSorts;
-      }
-      if (!currentShowUnsorted || currentShowUnsorted === defShow) {
-        Query.del('so');
-        currentShowUnsorted = defShow;
-      }
-
-      prevSorts.current = [currentPrimarySort, currentSecondarySort, currentTertiarySort, currentQuaternarySort];
-      prevShow.current = currentShowUnsorted;
-      if (setSorts) {
-        setSorts(prevSorts.current);
-      }
-      changeSort({
-        primary: currentPrimarySort,
-        secondary: currentSecondarySort,
-        tertiary: currentTertiarySort,
-        quaternary: currentQuaternarySort,
-      });
-      if (currentShowUnsorted) {
-        changeSort({ showOther: currentShowUnsorted === 'true' });
-      }
-    }
-  }, [
-    defaultPrimarySort,
-    defaultSecondarySort,
-    defaultTertiarySort,
-    defaultQuaternarySort,
-    defaultShowUnsorted,
-    setSorts,
-    changeSort,
-    defSorts,
-    defShow,
-  ]);
-
-  const addAlert = useCallback((color, message) => setAlerts((alertsB) => [...alertsB, { color, message }]), []);
-
-  const handleReset = useCallback(() => {
-    Query.del('s1');
-    Query.del('s2');
-    Query.del('s3');
-    Query.del('s4');
-    changeSort({ primary: defSorts[0], secondary: defSorts[1], tertiary: defSorts[2], quaternary: defSorts[3] });
-  }, [defSorts, changeSort]);
-
-  const handleSave = useCallback(async () => {
-    try {
-      await csrfFetch(`/cube/api/savesorts/${cubeID}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sorts: [primary, secondary, tertiary, quaternary],
-          showOther,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (e) {
-      addAlert('danger', 'Error saving default sorts.');
-      return;
-    }
-    Query.del('s1');
-    Query.del('s2');
-    Query.del('s3');
-    Query.del('s4');
-    Query.del('so');
-    setDefSorts([primary, secondary, tertiary, quaternary]);
-    setDefShow(showOther.toString());
-    addAlert('success', 'Default sorts saved.');
-  }, [addAlert, cubeID, primary, secondary, tertiary, quaternary, showOther]);
+  const sortsModified = useMemo(() => {
+    return (
+      sortPrimary !== (cube.defaultSorts[0] || 'Color Category') ||
+      sortSecondary !== (cube.defaultSorts[1] || 'Types-Multicolor') ||
+      sortTertiary !== (cube.defaultSorts[2] || 'Mana Value') ||
+      sortQuaternary !== (cube.defaultSorts[3] || 'Alphabetical')
+    );
+  }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
 
   return (
-    <Collapse {...props}>
+    <Collapse isOpen={isOpen}>
       <Container>
-        <Row>
-          <Col>
-            {alerts.map(({ color, message }, index) => (
-              <UncontrolledAlert
-                key={index /* eslint-disable-line react/no-array-index-key */}
-                className="w-100 mb-1"
-                color={color}
-              >
-                {message}
-              </UncontrolledAlert>
-            ))}
-          </Col>
-        </Row>
         <Row>
           <Col xs="12" sm="6" className="mt-2">
             <h6>Primary Sort</h6>
             <Input
               type="select"
-              value={primary}
+              value={sortPrimary}
               onChange={(e) => {
-                const newPrimary = e.target.value;
-                if (!newPrimary || newPrimary === defSorts[0]) {
-                  Query.del('s1');
-                } else {
-                  Query.set('s1', newPrimary);
-                }
-                changeSort({ primary: newPrimary });
+                setSortPrimary(e.target.value);
               }}
             >
               {SORTS.map((sort) => (
-                <option key={sort}>{sort}</option>
+                <option key={`primary-${sort}`} value={sort}>
+                  {sort}
+                </option>
               ))}
             </Input>
           </Col>
@@ -187,19 +57,15 @@ const SortCollapse = ({
             <h6>Secondary Sort</h6>
             <Input
               type="select"
-              value={secondary}
+              value={sortSecondary}
               onChange={(e) => {
-                const newSecondary = e.target.value;
-                if (!newSecondary || newSecondary === defSorts[1]) {
-                  Query.del('s2');
-                } else {
-                  Query.set('s2', newSecondary);
-                }
-                changeSort({ secondary: newSecondary });
+                setSortSecondary(e.target.value);
               }}
             >
               {SORTS.map((sort) => (
-                <option key={sort}>{sort}</option>
+                <option key={`secondary-${sort}`} value={sort}>
+                  {sort}
+                </option>
               ))}
             </Input>
           </Col>
@@ -207,19 +73,15 @@ const SortCollapse = ({
             <h6>Tertiary Sort</h6>
             <Input
               type="select"
-              value={tertiary}
+              value={sortTertiary}
               onChange={(e) => {
-                const newTertiary = e.target.value;
-                if (!newTertiary || newTertiary === defSorts[2]) {
-                  Query.del('s3');
-                } else {
-                  Query.set('s3', newTertiary);
-                }
-                changeSort({ tertiary: newTertiary });
+                setSortTertiary(e.target.value);
               }}
             >
               {SORTS.map((sort) => (
-                <option key={sort}>{sort}</option>
+                <option key={`tertiary-${sort}`} value={sort}>
+                  {sort}
+                </option>
               ))}
             </Input>
           </Col>
@@ -227,19 +89,15 @@ const SortCollapse = ({
             <h6>Ordered Sort</h6>
             <Input
               type="select"
-              value={quaternary}
+              value={sortQuaternary}
               onChange={(e) => {
-                const newQuaternary = e.target.value;
-                if (!newQuaternary || newQuaternary === defSorts[3]) {
-                  Query.del('s4');
-                } else {
-                  Query.set('s4', newQuaternary);
-                }
-                changeSort({ quaternary: newQuaternary });
+                setSortQuaternary(e.target.value);
               }}
             >
               {ORDERED_SORTS.map((sort) => (
-                <option key={sort}>{sort}</option>
+                <option key={`quaternary-${sort}`} value={sort}>
+                  {sort}
+                </option>
               ))}
             </Input>
           </Col>
@@ -248,7 +106,7 @@ const SortCollapse = ({
           <Col>
             <p className="my-2">
               <em>
-                Cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
+                cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
                 each item once.
               </em>
             </p>
@@ -256,31 +114,23 @@ const SortCollapse = ({
         </Row>
         <Row className="mb-3">
           <Col>
-            <Button color="accent" className="me-sm-2 mb-3" onClick={handleReset}>
+            <Button color="accent" className="me-sm-2 mb-3" onClick={resetSorts} disabled={!sortsModified}>
               Reset Sort
             </Button>
             {!canEdit ? (
               false
             ) : (
-              <Button color="accent" className="me-sm-2 mb-3" onClick={handleSave}>
+              <Button color="accent" className="me-sm-2 mb-3" onClick={saveSorts} disabled={!sortsModified}>
                 Save as Default Sort
               </Button>
             )}
             <Button
-              color={showOther ? 'unsafe' : 'primary'}
+              color={cube.showUnsorted ? 'unsafe' : 'primary'}
               className="me-sm-2 mb-3"
-              onClick={() => {
-                const newShowOther = !showOther;
-                if (newShowOther.toString() === defShow) {
-                  Query.del('so');
-                } else {
-                  Query.set('so', newShowOther);
-                }
-                changeSort({ showOther: newShowOther });
-              }}
+              onClick={() => setShowUnsorted(!cube.showUnsorted)}
             >
               <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-                {showOther ? 'Hide' : 'Show'} Unsorted Cards
+                {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
               </Tooltip>
             </Button>
           </Col>
@@ -291,23 +141,10 @@ const SortCollapse = ({
 };
 
 SortCollapse.propTypes = {
-  defaultPrimarySort: PropTypes.string,
-  defaultSecondarySort: PropTypes.string,
-  defaultTertiarySort: PropTypes.string,
-  defaultQuaternarySort: PropTypes.string,
-  defaultShowUnsorted: PropTypes.string,
-  defaultSorts: PropTypes.arrayOf(PropTypes.string.isRequired),
-  cubeDefaultShowUnsorted: PropTypes.bool,
-  setSorts: PropTypes.func.isRequired,
-};
-SortCollapse.defaultProps = {
-  defaultPrimarySort: '',
-  defaultSecondarySort: '',
-  defaultTertiarySort: '',
-  defaultQuaternarySort: '',
-  defaultShowUnsorted: '',
-  defaultSorts: ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'],
-  cubeDefaultShowUnsorted: false,
+  isOpen: PropTypes.bool,
 };
 
+SortCollapse.defaultProps = {
+  isOpen: false,
+};
 export default SortCollapse;

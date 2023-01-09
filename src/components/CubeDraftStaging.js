@@ -60,9 +60,9 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
         // TODO: if there is a collision, reassign a seat and make and API call to reflect the change
       });
 
-      await callApi('/multiplayer/joinlobby', { draft: draft._id });
+      await callApi('/multiplayer/joinlobby', { draft: draft.id });
 
-      const res = await callApi('/multiplayer/getlobbyseats', { draft: draft._id });
+      const res = await callApi('/multiplayer/getlobbyseats', { draft: draft.id });
       const json = await res.json();
 
       setOrder(json.seats);
@@ -90,7 +90,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
 
     // TODO: make API call to update seat orders
     await callApi('/multiplayer/updatelobbyseats', {
-      draftid: draft._id,
+      draftid: draft.id,
       order: newSeats,
     });
 
@@ -132,11 +132,11 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
           <>
             <p>Use the following link to invite players to your draft:</p>
             <InputGroup>
-              <Input className="bg-white monospaced" value={`https://${domain}/d/${draft._id}`} readOnly />
+              <Input className="bg-white monospaced" value={`https://${domain}/d/${draft.id}`} readOnly />
               <Button
                 className="btn-sm input-group-button"
-                onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft._id}`)}
-                aria-label="Copy Short ID"
+                onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft.id}`)}
+                aria-label="Copy short ID"
               >
                 <ClippyIcon size={16} />
               </Button>

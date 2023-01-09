@@ -56,8 +56,8 @@ const flattenSteps = (steps) => {
   return res;
 };
 
-export const getStepList = (draft) =>
-  draft.initial_state[0]
+export const getStepList = (initialState) =>
+  initialState[0]
     .map((pack, packIndex) => [
       ...flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
         pack: packIndex + 1,
@@ -71,7 +71,7 @@ export const getStepList = (draft) =>
     .flat();
 
 export const nextStep = (draft, seat, cardsPicked) => {
-  const steps = getStepList(draft);
+  const steps = getStepList(draft.InitialState);
 
   let picks = 0;
 
@@ -90,14 +90,14 @@ export const nextStep = (draft, seat, cardsPicked) => {
 
 export const getDrafterState = (draft, seatNumber, pickNumber) => {
   // build list of steps and match to pick and pack number
-  const steps = getStepList(draft);
+  const steps = getStepList(draft.InitialState);
 
   // build a list of states for each seat
   const states = [];
   for (let i = 0; i < draft.seats.length; i++) {
     const picksList = [];
     const pickQueue = draft.seats[i].pickorder.slice();
-    const trashQueue = draft.seats[i].trashorder.slice();
+    const trashQueue = (draft.seats[i].trashorder || []).slice();
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
@@ -120,7 +120,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       picked: [],
       trashed: [],
       pickQueue: draft.seats[i].pickorder.slice(),
-      trashQueue: draft.seats[i].trashorder.slice(),
+      trashQueue: (draft.seats[i].trashorder || []).slice(),
+      cardsPicked: [...draft.seats[i].Mainboard.flat(3), ...draft.seats[i].Sideboard.flat(3)],
       cardsInPack: [],
       picksList,
     });
@@ -136,8 +137,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
-      for (let i = 0; i < draft.initial_state.length; i++) {
-        packsWithCards[i] = draft.initial_state[i][step.pack - 1].cards.slice();
+      for (let i = 0; i < draft.InitialState.length; i++) {
+        packsWithCards[i] = draft.InitialState[i][step.pack - 1].cards.slice();
       }
 
       offset = 0;
@@ -152,7 +153,18 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       if (step.action === 'pick' || step.action === 'pickrandom') {
         seat.cardsInPack = packsWithCards[(i + offset) % draft.seats.length].slice();
 
-        const picked = seat.pickQueue.pop();
+        let picked = seat.pickQueue.pop();
+
+        if (picked === -1) {
+          // try to make picked a card in the pack that exists in cardsPicked
+          for (const cardIndex of seat.cardsInPack) {
+            if (seat.cardsPicked.includes(cardIndex)) {
+              picked = cardIndex;
+              break;
+            }
+          }
+        }
+
         seat.picked.push(picked);
         seat.selection = picked;
         seat.step = step;
@@ -239,7 +251,7 @@ export const draftStateToTitle = (draft, picks, trashed, loading, stepQueue) => 
   let pack = 1;
   let pick = 1;
 
-  const steplist = getStepList(draft);
+  const steplist = getStepList(draft.InitialState);
   let pickCount = 0;
   let trashCount = 0;
 

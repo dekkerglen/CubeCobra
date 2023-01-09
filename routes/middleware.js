@@ -1,6 +1,6 @@
 const csurf = require('csurf');
 const { validationResult } = require('express-validator');
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const ensureAuth = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -11,18 +11,18 @@ const ensureAuth = (req, res, next) => {
   return res.redirect('/user/login');
 };
 
-const ensureRole = (role) => (req, res, next) => {
+const ensureRole = (role) => async (req, res, next) => {
   if (!req.isAuthenticated()) {
     req.flash('danger', 'Please login to view this content');
     return res.redirect('/user/login');
   }
 
-  return User.findById(req.user._id, (err, user) => {
-    if (user.roles && user.roles.includes(role)) {
-      return next();
-    }
-    return res.redirect('/404');
-  });
+  const user = await User.getById(req.user.id);
+
+  if (user.roles && user.roles.includes(role)) {
+    return next();
+  }
+  return res.redirect('/404');
 };
 
 const csrfProtection = [

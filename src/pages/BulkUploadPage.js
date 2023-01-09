@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useContext, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from 'reactstrap';
@@ -6,7 +6,6 @@ import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import Changelist from 'components/Changelist';
-import ChangelistContext, { ChangelistContextProvider } from 'contexts/ChangelistContext';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import CubeLayout from 'layouts/CubeLayout';
@@ -14,11 +13,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
+const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
   const [addValue, setAddValue] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { addChange } = useContext(ChangelistContext);
 
   const addInput = useRef();
   const formRef = useRef();
@@ -30,11 +27,10 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
       event.preventDefault();
       try {
         setLoading(true);
-        const card = await getCard(cubeID, newValue || addValue);
+        const card = await getCard(cube.id, newValue || addValue);
         if (!card) {
           return;
         }
-        addChange({ add: { details: card } });
         setAddValue('');
         setLoading(false);
         if (addInput.current) {
@@ -44,11 +40,11 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
         console.error(e);
       }
     },
-    [addChange, addValue, addInput, cubeID],
+    [addValue, addInput, cube],
   );
 
   return (
-    <CubeLayout cube={cube} activeLink="list">
+    <CubeLayout cards={cards} cube={cube} activeLink="list">
       <Card className="mt-3">
         <CardHeader>
           <h5>Confirm Upload</h5>
@@ -88,7 +84,7 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
                   </LoadingButton>
                 </Col>
               </Form>
-              <CSRFForm method="POST" action={`/cube/edit/${cubeID}`} innerRef={formRef}>
+              <CSRFForm method="POST" action={`/cube/edit/${cube.id}`} innerRef={formRef}>
                 <Label>Changelist:</Label>
                 <div className="changelist-container mb-2">
                   <Changelist />
@@ -108,7 +104,9 @@ const BulkUploadPageRaw = ({ cubeID, missing, blogpost, cube }) => {
 };
 
 BulkUploadPageRaw.propTypes = {
-  cubeID: PropTypes.string.isRequired,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
   missing: PropTypes.arrayOf(PropTypes.string).isRequired,
   blogpost: PropTypes.shape({
     title: PropTypes.string.isRequired,
@@ -116,22 +114,17 @@ BulkUploadPageRaw.propTypes = {
   }).isRequired,
 };
 
-const BulkUploadPage = ({ cubeID, added, loginCallback, ...props }) => (
+const BulkUploadPage = ({ cube, added, loginCallback, ...props }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
-    <ChangelistContextProvider
-      cubeID={cubeID}
-      noSave
-      initialChanges={added.map((details, index) => ({ add: { details }, id: index }))}
-      setOpenCollapse={() => {}}
-    >
-      <BulkUploadPageRaw cubeID={cubeID} {...props} />
-    </ChangelistContextProvider>
+    <BulkUploadPageRaw cube={cube} {...props} />
   </MainLayout>
 );
 
 BulkUploadPage.propTypes = {
-  cubeID: PropTypes.string.isRequired,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
   added: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

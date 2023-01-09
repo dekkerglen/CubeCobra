@@ -2,17 +2,18 @@ import PropTypes from 'prop-types';
 
 const UserPropType = PropTypes.shape({
   id: PropTypes.string.isRequired,
-  email: PropTypes.string,
-  username: PropTypes.string,
+  username: PropTypes.string.isRequired,
+  usernameLower: PropTypes.string.isRequired,
   about: PropTypes.string,
-  notifications: PropTypes.arrayOf(PropTypes.shape({})),
-  image_name: PropTypes.string,
-  image: PropTypes.string,
-  artist: PropTypes.string,
+  hideTagColors: PropTypes.bool,
+  followedCubes: PropTypes.arrayOf(PropTypes.string),
+  followedUsers: PropTypes.arrayOf(PropTypes.string),
+  following: PropTypes.arrayOf(PropTypes.string),
+  imageName: PropTypes.string,
+  roles: PropTypes.arrayOf(PropTypes.string),
   theme: PropTypes.string,
-  users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
-  roles: PropTypes.arrayOf(PropTypes.string).isRequired,
-  hide_featured: PropTypes.bool,
+  hideFeatured: PropTypes.bool,
+  patron: PropTypes.string,
 });
 
 export default UserPropType;

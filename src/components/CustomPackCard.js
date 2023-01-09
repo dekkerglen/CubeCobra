@@ -59,7 +59,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
     <Card key={packIndex} className="mb-4 pack-outline">
       <CardHeader>
         <CardTitle className="mb-0">
-          Pack {packIndex + 1} - {pack.slots.length} Cards
+          Pack {packIndex + 1} - {pack.slots.length} cards
           {canRemove && <Button close onClick={mutations.removePack} data-pack-index={packIndex} />}
         </CardTitle>
       </CardHeader>

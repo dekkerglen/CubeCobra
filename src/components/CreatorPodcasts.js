@@ -1,43 +1,46 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 
-import { Navbar, Nav, NavItem, NavLink, Row, Col, CardBody } from 'reactstrap';
+import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
 
-import UserContext from 'contexts/UserContext';
-import Loading from 'pages/Loading';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import PodcastPreview from 'components/PodcastPreview';
-import Paginate from 'components/Paginate';
-import useQueryParam from 'hooks/useQueryParam';
 import { csrfFetch } from 'utils/CSRF';
+import { wait } from 'utils/Util';
 
-const PAGE_SIZE = 24;
+const CreatorPodcasts = ({ podcasts, lastKey }) => {
+  const [items, setItems] = useState(podcasts);
+  const [currentLastKey, setLastKey] = useState(lastKey);
 
-const CreatorPodcasts = () => {
-  const user = useContext(UserContext);
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
 
-  const [podcasts, setPodcasts] = useState([]);
-  const [page, setPage] = useQueryParam('page', 0);
-  const [pages, setPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+    const response = await csrfFetch(`/content/getcreatorcontent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastKey: currentLastKey,
+        type: 'a',
+      }),
+    });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await csrfFetch(`/content/api/podcasts/${user.id}/${page}`);
-      if (!response.ok) {
-        console.log(response);
-      }
+    if (response.ok) {
       const json = await response.json();
+      if (json.success === 'true') {
+        setItems([...items, ...json.content]);
+        setLastKey(json.lastKey);
+      }
+    }
+  }, [items, setItems, currentLastKey]);
 
-      setPages(Math.ceil(json.numResults / PAGE_SIZE));
-      setPodcasts(json.podcasts);
-      setLoading(false);
-    };
-    fetchData();
-  }, [page, user]);
-
-  const updatePage = (index) => {
-    setLoading(true);
-    setPage(index);
-  };
+  const loader = (
+    <div className="centered py-3 my-4">
+      <Spinner className="position-absolute" />
+    </div>
+  );
 
   return (
     <>
@@ -50,24 +53,26 @@ const CreatorPodcasts = () => {
           </NavItem>
         </Nav>
       </Navbar>
-      {pages > 1 && (
-        <CardBody className="pt-0">
-          <Paginate count={pages} active={page} onClick={(i) => updatePage(i)} />
-        </CardBody>
-      )}
-      {loading ? (
-        <Loading />
-      ) : (
-        <Row className="px-3">
-          {podcasts.map((podcast) => (
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <Row className="mx-0">
+          {items.map((podcast) => (
             <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
               <PodcastPreview podcast={podcast} />
             </Col>
           ))}
         </Row>
-      )}
+      </InfiniteScroll>
     </>
   );
+};
+
+CreatorPodcasts.propTypes = {
+  podcasts: PropTypes.arrayOf({}).isRequired,
+  lastKey: PropTypes.shape({}),
+};
+
+CreatorPodcasts.defaultProps = {
+  lastKey: null,
 };
 
 export default CreatorPodcasts;

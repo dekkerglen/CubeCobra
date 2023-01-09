@@ -5,7 +5,7 @@ import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
 
 import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
-import { getCardColorClass } from 'contexts/TagContext';
+import { getCardColorClass } from 'utils/Util';
 import useQueryParam from 'hooks/useQueryParam';
 import DraftPropType from 'proptypes/DraftPropType';
 import { cardName, encodeName } from 'utils/Card';
@@ -25,9 +25,6 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
 
   const drafterState = getDrafterState(draft, parseInt(seatNumber, 10), parseInt(pickNumber, 10));
   const { cardsInPack, pick, pack, picksList } = drafterState;
-
-  console.log(draft);
-  console.log(drafterState);
 
   return (
     <Row>

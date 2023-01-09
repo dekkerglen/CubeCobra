@@ -10,17 +10,15 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
-const MongoDBStore = require('connect-mongodb-session')(session);
 const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
+const DynamoDBStore = require('dynamodb-store');
 const { winston } = require('./serverjs/cloudwatch');
-const updatedb = require('./serverjs/updatecards');
-const carddb = require('./serverjs/cards');
-const CardRating = require('./models/cardrating');
-const CardHistory = require('./models/cardHistory');
+const { updateCardbase } = require('./serverjs/updatecards');
+const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
 
@@ -33,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URL, {
 
 const db = mongoose.connection;
 db.once('open', () => {
-  winston.info('Connected to Mongo.');
+  console.log('Connected to Mongo.');
 });
 
 // Check for db errors
@@ -43,18 +41,6 @@ db.on('error', (err) => {
 
 // Init app
 const app = express();
-
-const store = new MongoDBStore(
-  {
-    uri: process.env.MONGODB_URL,
-    collection: 'session_data',
-  },
-  (err) => {
-    if (err) {
-      winston.error('Store failed to connect to mongoDB.', { error: err });
-    }
-  },
-);
 
 // gzip middleware
 app.use(compression());
@@ -93,7 +79,7 @@ app.use((req, res, next) => {
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
   onFinished(res, (err, finalRes) => {
-    winston.info({
+    console.log({
       level: 'info',
       type: 'request',
       remoteAddr: req.ip,
@@ -111,7 +97,7 @@ app.use((req, res, next) => {
 // upload file middleware
 app.use(fileUpload());
 
-// Body parser middleware
+// body parser middleware
 app.use(
   bodyParser.urlencoded({
     limit: '200mb',
@@ -134,18 +120,34 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'dist')));
 app.use('/jquery-ui', express.static(`${__dirname}/node_modules/jquery-ui-dist/`));
 
-const sessionOptions = {
-  secret: process.env.SESSION,
-  store,
-  resave: true,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
-  },
-};
-
 // Express session middleware
-app.use(session(sessionOptions));
+app.use(
+  session({
+    secret: process.env.SESSION,
+    store: new DynamoDBStore({
+      table: {
+        name: `${process.env.DYNAMO_PREFIX}_SESSIONS`,
+        hashKey: `id`,
+        hashPrefix: ``,
+        readCapacityUnits: 10,
+        writeCapacityUnits: 10,
+      },
+      dynamoConfig: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_REGION,
+      },
+      keepExpired: false,
+      touchInterval: 30000,
+      ttl: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+    }),
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7 * 52, // 1 year
+    },
+  }),
+);
 
 // Express messages middleware
 app.use(require('connect-flash')());
@@ -221,23 +223,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// scryfall updates this data at 9, so his will minimize staleness
+// scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  winston.info('String midnight cardbase update...');
-
-  let ratings = [];
-  let histories = [];
-  if (process.env.USE_S3 !== 'true') {
-    ratings = await CardRating.find({}, 'name elo embedding').lean();
-    histories = await CardHistory.find({}, 'oracleId current.total current.picks').lean();
-  }
-  updatedb.updateCardbase(ratings, histories);
+  console.log('starting midnight cardbase update...');
+  await updateCardbase();
 });
 
 // Start server after carddb is initialized.
-carddb.initializeCardDb().then(async () => {
+carddb.initializeCardDb().then(() => {
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
-  winston.info(`Server started on port ${process.env.PORT || 5000}...`);
+  console.log(`Server started on port ${process.env.PORT || 5000}...`);
 
   // init socket io
   setup(socketio(server));

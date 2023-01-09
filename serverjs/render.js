@@ -4,7 +4,7 @@ require('dotenv').config();
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const serialize = require('serialize-javascript');
-const Cube = require('../models/cube');
+const Cube = require('../dynamo/models/cube');
 
 const { NODE_ENV } = process.env;
 
@@ -12,7 +12,6 @@ const pages = {};
 if (NODE_ENV === 'production') {
   pages.CardSearchPage = require('../dist/pages/CardSearchPage').default;
   pages.CommentPage = require('../dist/pages/CommentPage').default;
-  pages.CommentReportsPage = require('../dist/pages/CommentReportsPage').default;
   pages.ContactPage = require('../dist/pages/ContactPage').default;
   pages.CreatorsPage = require('../dist/pages/CreatorsPage').default;
   pages.CubeAnalysisPage = require('../dist/pages/CubeAnalysisPage').default;
@@ -51,9 +50,7 @@ if (NODE_ENV === 'production') {
   pages.PodcastsPage = require('../dist/pages/PodcastsPage').default;
   pages.RecentDraftsPage = require('../dist/pages/RecentDraftsPage').default;
   pages.RegisterPage = require('../dist/pages/RegisterPage').default;
-  pages.ReviewArticlesPage = require('../dist/pages/ReviewArticlesPage').default;
-  pages.ReviewPodcastsPage = require('../dist/pages/ReviewPodcastsPage').default;
-  pages.ReviewVideosPage = require('../dist/pages/ReviewVideosPage').default;
+  pages.ReviewContentPage = require('../dist/pages/ReviewContentPage').default;
   pages.SearchPage = require('../dist/pages/SearchPage').default;
   pages.TopCardsPage = require('../dist/pages/TopCardsPage').default;
   pages.UserAccountPage = require('../dist/pages/UserAccountPage').default;
@@ -64,10 +61,8 @@ if (NODE_ENV === 'production') {
   pages.VersionPage = require('../dist/pages/VersionPage').default;
   pages.VideoPage = require('../dist/pages/VideoPage').default;
   pages.VideosPage = require('../dist/pages/VideosPage').default;
-  pages.AdminCommentsPage = require('../dist/pages/AdminCommentsPage').default;
   pages.AdminDashboardPage = require('../dist/pages/AdminDashboardPage').default;
   pages.ApplicationPage = require('../dist/pages/ApplicationPage').default;
-  pages.ApplicationsPage = require('../dist/pages/ApplicationsPage').default;
   pages.ArticlePage = require('../dist/pages/ArticlePage').default;
   pages.ArticlesPage = require('../dist/pages/ArticlesPage').default;
   pages.BlogPostPage = require('../dist/pages/BlogPostPage').default;
@@ -81,20 +76,12 @@ if (NODE_ENV === 'production') {
 
 const getPage = (page) => pages[page] || pages.Loading;
 
-const getCubes = (req, callback) => {
+const getCubes = async (req, callback) => {
   if (!req.user) {
     callback([]);
   } else {
-    Cube.find({ owner: req.user._id }, '_id name')
-      .sort({ date_updated: -1 })
-      .lean()
-      .exec((err, docs) => {
-        if (err) {
-          callback([]);
-        } else {
-          callback(docs);
-        }
-      });
+    const query = await Cube.getByOwner(req.user.id);
+    callback(query.items);
   }
 };
 
@@ -102,17 +89,16 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, (cubes) => {
     reactProps.user = req.user
       ? {
-          id: req.user._id,
-          notifications: req.user.notifications,
+          id: req.user.id,
           username: req.user.username,
           email: req.user.email,
           about: req.user.about,
           image: req.user.image,
-          image_name: req.user.image_name,
-          artist: req.user.artist,
+          imageName: req.user.imageName,
+          Artist: req.user.Artist,
           roles: req.user.roles,
           theme: req.user.theme,
-          hide_featured: req.user.hide_featured,
+          hideFeatured: req.user.hideFeatured,
           cubes,
         }
       : null;

@@ -4,7 +4,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const { updatePodcast } = require('../serverjs/podcast');
-const Podcast = require('../models/podcast');
+const Content = require('../dynamo/models/content');
 const { winston } = require('../serverjs/cloudwatch');
 
 const tryUpdate = async (podcast) => {
@@ -15,13 +15,13 @@ const tryUpdate = async (podcast) => {
   }
 };
 const run = async () => {
-  const podcasts = await Podcast.find({ status: 'published' });
+  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS_TYPES.PUBLISHED);
 
-  winston.info({ message: 'Updating podcasts...' });
+  console.log({ message: 'Updating podcasts...' });
 
   await Promise.all(podcasts.map(tryUpdate));
 
-  winston.info({ message: 'Finished updating podcasts.' });
+  console.log({ message: 'Finished updating podcasts.' });
 
   // this is needed for log group to stream
   await new Promise((resolve) => {

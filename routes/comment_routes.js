@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
@@ -5,132 +6,128 @@ const express = require('express');
 const { ensureAuth, csrfProtection } = require('./middleware');
 
 const util = require('../serverjs/util');
-const Comment = require('../models/comment');
-const User = require('../models/user');
-const Report = require('../models/report');
-const Deck = require('../models/deck');
-const Article = require('../models/article');
-const Video = require('../models/video');
-const Podcast = require('../models/podcast');
-const PodcastEpisode = require('../models/podcastEpisode');
-const Blog = require('../models/blog');
-const Package = require('../models/package');
+const Comment = require('../dynamo/models/comment');
+const User = require('../dynamo/models/user');
+const Content = require('../dynamo/models/content');
+const Blog = require('../dynamo/models/blog');
+const Package = require('../dynamo/models/package');
+const Notice = require('../dynamo/models/notice');
+const Draft = require('../dynamo/models/draft');
 const { render } = require('../serverjs/render');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get(
-  '/:type/:parent',
-  util.wrapAsyncApi(async (req, res) => {
-    const comments = await Comment.find({
-      $and: [{ parent: req.params.parent }, { parentType: req.params.type }],
-    }).lean();
-
-    return res.status(200).send({
-      success: 'true',
-      comments,
-    });
-  }),
-);
-
 const getReplyContext = {
   comment: async (id) => {
-    const comment = await Comment.findById(id);
+    const comment = await Comment.getById(id);
     return [comment.owner, 'comment'];
   },
   blog: async (id) => {
-    const blog = await Blog.findById(id);
+    const blog = await Blog.getById(id);
     return [blog.owner, 'blogpost'];
   },
   deck: async (id) => {
-    const deck = await Deck.findById(id);
+    const deck = await Draft.getById(id);
     return [deck.owner, 'deck'];
   },
   article: async (id) => {
-    const article = await Article.findById(id);
+    const article = await Content.getById(id);
     return [article.owner, 'article'];
   },
   podcast: async (id) => {
-    const podcast = await Podcast.findById(id);
+    const podcast = await Content.getById(id);
     return [podcast.owner, 'podcast'];
   },
   video: async (id) => {
-    const video = await Video.findById(id);
+    const video = await Content.getById(id);
     return [video.owner, 'video'];
   },
   episode: async (id) => {
-    const episode = await PodcastEpisode.findById(id);
+    const episode = await Content.getById(id);
     return [episode.owner, 'podcast episode'];
   },
   package: async (id) => {
-    const pack = await Package.findById(id);
-    return [pack.userid, 'card package'];
+    const pack = await Package.getById(id);
+    return [pack.owner, 'card package'];
   },
   default: async () => null, // nobody gets a notification for this
 };
 
 router.post(
-  '/:type/:parent',
+  '/getcomments',
+  util.wrapAsyncApi(async (req, res) => {
+    const { parent, lastKey } = req.body;
+    const comments = await Comment.queryByParentAndType(parent, lastKey);
+
+    return res.status(200).send({
+      success: 'true',
+      comments: comments.items,
+      lastKey: comments.lastKey,
+    });
+  }),
+);
+
+router.post(
+  '/addcomment',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const poster = await User.findById(req.user._id);
+    const { body, mentions = [], parent, type } = req.body;
+    const { user } = req;
 
-    if (
-      !['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(
-        req.params.type,
-      )
-    ) {
+    if (!['comment', 'blog', 'deck', 'card', 'article', 'podcast', 'video', 'episode', 'package'].includes(type)) {
       return res.status(400).send({
         success: 'false',
         message: 'Invalid comment parent type.',
       });
     }
 
-    const comment = new Comment();
+    const comment = {
+      owner: user.id,
+      body: body.substring(0, 5000),
+      date: Date.now() - 1000,
+      parent: parent.substring(0, 500),
+      type,
+    };
 
-    comment.parent = req.params.parent.substring(0, 500);
-    comment.parentType = req.params.type;
-    comment.owner = poster._id;
-    comment.ownerName = poster.username;
-    comment.image = poster.image;
-    comment.artist = poster.artist;
-    comment.updated = false;
-    comment.content = req.body.comment.substring(0, 5000);
-    // the -1000 is to prevent weird time display error
-    comment.timePosted = Date.now() - 1000;
-    comment.date = Date.now() - 1000;
+    const id = await Comment.put(comment);
 
-    await comment.save();
+    const [ownerid] = await getReplyContext[type](parent);
 
-    const [ownerid, type] = await getReplyContext[req.params.type](req.params.parent);
-
-    const owner = await User.findById(ownerid);
+    const owner = await User.getById(ownerid);
 
     if (owner) {
       await util.addNotification(
         owner,
-        poster,
-        `/comment/${comment._id}`,
-        `${poster.username} left a comment in response to your ${type}.`,
+        user,
+        `/comment/${comment.id}`,
+        `${user.username} left a comment in response to your ${type}.`,
       );
     }
 
-    if (req.body.mentions) {
-      const mentions = req.body.mentions.split(';');
-      const users = User.find({ username_lower: mentions });
-      await util.addMultipleNotifications(
-        users,
-        poster,
-        `/comment/${comment._id}`,
-        `${poster.username} mentioned you in their comment`,
-      );
+    for (const mention of mentions) {
+      const query = await User.getByUsername(mention);
+      if (query.items.length === 1) {
+        await util.addNotification(
+          query.items[0],
+          user,
+          `/comment/${comment._id}`,
+          `${user.username} mentioned you in their comment`,
+        );
+      }
     }
+
+    const ImageData = util.getImageData(user.imageName);
 
     return res.status(200).send({
       success: 'true',
-      comment,
+      comment: {
+        ImageData,
+        user: req.user,
+        id,
+        ...comment,
+      },
     });
   }),
 );
@@ -139,39 +136,24 @@ router.post(
   '/edit',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
-    const newComment = req.body.comment;
+    const { id, content, remove } = req.body.comment;
 
-    const comment = await Comment.findById(newComment._id);
+    const document = await Comment.getById(id);
 
-    if (!comment.owner.equals(req.user._id)) {
+    if (document.owner !== req.user.id) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
       });
     }
 
-    if (
-      ![null, comment.owner].includes(newComment.owner) ||
-      ![null, comment.ownerName].includes(newComment.ownerName)
-    ) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Invalid comment update.',
-      });
+    document.body = content.substring(0, 5000);
+
+    if (remove) {
+      document.owner = null;
     }
 
-    comment.owner = newComment.owner;
-    comment.ownerName = newComment.ownerName;
-    comment.image = newComment.owner
-      ? req.user.image
-      : 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/c/0c082aa8-bf7f-47f2-baf8-43ad253fd7d7.jpg?1562826021';
-    comment.artist = newComment.owner ? 'Allan Pollack' : req.user.artist;
-    comment.updated = true;
-    comment.content = newComment.content.substring(0, 5000);
-    // the -1000 is to prevent weird time display error
-    comment.timePosted = Date.now() - 1000;
-
-    await comment.save();
+    await Comment.update(document);
 
     return res.status(200).send({
       success: 'true',
@@ -184,13 +166,15 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const { commentid, info, reason } = req.body;
 
-    const report = new Report();
-    report.commentid = commentid;
-    report.info = info;
-    report.reason = reason;
-    report.reportee = req.user ? req.user._id : null;
-    report.timePosted = Date.now() - 1000;
-    await report.save();
+    const report = {
+      subject: commentid,
+      body: `${reason}\n\n${info}`,
+      user: req.user ? req.user.id : null,
+      date: Date.now().valueOf(),
+      type: Notice.TYPE.COMMENT_REPORT,
+    };
+
+    await Notice.put(report);
 
     req.flash(
       'success',
@@ -204,7 +188,7 @@ router.post(
 router.get(
   '/:id',
   util.wrapAsyncApi(async (req, res) => {
-    const comment = await Comment.findById(req.params.id).lean();
+    const comment = await Comment.getById(req.params.id);
 
     return render(
       req,

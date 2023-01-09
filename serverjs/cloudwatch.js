@@ -85,6 +85,6 @@ module.exports = {
     // eslint-disable-next-line no-console
     info: (...params) => console.log(...params),
     // eslint-disable-next-line no-console
-    error: (...params) => console.error(...params),
+    error: (error) => console.log({ message: error.message, stack: error.stack }),
   },
 };

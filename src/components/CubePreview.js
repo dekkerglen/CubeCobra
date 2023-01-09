@@ -1,12 +1,14 @@
 import React, { useCallback, useState } from 'react';
 
 import CubePropType from 'proptypes/CubePropType';
+import Username from 'components/Username';
 
 import { Card } from 'reactstrap';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 
 import { getCubeDescription, getCubeId } from 'utils/Util';
+import MtgImage from 'components/MtgImage';
 
 const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);
@@ -21,8 +23,7 @@ const CubePreview = ({ cube }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <img className="w-100" alt={cube.image_name} src={cube.image_uri} />
-        <em className="cube-preview-artist">Art by {cube.image_artist}</em>
+        <MtgImage cardname={cube.imageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
         <a href={`/cube/overview/${encodeURIComponent(getCubeId(cube))}`} className="stretched-link">
@@ -31,11 +32,9 @@ const CubePreview = ({ cube }) => {
           </h5>
         </a>
         <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
+        <div className="text-muted text-ellipsis">{cube.following.length} followers</div>
         <em className="text-muted text-ellipsis">
-          Designed by{' '}
-          <a data-sublink href={`/user/view/${cube.owner}`}>
-            {cube.owner_name}
-          </a>
+          Designed by <Username userId={cube.owner} />
         </em>
       </div>
     </Card>

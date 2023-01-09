@@ -12,7 +12,7 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CreatorsPage = ({ loginCallback }) => {
+const CreatorsPage = ({ loginCallback, articles, videos, podcasts }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
 
   return (
@@ -35,13 +35,13 @@ const CreatorsPage = ({ loginCallback }) => {
         <DynamicFlash />
         <TabContent activeTab={tab}>
           <TabPane tabId="0">
-            <CreatorArticles />
+            <CreatorArticles articles={articles.items} lastKey={articles.lastKey} />
           </TabPane>
           <TabPane tabId="1">
-            <CreatorPodcasts />
+            <CreatorPodcasts podcasts={podcasts.items} lastKey={podcasts.lastKey} />
           </TabPane>
           <TabPane tabId="2">
-            <CreatorVideos />
+            <CreatorVideos videos={videos.items} lastKey={videos.lastKey} />
           </TabPane>
         </TabContent>
       </Card>
@@ -51,6 +51,18 @@ const CreatorsPage = ({ loginCallback }) => {
 
 CreatorsPage.propTypes = {
   loginCallback: PropTypes.string,
+  articles: PropTypes.shape({
+    items: PropTypes.arrayOf({}),
+    lastKey: PropTypes.shape({}),
+  }).isRequired,
+  videos: PropTypes.shape({
+    items: PropTypes.arrayOf({}),
+    lastKey: PropTypes.shape({}),
+  }).isRequired,
+  podcasts: PropTypes.shape({
+    items: PropTypes.arrayOf({}),
+    lastKey: PropTypes.shape({}),
+  }).isRequired,
 };
 
 CreatorsPage.defaultProps = {

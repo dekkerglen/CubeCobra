@@ -1,7 +1,7 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import CommentsSection from 'components/CommentsSection';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
@@ -43,13 +43,13 @@ const Podcast = ({ podcast, episodes }) => {
         )}
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="podcast" parent={podcast._id} collapse={false} />
+        <CommentsSection parentType="podcast" parent={podcast.id} collapse={false} />
       </div>
     </>
   );
 };
 Podcast.propTypes = {
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})),
 };
 

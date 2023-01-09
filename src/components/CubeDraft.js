@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import useMount from 'hooks/UseMount';
@@ -9,6 +9,7 @@ import DeckStacks from 'components/DeckStacks';
 import { makeSubtitle } from 'utils/Card';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
 import { setupPicks, getCardCol, draftStateToTitle } from 'drafting/draftutil';
+import AutocardContext from 'contexts/AutocardContext';
 
 import { callApi } from 'utils/CSRF';
 
@@ -16,7 +17,7 @@ import { Card } from 'reactstrap';
 
 const fetchPicks = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpicks', {
-    draft: draft._id,
+    draft: draft.id,
     seat,
   });
   const json = await res.json();
@@ -31,7 +32,7 @@ const fetchPicks = async (draft, seat) => {
 
 const fetchPack = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpack', {
-    draft: draft._id,
+    draft: draft.id,
     seat,
   });
   const json = await res.json();
@@ -49,6 +50,7 @@ const CubeDraft = ({ draft, socket }) => {
   const [loading, setLoading] = React.useState(true);
   const [stepQueue, setStepQueue] = React.useState([]);
   const [trashed, setTrashed] = React.useState([]);
+  const { hideCard } = useContext(AutocardContext);
 
   const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
@@ -66,8 +68,7 @@ const CubeDraft = ({ draft, socket }) => {
 
   const makePick = useCallback(
     async (pick) => {
-      // eslint-disable-next-line no-undef
-      /* global */ autocard_hide_card();
+      hideCard();
 
       if (stepQueue[1] === 'pass' || pack.length < 1) {
         tryPopPack();
@@ -78,9 +79,9 @@ const CubeDraft = ({ draft, socket }) => {
         setLoading(false);
       }
 
-      await callApi('/multiplayer/draftpick', { draft: draft._id, seat, pick });
+      await callApi('/multiplayer/draftpick', { draft: draft.id, seat, pick });
     },
-    [stepQueue, pack, draft._id, tryPopPack],
+    [hideCard, stepQueue, pack, draft.id, tryPopPack],
   );
 
   const updatePack = async (data) => {
@@ -94,16 +95,16 @@ const CubeDraft = ({ draft, socket }) => {
 
   useMount(() => {
     const run = async () => {
-      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft._id });
+      const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.id });
       const seatJson = await getSeat.json();
       seat = seatJson.seat;
 
-      socket.emit('joinDraft', { draftId: draft._id, seat });
+      socket.emit('joinDraft', { draftId: draft.id, seat });
 
       socket.on('draft', async (data) => {
         if (data.finished === 'true') {
           const res = await callApi('/multiplayer/editdeckbydraft', {
-            draftId: draft._id,
+            draftId: draft.id,
             seat,
             drafted: staticPicks,
             sideboard: setupPicks(1, 8),
@@ -126,13 +127,11 @@ const CubeDraft = ({ draft, socket }) => {
         let status = 'in_progress';
         setInterval(async () => {
           try {
-            console.log(status);
             if (status === 'in_progress') {
               const res = await callApi('/multiplayer/trybotpicks', {
-                draft: draft._id,
+                draft: draft.id,
               });
               const json = await res.json();
-              console.log(json);
               status = json.result;
             }
           } catch (e) {
@@ -206,7 +205,7 @@ const CubeDraft = ({ draft, socket }) => {
       <Card className="my-3">
         <DeckStacks
           cards={picks.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
-          title="Picks"
+          title="picks"
           subtitle={makeSubtitle(picks.flat(3).map((index) => draft.cards[index]))}
           locationType={DraftLocation.PICKS}
           canDrop={(_, to) => to.type === DraftLocation.PICKS}

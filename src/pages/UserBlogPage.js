@@ -1,51 +1,83 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import UserLayout from 'layouts/UserLayout';
 import BlogPost from 'components/BlogPost';
-import Paginate from 'components/Paginate';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import DynamicFlash from 'components/DynamicFlash';
 import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import { csrfFetch } from 'utils/CSRF';
+import { wait } from 'utils/Util';
+import { Spinner } from 'reactstrap';
 
-const UserBlogPage = ({ followers, following, posts, owner, loginCallback, pages, activePage }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
-      <Banner />
-      <DynamicFlash />
-
-      {pages > 1 && (
-        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
-      )}
-      {posts.length > 0 ? (
-        posts.slice(0).map((post) => <BlogPost key={post._id} post={post} />)
-      ) : (
-        <p>This user has no blog posts!</p>
-      )}
-
-      {pages > 1 && (
-        <Paginate count={pages} active={parseInt(activePage, 10)} urlF={(i) => `/user/blog/${owner._id}/${i}`} />
-      )}
-    </UserLayout>
-  </MainLayout>
+const loader = (
+  <div className="centered py-3 my-4">
+    <Spinner className="position-absolute" />
+  </div>
 );
+
+const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastKey }) => {
+  const [items, setItems] = useState(posts);
+  const [currentLastKey, setLastKey] = useState(lastKey);
+
+  const fetchMoreData = useCallback(async () => {
+    // intentionally wait to avoid too many DB queries
+    await wait(2000);
+
+    const response = await csrfFetch(`/user/getmoreblogs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        owner: owner.id,
+        lastKey: currentLastKey,
+      }),
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      if (json.success === 'true') {
+        setItems([...items, ...json.posts]);
+        setLastKey(json.lastKey);
+      }
+    }
+  }, [owner.id, currentLastKey, items]);
+
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
+        <Banner />
+        <DynamicFlash />
+        <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+          {items.length > 0 ? (
+            items.map((post) => <BlogPost key={post.id} post={post} />)
+          ) : (
+            <p>This user has no blog posts!</p>
+          )}
+        </InfiniteScroll>
+      </UserLayout>
+    </MainLayout>
+  );
+};
 
 UserBlogPage.propTypes = {
   owner: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }).isRequired,
   followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   following: PropTypes.bool.isRequired,
   posts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  pages: PropTypes.number.isRequired,
-  activePage: PropTypes.number.isRequired,
   loginCallback: PropTypes.string,
+  lastKey: PropTypes.shape({}),
 };
 
 UserBlogPage.defaultProps = {
   loginCallback: '/',
+  lastKey: null,
 };
 
 export default RenderToRoot(UserBlogPage);

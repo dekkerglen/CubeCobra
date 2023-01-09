@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
@@ -21,7 +21,7 @@ const PodcastPreview = ({ podcast }) => {
         <img className="w-100" alt={podcast.title} src={podcast.image} />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2">
-        <a href={`/content/podcast/${podcast._id}`} className="stretched-link">
+        <a href={`/content/podcast/${podcast.id}`} className="stretched-link">
           <h5 className="text-muted text-ellipsis my-0">{podcast.title}</h5>
         </a>
         <small>
@@ -35,7 +35,7 @@ const PodcastPreview = ({ podcast }) => {
 };
 
 PodcastPreview.propTypes = {
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
 };
 
 export default PodcastPreview;

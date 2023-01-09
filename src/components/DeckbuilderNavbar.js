@@ -2,7 +2,7 @@ import React, { useCallback, useRef, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import DeckDeleteModal from 'components/DeckDeleteModal';
-import CardPropType from 'proptypes/CardPropType';
+import DeckPropType from 'proptypes/DeckPropType';
 
 import { cardsAreEquivalent } from 'utils/Card';
 
@@ -28,7 +28,6 @@ const DeckbuilderNavbar = ({
   seat,
   ...props
 }) => {
-  const { basics } = deck;
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNavbar = useCallback(
@@ -77,12 +76,12 @@ const DeckbuilderNavbar = ({
     if (main.length <= 0) {
       main = [...deck.seats[seat].deck.flat(3), ...deck.seats[seat].sideboard.flat(3)];
     }
-    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, basics);
+    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, deck.basics);
     const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     setSideboard(newSide);
     setDeck(newDeckCards);
-  }, [deck.seats, deck.cards, seat, basics, setSideboard, setDeck]);
+  }, [deck.seats, deck.cards, seat, deck.basics, setSideboard, setDeck]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>
@@ -93,19 +92,19 @@ const DeckbuilderNavbar = ({
             <NavLink href="#" onClick={saveDeck}>
               Save Deck
             </NavLink>
-            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck._id}`}>
+            <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck.id}`}>
               <Input type="hidden" name="draftraw" value={stripped} />
               <Input type="hidden" name="name" value={JSON.stringify(name)} />
               <Input type="hidden" name="description" value={JSON.stringify(description)} />
             </CSRFForm>
           </NavItem>
           <NavItem>
-            <DeleteDeckModalLink modalProps={{ deckID: deck._id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
+            <DeleteDeckModalLink modalProps={{ deckID: deck.id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
           </NavItem>
           <NavItem>
             <BasicsModalLink
               modalProps={{
-                basics,
+                basics: deck.basics,
                 addBasics,
                 deck: deck.playerdeck.flat(3).map(({ index }) => index),
                 cards: deck.cards,
@@ -127,22 +126,7 @@ const DeckbuilderNavbar = ({
 };
 
 DeckbuilderNavbar.propTypes = {
-  deck: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    cube: PropTypes.string.isRequired,
-    playerdeck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(CardPropType.isRequired).isRequired).isRequired)
-      .isRequired,
-    playersideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.object)).isRequired,
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-    seats: PropTypes.arrayOf(
-      PropTypes.shape({
-        pickorder: PropTypes.arrayOf(PropTypes.number).isRequired,
-        deck: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-        sideboard: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-      }).isRequired,
-    ).isRequired,
-  }).isRequired,
+  deck: DeckPropType.isRequired,
   addBasics: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,

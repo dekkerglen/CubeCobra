@@ -1,41 +1,25 @@
-const carddb = require('../../serverjs/cards');
+const carddb = require('../../serverjs/carddb');
 const { render } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
-const { setCubeType, CSVtoCards } = require('../../serverjs/cubefn');
+const { CSVtoCards } = require('../../serverjs/cubefn');
 
 // Bring in models
-const Cube = require('../../models/cube');
-const Blog = require('../../models/blog');
-
-const DEFAULT_BASICS = [
-  '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
-  '42232ea6-e31d-46a6-9f94-b2ad2416d79b',
-  '19e71532-3f79-4fec-974f-b0e85c7fe701',
-  '8365ab45-6d78-47ad-a6ed-282069b0fabc',
-  '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
-];
+const Cube = require('../../dynamo/models/cube');
+const Blog = require('../../dynamo/models/blog');
+const Feed = require('../../dynamo/models/feed');
+const Changelog = require('../../dynamo/models/changelog');
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'Name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,Status,Finish,Maybeboard,Image URL,Image Back URL,Tags,Notes,MTGO ID';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,Maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
 
-async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
+async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
   try {
-    const blogpost = new Blog();
-    blogpost.title = 'Cube Bulk Import - Automatic Post';
-    blogpost.changed_cards = changelog;
-    blogpost.owner = cube.owner;
-    blogpost.date = Date.now();
-    blogpost.cube = cube._id;
-    blogpost.dev = 'false';
-    blogpost.date_formatted = blogpost.date.toLocaleString('en-US');
-    blogpost.username = cube.owner_name;
-    blogpost.cubename = cube.name;
-
     if (missing.length > 0) {
       return render(req, res, 'BulkUploadPage', {
         cube,
+        cards,
         canEdit: true,
         cubeID: req.params.id,
         missing,
@@ -45,24 +29,73 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
           image_normal,
           image_flip,
         })),
-        blogpost: blogpost.toObject(),
       });
     }
-    await blogpost.save();
-    cube = setCubeType(cube, carddb);
-    try {
-      await Cube.updateOne(
-        {
-          _id: cube._id,
-        },
-        cube,
-      );
-    } catch (err) {
-      req.logger.error(err);
-      req.flash('danger', 'Error adding cards. Please try again.');
-      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+
+    if (changelog.Mainboard) {
+      if (changelog.Mainboard.adds && changelog.Mainboard.adds.length === 0) {
+        delete changelog.Mainboard.adds;
+      }
+      if (changelog.Mainboard.removes && changelog.Mainboard.removes.length === 0) {
+        delete changelog.Mainboard.removes;
+      }
+      if (changelog.Mainboard.swaps && changelog.Mainboard.swaps.length === 0) {
+        delete changelog.Mainboard.swaps;
+      }
+      if (changelog.Mainboard.edits && changelog.Mainboard.edits.length === 0) {
+        delete changelog.Mainboard.edits;
+      }
+      if (Object.keys(changelog.Mainboard).length === 0) {
+        delete changelog.Mainboard;
+      }
     }
-    req.flash('success', 'All cards successfully added.');
+
+    if (changelog.Maybeboard) {
+      if (changelog.Maybeboard.adds && changelog.Maybeboard.adds.length === 0) {
+        delete changelog.Maybeboard.adds;
+      }
+      if (changelog.Maybeboard.removes && changelog.Maybeboard.removes.length === 0) {
+        delete changelog.Maybeboard.removes;
+      }
+      if (changelog.Maybeboard.swaps && changelog.Maybeboard.swaps.length === 0) {
+        delete changelog.Maybeboard.swaps;
+      }
+      if (changelog.Maybeboard.edits && changelog.Maybeboard.edits.length === 0) {
+        delete changelog.Maybeboard.edits;
+      }
+      if (Object.keys(changelog.Maybeboard).length === 0) {
+        delete changelog.Maybeboard;
+      }
+    }
+
+    if (Object.keys(changelog).length > 0) {
+      const changelist = await Changelog.put(changelog, cube.id);
+
+      const id = await Blog.put({
+        owner: req.user.id,
+        date: new Date().valueOf(),
+        cube: cube.id,
+        title: 'Cube Bulk Import - Automatic Post',
+        changelist,
+      });
+
+      const followers = [...new Set([...req.user.following, ...cube.following])];
+
+      const feedItems = followers.map((user) => ({
+        id,
+        to: user,
+        date: new Date().valueOf(),
+        type: Feed.TYPES.BLOG,
+      }));
+
+      await Feed.batchPut(feedItems);
+
+      await Cube.updateCards(cube.id, cards);
+      req.flash('success', 'All cards successfully added.');
+    } else {
+      req.flash('danger', 'No changes made.');
+    }
+
     return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
@@ -70,6 +103,10 @@ async function updateCubeAndBlog(req, res, cube, changelog, added, missing) {
 }
 
 async function bulkUpload(req, res, list, cube) {
+  const cards = await Cube.getCards(cube.id);
+  const mainboard = cards.Mainboard;
+  const maybeboard = cards.Maybeboard;
+
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
   const added = [];
@@ -85,8 +122,10 @@ async function bulkUpload(req, res, list, cube) {
           return { addedID: card.cardID, removedID: null };
         }),
       );
-      cube.cards.push(...newCards);
-      cube.maybe.push(...newMaybe);
+
+      mainboard.push(...newCards);
+      maybeboard.push(...newMaybe);
+
       added.concat(newCards, newMaybe);
     } else {
       // upload is in TXT format
@@ -126,7 +165,7 @@ async function bulkUpload(req, res, list, cube) {
           const details = carddb.cardFromId(selectedId);
           if (!details.error) {
             for (let i = 0; i < count; i++) {
-              util.addCardToCube(cube, details);
+              util.addCardToCube(mainboard, cube, details);
               added.push(details);
               changelog.push({ addedID: selectedId, removedID: null });
             }
@@ -137,7 +176,14 @@ async function bulkUpload(req, res, list, cube) {
       }
     }
   }
-  await updateCubeAndBlog(req, res, cube, changelog, added, missing);
+
+  const changelist = {
+    Mainboard: {
+      adds: changelog.map((change) => ({ cardID: change.addedID })),
+    },
+  };
+
+  await updateCubeAndBlog(req, res, cube, cards, changelist, added, missing);
 }
 
 function writeCard(res, card, maybe) {
@@ -224,19 +270,32 @@ const shuffle = (a) => {
   return a;
 };
 
-const addBasics = (cardsArray, basics, collection = null) => {
+const addBasics = (document, basics) => {
   const populatedBasics = basics.map((cardID) => {
     const details = carddb.cardFromId(cardID);
-    const populatedCard = {
-      cardID: details._id,
-      index: cardsArray.length,
-      isUnlimited: true,
-      type_line: details.type,
-    };
-    cardsArray.push(populatedCard);
-    return populatedCard;
+    if (document.cards) {
+      const populatedCard = {
+        cardID: details._id,
+        index: document.cards.length,
+        isUnlimited: true,
+        type_line: details.type,
+      };
+      document.cards.push(populatedCard);
+      return populatedCard;
+    }
+    if (document.cards) {
+      const populatedCard = {
+        cardID: details._id,
+        index: document.cards.length,
+        isUnlimited: true,
+        type_line: details.type,
+      };
+      document.cards.push(populatedCard);
+      return populatedCard;
+    }
+    throw new Error('Document must contains cards to add basics');
   });
-  if (collection) collection.basics = populatedBasics.map(({ index }) => index);
+  document.basics = populatedBasics.map(({ index }) => index);
 };
 
 const createPool = () => {
@@ -273,7 +332,6 @@ module.exports = {
   CARD_HEIGHT,
   CARD_WIDTH,
   CSV_HEADER,
-  DEFAULT_BASICS,
   addBasics,
   bulkUpload,
   createPool,

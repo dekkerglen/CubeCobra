@@ -148,7 +148,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
         <Markdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="deck" parent={deck._id} collapse={false} />
+        <CommentsSection parentType="deck" parent={deck.id} collapse={false} />
       </div>
     </Card>
   );

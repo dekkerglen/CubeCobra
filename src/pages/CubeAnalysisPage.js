@@ -16,7 +16,6 @@ import HyperGeom from 'analytics/HyperGeom';
 import Suggestions from 'analytics/Suggestions';
 import Asfans from 'analytics/Asfans';
 import FilterCollapse from 'components/FilterCollapse';
-import { TagContextProvider } from 'contexts/TagContext';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
@@ -42,16 +41,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries } from 'utils/Util';
 import { getLabels, cardIsLabel } from 'utils/Sort';
 
-const CubeAnalysisPage = ({
-  cube,
-  cubeID,
-  defaultFilterText,
-  defaultTab,
-  defaultFormatId,
-  defaultShowTagColors,
-  loginCallback,
-  cubeAnalytics,
-}) => {
+const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId, loginCallback, cubeAnalytics }) => {
   defaultFormatId = cube.defaultDraftFormat ?? -1;
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useQueryParam('tab', defaultTab ?? 0);
@@ -104,14 +94,14 @@ const CubeAnalysisPage = ({
     'Mana Value': convertToCharacteristic('Mana Value', cardCmc),
     Power: convertToCharacteristic('Power', (card) => parseInt(cardPower(card), 10)),
     Toughness: convertToCharacteristic('Toughness', (card) => parseInt(cardToughness(card), 10)),
-    Elo: convertToCharacteristic('Elo', (card) => parseFloat(card.details.elo, 10)),
+    elo: convertToCharacteristic('elo', (card) => parseFloat(card.details.elo, 10)),
     Price: convertToCharacteristic('Price', (card) => parseFloat(cardPrice(card), 10)),
     'Price USD': convertToCharacteristic('Price USD', (card) => parseFloat(cardNormalPrice(card))),
     'Price USD Foil': convertToCharacteristic('Price USD Foil', (card) => parseFloat(cardFoilPrice(card))),
     'Price USD Etched': convertToCharacteristic('Price USD Etched', (card) => parseFloat(cardEtchedPrice(card))),
     'Price EUR': convertToCharacteristic('Price EUR', (card) => parseFloat(cardPriceEur(card))),
     'MTGO TIX': convertToCharacteristic('MTGO TIX', (card) => parseFloat(cardTix(card))),
-    'Cube Elo': {
+    'Cube elo': {
       get: getCubeElo,
       labels: (list) =>
         getLabels(
@@ -120,13 +110,13 @@ const CubeAnalysisPage = ({
             newcard.details.elo = getCubeElo(card);
             return newcard;
           }),
-          'Elo',
+          'elo',
         ),
       cardIsLabel: (card, label) => {
         const newcard = JSON.parse(JSON.stringify(card));
         newcard.details.elo = getCubeElo(card);
 
-        return cardIsLabel(newcard, label, 'Elo');
+        return cardIsLabel(newcard, label, 'elo');
       },
     },
     'Pick Rate': {
@@ -272,7 +262,7 @@ const CubeAnalysisPage = ({
   }
 
   useEffect(() => {
-    getData(`/cube/api/adds/${cubeID}`)
+    getData(`/cube/api/adds/${cube.id}`)
       .then(({ toCut, toAdd }) => {
         setAdds(toAdd);
         setCuts(toCut);
@@ -281,66 +271,53 @@ const CubeAnalysisPage = ({
       .catch(() => {
         setLoading('error');
       });
-  }, [cubeID]);
-
-  const defaultTagSet = new Set([].concat(...cube.cards.map((card) => card.tags)));
-  const defaultTags = [...defaultTagSet].map((tag) => ({
-    id: tag,
-    text: tag,
-  }));
+  }, [cube.id]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
-        <TagContextProvider
-          cubeID={cube._id}
-          defaultTagColors={cube.tag_colors}
-          defaultShowTagColors={defaultShowTagColors}
-          defaultTags={defaultTags}
-        >
-          <DynamicFlash />
-          {cube.cards.length === 0 ? (
-            <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
-          ) : (
-            <Row className="mt-3">
-              <Col xs="12" lg="2">
-                <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
-                  {analytics.map((analytic, index) => (
-                    <NavLink
-                      key={analytic.name}
-                      active={activeTab === index}
-                      onClick={() => setActiveTab(index)}
-                      href="#"
-                    >
-                      {analytic.name}
-                    </NavLink>
-                  ))}
-                </Nav>
-              </Col>
-              <Col xs="12" lg="10" className="overflow-x">
-                <Card className="mb-3">
-                  <CardBody>
-                    <NavLink href="#" onClick={toggleFilterCollapse}>
-                      <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
-                    </NavLink>
-                    <FilterCollapse
-                      defaultFilterText={defaultFilterText}
-                      filter={filter}
-                      setFilter={setFilter}
-                      numCards={cards.length}
-                      isOpen={filterCollapseOpen}
-                    />
-                  </CardBody>
-                </Card>
-                <Card>
-                  <CardBody>
-                    <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
-                  </CardBody>
-                </Card>
-              </Col>
-            </Row>
-          )}
-        </TagContextProvider>
+        <DynamicFlash />
+        {cube.cards.length === 0 ? (
+          <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
+        ) : (
+          <Row className="mt-3">
+            <Col xs="12" lg="2">
+              <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
+                {analytics.map((analytic, index) => (
+                  <NavLink
+                    key={analytic.name}
+                    active={activeTab === index}
+                    onClick={() => setActiveTab(index)}
+                    href="#"
+                  >
+                    {analytic.name}
+                  </NavLink>
+                ))}
+              </Nav>
+            </Col>
+            <Col xs="12" lg="10" className="overflow-x">
+              <Card className="mb-3">
+                <CardBody>
+                  <NavLink href="#" onClick={toggleFilterCollapse}>
+                    <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
+                  </NavLink>
+                  <FilterCollapse
+                    defaultFilterText={defaultFilterText}
+                    filter={filter}
+                    setFilter={setFilter}
+                    numCards={cards.length}
+                    isOpen={filterCollapseOpen}
+                  />
+                </CardBody>
+              </Card>
+              <Card>
+                <CardBody>
+                  <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        )}
       </CubeLayout>
     </MainLayout>
   );
@@ -348,11 +325,12 @@ const CubeAnalysisPage = ({
 
 CubeAnalysisPage.propTypes = {
   cube: CubePropType.isRequired,
-  cubeID: PropTypes.string.isRequired,
+  cards: PropTypes.shape({
+    boards: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
   defaultFilterText: PropTypes.string,
   defaultTab: PropTypes.number,
   defaultFormatId: PropTypes.number,
-  defaultShowTagColors: PropTypes.bool,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
@@ -361,7 +339,6 @@ CubeAnalysisPage.defaultProps = {
   defaultFilterText: '',
   defaultTab: 0,
   defaultFormatId: null,
-  defaultShowTagColors: true,
   loginCallback: '/',
 };
 

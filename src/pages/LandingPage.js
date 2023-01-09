@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { Row, Col, Button } from 'reactstrap';
 
@@ -11,7 +10,7 @@ import CardSearchBar from 'components/CardSearchBar';
 
 const LoginModalButton = withModal(Button, LoginModal);
 
-const LandingPage = ({ numusers, numcubes, numdrafts }) => {
+const LandingPage = () => {
   return (
     <div className="flex-container flex-vertical viewport">
       <Row className="m-0 p-0 flex-grow">
@@ -24,15 +23,6 @@ const LandingPage = ({ numusers, numcubes, numdrafts }) => {
           </div>
           <div className="flex-grow centered flex-vertical">
             <h4 className="center footer-text  mt-4">Build, playtest, and share your Magic the Gathering cube!</h4>
-            <br />
-            <h5 className="center footer-text">
-              <strong>{numusers}</strong>
-              {' Users, '}
-              <strong>{numcubes}</strong>
-              {' Cubes, '}
-              <strong>{numdrafts}</strong>
-              {' Completed Drafts'}
-            </h5>
             <Button href="/user/register" className="landing-btn my-3" color="accent">
               Sign Up
             </Button>
@@ -46,12 +36,6 @@ const LandingPage = ({ numusers, numcubes, numdrafts }) => {
       </Row>
     </div>
   );
-};
-
-LandingPage.propTypes = {
-  numusers: PropTypes.string.isRequired,
-  numcubes: PropTypes.string.isRequired,
-  numdrafts: PropTypes.string.isRequired,
 };
 
 export default RenderToRoot(LandingPage);

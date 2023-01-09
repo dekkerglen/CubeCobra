@@ -1,6 +1,6 @@
 const { hmset, hgetall, expire, exists } = require('./redis');
 
-const User = require('../models/user');
+const User = require('../dynamo/models/user');
 
 const flattenObject = (object) => {
   const result = [];
@@ -19,19 +19,37 @@ const flattenObject = (object) => {
   return result;
 };
 
-const getUserFromId = async (id) => {
-  const entryExixts = await exists(id);
-
-  if (!entryExixts) {
-    const user = await User.findById(id, User.PUBLIC_FIELDS).lean();
-
-    const flattened = flattenObject(user);
-    hmset(id, flattened);
-    expire(id, 60 * 60 * 24); // 1 day
-    return hgetall(id);
+const unpack = (object) => {
+  const result = {};
+  for (const [key, value] of Object.entries(object)) {
+    if (key.includes(':')) {
+      const [newKey, newValue] = key.split(':');
+      if (!result[newKey]) {
+        result[newKey] = [];
+      }
+      result[newKey].push(newValue);
+    } else {
+      result[key] = value;
+    }
   }
 
-  return hgetall(id);
+  return result;
+};
+
+const getUserFromId = async (id) => {
+  const entryExixts = await exists(`usercache:${id}`);
+  if (!entryExixts) {
+    const user = await User.getById(id);
+
+    delete user.passwordHash;
+    delete user.email;
+
+    const flattened = flattenObject(user);
+    await hmset(`usercache:${id}`, flattened);
+    await expire(`usercache:${id}`, 60 * 60 * 24); // 1 day
+  }
+
+  return unpack(await hgetall(`usercache:${id}`));
 };
 
 module.exports = {

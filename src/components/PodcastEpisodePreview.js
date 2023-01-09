@@ -1,22 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Card } from 'reactstrap';
 import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/AspectRatioBox';
-import htmlToText from 'html-to-text';
 import Username from 'components/Username';
 
 const PodcastEpisodePreview = ({ episode }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  const short = htmlToText
-    .fromString(episode.description, {
-      wordwrap: 130,
-    })
-    .substring(0, 200);
-
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
@@ -32,11 +25,11 @@ const PodcastEpisodePreview = ({ episode }) => {
         </h6>
       </AspectRatioBox>
       <div className="w-100 pt-1 pb-1 px-2">
-        <a href={`/content/episode/${episode._id}`} className="stretched-link">
+        <a href={`/content/episode/${episode.id}`} className="stretched-link">
           <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{episode.title}</h6>
         </a>
         <small>
-          <p className="mb-0">{`${short}...`}</p>
+          <p className="mb-0">{episode.short}</p>
         </small>
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
@@ -52,7 +45,7 @@ const PodcastEpisodePreview = ({ episode }) => {
 };
 
 PodcastEpisodePreview.propTypes = {
-  episode: PodcastPropType.isRequired,
+  episode: ContentPropType.isRequired,
 };
 
 export default PodcastEpisodePreview;

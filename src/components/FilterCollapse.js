@@ -1,30 +1,11 @@
-import React, { Component } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
+import PropTypes from 'prop-types';
 
-import {
-  Button,
-  Col,
-  Row,
-  Collapse,
-  Form,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-} from 'reactstrap';
+import { Button, Col, Row, Collapse, Input, InputGroup, InputGroupText } from 'reactstrap';
 
-import { makeFilter } from 'filtering/FilterCards';
-import Query from 'utils/Query';
-import { fromEntries } from 'utils/Util';
+import { ColorChecksControl } from 'components/ColorCheck';
 
-import { ColorChecksAddon, ColorChecksControl } from 'components/ColorCheck';
-import LoadingButton from 'components/LoadingButton';
-
-import TextField from 'components/TextField';
-import NumericField from 'components/NumericField';
-import AutocompleteInput from 'components/AutocompleteInput';
+import AdvancedFilterModal from 'components/AdvancedFilterModal';
 import CubeContext from 'contexts/CubeContext';
 
 const allFields = [
@@ -50,6 +31,9 @@ const allFields = [
   'artist',
   'is',
 ];
+
+const quickFields = ['name', 'oracle', 'mv', 'mana', 'type'];
+
 const numFields = [
   'mv',
   'price',
@@ -65,312 +49,41 @@ const numFields = [
 ];
 const colorFields = ['color', 'identity'];
 
-const AdvancedFilterModal = ({ isOpen, toggle, apply, values, onChange, ...props }) => (
-  <Modal isOpen={isOpen} toggle={toggle} size="lg" {...props}>
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        apply();
-      }}
-    >
-      <ModalHeader toggle={toggle}>Advanced Filters</ModalHeader>
-      <ModalBody>
-        <TextField
-          name="name"
-          humanName="Card Name"
-          placeholder={'Any words in the name, e.g. "Fire"'}
-          value={values.name}
-          onChange={onChange}
-        />
-        <TextField
-          name="oracle"
-          humanName="Oracle Text"
-          placeholder={'Any text, e.g. "Draw a card"'}
-          value={values.oracle}
-          onChange={onChange}
-        />
-        <NumericField
-          name="mv"
-          humanName="Mana Value"
-          placeholder={'Any value, e.g. "2"'}
-          value={values.cmc}
-          valueOp={values.cmcOp}
-          onChange={onChange}
-        />
-        <InputGroup className="mb-3">
-          <InputGroupText>Color</InputGroupText>
-          <ColorChecksAddon colorless prefix="color" values={values} onChange={onChange} />
-          <Input type="select" id="colorOp" name="colorOp" value={values.colorOp} onChange={onChange}>
-            <option value="=">Exactly these colors</option>
-            <option value=">=">Including these colors</option>
-            <option value="<=">At most these colors</option>
-          </Input>
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroupText>Color Identity</InputGroupText>
-          <ColorChecksAddon colorless prefix="identity" values={values} onChange={onChange} />
-          <Input type="select" id="identityOp" name="identityOp" value={values.identityOp} onChange={onChange}>
-            <option value="=">Exactly these colors</option>
-            <option value=">=">Including these colors</option>
-            <option value="<=">At most these colors</option>
-          </Input>
-        </InputGroup>
-        <TextField
-          name="mana"
-          humanName="Mana Cost"
-          placeholder={'Any mana cost, e.g. "{1}{W}"'}
-          value={values.mana}
-          onChange={onChange}
-        />
-        <InputGroup className="mb-3">
-          <InputGroupText>Manacost Type</InputGroupText>
-          <Input type="select" name="is" value={values.is} onChange={onChange}>
-            {['', 'Gold', 'Hybrid', 'Phyrexian'].map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </Input>
-        </InputGroup>
-        <TextField
-          name="type"
-          humanName="Type Line"
-          placeholder={'Choose any card type, supertype, or subtypes to match'}
-          value={values.type}
-          onChange={onChange}
-        />
-        <TextField
-          name="set"
-          humanName="Set"
-          placeholder={'Any set code, e.g. "WAR"'}
-          value={values.set}
-          onChange={onChange}
-        />
-        <CubeContext.Consumer>
-          {({ cubeID }) =>
-            cubeID && (
-              <InputGroup className="mb-3" {...props}>
-                <InputGroupText>Tag</InputGroupText>
-                <AutocompleteInput
-                  treeUrl={`/cube/api/cubecardtags/${cubeID}`}
-                  treePath="tags"
-                  type="text"
-                  name="tag"
-                  value={values.tag}
-                  onChange={onChange}
-                  placeholder={'Any text, e.g. "Zombie Testing"'}
-                  autoComplete="off"
-                  data-lpignore
-                  className="tag-autocomplete-input"
-                  wrapperClassName="tag-autocomplete-wrapper"
-                />
-              </InputGroup>
-            )
-          }
-        </CubeContext.Consumer>
-        <Row className="row-mid-padding">
-          <Col md={6}>
-            <InputGroup className="mb-3">
-              <InputGroupText>Status</InputGroupText>
-              <Input type="select" name="status" value={values.status} onChange={onChange}>
-                {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
-                  <option key={status}>{status}</option>
-                ))}
-              </Input>
-            </InputGroup>
-          </Col>
-          <Col md={6}>
-            <InputGroup className="mb-3">
-              <InputGroupText>Finish</InputGroupText>
-              <Input type="select" name="finish" value={values.finish} onChange={onChange}>
-                {['', 'Foil', 'Non-foil'].map((finish) => (
-                  <option key={finish}>{finish}</option>
-                ))}
-              </Input>
-            </InputGroup>
-          </Col>
-        </Row>
-        <Row className="row-mid-padding">
-          <Col md={6}>
-            <NumericField
-              name="price"
-              humanName="Price USD"
-              placeholder={'Any decimal number, e.g. "3.50"'}
-              value={values.price}
-              valueOp={values.priceOp}
-              onChange={onChange}
-            />
-          </Col>
-          <Col md={6}>
-            <NumericField
-              name="priceFoil"
-              humanName="Price USD Foil"
-              placeholder={'Any decimal number, e.g. "14.00"'}
-              value={values.priceFoil}
-              valueOp={values.priceFoilOp}
-              onChange={onChange}
-            />
-          </Col>
-          <Col md={6}>
-            <NumericField
-              name="priceEur"
-              humanName="Price EUR"
-              placeholder={'Any decimal number, e.g. "14.00"'}
-              value={values.priceEur}
-              valueOp={values.priceEurOp}
-              onChange={onChange}
-            />
-          </Col>
-          <Col md={6}>
-            <NumericField
-              name="priceTix"
-              humanName="MTGO TIX"
-              placeholder={'Any decimal number, e.g. "14.00"'}
-              value={values.priceTix}
-              valueOp={values.priceTixOp}
-              onChange={onChange}
-            />
-          </Col>
-        </Row>
-        <NumericField
-          name="elo"
-          humanName="Elo"
-          placeholder={'Any integer number, e.g. "1200"'}
-          value={values.elo}
-          valueOp={values.eloOp}
-          onChange={onChange}
-        />
-        <NumericField
-          name="power"
-          humanName="Power"
-          placeholder={'Any value, e.g. "2"'}
-          value={values.power}
-          valueOp={values.powerOp}
-          onChange={onChange}
-        />
-        <NumericField
-          name="toughness"
-          humanName="Toughness"
-          placeholder={'Any value, e.g. "2"'}
-          value={values.toughness}
-          valueOp={values.toughnessOp}
-          onChange={onChange}
-        />
-        <NumericField
-          name="loyalty"
-          humanName="Loyalty"
-          placeholder={'Any value, e.g. "3"'}
-          value={values.loyalty}
-          valueOp={values.loyaltyOp}
-          onChange={onChange}
-        />
-        <NumericField
-          name="rarity"
-          humanName="Rarity"
-          placeholder={'Any rarity, e.g. "common"'}
-          value={values.rarity}
-          valueOp={values.rarityOp}
-          onChange={onChange}
-        />
-        <InputGroup className="mb-3" {...props}>
-          <InputGroupText>Legality</InputGroupText>
-          <Input type="select" id="legalityOp" name="legalityOp" onChange={onChange}>
-            <option value="=">legal</option>
-            <option value="!=">not legal</option>
-          </Input>
-          <Input type="select" name="legality" value={values.legality} onChange={onChange}>
-            {[
-              '',
-              'Standard',
-              'Pioneer',
-              'Modern',
-              'Legacy',
-              'Vintage',
-              'Brawl',
-              'Historic',
-              'Pauper',
-              'Penny',
-              'Commander',
-            ].map((legality) => (
-              <option key={legality}>{legality}</option>
-            ))}
-          </Input>
-        </InputGroup>
-        <TextField
-          name="artist"
-          humanName="Artist"
-          placeholder={'Any text, e.g. "seb"'}
-          value={values.artist}
-          onChange={onChange}
-        />
-      </ModalBody>
-      <ModalFooter>
-        <Button color="unsafe" aria-label="Close" onClick={toggle}>
-          Cancel
-        </Button>
-        <Button color="accent" type="submit">
-          Apply
-        </Button>
-      </ModalFooter>
-    </Form>
-  </Modal>
-);
+const FilterCollapse = ({ isOpen }) => {
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [values, setValues] = useState({});
 
-class FilterCollapse extends Component {
-  constructor(props) {
-    super(props);
+  const { filterInput, setFilterInput, filterValid, filterResult } = useContext(CubeContext);
 
-    this.state = {
-      loading: false,
-      advancedOpen: false,
-      filterInput: this.props.defaultFilterText || '',
-      ...fromEntries(allFields.map((n) => [n, ''])),
-      ...fromEntries(numFields.map((n) => [n + 'Op', '='])),
-      ...fromEntries(colorFields.map((n) => [n + 'Op', '='])),
-      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
-      typeQuick: '',
-      cmcQuick: '',
-      cmcQuickOp: '<=',
-      textQuick: '',
-      ...fromEntries(colorFields.map((n) => [...'WUBRG'].map((c) => [n + c, false])).flat()),
-    };
-
-    this.toggleAdvanced = this.toggleAdvanced.bind(this);
-    this.applyAdvanced = this.applyAdvanced.bind(this);
-    this.applyQuick = this.applyQuick.bind(this);
-    this.updateFilters = this.updateFilters.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleApply = this.handleApply.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleReset = this.handleReset.bind(this);
-  }
-
-  componentDidMount() {
-    if (this.props.defaultFilterText) this.updateFilters();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.filter !== this.props.filter) {
-      const { filterInput } = this.state;
-      if (filterInput === '') {
-        Query.del('f');
-      } else {
-        Query.set('f', filterInput);
-      }
-    }
-  }
-
-  toggleAdvanced() {
-    this.setState({
-      advancedOpen: !this.state.advancedOpen,
-    });
-  }
-
-  async applyAdvanced() {
+  const applyAdvanced = useCallback(async () => {
     // Advanced Filter change. Render to filter input.
     const tokens = [];
     for (const name of allFields) {
-      if (this.state[name]) {
-        const op = numFields.includes(name) ? this.state[name + 'Op'] || '=' : ':';
-        let value = this.state[name].replace('"', '\\"');
+      if (values[name]) {
+        const op = numFields.includes(name) ? values[`${name}Op`] || '=' : ':';
+        let value = values[name].replace('"', '\\"');
+        if (value.indexOf(' ') > -1) {
+          value = `"${value}"`;
+        }
+        tokens.push(`${name}${op}${value}`);
+      }
+    }
+    for (const name of colorFields) {
+      const op = values[`${name}Op`] || '=';
+      if (values[name] && values[name].length > 0) {
+        tokens.push(`${name}${op}${values[name].join('')}`);
+      }
+    }
+    setFilterInput(tokens.join(' '));
+    setAdvancedOpen(false);
+  }, [setFilterInput, values]);
+
+  const applyQuick = useCallback(async () => {
+    const tokens = [];
+    for (const name of quickFields) {
+      if (values[name]) {
+        const op = numFields.includes(name) ? values[`${name}Op`] || '=' : ':';
+        let value = values[name].replace('"', '\\"');
         if (value.indexOf(' ') > -1) {
           value = `"${value}"`;
         }
@@ -379,9 +92,9 @@ class FilterCollapse extends Component {
     }
     for (const name of colorFields) {
       const colors = [];
-      const op = this.state[name + 'Op'] || '=';
+      const op = values[`${name}Op`] || '=';
       for (const color of [...'WUBRG']) {
-        if (this.state[name + color]) {
+        if (values[name + color]) {
           colors.push(color);
         }
       }
@@ -389,236 +102,152 @@ class FilterCollapse extends Component {
         tokens.push(`${name}${op}${colors.join('')}`);
       }
     }
-    const filterInput = tokens.join(' ');
-    this.setState({
-      advancedOpen: false,
-      filterInput,
-    });
-    await this.updateFilters(filterInput);
-  }
+    setFilterInput(tokens.join(' '));
+    setAdvancedOpen(false);
+  }, [setFilterInput, values]);
 
-  async applyQuick(event) {
-    event.preventDefault();
-    const tokens = [];
+  const reset = useCallback(() => {
+    setFilterInput('');
+    setValues({});
+  }, [setFilterInput]);
 
-    const colors = [];
-    for (const color of [...'WUBRGC']) {
-      if (this.state[`colorQuick${color}`]) {
-        colors.push(color);
-      }
-    }
-    if (colors.length > 0) {
-      tokens.push(`coloridentity=${colors.join('')}`);
-    }
+  const updateValue = useCallback(
+    (value, name) => {
+      const newValues = { ...values };
+      newValues[name] = value;
+      setValues(newValues);
+    },
+    [values],
+  );
 
-    if (this.state.cmcQuick) {
-      tokens.push(`mv${this.state.cmcQuickOp}${this.state.cmcQuick}`);
-    }
-
-    for (const name of ['type', 'text']) {
-      let value = this.state[`${name}Quick`];
-      if (!value) continue;
-      if (value.includes(' ')) {
-        value = value.replace('"', '\\"');
-        value = `"${value}"`;
-      }
-      tokens.push(`${name}:${value}`);
-    }
-
-    const filterInput = tokens.join(' ');
-    this.setState({ filterInput });
-    await this.updateFilters(filterInput);
-  }
-
-  async updateFilters(overrideFilter) {
-    if (this.props.filter && Query.get('f') === this.state.filterInput) {
-      return;
-    }
-
-    const filterInput = overrideFilter ?? this.state.filterInput;
-    if ((filterInput ?? '') === '') {
-      this.props.setFilter(null, '');
-      return;
-    }
-
-    const { filter, err } = makeFilter(filterInput);
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    // TODO: Copy to advanced filter boxes.
-    this.setState({ loading: true });
-    await this.props.setFilter(() => filter, filterInput);
-    this.setState({ loading: false });
-  }
-
-  handleChange(event) {
-    const target = event.target;
-    const value = ['checkbox', 'radio'].includes(target.type) ? target.checked : target.value;
-    const name = target.name;
-
-    this.setState({
-      [name]: value,
-    });
-  }
-
-  async handleApply(event) {
-    event.preventDefault();
-    await this.updateFilters();
-  }
-
-  async handleKeyDown(event) {
-    if (event.keyCode === 13 /* ENTER */) {
-      event.preventDefault();
-      await this.updateFilters();
-    }
-  }
-
-  handleReset() {
-    this.setState({ filterInput: '' });
-    this.props.setFilter(null, '');
-  }
-
-  render() {
-    const { filter, setFilter, numCards, numShown, useQuery, defaultFilterText, noCount, ...props } = this.props;
-    const { loading, filterInput, advancedOpen } = this.state;
-    const { err } = makeFilter(filterInput);
-    const valid = !err;
-    if (err) {
-      console.warn('Error parsing', err);
-    }
-    const appliedText =
-      'Filters applied' +
-      (typeof numCards !== 'undefined' ? `: ${numCards} cards` : '') +
-      (typeof numShown !== 'undefined' ? `, ${numShown} shown` : '') +
-      '.';
-    return (
-      <Collapse className="px-3" {...props}>
-        <Row>
-          <Col>
-            <Form>
-              <InputGroup className="mb-3">
-                <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
-                <Input
-                  type="text"
-                  id="filterInput"
-                  name="filterInput"
-                  placeholder={'name:"Ambush Viper"'}
-                  disabled={loading}
-                  valid={filterInput.length > 0 && valid}
-                  invalid={filterInput.length > 0 && !valid}
-                  value={this.state.filterInput}
-                  onChange={this.handleChange}
-                  onKeyDown={this.handleKeyDown}
-                />
-                <LoadingButton color="accent" className="square-left" onClick={this.handleApply} loading={loading}>
-                  Apply
-                </LoadingButton>
-              </InputGroup>
-            </Form>
-          </Col>
-        </Row>
-        <Form className="row ps-2">
-          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <ColorChecksControl
-              size="sm"
-              className="mb-3"
-              colorless
-              prefix="colorQuick"
-              values={this.state}
-              onChange={this.handleChange}
+  return (
+    <Collapse className="px-3" isOpen={isOpen}>
+      <Row>
+        <Col>
+          <InputGroup>
+            <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
+            <Input
+              type="text"
+              id="filterInput"
+              name="filterInput"
+              placeholder={'name:"Ambush Viper"'}
+              valid={filterInput.length > 0 && filterValid}
+              invalid={filterInput.length > 0 && !filterValid}
+              value={filterInput}
+              onChange={(event) => setFilterInput(event.target.value)}
             />
-          </Col>
-          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
-              <Input
-                id="cmcQickOp"
-                type="select"
-                name="cmcQuickOp"
-                value={this.state.cmcQuickOp}
-                onChange={this.handleChange}
-                bsSize="sm"
-                style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
-              >
-                <option>{'>'}</option>
-                <option>{'>='}</option>
-                <option>{'='}</option>
-                <option>{'<='}</option>
-                <option>{'<'}</option>
-              </Input>
-              <Input
-                name="cmcQuick"
-                id="cmcQuick"
-                value={this.state.cmcQuick}
-                onChange={this.handleChange}
-                bsSize="sm"
-                className="square-left"
-                style={{ width: '3rem' }}
-              />
-            </InputGroup>
-          </Col>
-          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
-              <Input
-                name="typeQuick"
-                id="typeQuick"
-                value={this.state.typeQuick}
-                onChange={this.handleChange}
-                style={{ width: '8rem' }}
-              />
-            </InputGroup>
-          </Col>
-          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <InputGroup size="sm" className="mb-3">
-              <InputGroupText htmlFor="textQuick">Text</InputGroupText>
-              <Input
-                name="textQuick"
-                id="textQuick"
-                value={this.state.textQuick}
-                onChange={this.handleChange}
-                style={{ width: '8rem' }}
-              />
-            </InputGroup>
-          </Col>
-          <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
-            <Button type="submit" onClick={this.applyQuick} size="sm" color="accent" className="mb-3">
-              Quick Filter
-            </Button>
-          </Col>
-        </Form>
+          </InputGroup>
+          <small>
+            Having trouble using filter syntax? Check out our <a href="/filters">syntax guide</a>.
+          </small>
+        </Col>
+      </Row>
+      <Row className="mt-2">
+        <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+          <ColorChecksControl
+            size="sm"
+            className="mb-3"
+            colorless
+            prefix="colorQuick"
+            values={values.color || []}
+            setValues={(colors) => updateValue(colors, 'color')}
+          />
+        </Col>
+        <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+          <InputGroup size="sm" className="mb-3">
+            <InputGroupText htmlFor="cmcQuick">Mana Value</InputGroupText>
+            <Input
+              id="cmcQickOp"
+              type="select"
+              name="cmcQuickOp"
+              value={values.cmcOp || '='}
+              onChange={(event) => updateValue(event.target.value, 'cmcOp')}
+              bsSize="sm"
+              style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+            >
+              <option>{'>'}</option>
+              <option>{'>='}</option>
+              <option>=</option>
+              <option>{'<='}</option>
+              <option>{'<'}</option>
+            </Input>
+            <Input
+              name="cmcQuick"
+              id="cmcQuick"
+              value={values.cmc}
+              onChange={(event) => updateValue(event.target.value, 'cmc')}
+              bsSize="sm"
+              className="square-left"
+              style={{ width: '3rem' }}
+            />
+          </InputGroup>
+        </Col>
+        <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+          <InputGroup size="sm" className="mb-3">
+            <InputGroupText htmlFor="typeQuick">Type</InputGroupText>
+            <Input
+              name="typeQuick"
+              id="typeQuick"
+              value={values.type}
+              onChange={(event) => updateValue(event.target.value, 'type')}
+              style={{ width: '8rem' }}
+            />
+          </InputGroup>
+        </Col>
+        <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+          <InputGroup size="sm" className="mb-3">
+            <InputGroupText htmlFor="textQuick">Text</InputGroupText>
+            <Input
+              name="textQuick"
+              id="textQuick"
+              value={values.oracle}
+              onChange={(event) => updateValue(event.target.value, 'oracle')}
+              style={{ width: '8rem' }}
+            />
+          </InputGroup>
+        </Col>
+        <Col xs={9} sm="auto" style={{ padding: '0 5px' }}>
+          <Button type="submit" onClick={applyQuick} size="sm" color="accent" className="mb-3">
+            Quick Filter
+          </Button>
+        </Col>
+      </Row>
+      {filterResult && filterResult.length > 0 && (
         <Row>
           <Col>
-            {!noCount && (
-              <p>{!filter || filter.length === 0 ? <em>No filters applied.</em> : <em>{appliedText}</em>}</p>
-            )}
+            <p>
+              <em>{filterResult}</em>
+            </p>
           </Col>
         </Row>
-        <Row>
-          <Col>
-            <Button color="unsafe" className="me-2 mb-3" onClick={this.handleReset}>
-              Reset Filters
-            </Button>
-            <Button color="primary" className="me-2 mb-3" onClick={this.toggleAdvanced}>
-              Advanced...
-            </Button>
-            <Button color="secondary" className="me-2 mb-3" href="/filters">
-              Syntax Guide
-            </Button>
-          </Col>
-        </Row>
-        <AdvancedFilterModal
-          isOpen={advancedOpen}
-          toggle={this.toggleAdvanced}
-          apply={this.applyAdvanced}
-          values={this.state}
-          onChange={this.handleChange}
-        />
-      </Collapse>
-    );
-  }
-}
+      )}
+      <Row>
+        <Col>
+          <Button color="unsafe" className="me-2 mb-3" onClick={reset}>
+            Reset Filters
+          </Button>
+          <Button color="primary" className="me-2 mb-3" onClick={() => setAdvancedOpen(true)}>
+            Advanced...
+          </Button>
+        </Col>
+      </Row>
+      <AdvancedFilterModal
+        isOpen={advancedOpen}
+        toggle={() => setAdvancedOpen(false)}
+        apply={applyAdvanced}
+        values={values}
+        updateValue={updateValue}
+      />
+    </Collapse>
+  );
+};
+
+FilterCollapse.propTypes = {
+  isOpen: PropTypes.bool,
+};
+
+FilterCollapse.defaultProps = {
+  isOpen: false,
+};
 
 export default FilterCollapse;

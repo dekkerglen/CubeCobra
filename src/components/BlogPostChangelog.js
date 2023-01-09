@@ -1,56 +1,114 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Row, Col } from 'reactstrap';
+
+import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
+import withAutocard from 'components/WithAutocard';
 import CardPropType from 'proptypes/CardPropType';
 
-const CardHtml = ({ card }) => (
-  // eslint-disable-next-line jsx-a11y/anchor-is-valid
-  <a className="dynamic-autocard" card={card.image_normal} card_flip={card.image_flip}>
-    {card.name}
-  </a>
-);
+const TextAutocard = withAutocard('a');
 
-CardHtml.propTypes = {
+const Add = ({ card }) => {
+  return (
+    <li>
+      <span className="mx-1" style={{ color: 'green' }}>
+        <PlusCircleIcon />
+      </span>
+      <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
+        {card.details.name}
+      </TextAutocard>
+    </li>
+  );
+};
+
+Add.propTypes = {
   card: CardPropType.isRequired,
 };
 
-const BlogPostChangelog = ({ cards }) => (
-  <>
-    {cards.map(({ added, removed }) => {
-      let className = 'badge ';
-      let symbol;
-      if (added && removed) {
-        symbol = '→';
-        className += 'badge-primary';
-      } else if (added) {
-        symbol = '+';
-        className += 'badge-success';
-      } else if (removed) {
-        symbol = '-';
-        className += 'badge-danger';
-      }
-
-      return (
-        <>
-          <span className={className} style={{ fontFamily: "'Lucida Console', 'Monaco', 'monospace'" }}>
-            {symbol}
-          </span>{' '}
-          {added && <CardHtml card={added} />}
-          {added && removed && '>'}
-          {removed && <CardHtml card={removed} />}
-          <br />
-        </>
-      );
-    })}
-  </>
+const Remove = ({ oldCard }) => (
+  <li>
+    <span className="mx-1" style={{ color: 'red' }}>
+      <NoEntryIcon />
+    </span>
+    <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
+      {oldCard.details.name}
+    </TextAutocard>
+  </li>
 );
 
+Remove.propTypes = {
+  oldCard: CardPropType.isRequired,
+};
+
+const Edit = ({ card }) => (
+  <li>
+    <span className="mx-1" style={{ color: 'orange' }}>
+      <ToolsIcon />
+    </span>
+    <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
+      {card.details.name}
+    </TextAutocard>
+  </li>
+);
+
+Edit.propTypes = {
+  card: CardPropType.isRequired,
+};
+
+const Swap = ({ oldCard, card }) => {
+  return (
+    <li>
+      <span className="mx-1" style={{ color: 'blue' }}>
+        <ArrowSwitchIcon />
+      </span>
+      <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
+        {oldCard.details.name}
+      </TextAutocard>
+      <ArrowRightIcon className="mx-1" />
+      <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
+        {card.details.name}
+      </TextAutocard>
+    </li>
+  );
+};
+
+Swap.propTypes = {
+  oldCard: CardPropType.isRequired,
+  card: CardPropType.isRequired,
+};
+
+const BlogPostChangelog = ({ changelog }) => {
+  return (
+    <div>
+      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => (
+        <div key={board} className="mb-2">
+          <h6>
+            <Row>
+              <Col>{board} Changelist</Col>
+              <Col className="col-auto">
+                <div className="text-secondary">
+                  +{(adds || []).length}, -{(removes || []).length}
+                </div>
+              </Col>
+            </Row>
+          </h6>
+          <ul className="changelist">
+            {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
+            {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}
+            {swaps &&
+              swaps.map((swap) => (
+                <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
+              ))}
+            {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.oldCard} />)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 BlogPostChangelog.propTypes = {
-  cards: PropTypes.arrayOf(
-    PropTypes.shape({
-      added: CardPropType,
-      removed: CardPropType,
-    }),
-  ).isRequired,
+  changelog: PropTypes.shape({}).isRequired,
 };
 
 export default BlogPostChangelog;

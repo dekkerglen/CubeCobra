@@ -1,13 +1,10 @@
-import React, { useCallback, useContext } from 'react';
+import React from 'react';
 
-import CardModalContext from 'contexts/CardModalContext';
 import FoilCardImage from 'components/FoilCardImage';
 import CardPropType from 'proptypes/CardPropType';
 
-const SpoilerImage = ({ card }) => {
-  const openCardModal = useContext(CardModalContext);
-  const handleClick = useCallback(() => openCardModal(card), [openCardModal, card]);
-  return <FoilCardImage autocard card={card} onClick={handleClick} className="clickable" />;
+const SpoilerImage = ({ card, ...props }) => {
+  return <FoilCardImage autocard card={card} {...props} className="clickable" />;
 };
 
 SpoilerImage.propTypes = {

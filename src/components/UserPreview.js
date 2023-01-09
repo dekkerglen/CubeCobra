@@ -5,6 +5,7 @@ import { Card } from 'reactstrap';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
+import MtgImage from 'components/MtgImage';
 
 const UserPreview = ({ user }) => {
   const [hover, setHover] = useState(false);
@@ -13,11 +14,12 @@ const UserPreview = ({ user }) => {
   const handleClick = useCallback((event) => {
     window.location.href = event.currentTarget.getAttribute('data-href');
   }, []);
-  const followers = user.users_following.length;
+
+  const followers = (user.following || []).length;
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      data-href={`/user/view/${user._id}`}
+      data-href={`/user/view/${user.id}`}
       onClick={handleClick}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
@@ -25,13 +27,11 @@ const UserPreview = ({ user }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <img className="w-100" src={user.image} />
-        <em className="cube-preview-artist">Art by {user.artist}</em>
+        <MtgImage cardname={user.imageName} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">
-          <Username userId={user._id} defaultName={user.username} />
+          <Username userId={user.id} defaultName={user.username} />
         </h5>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>
@@ -41,11 +41,12 @@ const UserPreview = ({ user }) => {
 
 UserPreview.propTypes = {
   user: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    users_following: PropTypes.arrayOf(PropTypes.string.isRequired),
+    Artist: PropTypes.string.isRequired,
+    following: PropTypes.arrayOf(PropTypes.string.isRequired),
+    imageName: PropTypes.string.isRequired,
   }).isRequired,
 };
 

@@ -35,6 +35,7 @@ import { getDefaultPosition } from 'drafting/draftutil';
 import { getGridDrafterState } from 'drafting/griddraftutils';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
+import DraftPropType from 'proptypes/DraftPropType';
 
 const GRID_DRAFT_OPTIONS = [0, 1, 2]
   .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
@@ -133,8 +134,6 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
-    console.log({ newGridDraft, seatIndex, cardIndices });
-
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
@@ -174,16 +173,14 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
   const drafterStates = useMemo(() => {
-    console.log(gridDraft);
     return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
   }, [gridDraft]);
   const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
-  console.log(seatNum);
   const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
 
-  // Picks is an array with 1st key C/NC, 2d key CMC, 3d key order
+  // picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picked = useMemo(
     () =>
       gridDraft.seats.map(({ drafted }) =>
@@ -221,8 +218,8 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider>
+      <DisplayContextProvider>
+        <CubeLayout cube={cube} activeLink="playtest">
           <Navbar expand="xs" light className="usercontrols">
             <Collapse navbar>
               <Nav navbar>
@@ -237,7 +234,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
             method="POST"
             action={`/cube/deck/submitgriddeck/${initialDraft.cube}`}
           >
-            <Input type="hidden" name="body" value={initialDraft._id} />
+            <Input type="hidden" name="body" value={initialDraft.id} />
           </CSRFForm>
           <DndProvider>
             <ErrorBoundary>
@@ -254,7 +251,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
               <Card className="mt-3">
                 <DeckStacks
                   cards={picked[0]}
-                  title={draftType === 'bot' ? 'Picks' : "Player One's Picks"}
+                  title={draftType === 'bot' ? 'picks' : "Player One's picks"}
                   subtitle={makeSubtitle(picked[0].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
@@ -264,7 +261,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
               <Card className="my-3">
                 <DeckStacks
                   cards={picked[1]}
-                  title={draftType === 'bot' ? 'Bot Picks' : "Player Two's Picks"}
+                  title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
                   subtitle={makeSubtitle(picked[1].flat(3))}
                   locationType={Location.PICKS}
                   canDrop={() => false}
@@ -273,24 +270,15 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
               </Card>
             </ErrorBoundary>
           </DndProvider>
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };
 
 GridDraftPage.propTypes = {
   cube: CubePropType.isRequired,
-  initialDraft: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-    _id: PropTypes.string,
-    ratings: PropTypes.objectOf(PropTypes.number),
-    unopenedPacks: PropTypes.arrayOf().isRequired,
-    initial_state: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired)).isRequired,
-    basics: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-    cube: PropTypes.string.isRequired,
-    draftType: PropTypes.string.isRequired,
-  }).isRequired,
+  initialDraft: DraftPropType.isRequired,
   seatNumber: PropTypes.number,
   loginCallback: PropTypes.string,
 };

@@ -3,28 +3,23 @@ require('dotenv').config();
 
 const express = require('express');
 
-const { winston } = require('../serverjs/cloudwatch');
-const carddb = require('../serverjs/cards');
+const carddb = require('../serverjs/carddb');
 const cardutil = require('../dist/utils/Card');
 const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort');
-const getBlankCardHistory = require('../src/utils/BlankCardHistory');
 const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta');
 const util = require('../serverjs/util');
 const { render } = require('../serverjs/render');
-const { ensureAuth, csrfProtection } = require('./middleware');
+const { csrfProtection } = require('./middleware');
 
-const CardHistory = require('../models/cardHistory');
-const Cube = require('../models/cube');
-
-const { buildIdQuery } = require('../serverjs/cubefn');
-const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
+const CardHistory = require('../dynamo/models/cardhistory');
+const Cube = require('../dynamo/models/cube');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-/* Minimum number of picks for data to show up in Top Cards list. */
+/* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
@@ -54,8 +49,6 @@ const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', d
 
   if (ORDERED_SORTS.includes(sort)) {
     cards.sort(SortFunctionsOnDetails(sort));
-  } else {
-    winston.info(`Sort function not found: ${sort}`);
   }
 
   if (direction === 'descending') {
@@ -72,7 +65,7 @@ const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', d
 
 router.get('/api/topcards', async (req, res) => {
   try {
-    const { err, filter } = makeFilter(`pickcount>=${MIN_PICKS} ${req.query.f}`);
+    const { err, filter } = makeFilter(`${req.query.f}`);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -138,7 +131,7 @@ router.get('/topcards', async (req, res) => {
         numResults,
       },
       {
-        title: 'Top Cards',
+        title: 'Top cards',
       },
     );
   } catch (err) {
@@ -149,6 +142,59 @@ router.get('/topcards', async (req, res) => {
 router.get('/randomcard', async (req, res) => {
   const card = carddb.allCards()[Math.floor(Math.random() * carddb.allCards().length)];
   res.redirect(`/tool/card/${card.oracle_id}`);
+});
+
+router.post('/cardhistory', async (req, res) => {
+  try {
+    const { id, zoom, period } = req.body;
+
+    let zoomValue = 10000;
+
+    if (zoom === 'month') {
+      switch (period) {
+        case 'day':
+          zoomValue = 30;
+          break;
+        case 'week':
+          zoomValue = 4;
+          break;
+        case 'month':
+          zoomValue = 2;
+          break;
+        default:
+          zoomValue = 0;
+          break;
+      }
+    } else if (zoom === 'year') {
+      switch (period) {
+        case 'day':
+          zoomValue = 365;
+          break;
+        case 'week':
+          zoomValue = 52;
+          break;
+        case 'month':
+          zoomValue = 12;
+          break;
+        default:
+          zoomValue = 0;
+          break;
+      }
+    }
+
+    const history = await CardHistory.getByOracleAndType(id, period, zoomValue);
+
+    return res.status(200).send({
+      success: 'true',
+      data: history.items.reverse(),
+    });
+  } catch (err) {
+    req.logger.error(err);
+    return res.status(500).send({
+      success: 'false',
+      data: [],
+    });
+  }
 });
 
 router.get('/card/:id', async (req, res) => {
@@ -181,15 +227,16 @@ router.get('/card/:id', async (req, res) => {
     }
 
     // otherwise just go to this ID.
-    let data = await CardHistory.findOne({ oracleId: card.oracle_id });
-    // id is valid but has no matching history
-    if (!data) {
-      data = getBlankCardHistory(id);
-    }
-    const related = {};
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
 
-    for (const category of ['top', 'synergistic', 'spells', 'creatures', 'other']) {
-      related[category] = data.cubedWith[category].map((oracle) =>
+    const draftedWith = {};
+    const cubedWith = {};
+
+    for (const category of ['top', 'spells', 'creatures', 'other']) {
+      draftedWith[category] = card.draftedWith[category].map((oracle) =>
+        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
+      );
+      cubedWith[category] = card.cubedWith[category].map((oracle) =>
         carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
       );
     }
@@ -200,11 +247,13 @@ router.get('/card/:id', async (req, res) => {
       'CardPage',
       {
         card,
-        data,
+        history: history.items.reverse(),
+        lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
           .filter((cid) => cid !== card._id)
           .map((cardid) => carddb.cardFromId(cardid)),
-        related,
+        draftedWith,
+        cubedWith,
       },
       {
         title: `${card.name}`,
@@ -259,9 +308,11 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const cube = await Cube.findOne(buildIdQuery(req.params.cubeid), 'cards').lean();
+    const cards = await Cube.getCards(req.params.cubeid);
 
-    const found = cube.cards
+    const main = cards.Mainboard;
+
+    const found = main
       .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))
       .find(
         (card) => id === card.cardID || id.toLowerCase() === card.details.name_lower || id === card.details.oracleId,
@@ -322,18 +373,9 @@ router.get('/searchcards', async (req, res) => {
     'CardSearchPage',
     {},
     {
-      title: 'Search Cards',
+      title: 'Search cards',
     },
   );
-});
-
-router.get('/getfeeditems/:skip', ensureAuth, async (req, res) => {
-  const skip = Number.parseInt(req.params.skip, 10) || 0;
-  const items = await getBlogFeedItems(req.user, skip, 10);
-  return res.status(200).send({
-    success: 'true',
-    items,
-  });
 });
 
 module.exports = router;

@@ -1,216 +1,92 @@
 const express = require('express');
 
+const carddb = require('../serverjs/carddb');
 const util = require('../serverjs/util');
+const Cube = require('../dynamo/models/cube');
+const CubeHash = require('../dynamo/models/cubeHash');
+const Draft = require('../dynamo/models/draft');
+const Content = require('../dynamo/models/content');
+const Feed = require('../dynamo/models/feed');
 
-const Cube = require('../models/cube');
-const Deck = require('../models/deck');
-const User = require('../models/user');
-const Article = require('../models/article');
-const Video = require('../models/video');
-const PodcastEpisode = require('../models/podcastEpisode');
-
-const carddb = require('../serverjs/cards');
-const { makeFilter } = require('../serverjs/filterCubes');
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
-const { getCubeId } = require('../serverjs/cubefn');
-const { getBlogFeedItems } = require('../serverjs/blogpostUtils');
 
 const router = express.Router();
 
 router.use(csrfProtection);
 
-const CUBE_PREVIEW_FIELDS =
-  '_id shortID image_uri image_name image_artist name owner owner_name type card_count overrideCategory categoryPrefixes categoryOverride';
-
 // Home route
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const recentsq = Cube.find(
-    {
-      card_count: {
-        $gt: 200,
-      },
-      isListed: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .sort({
-      date_updated: -1,
-    })
-    .limit(12)
-    .exec();
+  const recentsQuery = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
+  const recents = recentsQuery.items;
 
-  const featuredq = Cube.find(
-    {
-      isFeatured: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .exec();
+  const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
+  const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-  const draftedq = Cube.find(
-    {
-      isListed: true,
-    },
-    CUBE_PREVIEW_FIELDS,
-  )
-    .lean()
-    .sort({
-      numDecks: -1,
-    })
-    .limit(12)
-    .exec();
-
-  const decksq = Deck.find()
-    .lean()
-    .sort({
-      date: -1,
-    })
-    .limit(10)
-    .exec();
-
-  const [recents, featured, drafted, decks] = await Promise.all([recentsq, featuredq, draftedq, decksq]);
-
-  const recentlyDrafted = await Cube.find({ _id: { $in: decks.map((deck) => deck.cube) } }, CUBE_PREVIEW_FIELDS).lean();
+  const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
+  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
 
   return render(req, res, 'ExplorePage', {
-    recents,
+    recents: recents.sort((a, b) => b.date - a.date).slice(0, 12),
     featured,
-    drafted,
-    recentlyDrafted,
+    drafted: [],
+    popular: popular.sort((a, b) => b.following.length - a.following.length).slice(0, 12),
   });
 });
 
 router.get('/random', async (req, res) => {
-  const lastMonth = () => {
-    const ret = new Date();
-    ret.setMonth(ret.getMonth() - 1);
-    return ret;
-  };
+  const now = new Date().valueOf();
+  // sometime random within the last month
+  const random = now - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30 * 30);
 
-  const [randCube] = await Cube.aggregate()
-    .match({ isListed: true, card_count: { $gte: 360 }, date_updated: { $gte: lastMonth() } })
-    .sample(1);
-  res.redirect(`/cube/overview/${encodeURIComponent(getCubeId(randCube))}`);
+  const query = await Cube.getByVisibilityBefore(Cube.VISIBILITY.PUBLIC, random);
+
+  res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].id)}`);
 });
 
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
-    const cubesq = Cube.find(
-      {
-        owner: req.user._id,
-      },
-      CUBE_PREVIEW_FIELDS,
-    )
-      .lean()
-      .sort({
-        date_updated: -1,
-      });
-    const postsq = getBlogFeedItems(req.user, 0, 10);
+    const posts = await Feed.getByTo(req.user.id);
 
-    const featuredq = Cube.find(
-      {
-        isFeatured: true,
-      },
-      CUBE_PREVIEW_FIELDS,
-    ).lean();
+    const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
+    const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-    const articlesq = Article.find({ status: 'published' }).sort({ date: -1 }).limit(10);
-    const episodesq = PodcastEpisode.find().sort({ date: -1 }).limit(10);
-    const videosq = Video.find({ status: 'published' }).sort({ date: -1 }).limit(10);
+    const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
+    const decks = await Draft.getByCubeOwner(req.user.id);
 
-    // We can do these queries in parallel
-    const [cubes, posts, articles, videos, episodes, featured] = await Promise.all([
-      cubesq,
-      postsq,
-      articlesq,
-      videosq,
-      episodesq,
-      featuredq,
-    ]);
-
-    const content = [];
-
-    for (const article of articles) {
-      content.push({
-        type: 'article',
-        date: article.date,
-        content: article,
-      });
-    }
-    for (const video of videos) {
-      content.push({
-        type: 'video',
-        date: video.date,
-        content: video,
-      });
-    }
-    for (const episode of episodes) {
-      content.push({
-        type: 'episode',
-        date: episode.date,
-        content: episode,
-      });
-    }
-
-    content.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateB - dateA;
+    return render(req, res, 'DashboardPage', {
+      posts: posts.items,
+      lastKey: posts.lastKey,
+      decks: decks.items,
+      content: content.items.filter((item) => item.type !== 'p'),
+      featured,
     });
-
-    content.splice(10);
-
-    const decks = await Deck.find({
-      cubeOwner: req.user._id,
-    })
-      .sort({
-        date: -1,
-      })
-      .lean()
-      .limit(12);
-
-    return render(req, res, 'DashboardPage', { posts, cubes, decks, content, featured });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/landing');
   }
 });
 
-router.get('/dashboard/decks/:page', async (req, res) => {
+router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
+  const { lastKey, user } = req.body;
+
+  const result = await Feed.getByTo(user, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    items: result.items,
+    lastKey: result.lastKey,
+  });
+});
+
+router.get('/dashboard/decks', ensureAuth, async (req, res) => {
   try {
-    const pagesize = 30;
-    const { page } = req.params;
-    const { user } = req;
-    if (!user) {
-      return res.redirect('/landing');
-    }
-
-    const decks = await Deck.find({
-      cubeOwner: user._id,
-    })
-      .sort({
-        date: -1,
-      })
-      .skip(pagesize * page)
-      .limit(pagesize)
-      .lean()
-      .exec();
-
-    const numDecks = await Deck.countDocuments({
-      cubeOwner: user._id,
-    })
-      .lean()
-      .exec();
+    const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'RecentDraftsPage', {
-      decks,
-      currentPage: parseInt(page, 10),
-      totalPages: Math.ceil(numDecks / pagesize),
-      count: numDecks,
+      decks: decks.items,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     req.logger.error(err);
@@ -219,18 +95,7 @@ router.get('/dashboard/decks/:page', async (req, res) => {
 });
 
 router.get('/landing', async (req, res) => {
-  const cubeq = Cube.estimatedDocumentCount().exec();
-  const deckq = Deck.estimatedDocumentCount().exec();
-  const userq = User.estimatedDocumentCount().exec();
-
-  const [cube, deck, user] = await Promise.all([cubeq, deckq, userq]);
-
-  return render(req, res, 'LandingPage', {
-    numusers: user.toLocaleString('en-US'),
-    numcubes: cube.toLocaleString('en-US'),
-    numdrafts: deck.toLocaleString('en-US'),
-    version: process.env.CUBECOBRA_VERSION,
-  });
+  return render(req, res, 'LandingPage');
 });
 
 router.get('/version', async (req, res) => {
@@ -247,83 +112,66 @@ router.get('/search', async (req, res) => {
   });
 });
 
-router.get('/search/:query/:page', async (req, res) => {
-  try {
-    const perPage = 36;
-    const page = Math.max(0, Math.max(req.params.page, 0));
+const searchCubes = async (query, order, lastKey, ascending) => {
+  let updatedQuery = query;
+  const split = updatedQuery.split(':');
 
-    const { order } = req.query;
-
-    let sort = {
-      date_updated: -1,
-    };
-
-    switch (order) {
-      case 'pop':
-        sort = {
-          numDecks: -1,
-        };
-        break;
-      case 'alpha':
-        sort = {
-          name: -1,
-        };
-        break;
-      default:
-        break;
+  if (split.length === 1 && split[0].length > 0) {
+    updatedQuery = `keywords:${updatedQuery}`;
+  } else if (split.length === 2 && split[0].length > 0 && split[1].length > 0) {
+    // removed surrounding quotes from split[1]
+    if (split[1].startsWith('"') && split[1].endsWith('"')) {
+      split[1] = split[1].substring(1, split[1].length - 1);
     }
-
-    const query = await makeFilter(req.params.query, carddb);
-
-    if (query.error) {
-      req.flash('danger', `Invalid Search Syntax: ${query.error}`);
-
-      return render(req, res, 'SearchPage', {
-        query: req.params.query,
-        cubes: [],
-        count: 0,
-        perPage: 0,
-        page: 0,
-      });
-    }
-
-    if (query.warnings) {
-      for (const warning of query.warnings) {
-        req.flash('danger', `Warning: ${warning}`);
-      }
-      delete query.warnings;
-    }
-
-    query.isListed = true;
-
-    const count = await Cube.countDocuments(query);
-
-    const cubes = await Cube.find(query, CUBE_PREVIEW_FIELDS)
-      .lean()
-      .sort(sort)
-      .skip(perPage * page)
-      .limit(perPage);
-
-    return render(req, res, 'SearchPage', {
-      query: req.params.query,
-      cubes,
-      count,
-      perPage,
-      page,
-      order,
-    });
-  } catch (err) {
-    req.logger.error(err);
-    req.flash('danger', 'Invalid Search Syntax');
-
-    return render(req, res, 'SearchPage', {
-      query: req.params.query,
-      cubes: [],
-      count: 0,
-      perPage: 0,
-      page: 0,
-    });
+    updatedQuery = `${split[0].trim()}:${split[1].trim()}`;
   }
+
+  const [key, value] = updatedQuery.split(':');
+  if (key === 'card') {
+    // get oracle id from card name
+    const card = carddb.getMostReasonable(value);
+
+    updatedQuery = `oracle:${card ? card.oracle_id : ''}`;
+  }
+
+  const result = await CubeHash.query(updatedQuery, ascending, lastKey, order);
+
+  const items = result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : [];
+
+  // make sure items is in same order as result.items
+  const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube));
+
+  return {
+    cubes,
+    lastKey: result.lastKey,
+  };
+};
+
+router.get('/search/:query', async (req, res) => {
+  const ascending = req.query.ascending || false;
+  const order = req.query.order || 'pop';
+
+  const result = await searchCubes(req.params.query, order, null, ascending);
+
+  return render(req, res, 'SearchPage', {
+    query: req.params.query,
+    cubes: result.cubes,
+    lastKey: result.lastKey,
+    ascending,
+    order,
+  });
+});
+
+router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
+  const { lastKey, query, order, ascending } = req.body;
+
+  const result = await searchCubes(query, order, lastKey, ascending);
+
+  return res.status(200).send({
+    success: 'true',
+    cubes: result.cubes,
+    lastKey: result.lastKey,
+  });
 });
 
 router.get('/contact', (req, res) => {
@@ -453,7 +301,7 @@ router.get('/privacy', (req, res) => {
       },
       {
         label: 'Types of Data Collected',
-        text: 'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: Email address, Cookies and Usage Data',
+        text: 'Personal Data: While using our Service, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include, but is not limited to: email address, Cookies and Usage Data',
       },
       {
         label: '',
@@ -830,7 +678,7 @@ router.get('/ourstory', (req, res) => {
     title: 'Our Story',
     content: [
       {
-        label: 'About the Creator',
+        label: 'about the Creator',
         text: "My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me. I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features. With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, as I believe that is the best route for the quality and longevity of the project.",
       },
       {
@@ -875,7 +723,7 @@ router.get('/faq', (req, res) => {
       },
       {
         label: 'How can I put my lands into my guild sections?',
-        text: 'From your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
+        text: 'from your cube list page, click "Sort", set your primary sort to "Color Identity", and hit "Save as Default Sort". We highly recommend trying out different sorts, as they provide flexible and powerful ways to view your cube.',
       },
     ],
   });

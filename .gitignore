@@ -4,6 +4,7 @@ private/
 src/generated/
 jobs/export/
 public/css/bootstrap
+/temp/
 
 .python-version
 

@@ -14,6 +14,7 @@ import {
   COLOR_COMBINATIONS,
   cardRarity,
   cardPopularity,
+  cardCollectorNumber,
 } from 'utils/Card';
 
 const COLOR_MAP = {
@@ -158,8 +159,8 @@ export const SORTS = [
   'Includes Color Combination',
   'Color',
   'Creature/Non-Creature',
-  'Date Added',
-  'Elo',
+  'date Added',
+  'elo',
   'Finish',
   'Guilds',
   'Legality',
@@ -174,10 +175,10 @@ export const SORTS = [
   'Rarity',
   'Set',
   'Shards / Wedges',
-  'Status',
+  'status',
   'Subtype',
   'Supertype',
-  'Tags',
+  'tags',
   'Toughness',
   'Type',
   'Types-Multicolor',
@@ -189,14 +190,23 @@ export const SORTS = [
   'Unsorted',
 ];
 
-export const ORDERED_SORTS = ['Alphabetical', 'Mana Value', 'Price', 'Elo', 'Release Date', 'Cube Count', 'Pick Count'];
+export const ORDERED_SORTS = [
+  'Alphabetical',
+  'Mana Value',
+  'Price',
+  'elo',
+  'Release date',
+  'Cube Count',
+  'Pick Count',
+  'Collector number',
+];
 
 export const SortFunctions = {
   Alphabetical: alphaCompare,
   'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
   Price: (a, b) => cardPrice(a) - cardPrice(b),
-  Elo: (a, b) => cardElo(a) - cardElo(b),
-  'Release Date': (a, b) => {
+  elo: (a, b) => cardElo(a) - cardElo(b),
+  'Release date': (a, b) => {
     if (cardReleaseDate(a) > cardReleaseDate(b)) {
       return 1;
     }
@@ -207,6 +217,15 @@ export const SortFunctions = {
   },
   'Cube Count': (a, b) => cardCubeCount(a) - cardCubeCount(b),
   'Pick Count': (a, b) => cardPickCount(a) - cardPickCount(b),
+  'Collector number': (a, b) => {
+    if (cardCollectorNumber(a) > cardCollectorNumber(b)) {
+      return 1;
+    }
+    if (cardCollectorNumber(a) < cardCollectorNumber(b)) {
+      return -1;
+    }
+    return 0;
+  },
 };
 
 export const SortFunctionsOnDetails = (sort) => (a, b) => SortFunctions[sort]({ details: a }, { details: b });
@@ -296,7 +315,7 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = CARD_TYPES.concat(['Other']);
   } else if (sort === 'Supertype') {
     ret = ['Snow', 'Legendary', 'Tribal', 'Basic', 'Elite', 'Host', 'Ongoing', 'World'];
-  } else if (sort === 'Tags') {
+  } else if (sort === 'tags') {
     const tags = [];
     for (const card of cube) {
       for (const tag of card.tags) {
@@ -306,11 +325,11 @@ function getLabelsRaw(cube, sort, showOther) {
       }
     }
     ret = tags.sort();
-  } else if (sort === 'Date Added') {
+  } else if (sort === 'date Added') {
     const dates = cube.map((card) => card.addedTmsp).sort((a, b) => a - b);
     const days = dates.map((date) => ISODateToYYYYMMDD(date));
     ret = removeAdjacentDuplicates(days);
-  } else if (sort === 'Status') {
+  } else if (sort === 'status') {
     ret = ['Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'];
   } else if (sort === 'Finish') {
     ret = ['Non-foil', 'Foil', 'Etched'];
@@ -430,7 +449,7 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = allDevotions(cube, 'G');
   } else if (sort === 'Unsorted') {
     ret = ['All'];
-  } else if (sort === 'Elo') {
+  } else if (sort === 'elo') {
     let elos = [];
     for (const card of cube) {
       const elo = card.details.elo ?? ELO_DEFAULT;
@@ -530,13 +549,13 @@ export function cardGetLabels(card, sort, showOther) {
       const labels = getLabelsRaw(null, sort, showOther);
       ret = types.filter((t) => labels.includes(t));
     }
-  } else if (sort === 'Tags') {
+  } else if (sort === 'tags') {
     ret = card.tags;
-  } else if (sort === 'Status') {
+  } else if (sort === 'status') {
     ret = [card.status];
   } else if (sort === 'Finish') {
     ret = [card.finish];
-  } else if (sort === 'Date Added') {
+  } else if (sort === 'date Added') {
     ret = [ISODateToYYYYMMDD(card.addedTmsp)];
   } else if (sort === 'Guilds') {
     if (cardColorIdentity(card).length === 2) {
@@ -679,7 +698,7 @@ export function cardGetLabels(card, sort, showOther) {
     else if (popularity < 30) ret = ['20–30%'];
     else if (popularity < 50) ret = ['30–50%'];
     else if (popularity <= 100) ret = ['50–100%'];
-  } else if (sort === 'Elo') {
+  } else if (sort === 'elo') {
     ret = [getEloBucket(card.details.elo ?? ELO_DEFAULT)];
   }
   /* End of sort options */

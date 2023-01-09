@@ -159,9 +159,9 @@ const customDraftAsfan = (cards, duplicates = false) => {
 export const getDraftFormat = (params, cube) => {
   let format;
   if (params.id >= 0) {
-    format = parseDraftFormat(cube.draft_formats[params.id].packs);
+    format = parseDraftFormat(cube.formats[params.id].packs);
     format.custom = true;
-    format.multiples = cube.draft_formats[params.id].multiples;
+    format.multiples = cube.formats[params.id].multiples;
   } else {
     // default format
     format = [];
@@ -272,7 +272,7 @@ export const createDraft = (format, cubeCards, seats, user, botsOnly = false, se
   draft.seats = draft.initial_state.map((_, seatIndex) => ({
     bot: seatIndex !== 0 || botsOnly,
     name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
-    userid: seatIndex === 0 ? user._id : null,
+    userid: seatIndex === 0 ? user.id : null,
     drafted: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
     sideboard: [new Array(8).fill([]), new Array(8).fill([])],
     pickorder: [],

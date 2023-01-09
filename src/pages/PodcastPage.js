@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -21,15 +21,15 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
         {user && user.id === podcast.owner && (
           <CardHeader>
             <h5>
-              {podcast.status !== 'published' && (
+              {podcast.status !== 'p' && (
                 <>
                   <em className="pe-3">*Draft*</em>
-                  <ButtonLink color="accent" outline href={`/content/podcast/edit/${podcast._id}`}>
+                  <ButtonLink color="accent" outline href={`/content/podcast/edit/${podcast.id}`}>
                     Edit
                   </ButtonLink>
                 </>
               )}
-              <ButtonLink color="primary" outline href={`/content/podcast/update/${podcast._id}`}>
+              <ButtonLink color="primary" outline href={`/content/podcast/update/${podcast.id}`}>
                 Fetch Episodes
               </ButtonLink>
             </h5>
@@ -43,7 +43,7 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
 
 PodcastPage.propTypes = {
   loginCallback: PropTypes.string,
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 

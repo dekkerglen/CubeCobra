@@ -44,13 +44,13 @@ const CommentPage = ({ comment, loginCallback }) => {
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
-          <a href={translateLink[content.parentType](content.parent)}>
-            {`Responding to this ${translateType[content.parentType]}`}
+          <a href={translateLink[content.type](content.parent)}>
+            {`Responding to this ${translateType[content.type]}`}
           </a>
         </CardHeader>
         <Comment comment={content} index={0} noReplies editComment={setContent} />
         <div className="border-top">
-          <CommentsSection parentType="comment" parent={content._id} />
+          <CommentsSection parentType="comment" parent={content.id} />
         </div>
       </Card>
     </MainLayout>

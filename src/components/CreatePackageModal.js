@@ -60,7 +60,6 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
       setCardName('');
       setPackageName('');
     } else {
-      console.log(json);
       onError(`Error creating package: ${json.message}`);
     }
     toggle();
@@ -75,7 +74,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
           packages can be quickly added to any cube.
         </p>
         <InputGroup className="mb-3">
-          <InputGroupText>Package Name</InputGroupText>
+          <InputGroupText>Package name</InputGroupText>
           <Input
             type="text"
             value={packageName}

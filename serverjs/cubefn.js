@@ -4,46 +4,13 @@ const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
 const sharp = require('sharp');
-const { winston } = require('./cloudwatch');
-const CardRating = require('../models/cardrating');
-const Cube = require('../models/cube');
-const CubeAnalytic = require('../models/cubeAnalytic');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
-const { getDrafterState } = require('../dist/drafting/draftutil');
-
-const ELO_BASE = 1200;
-const ELO_SPEED = 1 / 128;
-const CUBE_ELO_SPEED = 4;
 
 function getCubeId(cube) {
-  if (cube.shortID) return cube.shortID;
-  return cube._id;
-}
-
-function buildIdQuery(id) {
-  if (!id || id.match(/^[0-9a-fA-F]{24}$/)) {
-    return { _id: id };
-  }
-  return { shortID: id.toLowerCase() };
-}
-
-async function generateShortId() {
-  const numCubes = await Cube.estimatedDocumentCount();
-  const space = numCubes * 100;
-
-  let newId = '';
-  let isGoodId = false;
-  while (!isGoodId) {
-    const rand = Math.floor(Math.random() * space);
-    newId = util.toBase36(rand);
-    // eslint-disable-next-line no-await-in-loop
-    const taken = await Cube.exists({ shortID: newId });
-    isGoodId = !util.hasProfanity(newId) && !taken;
-  }
-
-  return newId;
+  if (cube.shortId) return cube.shortId;
+  return cube.id;
 }
 
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
@@ -91,11 +58,11 @@ function cardIsLegal(card, legality) {
   return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
 }
 
-function setCubeType(cube, carddb) {
+function getCubeTypes(cards, carddb) {
   let pauper = true;
   let peasant = false;
   let type = FORMATS.length - 1;
-  for (const card of cube.cards) {
+  for (const card of cards) {
     if (pauper && !cardIsLegal(carddb.cardFromId(card.cardID), 'Pauper')) {
       pauper = false;
       peasant = true;
@@ -111,6 +78,12 @@ function setCubeType(cube, carddb) {
       type -= 1;
     }
   }
+
+  return { pauper, peasant, type };
+}
+
+function setCubeType(cube, carddb) {
+  const { pauper, peasant, type } = getCubeTypes(cube.cards, carddb);
 
   cube.type = intToLegality(type);
   if (pauper) {
@@ -174,16 +147,16 @@ function abbreviate(name) {
   return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
-function buildTagColors(cube) {
-  let { tag_colors: tagColor } = cube;
-  const tags = tagColor.map((item) => item.tag);
-  const notFound = tagColor.map((item) => item.tag);
+function buildTagColors(cube, cards) {
+  const { tagColors } = cube;
+  const tags = tagColors.map((item) => item.tag);
+  const notFound = tagColors.map((item) => item.tag);
 
-  for (const card of cube.cards) {
+  for (const card of cards) {
     for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
-        tagColor.push({
+        tagColors.push({
           tag,
           color: null,
         });
@@ -194,17 +167,16 @@ function buildTagColors(cube) {
   }
 
   const tmp = [];
-  for (const color of tagColor) {
+  for (const color of tagColors) {
     if (!notFound.includes(color.tag)) tmp.push(color);
   }
-  tagColor = tmp;
 
-  return tagColor;
+  return tmp;
 }
 
-function cubeCardTags(cube) {
+function cubeCardTags(cubeCards) {
   const tags = [];
-  for (const card of cube.cards) {
+  for (const card of cubeCards) {
     for (let tag of card.tags) {
       tag = tag.trim();
       if (!tags.includes(tag)) {
@@ -218,16 +190,6 @@ function cubeCardTags(cube) {
 function maybeCards(cube, carddb) {
   const maybe = (cube.maybe || []).filter((card) => card.cardID);
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
-}
-
-async function getCardElo(cardname, round) {
-  const rating = await CardRating.findOne({ name: { $regex: new RegExp(cardname, 'i') } }).lean();
-
-  if (!rating || Number.isNaN(rating.elo)) {
-    return 1200;
-  }
-
-  return round ? Math.round(rating.elo) : rating.elo;
 }
 
 function CSVtoCards(csvString, carddb) {
@@ -300,19 +262,19 @@ function CSVtoCards(csvString, carddb) {
 
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];
-  const onlyA = cardsA.slice(0);
-  const onlyB = cardsB.slice(0);
-  const aNames = onlyA.map((card) => card.details.name);
-  const bNames = onlyB.map((card) => card.details.name);
-  for (const card of cardsA) {
-    if (bNames.includes(card.details.name)) {
+  const onlyA = cardsA.Mainboard.slice(0);
+  const onlyB = cardsB.Mainboard.slice(0);
+  const aOracles = onlyA.map((card) => card.details.oracle_id);
+  const bOracles = onlyB.map((card) => card.details.oracle_id);
+  for (const card of cardsA.Mainboard) {
+    if (bOracles.includes(card.details.oracle_id)) {
       inBoth.push(card);
 
-      onlyA.splice(aNames.indexOf(card.details.name), 1);
-      onlyB.splice(bNames.indexOf(card.details.name), 1);
+      onlyA.splice(aOracles.indexOf(card.details.oracle_id), 1);
+      onlyB.splice(bOracles.indexOf(card.details.oracle_id), 1);
 
-      aNames.splice(aNames.indexOf(card.details.name), 1);
-      bNames.splice(bNames.indexOf(card.details.name), 1);
+      aOracles.splice(aOracles.indexOf(card.details.oracle_id), 1);
+      bOracles.splice(bOracles.indexOf(card.details.oracle_id), 1);
     }
   }
 
@@ -321,240 +283,11 @@ async function compareCubes(cardsA, cardsB) {
     inBoth,
     onlyA,
     onlyB,
-    aNames,
-    bNames,
+    aOracles,
+    bOracles,
     allCards,
   };
 }
-
-const getEloAdjustment = (winner, loser, speed) => {
-  const diff = loser - winner;
-  // Expected performance for pick.
-  const expectedA = 1 / (1 + 10 ** (diff / 400));
-  const expectedB = 1 - expectedA;
-  const adjustmentA = (1 - expectedA) * speed;
-  const adjustmentB = (0 - expectedB) * speed;
-  return [adjustmentA, adjustmentB];
-};
-
-const newCardAnalytics = (cardName, elo) => {
-  return {
-    cardName,
-    picks: 0,
-    passes: 0,
-    elo,
-    mainboards: 0,
-    sideboards: 0,
-  };
-};
-
-const removeDeckCardAnalytics = async (cube, deck, carddb) => {
-  // we don't want to save deck analytics for decks have not been built
-  if (deck.seats[0].sideboard.flat().length > 0) {
-    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
-
-    if (!analytic) {
-      analytic = new CubeAnalytic();
-      analytic.cube = cube._id;
-    }
-
-    for (const row of deck.seats[0].deck) {
-      for (const col of row) {
-        for (const ci of col) {
-          let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
-          );
-          if (pickIndex === -1) {
-            pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
-              1;
-          }
-          analytic.cards[pickIndex].mainboards = Math.max(0, analytic.cards[pickIndex].mainboards - 1);
-        }
-      }
-    }
-    for (const row of deck.seats[0].sideboard) {
-      for (const col of row) {
-        for (const ci of col) {
-          let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
-          );
-          if (pickIndex === -1) {
-            pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
-              1;
-          }
-          analytic.cards[pickIndex].sideboards = Math.max(0, analytic.cards[pickIndex].sideboards - 1);
-        }
-      }
-    }
-
-    await analytic.save();
-  }
-};
-
-const addDeckCardAnalytics = async (cube, deck, carddb) => {
-  // we don't want to save deck analytics for decks have not been built
-  if (deck.seats[0].sideboard.flat().length > 0) {
-    let analytic = await CubeAnalytic.findOne({ cube: cube._id });
-
-    if (!analytic) {
-      analytic = new CubeAnalytic();
-      analytic.cube = cube._id;
-    }
-
-    for (const row of deck.seats[0].deck) {
-      for (const col of row) {
-        for (const ci of col) {
-          let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
-          );
-          if (pickIndex === -1) {
-            pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
-              1;
-          }
-          analytic.cards[pickIndex].mainboards += 1;
-        }
-      }
-    }
-    for (const row of deck.seats[0].sideboard) {
-      for (const col of row) {
-        for (const ci of col) {
-          let pickIndex = analytic.cards.findIndex(
-            (card) => card.cardName === carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(),
-          );
-          if (pickIndex === -1) {
-            pickIndex =
-              analytic.cards.push(newCardAnalytics(carddb.cardFromId(deck.cards[ci].cardID).name.toLowerCase(), 1200)) -
-              1;
-          }
-          analytic.cards[pickIndex].sideboards += 1;
-        }
-      }
-    }
-    await analytic.save();
-  }
-};
-
-const saveDraftAnalytics = async (draft, seatNumber, carddb) => {
-  try {
-    // first get all the card rating objects we need
-    const cards = await CardRating.find(
-      {
-        name: {
-          $in: draft.cards.map(({ cardID }) => carddb.cardFromId(cardID).name),
-        },
-      },
-      'elo picks name',
-    );
-
-    const nameToCardAnalytic = {};
-    for (const analytic of cards) {
-      nameToCardAnalytic[analytic.name] = analytic;
-    }
-
-    // fetch the cube analytic
-    let analytic = await CubeAnalytic.findOne({ cube: draft.cube });
-
-    if (!analytic) {
-      analytic = new CubeAnalytic();
-      analytic.cube = draft.cube;
-    }
-
-    const { pickorder, trashorder } = draft.seats[seatNumber];
-    const numToTake = pickorder.length + trashorder.length;
-    let prevPickedNum = 0;
-    for (let pickNumber = 0; pickNumber <= numToTake; pickNumber++) {
-      const { cardsInPack, pickedNum } = getDrafterState({ draft, seatNumber, pickNumber }, true);
-      let pickedIndex = -1;
-
-      if (pickedNum > prevPickedNum) {
-        pickedIndex = pickorder[prevPickedNum];
-      }
-      prevPickedNum = pickedNum;
-
-      if (pickedIndex !== -1) {
-        const pickedCard = carddb.cardFromId(draft.cards[pickedIndex].cardID);
-        const packCards = cardsInPack.map((index) => carddb.cardFromId(draft.cards[index].cardID));
-
-        // update the local values of the cubeAnalytic
-        let pickIndex = analytic.cards.findIndex((card) => card.cardName === pickedCard.name_lower);
-        if (pickIndex === -1) {
-          pickIndex = analytic.cards.push(newCardAnalytics(pickedCard.name_lower, ELO_BASE)) - 1;
-        }
-
-        analytic.cards[pickIndex].picks += 1;
-
-        for (const packCard of packCards) {
-          let index = analytic.cards.findIndex((card) => card.cardName === packCard.name_lower);
-          if (index === -1) {
-            index = analytic.cards.push(newCardAnalytics(packCard.name_lower, ELO_BASE)) - 1;
-          }
-
-          const adjustments = getEloAdjustment(
-            analytic.cards[pickIndex].elo,
-            analytic.cards[index].elo,
-            CUBE_ELO_SPEED,
-          );
-          analytic.cards[pickIndex].elo += adjustments[0];
-          analytic.cards[index].elo += adjustments[1];
-
-          analytic.cards[index].passes += 1;
-        }
-
-        // update the local values of the cardAnalytics.
-
-        // ensure we have valid analytics for all these cards
-        if (!nameToCardAnalytic[pickedCard.name]) {
-          nameToCardAnalytic[pickedCard.name] = new CardRating();
-        }
-        if (!nameToCardAnalytic[pickedCard.name].elo) {
-          nameToCardAnalytic[pickedCard.name].name = pickedCard.name;
-          nameToCardAnalytic[pickedCard.name].elo = ELO_BASE;
-        } else if (!Number.isFinite(nameToCardAnalytic[pickedCard.name].elo)) {
-          nameToCardAnalytic[pickedCard.name].elo = ELO_BASE;
-        }
-        if (!nameToCardAnalytic[pickedCard.name].picks) {
-          nameToCardAnalytic[pickedCard.name].picks = 0;
-        }
-        nameToCardAnalytic[pickedCard.name].picks += 1;
-
-        for (const packCard of packCards) {
-          if (!nameToCardAnalytic[packCard.name]) {
-            nameToCardAnalytic[packCard.name] = new CardRating();
-          }
-          if (!nameToCardAnalytic[packCard.name].elo) {
-            nameToCardAnalytic[packCard.name].name = packCard.name;
-            nameToCardAnalytic[packCard.name].elo = ELO_BASE;
-          }
-          if (!nameToCardAnalytic[packCard.name].picks) {
-            nameToCardAnalytic[packCard.name].picks = 0;
-          }
-
-          if (!Number.isFinite(nameToCardAnalytic[packCard.name].elo)) {
-            nameToCardAnalytic[packCard.name].elo = ELO_BASE;
-          }
-
-          // update the elos
-          const adjustments = getEloAdjustment(
-            nameToCardAnalytic[pickedCard.name].elo,
-            nameToCardAnalytic[packCard.name].elo,
-            ELO_SPEED,
-          );
-
-          nameToCardAnalytic[pickedCard.name].elo += adjustments[0];
-          nameToCardAnalytic[packCard.name].elo += adjustments[1];
-        }
-      }
-    }
-    // save our docs
-    await analytic.save();
-    await Promise.all(cards.map((card) => card.save()));
-  } catch (err) {
-    winston.error(err);
-  }
-};
 
 const generateSamplepackImage = async (sources = [], width, height) => {
   const images = await Promise.all(
@@ -602,8 +335,8 @@ function cachePromise(key, callback) {
 
 function isCubeViewable(cube, user) {
   if (!cube) return false;
-  if (!cube.isPrivate) return true;
-  return user && (user._id.equals(cube.owner) || util.isAdmin(user));
+  if (cube.visibility !== 'pu') return true;
+  return user && (cube.owner === user.id || util.isAdmin(user));
 }
 
 const methods = {
@@ -632,14 +365,16 @@ const methods = {
       selfClosing: ['br'],
     });
   },
-  generatePack: async (cube, carddb, seed) => {
+  generatePack: async (cube, cards, carddb, seed) => {
+    const main = cards.Mainboard;
+
     if (!seed) {
       seed = Date.now().toString();
     }
-    cube.cards = cube.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
-    const formatId = cube.defaultDraftFormat === undefined ? -1 : cube.defaultDraftFormat;
+    main.cards = main.cards.map((card) => ({ ...card, details: { ...carddb.getCardDetails(card) } }));
+    const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, cards: 15 }, cube);
-    const draft = createDraft(format, cube.cards, 1, { username: 'Anonymous' }, false, seed);
+    const draft = createDraft(format, main.cards, 1, { username: 'Anonymous' }, false, seed);
     return {
       seed,
       pack: draft.initial_state[0][0].cards.map((cardIndex) => ({
@@ -648,10 +383,6 @@ const methods = {
       })),
     };
   },
-  newCardAnalytics,
-  getEloAdjustment,
-  generateShortId,
-  buildIdQuery,
   getCubeId,
   intToLegality,
   legalityToInt,
@@ -662,18 +393,12 @@ const methods = {
   buildTagColors,
   cubeCardTags,
   maybeCards,
-  getCardElo,
   CSVtoCards,
   compareCubes,
   generateSamplepackImage,
-  removeDeckCardAnalytics,
-  addDeckCardAnalytics,
   cachePromise,
-  saveDraftAnalytics,
   isCubeViewable,
-  ELO_BASE,
-  ELO_SPEED,
-  CUBE_ELO_SPEED,
+  getCubeTypes,
 };
 
 module.exports = methods;

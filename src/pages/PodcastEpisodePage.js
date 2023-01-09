@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card, Row, Col, CardBody } from 'reactstrap';
 
@@ -18,9 +18,9 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
       <DynamicFlash />
       <Card className="mb-3">
         <CardHeader>
-          <h1>{episode.title}</h1>
+          <h1>{episode.Ttitle}</h1>
           <h6>
-            From <a href={`/content/podcast/${episode.podcast}`}>{episode.podcastname}</a>
+            from <a href={`/content/podcast/${episode.Podcast}`}>{episode.podcastName}</a>
             {' - '}
             <TimeAgo date={episode.date} />
           </h6>
@@ -33,13 +33,13 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
           </Col>
           <Col xs="12" sm="8" className="border-start ps-0">
             <CardBody>
-              <ReactAudioPlayer src={episode.source} controls />
+              <ReactAudioPlayer src={episode.url} controls />
             </CardBody>
-            <CardBody className="border-top" dangerouslySetInnerHTML={{ __html: episode.description }} />
+            <CardBody className="border-top" dangerouslySetInnerHTML={{ __html: episode.body }} />
           </Col>
         </Row>
         <div className="border-top">
-          <CommentsSection parentType="episode" parent={episode._id} collapse={false} />
+          <CommentsSection parentType="episode" parent={episode.id} collapse={false} />
         </div>
       </Card>
     </MainLayout>
@@ -48,7 +48,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
 
 PodcastEpisodePage.propTypes = {
   loginCallback: PropTypes.string,
-  episode: PodcastPropType.isRequired,
+  episode: ContentPropType.isRequired,
 };
 
 PodcastEpisodePage.defaultProps = {

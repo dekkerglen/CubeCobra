@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -22,7 +22,7 @@ const VideoPage = ({ loginCallback, video }) => {
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="accent" outline href={`/content/video/edit/${video._id}`}>
+              <ButtonLink color="accent" outline href={`/content/video/edit/${video.id}`}>
                 Edit
               </ButtonLink>
             </h5>
@@ -36,7 +36,7 @@ const VideoPage = ({ loginCallback, video }) => {
 
 VideoPage.propTypes = {
   loginCallback: PropTypes.string,
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 VideoPage.defaultProps = {

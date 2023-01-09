@@ -1,5 +1,5 @@
 import React from 'react';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -29,13 +29,13 @@ const Video = ({ video }) => {
         <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="video" parent={video._id} collapse={false} />
+        <CommentsSection parentType="video" parent={video.id} collapse={false} />
       </div>
     </>
   );
 };
 Video.propTypes = {
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 export default Video;

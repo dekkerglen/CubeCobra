@@ -1,16 +1,21 @@
 import PropTypes from 'prop-types';
 
 const CommentPropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
-  timePosted: PropTypes.string.isRequired,
-  ownerName: PropTypes.string.isRequired,
-  owner: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   parent: PropTypes.string.isRequired,
-  parentType: PropTypes.string.isRequired,
-  artist: PropTypes.string.isRequired,
-  image: PropTypes.string.isRequired,
-  content: PropTypes.string.isRequired,
-  updated: PropTypes.bool.isRequired,
+  type: PropTypes.string.isRequired,
+  owner: PropTypes.string,
+  body: PropTypes.string.isRequired,
+  date: PropTypes.number.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+  }),
+  ImageData: PropTypes.shape({
+    uri: PropTypes.string.isRequired,
+    artist: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+  }),
 });
 
 export default CommentPropType;

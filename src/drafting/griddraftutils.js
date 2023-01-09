@@ -52,7 +52,6 @@ export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
       break;
     }
   }
-  console.log(cardsInPack);
 
   return {
     // Note this currently includes all cards. Having this just include cards from open

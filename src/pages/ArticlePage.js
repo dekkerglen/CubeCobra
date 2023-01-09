@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { CardHeader, Card } from 'reactstrap';
 
@@ -20,11 +20,11 @@ const ArticlePage = ({ loginCallback, article }) => {
       <Banner />
       <DynamicFlash />
       <Card className="mb-3">
-        {user && user.id === article.owner && article.status !== 'published' && (
+        {user && user.id === article.owner && article.status !== 'p' && (
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="accent" outline href={`/content/article/edit/${article._id}`}>
+              <ButtonLink color="accent" outline href={`/content/article/edit/${article.id}`}>
                 Edit
               </ButtonLink>
             </h5>
@@ -38,7 +38,7 @@ const ArticlePage = ({ loginCallback, article }) => {
 
 ArticlePage.propTypes = {
   loginCallback: PropTypes.string,
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 
 ArticlePage.defaultProps = {

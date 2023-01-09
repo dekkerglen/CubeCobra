@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPricePropType from 'proptypes/CardPricePropType';
-import CardHistoryPropType, { HistoryPropType } from 'proptypes/CardHistoryPropType';
+import CardPropType from 'proptypes/CardPropType';
+import HistoryPropType from 'proptypes/HistoryPropType';
 
 import {
   Card,
@@ -20,8 +21,6 @@ import {
   Input,
 } from 'reactstrap';
 
-import ChartComponent from 'react-chartjs-2';
-
 import CardImage from 'components/CardImage';
 import CardGrid from 'components/CardGrid';
 import ImageFallback from 'components/ImageFallback';
@@ -39,7 +38,9 @@ import DynamicFlash from 'components/DynamicFlash';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
+import PlayRateGraph from 'components/PlayRateGraph';
 import Tab from 'components/Tab';
+import EloGraph from 'components/EloGraph';
 
 import {
   cardFoilPrice,
@@ -62,112 +63,6 @@ import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);
-
-const formatDate = (date) => `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
-
-const distinct = (list) => {
-  const res = [];
-  const dates = new Set();
-  for (const item of list) {
-    const date = formatDate(item.x);
-    if (!dates.has(date)) {
-      res.push(item);
-      dates.add(date);
-    }
-  }
-  if (res.length > 0 && !dates.has(formatDate(new Date()))) {
-    res.push({
-      x: new Date(),
-      y: res[res.length - 1].y,
-    });
-  }
-  return res;
-};
-
-const Graph = ({ data, yFunc, unit, yRange }) => {
-  const plot = {
-    labels: [unit],
-    datasets: [
-      {
-        lineTension: 0,
-        pointRadius: 0,
-        fill: false,
-        borderColor: '#28A745',
-        backgroundColor: '#28A745',
-        data: distinct(
-          data
-            .map((point) => {
-              try {
-                return { x: new Date(point.date), y: yFunc(point.data) };
-              } catch (exc) {
-                return {}; // if the yFunc fails this will get filtered out
-              }
-            })
-            .filter((point) => point.y),
-        ),
-      },
-    ],
-  };
-
-  let options = {};
-
-  if (plot.datasets[0].data.length > 0) {
-    options = {
-      legend: {
-        display: false,
-      },
-      responsive: true,
-      tooltips: {
-        mode: 'index',
-        intersect: false,
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: true,
-      },
-      scales: {
-        xAxes: [
-          {
-            type: 'time',
-            distribution: 'linear',
-            time: {
-              unit: 'day',
-            },
-            ticks: {
-              min: plot.datasets[0].data[0].x,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            display: true,
-            scaleLabel: {
-              display: true,
-              labelString: unit,
-            },
-            ticks: yRange ? { min: yRange[0], max: yRange[1] } : {},
-          },
-        ],
-      },
-    };
-  }
-
-  if (plot.datasets[0].data.length > 0) {
-    return <ChartComponent options={options} data={plot} type="line" />;
-  }
-  return <p>No data to show.</p>;
-};
-
-Graph.propTypes = {
-  data: HistoryPropType.isRequired,
-  yFunc: PropTypes.func.isRequired,
-  unit: PropTypes.string.isRequired,
-  yRange: PropTypes.arrayOf(PropTypes.number),
-};
-
-Graph.defaultProps = {
-  yRange: null,
-};
 
 const convertLegality = {
   legal: ['success', 'Legal'],
@@ -215,18 +110,9 @@ CardIdBadge.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-const getPriceTypeUnit = {
-  price: 'USD',
-  price_foil: 'USD',
-  price_etched: 'USD',
-  eur: 'EUR',
-  tix: 'TIX',
-};
-
-const CardPage = ({ card, data, versions, related, loginCallback }) => {
+const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
-  const [priceType, setPriceType] = useQueryParam('priceType', 'price');
-  const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
+  const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
   const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   const sortedVersions = versions.sort((a, b) => {
@@ -277,7 +163,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
             <CardBody className="breakdown p-1">
               <p>
                 Played in {cardPopularity({ details: card })}%
-                <span className="percent">{cardCubeCount({ details: card })}</span> Cubes total.
+                <span className="percent">{cardCubeCount({ details: card })}</span> cubes total.
               </p>
               <AddModal color="accent" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
@@ -322,9 +208,6 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="1">
                 Elo
-              </Tab>
-              <Tab tab={selectedTab} setTab={setSelectedTab} index="2">
-                Price
               </Tab>
               <Tab tab={selectedTab} setTab={setSelectedTab} index="3">
                 Play Rate
@@ -402,74 +285,22 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
               </TabPane>
               <TabPane tabId="1">
                 <CardBody>
-                  <Graph unit="Elo" data={data.history} yFunc={(point) => point.elo} />
-                </CardBody>
-              </TabPane>
-              <TabPane tabId="2">
-                <CardBody>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Price Type: </InputGroupText>
-                    <Input
-                      id="priceType"
-                      type="select"
-                      value={priceType}
-                      onChange={(event) => setPriceType(event.target.value)}
-                    >
-                      <option value="price">USD</option>
-                      <option value="price_foil">USD Foil</option>
-                      <option value="price_etched">USD Etched</option>
-                      <option value="eur">EUR</option>
-                      <option value="tix">TIX</option>
-                    </Input>
-                  </InputGroup>
-                  <Graph
-                    unit={getPriceTypeUnit[priceType]}
-                    data={data.history}
-                    yFunc={(point) => point.prices.filter((item) => item.version === card._id)[0][priceType]}
-                  />
+                  <EloGraph defaultHistories={history} cardId={card.oracle_id} />
                 </CardBody>
               </TabPane>
               <TabPane tabId="3">
                 <CardBody>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Cube Type: </InputGroupText>
-                    <Input
-                      id="cubeType"
-                      type="select"
-                      value={cubeType}
-                      onChange={(event) => setCubeType(event.target.value)}
-                    >
-                      <option value="total">All</option>
-                      <option value="vintage">Vintage</option>
-                      <option value="legacy">Legacy</option>
-                      <option value="modern">Modern</option>
-                      <option value="standard">Standard</option>
-                      <option value="peasant">Peasant</option>
-                      <option value="pauper">Pauper</option>
-                      <option value="size180">1-180 Cards</option>
-                      <option value="size360">181-360 Cards</option>
-                      <option value="size450">361-450 Cards</option>
-                      <option value="size540">451-540 Cards</option>
-                      <option value="size720">541+ Cards</option>
-                    </Input>
-                  </InputGroup>
-                  <Graph
-                    unit="Percent of Cubes"
-                    data={data.history}
-                    yFunc={(point) => 100 * (point[cubeType] || [0, 0])[1]}
-                    yRange={[0, 100]}
-                  />
+                  <PlayRateGraph defaultHistories={history} cardId={card.oracle_id} />
                   <Row className="pt-2">
                     <Col xs="12" sm="6" md="6" lg="6">
                       <h5>By Legality:</h5>
                       <Table bordered>
                         <tbody>
-                          <CountTableRow label="Vintage" value={data.current.vintage || [0, 0]} />
-                          <CountTableRow label="Legacy" value={data.current.legacy || [0, 0]} />
-                          <CountTableRow label="Modern" value={data.current.modern || [0, 0]} />
-                          <CountTableRow label="Standard" value={data.current.standard || [0, 0]} />
-                          <CountTableRow label="Peasant" value={data.current.peasant || [0, 0]} />
-                          <CountTableRow label="Pauper" value={data.current.pauper || [0, 0]} />
+                          <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
+                          <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
+                          <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
+                          <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
+                          <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
                         </tbody>
                       </Table>
                     </Col>
@@ -477,11 +308,11 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                       <h5>By Size:</h5>
                       <Table bordered>
                         <tbody>
-                          <CountTableRow label="1-180" value={data.current.size180 || [0, 0]} />
-                          <CountTableRow label="181-360" value={data.current.size360 || [0, 0]} />
-                          <CountTableRow label="361-450" value={data.current.size450 || [0, 0]} />
-                          <CountTableRow label="451-540" value={data.current.size540 || [0, 0]} />
-                          <CountTableRow label="541+" value={data.current.size720 || [0, 0]} />
+                          <CountTableRow label="1-180" value={history[0].size180 || [0, 0]} />
+                          <CountTableRow label="181-360" value={history[0].size360 || [0, 0]} />
+                          <CountTableRow label="361-450" value={history[0].size450 || [0, 0]} />
+                          <CountTableRow label="451-540" value={history[0].size540 || [0, 0]} />
+                          <CountTableRow label="541+" value={history[0].size720 || [0, 0]} />
                         </tbody>
                       </Table>
                     </Col>
@@ -492,7 +323,7 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
                 <CardBody>
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="accent" block href={`/search/card:"${card.name}"/0`} target="_blank">
+                      <ButtonLink outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
                         {`Cubes with ${card.name}`}
                       </ButtonLink>
                     </Col>
@@ -678,85 +509,135 @@ const CardPage = ({ card, data, versions, related, loginCallback }) => {
         </Col>
       </Row>
       <Card className="my-3">
-        <CardHeader>
-          <h4>Often Drafted With</h4>
+        <CardHeader className="m-0 p-0 pt-2">
+          <Nav tabs>
+            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="0">
+              <h5>Often Drafted With</h5>
+            </Tab>
+            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="1">
+              <h5>Often Cubed With</h5>
+            </Tab>
+          </Nav>
         </CardHeader>
-        <CardBody>
-          <h4>Most Synergistic Cards</h4>
-          <CardGrid
-            cardList={related.synergistic.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Top Cards</h4>
-          <CardGrid
-            cardList={related.top.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Creatures</h4>
-          <CardGrid
-            cardList={related.creatures.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Spells</h4>
-          <CardGrid
-            cardList={related.spells.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-          <hr />
-          <h4>Other</h4>
-          <CardGrid
-            cardList={related.other.map((item) => ({ details: item }))}
-            Tag={CardImage}
-            colProps={{ xs: 4, sm: 3, md: 2 }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
-        </CardBody>
+        {correlatedTab === '0' && (
+          <CardBody>
+            <h4>Top cards</h4>
+            <CardGrid
+              cardList={draftedWith.top.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Creatures</h4>
+            <CardGrid
+              cardList={draftedWith.creatures.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Spells</h4>
+            <CardGrid
+              cardList={draftedWith.spells.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Other</h4>
+            <CardGrid
+              cardList={draftedWith.other.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+          </CardBody>
+        )}
+        {correlatedTab === '1' && (
+          <CardBody>
+            <h4>Top cards</h4>
+            <CardGrid
+              cardList={cubedWith.top.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Creatures</h4>
+            <CardGrid
+              cardList={cubedWith.creatures.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Spells</h4>
+            <CardGrid
+              cardList={cubedWith.spells.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+            <hr />
+            <h4>Other</h4>
+            <CardGrid
+              cardList={cubedWith.other.map((item) => ({ details: item }))}
+              Tag={CardImage}
+              colProps={{ xs: 4, sm: 3, md: 2 }}
+              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              linkDetails
+            />
+          </CardBody>
+        )}
       </Card>
     </MainLayout>
   );
 };
 
 CardPage.propTypes = {
-  card: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    elo: PropTypes.number.isRequired,
-    image_normal: PropTypes.string.isRequired,
-    image_flip: PropTypes.string,
-    scryfall_uri: PropTypes.string.isRequired,
-    tcgplayer_id: PropTypes.number.isRequired,
-    _id: PropTypes.string.isRequired,
-    set: PropTypes.string.isRequired,
-    set_name: PropTypes.string.isRequired,
-    collector_number: PropTypes.string.isRequired,
-    legalities: PropTypes.shape({}).isRequired,
-    parsed_cost: PropTypes.arrayOf(PropTypes.string).isRequired,
-    oracle_text: PropTypes.string.isRequired,
-    oracle_id: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    loyalty: PropTypes.string,
-    power: PropTypes.string,
-    toughness: PropTypes.string,
-    prices: CardPricePropType.isRequired,
+  card: CardPropType.isRequired,
+  history: PropTypes.arrayOf(HistoryPropType).isRequired,
+  draftedWith: PropTypes.shape({
+    top: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    synergistic: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    creatures: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    spells: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    other: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
   }).isRequired,
-  data: CardHistoryPropType.isRequired,
-  related: PropTypes.shape({
+  cubedWith: PropTypes.shape({
     top: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,

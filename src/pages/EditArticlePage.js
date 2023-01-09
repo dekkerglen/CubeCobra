@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import {
   Spinner,
@@ -28,6 +28,12 @@ import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import useQueryParam from 'hooks/useQueryParam';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
+
 const EditArticlePage = ({ loginCallback, article }) => {
   const user = useContext(UserContext);
 
@@ -35,8 +41,8 @@ const EditArticlePage = ({ loginCallback, article }) => {
   const [body, setBody] = useState(article.body);
   const [title, setTitle] = useState(article.title);
   const [short, setShort] = useState(article.short || '');
-  const [imageName, setImageName] = useState(article.imagename);
-  const [imageArtist, setImageArtist] = useState(article.artist);
+  const [imageName, setImageName] = useState(article.imageName);
+  const [imageArtist, setImageArtist] = useState(article.Artist);
   const [imageUri, setImageUri] = useState(article.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);
@@ -61,7 +67,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
   }, [imageName, imageDict]);
 
   const hasChanges =
-    article.body !== body || article.title !== title || article.imagename !== imageName || article.short !== short;
+    article.body !== body || article.title !== title || article.imageName !== imageName || article.short !== short;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -80,12 +86,10 @@ const EditArticlePage = ({ loginCallback, article }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editarticle" autoComplete="off">
-                <Input type="hidden" name="articleid" value={article._id} />
+                <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Save
@@ -94,12 +98,10 @@ const EditArticlePage = ({ loginCallback, article }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitarticle" autoComplete="off">
-                <Input type="hidden" name="articleid" value={article._id} />
+                <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Button type="submit" outline color="accent" block>
                   Submit for Review
@@ -123,17 +125,17 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={article.status} />
+                    <Input disabled value={CONVERT_STATUS[article.status]} />
                   </Col>
                 </Row>
               </FormGroup>
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Title:</Label>
+                    <Label>title:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -143,7 +145,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Short Description:</Label>
+                    <Label>short description:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
@@ -166,7 +168,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
                       onSubmit={(event) => event.preventDefault()}
-                      placeholder="Cardname for Image"
+                      placeholder="Cardname for image"
                       autoComplete="off"
                       data-lpignore
                     />
@@ -214,8 +216,8 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       title,
                       body,
                       short,
-                      artist: imageArtist,
-                      imagename: imageName,
+                      Artist: imageArtist,
+                      imageName,
                       image: imageUri,
                       date: article.date,
                     }}
@@ -228,8 +230,8 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       title,
                       body,
                       short,
-                      artist: imageArtist,
-                      imagename: imageName,
+                      Artist: imageArtist,
+                      imageName,
                       image: imageUri,
                       date: article.date,
                     }}
@@ -242,8 +244,9 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 username: user.username,
                 title,
                 body,
-                artist: imageArtist,
-                imagename: imageName,
+                short,
+                Artist: imageArtist,
+                imageName,
                 image: imageUri,
                 date: article.date,
               }}
@@ -257,7 +260,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
 
 EditArticlePage.propTypes = {
   loginCallback: PropTypes.string,
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 
 EditArticlePage.defaultProps = {

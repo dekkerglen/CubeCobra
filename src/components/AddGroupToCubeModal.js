@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import { csrfFetch } from 'utils/CSRF';
 import withAutocard from 'components/WithAutocard';
-import { getCardColorClass } from 'contexts/TagContext';
 import {
   Modal,
   ModalHeader,
@@ -18,11 +17,12 @@ import {
   ListGroupItem,
   Input,
 } from 'reactstrap';
+import { getCardColorClass } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
 const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
-  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0]._id : null);
+  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState([]);

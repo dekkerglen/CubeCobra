@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { Spinner, Table } from 'reactstrap';
 
@@ -7,22 +6,27 @@ import Query from 'utils/Query';
 import withAutocard from 'components/WithAutocard';
 import Paginate from 'components/Paginate';
 import HeaderCell from 'components/HeaderCell';
+import CubeContext from 'contexts/CubeContext';
 
 const AutocardA = withAutocard('a');
 
-const TopCardsTable = ({ filter, setCount, count, cards }) => {
+const TopCardsTable = () => {
+  const { filterInput } = useContext(CubeContext);
+
   const [page, setPage] = useState(parseInt(Query.get('p'), 10) || 0);
-  const [data, setData] = useState(cards);
+  const [data, setData] = useState([]);
+  const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: Query.get('s') || 'Elo',
+    key: Query.get('s') || 'elo',
     direction: Query.get('d') || 'descending',
   });
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('fetching data');
       const params = new URLSearchParams([
-        ['f', filter],
+        ['f', filterInput],
         ['s', sortConfig.key],
         ['p', page],
         ['d', sortConfig.direction],
@@ -32,18 +36,18 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
         console.error(response);
       }
 
-      Query.set('f', filter);
       Query.set('p', page);
       Query.set('s', sortConfig.key);
 
       const json = await response.json();
+      console.log(json);
 
       setData(json.data);
       setCount(json.numResults);
       setLoading(false);
     };
     fetchData();
-  }, [page, filter, setCount, sortConfig]);
+  }, [filterInput, page, sortConfig]);
 
   const updatePage = (index) => {
     setLoading(true);
@@ -70,16 +74,15 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
     );
   }
 
-  console.log(data);
   return (
     <>
       <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />
       <Table responsive className="mt-lg-3">
         <thead>
           <tr>
-            <th scope="col">Name</th>
+            <th scope="col" label="Name" />
             <HeaderCell label="Elo" fieldName="Elo" sortConfig={sortConfig} requestSort={updateSort} />
-            <HeaderCell label="Total Picks" fieldName="Pick Count" sortConfig={sortConfig} requestSort={updateSort} />
+            <HeaderCell label="Total picks" fieldName="Pick Count" sortConfig={sortConfig} requestSort={updateSort} />
             <HeaderCell label="Cubes" fieldName="Cube Count" sortConfig={sortConfig} requestSort={updateSort} />
           </tr>
         </thead>
@@ -106,26 +109,6 @@ const TopCardsTable = ({ filter, setCount, count, cards }) => {
       <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />
     </>
   );
-};
-
-/*
-
-<tbody className="breakdown">
-  {secondaryLabels.map((label) => (
-  ))}
-</tbody>
-
-*/
-
-TopCardsTable.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.any)).isRequired,
-  filter: PropTypes.string,
-  setCount: PropTypes.func.isRequired,
-  count: PropTypes.number.isRequired,
-};
-
-TopCardsTable.defaultProps = {
-  filter: '',
 };
 
 export default TopCardsTable;

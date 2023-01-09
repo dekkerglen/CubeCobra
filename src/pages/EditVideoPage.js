@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import VideoPropType from 'proptypes/VideoPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import {
   Spinner,
@@ -28,6 +28,12 @@ import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import useQueryParam from 'hooks/useQueryParam';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
+
 const EditVideoPage = ({ loginCallback, video }) => {
   const user = useContext(UserContext);
 
@@ -36,8 +42,8 @@ const EditVideoPage = ({ loginCallback, video }) => {
   const [short, setShort] = useState(video.short);
   const [url, setUrl] = useState(video.url);
   const [title, setTitle] = useState(video.title);
-  const [imageName, setImageName] = useState(video.imagename);
-  const [imageArtist, setImageArtist] = useState(video.artist);
+  const [imageName, setImageName] = useState(video.imageName);
+  const [imageArtist, setImageArtist] = useState(video.Artist);
   const [imageUri, setImageUri] = useState(video.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);
@@ -61,7 +67,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
     }
   }, [imageName, imageDict]);
 
-  const hasChanges = video.body !== body || video.url !== url || video.title !== title || video.imagename !== imageName;
+  const hasChanges = video.body !== body || video.url !== url || video.title !== title || video.imageName !== imageName;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -80,12 +86,10 @@ const EditVideoPage = ({ loginCallback, video }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editvideo" autoComplete="off">
-                <Input type="hidden" name="videoid" value={video._id} />
+                <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
@@ -95,12 +99,10 @@ const EditVideoPage = ({ loginCallback, video }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitvideo" autoComplete="off">
-                <Input type="hidden" name="videoid" value={video._id} />
+                <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />
                 <Input type="hidden" name="short" value={short} />
-                <Input type="hidden" name="image" value={imageUri} />
                 <Input type="hidden" name="imagename" value={imageName} />
-                <Input type="hidden" name="artist" value={imageArtist} />
                 <Input type="hidden" name="body" value={body} />
                 <Input type="hidden" name="url" value={url} />
                 <Button type="submit" outline color="accent" block>
@@ -125,17 +127,17 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={video.status} />
+                    <Input disabled value={CONVERT_STATUS[video.status]} />
                   </Col>
                 </Row>
               </FormGroup>
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Title:</Label>
+                    <Label>title:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -155,7 +157,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Short Description:</Label>
+                    <Label>short description:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
@@ -178,7 +180,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                       value={imageName}
                       onChange={(event) => setImageName(event.target.value)}
                       onSubmit={(event) => event.preventDefault()}
-                      placeholder="Cardname for Image"
+                      placeholder="Cardname for image"
                       autoComplete="off"
                       data-lpignore
                     />
@@ -270,7 +272,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
 
 EditVideoPage.propTypes = {
   loginCallback: PropTypes.string,
-  video: VideoPropType.isRequired,
+  video: ContentPropType.isRequired,
 };
 
 EditVideoPage.defaultProps = {

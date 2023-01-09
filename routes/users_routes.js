@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const express = require('express');
 
 const bcrypt = require('bcryptjs');
@@ -8,33 +9,31 @@ const Email = require('email-templates');
 const path = require('path');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const carddb = require('../serverjs/cards');
 const { render } = require('../serverjs/render');
-const { buildIdQuery } = require('../serverjs/cubefn');
 
 // Bring in models
-const User = require('../models/user');
-const PasswordReset = require('../models/passwordreset');
-const Cube = require('../models/cube');
-const Deck = require('../models/deck');
-const Blog = require('../models/blog');
-const Patron = require('../models/patron');
-const FeaturedCubes = require('../models/featuredCubes');
+const User = require('../dynamo/models/user');
+const PasswordReset = require('../dynamo/models/passwordReset');
+const Cube = require('../dynamo/models/cube');
+const Blog = require('../dynamo/models/blog');
+const Patron = require('../dynamo/models/patron');
+const FeaturedQueue = require('../dynamo/models/featuredQueue');
+const Notification = require('../dynamo/models/notification');
+const Draft = require('../dynamo/models/draft');
 
 const router = express.Router();
 
 const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
-const { fillBlogpostChangelog } = require('../serverjs/blogpostUtils');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
-  body('username', 'Username is required').notEmpty(),
-  body('username', 'Username must be between 5 and 24 characters.').isLength({
+  body('username', 'username is required').notEmpty(),
+  body('username', 'username must be between 5 and 24 characters.').isLength({
     min: 5,
     max: 24,
   }),
-  body('username', 'Username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
-  body('username', 'Username may not use profanity.').custom((value) => !util.hasProfanity(value)),
+  body('username', 'username must only contain alphanumeric characters.').matches(/^[0-9a-zA-Z]*$/, 'i'),
+  body('username', 'username may not use profanity.').custom((value) => !util.hasProfanity(value)),
 ];
 
 function checkPasswordsMatch(value, { req }) {
@@ -44,28 +43,20 @@ function checkPasswordsMatch(value, { req }) {
 
   return true;
 }
-
-function addMinutes(date, minutes) {
-  return new Date(new Date(date).getTime() + minutes * 60000);
-}
-
 router.use(csrfProtection);
 
-router.get('/notification/:index', ensureAuth, async (req, res) => {
+router.get('/notification/:id', ensureAuth, async (req, res) => {
   try {
-    const { user } = req;
-
-    if (req.params.index > user.notifications.length) {
-      req.flash('danger', 'Not Found');
-      return res.redirect('/404');
-    }
-
-    const notification = user.notifications.splice(req.params.index, 1)[0];
-    await user.save();
+    const notification = await Notification.getById(req.params.id);
 
     if (!notification) {
       req.flash('danger', 'Not Found');
       return res.redirect('/404');
+    }
+
+    if (notification.status === Notification.STATUS.UNREAD) {
+      notification.status = Notification.STATUS.READ;
+      await notification.update(notification);
     }
 
     return res.redirect(notification.url);
@@ -80,10 +71,13 @@ router.get('/notification/:index', ensureAuth, async (req, res) => {
 
 router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
-    const { user } = req;
-
-    user.notifications = [];
-    await user.save();
+    const notifications = Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD);
+    await Notification.batchPut(
+      notifications.map((notification) => {
+        notification.STATUS = Notification.STATUS.READ;
+        return notification;
+      }),
+    );
 
     return res.status(200).send({
       success: 'true',
@@ -104,23 +98,23 @@ router.get('/lostpassword', (req, res) => {
 router.get('/follow/:id', ensureAuth, async (req, res) => {
   try {
     const { user } = req;
-    const other = await User.findById(req.params.id).exec();
+    const other = await User.getById(req.params.id);
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.redirect('/404');
     }
 
-    if (!other.users_following.some((id) => id.equals(user._id))) {
-      other.users_following.push(user._id);
+    if (!other.following.some((id) => id === user.id)) {
+      other.following.push(user.id);
     }
-    if (!user.followed_users.some((id) => id.equals(other._id))) {
-      user.followed_users.push(other._id);
+    if (!user.followedUsers.some((id) => id.equals(other.id))) {
+      user.followedUsers.push(other.id);
     }
 
     await util.addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
 
-    await Promise.all([user.save(), other.save()]);
+    await User.batchPut([other, user]);
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
@@ -134,16 +128,17 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 router.get('/unfollow/:id', ensureAuth, async (req, res) => {
   try {
     const { user } = req;
-    const other = await User.findById(req.params.id).exec();
+    const other = await User.getById(req.params.id);
 
     if (!other) {
       req.flash('danger', 'User not found');
       return res.redirect('/404');
     }
 
-    other.users_following = other.users_following.filter((id) => !req.user._id.equals(id));
-    user.followed_users = user.followed_users.filter((id) => !id.equals(req.params.id));
+    other.following = other.following.filter((id) => !req.user.id === id);
+    user.followedUsers = user.followedUsers.filter((id) => !id.equals(req.params.id));
 
+    await User.batchPut([user, other]);
     await Promise.all([user.save(), other.save()]);
 
     return res.redirect(`/user/view/${req.params.id}`);
@@ -158,7 +153,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 // Lost password submit
 router.post(
   '/lostpassword',
-  [body('email', 'Email is required').isEmail()],
+  [body('email', 'email is required').isEmail()],
   flashValidationErrors,
   async (req, res) => {
     try {
@@ -166,15 +161,15 @@ router.post(
         return render(req, res, 'LostPasswordPage');
       }
       const recoveryEmail = req.body.email.toLowerCase();
-      await PasswordReset.deleteOne({
-        email: recoveryEmail,
-      });
 
-      const passwordReset = new PasswordReset();
-      passwordReset.expires = addMinutes(Date.now(), 15);
-      passwordReset.email = recoveryEmail;
-      passwordReset.code = Math.floor(1000000000 + Math.random() * 9000000000);
-      await passwordReset.save();
+      const user = await User.getByEmail(recoveryEmail);
+
+      const passwordReset = {
+        owner: user.id,
+        date: new Date(),
+      };
+
+      await PasswordReset.put(passwordReset);
 
       const smtpTransport = mailer.createTransport({
         name: 'CubeCobra.com',
@@ -206,7 +201,7 @@ router.post(
         template: 'password_reset',
         locals: {
           id: passwordReset.id,
-          code: passwordReset.code,
+          code: passwordReset.Code,
         },
       });
 
@@ -218,15 +213,13 @@ router.post(
   },
 );
 
-router.get('/passwordreset/:id', (req, res) => {
-  // create a password reset page and return it here
-  PasswordReset.findById(req.params.id, (err, passwordreset) => {
-    if (!passwordreset || Date.now() > passwordreset.expires) {
-      req.flash('danger', 'Password recovery link expired');
-      return res.redirect('/');
-    }
-    return render(req, res, 'PasswordResetPage');
-  });
+router.get('/passwordreset/:id', async (req, res) => {
+  const document = await PasswordReset.getById();
+  if (!document || Date.now().valueOf() > document.date + 6 * 60 * 60 * 1000) {
+    req.flash('danger', 'Password recovery link expired');
+    return res.redirect('/');
+  }
+  return render(req, res, 'PasswordResetPage');
 });
 
 router.post(
@@ -251,14 +244,14 @@ router.post(
         req.flash('danger', 'Incorrect email and recovery code combination.');
         return render(req, res, 'PasswordResetPage');
       }
-      const user = await User.findOne({
-        email: recoveryEmail,
-      });
+      const query = await User.getByEmail(recoveryEmail);
 
-      if (!user) {
+      if (query.items.length !== 1) {
         req.flash('danger', 'No user with that email found! Are you sure you created an account?');
         return render(req, res, 'PasswordResetPage');
       }
+
+      const user = query.items[0];
 
       if (req.body.password2 !== req.body.password) {
         req.flash('danger', "New passwords don't match");
@@ -273,9 +266,9 @@ router.post(
           if (err5) {
             return util.handleRouteError(req, res, err5, `/`);
           }
-          user.password = hash;
+          user.Password = hash;
           try {
-            await user.save();
+            await User.update(user);
             req.flash('success', 'Password updated successfully');
             return res.redirect('/user/login');
           } catch (err6) {
@@ -298,9 +291,9 @@ router.get('/register', (req, res) => {
 router.post(
   '/register',
   [
-    body('email', 'Email is required').notEmpty(),
-    body('email', 'Email is not valid').isEmail(),
-    body('email', 'Email must be between 5 and 100 characters.').isLength({
+    body('email', 'email is required').notEmpty(),
+    body('email', 'email is not valid').isEmail(),
+    body('email', 'email must be between 5 and 100 characters.').isLength({
       min: 5,
       max: 100,
     }),
@@ -321,82 +314,73 @@ router.post(
     if (!req.validated) {
       return render(req, res, 'RegisterPage', attempt);
     }
-    const user = await User.findOne({
-      username_lower: req.body.username.toLowerCase(),
-    });
 
-    if (user) {
-      req.flash('danger', 'Username already taken.');
+    const usernameQuery = await User.getByUsername(req.body.username.toLowerCase());
+
+    if (usernameQuery.items.length > 0) {
+      req.flash('danger', 'username already taken.');
       return render(req, res, 'RegisterPage', attempt);
     }
 
     // check if user exists
-    const user2 = await User.findOne({
-      email: req.body.email.toLowerCase(),
-    });
+    const emailQuery = await User.getByEmail(req.body.email.toLowerCase());
 
-    if (user2) {
-      req.flash('danger', 'Email already associated with an existing account.');
+    if (emailQuery.items.length > 0) {
+      req.flash('danger', 'email already associated with an existing account.');
       return render(req, res, 'RegisterPage', attempt);
     }
-    const newUser = new User({
+
+    const newUser = {
       email,
       username,
-      username_lower: username.toLowerCase(),
-      password,
-      confirm: 'false',
-    });
+      confirmed: false,
+    };
 
     return bcrypt.genSalt(10, (err3, salt) => {
-      bcrypt.hash(newUser.password, salt, (err4, hash) => {
+      bcrypt.hash(password, salt, async (err4, hash) => {
         if (err4) {
           req.logger.error(err4);
         } else {
-          newUser.password = hash;
-          newUser.confirmed = 'false';
-          newUser.save((err5) => {
-            if (err5) {
-              req.logger.error(err5);
-            } else {
-              const smtpTransport = mailer.createTransport({
-                name: 'CubeCobra.com',
-                secure: true,
-                service: 'Gmail',
-                auth: {
-                  user: process.env.EMAIL_CONFIG_USERNAME,
-                  pass: process.env.EMAIL_CONFIG_PASSWORD,
-                },
-              });
-              const confirmEmail = new Email({
-                message: {
-                  from: 'Cube Cobra Team <support@cubecobra.com>',
-                  to: email,
-                  subject: 'Confirm Account',
-                },
-                send: true,
-                juiceResources: {
-                  webResources: {
-                    relativeTo: path.join(__dirname, '..', 'public'),
-                    images: true,
-                  },
-                },
-                transport: smtpTransport,
-              });
+          newUser.passwordHash = hash;
+          await User.put(newUser);
 
-              confirmEmail
-                .send({
-                  template: 'confirm_email',
-                  locals: {
-                    id: newUser._id,
-                  },
-                })
-                .then(() => {
-                  // req.flash('success','Please check your email for confirmation link. It may be filtered as spam.');
-                  req.flash('success', 'Account successfully created. You are now able to login.');
-                  res.redirect('/user/login');
-                });
-            }
+          const smtpTransport = mailer.createTransport({
+            name: 'CubeCobra.com',
+            secure: true,
+            service: 'Gmail',
+            auth: {
+              user: process.env.EMAIL_CONFIG_USERNAME,
+              pass: process.env.EMAIL_CONFIG_PASSWORD,
+            },
           });
+
+          const confirmEmail = new Email({
+            message: {
+              from: 'Cube Cobra Team <support@cubecobra.com>',
+              to: email,
+              subject: 'Confirm Account',
+            },
+            send: true,
+            juiceResources: {
+              webResources: {
+                relativeTo: path.join(__dirname, '..', 'public'),
+                images: true,
+              },
+            },
+            transport: smtpTransport,
+          });
+
+          confirmEmail
+            .send({
+              template: 'confirm_email',
+              locals: {
+                id: newUser.id,
+              },
+            })
+            .then(() => {
+              req.flash('success', 'Account successfully created. You are now able to login.');
+              res.redirect('/user/login');
+            });
         }
       });
     });
@@ -404,27 +388,18 @@ router.post(
 );
 
 // Register confirm
-router.get('/register/confirm/:id', (req, res) => {
-  User.findById(req.params.id, (err, user) => {
-    if (err) {
-      req.flash('danger', 'Invalid confirmation link.');
-      res.redirect('/');
-    } else if (user.confirmed === 'true') {
-      req.flash('success', 'User already confirmed.');
-      res.redirect('/user/login');
-    } else {
-      user.confirmed = true;
-      user.save((err2) => {
-        if (err2) {
-          req.flash('danger', 'Failed to confirm user.');
-          res.redirect('/');
-        } else {
-          req.flash('success', 'User successfully confirmed');
-          res.redirect('/user/login');
-        }
-      });
-    }
-  });
+router.get('/register/confirm/:id', async (req, res) => {
+  const user = await User.getById(req.params.id);
+
+  if (user.confirmed) {
+    req.flash('success', 'User already confirmed.');
+    return res.redirect('/user/login');
+  }
+
+  user.confirmed = true;
+  await User.update(user);
+  req.flash('success', 'User successfully confirmed');
+  return res.redirect('/user/login');
 });
 
 // Login route
@@ -433,29 +408,32 @@ router.get('/login', (req, res) => {
 });
 
 // Login post
-router.post('/login', (req, res, next) => {
-  const query = {
-    [req.body.username.includes('@') ? 'email' : 'username_lower']: req.body.username.toLowerCase(),
-  };
-  // find by email
-  User.findOne(query, (err, user) => {
-    if (!user) {
-      req.flash('danger', 'Incorrect username or email address.');
-      res.redirect('/user/login');
-    } else {
-      req.body.username = user.username;
-      // TODO: fix confirmation and check it here.
-      let redirect = '/';
-      if (req.body.loginCallback) {
-        redirect = req.body.loginCallback;
-      }
-      passport.authenticate('local', {
-        successRedirect: redirect,
-        failureRedirect: '/user/login',
-        failureFlash: { type: 'danger' },
-      })(req, res, next);
+router.post('/login', async (req, res, next) => {
+  let query;
+
+  if (req.body.username.includes('@')) {
+    query = await User.getByEmail(req.body.username.toLowerCase());
+  } else {
+    query = await User.getByUsername(req.body.username.toLowerCase());
+  }
+
+  if (query.items.length !== 1) {
+    req.flash('danger', 'Incorrect username or email address.');
+    res.redirect('/user/login');
+  } else {
+    const user = query.items[0];
+    req.body.username = user.username;
+    // TODO: fix confirmation and check it here.
+    let redirect = '/';
+    if (req.body.loginCallback) {
+      redirect = req.body.loginCallback;
     }
-  });
+    passport.authenticate('local', {
+      successRedirect: redirect,
+      failureRedirect: '/user/login',
+      failureFlash: { type: 'danger' },
+    })(req, res, next);
+  }
 });
 
 // logout
@@ -467,46 +445,38 @@ router.get('/logout', (req, res) => {
 
 router.get('/view/:id', async (req, res) => {
   try {
-    let user = null;
-    try {
-      user = await User.findById(req.params.id, '_id username about users_following image_name image artist').lean();
-      // eslint-disable-next-line no-empty
-    } catch (err) {}
+    let user = await User.getById(req.params.id);
 
+    // eslint-disable-next-line no-empty
     if (!user) {
-      user = await User.findOne(
-        {
-          username_lower: req.params.id.toLowerCase(),
-        },
-        '_id username about users_following image_name image artist',
-      ).lean();
-      if (!user) {
+      const query = await User.getByUsername(req.params.id.toLowerCase());
+
+      if (query.items.length !== 1) {
         req.flash('danger', 'User not found');
         return res.redirect('/404');
       }
+
+      [user] = query.items;
     }
 
-    const cubesQ = Cube.find({
-      owner: user._id,
-      ...(req.user && req.user._id.equals(user._id)
-        ? {}
-        : {
-            isListed: true,
-          }),
-    }).lean();
-    const followersQ = User.find(
-      { _id: { $in: user.users_following } },
-      '_id username image_name image artist users_following',
-    ).lean();
+    const cubes = await Cube.getByOwner(req.params.id);
 
-    const [cubes, followers] = await Promise.all([cubesQ, followersQ]);
+    const followers = await User.batchGet(user.following);
 
-    const following = req.user && user.users_following && user.users_following.some((id) => id.equals(req.user._id));
-    delete user.users_following;
+    for (const follower of followers) {
+      // don't leak this info
+      delete follower.passwordHash;
+      delete follower.email;
+    }
+
+    const following = req.user && user.following && user.following.some((id) => id === req.user.id);
+    user.following = []; // don't want to leak this info
+    delete user.passwordHash;
+    delete user.email;
 
     return render(req, res, 'UserCubePage', {
       owner: user,
-      cubes,
+      cubes: cubes.items,
       followers,
       following,
     });
@@ -521,94 +491,82 @@ router.get('/decks/:userid', (req, res) => {
 });
 
 router.get('/notifications', ensureAuth, async (req, res) => {
+  const notifications = await Notification.getByTo(`${req.user.id}`);
+
   return render(req, res, 'NotificationsPage', {
-    notifications: req.user.old_notifications,
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
+  });
+});
+
+router.post('/getusernotifications', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const notifications = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
+  });
+});
+
+router.post('/getmorenotifications', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const notifications = await Notification.getByTo(`${req.user.id}`, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
   });
 });
 
 router.get('/decks/:userid/:page', async (req, res) => {
   try {
     const { userid } = req.params;
-    const pagesize = 30;
 
-    const userQ = User.findById(userid, '_id username users_following').lean();
-
-    const decksQ = Deck.find(
-      {
-        owner: userid,
-      },
-      '_id seats date cube owner cubeOwner',
-    )
-      .sort({
-        date: -1,
-      })
-      .skip(pagesize * Math.max(req.params.page, 0))
-      .limit(pagesize)
-      .lean();
-    const numDecksQ = Deck.countDocuments({
-      owner: userid,
-    });
-
-    const [user, numDecks, decks] = await Promise.all([userQ, numDecksQ, decksQ]);
+    const user = await User.getById(userid);
+    const decks = await Draft.getByOwner(userid);
 
     if (!user) {
       req.flash('danger', 'User not found');
       return res.redirect('/404');
     }
 
-    const followers = await User.find(
-      { _id: { $in: user.users_following } },
-      '_id username image_name image artist users_following',
-    );
+    const followers = await User.batchGet(user.following);
 
-    delete user.users_following;
+    for (const follower of followers) {
+      // don't leak this info
+      delete follower.passwordHash;
+      delete follower.email;
+    }
+
+    delete user.passwordHash;
+    delete user.email;
 
     return render(req, res, 'UserDecksPage', {
       owner: user,
       followers,
-      following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
-      decks: decks || [],
-      pages: Math.ceil(numDecks / pagesize),
-      activePage: Math.max(req.params.page, 0),
+      following: req.user && req.user.followedUsers.some((id) => id === user.id),
+      decks: decks.items,
+      lastKey: decks.lastKey,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
 });
 
-router.get('/blog/:userid', (req, res) => {
-  res.redirect(`/user/blog/${req.params.userid}/0`);
-});
-
-router.get('/blog/:userid/:page', async (req, res) => {
+router.get('/blog/:userid', async (req, res) => {
   try {
-    const pagesize = 30;
+    const user = await User.getById(req.params.userid);
+    const posts = await Blog.getByOwner(req.params.userid, 10);
+    const followers = await User.batchGet(user.following);
 
-    const user = await User.findById(req.params.userid, '_id username users_following').lean();
-
-    const postsq = Blog.find({
-      owner: user._id,
-    })
-      .sort({
-        date: -1,
-      })
-      .skip(Math.max(req.params.page, 0) * pagesize)
-      .limit(pagesize)
-      .lean();
-
-    const numBlogsq = Blog.countDocuments({
-      owner: user._id,
-    });
-
-    const followersq = User.find(
-      { _id: { $in: user.users_following } },
-      '_id username image_name image artist users_following',
-    );
-
-    const [posts, numBlogs, followers] = await Promise.all([postsq, numBlogsq, followersq]);
-    posts.forEach(fillBlogpostChangelog);
-
-    delete user.users_following;
+    for (const follower of [user, ...followers]) {
+      // don't leak this info
+      delete follower.passwordHash;
+      delete follower.email;
+    }
 
     return render(
       req,
@@ -616,12 +574,10 @@ router.get('/blog/:userid/:page', async (req, res) => {
       'UserBlogPage',
       {
         owner: user,
-        posts,
-        canEdit: req.user && req.user._id.equals(user._id),
+        posts: posts.items,
+        lastKey: posts.lastKey,
         followers,
-        following: req.user && req.user.followed_users.some((id) => id.equals(user._id)),
-        pages: Math.ceil(numBlogs / pagesize),
-        activePage: Math.max(req.params.page, 0),
+        following: req.user && req.user.followedUsers.some((id) => id === user.id),
       },
       {
         title: user.username,
@@ -632,14 +588,37 @@ router.get('/blog/:userid/:page', async (req, res) => {
   }
 });
 
+router.post('/getmoreblogs', ensureAuth, async (req, res) => {
+  const { lastKey, owner } = req.body;
+  const posts = await Blog.getByOwner(owner, 10, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    posts: posts.items,
+    lastKey: posts.lastKey,
+  });
+});
+
 // account page
 router.get('/account', ensureAuth, async (req, res) => {
-  const patron = await Patron.findOne({ user: req.user._id });
-  const featured = await FeaturedCubes.getSingleton();
-  const i = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+  const patron = await Patron.getById(req.user.id);
+
+  const entireQueue = [];
+
+  if (patron) {
+    let lastKey;
+
+    do {
+      const result = await FeaturedQueue.querySortedByDate(lastKey);
+      lastKey = result.lastKey;
+      entireQueue.push(...result.items);
+    } while (lastKey);
+  }
+
+  const i = entireQueue.findIndex((f) => f.owner === req.user.id);
   let myFeatured;
   if (i !== -1) {
-    const cube = await Cube.findById(featured.queue[i].cubeID).lean();
+    const cube = await Cube.getById(entireQueue[i].cubeID);
     myFeatured = { cube, position: i + 1 };
   }
 
@@ -670,46 +649,38 @@ router.post(
     }),
   ],
   flashValidationErrors,
-  (req, res) => {
+  async (req, res) => {
     if (!req.validated) {
-      User.findById(req.user._id, () => {
-        res.redirect('/user/account');
-      });
-    } else {
-      User.findById(req.user._id, (err, user) => {
-        if (user) {
-          bcrypt.compare(req.body.password, user.password, (err2, isMatch) => {
-            if (!isMatch) {
-              req.flash('danger', 'Password is incorrect');
-              return res.redirect('/user/account?nav=password');
-            }
-            if (req.body.password2 !== req.body.password3) {
-              req.flash('danger', "New passwords don't match");
-              return res.redirect('/user/account?nav=password');
-            }
-            return bcrypt.genSalt(10, (err3, salt) => {
-              bcrypt.hash(req.body.password2, salt, (err4, hash) => {
-                if (err4) {
-                  req.logger.error(err4);
-                } else {
-                  user.password = hash;
-                  user.save((err5) => {
-                    if (err5) {
-                      req.logger.error(err5);
-                      req.flash('danger', 'Error saving user.');
-                      return res.redirect('/user/account?nav=password');
-                    }
-
-                    req.flash('success', 'Password updated successfully');
-                    return res.redirect('/user/account?nav=password');
-                  });
-                }
-              });
-            });
-          });
-        }
-      });
+      return res.redirect('/user/account');
     }
+    const user = await User.getById(req.user.id);
+
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return res.redirect('/user/account?nav=password');
+    }
+
+    return bcrypt.compare(req.body.password, user.passwordHash, (err2, isMatch) => {
+      if (!isMatch) {
+        req.flash('danger', 'Password is incorrect');
+        return res.redirect('/user/account?nav=password');
+      }
+      if (req.body.password2 !== req.body.password3) {
+        req.flash('danger', "New passwords don't match");
+        return res.redirect('/user/account?nav=password');
+      }
+      return bcrypt.genSalt(10, (err3, salt) => {
+        bcrypt.hash(req.body.password2, salt, async (err4, hash) => {
+          if (err4) {
+            return req.logger.error(err4);
+          }
+          user.passwordHash = hash;
+          await User.update(user);
+          req.flash('success', 'Password updated successfully');
+          return res.redirect('/user/account?nav=password');
+        });
+      });
+    });
   },
 );
 
@@ -720,38 +691,22 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
       return res.redirect('/user/account');
     }
 
-    const duplicate = await User.findOne({
-      username_lower: req.body.username.toLowerCase(),
-      _id: {
-        $ne: req.user._id,
-      },
-    });
-    if (duplicate) {
-      req.flash('danger', 'Username already taken.');
+    const usernameQuery = await User.getByUsername(req.body.username.toLowerCase());
+
+    usernameQuery.items = usernameQuery.items.filter((item) => item.id !== user.id);
+
+    if (usernameQuery.items.length > 0) {
+      req.flash('danger', 'username already taken.');
       return res.redirect('/user/account');
     }
 
     user.username = req.body.username;
-    user.username_lower = req.body.username.toLowerCase();
+    user.usernameLower = req.body.username.toLowerCase();
     user.about = req.body.body;
     if (req.body.image) {
-      const imageData = carddb.imagedict[req.body.image];
-      if (imageData) {
-        user.image = imageData.uri;
-        user.artist = imageData.artist;
-        user.image_name = req.body.image.replace(/ \[[^\]]*\]$/, '');
-      }
+      user.imageName = req.body.image;
     }
-    const userQ = user.save();
-    const cubesQ = Cube.updateMany(
-      {
-        owner: req.user._id,
-      },
-      {
-        owner_name: req.body.username,
-      },
-    );
-    await Promise.all([userQ, cubesQ]);
+    await User.update(user);
 
     req.flash('success', 'User information updated.');
     return res.redirect('/user/account');
@@ -760,43 +715,33 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
   }
 });
 
-router.post('/updateemail', ensureAuth, (req, res) => {
-  User.findOne(
-    {
-      email: req.body.email.toLowerCase(),
-    },
-    (err, user) => {
-      if (user) {
-        req.flash('danger', 'Email already associated with an existing account.');
-        res.redirect('/user/account?nav=email');
-      } else if (req.user) {
-        req.user.email = req.body.email;
-        req.user.save((err2) => {
-          if (err2) {
-            req.logger.error(err2);
-            req.flash('danger', 'Error saving user.');
-            res.redirect('/user/account');
-          } else {
-            req.flash('success', 'Your profile has been updated.');
-            res.redirect('/user/account');
-          }
-        });
-      } else {
-        req.flash('danger', 'Not logged in.');
-        res.redirect('/user/account?nav=email');
-      }
-    },
-  );
+router.post('/updateemail', ensureAuth, async (req, res) => {
+  const emailQuery = await User.getByEmail(req.body.email.toLowerCase());
+
+  emailQuery.items = emailQuery.items.filter((item) => item.id !== req.user.id);
+
+  if (emailQuery.items.length > 0) {
+    req.flash('danger', 'username already taken.');
+    return res.redirect('/user/account');
+  }
+
+  const user = await User.getById(req.params.id);
+
+  user.email = req.body.email;
+  await User.update(user);
+
+  req.flash('success', 'Your profile has been updated.');
+  return res.redirect('/user/account');
 });
 
 router.post('/changedisplay', ensureAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.getById(req.user.id);
 
     user.theme = req.body.theme;
-    user.hide_featured = req.body.hideFeatured === 'on';
+    user.hideFeatured = req.body.hideFeatured === 'on';
 
-    await user.save();
+    await User.update(user);
 
     req.flash('success', 'Your display preferences have been updated.');
     res.redirect('/user/account');
@@ -808,17 +753,15 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
 
 router.get('/social', ensureAuth, async (req, res) => {
   try {
-    const followedCubesQ = Cube.find({ _id: { $in: req.user.followed_cubes } }, Cube.PREVIEW_FIELDS).lean();
-    const followedUsersQ = User.find(
-      { _id: { $in: req.user.followed_users } },
-      '_id username image artist users_following',
-    ).lean();
-    const followersQ = User.find(
-      { _id: { $in: req.user.users_following } },
-      '_id username image artist users_following',
-    ).lean();
+    const followedCubes = await Cube.batchGet(req.user.followedCubes);
+    const followers = await User.batchGet(req.user.following);
+    const followedUsers = await User.batchGet(req.user.followedUsers);
 
-    const [followedCubes, followedUsers, followers] = await Promise.all([followedCubesQ, followedUsersQ, followersQ]);
+    for (const follower of [...followers, ...followedUsers]) {
+      // don't leak this info
+      delete follower.passwordHash;
+      delete follower.email;
+    }
 
     return render(
       req,
@@ -845,38 +788,38 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
-  const cube = await Cube.findOne(buildIdQuery(req.body.cubeId)).lean();
+  const cube = await Cube.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube not found');
     return res.redirect(redirect);
   }
-  if (!req.user._id.equals(cube.owner)) {
+  if (cube.owner !== req.user.id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
     return res.redirect(redirect);
   }
 
-  if (cube.isPrivate) {
+  if (cube.visibility === Cube.VISIBILITY.PRIVATE) {
     req.flash('danger', 'Private cubes cannot be featured');
     return res.redirect(redirect);
   }
 
-  const patron = await Patron.findOne({ user: req.user._id }).lean();
+  const patron = await Patron.getById(req.user.id);
   if (!fq.canBeFeatured(patron)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return res.redirect(redirect);
   }
 
   const update = await fq.updateFeatured(async (featured) => {
-    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user.id));
     if (currentIndex === 0 || currentIndex === 1) {
       throw new Error('Cannot change currently featured cube');
     }
     let message;
     if (currentIndex === -1) {
-      featured.queue.push({ cubeID: cube._id, ownerID: req.user._id });
+      featured.queue.push({ cubeID: cube.id, ownerID: req.user.id });
       message = 'Successfully added cube to queue';
     } else {
-      featured.queue[currentIndex].cubeID = cube._id;
+      featured.queue[currentIndex].cubeID = cube.id;
       message = 'Successfully replaced cube in queue';
     }
     return message;
@@ -891,7 +834,7 @@ router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
   const redirect = '/user/account?nav=patreon';
 
   const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user._id));
+    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user.id));
     if (index === -1) {
       throw new Error('Nothing to remove');
     }

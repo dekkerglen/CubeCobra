@@ -6,7 +6,7 @@ import LabelRow from 'components/LabelRow';
 import { Card, CardBody, CardHeader, CardTitle, Input, CardFooter, Button } from 'reactstrap';
 
 const SamplePackCard = (props) => {
-  const { cubeID } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   const [seed, setSeed] = useState('');
   const handleChange = useCallback((event) => setSeed(event.target.value), []);
 
@@ -23,10 +23,10 @@ const SamplePackCard = (props) => {
         </LabelRow>
       </CardBody>
       <CardFooter>
-        <Button color="accent" className="me-2" href={`/cube/samplepack/${cubeID}`}>
+        <Button color="accent" className="me-2" href={`/cube/samplepack/${cube.id}`}>
           View Random
         </Button>
-        <Button color="accent" disabled={!seed} href={`/cube/samplepack/${cubeID}/${seed}`}>
+        <Button color="accent" disabled={!seed} href={`/cube/samplepack/${cube.id}/${seed}`}>
           View Seeded
         </Button>
       </CardFooter>

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React from 'react';
 import { useDrop } from 'react-dnd';
 
@@ -7,7 +8,7 @@ const CardStack = ({ location, children, ...props }) => {
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
     drop: (item, monitor) => (monitor.didDrop() ? undefined : location),
-    canDrop: (item) => true,
+    canDrop: () => true,
     collect: (monitor) => ({
       isAcceptable: !!monitor.isOver({ shallow: true }) && !!monitor.canDrop(),
     }),

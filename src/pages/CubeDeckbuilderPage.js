@@ -44,8 +44,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const handleMoveCard = useCallback(
     (source, target) => {
-      console.log(source, target);
-
       if (source.equals(target)) {
         return;
       }
@@ -83,11 +81,10 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const [name, setName] = useState(initialDeck.seats[seat].name);
   const [description, setDescription] = useState(initialDeck.seats[seat].description);
 
-  console.log(deck);
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube._id}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} activeLink="playtest">
           <DeckbuilderNavbar
             deck={currentDeck}
             addBasics={addBasics}
@@ -127,11 +124,11 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                 </ErrorBoundary>
                 <CardHeader className="border-top">
                   <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                    <h4 className="mb-0 me-auto">About</h4>
+                    <h4 className="mb-0 me-auto">about</h4>
                   </CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <h6>Deck Name</h6>
+                  <h6>Deck name</h6>
                   <input
                     className="form-control"
                     name="name"
@@ -141,14 +138,14 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     maxLength="100"
                   />
                   <br />
-                  <h6>Description</h6>
+                  <h6>description</h6>
                   <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} maxLength="10000" />
                 </CardBody>
               </Card>
             </Col>
           </Row>
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

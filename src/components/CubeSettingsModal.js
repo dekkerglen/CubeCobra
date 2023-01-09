@@ -1,95 +1,96 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import { postJson } from 'utils/CSRF';
-import { formDataObject } from 'utils/Form';
 
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
 import LoadingButton from 'components/LoadingButton';
 
 const visibilityHelp = {
-  public: 'Anyone can search for and see your cube',
-  unlisted: 'Anyone with a link can see your cube',
-  private: 'Only you can see your cube',
-};
-
-const convertVisibility = (cube) => {
-  if (!cube.isListed && cube.isPrivate) return 'private';
-  if (!cube.isListed && !cube.isPrivate) return 'unlisted';
-  return 'public';
+  pu: 'Anyone can search for and see your cube',
+  un: 'Anyone with a link can see your cube',
+  pr: 'Only you can see your cube',
 };
 
 const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
-  const { cube, cubeID, setCube } = useContext(CubeContext);
-  const [visibility, setVisibility] = useState(convertVisibility(cube));
-  const formRef = useRef();
+  const { cube } = useContext(CubeContext);
+  const [state, setState] = useState(cube);
 
   const handleSave = useCallback(async () => {
-    const formObject = formDataObject(formRef.current);
-    const response = await postJson(`/cube/api/settings/${cubeID}`, formObject);
+    const response = await postJson(`/cube/api/settings/${cube.id}`, state);
     const json = await response.json();
-    // eslint-disable-next-line no-underscore-dangle
-    delete formObject._csrf;
     if (response.ok) {
-      onCubeUpdate({ ...cube, ...formObject });
-      setCube((current) => ({ ...current, ...formObject }));
-    } else {
+      onCubeUpdate(state);
+    } else if (json.errors) {
       for (const error of json.errors) {
         addAlert('danger', error);
       }
+    } else {
       addAlert('danger', json.message);
     }
     toggle();
-  }, [toggle, addAlert, onCubeUpdate, cube, cubeID, setCube, formRef]);
+  }, [cube.id, toggle, onCubeUpdate, state, addAlert]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader toggle={toggle}>Edit Settings</ModalHeader>
       <ModalBody>
-        <CSRFForm innerRef={formRef}>
+        <CSRFForm>
           <FormGroup check>
             <Input
-              id="privatePrices"
-              name="privatePrices"
+              id="PrivatePrices"
+              name="PrivatePrices"
               type="checkbox"
-              defaultChecked={cube.privatePrices || false}
+              checked={state.priceVisibility === 'pr'}
+              onChange={(e) => {
+                setState({ ...state, priceVisibility: e.target.checked ? 'pr' : 'pu' });
+              }}
             />
-            <Label for="privatePrices">Hide Total Prices</Label>
+            <Label for="PrivatePrices">Hide Total prices</Label>
           </FormGroup>
           <FormGroup check>
             <Input
-              id="disableNotifications"
-              name="disableNotifications"
+              id="disableAlerts"
+              name="disableAlerts"
               type="checkbox"
-              defaultChecked={cube.disableNotifications || false}
+              checked={state.disableAlerts}
+              onChange={(e) => {
+                setState({ ...state, disableAlerts: e.target.checked });
+              }}
             />
-            <Label for="disableNotifications">Disable Draft Notifications</Label>
-          </FormGroup>
-          <FormGroup check>
-            <Input id="useCubeElo" name="useCubeElo" type="checkbox" defaultChecked={cube.useCubeElo || false} />
-            <Label for="useCubeElo">Use Cube Elo instead of Global Elo</Label>
+            <Label for="disableAlerts">Disable Draft Notifications</Label>
           </FormGroup>
           <FormGroup>
-            <Label for="visibility">Cube Visibility</Label>
+            <Label for="visibility">Cube visibility</Label>
             <Input
               id="visibility"
               name="visibility"
               type="select"
-              value={visibility}
-              onChange={(e) => setVisibility(e.target.value)}
+              value={state.visibility}
+              onChange={(e) => {
+                setState({ ...state, visibility: e.target.value });
+              }}
             >
-              <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
-              <option value="private">Private</option>
+              <option value="pu">Public</option>
+              <option value="un">Unlisted</option>
+              <option value="pr">Private</option>
             </Input>
-            <FormText>{visibilityHelp[visibility]}</FormText>
+            <FormText>{visibilityHelp[state.visibility]}</FormText>
           </FormGroup>
           <FormGroup>
-            <Label for="defaultStatus">Default Status</Label>
-            <Input id="defaultStatus" name="defaultStatus" type="select" defaultValue={cube.defaultStatus || false}>
+            <Label for="defaultStatus">Default status</Label>
+            <Input
+              id="defaultStatus"
+              name="defaultStatus"
+              type="select"
+              value={state.defaultStatus}
+              onChange={(e) => {
+                setState({ ...state, defaultStatus: e.target.value });
+              }}
+            >
               {['Owned', 'Not Owned'].map((status) => (
                 <option key={status}>{status}</option>
               ))}
@@ -101,7 +102,10 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
               id="defaultPrinting"
               name="defaultPrinting"
               type="select"
-              defaultValue={cube.defaultPrinting || false}
+              value={state.defaultPrinting}
+              onChange={(e) => {
+                setState({ ...state, defaultPrinting: e.target.value });
+              }}
             >
               <option value="recent">Most Recent</option>
               <option value="first">First</option>

@@ -8,8 +8,8 @@ const crypto = require('crypto');
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util');
 
-const Patron = require('../models/patron');
-const User = require('../models/user');
+const Patron = require('../dynamo/models/patron');
+const User = require('../dynamo/models/user');
 
 const patreonAPI = patreon.patreon;
 const patreonOAuth = patreon.oauth;
@@ -28,12 +28,12 @@ const isValidPatreonSignature = (signature, body) => {
 
 router.get('/unlink', ensureAuth, async (req, res) => {
   try {
-    await Patron.deleteOne({ user: req.user._id });
+    await Patron.deleteById(req.user.id);
 
-    const user = await User.findById(req.user._id);
+    const user = await User.getById(req.user.id);
     user.roles = user.roles.filter((role) => role !== 'Patron');
-    user.patron = undefined;
-    await user.save();
+    user.Patron = undefined;
+    await User.update(user);
 
     req.flash('success', `Patron account has been unlinked.`);
     return res.redirect('/user/account?nav=patreon');
@@ -67,9 +67,9 @@ router.post('/hook', async (req, res) => {
     const email = users[0].attributes.email.toLowerCase();
 
     // if a patron with this email is already linked, we can't use it
-    const patron = await Patron.findOne({ email });
+    const document = await Patron.getByEmail(email);
 
-    if (!patron) {
+    if (!document) {
       req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
 
       return res.status(200).send({
@@ -77,10 +77,10 @@ router.post('/hook', async (req, res) => {
       });
     }
 
-    const user = await User.findById(patron.user);
+    const user = await User.getById(document.owner);
 
     if (!user) {
-      req.logger.info(`Recieved a patreon hook without a found user: "${patron.user}"`);
+      req.logger.info(`Recieved a patreon hook without a found user: "${document.owner}"`);
 
       return res.status(200).send({
         success: 'false',
@@ -92,17 +92,17 @@ router.post('/hook', async (req, res) => {
       const rewards = included.filter((item) => item.id === rewardId);
 
       if (rewards.length === 0) {
-        patron.level = 'Patron';
+        document.level = 0;
       } else {
-        patron.level = rewards[0].attributes.title;
+        document.level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
       }
 
-      patron.active = true;
+      document.status = Patron.STATUSES.ACTIVE;
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }
     } else if (action === 'pledges:delete') {
-      patron.active = false;
+      document.status = Patron.STATUSES.INACTIVE;
       user.roles = user.roles.filter((role) => role !== 'Patron');
     } else {
       req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
@@ -110,8 +110,9 @@ router.post('/hook', async (req, res) => {
         success: 'false',
       });
     }
-    await patron.save();
-    await user.save();
+
+    await Patron.put(document);
+    await User.update(user);
 
     return res.status(200).send({
       success: 'false',
@@ -144,9 +145,9 @@ router.get('/redirect', ensureAuth, (req, res) => {
       const email = rawJson.data.attributes.email.toLowerCase();
 
       // if a patron with this email is already linked, we can't use it
-      const patron = await Patron.findOne({ email });
+      const document = await Patron.getByEmail(email);
 
-      if (patron) {
+      if (document) {
         req.flash(
           'danger',
           `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
@@ -154,10 +155,11 @@ router.get('/redirect', ensureAuth, (req, res) => {
         return res.redirect('/user/account?nav=patreon');
       }
 
-      const newPatron = new Patron();
-      newPatron.email = email;
-      newPatron.user = req.user._id;
-
+      const newPatron = {
+        email,
+        owner: req.user.id,
+        status: Patron.STATUSES.INACTIVE,
+      };
       if (!rawJson.included) {
         req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
         return res.redirect('/user/account?nav=patreon');
@@ -176,7 +178,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       }
 
       if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
-        newPatron.level = 'Patron';
+        newPatron.level = 0;
       } else {
         const rewardId = pledges[0].relationships.reward.data.id;
 
@@ -191,24 +193,23 @@ router.get('/redirect', ensureAuth, (req, res) => {
         }
 
         if (rewards.length === 0) {
-          newPatron.level = 'Patron';
+          newPatron.level = 0;
         } else {
-          newPatron.level = rewards[0].attributes.title;
+          newPatron.level = Patron.LEVELS.indexOf(rewards[0].attributes.title);
         }
       }
 
-      newPatron.active = true;
+      newPatron.status = Patron.STATUSES.ACTIVE;
 
-      await newPatron.save();
+      await Patron.put(newPatron);
 
-      const user = await User.findById(req.user._id);
+      const user = await User.getById(req.user.id);
       if (!user.roles.includes('Patron')) {
         user.roles.push('Patron');
       }
-      user.patron = newPatron._id;
-      await user.save();
+      await User.update(user);
 
-      if (newPatron.level === 'Patron') {
+      if (newPatron.level === 0) {
         req.flash(
           'warning',
           "Your pledge isn't tied to any support tiers. Choose an eligible tier on Patreon to get access to all your rewards.",

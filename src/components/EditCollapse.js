@@ -1,39 +1,41 @@
-import React, { useCallback, useContext, useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useCallback, useContext, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 import {
   Button,
   Col,
   Collapse,
-  Form,
   InputGroup,
   Row,
   UncontrolledAlert,
   FormGroup,
   Label,
   Input,
-  Card,
-  FormText,
   InputGroupText,
 } from 'reactstrap';
 
-import Query from 'utils/Query';
-import { encodeName } from 'utils/Card';
-import { findUserLinks } from 'markdown/parser';
+import { csrfFetch } from 'utils/CSRF';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
-import ChangelistContext from 'contexts/ChangelistContext';
-import CubeContext from 'contexts/CubeContext';
-import CSRFForm from 'components/CSRFForm';
 import DisplayContext from 'contexts/DisplayContext';
-import ResizeModal from 'components/ResizeModal';
+import CubeContext from 'contexts/CubeContext';
 import TextEntry from 'components/TextEntry';
+import useLocalStorage from 'hooks/useLocalStorage';
 
-export const getCard = async (cubeID, name, setAlerts) => {
+export const getCard = async (defaultprinting, name, setAlerts) => {
   if (name && name.length > 0) {
-    const normalized = encodeName(name);
-    const response = await fetch(`/cube/api/getcardforcube/${cubeID}/${normalized}`);
+    const response = await csrfFetch(`/cube/api/getcardforcube`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        defaultprinting,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     if (!response.ok) {
       const message = `Couldn't get card: ${response.status}.`;
       if (setAlerts) {
@@ -59,98 +61,99 @@ export const getCard = async (cubeID, name, setAlerts) => {
   return null;
 };
 
-const EditCollapse = ({ cubeView, ...props }) => {
-  const [alerts, setAlerts] = useState([]);
-  const [postContent, setPostContent] = useState('');
-  const [mentions, setMentions] = useState('');
-  const [specifyEdition, setSpecifyEdition] = useState(false);
+const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
+
+const EditCollapse = ({ isOpen }) => {
+  const [addValue, setAddValue] = useState('');
+  const [removeValue, setRemoveValue] = useState('');
+  const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
+  const addRef = useRef();
+  const removeRef = useRef();
 
   const {
+    cube,
     changes,
-    addValue,
-    setAddValue,
-    removeValue,
-    setRemoveValue,
-    addInputRef,
-    removeInputRef,
-    addChange,
-    setChanges,
-  } = useContext(ChangelistContext);
-  const { cube, cubeID } = useContext(CubeContext);
-  const { toggleShowMaybeboard } = useContext(DisplayContext);
+    addCard,
+    removeCard,
+    swapCard,
+    changedCards,
+    discardAllChanges,
+    commitChanges,
+    alerts,
+    setAlerts,
+    loading,
+  } = useContext(CubeContext);
 
-  const additions = changes.filter((change) => change.add || change.replace).length;
-  const removals = changes.filter((change) => change.remove || change.replace).length;
-  const newTotal = cube.cards.length + additions - removals;
-
-  const scaleParams = Query.get('scale', 'medium');
-
-  const handleChange = useCallback(
-    (event) => {
-      return {
-        textarea: setPostContent,
-        add: setAddValue,
-        remove: setRemoveValue,
-      }[event.target.name](event.target.value);
-    },
-    [setAddValue, setRemoveValue],
-  );
+  const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
+  const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
+  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'Mainboard');
+  const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
+  const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
   const handleAdd = useCallback(
-    async (event, newValue) => {
+    async (event, match) => {
       event.preventDefault();
       try {
-        const card = await getCard(cubeID, newValue || addValue, setAlerts);
+        const card = await getCard(cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
-        addChange({ add: { details: card } });
+        addCard(
+          { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+          showMaybeboard ? activeBoard : 'Mainboard',
+        );
         setAddValue('');
-        setRemoveValue('');
-        if (addInputRef.current) {
-          addInputRef.current.focus();
-        }
+
+        addRef.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addChange, addValue, addInputRef, cubeID, setAddValue, setRemoveValue],
+    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, showMaybeboard, activeBoard],
   );
 
   const handleRemoveReplace = useCallback(
-    async (event, newValue) => {
+    async (event, match) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
-        const cardOut = cube.cards.find(
-          (card) =>
-            card.details.name.toLowerCase() === (newValue || removeValue).toLowerCase() &&
-            !changes.some(
-              (change) =>
-                (change.remove && change.remove.index === card.index) ||
-                (Array.isArray(change.replace) && change.replace[0].index === card.index),
-            ),
-        );
-        if (!cardOut) {
+        let removeIndex = -1;
+        const board = changedCards[showMaybeboard ? activeBoard : 'Mainboard'];
+        for (let i = 0; i < board.length; i++) {
+          if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
+            removeIndex = i;
+          }
+        }
+
+        if (removeIndex === -1) {
           setAlerts((items) => [
             ...items,
-            { color: 'danger', message: `Couldn't find a card with name [${newValue || removeValue}].` },
+            {
+              color: 'danger',
+              message: `Couldn't find a card with name "${match}" in "${showMaybeboard ? activeBoard : 'Mainboard'}".`,
+            },
           ]);
           return;
         }
+
         if (replace) {
-          const cardIn = await getCard(cubeID, addValue, setAlerts);
-          if (!cardIn) {
+          const card = await getCard(cube.defaultPrinting, addValue, setAlerts);
+          if (!card) {
             return;
           }
-          addChange({ replace: [cardOut, { details: cardIn }] });
+          swapCard(
+            removeIndex,
+            { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+            showMaybeboard ? activeBoard : 'Mainboard',
+          );
         } else {
-          addChange({ remove: cardOut });
+          removeCard(removeIndex, showMaybeboard ? activeBoard : 'Mainboard');
         }
+
         setAddValue('');
         setRemoveValue('');
-        /* If replace, put focus back in addInputRef; otherwise leave it here. */
-        const focus = replace ? addInputRef : removeInputRef;
+
+        const focus = replace ? addRef : removeRef;
         if (focus.current) {
           focus.current.focus();
         }
@@ -158,157 +161,190 @@ const EditCollapse = ({ cubeView, ...props }) => {
         console.error(e);
       }
     },
-    [addChange, addInputRef, addValue, removeInputRef, removeValue, cube, cubeID, changes, setAddValue, setRemoveValue],
+    [
+      addValue,
+      changedCards,
+      showMaybeboard,
+      activeBoard,
+      cube.defaultPrinting,
+      cube.defaultStatus,
+      swapCard,
+      removeCard,
+    ],
   );
 
-  const handleDiscardAll = useCallback(() => {
-    setChanges([]);
-  }, [setChanges]);
-
-  const handleMentions = useCallback(() => {
-    setMentions(findUserLinks(postContent).join(';'));
-  }, [postContent]);
+  const submit = useCallback(async () => {
+    commitChanges(postTitle, postContent);
+    setPostTitle(DEFAULT_BLOG_TITLE);
+    setPostContent('');
+  }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (
-    <Collapse className="px-3" {...props}>
+    <Collapse className="px-3" isOpen={isOpen}>
       {alerts.map(({ color, message }) => (
         <UncontrolledAlert color={color} className="mt-2">
           {message}
         </UncontrolledAlert>
       ))}
-      <Row className="me-auto g-0">
-        <Col xs={12} md="auto">
-          <Form className="mb-2 me-2" onSubmit={handleAdd}>
-            <InputGroup className="flex-nowrap">
-              <AutocompleteInput
-                treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
-                treePath="cardnames"
-                type="text"
-                innerRef={addInputRef}
-                name="add"
-                value={addValue}
-                onChange={handleChange}
-                onSubmit={handleAdd}
-                placeholder="Card to Add"
-                autoComplete="off"
-                data-lpignore
-                className="square-right"
-              />
-              <Button color="accent" type="submit" disabled={addValue.length === 0}>
-                Add
-              </Button>
+      <Row className="mb-2">
+        {showMaybeboard && (
+          <Col xs={12} md={3}>
+            <InputGroup className="mb-1">
+              <Input disabled value="Board" />
+              <Input value={activeBoard} onChange={(e) => setActiveBoard(e.target.value)} name="select" type="select">
+                <option>Mainboard</option>
+                <option>Maybeboard</option>
+              </Input>
             </InputGroup>
-          </Form>
+          </Col>
+        )}
+        <Col xs={12} md={3}>
+          <InputGroup className="mb-1">
+            <AutocompleteInput
+              treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
+              treePath="cardnames"
+              type="text"
+              innerRef={addRef}
+              name="add"
+              value={addValue}
+              setValue={setAddValue}
+              onSubmit={handleAdd}
+              placeholder="Card to Add"
+              autoComplete="off"
+              data-lpignore
+              className="square-right"
+            />
+            <Button color="accent" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
+              Add
+            </Button>
+          </InputGroup>
         </Col>
-        <Col xs={12} md="auto">
-          <Form className="mb-2 me-2" onSubmit={handleRemoveReplace}>
-            <InputGroup className="flex-nowrap">
-              <AutocompleteInput
-                cubeId={cube._id}
-                treeUrl={`/cube/api/cubecardnames/${cubeID}`}
-                treePath="cardnames"
-                type="text"
-                innerRef={removeInputRef}
-                name="remove"
-                value={removeValue}
-                onChange={handleChange}
-                onSubmit={handleRemoveReplace}
-                placeholder="Card to Remove"
-                autoComplete="off"
-                data-lpignore
-                className="square-right"
-              />
-              <Button color="accent" type="submit" disabled={removeValue.length === 0}>
-                Remove/Replace
-              </Button>
-            </InputGroup>
-          </Form>
-        </Col>
-        <Col xs="auto">
-          <Form className="mb-2 me-2">
-            <InputGroup>
-              <InputGroupText>
-                <Input
-                  addon
-                  type="checkbox"
-                  aria-label="Checkbox for following text input"
-                  checked={specifyEdition}
-                  onChange={() => setSpecifyEdition(!specifyEdition)}
-                />
-              </InputGroupText>
-              <Input disabled value="Specify Versions" />
-            </InputGroup>
-          </Form>
-        </Col>
-        <Col xs={12} md="auto" className="ms-md-auto">
-          <ResizeModal cubeID={cubeID} />
-          <Button color="accent" className="mb-2" onClick={toggleShowMaybeboard}>
-            Maybeboard
-          </Button>
+        <Col xs={12} md={4}>
+          <InputGroup className="flex-nowrap mb-1">
+            <AutocompleteInput
+              cubeId={cube.id}
+              treeUrl={`/cube/api/cubecardnames/${cube.id}`}
+              treePath="cardnames"
+              type="text"
+              innerRef={removeRef}
+              name="remove"
+              value={removeValue}
+              setValue={setRemoveValue}
+              onSubmit={handleRemoveReplace}
+              placeholder="Card to Remove"
+              autoComplete="off"
+              data-lpignore
+              className="square-right"
+            />
+            <Button
+              color="accent"
+              disabled={removeValue.length === 0}
+              onClick={(e) => handleRemoveReplace(e, removeValue)}
+            >
+              Remove/Replace
+            </Button>
+          </InputGroup>
         </Col>
       </Row>
-      <Collapse isOpen={changes.length > 0} className="pt-1">
-        <CSRFForm
-          method="POST"
-          action={`/cube/edit/${cubeID}?view=${encodeURIComponent(cubeView)}&scale=${encodeURIComponent(scaleParams)}`}
-          onSubmit={handleMentions}
-        >
-          <Row>
-            <Col>
-              <h6>
-                <Row>
-                  <Col>Changelist</Col>
-                  <Col className="col-sm-auto">
-                    <div className="text-secondary">
-                      +{additions}, -{removals}, {newTotal} Total
-                    </div>
-                  </Col>
-                </Row>
-              </h6>
-              <div className="changelist-container mb-2">
-                <Changelist />
-              </div>
-            </Col>
-            <Col>
+      <Row className="mb-2">
+        <Col xs={12} md={2}>
+          <InputGroup className="mb-1">
+            <InputGroupText>
+              <Input
+                addon
+                type="checkbox"
+                aria-label="Checkbox for following text input"
+                checked={specifyEdition}
+                onChange={() => setSpecifyEdition(!specifyEdition)}
+              />
+            </InputGroupText>
+            <Input disabled value="Specify Versions" />
+          </InputGroup>
+        </Col>
+        <Col xs={12} md={2}>
+          <InputGroup className="mb-1">
+            <InputGroupText>
+              <Input
+                addon
+                type="checkbox"
+                aria-label="Checkbox for following text input"
+                checked={showMaybeboard}
+                onChange={toggleShowMaybeboard}
+              />
+            </InputGroupText>
+            <Input disabled value="Use Maybeboard" />
+          </InputGroup>
+        </Col>
+        <Col xs={12} md={2}>
+          <InputGroup className="mb-1">
+            <InputGroupText>
+              <Input
+                addon
+                type="checkbox"
+                aria-label="Checkbox for following text input"
+                checked={useBlog}
+                onChange={() => setUseBlog(!useBlog)}
+              />
+            </InputGroupText>
+            <Input disabled value="Create Blog Post" />
+          </InputGroup>
+        </Col>
+      </Row>
+      <Collapse isOpen={Object.entries(changes).length > 0} className="pt-1">
+        <Row>
+          <Col xs="12" md="6">
+            <Changelist />
+          </Col>
+          {useBlog && (
+            <Col xs="12" md="6">
               <h6>Blog Post</h6>
               <FormGroup>
-                <Label className="visually-hidden">Blog Title</Label>
-                <Input type="text" name="title" defaultValue="Cube Updated – Automatic Post" />
+                <Label className="visually-hidden">Blog title</Label>
+                <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
               </FormGroup>
               <FormGroup>
-                <Label className="visually-hidden">Blog Body</Label>
-                <Card>
-                  <TextEntry name="blog" value={postContent} onChange={handleChange} maxLength={10000} />
-                </Card>
-                <Input type="hidden" name="mentions" value={mentions} />
-                <FormText>
-                  Having trouble formatting your posts? Check out the{' '}
-                  <a href="/markdown" target="_blank">
-                    markdown guide
-                  </a>
-                  .
-                </FormText>
+                <Label className="visually-hidden">Blog body</Label>
+                <TextEntry
+                  name="blog"
+                  value={postContent}
+                  onChange={(event) => setPostContent(event.target.value)}
+                  maxLength={10000}
+                />
               </FormGroup>
             </Col>
-          </Row>
-          <Row className="mb-2">
-            <Col>
-              <Button color="accent" className="me-2" type="submit">
-                Save Changes
-              </Button>
-              <Button color="unsafe" onClick={handleDiscardAll}>
-                Discard All
-              </Button>
-            </Col>
-          </Row>
-        </CSRFForm>
+          )}
+        </Row>
+        <Row className="mb-2">
+          <Col xs="6" md="3">
+            <Button color="accent" block className="me-2" onClick={submit} disabled={loading}>
+              Save Changes
+            </Button>
+          </Col>
+          <Col xs="6" md="3">
+            <Button
+              color="unsafe"
+              block
+              onClick={() => {
+                discardAllChanges();
+                setPostTitle(DEFAULT_BLOG_TITLE);
+                setPostContent('');
+              }}
+            >
+              Discard All
+            </Button>
+          </Col>
+        </Row>
       </Collapse>
     </Collapse>
   );
 };
 
 EditCollapse.propTypes = {
-  cubeView: PropTypes.string.isRequired,
+  isOpen: PropTypes.bool,
+};
+
+EditCollapse.defaultProps = {
+  isOpen: false,
 };
 
 export default EditCollapse;

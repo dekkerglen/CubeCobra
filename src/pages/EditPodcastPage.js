@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import PodcastPropType from 'proptypes/PodcastPropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import { Nav, CardBody, Card, TabContent, TabPane, Input, FormGroup, Row, Col, Label, Button } from 'reactstrap';
 
@@ -13,11 +13,17 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import CSRFForm from 'components/CSRFForm';
 
+const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};
+
 const EditPodcastPage = ({ loginCallback, podcast }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
-  const [rss, setRss] = useState(podcast.rss);
+  const [rss, setRss] = useState(podcast.url);
 
-  const hasChanges = podcast.rss !== rss;
+  const hasChanges = podcast.url !== rss;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -36,7 +42,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
           <Row>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast._id} />
+                <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" color="accent" block disabled={!hasChanges}>
                   Update
@@ -45,7 +51,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
             </Col>
             <Col xs="6">
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
-                <Input type="hidden" name="podcastid" value={podcast._id} />
+                <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />
                 <Button type="submit" outline color="accent" block>
                   Submit for Review
@@ -69,10 +75,10 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>Status:</Label>
+                    <Label>status:</Label>
                   </Col>
                   <Col sm="10">
-                    <Input disabled value={podcast.status} />
+                    <Input disabled value={CONVERT_STATUS[podcast.status]} />
                   </Col>
                 </Row>
               </FormGroup>
@@ -106,7 +112,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
 
 EditPodcastPage.propTypes = {
   loginCallback: PropTypes.string,
-  podcast: PodcastPropType.isRequired,
+  podcast: ContentPropType.isRequired,
 };
 
 EditPodcastPage.defaultProps = {

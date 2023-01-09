@@ -1,39 +1,58 @@
+const htmlToText = require('html-to-text');
+const sanitizeHtml = require('sanitize-html');
 const { getFeedEpisodes } = require('./rss');
 
-const PodcastEpisode = require('../models/podcastEpisode');
+const Content = require('../dynamo/models/content');
+
+const removeSpan = (text) =>
+  sanitizeHtml(text, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== 'span'),
+  });
 
 const updatePodcast = async (podcast) => {
   const episodes = await getFeedEpisodes(podcast.rss);
+  const existingGuids = episodes.map((episode) => episode.guid);
 
-  const liveEpisodes = await PodcastEpisode.find({ guid: { $in: episodes.map((episode) => episode.guid) } });
+  let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
+  let items = result.items.filter((item) => existingGuids.includes(item.podcastGuid));
 
-  const guids = liveEpisodes.map((episode) => episode.guid);
+  while (result.lastKey) {
+    // eslint-disable-next-line no-await-in-loop
+    result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
+    items = [...episodes, ...result.items.filter((item) => existingGuids.includes(item.podcastGuid))];
+  }
 
-  const filtered = episodes.filter((episode) => !guids.includes(episode.guid));
+  const guids = items.map((episode) => episode.podcastGuid);
+
+  const filtered = episodes.filter((episode) => !guids.includes(episode.podcastGuid));
 
   await Promise.all(
     filtered.map((episode) => {
-      const podcastEpisode = new PodcastEpisode();
+      const podcastEpisode = {
+        title: episode.title,
+        body: removeSpan(episode.description),
+        url: episode.url,
+        date: new Date(episode.date).valueOf(),
+        owner: podcast.owner,
+        image: podcast.image,
+        username: podcast.username,
+        podcast: podcast.id,
+        podcastName: podcast.title,
+        podcastGuid: episode.podcastGuid,
+        podcastLink: episode.url,
+        short: htmlToText
+          .fromString(removeSpan(episode.description), {
+            wordwrap: 130,
+          })
+          .substring(0, 200),
+      };
 
-      podcastEpisode.title = episode.title;
-      podcastEpisode.description = episode.description;
-      podcastEpisode.source = episode.source;
-      podcastEpisode.guid = episode.guid;
-      podcastEpisode.link = episode.link;
-      podcastEpisode.date = new Date(episode.date);
-
-      podcastEpisode.podcast = podcast._id;
-      podcastEpisode.owner = podcast.owner;
-      podcastEpisode.image = podcast.image;
-      podcastEpisode.username = podcast.username;
-      podcastEpisode.podcastname = podcast.title;
-
-      return podcastEpisode.save();
+      return Content.put(podcastEpisode, Content.TYPES.EPISODE);
     }),
   );
 
-  podcast.date = new Date();
-  await podcast.save();
+  podcast.date = new Date().valueOf();
+  await Content.update(podcast);
 };
 
 module.exports = {

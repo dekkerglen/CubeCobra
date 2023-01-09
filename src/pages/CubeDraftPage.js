@@ -24,7 +24,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
   const [message, setMessage] = useState('');
 
   const start = async () => {
-    await callApi('/multiplayer/startdraft', { draft: initialDraft._id });
+    await callApi('/multiplayer/startdraft', { draft: initialDraft.id });
   };
 
   useMount(() => {
@@ -34,11 +34,10 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
         setMessage('Please log in to join this draft.');
       } else {
         socket.on('draft', async (data) => {
-          console.log('draft', data);
           setState(data.state);
         });
 
-        const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft._id });
+        const res = await callApi('/multiplayer/isdraftinitialized', { draft: initialDraft.id });
         const json = await res.json();
         if (json.initialized) {
           if (!json.seats[user.id]) {
@@ -52,7 +51,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
           setState('staging');
         }
 
-        socket.emit('joinLobby', { draftId: initialDraft._id });
+        socket.emit('joinLobby', { draftId: initialDraft.id });
       }
     };
     run();
@@ -60,8 +59,8 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <DisplayContextProvider cubeID={cube._id}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} activeLink="playtest">
           {state === 'loading' && (
             <div className="centered py-3">
               <Spinner className="position-absolute" />
@@ -70,8 +69,8 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
           {state === 'staging' && <CubeDraftStaging draft={initialDraft} start={start} socket={socket} />}
           {state === 'drafting' && <CubeDraft draft={initialDraft} socket={socket} />}
           {state === 'error' && <CubeDraftError message={message} />}
-        </DisplayContextProvider>
-      </CubeLayout>
+        </CubeLayout>
+      </DisplayContextProvider>
     </MainLayout>
   );
 };

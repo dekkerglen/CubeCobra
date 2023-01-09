@@ -1,5 +1,5 @@
 import React from 'react';
-import ArticlePropType from 'proptypes/ArticlePropType';
+import ContentPropType from 'proptypes/ContentPropType';
 
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
@@ -23,13 +23,13 @@ const Article = ({ article }) => {
         <Markdown markdown={article.body} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="article" parent={article._id} collapse={false} />
+        <CommentsSection parentType="article" parent={article.id} collapse={false} />
       </div>
     </>
   );
 };
 Article.propTypes = {
-  article: ArticlePropType.isRequired,
+  article: ContentPropType.isRequired,
 };
 
 export default Article;
