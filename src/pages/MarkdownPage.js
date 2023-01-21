@@ -325,7 +325,7 @@ const MarkdownPage = ({ loginCallback }) => (
               <CardHeader>Source</CardHeader>
               <CardBody>
                 <p>
-                  <code>{'{e}{T}{q}{s}{X}{Y}{15}'}</code>
+                  <code>{'{e}{T}{q}{s}{m}{c}{X}{Y}{15}'}</code>
                 </p>
               </CardBody>
             </Card>
