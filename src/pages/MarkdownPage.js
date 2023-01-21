@@ -334,7 +334,7 @@ const MarkdownPage = ({ loginCallback }) => (
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
-                <Markdown markdown={'{e}{T}{q}{s}{X}{Y}{15}'} />
+                <Markdown markdown={'{e}{T}{q}{s}{m}{c}{X}{Y}{15}'} />
               </CardBody>
             </Card>
           </Col>
