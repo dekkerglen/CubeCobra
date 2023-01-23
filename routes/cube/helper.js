@@ -32,21 +32,21 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
       });
     }
 
-    if (changelog.Mainboard) {
-      if (changelog.Mainboard.adds && changelog.Mainboard.adds.length === 0) {
-        delete changelog.Mainboard.adds;
+    if (changelog.mainboard) {
+      if (changelog.mainboard.adds && changelog.mainboard.adds.length === 0) {
+        delete changelog.mainboard.adds;
       }
-      if (changelog.Mainboard.removes && changelog.Mainboard.removes.length === 0) {
-        delete changelog.Mainboard.removes;
+      if (changelog.mainboard.removes && changelog.mainboard.removes.length === 0) {
+        delete changelog.mainboard.removes;
       }
-      if (changelog.Mainboard.swaps && changelog.Mainboard.swaps.length === 0) {
-        delete changelog.Mainboard.swaps;
+      if (changelog.mainboard.swaps && changelog.mainboard.swaps.length === 0) {
+        delete changelog.mainboard.swaps;
       }
-      if (changelog.Mainboard.edits && changelog.Mainboard.edits.length === 0) {
-        delete changelog.Mainboard.edits;
+      if (changelog.mainboard.edits && changelog.mainboard.edits.length === 0) {
+        delete changelog.mainboard.edits;
       }
-      if (Object.keys(changelog.Mainboard).length === 0) {
-        delete changelog.Mainboard;
+      if (Object.keys(changelog.mainboard).length === 0) {
+        delete changelog.mainboard;
       }
     }
 
@@ -104,7 +104,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
 async function bulkUpload(req, res, list, cube) {
   const cards = await Cube.getCards(cube.id);
-  const mainboard = cards.Mainboard;
+  const { mainboard } = cards;
   const maybeboard = cards.Maybeboard;
 
   const lines = list.match(/[^\r\n]+/g);
@@ -178,7 +178,7 @@ async function bulkUpload(req, res, list, cube) {
   }
 
   const changelist = {
-    Mainboard: {
+    mainboard: {
       adds: changelog.map((change) => ({ cardID: change.addedID })),
     },
   };

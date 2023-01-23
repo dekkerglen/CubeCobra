@@ -486,42 +486,7 @@ router.get('/view/:id', async (req, res) => {
   }
 });
 
-router.get('/decks/:userid', (req, res) => {
-  res.redirect(`/user/decks/${req.params.userid}/0`);
-});
-
-router.get('/notifications', ensureAuth, async (req, res) => {
-  const notifications = await Notification.getByTo(`${req.user.id}`);
-
-  return render(req, res, 'NotificationsPage', {
-    notifications: notifications.items,
-    lastKey: notifications.lastKey,
-  });
-});
-
-router.post('/getusernotifications', ensureAuth, async (req, res) => {
-  const { lastKey } = req.body;
-  const notifications = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
-
-  return res.status(200).send({
-    success: 'true',
-    notifications: notifications.items,
-    lastKey: notifications.lastKey,
-  });
-});
-
-router.post('/getmorenotifications', ensureAuth, async (req, res) => {
-  const { lastKey } = req.body;
-  const notifications = await Notification.getByTo(`${req.user.id}`, lastKey);
-
-  return res.status(200).send({
-    success: 'true',
-    notifications: notifications.items,
-    lastKey: notifications.lastKey,
-  });
-});
-
-router.get('/decks/:userid/:page', async (req, res) => {
+router.get('/decks/:userid', async (req, res) => {
   try {
     const { userid } = req.params;
 
@@ -554,6 +519,37 @@ router.get('/decks/:userid/:page', async (req, res) => {
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
+});
+
+router.get('/notifications', ensureAuth, async (req, res) => {
+  const notifications = await Notification.getByTo(`${req.user.id}`);
+
+  return render(req, res, 'NotificationsPage', {
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
+  });
+});
+
+router.post('/getusernotifications', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const notifications = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
+  });
+});
+
+router.post('/getmorenotifications', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const notifications = await Notification.getByTo(`${req.user.id}`, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    notifications: notifications.items,
+    lastKey: notifications.lastKey,
+  });
 });
 
 router.get('/blog/:userid', async (req, res) => {

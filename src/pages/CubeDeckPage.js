@@ -70,7 +70,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
                 {deck.seats.map((seat, index) => (
                   <option key={seat.title} value={index}>
-                    {seat.username ? seat.username : seat.name}
+                    {`Seat ${index + 1}: ${seat.title}`}
                   </option>
                 ))}
               </Input>
@@ -90,7 +90,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               <Nav navbar>
                 <NavItem>
                   <SampleHandModal
-                    deck={deck.seats[seatIndex].deck.map((row) =>
+                    deck={deck.seats[seatIndex].mainboard.map((row) =>
                       row.map((col) => col.map((cardIndex) => deck.cards[cardIndex])),
                     )}
                   />

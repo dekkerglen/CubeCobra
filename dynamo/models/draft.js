@@ -12,6 +12,7 @@ const FIELDS = {
   CUBE_OWNER: 'cubeOwner',
   DATE: 'date',
   TYPE: 'type',
+  COMPLETE: 'complete',
 };
 
 const TYPES = {
@@ -143,8 +144,8 @@ const sanitize = (document) => {
       seat.Deck = seat.Deck.map(indexify);
     }
 
-    if (seat.Sideboard) {
-      seat.Sideboard = seat.Sideboard.map(indexify);
+    if (seat.sideboard) {
+      seat.sideboard = seat.sideboard.map(indexify);
     }
 
     if (seat.pickorder) {
@@ -160,19 +161,7 @@ const sanitize = (document) => {
 };
 
 const draftIsCompleted = (draft) => {
-  let numCards = 0;
-  if (!draft.seats) {
-    return false;
-  }
-  for (const seat of draft.seats) {
-    if (seat.Deck) {
-      numCards += seat.Deck.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
-    }
-    if (seat.Sideboard) {
-      numCards += seat.Sideboard.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
-    }
-  }
-  return numCards > 0;
+  return draft.complete;
 };
 
 module.exports = {
@@ -186,7 +175,7 @@ module.exports = {
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
       ExpressionAttributeNames: {
-        '#owner': FIELDS.CUBE_OWNER,
+        '#owner': FIELDS.OWNER,
       },
       ExpressionAttributeValues: {
         ':owner': owner,
@@ -246,6 +235,8 @@ module.exports = {
       [FIELDS.OWNER]: document.owner,
       [FIELDS.CUBE_OWNER]: document.cubeOwner,
       [FIELDS.DATE]: document.date,
+      [FIELDS.TYPE]: document.type,
+      [FIELDS.COMPLETE]: document.complete,
     });
 
     await s3
@@ -285,6 +276,7 @@ module.exports = {
         [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
         [FIELDS.DATE]: document[FIELDS.DATE],
         [FIELDS.TYPE]: document[FIELDS.TYPE],
+        [FIELDS.COMPLETE]: document[FIELDS.COMPLETE],
       }));
 
       await client.batchPut(items);
@@ -385,8 +377,8 @@ module.exports = {
         cards,
         seats: deck.seats.map((seat, index) => ({
           owner: `${seat.userid}`,
-          Mainboard: seat.deck,
-          Sideboard: seat.sideboard,
+          mainboard: seat.deck,
+          sideboard: seat.sideboard,
           pickorder: seatsForPickOrder ? seatsForPickOrder[index].pickorder : null,
           trashorder: seatsForPickOrder ? seatsForPickOrder[index].trashorder : null,
           title: seat.name,
@@ -395,6 +387,7 @@ module.exports = {
         })),
         InitialState: initialState,
         [FIELDS.TYPE]: type,
+        [FIELDS.COMPLETE]: true,
       });
 
       return [doc];
@@ -404,7 +397,7 @@ module.exports = {
       return [];
     }
   },
-  delete: async (id) => client.delete(id),
+  delete: async (id) => client.delete({ id }),
   scan: async (limit, lastKey) => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,

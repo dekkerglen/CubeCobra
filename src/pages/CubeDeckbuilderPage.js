@@ -21,13 +21,15 @@ import UserContext from 'contexts/UserContext';
 const canDrop = () => true;
 
 const getMatchingSeat = (seats, userid) =>
-  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].userid === userid)[1];
+  seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].owner === userid)[1];
 
 const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   const user = useContext(UserContext);
   const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
-    initialDeck.seats[seat].deck.map((row) => row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex]))),
+    initialDeck.seats[seat].mainboard.map((row) =>
+      row.map((col) => col.map((cardIndex) => initialDeck.cards[cardIndex])),
+    ),
   );
   const [sideboard, setSideboard] = useState(
     initialDeck.seats[seat].sideboard.map((row) =>
@@ -75,8 +77,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   );
 
   const currentDeck = { ...initialDeck };
-  currentDeck.playerdeck = deck;
-  currentDeck.playersideboard = sideboard;
+  currentDeck.mainboard = deck;
+  currentDeck.sideboard = sideboard;
 
   const [name, setName] = useState(initialDeck.seats[seat].name);
   const [description, setDescription] = useState(initialDeck.seats[seat].description);
@@ -114,7 +116,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     <DeckStacks
                       className="border-top"
                       cards={sideboard}
-                      title="Sideboard"
+                      title="sideboard"
                       locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}

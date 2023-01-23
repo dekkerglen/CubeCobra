@@ -86,7 +86,7 @@ const EditCollapse = ({ isOpen }) => {
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
-  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'Mainboard');
+  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'mainboard');
   const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
@@ -100,7 +100,7 @@ const EditCollapse = ({ isOpen }) => {
         }
         addCard(
           { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
-          showMaybeboard ? activeBoard : 'Mainboard',
+          showMaybeboard ? activeBoard : 'mainboard',
         );
         setAddValue('');
 
@@ -118,7 +118,7 @@ const EditCollapse = ({ isOpen }) => {
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
-        const board = changedCards[showMaybeboard ? activeBoard : 'Mainboard'];
+        const board = changedCards[showMaybeboard ? activeBoard : 'mainboard'];
         for (let i = 0; i < board.length; i++) {
           if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
             removeIndex = i;
@@ -130,7 +130,7 @@ const EditCollapse = ({ isOpen }) => {
             ...items,
             {
               color: 'danger',
-              message: `Couldn't find a card with name "${match}" in "${showMaybeboard ? activeBoard : 'Mainboard'}".`,
+              message: `Couldn't find a card with name "${match}" in "${showMaybeboard ? activeBoard : 'mainboard'}".`,
             },
           ]);
           return;
@@ -144,10 +144,10 @@ const EditCollapse = ({ isOpen }) => {
           swapCard(
             removeIndex,
             { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
-            showMaybeboard ? activeBoard : 'Mainboard',
+            showMaybeboard ? activeBoard : 'mainboard',
           );
         } else {
-          removeCard(removeIndex, showMaybeboard ? activeBoard : 'Mainboard');
+          removeCard(removeIndex, showMaybeboard ? activeBoard : 'mainboard');
         }
 
         setAddValue('');
@@ -192,7 +192,7 @@ const EditCollapse = ({ isOpen }) => {
             <InputGroup className="mb-1">
               <Input disabled value="Board" />
               <Input value={activeBoard} onChange={(e) => setActiveBoard(e.target.value)} name="select" type="select">
-                <option>Mainboard</option>
+                <option>mainboard</option>
                 <option>Maybeboard</option>
               </Input>
             </InputGroup>

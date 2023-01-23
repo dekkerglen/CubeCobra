@@ -144,7 +144,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
       },
       cardIsLabel: (card, label) => getPickCount(card) === parseInt(label, 10),
     },
-    'Mainboard Rate': {
+    'mainboard Rate': {
       get: getMainboardRate,
       labels: () => {
         const labels = [];
@@ -158,7 +158,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
         return label === `${v}% - ${v + 10}%`;
       },
     },
-    'Mainboard Count': {
+    'mainboard Count': {
       get: getMainboardCount,
       labels: (list) => {
         const set = new Set(list.map(getMainboardCount));

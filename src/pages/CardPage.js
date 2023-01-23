@@ -290,33 +290,39 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
               </TabPane>
               <TabPane tabId="3">
                 <CardBody>
-                  <PlayRateGraph defaultHistories={history} cardId={card.oracle_id} />
-                  <Row className="pt-2">
-                    <Col xs="12" sm="6" md="6" lg="6">
-                      <h5>By Legality:</h5>
-                      <Table bordered>
-                        <tbody>
-                          <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
-                          <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
-                          <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
-                          <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
-                          <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
-                        </tbody>
-                      </Table>
-                    </Col>
-                    <Col xs="12" sm="6" md="6" lg="6">
-                      <h5>By Size:</h5>
-                      <Table bordered>
-                        <tbody>
-                          <CountTableRow label="1-180" value={history[0].size180 || [0, 0]} />
-                          <CountTableRow label="181-360" value={history[0].size360 || [0, 0]} />
-                          <CountTableRow label="361-450" value={history[0].size450 || [0, 0]} />
-                          <CountTableRow label="451-540" value={history[0].size540 || [0, 0]} />
-                          <CountTableRow label="541+" value={history[0].size720 || [0, 0]} />
-                        </tbody>
-                      </Table>
-                    </Col>
-                  </Row>
+                  {history.length > 1 ? (
+                    <>
+                      <PlayRateGraph defaultHistories={history} cardId={card.oracle_id} />
+                      <Row className="pt-2">
+                        <Col xs="12" sm="6" md="6" lg="6">
+                          <h5>By Legality:</h5>
+                          <Table bordered>
+                            <tbody>
+                              <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
+                              <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
+                              <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
+                              <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
+                              <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
+                            </tbody>
+                          </Table>
+                        </Col>
+                        <Col xs="12" sm="6" md="6" lg="6">
+                          <h5>By Size:</h5>
+                          <Table bordered>
+                            <tbody>
+                              <CountTableRow label="1-180" value={history[0].size180 || [0, 0]} />
+                              <CountTableRow label="181-360" value={history[0].size360 || [0, 0]} />
+                              <CountTableRow label="361-450" value={history[0].size450 || [0, 0]} />
+                              <CountTableRow label="451-540" value={history[0].size540 || [0, 0]} />
+                              <CountTableRow label="541+" value={history[0].size720 || [0, 0]} />
+                            </tbody>
+                          </Table>
+                        </Col>
+                      </Row>
+                    </>
+                  ) : (
+                    <p>No play data available.</p>
+                  )}
                 </CardBody>
               </TabPane>
               <TabPane tabId="4">
@@ -508,96 +514,98 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
           </Card>
         </Col>
       </Row>
-      <Card className="my-3">
-        <CardHeader className="m-0 p-0 pt-2">
-          <Nav tabs>
-            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="0">
-              <h5>Often Drafted With</h5>
-            </Tab>
-            <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="1">
-              <h5>Often Cubed With</h5>
-            </Tab>
-          </Nav>
-        </CardHeader>
-        {correlatedTab === '0' && (
-          <CardBody>
-            <h4>Top cards</h4>
-            <CardGrid
-              cardList={draftedWith.top.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Creatures</h4>
-            <CardGrid
-              cardList={draftedWith.creatures.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Spells</h4>
-            <CardGrid
-              cardList={draftedWith.spells.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Other</h4>
-            <CardGrid
-              cardList={draftedWith.other.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-          </CardBody>
-        )}
-        {correlatedTab === '1' && (
-          <CardBody>
-            <h4>Top cards</h4>
-            <CardGrid
-              cardList={cubedWith.top.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Creatures</h4>
-            <CardGrid
-              cardList={cubedWith.creatures.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Spells</h4>
-            <CardGrid
-              cardList={cubedWith.spells.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-            <hr />
-            <h4>Other</h4>
-            <CardGrid
-              cardList={cubedWith.other.map((item) => ({ details: item }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-              linkDetails
-            />
-          </CardBody>
-        )}
-      </Card>
+      {cubedWith.top.length > 0 && (
+        <Card className="my-3">
+          <CardHeader className="m-0 p-0 pt-2">
+            <Nav tabs>
+              <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="0">
+                <h5>Often Drafted With</h5>
+              </Tab>
+              <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="1">
+                <h5>Often Cubed With</h5>
+              </Tab>
+            </Nav>
+          </CardHeader>
+          {correlatedTab === '0' && (
+            <CardBody>
+              <h4>Top cards</h4>
+              <CardGrid
+                cardList={draftedWith.top.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Creatures</h4>
+              <CardGrid
+                cardList={draftedWith.creatures.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Spells</h4>
+              <CardGrid
+                cardList={draftedWith.spells.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Other</h4>
+              <CardGrid
+                cardList={draftedWith.other.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+            </CardBody>
+          )}
+          {correlatedTab === '1' && (
+            <CardBody>
+              <h4>Top cards</h4>
+              <CardGrid
+                cardList={cubedWith.top.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Creatures</h4>
+              <CardGrid
+                cardList={cubedWith.creatures.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Spells</h4>
+              <CardGrid
+                cardList={cubedWith.spells.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Other</h4>
+              <CardGrid
+                cardList={cubedWith.other.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+            </CardBody>
+          )}
+        </Card>
+      )}
     </MainLayout>
   );
 };

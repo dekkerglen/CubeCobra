@@ -113,7 +113,7 @@ module.exports = {
     return id;
   },
   delete: async (id) => {
-    await client.delete(id);
+    await client.delete({ id });
   },
   batchPut: async (documents) => {
     await client.batchPut(

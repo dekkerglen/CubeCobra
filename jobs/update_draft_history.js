@@ -168,7 +168,8 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
           `./temp/all_drafts/${key}_${index}.json`,
           JSON.stringify(
             drafts.map((draft) =>
-              draft.seats[0].Mainboard.flat(3)
+              draft.seats[0].mainboard
+                .flat(3)
                 .map((cardIndex) => {
                   if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
                     return draft.cards[cardIndex].details.oracle_id;
@@ -198,13 +199,13 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
               sideboardsByCubeAndOracleId = loaded.sideboardsByCubeAndOracleId;
             }
 
-            for (const card of draft.seats[0].Mainboard.flat(3)) {
+            for (const card of draft.seats[0].mainboard.flat(3)) {
               if (typeof card === 'number' && card < draft.cards.length && card >= 0) {
                 incrementDict(mainboardsByCubeAndOracleId, draft.cards[card].details.oracle_id);
               }
             }
 
-            for (const card of draft.seats[0].Sideboard.flat(3)) {
+            for (const card of draft.seats[0].sideboard.flat(3)) {
               if (typeof card === 'number' && card < draft.cards.length && card >= 0) {
                 incrementDict(sideboardsByCubeAndOracleId, draft.cards[card].details.oracle_id);
               }

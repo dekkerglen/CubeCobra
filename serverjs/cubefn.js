@@ -263,11 +263,11 @@ function CSVtoCards(csvString, carddb) {
 
 async function compareCubes(cardsA, cardsB) {
   const inBoth = [];
-  const onlyA = cardsA.Mainboard.slice(0);
-  const onlyB = cardsB.Mainboard.slice(0);
+  const onlyA = cardsA.mainboard.slice(0);
+  const onlyB = cardsB.mainboard.slice(0);
   const aOracles = onlyA.map((card) => card.details.oracle_id);
   const bOracles = onlyB.map((card) => card.details.oracle_id);
-  for (const card of cardsA.Mainboard) {
+  for (const card of cardsA.mainboard) {
     if (bOracles.includes(card.details.oracle_id)) {
       inBoth.push(card);
 
@@ -373,7 +373,7 @@ const methods = {
     });
   },
   generatePack: async (cube, cards, carddb, seed) => {
-    const main = cards.Mainboard;
+    const main = cards.mainboard;
 
     if (!seed) {
       seed = Date.now().toString();

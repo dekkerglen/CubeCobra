@@ -20,12 +20,12 @@ const SealedCard = () => {
           </CardTitle>
         </CardHeader>
         <CardBody>
-          <LabelRow htmlFor="packs-sealed" label="Number of Packs">
+          <LabelRow htmlFor="packs-sealed" label="Number of packs">
             <Input type="select" name="packs" id="packs-sealed" defaultValue="6">
               {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="cards-sealed" label="cards per Pack">
+          <LabelRow htmlFor="cards-sealed" label="Cards per pack">
             <Input type="select" name="cards" id="cards-sealed" defaultValue="15">
               {rangeOptions(5, 25)}
             </Input>

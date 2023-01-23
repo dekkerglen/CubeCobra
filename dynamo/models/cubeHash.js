@@ -94,10 +94,10 @@ const hashKeywords = (metadata) => {
 const hashOracles = (cards) => {
   const res = [];
 
-  for (const card of cards.Mainboard) {
+  for (const card of cards.mainboard) {
     res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
   }
-  for (const card of cards.Mainboard) {
+  for (const card of cards.mainboard) {
     res.push(`maybe:${carddb.cardFromId(card.cardID).oracle_id}`);
   }
 

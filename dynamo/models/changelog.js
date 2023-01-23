@@ -132,7 +132,7 @@ const getChangelog = async (cubeId, id) => {
 
 const parseHtml = (html) => {
   const changelog = {
-    Mainboard: {},
+    mainboard: {},
   };
 
   const items = html.split(/<\/?br\/?>/g);
@@ -144,32 +144,32 @@ const parseHtml = (html) => {
       const ids = carddb.nameToId[name];
 
       if (operator === '+') {
-        if (!changelog.Mainboard.adds) {
-          changelog.Mainboard.adds = [];
+        if (!changelog.mainboard.adds) {
+          changelog.mainboard.adds = [];
         }
         if (ids) {
-          changelog.Mainboard.adds.push({ cardID: ids[0] });
+          changelog.mainboard.adds.push({ cardID: ids[0] });
         }
       } else if (operator === '-' || operator === '–') {
-        if (!changelog.Mainboard.removes) {
-          changelog.Mainboard.removes = [];
+        if (!changelog.mainboard.removes) {
+          changelog.mainboard.removes = [];
         }
         if (ids) {
-          changelog.Mainboard.removes.push({ oldCard: { cardID: ids[0] } });
+          changelog.mainboard.removes.push({ oldCard: { cardID: ids[0] } });
         }
       }
     } else if (tokens.length === 3) {
       const [operator, removed, added] = tokens;
       if (operator === '→') {
-        if (!changelog.Mainboard.swaps) {
-          changelog.Mainboard.swaps = [];
+        if (!changelog.mainboard.swaps) {
+          changelog.mainboard.swaps = [];
         }
 
         const addedIds = carddb.nameToId[cardutil.normalizeName(added)];
         const removedIds = carddb.nameToId[cardutil.normalizeName(removed)];
 
         if (addedIds && removedIds) {
-          changelog.Mainboard.swaps.push({
+          changelog.mainboard.swaps.push({
             oldCard: { cardID: removedIds[0] },
             card: { cardID: addedIds[0] },
           });
@@ -253,30 +253,30 @@ module.exports = {
     let changelog = null;
     if (blog.changed_cards) {
       changelog = {
-        Mainboard: {},
+        mainboard: {},
       };
       for (const { removedID, addedID } of blog.changed_cards) {
         if (addedID && removedID) {
           // swap
-          if (!changelog.Mainboard.swaps) {
-            changelog.Mainboard.swaps = [];
+          if (!changelog.mainboard.swaps) {
+            changelog.mainboard.swaps = [];
           }
-          changelog.Mainboard.swaps.push({
+          changelog.mainboard.swaps.push({
             card: { cardID: addedID },
             oldCard: { cardID: removedID },
           });
         } else if (addedID) {
           // add
-          if (!changelog.Mainboard.adds) {
-            changelog.Mainboard.adds = [];
+          if (!changelog.mainboard.adds) {
+            changelog.mainboard.adds = [];
           }
-          changelog.Mainboard.adds.push({ cardID: addedID });
+          changelog.mainboard.adds.push({ cardID: addedID });
         } else if (removedID) {
           // remove
-          if (!changelog.Mainboard.removes) {
-            changelog.Mainboard.removes = [];
+          if (!changelog.mainboard.removes) {
+            changelog.mainboard.removes = [];
           }
-          changelog.Mainboard.removes.push({
+          changelog.mainboard.removes.push({
             oldCard: { cardID: removedID },
           });
         }
@@ -287,7 +287,7 @@ module.exports = {
       changelog = parseHtml(blog.html);
     }
 
-    if (!changelog || Object.entries(changelog.Mainboard).length === 0) {
+    if (!changelog || Object.entries(changelog.mainboard).length === 0) {
       return [];
     }
 
