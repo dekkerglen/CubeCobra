@@ -99,7 +99,7 @@ module.exports = {
       [FIELDS.VOTECOUNT]: pack.voters.length,
     };
   },
-  delete: async (id) => client.delete(id),
+  delete: async (id) => client.delete({ id }),
   FIELDS,
   STATUSES,
 };

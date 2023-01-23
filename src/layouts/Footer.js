@@ -41,17 +41,12 @@ const Footer = () => (
             <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/explore">
-                  Explore cubes
+                  Explore Cubes
                 </a>
               </li>
               <li>
                 <a className="footer-link" href="/search">
-                  Search cubes
-                </a>
-              </li>
-              <li>
-                <a className="footer-link" href="/random">
-                  Random Cube
+                  Search Cubes
                 </a>
               </li>
             </ul>
@@ -59,26 +54,21 @@ const Footer = () => (
         </Col>
         <Col xs="6" sm="3">
           <small>
-            <h6 className="footer-header">cards</h6>
+            <h6 className="footer-header">Cards</h6>
             <ul className="footer-ul ps-0">
               <li>
                 <a className="footer-link" href="/tool/topcards">
-                  Top cards
+                  Top Cards
                 </a>
               </li>
               <li>
                 <a className="footer-link" href="/tool/searchcards">
-                  Search cards
+                  Search Cards
                 </a>
               </li>
               <li>
                 <a className="footer-link" href="/packages/browse">
                   Packages
-                </a>
-              </li>
-              <li>
-                <a className="footer-link" href="/tool/randomcard">
-                  Random Card
                 </a>
               </li>
               <li>

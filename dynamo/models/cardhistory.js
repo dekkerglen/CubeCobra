@@ -15,7 +15,6 @@ const FIELDS = {
   DATE: 'date',
   ELO: 'elo',
   PICKS: 'picks',
-  PRICES: 'prices',
   SIZE180: 'size180',
   SIZE360: 'size360',
   SIZE450: 'size450',
@@ -81,18 +80,6 @@ module.exports = {
           [FIELDS.DATE]: date.valueOf(),
           [FIELDS.ELO]: data.elo,
           [FIELDS.PICKS]: data.picks,
-          [FIELDS.PRICES]: Object.fromEntries(
-            data.prices.map((item) => [
-              item.version,
-              {
-                Usd: item.price,
-                UsdFoil: item.price_foil,
-                UsdEtched: item.price_etched,
-                Eur: item.eur,
-                Tix: item.tix,
-              },
-            ]),
-          ),
           [FIELDS.SIZE180]: data.size180,
           [FIELDS.SIZE360]: data.size360,
           [FIELDS.SIZE450]: data.size450,

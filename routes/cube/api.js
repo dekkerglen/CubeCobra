@@ -633,7 +633,7 @@ router.post(
     }
 
     const cubeCards = await Cube.getCards(req.params.id);
-    const mainboard = cubeCards.Mainboard;
+    const { mainboard } = cubeCards;
 
     let tag = null;
     if (req.body.packid) {
@@ -661,7 +661,7 @@ router.post(
     if (tag) {
       const changelist = await Changelog.put(
         {
-          Mainboard: { adds },
+          mainboard: { adds },
         },
         cube.id,
       );
@@ -744,6 +744,8 @@ router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
   }
 
   draft.seats[index].seat = seat;
+  draft.complete = true;
+
   await Draft.put(draft);
 
   return res.status(200).send({

@@ -22,12 +22,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
           </CardTitle>
         </CardHeader>
         <CardBody>
-          <LabelRow htmlFor="packs" label="Number of Packs">
+          <LabelRow htmlFor="packs" label="Number of packs">
             <Input type="select" name="packs" id="packs" defaultValue="3">
               {rangeOptions(1, 16)}
             </Input>
           </LabelRow>
-          <LabelRow htmlFor="cards" label="cards per Pack">
+          <LabelRow htmlFor="cards" label="Cards per pack">
             <Input type="select" name="cards" id="cards" defaultValue="15">
               {rangeOptions(1, 25)}
             </Input>

@@ -68,13 +68,7 @@ const DeckPreview = ({ deck, nextURL }) => {
           <a href={`/cube/deck/${deck.id}`} title={fullName}>
             {name}
           </a>{' '}
-          by{' '}
-          {deck.seats[0].userid ? (
-            <Username userId={deck.seats[0].userid} defaultName={deck.seats[0].username} />
-          ) : (
-            'Anonymous'
-          )}{' '}
-          - <TimeAgo date={date} />
+          by <Username userId={deck.owner} defaultName="Drafter" /> - <TimeAgo date={date} />
         </h6>
       </Col>
       {canEdit && (

@@ -291,10 +291,11 @@ const finishDraft = async (draftId, draft) => {
       drafted[row][col].push(parseInt(cardIndex, 10));
     }
 
-    draft.seats[i].Sideboard = sideboard;
-    draft.seats[i].Mainboard = drafted;
+    draft.seats[i].sideboard = sideboard;
+    draft.seats[i].mainboard = drafted;
   }
 
+  draft.compelted = true;
   await Draft.put(draft);
   await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);

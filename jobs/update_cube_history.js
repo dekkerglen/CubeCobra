@@ -97,20 +97,20 @@ const { getCubeTypes } = require('../serverjs/cubefn');
           cubes[logRow.cube] = [];
         }
 
-        if (log.Mainboard.adds) {
-          for (const add of log.Mainboard.adds) {
+        if (log.mainboard.adds) {
+          for (const add of log.mainboard.adds) {
             cubes[logRow.cube].push(add.cardID);
           }
         }
 
-        if (log.Mainboard.removes) {
-          for (const remove of log.Mainboard.removes) {
+        if (log.mainboard.removes) {
+          for (const remove of log.mainboard.removes) {
             cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(remove.oldCard.cardID), 1);
           }
         }
 
-        if (log.Mainboard.swaps) {
-          for (const swap of log.Mainboard.swaps) {
+        if (log.mainboard.swaps) {
+          for (const swap of log.mainboard.swaps) {
             cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
           }
         }

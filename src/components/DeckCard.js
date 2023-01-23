@@ -53,7 +53,7 @@ DeckStacksStatic.propTypes = {
 };
 
 const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
-  const stackedDeck = seat.deck.slice();
+  const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
   for (const col of stackedSideboard[0]) {
@@ -115,7 +115,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
                 cards={deck.cards}
                 title="Deck"
                 subtitle={makeSubtitle(
-                  seat.deck
+                  seat.mainboard
                     .flat()
                     .flat()
                     .map((cardIndex) => deck.cards[cardIndex]),
@@ -127,9 +127,9 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
             <Row>
               <Col>
                 <CardBody className="border-bottom">
-                  <h4>Sideboard</h4>
+                  <h4>sideboard</h4>
                 </CardBody>
-                <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="Sideboard" />
+                <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="sideboard" />
               </Col>
             </Row>
           )}

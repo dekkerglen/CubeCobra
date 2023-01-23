@@ -35,7 +35,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     res.charset = 'UTF-8';
     res.write(`NAME:${seat.name}\r\n`);
     const main = {};
-    for (const row of seat.Mainboard) {
+    for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -53,7 +53,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
     }
 
     const side = {};
-    for (const row of seat.Sideboard) {
+    for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -91,7 +91,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
     res.write(`name=${seat.name}\r\n`);
     res.write('[Main]\r\n');
     const main = {};
-    for (const row of seat.Mainboard) {
+    for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -110,7 +110,7 @@ router.get('/download/forge/:id/:seat', async (req, res) => {
 
     res.write('[Side]\r\n');
     const side = {};
-    for (const row of seat.Sideboard) {
+    for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -145,7 +145,7 @@ router.get('/download/txt/:id/:seat', async (req, res) => {
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    for (const row of seat.Mainboard) {
+    for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const { name } = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -167,7 +167,7 @@ router.get('/download/mtgo/:id/:seat', async (req, res) => {
       return res.redirect('/404');
     }
     const seat = deck.seats[req.params.seat];
-    return exportToMtgo(res, seat.name, seat.Mainboard.flat(), seat.Sideboard.flat(), deck.cards);
+    return exportToMtgo(res, seat.name, seat.mainboard.flat(), seat.sideboard.flat(), deck.cards);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -187,7 +187,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
     res.charset = 'UTF-8';
     res.write('Deck\r\n');
     const main = {};
-    for (const row of seat.Mainboard) {
+    for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -206,7 +206,7 @@ router.get('/download/arena/:id/:seat', async (req, res) => {
 
     res.write('\r\nSideboard\r\n');
     const side = {};
-    for (const row of seat.Sideboard) {
+    for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -242,7 +242,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     const main = {};
-    for (const row of seat.Mainboard) {
+    for (const row of seat.mainboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -259,9 +259,9 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
       res.write(`${value}x ${key}\r\n`);
     }
 
-    res.write('Sideboard\r\n');
+    res.write('sideboard\r\n');
     const side = {};
-    for (const row of seat.Sideboard) {
+    for (const row of seat.sideboard) {
       for (const col of row) {
         for (const cardIndex of col) {
           const details = carddb.cardFromId(deck.cards[cardIndex].cardID);
@@ -293,7 +293,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    await Draft.delete(req.params.id);
+    await Draft.delete(deck.id);
 
     req.flash('success', 'Deck Deleted');
     return res.send('Success');
@@ -483,14 +483,16 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     const seatIndex = deck.seats
       .map((seat, index) => [seat, index])
-      .find((tuple) => `${tuple[0].userid}` === `${req.user.id}`)[1];
+      .find((tuple) => `${tuple[0].owner}` === `${req.user.id}`)[1];
 
     const { main, side, title, description } = req.body;
 
-    deck.seats[seatIndex].Mainboard = main;
-    deck.seats[seatIndex].Sideboard = side;
-    deck.seats[seatIndex].title = title.substring(0, 100);
-    deck.seats[seatIndex].body = description.substring(0, 1000);
+    deck.seats[seatIndex].mainboard = JSON.parse(main);
+    deck.seats[seatIndex].sideboard = JSON.parse(side);
+    deck.seats[seatIndex].title = (title || '').substring(0, 100);
+    deck.seats[seatIndex].body = (description || '').substring(0, 1000);
+
+    deck.complete = true;
 
     await Draft.put(deck);
 
@@ -550,10 +552,11 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
       basics: base.basics,
       cards: base.cards,
       seats: [],
+      complete: false,
     };
 
     for (let i = 0; i < draft.seats.length; i += 1) {
-      draft.seats[i].deck = createPool();
+      draft.seats[i].mainboard = createPool();
       draft.seats[i].sideboard = createPool();
       draft.seats[i].pickorder = [];
       draft.seats[i].trashorder = [];
@@ -579,7 +582,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     }
 
     const cubeCards = Cube.getCards(cube);
-    const mainboard = cubeCards.Mainboard;
+    const { mainboard } = cubeCards;
 
     if (cube.owner !== req.user.id) {
       req.flash('danger', 'Not Authorized');
@@ -658,10 +661,11 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         {
           owner: req.user.id,
           title: `${req.user.username}'s decklist upload`,
-          Mainboard: [added.slice(0, 8), added.slice(8, 16)],
-          Sideboard: createPool(),
+          mainboard: [added.slice(0, 8), added.slice(8, 16)],
+          sideboard: createPool(),
         },
       ],
+      complete: true,
     };
 
     await Draft.put(deck);
@@ -696,7 +700,7 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imgUrl);
+    const imagedata = util.getImageData(cube.imageName);
 
     return render(
       req,

@@ -65,8 +65,8 @@ const PlaytestData = ({ cards: allCards, cubeAnalytics }) => {
             { key: 'elo', title: 'Cube elo', sortable: true, heading: false },
             { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false, renderFn: renderPercent },
             { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
-            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
+            { key: 'mainboard', title: 'mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },
+            { key: 'mainboards', title: 'mainboard Count', sortable: true, heading: false },
           ]}
           data={data}
           sortFns={{ label: compareStrings }}

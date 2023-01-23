@@ -130,9 +130,8 @@ const getCards = async (id) => {
     }
     return cards;
   } catch (e) {
-    console.log(e);
     return {
-      Mainboard: [],
+      mainboard: [],
       Maybeboard: [],
     };
   }
@@ -146,7 +145,7 @@ module.exports = {
     const oldMetadata = (await client.get(id)).Item;
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 
-    const main = newCards.Mainboard;
+    const main = newCards.mainboard;
     newMetadata.cardCount = main.length;
 
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
@@ -193,14 +192,11 @@ module.exports = {
   },
   getById: async (id) => {
     const byId = await client.get(id);
-    console.log(byId);
     if (byId.Item) {
       return byId.Item;
     }
 
-    console.log(id);
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
-    console.log(byShortId);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
       const query = await client.get(cubeId);
@@ -407,7 +403,7 @@ module.exports = {
   convertCubeToCards: (cube) => {
     return {
       id: `${cube._id}`,
-      Mainboard: cube.cards.map((card) => {
+      mainboard: cube.cards.map((card) => {
         delete card._id;
         delete card.details;
         if (card.addedTmsp) {

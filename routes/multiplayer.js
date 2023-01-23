@@ -180,7 +180,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
         });
       }
 
-      deck.seats[seat].deck = drafted;
+      deck.seats[seat].mainboard = drafted;
       deck.seats[seat].sideboard = sideboard;
       await Draft.put(deck);
 

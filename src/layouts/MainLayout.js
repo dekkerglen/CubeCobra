@@ -65,7 +65,6 @@ const MainLayout = ({ children, loginCallback }) => {
               <DropdownMenu end>
                 <DropdownItem href="/explore">Explore cubes</DropdownItem>
                 <DropdownItem href="/search">Search cubes</DropdownItem>
-                <DropdownItem href="/random">Random Cube</DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>
             <UncontrolledDropdown nav inNavbar>
@@ -76,7 +75,6 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownItem href="/tool/topcards">Top cards</DropdownItem>
                 <DropdownItem href="/tool/searchcards">Search cards</DropdownItem>
                 <DropdownItem href="/packages/browse">Packages</DropdownItem>
-                <DropdownItem href="/tool/randomcard">Random Card</DropdownItem>
                 <DropdownItem href="/filters">Filter Syntax</DropdownItem>
               </DropdownMenu>
             </UncontrolledDropdown>

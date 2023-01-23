@@ -90,7 +90,7 @@ router.post('/add', ensureAuth, async (req, res) => {
 
     await Cube.putCards({
       id: cube.id,
-      Mainboard: [],
+      mainboard: [],
       Maybeboard: [],
     });
 
@@ -336,7 +336,7 @@ router.get('/overview/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    const mainboard = cards.Mainboard;
+    const { mainboard } = cards;
 
     const blogs = await Blog.getByCube(cube.id, 1);
 
@@ -603,6 +603,7 @@ router.get('/playtest/:id', async (req, res) => {
     }
 
     const decks = await Draft.getByCube(cube.id);
+
     const imagedata = util.getImageData(cube.imageName);
 
     return render(
@@ -871,7 +872,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       const { newCards, newMaybe, missing } = CSVtoCards(items, carddb);
 
       const newList = {
-        Mainboard: newCards.map((card) => ({
+        mainboard: newCards.map((card) => ({
           details: carddb.cardFromId(card.cardID),
           ...card,
         })),
@@ -882,11 +883,11 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       };
 
       const changelog = {
-        Mainboard: {
-          adds: newList.Mainboard.map(({ cardID }) => {
+        mainboard: {
+          adds: newList.mainboard.map(({ cardID }) => {
             return { cardID };
           }),
-          removes: cards.Mainboard.map(({ cardID }) => {
+          removes: cards.mainboard.map(({ cardID }) => {
             return { oldCard: { cardID } };
           }),
         },
@@ -900,7 +901,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
         },
       };
 
-      added.push(...newList.Mainboard);
+      added.push(...newList.mainboard);
 
       return updateCubeAndBlog(req, res, cube, newList, changelog, added, missing);
     }
@@ -926,7 +927,7 @@ router.post(
 
       const cube = await Cube.getById(req.params.id);
       const cubeCards = await Cube.getCards(req.params.id);
-      const mainboard = cubeCards.Mainboard;
+      const { mainboard } = cubeCards;
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Cube not found');
@@ -954,6 +955,7 @@ router.post(
         seats: {},
         cards: [],
         IniitalState: [],
+        complete: false,
       };
 
       for (let i = 0; i < numPacks; i++) {
@@ -1005,7 +1007,7 @@ router.post(
   body('cards').toInt(),
   async (req, res) => {
     try {
-      const user = await User.getById(req.user);
+      const user = await User.getById(req.user.id);
 
       if (!user) {
         req.flash('danger', 'Please Login to build a sealed deck.');
@@ -1025,7 +1027,7 @@ router.post(
       }
 
       const cubeCards = await Cube.getCards(req.params.id);
-      const mainboard = cubeCards.Mainboard;
+      const { mainboard } = cubeCards;
 
       if (mainboard.length < numCards) {
         req.flash('danger', `Not enough cards, need ${numCards} cards for sealed with ${packs} packs of ${cards}.`);
@@ -1076,6 +1078,7 @@ router.post(
         type: Draft.TYPES.SEALED,
         seats: [],
         cards: cardsArray,
+        complete: true,
       };
 
       addBasics(deck, cube.basics);
@@ -1084,15 +1087,15 @@ router.post(
         owner: user.id,
         title: `Sealed from ${cube.name}`,
         body: '',
-        Mainboard: pool,
-        Sideboard: createPool(),
+        mainboard: pool,
+        sideboard: createPool(),
       });
 
-      await Draft.put(deck);
+      const deckId = await Draft.put(deck);
 
       cube.numDecks += 1;
 
-      await cube.save();
+      await Cube.update(cube);
 
       const cubeOwner = await User.getById(cube.owner);
 
@@ -1100,12 +1103,12 @@ router.post(
         await util.addNotification(
           cubeOwner,
           user,
-          `/cube/deck/${deck.id}`,
+          `/cube/deck/${deckId}`,
           `${user.username} built a sealed deck from your cube: ${cube.name}`,
         );
       }
 
-      return res.redirect(`/cube/deck/deckbuilder/${deck.id}`);
+      return res.redirect(`/cube/deck/deckbuilder/${deckId}`);
     } catch (err) {
       return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
@@ -1139,7 +1142,7 @@ router.post(
       }
 
       const cubeCards = await Cube.getCards(req.params.id);
-      const mainboard = cubeCards.Mainboard;
+      const { mainboard } = cubeCards;
 
       if (mainboard.length === 0) {
         // This is a 4XX error, not a 5XX error
@@ -1152,7 +1155,9 @@ router.post(
       // setup draft
       const format = createdraft.getDraftFormat(params, cube);
 
-      const draft = {};
+      const draft = {
+        complete: false,
+      };
 
       let populated = {};
       try {

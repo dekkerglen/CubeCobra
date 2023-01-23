@@ -52,7 +52,7 @@ const DeckbuilderNavbar = ({
   const stripped = useMemo(() => {
     const res = JSON.parse(JSON.stringify(deck));
 
-    for (const collection of [res.playerdeck, res.playersideboard]) {
+    for (const collection of [res.mainboard, res.sideboard]) {
       for (const row of collection) {
         for (const column of row) {
           column.forEach((card, index) => {
@@ -63,12 +63,11 @@ const DeckbuilderNavbar = ({
         }
       }
     }
-    const result = JSON.stringify({
-      playersideboard: res.playersideboard,
-      playerdeck: res.playerdeck,
-    });
 
-    return result;
+    return {
+      sideboard: res.sideboard,
+      mainboard: res.mainboard,
+    };
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
@@ -93,9 +92,10 @@ const DeckbuilderNavbar = ({
               Save Deck
             </NavLink>
             <CSRFForm className="d-none" innerRef={saveForm} method="POST" action={`/cube/deck/editdeck/${deck.id}`}>
-              <Input type="hidden" name="draftraw" value={stripped} />
-              <Input type="hidden" name="name" value={JSON.stringify(name)} />
-              <Input type="hidden" name="description" value={JSON.stringify(description)} />
+              <Input type="hidden" name="main" value={JSON.stringify(stripped.mainboard)} />
+              <Input type="hidden" name="side" value={JSON.stringify(stripped.sideboard)} />
+              <Input type="hidden" name="title" value={name} />
+              <Input type="hidden" name="description" value={description} />
             </CSRFForm>
           </NavItem>
           <NavItem>
@@ -106,7 +106,7 @@ const DeckbuilderNavbar = ({
               modalProps={{
                 basics: deck.basics,
                 addBasics,
-                deck: deck.playerdeck.flat(3).map(({ index }) => index),
+                deck: deck.mainboard.flat(3).map(({ index }) => index),
                 cards: deck.cards,
               }}
             >

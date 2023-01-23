@@ -8,7 +8,7 @@ import CardSearch from 'components/CardSearch';
 
 const CardSearchPage = ({ loginCallback }) => {
   return (
-    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ Mainboard: [] }}>
+    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
         <CardSearch />
       </MainLayout>

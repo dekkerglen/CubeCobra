@@ -44,7 +44,7 @@ router.get('/cubecobra/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    let mainboard = cards.Mainboard;
+    let { mainboard } = cards;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
@@ -75,7 +75,7 @@ router.get('/csv/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    let mainboard = cards.Mainboard;
+    let { mainboard } = cards;
     const maybeboard = cards.Maybeboard;
 
     for (const card of [...mainboard, ...maybeboard]) {
@@ -113,7 +113,7 @@ router.get('/forge/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    let mainboard = cards.Mainboard;
+    let { mainboard } = cards;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);
@@ -147,7 +147,7 @@ router.get('/mtgo/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    let mainboard = cards.Mainboard;
+    let { mainboard } = cards;
     const maybeboard = cards.Maybeboard;
 
     for (const card of mainboard) {
@@ -173,7 +173,7 @@ router.get('/xmage/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
-    let mainboard = cards.Mainboard;
+    let { mainboard } = cards;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);

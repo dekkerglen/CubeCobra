@@ -139,11 +139,6 @@ router.get('/topcards', async (req, res) => {
   }
 });
 
-router.get('/randomcard', async (req, res) => {
-  const card = carddb.allCards()[Math.floor(Math.random() * carddb.allCards().length)];
-  res.redirect(`/tool/card/${card.oracle_id}`);
-});
-
 router.post('/cardhistory', async (req, res) => {
   try {
     const { id, zoom, period } = req.body;
@@ -229,6 +224,10 @@ router.get('/card/:id', async (req, res) => {
     // otherwise just go to this ID.
     const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
 
+    if (history.items.length === 0) {
+      history.items.push({});
+    }
+
     const draftedWith = {};
     const cubedWith = {};
 
@@ -310,7 +309,7 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
 
     const cards = await Cube.getCards(req.params.cubeid);
 
-    const main = cards.Mainboard;
+    const main = cards.mainboard;
 
     const found = main
       .map((card) => ({ details: carddb.cardFromId(card.cardID), ...card }))

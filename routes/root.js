@@ -36,16 +36,6 @@ router.get('/explore', async (req, res) => {
   });
 });
 
-router.get('/random', async (req, res) => {
-  const now = new Date().valueOf();
-  // sometime random within the last month
-  const random = now - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 30 * 30);
-
-  const query = await Cube.getByVisibilityBefore(Cube.VISIBILITY.PUBLIC, random);
-
-  res.redirect(`/cube/overview/${encodeURIComponent(query.items[0].id)}`);
-});
-
 router.get('/dashboard', ensureAuth, async (req, res) => {
   try {
     const posts = await Feed.getByTo(req.user.id);

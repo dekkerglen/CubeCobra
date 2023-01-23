@@ -121,7 +121,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
       trashed: [],
       pickQueue: draft.seats[i].pickorder.slice(),
       trashQueue: (draft.seats[i].trashorder || []).slice(),
-      cardsPicked: [...draft.seats[i].Mainboard.flat(3), ...draft.seats[i].Sideboard.flat(3)],
+      cardsPicked: [...draft.seats[i].mainboard.flat(3), ...draft.seats[i].sideboard.flat(3)],
       cardsInPack: [],
       picksList,
     });
