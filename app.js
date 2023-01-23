@@ -3,7 +3,6 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('passport');
@@ -21,23 +20,6 @@ const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
-
-// Connect db
-mongoose.connect(process.env.MONGODB_URL, {
-  useCreateIndex: true,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const db = mongoose.connection;
-db.once('open', () => {
-  console.log('Connected to Mongo.');
-});
-
-// Check for db errors
-db.on('error', (err) => {
-  winston.error(err);
-});
 
 // Init app
 const app = express();

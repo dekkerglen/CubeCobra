@@ -4,8 +4,8 @@
   "description": "",
   "private": true,
   "main": "app.js",
-  "engines" : { 
-    "node" : ">=12.0.0 <13.0.0"
+  "engines": {
+    "node": ">=12.0.0 <13.0.0"
   },
   "scripts": {
     "bash": "bash",
@@ -29,7 +29,7 @@
     "devstart": "npm run nearley && npm run sass -- --watch & npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
     "cards": "node --max-old-space-size=4096 force_update.js",
-    "start": "npm install && node force_update.js && nodemon -x 'node app.js || touch app.js'",
+    "start": "npm install && node force_update.js && node server.js",
     "sass": "sass scss:public/css/bootstrap --no-source-map",
     "run-daily-jobs": "sh jobs/definition/daily.sh",
     "run-weekly-jobs": "sh jobs/definition/weekly.sh",
@@ -83,6 +83,7 @@
     "express-rate-limit": "^5.1.3",
     "express-session": "^1.17.0",
     "express-validator": "^6.4.0",
+    "forever-monitor": "^3.0.3",
     "glob": "^7.1.6",
     "html-to-text": "^5.1.1",
     "http": "0.0.1-security",

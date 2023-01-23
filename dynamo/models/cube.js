@@ -193,11 +193,14 @@ module.exports = {
   },
   getById: async (id) => {
     const byId = await client.get(id);
+    console.log(byId);
     if (byId.Item) {
       return byId.Item;
     }
 
+    console.log(id);
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
+    console.log(byShortId);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
       const query = await client.get(cubeId);

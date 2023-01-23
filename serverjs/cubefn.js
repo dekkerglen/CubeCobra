@@ -4,6 +4,7 @@ const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
 const sharp = require('sharp');
+const Cube = require('../dynamo/models/cube');
 
 const util = require('./util');
 const { getDraftFormat, createDraft } = require('../dist/drafting/createdraft');
@@ -334,8 +335,14 @@ function cachePromise(key, callback) {
 }
 
 function isCubeViewable(cube, user) {
-  if (!cube) return false;
-  if (cube.visibility !== 'pu') return true;
+  if (!cube) {
+    return false;
+  }
+
+  if (cube.visibility === Cube.VISIBILITY.PUBLIC) {
+    return true;
+  }
+
   return user && (cube.owner === user.id || util.isAdmin(user));
 }
 
