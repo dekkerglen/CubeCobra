@@ -11,7 +11,6 @@ import {
   DropdownToggle,
   Form,
   Input,
-  Label,
   Nav,
   NavItem,
   NavLink,
