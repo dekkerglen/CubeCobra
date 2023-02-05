@@ -135,9 +135,6 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
       <Navbar expand="md" className="navbar-light">
         <div className="d-flex flex-row flex-nowrap justify-content-between" style={{ flexGrow: 1 }}>
           <div className="view-style-select">
-            <Label className="visually-hidden" for="viewSelect">
-              Cube View Style
-            </Label>
             <Input type="select" id="viewSelect" value={cubeView} onChange={handleChangeCubeView}>
               <option value="table">Table View</option>
               <option value="spoiler">Visual Spoiler</option>

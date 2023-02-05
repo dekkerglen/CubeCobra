@@ -6,14 +6,12 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import CommentsSection from 'components/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
-import DraftbotBreakdown from 'components/DraftbotBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
 import { makeSubtitle } from 'utils/Card';
 import Username from 'components/Username';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
-import DraftPropType from 'proptypes/DraftPropType';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
@@ -52,7 +50,7 @@ DeckStacksStatic.propTypes = {
   piles: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
 };
 
-const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
+const DeckCard = ({ seat, deck, seatIndex, view }) => {
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -99,11 +97,7 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          {draft ? (
-            <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={draft} />
-          ) : (
-            <h4>This deck does not have a related draft log.</h4>
-          )}
+          <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
         </CardBody>
       )}
       {view === 'deck' && (
@@ -135,15 +129,6 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
           )}
         </>
       )}
-      {view === 'draftbot' && (
-        <CardBody>
-          {draft ? (
-            <DraftbotBreakdown deck={deck} seatIndex={seatIndex} draft={draft} />
-          ) : (
-            <h4>This deck does not have a related draft log.</h4>
-          )}
-        </CardBody>
-      )}
       <CardBody>
         <Markdown markdown={seat.description} />
       </CardBody>
@@ -157,7 +142,6 @@ const DeckCard = ({ seat, deck, seatIndex, draft, view }) => {
 DeckCard.propTypes = {
   seat: DeckSeatPropType.isRequired,
   view: PropTypes.string,
-  draft: DraftPropType.isRequired,
   deck: DeckPropType.isRequired,
   seatIndex: PropTypes.string.isRequired,
 };

@@ -10,7 +10,6 @@ import {
   NavItem,
   NavLink,
   Row,
-  Label,
   Input,
   UncontrolledDropdown,
   DropdownToggle,
@@ -64,9 +63,6 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
         <CubeLayout cube={cube} activeLink="playtest">
           <Navbar expand="md" light className="usercontrols mb-3">
             <div className="view-style-select pe-2">
-              <Label className="sr-only" for="viewSelect">
-                Cube View Style
-              </Label>
               <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
                 {deck.seats.map((seat, index) => (
                   <option key={seat.title} value={index}>
@@ -76,13 +72,9 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               </Input>
             </div>
             <div className="view-style-select pe-2">
-              <Label className="sr-only" for="viewSelect">
-                Cube View Style
-              </Label>
               <Input type="select" id="viewSelect" value={view} onChange={handleChangeView}>
                 <option value="deck">Deck View</option>
                 <option value="picks">Pick by Pick Breakdown</option>
-                <option value="draftbot">Draftbot Analysis</option>
               </Input>
             </div>
             <NavbarToggler onClick={toggleNavbar} className="ms-auto" />

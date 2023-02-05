@@ -22,6 +22,8 @@ const skip = 0;
   const cursor = Deck.find().skip(skip).lean().cursor();
   const starttime = new Date();
 
+  console.log(`Deck: Found ${count} items. Starting migration...`);
+
   // batch them by batchSize
   for (let i = skip; i < count; i += batchSize) {
     const items = [];
