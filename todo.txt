@@ -1,0 +1,12 @@
+Cube analysis broken
+sample pack broken
+build for me broken
+redo draftbots into something more basic
+draft can hang
+rss feed doesn't work
+Cards Packages page doesn't load
+Top cards and Search cards pages:
+	don't have elo
+	mouse over doesn't work
+	typing in should have submit button instead of live 
+		quick filter optionms for color and MV don't work

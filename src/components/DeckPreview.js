@@ -40,9 +40,7 @@ const DeckPreview = ({ deck, nextURL }) => {
    */
   const [fullName, name] = useMemo(
     () =>
-      deck && deck.seats && deck.seats[0].name
-        ? [deck.seats[0].name, truncateToLength(MAX_LENGTH, deck.seats[0].name)]
-        : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
+      deck && deck.name ? [deck.name, truncateToLength(MAX_LENGTH, deck.name)] : [DEFAULT_DECK_NAME, DEFAULT_DECK_NAME],
     [deck],
   );
 

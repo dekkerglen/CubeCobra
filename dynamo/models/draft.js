@@ -13,6 +13,7 @@ const FIELDS = {
   DATE: 'date',
   TYPE: 'type',
   COMPLETE: 'complete',
+  NAME: 'name',
 };
 
 const TYPES = {
@@ -277,6 +278,7 @@ module.exports = {
         [FIELDS.DATE]: document[FIELDS.DATE],
         [FIELDS.TYPE]: document[FIELDS.TYPE],
         [FIELDS.COMPLETE]: document[FIELDS.COMPLETE],
+        [FIELDS.NAME]: document[FIELDS.NAME] ? document[FIELDS.NAME].slice(0, 300) : 'Untitled',
       }));
 
       await client.batchPut(items);
@@ -326,7 +328,7 @@ module.exports = {
       let seatsForPickOrder = {};
 
       if (type === TYPES.DRAFT) {
-        seatsForPickOrder = deck.seats;
+        seatsForPickOrder = draft.seats;
         cards = deck.cards;
         initialState = draft.initial_state.map((seat) =>
           seat.map((pack) => {
@@ -359,11 +361,7 @@ module.exports = {
         cards = deck.cards;
       }
 
-      if (
-        !seatsForPickOrder[0].pickorder ||
-        seatsForPickOrder[0].pickorder.length === 0 ||
-        !seatsForPickOrder[0].pickorder[0].cardID
-      ) {
+      if (!seatsForPickOrder[0].pickorder || seatsForPickOrder[0].pickorder.length === 0) {
         seatsForPickOrder = null;
       }
 
@@ -388,6 +386,7 @@ module.exports = {
         InitialState: initialState,
         [FIELDS.TYPE]: type,
         [FIELDS.COMPLETE]: true,
+        [FIELDS.NAME]: deck.seats[0].name,
       });
 
       return [doc];
