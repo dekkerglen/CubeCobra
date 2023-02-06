@@ -6,34 +6,29 @@ import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import useQueryParam from 'hooks/useQueryParam';
-import { calculateAsfans } from 'drafting/createdraft';
 import { SORTS, sortIntoGroups } from 'utils/Sort';
-import { fromEntries } from 'utils/Util';
+import AsfanDropdown from 'components/AsfanDropdown';
 
-const Asfans = ({ cards: cardsNoAsfan, cube }) => {
+const Asfans = ({ cards, asfans: rawAsfans, cube, defaultFormatId, setAsfans }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
-  const [draftFormat, setDraftFormat] = useQueryParam('formatId', -1);
 
-  const cards = useMemo(() => {
-    if (draftFormat !== null) {
-      try {
-        const asfans = calculateAsfans(cube, draftFormat);
-        return cardsNoAsfan.map((card) => ({ ...card, asfan: asfans[card.cardID] }));
-      } catch (e) {
-        console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
-      }
-    }
-    return fromEntries(cube.cards.map((card) => [card.cardID, 0]));
-  }, [cube, draftFormat, cardsNoAsfan]);
+  const cardsWithAsfan = useMemo(
+    () => cards.map((card) => ({ ...card, asfan: rawAsfans[card.cardID] ?? 1 })),
+    [cards, rawAsfans],
+  );
+
+  console.log(cardsWithAsfan);
 
   const asfans = useMemo(
     () =>
-      Object.entries(sortIntoGroups(cards, sort)).map(([label, cardsInGroup]) => ({
+      Object.entries(sortIntoGroups(cardsWithAsfan, sort)).map(([label, cardsInGroup]) => ({
         label,
         asfan: cardsInGroup.reduce((acc, { asfan }) => acc + asfan, 0),
       })),
-    [cards, sort],
+    [cardsWithAsfan, sort],
   );
+
+  console.log(asfans);
 
   return (
     <>
@@ -48,21 +43,7 @@ const Asfans = ({ cards: cardsNoAsfan, cube }) => {
             2, on average I will see 2 red creatures in all the packs I open together. The more common meaning is per
             pack instead of per player, but with custom formats it makes more sense to talk about per player.
           </p>
-          <InputGroup className="mb-3">
-            <InputGroupText>Draft Format: </InputGroupText>
-            <Input
-              type="select"
-              value={draftFormat}
-              onChange={(event) => setDraftFormat(parseInt(event.target.value, 10))}
-            >
-              <option value={-1}>Standard Draft</option>
-              {cube.draft_formats.map((format, index) => (
-                <option key={format._id} value={index}>
-                  {format.title}
-                </option>
-              ))}
-            </Input>
-          </InputGroup>
+          <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
           <InputGroup className="mb-3">
             <InputGroupText>Order By: </InputGroupText>
             <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
@@ -92,9 +73,12 @@ const Asfans = ({ cards: cardsNoAsfan, cube }) => {
 Asfans.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({})),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    formats: PropTypes.arrayOf(PropTypes.shape({})),
   }).isRequired,
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  asfans: PropTypes.shape({}).isRequired,
+  defaultFormatId: PropTypes.string.isRequired,
+  setAsfans: PropTypes.func.isRequired,
 };
 
 export default Asfans;

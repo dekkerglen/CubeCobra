@@ -6,43 +6,49 @@ import useQueryParam from 'hooks/useQueryParam';
 import { calculateAsfans } from 'drafting/createdraft';
 import { fromEntries } from 'utils/Util';
 
-const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
-  const [draftFormat, setDraftFormat] = useQueryParam('formatId', null);
+const AsfanDropdown = ({ cube, cards, setAsfans }) => {
+  const [draftFormat, setDraftFormat] = useQueryParam('formatId', -1);
+  const [enabled, setEnabled] = useQueryParam('asfans', false);
 
   const labelText = useMemo(() => {
     if (draftFormat !== null) {
       if (draftFormat < 0) {
         return 'Standard Draft Format';
       }
-      return cube.draft_formats[draftFormat].title;
+      return cube.formats[draftFormat].title;
     }
     return '';
   }, [draftFormat, cube]);
+
   const toggleUseAsfans = useCallback(
-    ({ target }) => setDraftFormat(target.checked ? defaultFormatId : null),
-    [setDraftFormat, defaultFormatId],
+    ({ target }) => {
+      setEnabled(target.checked);
+    },
+    [setEnabled],
   );
 
   useEffect(() => {
-    if (draftFormat !== null) {
+    if (!enabled) {
+      setAsfans(fromEntries(cards.map((card) => [card.cardID, 1])));
+    } else if (draftFormat >= 0) {
       try {
         const asfans = calculateAsfans(cube, draftFormat);
         setAsfans(asfans);
       } catch (e) {
-        console.error('Invalid Draft Format', draftFormat, cube.draft_formats[draftFormat], e);
-        setAsfans(fromEntries(cube.cards.map((card) => [card.cardID, 0])));
+        console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
+        setAsfans(fromEntries(cards.map((card) => [card.cardID, 0])));
       }
     } else {
-      setAsfans(fromEntries(cube.cards.map((card) => [card.cardID, 1])));
+      setAsfans(fromEntries(cards.map((card) => [card.cardID, 45 / cards.length])));
     }
-  }, [cube, draftFormat, setAsfans]);
+  }, [cards, cube, draftFormat, enabled, setAsfans]);
 
   return (
     <Row>
       <Col xs="12" sm="6">
         <Label>
-          <input type="checkbox" checked={draftFormat !== null} onChange={toggleUseAsfans} /> Use expected count per
-          player in a draft format instead of card count.
+          <input type="checkbox" checked={enabled} onChange={toggleUseAsfans} />
+          Use expected count per player for a non standard draft format
         </Label>
       </Col>
       {draftFormat !== null && (
@@ -56,8 +62,8 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
                 </DropdownToggle>
                 <DropdownMenu>
                   <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
-                  {cube.draft_formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
-                  {cube.draft_formats.map((format, index) => (
+                  {cube.formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
+                  {cube.formats.map((format, index) => (
                     <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
                       {format.title}
                     </DropdownItem>
@@ -75,7 +81,7 @@ const AsfanDropdown = ({ cube, defaultFormatId, setAsfans }) => {
 AsfanDropdown.propTypes = {
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
+    formats: PropTypes.arrayOf(
       PropTypes.shape({
         title: PropTypes.string.isRequired,
         _id: PropTypes.string.isRequired,
@@ -83,11 +89,8 @@ AsfanDropdown.propTypes = {
     ).isRequired,
     defaultDraftFormat: PropTypes.number,
   }).isRequired,
-  defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
-};
-AsfanDropdown.defaultProps = {
-  defaultFormatId: -1,
+  cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
 };
 
 export default AsfanDropdown;

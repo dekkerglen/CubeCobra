@@ -89,7 +89,7 @@ const cubeSchema = mongoose.Schema({
   default_show_unsorted: Boolean,
   card_count: Number, // sort key for hashes table
   type: String,
-  draft_formats: {
+  formats: {
     type: [
       {
         title: String,

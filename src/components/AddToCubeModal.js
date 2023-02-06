@@ -145,7 +145,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>
-          Maybeboard
+          maybeboard
         </Button>
         <Button color="unsafe" onClick={toggle}>
           Close

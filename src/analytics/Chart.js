@@ -9,11 +9,13 @@ import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => {
+const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId, asfans }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setcharacteristic] = useQueryParam('field', 'Mana Value');
 
   const groups = sortIntoGroups(cards, sort);
+
+  console.log(groups);
 
   const colorMap = {
     White: '#D8CEAB',
@@ -78,13 +80,13 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
         data: labels.map((label) =>
           groups[key]
             .filter((card) => characteristics[characteristic].cardIsLabel(card, label))
-            .reduce((acc, card) => acc + card.asfan, 0),
+            .reduce((acc, card) => acc + asfans[card.cardID], 0),
         ),
         backgroundColor: getColor(key, index),
         borderColor: getColor(key, index),
       })),
     }),
-    [labels, characteristic, characteristics, getColor, groups],
+    [labels, groups, getColor, characteristics, characteristic, asfans],
   );
 
   return (
@@ -115,7 +117,7 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId }) => 
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ChartComponent options={options} data={data} type="bar" />
     </>
   );
@@ -126,7 +128,9 @@ Chart.propTypes = {
   cube: CubePropType.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
+  asfans: PropTypes.shape({}).isRequired,
 };
+
 Chart.defaultProps = {
   defaultFormatId: null,
 };

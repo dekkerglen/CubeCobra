@@ -91,7 +91,7 @@ router.post('/add', ensureAuth, async (req, res) => {
     await Cube.putCards({
       id: cube.id,
       mainboard: [],
-      Maybeboard: [],
+      maybeboard: [],
     });
 
     req.flash('success', 'Cube created!');
@@ -876,7 +876,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
           details: carddb.cardFromId(card.cardID),
           ...card,
         })),
-        Maybeboard: newMaybe.map((card) => ({
+        maybeboard: newMaybe.map((card) => ({
           details: carddb.cardFromId(card.cardID),
           ...card,
         })),
@@ -891,11 +891,11 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
             return { oldCard: { cardID } };
           }),
         },
-        Maybeboard: {
-          adds: newList.Maybeboard.map(({ cardID }) => {
+        maybeboard: {
+          adds: newList.maybeboard.map(({ cardID }) => {
             return { cardID };
           }),
-          removes: cards.Maybeboard.map(({ cardID }) => {
+          removes: cards.maybeboard.map(({ cardID }) => {
             return { oldCard: { cardID } };
           }),
         },

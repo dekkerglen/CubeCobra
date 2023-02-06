@@ -18,29 +18,33 @@ const sortWithTotal = (pool, sort) =>
     cards.reduce((acc, card) => acc + card.asfan, 0),
   ]);
 
-const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) => {
+const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans, asfans }) => {
   const [column, setColumn] = useQueryParam('column', 'Color Identity');
   const [row, setRow] = useQueryParam('row', 'Type');
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
 
   // some criteria cannot be applied to some cards
-  const cards = useMemo(
-    () => allCards.filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row)),
-    [allCards, column, row],
+  const cardsWithAsfan = useMemo(
+    () =>
+      allCards
+        .filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row))
+        .map((card) => ({ ...card, asfan: asfans[card.cardID] })),
+    [allCards, asfans, column, row],
   );
+
   const [columnCounts, columnLabels] = useMemo(() => {
-    const counts = sortWithTotal(cards, column).filter(([label, count]) => label === 'Total' || count > 0);
+    const counts = sortWithTotal(cardsWithAsfan, column).filter(([label, count]) => label === 'Total' || count > 0);
     return [fromEntries(counts), counts.map(([label]) => label)];
-  }, [cards, column]);
+  }, [cardsWithAsfan, column]);
   const rows = useMemo(
     () =>
-      [...sortGroupsOrdered(cards, row), ['Total', cards]]
+      [...sortGroupsOrdered(cardsWithAsfan, row), ['Total', cardsWithAsfan]]
         .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards, column))])
         .map(([rowLabel, columnValues]) => ({
           rowLabel,
           ...fromEntries(columnLabels.map((label) => [label, columnValues[label] ?? 0])),
         })),
-    [cards, column, row, columnLabels],
+    [cardsWithAsfan, column, row, columnLabels],
   );
 
   const entryRenderer = useCallback(
@@ -118,7 +122,7 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans }) =>
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown cube={cube} cards={allCards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <SortableTable columnProps={columnProps} data={rows} sortFns={{ rowLabel: compareStrings }} />
       </ErrorBoundary>
@@ -131,7 +135,9 @@ AnalyticTable.propTypes = {
   cube: CubePropType.isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
+  asfans: PropTypes.objectOf(PropTypes.number).isRequired,
 };
+
 AnalyticTable.defaultProps = {
   defaultFormatId: null,
 };

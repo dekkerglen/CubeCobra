@@ -76,7 +76,7 @@ router.get('/csv/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
     let { mainboard } = cards;
-    const maybeboard = cards.Maybeboard;
+    const { maybeboard } = cards;
 
     for (const card of [...mainboard, ...maybeboard]) {
       const details = carddb.cardFromId(card.cardID);
@@ -148,7 +148,7 @@ router.get('/mtgo/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
     let { mainboard } = cards;
-    const maybeboard = cards.Maybeboard;
+    const { maybeboard } = cards;
 
     for (const card of mainboard) {
       const details = carddb.cardFromId(card.cardID);

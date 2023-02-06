@@ -85,7 +85,7 @@ Tokens.propTypes = {
         }).isRequired,
       }),
     ),
-    draft_formats: PropTypes.arrayOf(PropTypes.shape({})),
+    formats: PropTypes.arrayOf(PropTypes.shape({})),
   }).isRequired,
 };
 export default Tokens;
