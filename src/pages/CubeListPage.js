@@ -36,7 +36,7 @@ const CubeListPageRaw = () => {
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
-            {(showMaybeboard || boardname !== 'Maybeboard') && (
+            {(showMaybeboard || boardname !== 'maybeboard') && (
               <>
                 {boardname !== 'mainboard' && <h4>{boardname}</h4>}
                 {boardcards.length === 0 &&
@@ -53,7 +53,7 @@ const CubeListPageRaw = () => {
                     list: <ListView cards={boardcards} />,
                   }[cubeView]
                 }
-                {boardname === 'Maybeboard' && <hr />}
+                {boardname === 'maybeboard' && <hr />}
               </>
             )}
           </ErrorBoundary>

@@ -38,10 +38,17 @@ import {
 } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
-import { fromEntries } from 'utils/Util';
 import { getLabels, cardIsLabel } from 'utils/Sort';
 
-const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId, loginCallback, cubeAnalytics }) => {
+const CubeAnalysisPage = ({
+  cube,
+  defaultFilterText,
+  defaultTab,
+  defaultFormatId,
+  loginCallback,
+  cubeAnalytics,
+  cards,
+}) => {
   defaultFormatId = cube.defaultDraftFormat ?? -1;
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useQueryParam('tab', defaultTab ?? 0);
@@ -51,13 +58,11 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
   const [asfans, setAsfans] = useState({});
 
-  const cards = useMemo(() => {
-    return (filter ? cube.cards.filter(filter) : cube.cards).map((card) => ({ ...card, asfan: asfans[card.cardID] }));
-  }, [asfans, cube, filter]);
-
-  const cardAnalyticsDict = fromEntries(
-    cubeAnalytics.cards.map((cardAnalytic) => [cardAnalytic.cardName, cardAnalytic]),
-  );
+  const filteredCards = useMemo(() => {
+    return (filter ? cards.mainboard.filter(filter) : cards.mainboard).map((card) => ({
+      ...card,
+    }));
+  }, [cards, filter]);
 
   const convertToCharacteristic = (name, func) => ({
     get: func,
@@ -66,29 +71,19 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
   });
 
   const getCubeElo = (card) =>
-    cardAnalyticsDict[card.details.name.toLowerCase()]
-      ? Math.round(cardAnalyticsDict[card.details.name.toLowerCase()].elo)
-      : null;
+    cubeAnalytics[card.details.oracle_id] ? Math.round(cubeAnalytics[card.details.oracle_id].elo) : null;
 
   const getPickRate = (card) =>
-    cardAnalyticsDict[card.details.name.toLowerCase()]
-      ? pickRate(cardAnalyticsDict[card.details.name.toLowerCase()])
-      : null;
+    cubeAnalytics[card.details.oracle_id] ? pickRate(cubeAnalytics[card.details.oracle_id]) : null;
 
   const getPickCount = (card) =>
-    cardAnalyticsDict[card.details.name.toLowerCase()]
-      ? cardAnalyticsDict[card.details.name.toLowerCase()].picks
-      : null;
+    cubeAnalytics[card.details.oracle_id] ? cubeAnalytics[card.details.oracle_id].picks : null;
 
   const getMainboardRate = (card) =>
-    cardAnalyticsDict[card.details.name.toLowerCase()]
-      ? mainboardRate(cardAnalyticsDict[card.details.name.toLowerCase()])
-      : null;
+    cubeAnalytics[card.details.oracle_id] ? mainboardRate(cubeAnalytics[card.details.oracle_id]) : null;
 
   const getMainboardCount = (card) =>
-    cardAnalyticsDict[card.details.name.toLowerCase()]
-      ? cardAnalyticsDict[card.details.name.toLowerCase()].mainboards
-      : null;
+    cubeAnalytics[card.details.oracle_id] ? cubeAnalytics[card.details.oracle_id].mainboards : null;
 
   const characteristics = {
     'Mana Value': convertToCharacteristic('Mana Value', cardCmc),
@@ -186,18 +181,33 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
           defaultFormatId={defaultFormatId}
           cube={cube}
           setAsfans={setAsfans}
+          asfans={asfans}
         />
       ),
     },
     {
       name: 'Table',
       component: (collection) => (
-        <AnalyticTable cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+        <AnalyticTable
+          cards={collection}
+          setAsfans={setAsfans}
+          asfans={asfans}
+          defaultFormatId={defaultFormatId}
+          cube={cube}
+        />
       ),
     },
     {
       name: 'Asfans',
-      component: (collection) => <Asfans cards={collection} cube={cube} defaultFormatId={defaultFormatId} />,
+      component: (collection) => (
+        <Asfans
+          cards={collection}
+          asfans={asfans}
+          cube={cube}
+          defaultFormatId={defaultFormatId}
+          setAsfans={setAsfans}
+        />
+      ),
     },
     {
       name: 'Chart',
@@ -206,6 +216,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
           cards={collection}
           characteristics={characteristics}
           setAsfans={setAsfans}
+          asfans={asfans}
           defaultFormatId={defaultFormatId}
           cube={cube}
         />
@@ -235,7 +246,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
     {
       name: 'Tag Cloud',
       component: (collection) => (
-        <Cloud cards={collection} setAsfans={setAsfans} defaultFormatId={defaultFormatId} cube={cube} />
+        <Cloud cards={collection} setAsfans={setAsfans} asfans={asfans} defaultFormatId={defaultFormatId} cube={cube} />
       ),
     },
     {
@@ -277,7 +288,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
         <DynamicFlash />
-        {cube.cards.length === 0 ? (
+        {cards.mainboard.length === 0 ? (
           <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
         ) : (
           <Row className="mt-3">
@@ -305,14 +316,16 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
                     defaultFilterText={defaultFilterText}
                     filter={filter}
                     setFilter={setFilter}
-                    numCards={cards.length}
+                    numCards={filteredCards.length}
                     isOpen={filterCollapseOpen}
                   />
                 </CardBody>
               </Card>
               <Card>
                 <CardBody>
-                  <ErrorBoundary>{analytics[activeTab].component(cards, cube, adds, cuts, loading)}</ErrorBoundary>
+                  <ErrorBoundary>
+                    {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
+                  </ErrorBoundary>
                 </CardBody>
               </Card>
             </Col>
@@ -326,7 +339,7 @@ const CubeAnalysisPage = ({ cube, defaultFilterText, defaultTab, defaultFormatId
 CubeAnalysisPage.propTypes = {
   cube: CubePropType.isRequired,
   cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
+    mainboard: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
   defaultFilterText: PropTypes.string,
   defaultTab: PropTypes.number,

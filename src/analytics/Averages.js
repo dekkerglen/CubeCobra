@@ -11,7 +11,7 @@ import { cardType } from 'utils/Card';
 import { weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) => {
+const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans, asfans }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
 
@@ -32,7 +32,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
               return true;
             })
             .map((card) => {
-              return [card.asfan, characteristics[characteristic].get(card)];
+              return [asfans[card.cardID], characteristics[characteristic].get(card)];
             })
             .filter(([weight, x]) => {
               // Don't include null, undefined, or NaN values, but we still want to include 0 values.
@@ -49,7 +49,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
           };
         })
         .filter((row) => row.count > 0),
-    [characteristic, characteristics, groups],
+    [asfans, characteristic, characteristics, groups],
   );
 
   return (
@@ -80,7 +80,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans }) 
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
       <ErrorBoundary>
         <SortableTable
           columnProps={[
@@ -103,7 +103,7 @@ Averages.propTypes = {
   characteristics: PropTypes.shape({}).isRequired,
   cube: PropTypes.shape({
     cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    draft_formats: PropTypes.arrayOf(
+    formats: PropTypes.arrayOf(
       PropTypes.shape({
         title: PropTypes.string.isRequired,
         _id: PropTypes.string.isRequired,
@@ -113,6 +113,7 @@ Averages.propTypes = {
   }).isRequired,
   defaultFormatId: PropTypes.number,
   setAsfans: PropTypes.func.isRequired,
+  asfans: PropTypes.shape({}).isRequired,
 };
 Averages.defaultProps = {
   defaultFormatId: null,

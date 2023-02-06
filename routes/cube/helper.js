@@ -12,7 +12,7 @@ const Changelog = require('../../dynamo/models/changelog');
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,Maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
 
 async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
   try {
@@ -50,21 +50,21 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
       }
     }
 
-    if (changelog.Maybeboard) {
-      if (changelog.Maybeboard.adds && changelog.Maybeboard.adds.length === 0) {
-        delete changelog.Maybeboard.adds;
+    if (changelog.maybeboard) {
+      if (changelog.maybeboard.adds && changelog.maybeboard.adds.length === 0) {
+        delete changelog.maybeboard.adds;
       }
-      if (changelog.Maybeboard.removes && changelog.Maybeboard.removes.length === 0) {
-        delete changelog.Maybeboard.removes;
+      if (changelog.maybeboard.removes && changelog.maybeboard.removes.length === 0) {
+        delete changelog.maybeboard.removes;
       }
-      if (changelog.Maybeboard.swaps && changelog.Maybeboard.swaps.length === 0) {
-        delete changelog.Maybeboard.swaps;
+      if (changelog.maybeboard.swaps && changelog.maybeboard.swaps.length === 0) {
+        delete changelog.maybeboard.swaps;
       }
-      if (changelog.Maybeboard.edits && changelog.Maybeboard.edits.length === 0) {
-        delete changelog.Maybeboard.edits;
+      if (changelog.maybeboard.edits && changelog.maybeboard.edits.length === 0) {
+        delete changelog.maybeboard.edits;
       }
-      if (Object.keys(changelog.Maybeboard).length === 0) {
-        delete changelog.Maybeboard;
+      if (Object.keys(changelog.maybeboard).length === 0) {
+        delete changelog.maybeboard;
       }
     }
 
@@ -105,7 +105,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 async function bulkUpload(req, res, list, cube) {
   const cards = await Cube.getCards(cube.id);
   const { mainboard } = cards;
-  const maybeboard = cards.Maybeboard;
+  const { maybeboard } = cards;
 
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];

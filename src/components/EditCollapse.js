@@ -193,7 +193,7 @@ const EditCollapse = ({ isOpen }) => {
               <Input disabled value="Board" />
               <Input value={activeBoard} onChange={(e) => setActiveBoard(e.target.value)} name="select" type="select">
                 <option>mainboard</option>
-                <option>Maybeboard</option>
+                <option>maybeboard</option>
               </Input>
             </InputGroup>
           </Col>
@@ -272,7 +272,7 @@ const EditCollapse = ({ isOpen }) => {
                 onChange={toggleShowMaybeboard}
               />
             </InputGroupText>
-            <Input disabled value="Use Maybeboard" />
+            <Input disabled value="Use maybeboard" />
           </InputGroup>
         </Col>
         <Col xs={12} md={2}>

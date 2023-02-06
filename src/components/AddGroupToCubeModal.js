@@ -182,7 +182,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           Add
         </Button>
         <Button color="secondary" onClick={maybe}>
-          Maybeboard
+          maybeboard
         </Button>
         <Button color="unsafe" onClick={toggle}>
           Close

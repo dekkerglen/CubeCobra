@@ -132,7 +132,7 @@ const getCards = async (id) => {
   } catch (e) {
     return {
       mainboard: [],
-      Maybeboard: [],
+      maybeboard: [],
     };
   }
 };
@@ -371,7 +371,7 @@ module.exports = {
     [FIELDS.DATE]: cube.date_updated.valueOf(),
     [FIELDS.DEFAULT_SORTS]: cube.default_sorts,
     [FIELDS.SHOW_UNSORTED]: cube.default_show_unsorted,
-    [FIELDS.DRAFT_FORMATS]: (cube.draft_formats || []).map((item) => {
+    [FIELDS.DRAFT_FORMATS]: (cube.formats || []).map((item) => {
       return {
         title: item.title,
         multiples: item.multiples,
@@ -413,7 +413,7 @@ module.exports = {
         }
         return card;
       }),
-      Maybeboard: cube.maybe.map((card) => {
+      maybeboard: cube.maybe.map((card) => {
         delete card._id;
         delete card.details;
         if (card.addedTmsp) {

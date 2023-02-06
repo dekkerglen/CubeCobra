@@ -4,12 +4,13 @@ const s3 = require('../s3client');
 
 module.exports = {
   getByCube: async (cubeId) => {
-    return s3
+    const res = await s3
       .getObject({
         Bucket: process.env.DATA_BUCKET,
         Key: `cube_analytic/${cubeId}.json`,
       })
       .promise();
+    return JSON.parse(res.Body.toString());
   },
   batchPut: async (dict) => {
     await Promise.all(
