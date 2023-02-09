@@ -434,7 +434,7 @@ router.get('/rss/:id', async (req, res) => {
     }
 
     const items = [];
-    let queryResult;
+    let queryResult = { lastKey: null };
 
     do {
       queryResult = await Blog.getByCube(cube.id, 128, queryResult.lastKey);
