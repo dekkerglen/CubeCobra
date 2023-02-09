@@ -8,6 +8,10 @@ import CardPropType from 'proptypes/CardPropType';
 
 const TextAutocard = withAutocard('a');
 
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const Add = ({ card }) => {
   return (
     <li>
@@ -84,7 +88,7 @@ const BlogPostChangelog = ({ changelog }) => {
         <div key={board} className="mb-2">
           <h6>
             <Row>
-              <Col>{board} Changelist</Col>
+              <Col>{capitalizeFirstLetter(board)} Changelist</Col>
               <Col className="col-auto">
                 <div className="text-secondary">
                   +{(adds || []).length}, -{(removes || []).length}

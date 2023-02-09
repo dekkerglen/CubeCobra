@@ -8,13 +8,25 @@ import { compareStrings, SortableTable } from 'components/SortableTable';
 import useQueryParam from 'hooks/useQueryParam';
 import { SORTS, sortIntoGroups } from 'utils/Sort';
 import AsfanDropdown from 'components/AsfanDropdown';
+import { calculateAsfans } from 'drafting/createdraft';
+import CubePropType from 'proptypes/CubePropType';
 
-const Asfans = ({ cards, asfans: rawAsfans, cube, defaultFormatId, setAsfans }) => {
+const Asfans = ({ cards, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
+  const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
+
+  const cardAsfans = useMemo(() => {
+    try {
+      return calculateAsfans(cube, cards, draftFormat);
+    } catch (e) {
+      console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
+      return {};
+    }
+  }, [cards, cube, draftFormat]);
 
   const cardsWithAsfan = useMemo(
-    () => cards.map((card) => ({ ...card, asfan: rawAsfans[card.cardID] ?? 1 })),
-    [cards, rawAsfans],
+    () => cards.map((card) => ({ ...card, asfan: cardAsfans[card.cardID] || 1 })),
+    [cards, cardAsfans],
   );
 
   console.log(cardsWithAsfan);
@@ -43,7 +55,7 @@ const Asfans = ({ cards, asfans: rawAsfans, cube, defaultFormatId, setAsfans }) 
             2, on average I will see 2 red creatures in all the packs I open together. The more common meaning is per
             pack instead of per player, but with custom formats it makes more sense to talk about per player.
           </p>
-          <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+          <AsfanDropdown cube={cube} draftFormat={draftFormat} setDraftFormat={setDraftFormat} useAsfans alwaysOn />
           <InputGroup className="mb-3">
             <InputGroupText>Order By: </InputGroupText>
             <Input type="select" value={sort} onChange={(event) => setSort(event.target.value)}>
@@ -71,14 +83,9 @@ const Asfans = ({ cards, asfans: rawAsfans, cube, defaultFormatId, setAsfans }) 
 };
 
 Asfans.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({})),
-    formats: PropTypes.arrayOf(PropTypes.shape({})),
-  }).isRequired,
+  cube: CubePropType.isRequired,
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   asfans: PropTypes.shape({}).isRequired,
-  defaultFormatId: PropTypes.string.isRequired,
-  setAsfans: PropTypes.func.isRequired,
 };
 
 export default Asfans;

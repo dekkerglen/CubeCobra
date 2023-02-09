@@ -10,3 +10,13 @@ Top cards and Search cards pages:
 	mouse over doesn't work
 	typing in should have submit button instead of live 
 		quick filter optionms for color and MV don't work
+Socials tab broken
+have usernames pre-loaded everywhere
+have cube images pre-loaded everywhere
+fix proptypes - use object proptypes when possible
+cube elo and pick rate / pick count not propogated
+
+Investigate
+	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
+	- Make sure feed works as intended
+	- new session, login from landing seems to not work then redirect to landing with no error?
