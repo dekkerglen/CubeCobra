@@ -710,11 +710,13 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
+    console.log('Generating pack...');
     let pack;
     try {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
     } catch (err) {
-      req.flash('danger', err.message);
+      console.error(err);
+      req.flash('danger', "Failed to generate pack. If trying again doesn't work, please file a bug report.");
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
