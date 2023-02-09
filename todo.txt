@@ -1,4 +1,3 @@
-build for me broken
 redo draftbots into something more basic
 draft can hang
 rss feed doesn't work
