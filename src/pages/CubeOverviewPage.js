@@ -252,7 +252,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                     )}
                   </Row>
                 )}
-                {user && user.roles.includes('Admin') && (
+                {user && user.roles && user.roles.includes('Admin') && (
                   <CSRFForm
                     method="POST"
                     id="featuredForm"
@@ -265,18 +265,18 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                     </Button>
                   </CSRFForm>
                 )}
+                {user &&
+                  cubeState.owner !== user.id &&
+                  (followedState ? (
+                    <Button outline color="unsafe" block onClick={unfollow}>
+                      Unfollow
+                    </Button>
+                  ) : (
+                    <Button color="accent" block onClick={follow}>
+                      Follow
+                    </Button>
+                  ))}
               </CardBody>
-              {user &&
-                cubeState.owner !== user.id &&
-                (followedState ? (
-                  <Button outline color="unsafe" className="rounded-0" onClick={unfollow}>
-                    Unfollow
-                  </Button>
-                ) : (
-                  <Button color="accent" className="rounded-0" onClick={follow}>
-                    Follow
-                  </Button>
-                ))}
             </Col>
             <Col>
               <CardBody>

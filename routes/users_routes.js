@@ -334,6 +334,14 @@ router.post(
       email,
       username,
       confirmed: false,
+      followedCubes: [],
+      followedUsers: [],
+      following: [],
+      hideFeatured: false,
+      hideTagColors: false,
+      imageName: 'Ambush Viper',
+      roles: [],
+      theme: 'default',
     };
 
     return bcrypt.genSalt(10, (err3, salt) => {
