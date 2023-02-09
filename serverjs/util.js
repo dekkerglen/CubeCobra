@@ -227,7 +227,7 @@ module.exports = {
   hasProfanity,
   fromEntries,
   isAdmin(user) {
-    return user && user.roles.includes('Admin');
+    return user && user.roles && user.roles.includes('Admin');
   },
   addNotification,
   wrapAsyncApi,

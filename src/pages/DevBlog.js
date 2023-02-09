@@ -105,7 +105,7 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
       <DynamicFlash />
       <div className="mt-3">
         <h3>Developer Blog</h3>
-        {user && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
+        {user && user.roles && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.map((post) => (
             <BlogPost key={post.id} post={post} />

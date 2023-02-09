@@ -4,8 +4,8 @@ require('dotenv').config();
 const uuid = require('uuid/v4');
 
 const createClient = require('../util');
-const { getUserFromId } = require('../../serverjs/cache');
 const util = require('../../serverjs/util');
+const User = require('./user');
 
 const FIELDS = {
   ID: 'id',
@@ -50,7 +50,7 @@ const hydrate = async (item) => {
     };
   }
 
-  const user = await getUserFromId(item.owner);
+  const user = await User.getById(item.owner);
   const ImageData = util.getImageData(user.imageName);
 
   return {
