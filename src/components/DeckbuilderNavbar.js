@@ -71,10 +71,8 @@ const DeckbuilderNavbar = ({
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    let main = deck.seats[seat].pickorder;
-    if (main.length <= 0) {
-      main = [...deck.seats[seat].deck.flat(3), ...deck.seats[seat].sideboard.flat(3)];
-    }
+    console.log(deck, seat);
+    const main = [...deck.seats[seat].mainboard.flat(3), ...deck.seats[seat].sideboard.flat(3)];
     const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, deck.basics);
     const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
     const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
