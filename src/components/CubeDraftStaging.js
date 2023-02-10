@@ -76,7 +76,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     return {
       element: (
         <div className="tag-color-row clickable pb-3" key={i}>
-          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username userId={seats[i]} nolink />}
+          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={seats[i]} nolink />}
         </div>
       ),
       key: i,
@@ -110,7 +110,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
           <p>The draft owner is currently setting up the draft, please wait.</p>
           {seats.map((seat, i) => (
             <div className="pb-3" key={i}>
-              {`Seat ${i + 1}: `} {seat === BOT_NAME ? BOT_NAME : <Username userId={seat} nolink />}
+              {`Seat ${i + 1}: `} {seat === BOT_NAME ? BOT_NAME : <Username user={seat} nolink />}
             </div>
           ))}
         </CardBody>

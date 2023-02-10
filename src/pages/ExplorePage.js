@@ -21,7 +21,7 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
           <CubesCard title="Most Popular cubes" className="mt-4" cubes={popular} />
-          <CubesCard title="Recently Drafted cubes" className="mt-4" cubes={drafted} />
+          <CubesCard title="Recently drafted cubes" className="mt-4" cubes={drafted} />
         </Col>
       </Row>
     </MainLayout>

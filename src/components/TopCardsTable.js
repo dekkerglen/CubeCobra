@@ -24,7 +24,6 @@ const TopCardsTable = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('fetching data');
       const params = new URLSearchParams([
         ['f', filterInput],
         ['s', sortConfig.key],
@@ -40,8 +39,6 @@ const TopCardsTable = () => {
       Query.set('s', sortConfig.key);
 
       const json = await response.json();
-      console.log(json);
-
       setData(json.data);
       setCount(json.numResults);
       setLoading(false);
@@ -95,6 +92,7 @@ const TopCardsTable = () => {
                   front={card.image_normal}
                   back={card.image_back || undefined}
                   href={`/tool/card/${card._id}`}
+                  card={{ details: card }}
                 >
                   {card.name}
                 </AutocardA>

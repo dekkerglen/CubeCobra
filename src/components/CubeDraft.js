@@ -106,7 +106,7 @@ const CubeDraft = ({ draft, socket }) => {
           const res = await callApi('/multiplayer/editdeckbydraft', {
             draftId: draft.id,
             seat,
-            drafted: staticPicks,
+            mainboard: staticPicks,
             sideboard: setupPicks(1, 8),
           });
           const json = await res.json();

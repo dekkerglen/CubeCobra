@@ -284,16 +284,16 @@ const finishDraft = async (draftId, draft) => {
     draft.seats[i].pickorder = picks;
     draft.seats[i].trashorder = trash;
 
-    const drafted = setupPicks(2, 8);
+    const mainboard = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);
     for (const cardIndex of picks) {
       const col = getCardCol(draft, cardIndex);
       const row = cardType(draft.cards[cardIndex]).toLowerCase().includes('creature') ? 0 : 1;
-      drafted[row][col].push(parseInt(cardIndex, 10));
+      mainboard[row][col].push(parseInt(cardIndex, 10));
     }
 
     draft.seats[i].sideboard = sideboard;
-    draft.seats[i].mainboard = drafted;
+    draft.seats[i].mainboard = mainboard;
   }
 
   draft.compelted = true;

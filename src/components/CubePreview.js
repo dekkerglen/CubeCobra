@@ -34,7 +34,7 @@ const CubePreview = ({ cube }) => {
         <div className="text-muted text-ellipsis">{getCubeDescription(cube)}</div>
         <div className="text-muted text-ellipsis">{cube.following.length} followers</div>
         <em className="text-muted text-ellipsis">
-          Designed by <Username userId={cube.owner} />
+          Designed by <Username user={cube.owner} />
         </em>
       </div>
     </Card>
