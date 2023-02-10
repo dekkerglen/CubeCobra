@@ -81,7 +81,7 @@ module.exports = {
     const result = await client.query(query);
 
     if (keywords) {
-      result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].all((keyword) => keywords.includes(keyword)));
+      result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].some((keyword) => keywords.includes(keyword)));
     }
 
     return {

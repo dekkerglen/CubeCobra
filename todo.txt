@@ -1,4 +1,3 @@
-Cards Packages page doesn't load
 Top cards and Search cards pages:
 	don't have elo
 	mouse over doesn't work

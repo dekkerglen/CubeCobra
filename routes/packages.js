@@ -24,7 +24,7 @@ router.post('/getpackages', async (req, res) => {
       });
     }
 
-    packages = await Package.queryByOwner(req.user.id, keywords, ascending, lastKey);
+    packages = await Package.queryByOwner(req.user.id, lastKey);
   } else {
     const parsedStatus = {
       approved: Package.STATUSES.APPROVED,

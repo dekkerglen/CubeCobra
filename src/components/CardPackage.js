@@ -108,7 +108,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
                 >
                   Add To Cube
                 </AddGroupToCubeModalLink>
-                {user.roles.includes('Admin') && (
+                {user && user.roles && user.roles.includes('Admin') && (
                   <>
                     {cardPackage.approved ? (
                       <Button outline color="unsafe" className="mx-2" onClick={unapprove}>

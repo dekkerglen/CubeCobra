@@ -61,6 +61,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
 
   const changeTab = (i) => {
     setPage(0);
+    setLastKey(null);
     setSelectedTab(i);
   };
 
