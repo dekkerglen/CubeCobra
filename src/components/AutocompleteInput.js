@@ -189,7 +189,10 @@ const fetchTree = async (treeUrl, treePath) => {
 };
 
 const AutocompleteInput = forwardRef(
-  ({ treeUrl, treePath, defaultValue, value, setValue, onSubmit, wrapperClassName, cubeId, ...props }, ref) => {
+  (
+    { treeUrl, treePath, defaultValue, value, setValue, onSubmit, wrapperClassName, cubeId, noMargin, ...props },
+    ref,
+  ) => {
     const [tree, setTree] = useState({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
@@ -273,7 +276,7 @@ const AutocompleteInput = forwardRef(
       <>
         <Input ref={ref} value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
         {showMatches && (
-          <ul className="autocomplete-list">
+          <ul className={`autocomplete-list ${noMargin ? 'mt-0' : ''}`}>
             {matches.map((match, index) => (
               <AutocardLi
                 inModal

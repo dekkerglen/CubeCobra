@@ -7,11 +7,14 @@ import AsfanDropdown from 'components/AsfanDropdown';
 import useQueryParam from 'hooks/useQueryParam';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
+import { calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId, asfans }) => {
+const Chart = ({ cards, characteristics, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setcharacteristic] = useQueryParam('field', 'Mana Value');
+  const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
+  const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
 
   const groups = sortIntoGroups(cards, sort);
 
@@ -72,6 +75,18 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId, asfan
     [characteristic, characteristics, cards],
   );
 
+  const asfans = useMemo(() => {
+    if (!useAsfans) {
+      return {};
+    }
+    try {
+      return calculateAsfans(cube, cards, draftFormat);
+    } catch (e) {
+      console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
+      return {};
+    }
+  }, [cards, cube, draftFormat, useAsfans]);
+
   const data = useMemo(
     () => ({
       labels,
@@ -80,7 +95,7 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId, asfan
         data: labels.map((label) =>
           groups[key]
             .filter((card) => characteristics[characteristic].cardIsLabel(card, label))
-            .reduce((acc, card) => acc + asfans[card.cardID], 0),
+            .reduce((acc, card) => acc + (asfans[card.cardID] || 1), 0),
         ),
         backgroundColor: getColor(key, index),
         borderColor: getColor(key, index),
@@ -117,7 +132,13 @@ const Chart = ({ cards, characteristics, setAsfans, cube, defaultFormatId, asfan
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown
+        cube={cube}
+        draftFormat={draftFormat}
+        setDraftFormat={setDraftFormat}
+        useAsfans={useAsfans}
+        setUseAsfans={setUseAsfans}
+      />
       <ChartComponent options={options} data={data} type="bar" />
     </>
   );
@@ -126,13 +147,6 @@ Chart.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
   cube: CubePropType.isRequired,
-  defaultFormatId: PropTypes.number,
-  setAsfans: PropTypes.func.isRequired,
-  asfans: PropTypes.shape({}).isRequired,
-};
-
-Chart.defaultProps = {
-  defaultFormatId: null,
 };
 
 export default Chart;

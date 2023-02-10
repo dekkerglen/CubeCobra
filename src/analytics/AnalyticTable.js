@@ -11,6 +11,7 @@ import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import { SORTS, cardCanBeSorted, sortGroupsOrdered } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
+import { calculateAsfans } from 'drafting/createdraft';
 
 const sortWithTotal = (pool, sort) =>
   [...sortGroupsOrdered(pool, sort), ['Total', pool]].map(([label, cards]) => [
@@ -18,18 +19,32 @@ const sortWithTotal = (pool, sort) =>
     cards.reduce((acc, card) => acc + card.asfan, 0),
   ]);
 
-const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans, asfans }) => {
+const AnalyticTable = ({ cards, cube }) => {
   const [column, setColumn] = useQueryParam('column', 'Color Identity');
   const [row, setRow] = useQueryParam('row', 'Type');
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
+  const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
+  const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
+
+  const asfans = useMemo(() => {
+    if (!useAsfans) {
+      return {};
+    }
+    try {
+      return calculateAsfans(cube, cards, draftFormat);
+    } catch (e) {
+      console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
+      return {};
+    }
+  }, [cards, cube, draftFormat, useAsfans]);
 
   // some criteria cannot be applied to some cards
   const cardsWithAsfan = useMemo(
     () =>
-      allCards
+      cards
         .filter((card) => cardCanBeSorted(card, column) && cardCanBeSorted(card, row))
-        .map((card) => ({ ...card, asfan: asfans[card.cardID] })),
-    [allCards, asfans, column, row],
+        .map((card) => ({ ...card, asfan: asfans[card.cardID] || 1 })),
+    [asfans, cards, column, row],
   );
 
   const [columnCounts, columnLabels] = useMemo(() => {
@@ -122,7 +137,13 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans, asfa
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} cards={allCards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown
+        cube={cube}
+        draftFormat={draftFormat}
+        setDraftFormat={setDraftFormat}
+        useAsfans={useAsfans}
+        setUseAsfans={setUseAsfans}
+      />
       <ErrorBoundary>
         <SortableTable columnProps={columnProps} data={rows} sortFns={{ rowLabel: compareStrings }} />
       </ErrorBoundary>
@@ -133,13 +154,6 @@ const AnalyticTable = ({ cards: allCards, cube, defaultFormatId, setAsfans, asfa
 AnalyticTable.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
   cube: CubePropType.isRequired,
-  defaultFormatId: PropTypes.number,
-  setAsfans: PropTypes.func.isRequired,
-  asfans: PropTypes.objectOf(PropTypes.number).isRequired,
-};
-
-AnalyticTable.defaultProps = {
-  defaultFormatId: null,
 };
 
 export default AnalyticTable;

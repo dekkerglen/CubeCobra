@@ -1,96 +1,45 @@
 import PropTypes from 'prop-types';
-import React, { useCallback, useEffect, useMemo } from 'react';
-import { Col, DropdownItem, DropdownMenu, DropdownToggle, Form, Label, Row, UncontrolledDropdown } from 'reactstrap';
+import CubePropType from 'proptypes/CubePropType';
+import React from 'react';
+import { InputGroup, InputGroupText, Input } from 'reactstrap';
 
-import useQueryParam from 'hooks/useQueryParam';
-import { calculateAsfans } from 'drafting/createdraft';
-import { fromEntries } from 'utils/Util';
-
-const AsfanDropdown = ({ cube, cards, setAsfans }) => {
-  const [draftFormat, setDraftFormat] = useQueryParam('formatId', -1);
-  const [enabled, setEnabled] = useQueryParam('asfans', false);
-
-  const labelText = useMemo(() => {
-    if (draftFormat !== null) {
-      if (draftFormat < 0) {
-        return 'Standard Draft Format';
-      }
-      return cube.formats[draftFormat].title;
-    }
-    return '';
-  }, [draftFormat, cube]);
-
-  const toggleUseAsfans = useCallback(
-    ({ target }) => {
-      setEnabled(target.checked);
-    },
-    [setEnabled],
-  );
-
-  useEffect(() => {
-    if (!enabled) {
-      setAsfans(fromEntries(cards.map((card) => [card.cardID, 1])));
-    } else if (draftFormat >= 0) {
-      try {
-        const asfans = calculateAsfans(cube, draftFormat);
-        setAsfans(asfans);
-      } catch (e) {
-        console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
-        setAsfans(fromEntries(cards.map((card) => [card.cardID, 0])));
-      }
-    } else {
-      setAsfans(fromEntries(cards.map((card) => [card.cardID, 45 / cards.length])));
-    }
-  }, [cards, cube, draftFormat, enabled, setAsfans]);
-
+const AsfanDropdown = ({ cube, alwaysOn, useAsfans, setUseAsfans, draftFormat, setDraftFormat }) => {
   return (
-    <Row>
-      <Col xs="12" sm="6">
-        <Label>
-          <input type="checkbox" checked={enabled} onChange={toggleUseAsfans} />
-          Use expected count per player for a non standard draft format
-        </Label>
-      </Col>
-      {draftFormat !== null && (
-        <Col xs="12" sm="6">
-          <Form className="row row-cols-auto align-items-center gx-1">
-            <Col>Draft Format:</Col>
-            <Col>
-              <UncontrolledDropdown disabled={draftFormat === null} className="ms-2">
-                <DropdownToggle caret={draftFormat !== null} color={draftFormat !== null ? 'accent' : 'disabled'}>
-                  {labelText}
-                </DropdownToggle>
-                <DropdownMenu>
-                  <DropdownItem onClick={() => setDraftFormat(-1)}>Standard Draft Format</DropdownItem>
-                  {cube.formats.length > 0 && <DropdownItem header>Custom Formats</DropdownItem>}
-                  {cube.formats.map((format, index) => (
-                    <DropdownItem key={format._id} onClick={() => setDraftFormat(index)}>
-                      {format.title}
-                    </DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </UncontrolledDropdown>
-            </Col>
-          </Form>
-        </Col>
+    <InputGroup className="mb-3">
+      {alwaysOn ? (
+        <InputGroupText>Draft Format:</InputGroupText>
+      ) : (
+        <>
+          <InputGroupText>Use Asfans</InputGroupText>
+          <InputGroupText>
+            <Input addon type="checkbox" checked={useAsfans} onChange={() => setUseAsfans(!useAsfans)} />
+          </InputGroupText>
+        </>
       )}
-    </Row>
+      <Input addon type="select" value={draftFormat} onChange={(e) => setDraftFormat(e.target.value)}>
+        <option value="Standard Draft Format">Standard Draft Format</option>
+        {cube.formats.length > 0 && <option disabled>Custom Formats</option>}
+        {cube.formats.map((format, index) => (
+          <option key={format._id} value={index}>
+            {format.title}
+          </option>
+        ))}
+      </Input>
+    </InputGroup>
   );
 };
 
 AsfanDropdown.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
-    formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-    defaultDraftFormat: PropTypes.number,
-  }).isRequired,
-  setAsfans: PropTypes.func.isRequired,
-  cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string.isRequired })).isRequired,
+  cube: CubePropType.isRequired,
+  alwaysOn: PropTypes.bool,
+  useAsfans: PropTypes.bool.isRequired,
+  setUseAsfans: PropTypes.func.isRequired,
+  draftFormat: PropTypes.number.isRequired,
+  setDraftFormat: PropTypes.func.isRequired,
+};
+
+AsfanDropdown.defaultProps = {
+  alwaysOn: false,
 };
 
 export default AsfanDropdown;

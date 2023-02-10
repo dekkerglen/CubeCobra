@@ -14,10 +14,27 @@ router.use(csrfProtection);
 router.post('/getpackages', async (req, res) => {
   const { status, keywords, lastKey, ascending } = req.body;
 
-  const packages = await Package.querySortedByDate(status, keywords, ascending, lastKey);
+  let packages = [];
+
+  if (status === 'yourpackages') {
+    if (!req.user) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'You must be logged in to view your packages.',
+      });
+    }
+
+    packages = await Package.queryByOwner(req.user.id, lastKey);
+  } else {
+    const parsedStatus = {
+      approved: Package.STATUSES.APPROVED,
+      pending: Package.STATUSES.SUBMITTED,
+    }[status];
+
+    packages = await Package.querySortedByDate(parsedStatus, keywords, ascending, lastKey);
+  }
 
   return res.status(200).send({
-    success: true,
     packages: packages.items,
     lastKey: packages.lastKey,
   });

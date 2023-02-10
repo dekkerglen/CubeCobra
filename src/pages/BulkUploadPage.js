@@ -73,7 +73,7 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
                     className="me-2"
                     innerRef={addInput}
                     value={addValue}
-                    onChange={handleChange}
+                    setValue={handleChange}
                     onSubmit={handleAdd}
                     placeholder="Card to Add"
                   />

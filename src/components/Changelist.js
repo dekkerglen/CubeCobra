@@ -15,6 +15,10 @@ import CardPropType from 'proptypes/CardPropType';
 const TextAutocard = withAutocard('span');
 const CardModalLink = withCardModal(TextAutocard);
 
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const RemoveButton = ({ onClick }) => (
   <a href="#" className="clickx" onClick={onClick}>
     ×
@@ -162,7 +166,7 @@ const Changelist = () => {
         <div key={board} className="mb-2">
           <h6>
             <Row>
-              <Col>{board} Changelist</Col>
+              <Col>{capitalizeFirstLetter(board)} Changelist</Col>
               <Col className="col-sm-auto">
                 <div className="text-secondary">
                   +{(adds || []).length}, -{(removes || []).length},{' '}

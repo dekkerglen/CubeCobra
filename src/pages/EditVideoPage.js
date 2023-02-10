@@ -178,7 +178,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                       className="me-2"
                       name="remove"
                       value={imageName}
-                      onChange={(event) => setImageName(event.target.value)}
+                      setValue={setImageName}
                       onSubmit={(event) => event.preventDefault()}
                       placeholder="Cardname for image"
                       autoComplete="off"

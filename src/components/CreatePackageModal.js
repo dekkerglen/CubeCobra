@@ -91,7 +91,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
               className="me-2"
               name="remove"
               value={cardName}
-              onChange={(event) => setCardName(event.target.value)}
+              setValue={setCardName}
               onSubmit={(event) => event.preventDefault()}
               placeholder="Card name and version"
               autoComplete="off"

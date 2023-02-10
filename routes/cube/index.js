@@ -434,7 +434,7 @@ router.get('/rss/:id', async (req, res) => {
     }
 
     const items = [];
-    let queryResult;
+    let queryResult = { lastKey: null };
 
     do {
       queryResult = await Blog.getByCube(cube.id, 128, queryResult.lastKey);
@@ -645,28 +645,26 @@ router.get('/analysis/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
-    const tokens = {};
     for (const [boardname, list] of Object.entries(cards)) {
       if (boardname !== 'id') {
-        for (const card of list)
+        for (const card of list) {
           if (card.details.tokens) {
-            for (const tokenId in card.details.tokens) {
-              if (!tokens[tokenId]) {
-                const tokenDetails = carddb.cardFromId(tokenId);
-                tokens[tokenId] = {
-                  tags: [],
-                  status: 'Not Owned',
-                  colors: tokenDetails.color_identity,
-                  cmc: tokenDetails.cmc,
-                  cardID: tokenDetails._id,
-                  type_line: tokenDetails.type,
-                  addedTmsp: new Date(),
-                  finish: 'Non-foil',
-                  details: tokenDetails,
-                };
-              }
-            }
+            card.details.tokens = card.details.tokens.map((oracle) => {
+              const tokenDetails = carddb.cardFromId(oracle);
+              return {
+                tags: [],
+                status: 'Not Owned',
+                colors: tokenDetails.color_identity,
+                cmc: tokenDetails.cmc,
+                cardID: tokenDetails._id,
+                type_line: tokenDetails.type,
+                addedTmsp: new Date(),
+                finish: 'Non-foil',
+                details: tokenDetails,
+              };
+            });
           }
+        }
       }
     }
 
@@ -679,13 +677,8 @@ router.get('/analysis/:id', async (req, res) => {
       {
         cube,
         cards,
-        tokens,
         cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
-        defaultNav: req.query.nav,
-        defaultShowTagColors: !req.user || !req.user.hide_tag_colors,
-        defaultFormatId: Number(req.query.formatId),
-        defaultTab: req.query.tab ? Number(req.query.tab) : 0,
       },
       {
         metadata: generateMeta(
@@ -721,7 +714,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     try {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
     } catch (err) {
-      req.flash('danger', err.message);
+      req.flash('danger', "Failed to generate pack. If trying again doesn't work, please file a bug report.");
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 

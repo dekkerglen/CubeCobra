@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Row, Col, Card, CardBody } from 'reactstrap';
 import PropTypes from 'prop-types';
 
@@ -6,6 +6,8 @@ import { getTCGLink } from 'utils/Affiliate';
 
 import Markdown from 'components/Markdown';
 import MassBuyButton from 'components/MassBuyButton';
+import CubePropType from 'proptypes/CubePropType';
+import CardPropType from 'proptypes/CardPropType';
 
 const compareCards = (x, y) => x.details.name.localeCompare(y.details.name);
 const sortCards = (cards) => [...cards].sort(compareCards);
@@ -18,31 +20,33 @@ const dedupeCards = (cards) => {
   return [...map.values()];
 };
 
-const Tokens = ({ cube }) => {
-  const positioned = cube.cards.map((card, index) => ({ ...card, position: index }));
-  const byOracleId = {};
-  for (const card of positioned) {
-    for (const token of card.details.tokens || []) {
-      const oracleId = token.details.oracle_id;
-      if (!byOracleId[oracleId]) {
-        byOracleId[oracleId] = {
-          token,
-          cards: [],
-        };
+const Tokens = ({ cube, cards }) => {
+  const data = useMemo(() => {
+    const positioned = cards.map((card, index) => ({ ...card, position: index }));
+    const byOracleId = {};
+    for (const card of positioned) {
+      for (const token of card.details.tokens || []) {
+        const oracleId = token.details.oracle_id;
+        if (!byOracleId[oracleId]) {
+          byOracleId[oracleId] = {
+            token,
+            cards: [],
+          };
+        }
+        // TODO: Use most recent printing for this oracle ID.
+        byOracleId[oracleId].cards.push(card);
       }
-      // TODO: Use most recent printing for this oracle ID.
-      byOracleId[oracleId].cards.push(card);
     }
-  }
 
-  const sorted = [...Object.entries(byOracleId)];
-  sorted.sort((x, y) => compareCards(x[1].token, y[1].token));
-  const data = sorted.map(([, tokenData]) => ({
-    card: tokenData.token,
-    cardDescription: sortCards(dedupeCards(tokenData.cards))
-      .map(({ position }) => `[[${cube.cards[position].details.name}|${cube.cards[position].details._id}]]`)
-      .join('\n\n'),
-  }));
+    const sorted = [...Object.entries(byOracleId)];
+    sorted.sort((x, y) => compareCards(x[1].token, y[1].token));
+    return sorted.map(([, tokenData]) => ({
+      card: tokenData.token,
+      cardDescription: sortCards(dedupeCards(tokenData.cards))
+        .map(({ position }) => `[[${cards[position].details.name}|${cards[position].details._id}]]`)
+        .join('\n\n'),
+    }));
+  }, [cards]);
 
   return (
     <>
@@ -76,16 +80,7 @@ const Tokens = ({ cube }) => {
 };
 
 Tokens.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(
-      PropTypes.shape({
-        details: PropTypes.shape({
-          _id: PropTypes.string.isRequired,
-          name: PropTypes.string.isRequired,
-        }).isRequired,
-      }),
-    ),
-    formats: PropTypes.arrayOf(PropTypes.shape({})),
-  }).isRequired,
+  cube: CubePropType.isRequired,
+  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 export default Tokens;

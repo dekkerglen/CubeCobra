@@ -8,14 +8,28 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardType } from 'utils/Card';
-import { weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
+import { weightedAverage, weightedMedian, weightedStdDev, calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans, asfans }) => {
+const Averages = ({ cards, characteristics, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
+  const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
+  const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
 
   const groups = useMemo(() => sortIntoGroups(cards, sort), [cards, sort]);
+
+  const asfans = useMemo(() => {
+    if (!useAsfans) {
+      return {};
+    }
+    try {
+      return calculateAsfans(cube, cards, draftFormat);
+    } catch (e) {
+      console.error('Invalid Draft Format', draftFormat, cube.formats[draftFormat], e);
+      return {};
+    }
+  }, [cards, cube, draftFormat, useAsfans]);
 
   const counts = useMemo(
     () =>
@@ -32,7 +46,7 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans, as
               return true;
             })
             .map((card) => {
-              return [asfans[card.cardID], characteristics[characteristic].get(card)];
+              return [asfans[card.cardID] || 1, characteristics[characteristic].get(card)];
             })
             .filter(([weight, x]) => {
               // Don't include null, undefined, or NaN values, but we still want to include 0 values.
@@ -80,7 +94,13 @@ const Averages = ({ cards, characteristics, defaultFormatId, cube, setAsfans, as
           </InputGroup>
         </Col>
       </Row>
-      <AsfanDropdown cube={cube} cards={cards} defaultFormatId={defaultFormatId} setAsfans={setAsfans} />
+      <AsfanDropdown
+        cube={cube}
+        draftFormat={draftFormat}
+        setDraftFormat={setDraftFormat}
+        useAsfans={useAsfans}
+        setUseAsfans={setUseAsfans}
+      />
       <ErrorBoundary>
         <SortableTable
           columnProps={[
@@ -111,12 +131,6 @@ Averages.propTypes = {
     ).isRequired,
     defaultDraftFormat: PropTypes.number,
   }).isRequired,
-  defaultFormatId: PropTypes.number,
-  setAsfans: PropTypes.func.isRequired,
-  asfans: PropTypes.shape({}).isRequired,
-};
-Averages.defaultProps = {
-  defaultFormatId: null,
 };
 
 export default Averages;

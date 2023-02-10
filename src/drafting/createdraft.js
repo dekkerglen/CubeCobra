@@ -361,22 +361,22 @@ export const weightedStdDev = (arr, avg = null) => {
   return stdDev;
 };
 
-export const calculateAsfans = (cube, draftFormat) => {
+export const calculateAsfans = (cube, cards, draftFormat) => {
   const draft = {};
 
   let nextCardFn = null;
 
-  const cards = cube.cards.map((card) => ({ ...card, asfan: 0 }));
+  const cardsWithAsfan = cards.map((card) => ({ ...card, asfan: 0 }));
   const format = getDraftFormat({ id: draftFormat, packs: 3, cards: 15 }, cube);
 
-  if (cards.length === 0) {
+  if (cardsWithAsfan.length === 0) {
     throw new Error('Unable to create draft: no cards.');
   }
 
   if (format.custom === true) {
-    nextCardFn = customDraftAsfan(cards, format.multiples);
+    nextCardFn = customDraftAsfan(cardsWithAsfan, format.multiples);
   } else {
-    nextCardFn = standardDraftAsfan(cards);
+    nextCardFn = standardDraftAsfan(cardsWithAsfan);
   }
 
   const result = createPacks(draft, format, 1, nextCardFn);
@@ -389,5 +389,5 @@ export const calculateAsfans = (cube, draftFormat) => {
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
-  return fromEntries(cards.map((card) => [card.cardID, card.asfan]));
+  return fromEntries(cardsWithAsfan.map((card) => [card.cardID, card.asfan]));
 };

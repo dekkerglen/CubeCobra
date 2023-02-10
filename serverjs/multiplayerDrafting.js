@@ -2,6 +2,7 @@
 const uuid = require('uuid/v4');
 const { cardType } = require('../dist/utils/Card');
 const carddb = require('./carddb');
+const { draftbotPick } = require('./draftbots');
 
 const Draft = require('../dynamo/models/draft');
 
@@ -462,7 +463,6 @@ const getDraftPick = async (draftId, seat) => {
     cardsInPack: cardsInPack.map((card) => cardOracleIds[card]),
     basics: basics.map((card) => cardOracleIds[card]),
     picked: picked.map((card) => cardOracleIds[card]),
-    seen: [], // TODO: implement seen
     pickNum: strToInt(fullPack.length - cardsInPack.length), // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
     numPicks: strToInt(fullPack.length), // How many cards were in the pack when it was opened.
     packNum: strToInt(currentPack) - 1, // 0-Indexed pack number
@@ -471,23 +471,7 @@ const getDraftPick = async (draftId, seat) => {
 
   let choice = 0;
   try {
-    const result = await fetch('https://mtgml.cubeartisan.net/draft', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        drafterState,
-      }),
-    });
-
-    const json = await result.json();
-
-    // get the index of the highest scoring card
-    choice = json.scores.reduce((acc, cur, i) => (cur > acc.score ? { score: cur, index: i } : acc), {
-      score: -1,
-      index: -1,
-    }).index;
+    choice = await draftbotPick(drafterState);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);

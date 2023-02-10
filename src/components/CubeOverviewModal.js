@@ -43,8 +43,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   }, []);
 
   const changeImage = useCallback(
-    (event) => {
-      const image = event.target.value;
+    (image) => {
       setImagename(image);
       if (imageDict[image.toLowerCase()]) {
         setState({ ...state, imageName: image });
@@ -176,10 +175,11 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             className="me-2"
             name="remove"
             value={imagename}
-            onChange={changeImage}
+            setValue={changeImage}
             placeholder="Cardname for image"
             autoComplete="off"
             data-lpignore
+            noMargin
           />
           <br />
           <h6>description</h6>

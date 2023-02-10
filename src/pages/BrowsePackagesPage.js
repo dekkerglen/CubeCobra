@@ -52,6 +52,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState([]);
   const [refresh, setRefresh] = useState(false);
+  const [lastKey, setLastKey] = useState(null);
 
   const addAlert = (color, message) => {
     setAlerts([...alerts, { color, message }]);
@@ -60,6 +61,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
 
   const changeTab = (i) => {
     setPage(0);
+    setLastKey(null);
     setSelectedTab(i);
   };
 
@@ -70,19 +72,29 @@ const BrowsePackagesPage = ({ loginCallback }) => {
       }
       setLoading(true);
       const post = filter.length > 0 ? `/${filter}` : '';
-      const response = await csrfFetch(`/packages/${tabTypes[selectedTab]}/${page}/${sort}/${sortDirection}${post}`);
+      const response = await csrfFetch(`/packages/getpackages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: tabTypes[selectedTab],
+          keywords: post,
+          lastKey,
+          ascending: sortDirection,
+        }),
+      });
       if (response.ok) {
         const json = await response.json();
-        if (json.success === 'true') {
-          setTotal(json.total);
-          setLoading(false);
-          setPackages(json.packages);
-        }
+        setTotal(json.total);
+        setLoading(false);
+        setPackages(json.packages);
+        setLastKey(json.lastKey);
       }
       return [];
     };
     fetchData().then(() => setFilterTemp(filter));
-  }, [filter, page, sort, sortDirection, selectedTab, refresh, setRefresh]);
+  }, [filter, page, sort, sortDirection, selectedTab, refresh, setRefresh, lastKey]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
