@@ -32,6 +32,11 @@ const client = createClient({
       partitionKey: FIELDS.STATUS,
       sortKey: FIELDS.DATE,
     },
+    {
+      name: 'ByOwner',
+      partitionKey: FIELDS.OWNER,
+      sortKey: FIELDS.DATE,
+    },
   ],
   attributes: {
     [FIELDS.ID]: 'S',
@@ -78,6 +83,26 @@ module.exports = {
     if (keywords) {
       result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].all((keyword) => keywords.includes(keyword)));
     }
+
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  queryByOwner: async (owner, lastKey) => {
+    const query = {
+      IndexName: 'ByOwner',
+      KeyConditionExpression: '#owner = :owner',
+      ExpressionAttributeNames: {
+        '#owner': FIELDS.OWNER,
+      },
+      ExpressionAttributeValues: {
+        ':owner': owner,
+      },
+      ExclusiveStartKey: lastKey,
+    };
+
+    const result = await client.query(query);
 
     return {
       items: result.Items,
