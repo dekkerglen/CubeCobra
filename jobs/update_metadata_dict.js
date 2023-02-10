@@ -142,6 +142,7 @@ const correlationLimit = 36;
       elo: 1200,
       picks: 0,
       cubes: cubeCount[oracleToIndex[oracle]],
+      popularity: cubeCount[oracleToIndex[oracle]] / Object.keys(cubeHistory).length,
       cubedWith: {},
       draftedWith: {},
     };

@@ -38,7 +38,7 @@ const getAllMostReasonable = (filter) => {
   return filtered;
 };
 
-const searchCards = (filter, sort = 'elo', page = 0, direction = 'descending', distinct = 'names') => {
+const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', distinct = 'names') => {
   const cards = [];
 
   if (distinct === 'names') {
@@ -74,6 +74,7 @@ router.get('/api/topcards', async (req, res) => {
       });
       return;
     }
+
     const { data, numResults } = searchCards(filter, req.query.s, parseInt(req.query.p, 10), req.query.d);
     res.status(200).send({
       success: 'true',

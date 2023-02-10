@@ -1,16 +1,13 @@
 Top cards and Search cards pages:
-	total picks + cubes empty
-	sort by elo not working correctly
-	global elo not being decremented
 	typing in should have submit button instead of live 
-		quick filter options for color and MV don't work
+	quick filter options for color and MV don't work
 Socials tab broken
 have usernames pre-loaded everywhere
 have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
 draft can hang
-http://localhost:8080/cube/overview/9f
-	does not load analytics
+does not load analytics: http://localhost:8080/cube/overview/9f
+cube 404s: http://localhost:8080/cube/overview/3t0
 
 Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
