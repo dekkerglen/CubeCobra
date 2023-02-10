@@ -24,7 +24,6 @@ const Username = ({ user, nolink, defaultName }) => {
           }),
         });
         const val = await response.json();
-        console.log(val);
         return val;
       }
 

@@ -10,10 +10,7 @@ router.use(csrfProtection);
 
 router.post('/userfromid', async (req, res) => {
   const { userId } = req.body;
-  console.log(userId);
   const user = await User.getById(userId);
-
-  console.log(user);
 
   user.ImageData = util.getImageData(user.imageName || 'Ambush Viper');
 
