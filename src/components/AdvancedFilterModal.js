@@ -141,7 +141,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 type="text"
                 name="tag"
                 value={values.tag}
-                onChange={(event) => updateValue(event.target.value, 'tag')}
+                setValue={(tag) => updateValue(tag, 'tag')}
                 placeholder={'Any text, e.g. "Zombie Testing"'}
                 autoComplete="off"
                 data-lpignore

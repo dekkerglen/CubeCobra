@@ -17,7 +17,6 @@ router.post('/getpackages', async (req, res) => {
   const packages = await Package.querySortedByDate(status, keywords, ascending, lastKey);
 
   return res.status(200).send({
-    success: true,
     packages: packages.items,
     lastKey: packages.lastKey,
   });

@@ -63,14 +63,14 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
               treeUrl="/cube/api/fullnames"
               treePath="cardnames"
               type="text"
-              className="me-2"
               name="remove"
               value={cardName}
-              onChange={(event) => setCardName(event.target.value)}
+              setValue={setCardName}
               onSubmit={(event) => event.preventDefault()}
               placeholder="Card name and version"
               autoComplete="off"
               data-lpignore
+              noMargin
             />
           </Col>
           <Col xs="12" md="4">
