@@ -34,7 +34,7 @@ const PodcastEpisodePreview = ({ episode }) => {
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-start">
-          By <Username userId={episode.owner} defaultName={episode.username} />
+          By <Username user={episode.owner} defaultName={episode.username} />
         </small>
         <small className="float-end">
           <TimeAgo date={episode.date} />

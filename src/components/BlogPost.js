@@ -45,7 +45,7 @@ const BlogPost = ({ post, noScroll }) => {
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <Username userId={post.owner} />
+          <Username user={post.owner} />
           {' posted to '}
           {post.cube === 'DEVBLOG' ? (
             <a href="/dev/blog">Developer Blog</a>

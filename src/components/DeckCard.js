@@ -90,14 +90,24 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
           <h4 className="mb-0 me-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <Username userId={seat.userid} defaultName={seat.username} /> : 'Anonymous'}
+              Drafted by {seat.userid ? <Username user={seat.userid} defaultName={seat.username} /> : 'Anonymous'}
             </h6>
           )}
         </CardTitle>
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
+          {deck.type === 'd' ? (
+            <>
+              {deck.seats[0].pickorder ? (
+                <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
+              ) : (
+                <p>There is no draft log associated with this deck.</p>
+              )}
+            </>
+          ) : (
+            <p>This type of deck does not have a pick breakdown yet.</p>
+          )}
         </CardBody>
       )}
       {view === 'deck' && (

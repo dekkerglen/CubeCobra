@@ -77,7 +77,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
               <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
-              <Username userId={cardPackage.userid} defaultName={cardPackage.username} />
+              <Username user={cardPackage.userid} defaultName={cardPackage.username} />
               {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>

@@ -211,7 +211,12 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
               }
             }
 
-            if (draft.InitialState && Object.entries(draft.InitialState).length > 0 && draft.seats[0].pickorder) {
+            if (
+              draft.InitialState &&
+              Object.entries(draft.InitialState).length > 0 &&
+              draft.seats[0].pickorder &&
+              draft.type === Draft.TYPES.DRAFT
+            ) {
               for (let j = 0; j < draft.seats[0].pickorder.length; j++) {
                 const drafterState = getDrafterState(draft, 0, j);
 

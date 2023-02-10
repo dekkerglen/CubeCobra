@@ -162,7 +162,7 @@ router.post('/isdraftinitialized', ensureAuth, async (req, res) => {
 });
 
 router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
-  const { draftId, drafted, sideboard } = req.body;
+  const { draftId, mainboard, sideboard } = req.body;
   const seat = parseInt(req.body.seat, 10);
 
   for (let retry = 0; retry < 3; retry += 1) {
@@ -180,7 +180,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
         });
       }
 
-      deck.seats[seat].mainboard = drafted;
+      deck.seats[seat].mainboard = mainboard;
       deck.seats[seat].sideboard = sideboard;
       await Draft.put(deck);
 

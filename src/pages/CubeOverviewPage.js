@@ -219,7 +219,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                 <h6 className="mb-2">
                   <i>
                     {'Designed by '}
-                    <Username userId={cubeState.owner} />
+                    <Username user={cubeState.owner} />
                   </i>{' '}
                   • <a href={`/cube/rss/${cubeState.id}`}>RSS</a> •{' '}
                   <QRCodeModalLink

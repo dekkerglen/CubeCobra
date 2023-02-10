@@ -61,7 +61,7 @@ export const SeatPropType = PropTypes.shape({
   bot: PropTypes.bool,
   name: PropTypes.string.isRequired,
   userid: PropTypes.string,
-  drafted: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
+  mainboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
     .isRequired,
   sideboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
     .isRequired,

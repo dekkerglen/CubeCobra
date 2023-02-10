@@ -137,8 +137,8 @@ const MUTATIONS = {
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
-      const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].drafted);
-      newGridDraft.seats[seatIndex].drafted = moveOrAddCard(newGridDraft.seats[seatIndex].drafted, pos, cardIndex);
+      const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].mainboard);
+      newGridDraft.seats[seatIndex].mainboard = moveOrAddCard(newGridDraft.seats[seatIndex].mainboard, pos, cardIndex);
     }
   },
 };
@@ -183,8 +183,8 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
   // picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picked = useMemo(
     () =>
-      gridDraft.seats.map(({ drafted }) =>
-        drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
+      gridDraft.seats.map(({ mainboard }) =>
+        mainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
       ),
     [gridDraft, cards],
   );

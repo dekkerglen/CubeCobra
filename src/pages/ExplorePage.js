@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => {
+const ExplorePage = ({ recents, featured, mainboard, popular, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />
@@ -21,7 +21,7 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
           <CubesCard title="Most Popular cubes" className="mt-4" cubes={popular} />
-          <CubesCard title="Recently Drafted cubes" className="mt-4" cubes={drafted} />
+          <CubesCard title="Recently mainboard cubes" className="mt-4" cubes={mainboard} />
         </Col>
       </Row>
     </MainLayout>
@@ -33,7 +33,7 @@ const cubesListProp = PropTypes.arrayOf(CubePropType);
 ExplorePage.propTypes = {
   recents: cubesListProp.isRequired,
   featured: cubesListProp.isRequired,
-  drafted: cubesListProp.isRequired,
+  mainboard: cubesListProp.isRequired,
   popular: cubesListProp.isRequired,
   loginCallback: PropTypes.string,
 };

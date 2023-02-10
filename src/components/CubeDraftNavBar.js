@@ -17,7 +17,7 @@ const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;
 };
 
-const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
+const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
   const {
     cards,
     cardsInPack,
@@ -34,8 +34,8 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
   const pack = useMemo(() => cardsInPack.map((cardIndex) => cards[cardIndex]), [cardsInPack, cards]);
   // picks is an array with 1st key C/NC, 2d key CMC, 3d key order
   const picks = useMemo(
-    () => drafted.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
-    [drafted, cards],
+    () => mainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]))),
+    [mainboard, cards],
   );
   const instructions = useMemo(() => {
     if (action === 'pick') {
@@ -126,7 +126,7 @@ const CubeDraftNavBar = ({ drafterState, drafted, takeCard, moveCard }) => {
 
 CubeDraftNavBar.propTypes = {
   drafterState: DrafterStatePropType.isRequired,
-  drafted: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
+  mainboard: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired).isRequired).isRequired)
     .isRequired,
   takeCard: PropTypes.func.isRequired,
   moveCard: PropTypes.func.isRequired,

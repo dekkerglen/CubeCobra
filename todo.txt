@@ -1,8 +1,7 @@
 Top cards and Search cards pages:
 	don't have elo
-	mouse over doesn't work
 	typing in should have submit button instead of live 
-		quick filter optionms for color and MV don't work
+		quick filter options for color and MV don't work
 Socials tab broken
 have usernames pre-loaded everywhere
 have cube images pre-loaded everywhere
