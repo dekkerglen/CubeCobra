@@ -1,13 +1,24 @@
-Top cards and Search cards pages:
-	typing in should have submit button instead of live 
-	quick filter options for color and MV don't work
-Socials tab broken
-have usernames pre-loaded everywhere
-have cube images pre-loaded everywhere
-fix proptypes - use object proptypes when possible
+
+Create new blog post button on cube/blog not functional
+Error when looking at submitted packages when no packages have been submitted
+removing a card from list appears to autocomplete from all boards - should only include cards from board you're editing
+editing a blog post does not retain content, is blank. save overrides.
+'make default' for custom drafts appears to work on click, but is lost after navigating away or refreshing page.
+account confirmation email for dev site is for main site, not dev site.
+add timestamp (not just date) to history tab
+clicking on a card in list view after applying a filter causes error
+Add and Maybeboard buttons not working from card page
+drafts not visible under playtest tab
+"not a valid cube category override" when editing cube overview
+draftbots always pick first card in pack
+elo graph drops to 1200 when datapoint is empty
+card page play rate % is wrong
+top cards and search cards filtertext is wrong, says `Filtered 0 cards to 0`
 draft can hang
-does not load analytics: http://localhost:8080/cube/overview/9f
-cube 404s: http://localhost:8080/cube/overview/3t0
+the URL for the confirmation email is always https://cubecobra.com/user/register/confirm/undefined
+editing or cloning a saved draft deck causes an error
+Capitalization issues on front end
+
 
 Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
@@ -16,3 +27,7 @@ Investigate
 
 Eventually
 redo draftbots into something more basic
+have usernames pre-loaded everywhere
+have cube images pre-loaded everywhere
+fix proptypes - use object proptypes when possible
+add timestamp (not just date) to history tab

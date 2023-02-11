@@ -222,6 +222,7 @@ module.exports = {
   },
   getHashRowsForCube: (metadata, cards) => {
     const hashes = getHashesForCube(metadata, cards);
+    console.log(JSON.stringify(hashes, 0, 2));
 
     return hashes.map((hash) => ({
       [FIELDS.HASH]: hash,

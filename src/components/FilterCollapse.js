@@ -32,8 +32,6 @@ const allFields = [
   'is',
 ];
 
-const quickFields = ['name', 'oracle', 'mv', 'mana', 'type'];
-
 const numFields = [
   'mv',
   'price',
@@ -80,28 +78,25 @@ const FilterCollapse = ({ isOpen }) => {
 
   const applyQuick = useCallback(async () => {
     const tokens = [];
-    for (const name of quickFields) {
-      if (values[name]) {
-        const op = numFields.includes(name) ? values[`${name}Op`] || '=' : ':';
-        let value = values[name].replace('"', '\\"');
-        if (value.indexOf(' ') > -1) {
-          value = `"${value}"`;
-        }
-        tokens.push(`${name}${op}${value}`);
-      }
+
+    if (values.color && values.color.length > 0) {
+      tokens.push(`ci=${values.color.join('')}`);
     }
-    for (const name of colorFields) {
-      const colors = [];
-      const op = values[`${name}Op`] || '=';
-      for (const color of [...'WUBRG']) {
-        if (values[name + color]) {
-          colors.push(color);
-        }
-      }
-      if (colors.length > 0) {
-        tokens.push(`${name}${op}${colors.join('')}`);
-      }
+
+    if (values.cmc) {
+      const op = values.cmcOp || '=';
+
+      tokens.push(`mv${op}${values.cmc}`);
     }
+
+    if (values.type) {
+      tokens.push(`t:${values.type}`);
+    }
+
+    if (values.oracle) {
+      tokens.push(`o:${values.oracle}`);
+    }
+
     setFilterInput(tokens.join(' '));
     setAdvancedOpen(false);
   }, [setFilterInput, values]);
@@ -113,9 +108,7 @@ const FilterCollapse = ({ isOpen }) => {
 
   const updateValue = useCallback(
     (value, name) => {
-      const newValues = { ...values };
-      newValues[name] = value;
-      setValues(newValues);
+      setValues({ ...values, [name]: value });
     },
     [values],
   );
@@ -163,13 +156,11 @@ const FilterCollapse = ({ isOpen }) => {
               value={values.cmcOp || '='}
               onChange={(event) => updateValue(event.target.value, 'cmcOp')}
               bsSize="sm"
-              style={{ textAlignLast: 'center', maxWidth: '3.5rem' }}
+              style={{ textAlignLast: 'center', maxWidth: '5rem' }}
             >
-              <option>{'>'}</option>
-              <option>{'>='}</option>
-              <option>=</option>
-              <option>{'<='}</option>
-              <option>{'<'}</option>
+              {['=', '>', '>=', '<', '<='].map((op) => (
+                <option key={op}>{op}</option>
+              ))}
             </Input>
             <Input
               name="cmcQuick"

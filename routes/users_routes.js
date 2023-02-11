@@ -469,7 +469,7 @@ router.get('/view/:id', async (req, res) => {
 
     const cubes = await Cube.getByOwner(req.params.id);
 
-    const followers = await User.batchGet(user.following);
+    const followers = await User.batchGet(user.following || []);
 
     for (const follower of followers) {
       // don't leak this info
@@ -506,7 +506,7 @@ router.get('/decks/:userid', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const followers = await User.batchGet(user.following);
+    const followers = await User.batchGet(user.following || []);
 
     for (const follower of followers) {
       // don't leak this info
@@ -520,7 +520,7 @@ router.get('/decks/:userid', async (req, res) => {
     return render(req, res, 'UserDecksPage', {
       owner: user,
       followers,
-      following: req.user && req.user.followedUsers.some((id) => id === user.id),
+      following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
       lastKey: decks.lastKey,
     });
@@ -562,9 +562,21 @@ router.post('/getmorenotifications', ensureAuth, async (req, res) => {
 
 router.get('/blog/:userid', async (req, res) => {
   try {
-    const user = await User.getById(req.params.userid);
+    let user = await User.getById(req.params.userid);
+
+    if (!user) {
+      const userQuery = await User.getByUsername(req.params.userid.toLowerCase());
+
+      if (userQuery.items.length !== 1) {
+        req.flash('danger', 'User not found');
+        return res.redirect('/404');
+      }
+
+      [user] = userQuery.items;
+    }
+
     const posts = await Blog.getByOwner(req.params.userid, 10);
-    const followers = await User.batchGet(user.following);
+    const followers = await User.batchGet(user.following || []);
 
     for (const follower of [user, ...followers]) {
       // don't leak this info
@@ -581,7 +593,7 @@ router.get('/blog/:userid', async (req, res) => {
         posts: posts.items,
         lastKey: posts.lastKey,
         followers,
-        following: req.user && req.user.followedUsers.some((id) => id === user.id),
+        following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       },
       {
         title: user.username,
@@ -757,9 +769,9 @@ router.post('/changedisplay', ensureAuth, async (req, res) => {
 
 router.get('/social', ensureAuth, async (req, res) => {
   try {
-    const followedCubes = await Cube.batchGet(req.user.followedCubes);
-    const followers = await User.batchGet(req.user.following);
-    const followedUsers = await User.batchGet(req.user.followedUsers);
+    const followedCubes = await Cube.batchGet(req.user.followedCubes || []);
+    const followers = await User.batchGet(req.user.following || []);
+    const followedUsers = await User.batchGet(req.user.followedUsers || []);
 
     for (const follower of [...followers, ...followedUsers]) {
       // don't leak this info
