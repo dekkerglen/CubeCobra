@@ -92,7 +92,6 @@ function initializeCatalog() {
   catalog.english = {};
   catalog.elodict = {};
   catalog.embeddingdict = {};
-  catalog.historyDict = {};
 }
 
 initializeCatalog();
@@ -659,11 +658,17 @@ function convertCard(card, metadata, isExtra) {
   };
 
   newcard.elo = 1200;
+  newcard.popularity = 0;
+  newcard.cubeCount = 0;
+  newcard.pickCount = 0;
 
   if (metadata) {
     newcard.cubedWith = metadata.cubedWith;
     newcard.draftedWith = metadata.draftedWith;
     newcard.elo = metadata.elo;
+    newcard.popularity = metadata.popularity;
+    newcard.cubeCount = metadata.cubes;
+    newcard.pickCount = metadata.picks;
   }
 
   const name = convertName(card, isExtra);
@@ -692,17 +697,6 @@ function convertCard(card, metadata, isExtra) {
     eur: card.prices.eur ? parseFloat(card.prices.eur) : null,
     tix: card.prices.tix ? parseFloat(card.prices.tix) : null,
   };
-
-  if (catalog.historyDict[card.oracle_id]) {
-    newcard.popularity = catalog.historyDict[card.oracle_id].total[1] || 0;
-    newcard.popularity = newcard.popularity.toFixed(4) * 100;
-    newcard.cubeCount = catalog.historyDict[card.oracle_id].total[0] || 0;
-    newcard.pickCount = catalog.historyDict[card.oracle_id].picks || 0;
-  } else {
-    newcard.popularity = 0;
-    newcard.cubeCount = 0;
-    newcard.pickCount = 0;
-  }
 
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token';

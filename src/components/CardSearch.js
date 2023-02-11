@@ -30,7 +30,7 @@ const CardSearch = () => {
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(Query.get('m') || '');
   const [distinct, setDistinct] = useState(Query.get('di') || 'names');
-  const [sort, setSort] = useState(Query.get('s') || 'elo');
+  const [sort, setSort] = useState(Query.get('s') || 'Elo');
   const [direction, setDirection] = useState(Query.get('d') || 'descending');
 
   useEffect(() => {

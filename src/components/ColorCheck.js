@@ -5,14 +5,14 @@ import { Button, ButtonGroup } from 'reactstrap';
 
 import { COLORS } from 'utils/Util';
 
-export const ColorCheckButton = ({ size, color, short, checked, setChecked }) => {
+export const ColorCheckButton = ({ size, color, short, checked, onClick }) => {
   const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
       className={`color-check-button${checked ? ' active' : ''}`}
       outline={!checked}
       size={size}
-      onClick={() => setChecked(!checked)}
+      onClick={onClick}
       aria-label={color}
     >
       <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className={symbolClassName} />
@@ -25,7 +25,7 @@ ColorCheckButton.propTypes = {
   color: PropTypes.string.isRequired,
   short: PropTypes.string.isRequired,
   checked: PropTypes.bool.isRequired,
-  setChecked: PropTypes.func.isRequired,
+  onClick: PropTypes.func.isRequired,
 };
 
 ColorCheckButton.defaultProps = {
@@ -33,8 +33,6 @@ ColorCheckButton.defaultProps = {
 };
 
 export const ColorChecksControl = ({ colorless, prefix, size, values, setValues, style }) => {
-  const colors = colorless ? [...COLORS, ['Colorless', 'C']] : COLORS;
-
   const smallStyle = {
     height: 'calc(1.5em + .5rem + 2px)',
     fontSize: '0.875rem',
@@ -42,23 +40,39 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
 
   return (
     <ButtonGroup size={size} style={size === 'sm' ? smallStyle : style}>
-      {colors.map(([color, short]) => (
+      {COLORS.map(([color, short]) => (
         <ColorCheckButton
           key={short}
           prefix={prefix}
           size={size}
           color={color}
           short={short}
-          checked={values.map((tuple) => tuple[1]).includes(color)}
-          setChecked={(checked) => {
-            if (checked) {
-              setValues([...values, short]);
+          checked={values.includes(short)}
+          onClick={() => {
+            if (!values.includes(short)) {
+              setValues([...new Set([...values, short])].filter((c) => c !== 'C'));
             } else {
-              setValues(values.filter((tuple) => tuple[1] !== short));
+              setValues(values.filter((c) => c !== short));
             }
           }}
         />
       ))}
+      {colorless && (
+        <ColorCheckButton
+          prefix={prefix}
+          size={size}
+          color="Colorless"
+          short="C"
+          checked={values.includes('C')}
+          onClick={() => {
+            if (!values.includes('C')) {
+              setValues(['C']);
+            } else {
+              setValues([]);
+            }
+          }}
+        />
+      )}
     </ButtonGroup>
   );
 };

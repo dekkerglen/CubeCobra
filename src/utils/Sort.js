@@ -194,7 +194,7 @@ export const ORDERED_SORTS = [
   'Alphabetical',
   'Mana Value',
   'Price',
-  'elo',
+  'Elo',
   'Release date',
   'Cube Count',
   'Pick Count',
@@ -205,7 +205,7 @@ export const SortFunctions = {
   Alphabetical: alphaCompare,
   'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
   Price: (a, b) => cardPrice(a) - cardPrice(b),
-  elo: (a, b) => cardElo(a) - cardElo(b),
+  Elo: (a, b) => cardElo(a) - cardElo(b),
   'Release date': (a, b) => {
     if (cardReleaseDate(a) > cardReleaseDate(b)) {
       return 1;

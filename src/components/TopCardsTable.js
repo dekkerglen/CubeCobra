@@ -18,7 +18,7 @@ const TopCardsTable = () => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: Query.get('s') || 'elo',
+    key: Query.get('s') || 'Elo',
     direction: Query.get('d') || 'descending',
   });
 
