@@ -1,5 +1,3 @@
-'make default' for custom drafts appears to work on click, but is lost after navigating away or refreshing page.
-add timestamp (not just date) to history tab
 clicking on a card in list view after applying a filter causes error
 Add and Maybeboard buttons not working from card page
 drafts not visible under playtest tab
