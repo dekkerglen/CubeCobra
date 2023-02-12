@@ -242,11 +242,10 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  scan: async (lastKey, fields) => {
+  scan: async (lastKey) => {
     const result = await client.scan({
       ExclusiveStartKey: lastKey,
       ScanIndexForward: true,
-      ProjectionExpression: fields ? fields.join(',') : undefined,
     });
     return {
       items: result.Items,

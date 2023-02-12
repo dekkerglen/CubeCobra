@@ -218,7 +218,7 @@ router.get('/usercubes/:id', async (req, res) => {
 });
 
 router.get(
-  '/cubecardnames/:id',
+  '/cubecardnames/:id/:board',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
 
@@ -232,12 +232,9 @@ router.get(
     const cubeCards = await Cube.getCards(cube.id);
 
     const cardnames = [];
-    for (const [boardname, list] of Object.entries(cubeCards)) {
-      if (boardname !== 'id') {
-        for (const card of list) {
-          util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
-        }
-      }
+
+    for (const card of cubeCards[req.params.board]) {
+      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
     }
 
     const result = util.turnToTree(cardnames);
@@ -675,7 +672,7 @@ router.post(
         changelist,
       });
 
-      const followers = [...new Set([...req.user.following, ...cube.following])];
+      const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
       const feedItems = followers.map((user) => ({
         id,
@@ -851,7 +848,7 @@ router.post('/commit', async (req, res) => {
       changelist: changelogId,
     });
 
-    const followers = [...new Set([...req.user.following, ...cube.following])];
+    const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
     const feedItems = followers.map((user) => ({
       id: blogId,

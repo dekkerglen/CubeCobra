@@ -78,7 +78,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
   useMount(() => {
     // if there are changes
-    if (Object.keys(changes).length > 0) {
+    if (Object.keys(changes).length > 0 && setOpenCollapse) {
       setOpenCollapse('edit');
     }
   });

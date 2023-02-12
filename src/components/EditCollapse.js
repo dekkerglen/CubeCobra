@@ -223,7 +223,7 @@ const EditCollapse = ({ isOpen }) => {
           <InputGroup className="flex-nowrap mb-1">
             <AutocompleteInput
               cubeId={cube.id}
-              treeUrl={`/cube/api/cubecardnames/${cube.id}`}
+              treeUrl={`/cube/api/cubecardnames/${cube.id}/${showMaybeboard ? activeBoard : 'mainboard'}`}
               treePath="cardnames"
               type="text"
               innerRef={removeRef}

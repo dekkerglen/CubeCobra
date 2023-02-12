@@ -6,9 +6,9 @@ import TextEntry from 'components/TextEntry';
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
+const CreateBlogModal = ({ isOpen, toggle, post, cubeID }) => {
   const [mentions, setMentions] = useState('');
-  const [markdown, setMarkdown] = useState(post ? post.body : '');
+  const [markdown, setMarkdown] = useState(post ? post.markdown : '');
   const handleMentions = () => {
     setMentions(findUserLinks(markdown).join(';'));
   };
@@ -17,7 +17,7 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="#blogEditTitle" size="lg">
       <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} onSubmit={handleMentions}>
         <ModalHeader toggle={toggle} id="blogEditTitle">
-          Edit Blog Post
+          Create Blog Post
         </ModalHeader>
         <ModalBody>
           <Label>Title:</Label>
@@ -47,15 +47,15 @@ const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
   );
 };
 
-EditBlogModal.propTypes = {
+CreateBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   post: BlogPostPropType,
   cubeID: PropTypes.string.isRequired,
 };
 
-EditBlogModal.defaultProps = {
+CreateBlogModal.defaultProps = {
   post: null,
 };
 
-export default EditBlogModal;
+export default CreateBlogModal;

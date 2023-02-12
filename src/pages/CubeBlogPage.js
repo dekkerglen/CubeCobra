@@ -12,6 +12,10 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
+import CreateBlogModal from 'components/CreateBlogModal';
+import withModal from 'components/WithModal';
+
+const CreateBlogModalLink = withModal(NavLink, CreateBlogModal);
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -54,7 +58,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
           <Collapse navbar>
             <Nav navbar>
               <NavItem>
-                <NavLink>Create new blog post</NavLink>
+                <CreateBlogModalLink modalProps={{ cubeID: cube.id }}>Create new blog post</CreateBlogModalLink>
               </NavItem>
             </Nav>
           </Collapse>
