@@ -799,20 +799,22 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     <CubeContext.Provider value={value}>
       <>
         {children}
-        {modalSelection && !Array.isArray(modalSelection) && (
-          <CardModal
-            card={changedCards[modalSelection.board][modalSelection.index]}
-            isOpen={modalOpen}
-            toggle={toggle}
-            canEdit={canEdit}
-            versionDict={versionDict}
-            editCard={editCard}
-            revertEdit={revertEdit}
-            revertRemove={revertRemove}
-            removeCard={removeCard}
-            tagColors={tagColors}
-          />
-        )}
+        {modalSelection &&
+          !Array.isArray(modalSelection) &&
+          changedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
+            <CardModal
+              card={changedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
+              isOpen={modalOpen}
+              toggle={toggle}
+              canEdit={canEdit}
+              versionDict={versionDict}
+              editCard={editCard}
+              revertEdit={revertEdit}
+              revertRemove={revertRemove}
+              removeCard={removeCard}
+              tagColors={tagColors}
+            />
+          )}
         {modalSelection && Array.isArray(modalSelection) && (
           <GroupModal
             cards={modalSelection.map((s) => changedCards[s.board][s.index])}
