@@ -384,11 +384,11 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
   }
 
   const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((c) => c.cubeID.equals(cube._id));
+    const index = featured.queue.findIndex((c) => c.cubeID.equals(cube.id));
     if (index !== -1) {
       throw new Error('Cube is already in queue');
     }
-    featured.queue.push({ cubeID: cube._id, ownerID: cube.owner });
+    featured.queue.push({ cubeID: cube.id, ownerID: cube.owner });
   });
 
   if (!update.ok) {

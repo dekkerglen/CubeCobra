@@ -461,10 +461,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       );
     }
 
-    await deck.save();
+    const id = await Draft.put(deck);
     await Cube.update(cube);
 
-    return res.redirect(`/cube/deck/deckbuilder/${deck.id}`);
+    return res.redirect(`/cube/deck/deckbuilder/${id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/404`);
   }
@@ -668,12 +668,12 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       complete: true,
     };
 
-    await Draft.put(deck);
+    const id = await Draft.put(deck);
 
     cube.numDecks += 1;
     await Cube.update(cube);
 
-    return res.redirect(`/cube/deck/deckbuilder/${deck.id}`);
+    return res.redirect(`/cube/deck/deckbuilder/${id}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }

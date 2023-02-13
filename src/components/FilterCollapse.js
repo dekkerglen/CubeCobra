@@ -47,7 +47,7 @@ const numFields = [
 ];
 const colorFields = ['color', 'identity'];
 
-const FilterCollapse = ({ isOpen }) => {
+const FilterCollapse = ({ isOpen, hideDescription }) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [values, setValues] = useState({});
 
@@ -203,7 +203,7 @@ const FilterCollapse = ({ isOpen }) => {
           </Button>
         </Col>
       </Row>
-      {filterResult && filterResult.length > 0 && (
+      {filterResult && filterResult.length > 0 && !hideDescription && (
         <Row>
           <Col>
             <p>
@@ -235,10 +235,12 @@ const FilterCollapse = ({ isOpen }) => {
 
 FilterCollapse.propTypes = {
   isOpen: PropTypes.bool,
+  hideDescription: PropTypes.bool,
 };
 
 FilterCollapse.defaultProps = {
   isOpen: false,
+  hideDescription: false,
 };
 
 export default FilterCollapse;

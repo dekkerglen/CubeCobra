@@ -89,7 +89,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                 </NavItem>
                 {user && deck.seats[seatIndex].userid === user.id && (
                   <NavItem>
-                    <NavLink href={`/cube/deck/deckbuilder/${deck._id}`}>Edit</NavLink>
+                    <NavLink href={`/cube/deck/deckbuilder/${deck.id}`}>Edit</NavLink>
                   </NavItem>
                 )}
                 {draft ? (
@@ -98,15 +98,13 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                       Rebuild/Redraft Seat
                     </DropdownToggle>
                     <DropdownMenu end>
-                      <DropdownItem href={`/cube/deck/redraft/${deck._id}/${seatIndex}`}>Redraft</DropdownItem>
-                      <DropdownItem href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>
-                        Clone and Rebuild
-                      </DropdownItem>
+                      <DropdownItem href={`/cube/deck/redraft/${deck.id}/${seatIndex}`}>Redraft</DropdownItem>
+                      <DropdownItem href={`/cube/deck/rebuild/${deck.id}/${seatIndex}`}>Clone and Rebuild</DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 ) : (
                   <NavItem>
-                    <NavLink href={`/cube/deck/rebuild/${deck._id}/${seatIndex}`}>Clone and Rebuild</NavLink>
+                    <NavLink href={`/cube/deck/rebuild/${deck.id}/${seatIndex}`}>Clone and Rebuild</NavLink>
                   </NavItem>
                 )}
                 <CustomImageToggler />
@@ -115,20 +113,14 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     Export
                   </DropdownToggle>
                   <DropdownMenu end>
-                    <DropdownItem href={`/cube/deck/download/txt/${deck._id}/${seatIndex}`}>
+                    <DropdownItem href={`/cube/deck/download/txt/${deck.id}/${seatIndex}`}>
                       Card Names (.txt)
                     </DropdownItem>
-                    <DropdownItem href={`/cube/deck/download/forge/${deck._id}/${seatIndex}`}>
-                      Forge (.dck)
-                    </DropdownItem>
-                    <DropdownItem href={`/cube/deck/download/xmage/${deck._id}/${seatIndex}`}>
-                      XMage (.dck)
-                    </DropdownItem>
-                    <DropdownItem href={`/cube/deck/download/mtgo/${deck._id}/${seatIndex}`}>MTGO (.txt)</DropdownItem>
-                    <DropdownItem href={`/cube/deck/download/arena/${deck._id}/${seatIndex}`}>
-                      Arena (.txt)
-                    </DropdownItem>
-                    <DropdownItem href={`/cube/deck/download/cockatrice/${deck._id}/${seatIndex}`}>
+                    <DropdownItem href={`/cube/deck/download/forge/${deck.id}/${seatIndex}`}>Forge (.dck)</DropdownItem>
+                    <DropdownItem href={`/cube/deck/download/xmage/${deck.id}/${seatIndex}`}>XMage (.dck)</DropdownItem>
+                    <DropdownItem href={`/cube/deck/download/mtgo/${deck.id}/${seatIndex}`}>MTGO (.txt)</DropdownItem>
+                    <DropdownItem href={`/cube/deck/download/arena/${deck.id}/${seatIndex}`}>Arena (.txt)</DropdownItem>
+                    <DropdownItem href={`/cube/deck/download/cockatrice/${deck.id}/${seatIndex}`}>
                       Cockatrice (.txt)
                     </DropdownItem>
                   </DropdownMenu>
@@ -141,7 +133,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
             <Col>
               <DeckCard
                 seat={deck.seats[seatIndex]}
-                deckid={deck._id}
+                deckid={deck.id}
                 deck={deck}
                 seatIndex={`${seatIndex}`}
                 draft={draft}

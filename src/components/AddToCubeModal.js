@@ -111,7 +111,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             onChange={(event) => setSelectedCube(event.target.value)}
           >
             {cubes.map((cube) => (
-              <option key={cube._id} value={cube._id}>
+              <option key={cube._id} value={cube.id}>
                 {cube.name}
               </option>
             ))}

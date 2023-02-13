@@ -190,7 +190,7 @@ const BrowsePackagesPage = ({ loginCallback }) => {
               <Spinner className="position-absolute" />
             </div>
           ) : (
-            packages.map((pack) => <CardPackage key={pack._id} cardPackage={pack} refresh={() => setRefresh(true)} />)
+            packages.map((pack) => <CardPackage key={pack.id} cardPackage={pack} refresh={() => setRefresh(true)} />)
           )}
           {total / PAGE_SIZE > 1 && (
             <Paginate count={Math.ceil(total / PAGE_SIZE)} active={page} onClick={(i) => setPage(i)} />

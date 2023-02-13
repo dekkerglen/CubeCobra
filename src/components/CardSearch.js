@@ -102,7 +102,7 @@ const CardSearch = () => {
             </div>
           </Col>
         </Row>
-        <FilterCollapse isOpen />
+        <FilterCollapse hideDescription isOpen />
         <Row className="px-3">
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
