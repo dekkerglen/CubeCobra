@@ -76,6 +76,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
   console.log(`Loaded ${keys.length} days of logs`);
 
   let cubes = {};
+  let oracleToElo = {};
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
@@ -116,9 +117,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
         }
       }
 
-      if (logRows.length > 0) {
-        fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubes));
-      }
+      fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubes));
 
       const totals = {
         size180: 0,
@@ -212,12 +211,9 @@ const { getCubeTypes } = require('../serverjs/cubefn');
         }
       }
 
-      let oracleToElo = {};
-      try {
+      if (fs.existsSync(`temp/global_draft_history/${key}.json`)) {
         const eloFile = fs.readFileSync(`temp/global_draft_history/${key}.json`);
         oracleToElo = JSON.parse(eloFile).eloByOracleId;
-      } catch (e) {
-        console.log('No elo file found for', key);
       }
 
       await CardHistory.batchPut(
