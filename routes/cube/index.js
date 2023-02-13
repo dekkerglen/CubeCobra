@@ -980,6 +980,7 @@ router.post(
       document.seats.push({
         bot: true,
         name: 'Grid Bot',
+        date: new Date().valueOf(),
         userid: null,
         mainboard: pool,
         sideboard: pool,
@@ -1182,6 +1183,7 @@ router.post(
       draft.owner = req.user.id;
       draft.cubeOwner = cube.owner;
       draft.type = Draft.TYPES.DRAFT;
+      draft.date = new Date().valueOf();
       draft.cards = populated.cards;
       addBasics(draft, cube.basics);
 

@@ -1,6 +1,3 @@
-drafts not visible under playtest tab
-"not a valid cube category override" when editing cube overview
-draftbots always pick first card in pack
 elo graph drops to 1200 when datapoint is empty
 card page play rate % is wrong
 top cards and search cards filtertext is wrong, says `Filtered 0 cards to 0`
@@ -15,6 +12,10 @@ Hitting Save on edit settings in cube overview seems to spin forever, with or wi
 Opening a card that had edits applied still shows Pending Edit until page refresh
 cube search should strip non-alphanumeric character
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
+draft deck names are nonsense
+draft seat labels are nonsense
+draftbots always pick first card in pack
+
 
 Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
