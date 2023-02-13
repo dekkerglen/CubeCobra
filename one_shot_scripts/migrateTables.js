@@ -121,8 +121,23 @@ const skip = 0;
         if (Array.isArray(converted[0])) {
           converted = converted.flat();
         }
+        const convertedBatches = [];
+
         if (converted.length > 0) {
-          await put(converted);
+          // batch them by 1000
+          for (let j = 0; j < converted.length; j += 1000) {
+            const batch = converted.slice(j, j + 1000);
+            convertedBatches.push(batch);
+          }
+
+          for (const batch of convertedBatches) {
+            await put(batch);
+
+            // if there's more than one batch, wait 1 second between batches
+            if (convertedBatches.length > 1) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
         }
       }
       const currentTime = new Date();

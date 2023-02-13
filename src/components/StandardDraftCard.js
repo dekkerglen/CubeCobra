@@ -44,12 +44,12 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
             <Button color="accent" className="me-2">
               Start Draft
             </Button>
+            {canEdit && defaultDraftFormat !== -1 && (
+              <Button color="accent" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
+                Make Default
+              </Button>
+            )}
           </div>
-          {canEdit && defaultDraftFormat !== -1 && (
-            <Button color="accent" className="me-3" onClick={onSetDefaultFormat} data-index={-1}>
-              Make Default
-            </Button>
-          )}
         </CardFooter>
       </CSRFForm>
     </Card>

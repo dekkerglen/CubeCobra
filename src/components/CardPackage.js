@@ -77,7 +77,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
               <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
-              <Username user={cardPackage.userid} defaultName={cardPackage.username} />
+              <Username user={cardPackage.owner} defaultName={cardPackage.username} />
               {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>
@@ -96,7 +96,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
                         toggleVote();
                       }}
                     >
-                      {voted ? <b>{cardPackage.votes}</b> : cardPackage.votes}
+                      {voted ? <b>{cardPackage.voteCount}</b> : cardPackage.voteCount}
                     </button>
                   </Tooltip>
                 </TextBadge>
@@ -142,7 +142,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
           {cardPackage.cards.map((cardId) => (
             <Col key={`${cardPackage.id}-${cardId}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
               <Card className="mb-3">
-                <AutocardA href={`/tool/card/${cardId}`} front={`/tool/cardimage/${cardId}`} target="_blank">
+                <AutocardA href={`/tool/card/${cardId}`} image={`/tool/cardimage/${cardId}`} target="_blank">
                   <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
                 </AutocardA>
               </Card>

@@ -12,8 +12,8 @@ const FIELDS = {
 
 const client = createClient({
   name: 'CUBE_HASHES',
-  partitionKey: FIELDS.HASH,
-  sortKey: FIELDS.CUBE_ID,
+  partitionKey: FIELDS.CUBE_ID,
+  sortKey: FIELDS.HASH,
   attributes: {
     [FIELDS.HASH]: 'S',
     [FIELDS.NUM_FOLLOWERS]: 'N',
@@ -95,10 +95,13 @@ const hashOracles = (cards) => {
   const res = [];
 
   for (const card of cards.mainboard) {
-    res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
-  }
-  for (const card of cards.mainboard) {
-    res.push(`maybe:${carddb.cardFromId(card.cardID).oracle_id}`);
+    const oracle = carddb.cardFromId(card.cardID).oracle_id;
+
+    if (oracle) {
+      res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
+    } else {
+      console.log(`No oracle for `, card.cardID);
+    }
   }
 
   return res;
@@ -192,6 +195,28 @@ module.exports = {
       default:
         return getSortedByFollowers(hash, ascending, lastKey);
     }
+  },
+  getHashesByCubeId: async (cubeId) => {
+    const items = [];
+    let lastKey = null;
+
+    do {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await client.query({
+        KeyConditionExpression: `#p1 = :cubeId`,
+        ExpressionAttributeValues: {
+          ':cubeId': cubeId,
+        },
+        ExpressionAttributeNames: {
+          '#p1': FIELDS.CUBE_ID,
+        },
+        ExclusiveStartKey: lastKey,
+      });
+      items.push(...result.Items);
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+
+    return items;
   },
   getSortedByCardCount,
   getSortedByName,

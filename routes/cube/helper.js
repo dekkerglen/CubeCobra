@@ -79,7 +79,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
         changelist,
       });
 
-      const followers = [...new Set([...req.user.following, ...cube.following])];
+      const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
       const feedItems = followers.map((user) => ({
         id,

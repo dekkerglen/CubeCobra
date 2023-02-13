@@ -1,6 +1,7 @@
 import React, { useContext, useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
+import CubePropType from 'proptypes/CubePropType';
 
 import { Col, Nav, Navbar, NavLink, NavItem, Row } from 'reactstrap';
 
@@ -38,7 +39,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editFormatIndex, setEditFormatIndex] = useState(-1);
   const [editFormat, setEditFormat] = useState({});
-  const [defaultDraftFormat, setDefaultDraftFormat] = useState(cube.defaultDraftFormat ?? -1);
+  const [defaultDraftFormat, setDefaultDraftFormat] = useState(cube.defaultFormat ?? -1);
 
   const toggleEditModal = useCallback(() => setEditModalOpen((open) => !open), []);
 
@@ -184,30 +185,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
 };
 
 CubePlaytestPage.propTypes = {
-  cube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.object),
-    defaultDraftFormat: PropTypes.number,
-    id: PropTypes.string.isRequired,
-    owner: PropTypes.string.isRequired,
-    formats: PropTypes.arrayOf(
-      PropTypes.shape({
-        title: PropTypes.string,
-        multiples: PropTypes.bool,
-        markdown: PropTypes.string.isRequired,
-        packs: PropTypes.arrayOf(
-          PropTypes.shape({
-            slots: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-            steps: PropTypes.arrayOf(
-              PropTypes.shape({
-                action: PropTypes.oneOf(['pass', 'pick', 'trash', 'pickrandom', 'trashrandom']),
-                amount: PropTypes.number,
-              }),
-            ),
-          }).isRequired,
-        ).isRequired,
-      }).isRequired,
-    ),
-  }).isRequired,
+  cube: CubePropType.isRequired,
   decks: PropTypes.arrayOf(DeckPropType).isRequired,
   loginCallback: PropTypes.string,
 };

@@ -39,7 +39,14 @@ const formatDate = (date) => {
   const day = date.getDate();
   const year = date.getFullYear();
 
-  return `${monthNames[month]} ${addOrdinal(day)}, ${year}`;
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+
+  const ampm = hour >= 12 ? 'pm' : 'am';
+
+  return `${monthNames[month]} ${addOrdinal(day)}, ${year} - ${hour % 12}:${
+    minute < 10 ? `0${minute}` : minute
+  } ${ampm}`;
 };
 
 const CubeHistory = ({ changes, lastKey }) => {

@@ -197,6 +197,7 @@ module.exports = function createClient(config) {
           };
           batches.push(params);
         }
+
         await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
       } catch (error) {
         throw new Error(`Error batch putting items into table ${config.name}: ${error.message}`);

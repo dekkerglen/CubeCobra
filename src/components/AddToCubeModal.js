@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import UserContext from 'contexts/UserContext';
 import ImageFallback from 'components/ImageFallback';
 import { csrfFetch } from 'utils/CSRF';
+import useLocalStorage from 'hooks/useLocalStorage';
+import LoadingButton from 'components/LoadingButton';
 
 import {
   Modal,
@@ -26,14 +28,18 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
     def = cubes.map((cube) => cube.id).includes(cubeContext) ? cubeContext : cubes[0].id;
   }
   const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? def : '');
+  const [selectedBoard, setSelectedBoard] = useLocalStorage('selectedBoardForATCModal', 'mainboard');
   const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const add = async () => {
+    setLoading(true);
     try {
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
           cards: [card._id],
+          board: selectedBoard,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -50,30 +56,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
     } catch (err) {
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
-  };
-
-  const maybe = async () => {
-    try {
-      const response = await csrfFetch(`/cube/api/maybe/${selectedCube}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          add: [{ details: card }],
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          toggle();
-        }
-      } else {
-        setAlerts([...alerts, { color: 'danger', message: 'Error, could not maybeboard card' }]);
-      }
-    } catch (err) {
-      setAlerts([...alerts, { color: 'danger', message: 'Error, could not maybeboard card' }]);
-    }
+    setLoading(false);
   };
 
   if (!cubes || cubes.length === 0) {
@@ -134,6 +117,21 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             ))}
           </Input>
         </InputGroup>
+        <InputGroup className="pb-3">
+          <InputGroupText>Board: </InputGroupText>
+          <Input
+            id="selected-board-input"
+            type="select"
+            value={selectedBoard}
+            onChange={(event) => setSelectedBoard(event.target.value)}
+          >
+            <option value="mainboard">Mainboard</option>
+            <option value="maybeboard">Maybeboard</option>
+          </Input>
+        </InputGroup>
+        <LoadingButton block outline loading={loading} color="accent" onClick={add}>
+          Add
+        </LoadingButton>
       </ModalBody>
       <ModalFooter>
         {!hideAnalytics && (
@@ -141,12 +139,6 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             Analytics
           </Button>
         )}
-        <Button color="accent" onClick={add}>
-          Add
-        </Button>
-        <Button color="secondary" onClick={maybe}>
-          maybeboard
-        </Button>
         <Button color="unsafe" onClick={toggle}>
           Close
         </Button>

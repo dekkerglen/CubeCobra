@@ -218,7 +218,7 @@ router.get('/usercubes/:id', async (req, res) => {
 });
 
 router.get(
-  '/cubecardnames/:id',
+  '/cubecardnames/:id/:board',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
 
@@ -232,12 +232,9 @@ router.get(
     const cubeCards = await Cube.getCards(cube.id);
 
     const cardnames = [];
-    for (const [boardname, list] of Object.entries(cubeCards)) {
-      if (boardname !== 'id') {
-        for (const card of list) {
-          util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
-        }
-      }
+
+    for (const card of cubeCards[req.params.board]) {
+      util.binaryInsert(carddb.cardFromId(card.cardID).name, cardnames);
     }
 
     const result = util.turnToTree(cardnames);
@@ -625,15 +622,13 @@ router.post(
       });
     }
 
-    if (!cube.owner.equals(req.user.id)) {
+    if (cube.owner !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
       });
     }
-
     const cubeCards = await Cube.getCards(req.params.id);
-    const { mainboard } = cubeCards;
 
     let tag = null;
     if (req.body.packid) {
@@ -651,9 +646,9 @@ router.post(
     });
 
     if (tag) {
-      mainboard.push(...adds);
+      cubeCards[req.body.board].push(...adds);
     } else {
-      mainboard.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+      cubeCards[req.body.board].push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
 
     await Cube.updateCards(req.params.id, cubeCards);
@@ -675,7 +670,7 @@ router.post(
         changelist,
       });
 
-      const followers = [...new Set([...req.user.following, ...cube.following])];
+      const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
       const feedItems = followers.map((user) => ({
         id,
@@ -851,7 +846,7 @@ router.post('/commit', async (req, res) => {
       changelist: changelogId,
     });
 
-    const followers = [...new Set([...req.user.following, ...cube.following])];
+    const followers = [...new Set([...(req.user.following || []), ...cube.following])];
 
     const feedItems = followers.map((user) => ({
       id: blogId,

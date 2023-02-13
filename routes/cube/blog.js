@@ -64,7 +64,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       title: req.body.title,
     });
 
-    const followers = [...new Set([...req.user.following, ...cube.following, ...(req.body.mentions || [])])];
+    const followers = [...new Set([...(req.user.following || []), ...cube.following, ...(req.body.mentions || [])])];
 
     const feedItems = followers.map((userId) => ({
       id,
