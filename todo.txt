@@ -1,5 +1,3 @@
-clicking on a card in list view after applying a filter causes error
-Add and Maybeboard buttons not working from card page
 drafts not visible under playtest tab
 "not a valid cube category override" when editing cube overview
 draftbots always pick first card in pack

@@ -622,15 +622,13 @@ router.post(
       });
     }
 
-    if (!cube.owner.equals(req.user.id)) {
+    if (cube.owner !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
       });
     }
-
     const cubeCards = await Cube.getCards(req.params.id);
-    const { mainboard } = cubeCards;
 
     let tag = null;
     if (req.body.packid) {
@@ -648,9 +646,9 @@ router.post(
     });
 
     if (tag) {
-      mainboard.push(...adds);
+      cubeCards[req.body.board].push(...adds);
     } else {
-      mainboard.push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
+      cubeCards[req.body.board].push(...req.body.cards.map((id) => util.newCard(carddb.cardFromId(id))));
     }
 
     await Cube.updateCards(req.params.id, cubeCards);
