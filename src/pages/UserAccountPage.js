@@ -109,7 +109,7 @@ const RemoveFeaturedButton = withModal(Button, RemoveFeaturedModal);
 const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron, featured }) => {
   const user = useContext(UserContext);
   const [nav, setNav] = useQueryParam('nav', defaultNav);
-  const [imageValue, setImageValue] = useState('');
+  const [imageValue, setImageValue] = useState(user.imageName);
   const [imageDict, setImageDict] = useState({});
   const [markdown, setMarkdown] = useState(user?.about ?? '');
 
@@ -126,10 +126,6 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
     },
     [setNav],
   );
-
-  const handleChangeImage = useCallback((event) => {
-    setImageValue(event.target.value);
-  }, []);
 
   const handleSubmitImage = useCallback((event) => {
     event.preventDefault();
@@ -226,11 +222,12 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 className="me-2"
                                 name="remove"
                                 value={imageValue}
-                                setValue={handleChangeImage}
+                                setValue={setImageValue}
                                 onSubmit={handleSubmitImage}
                                 placeholder="Cardname for image"
                                 autoComplete="off"
                                 data-lpignore
+                                noMargin
                               />
                               {result && <Input type="hidden" name="image" value={imageValue.toLowerCase()} />}
                             </Col>

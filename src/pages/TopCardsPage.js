@@ -31,7 +31,7 @@ const TopCardsPage = ({ loginCallback }) => {
               </div>
             </Col>
           </Row>
-          <FilterCollapse isOpen />
+          <FilterCollapse hideDescription isOpen />
         </div>
         <DynamicFlash />
         <TopCardsTable />

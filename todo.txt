@@ -1,13 +1,4 @@
-elo graph drops to 1200 when datapoint is empty
-card page play rate % is wrong
-top cards and search cards filtertext is wrong, says `Filtered 0 cards to 0`
-draft can hang
-the URL for the confirmation email is always https://cubecobra.com/user/register/confirm/undefined
-editing or cloning a saved draft deck causes an error
-Capitalization issues on front end
-"Create Blog Post" checkbox is ignored, treated as always checked
 Cannot set tag colors
-Cannot set profile pic (cardname for image box can't be typed in)
 Hitting Save on edit settings in cube overview seems to spin forever, with or without settings changes
 Opening a card that had edits applied still shows Pending Edit until page refresh
 cube search should strip non-alphanumeric character
@@ -15,6 +6,9 @@ quickly switching cards between deck and sideboard during a sealed playtest, a f
 draft deck names are nonsense
 draft seat labels are nonsense
 draftbots always pick first card in pack
+password recovery might not be working
+draft can hang
+Capitalization issues on front end
 
 
 Investigate

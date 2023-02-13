@@ -172,7 +172,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <InputGroupText>Cube: </InputGroupText>
           <Input type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
             {cubes.map((cube) => (
-              <option value={cube._id}>{cube.name}</option>
+              <option value={cube.id}>{cube.name}</option>
             ))}
           </Input>
         </InputGroup>

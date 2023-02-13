@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import React from 'react';
@@ -20,7 +21,7 @@ const AsfanDropdown = ({ cube, alwaysOn, useAsfans, setUseAsfans, draftFormat, s
         <option value="Standard Draft Format">Standard Draft Format</option>
         {cube.formats.length > 0 && <option disabled>Custom Formats</option>}
         {cube.formats.map((format, index) => (
-          <option key={format._id} value={index}>
+          <option key={index} value={index}>
             {format.title}
           </option>
         ))}

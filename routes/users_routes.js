@@ -56,7 +56,7 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
 
     if (notification.status === Notification.STATUS.UNREAD) {
       notification.status = Notification.STATUS.READ;
-      await notification.update(notification);
+      await Notification.update(notification);
     }
 
     return res.redirect(notification.url);
@@ -333,7 +333,6 @@ router.post(
     const newUser = {
       email,
       username,
-      confirmed: false,
       followedCubes: [],
       followedUsers: [],
       following: [],
@@ -352,63 +351,13 @@ router.post(
           newUser.passwordHash = hash;
           await User.put(newUser);
 
-          const smtpTransport = mailer.createTransport({
-            name: 'CubeCobra.com',
-            secure: true,
-            service: 'Gmail',
-            auth: {
-              user: process.env.EMAIL_CONFIG_USERNAME,
-              pass: process.env.EMAIL_CONFIG_PASSWORD,
-            },
-          });
-
-          const confirmEmail = new Email({
-            message: {
-              from: 'Cube Cobra Team <support@cubecobra.com>',
-              to: email,
-              subject: 'Confirm Account',
-            },
-            send: true,
-            juiceResources: {
-              webResources: {
-                relativeTo: path.join(__dirname, '..', 'public'),
-                images: true,
-              },
-            },
-            transport: smtpTransport,
-          });
-
-          confirmEmail
-            .send({
-              template: 'confirm_email',
-              locals: {
-                id: newUser.id,
-              },
-            })
-            .then(() => {
-              req.flash('success', 'Account successfully created. You are now able to login.');
-              res.redirect('/user/login');
-            });
+          req.flash('success', 'Account successfully created. You are now able to login.');
+          res.redirect('/user/login');
         }
       });
     });
   },
 );
-
-// Register confirm
-router.get('/register/confirm/:id', async (req, res) => {
-  const user = await User.getById(req.params.id);
-
-  if (user.confirmed) {
-    req.flash('success', 'User already confirmed.');
-    return res.redirect('/user/login');
-  }
-
-  user.confirmed = true;
-  await User.update(user);
-  req.flash('success', 'User successfully confirmed');
-  return res.redirect('/user/login');
-});
 
 // Login route
 router.get('/login', (req, res) => {
