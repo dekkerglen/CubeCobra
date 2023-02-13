@@ -19,22 +19,22 @@ const featuredQueue = require('../dynamo/models/featuredQueue');
 const feed = require('../dynamo/models/feed');
 
 const tables = [
-  // content,
-  // notification,
-  // user,
-  // notice,
-  // cubeMetadata,
+  content,
+  notification,
+  user,
+  notice,
+  cubeMetadata,
   cubeHash,
-  // cubeChangelog,
-  // blog,
-  // cardhistory,
-  // comment,
-  // draft,
-  // pack,
-  // patron,
-  // passwordReset,
-  // featuredQueue,
-  // feed,
+  cubeChangelog,
+  blog,
+  cardhistory,
+  comment,
+  draft,
+  pack,
+  patron,
+  passwordReset,
+  featuredQueue,
+  feed,
 ];
 
 (async () => {

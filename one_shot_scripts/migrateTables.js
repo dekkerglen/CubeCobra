@@ -29,40 +29,40 @@ const Patron = require('../models/old/patron');
 const FeaturedQueue = require('../models/old/featuredCubes');
 
 const migrations = [
-  // {
-  //   source: Video,
-  //   conversions: [[content.convertVideo, content.batchPut]],
-  // },
-  // {
-  //   source: Episode,
-  //   conversions: [[content.convertEpisode, content.batchPut]],
-  // },
-  // {
-  //   source: Podcast,
-  //   conversions: [[content.convertPodcast, content.batchPut]],
-  // },
-  // {
-  //   source: Article,
-  //   conversions: [[content.convertArticle, content.batchPut]],
-  // },
-  // {
-  //   source: User,
-  //   conversions: [
-  //     [notification.getNotificationsFromUser, notification.batchPut],
-  //     [user.convertUser, user.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: Blog,
-  //   conversions: [
-  //     [changelog.getChangelogFromBlog, changelog.batchPut],
-  //     [blog.convertBlog, blog.batchPut],
-  //   ],
-  // },
-  // {
-  //   source: Comment,
-  //   conversions: [[comment.convertComment, comment.batchPut]],
-  // },
+  {
+    source: Video,
+    conversions: [[content.convertVideo, content.batchPut]],
+  },
+  {
+    source: Episode,
+    conversions: [[content.convertEpisode, content.batchPut]],
+  },
+  {
+    source: Podcast,
+    conversions: [[content.convertPodcast, content.batchPut]],
+  },
+  {
+    source: Article,
+    conversions: [[content.convertArticle, content.batchPut]],
+  },
+  {
+    source: User,
+    conversions: [
+      [notification.getNotificationsFromUser, notification.batchPut],
+      [user.convertUser, user.batchPut],
+    ],
+  },
+  {
+    source: Blog,
+    conversions: [
+      [changelog.getChangelogFromBlog, changelog.batchPut],
+      [blog.convertBlog, blog.batchPut],
+    ],
+  },
+  {
+    source: Comment,
+    conversions: [[comment.convertComment, comment.batchPut]],
+  },
   {
     source: Cube,
     conversions: [
@@ -74,18 +74,18 @@ const migrations = [
       ],
     ],
   },
-  // {
-  //   source: Package,
-  //   conversions: [[pack.convertPackage, pack.batchPut]],
-  // },
-  // {
-  //   source: Patron,
-  //   conversions: [[patron.convertPatron, patron.batchPut]],
-  // },
-  // {
-  //   source: FeaturedQueue,
-  //   conversions: [[featuredQueue.convertQueue, featuredQueue.batchPut]],
-  // },
+  {
+    source: Package,
+    conversions: [[pack.convertPackage, pack.batchPut]],
+  },
+  {
+    source: Patron,
+    conversions: [[patron.convertPatron, patron.batchPut]],
+  },
+  {
+    source: FeaturedQueue,
+    conversions: [[featuredQueue.convertQueue, featuredQueue.batchPut]],
+  },
 ];
 
 const batchSize = 100;

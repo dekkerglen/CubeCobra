@@ -14,6 +14,7 @@ Cannot set profile pic (cardname for image box can't be typed in)
 Hitting Save on edit settings in cube overview seems to spin forever, with or without settings changes
 Opening a card that had edits applied still shows Pending Edit until page refresh
 cube search should strip non-alphanumeric character
+quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
 
 Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
