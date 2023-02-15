@@ -23,6 +23,7 @@ import DisplayContext from 'contexts/DisplayContext';
 import CubeContext from 'contexts/CubeContext';
 import TextEntry from 'components/TextEntry';
 import useLocalStorage from 'hooks/useLocalStorage';
+import LoadingButton from 'components/LoadingButton';
 
 export const getCard = async (defaultprinting, name, setAlerts) => {
   if (name && name.length > 0) {
@@ -316,9 +317,9 @@ const EditCollapse = ({ isOpen }) => {
         </Row>
         <Row className="mb-2">
           <Col xs="6" md="3">
-            <Button color="accent" block className="me-2" onClick={submit} disabled={loading}>
+            <LoadingButton color="accent" block className="me-2" onClick={submit} loading={loading}>
               Save Changes
-            </Button>
+            </LoadingButton>
           </Col>
           <Col xs="6" md="3">
             <Button

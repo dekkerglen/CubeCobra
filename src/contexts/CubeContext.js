@@ -25,7 +25,7 @@ const CubeContext = React.createContext({
 });
 
 export const TAG_COLORS = [
-  ['None', null],
+  ['None', 'no-color'],
   ['Red', 'red'],
   ['Brown', 'brown'],
   ['Orange', 'orange'],
@@ -54,6 +54,7 @@ const getDetails = async (cardId) => {
 
 export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict, useChangedCards }) => {
   const user = useContext(UserContext);
+
   const { setOpenCollapse } = useContext(DisplayContext);
   const [cube, setCube] = useState({
     ...initialCube,
@@ -63,7 +64,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [changes, setChanges] = useLocalStorage(`cubecobra-changes-${cube.id}`, {});
   const [modalSelection, setModalSelection] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [tagColors, setTagColors] = useState(cube.tagColors);
   const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +75,29 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
   const [filterResult, setFilterResult] = useState('');
+
+  const allTags = useMemo(() => {
+    const tags = new Set();
+
+    for (const [board, list] of Object.entries(cards)) {
+      if (board !== 'id') {
+        for (const card of list) {
+          for (const tag of card.tags || []) {
+            tags.add(tag);
+          }
+        }
+      }
+    }
+
+    return [...tags];
+  }, [cube.cards]);
+
+  const [tagColors, setTagColors] = useState([
+    ...(cube.tagColors || []),
+    ...allTags
+      .filter((tag) => !(cube.tagColors || []).map((tc) => tc.tag).includes(tag))
+      .map((tag) => ({ tag, color: 'None' })),
+  ]);
 
   useMount(() => {
     // if there are changes
@@ -91,25 +114,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       setModalOpen(!modalOpen);
     },
     [modalOpen],
-  );
-
-  const updateTagColors = useCallback(
-    (colors) => {
-      return csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
-        method: 'POST',
-        body: JSON.stringify(tagColors),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then((response) => {
-        if (response.ok) {
-          setTagColors(colors);
-        } else {
-          console.error('Request failed.');
-        }
-      });
-    },
-    [cube.id, tagColors],
   );
 
   const updateShowTagColors = useCallback(
@@ -522,6 +526,14 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           }
         }
 
+        // strip editIndex
+        for (const [board] of Object.entries(newCards)) {
+          for (const card of newCards[board]) {
+            delete card.editIndex;
+            delete card.removeIndex;
+          }
+        }
+
         setChanges({});
         setModalSelection([]);
         setCube({
@@ -769,7 +781,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setModalOpen,
     tagColors,
     showTagColors,
-    updateTagColors,
+    setTagColors,
     updateShowTagColors,
     bulkEditCard,
     bulkRevertEdit,

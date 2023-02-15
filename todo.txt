@@ -1,7 +1,3 @@
-Cannot set tag colors
-Hitting Save on edit settings in cube overview seems to spin forever, with or without settings changes
-Opening a card that had edits applied still shows Pending Edit until page refresh
-cube search should strip non-alphanumeric character
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
 draft deck names are nonsense
 draft seat labels are nonsense
@@ -9,6 +5,7 @@ draftbots always pick first card in pack
 password recovery might not be working
 draft can hang
 Capitalization issues on front end
+analytics script resets elo to 1200 instead of loading previous state
 
 
 Investigate

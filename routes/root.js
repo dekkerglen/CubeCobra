@@ -103,7 +103,7 @@ router.get('/search', async (req, res) => {
 });
 
 const searchCubes = async (query, order, lastKey, ascending) => {
-  let updatedQuery = query;
+  let updatedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
   const split = updatedQuery.split(':');
 
   if (split.length === 1 && split[0].length > 0) {
