@@ -1,4 +1,3 @@
-cube search should strip non-alphanumeric character
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
 draft deck names are nonsense
 draft seat labels are nonsense
