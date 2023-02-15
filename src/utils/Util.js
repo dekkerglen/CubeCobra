@@ -244,10 +244,10 @@ export function getCardTagColorClass(tagColors, card) {
 
 export function getTagColorClass(tagColors, tag) {
   const tagColor = tagColors.find((tagColorB) => tag === tagColorB.tag);
-  if (tagColor && tagColor.color) {
+  if (tagColor && tagColor.color && tagColor.color !== 'no-color') {
     return `tag-color tag-${tagColor.color}`;
   }
-  return 'tag-no-color';
+  return '';
 }
 
 export async function wait(ms) {

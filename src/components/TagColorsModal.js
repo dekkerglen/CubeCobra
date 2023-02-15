@@ -2,10 +2,13 @@
 import React, { useContext, useCallback, useMemo } from 'react';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { Col, Input, Label, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
+import { Col, Input, Label, Modal, ModalBody, ModalHeader, Row, ModalFooter } from 'reactstrap';
 
 import { arrayMove, getTagColorClass } from 'utils/Util';
 import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
+
+import { csrfFetch } from 'utils/CSRF';
+import LoadingButton from 'components/LoadingButton';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
@@ -22,7 +25,7 @@ const SortableList = SortableContainer(({ items }) => {
 const TagColorRow = ({ tag, tagClass, value, onChange }) => (
   <Row className="tag-color-row">
     <Col>
-      <div className={tagClass}>{tag}</div>
+      <span className={tagClass}>{tag}</span>
     </Col>
     <Col className="d-flex flex-column justify-content-center">
       <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
@@ -37,7 +40,31 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) => (
 );
 
 const TagColorsModal = ({ isOpen, toggle }) => {
-  const { tagColors, updateTagColors, showTagColors, updateShowTagColors, canEdit } = useContext(CubeContext);
+  const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
+  const [loading, setLoading] = React.useState(false);
+  const [modalColors, setModalColors] = React.useState([...tagColors]);
+
+  const updateModalColors = useCallback(
+    (colors) => {
+      setLoading(true);
+      return csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ tag_colors: modalColors }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then((response) => {
+        if (response.ok) {
+          setTagColors(colors);
+        } else {
+          console.error('Request failed.');
+        }
+        setLoading(false);
+        toggle();
+      });
+    },
+    [cube.id, setTagColors, modalColors, toggle],
+  );
 
   const handleChangeColor = useCallback(
     (event) => {
@@ -49,47 +76,47 @@ const TagColorsModal = ({ isOpen, toggle }) => {
       const tag = name.slice('tagcolor-'.length);
       const color = target.value === 'none' ? null : target.value;
 
-      const result = [...tagColors];
-      const index = tagColors.findIndex((tagColor) => tag === tagColor.tag);
+      const result = [...modalColors];
+      const index = modalColors.findIndex((tagColor) => tag === tagColor.tag);
       if (index > -1) {
         result[index] = { tag, color };
       } else {
         result.push({ tag, color });
       }
-      updateTagColors(result);
+      setModalColors(result);
     },
-    [tagColors, updateTagColors],
+    [modalColors, setModalColors],
   );
 
   const handleSortEnd = useCallback(
     ({ oldIndex, newIndex }) => {
-      updateTagColors(arrayMove(tagColors, oldIndex, newIndex));
+      setModalColors(arrayMove(modalColors, oldIndex, newIndex));
     },
-    [tagColors, updateTagColors],
+    [modalColors, setModalColors],
   );
 
   const editableRows = useMemo(
     () =>
-      tagColors.map(({ tag, color }) => {
-        const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
+      modalColors.map(({ tag, color }) => {
+        const tagClass = `tag ${getTagColorClass(modalColors, tag)}`;
         return {
           element: <TagColorRow tag={tag} tagClass={tagClass} value={color} onChange={handleChangeColor} />,
           key: tag,
         };
       }),
-    [tagColors, handleChangeColor],
+    [modalColors, handleChangeColor],
   );
 
   const staticRows = useMemo(() => {
-    tagColors.map(({ tag }) => {
-      const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
+    modalColors.map(({ tag }) => {
+      const tagClass = `me-2 tag ${getTagColorClass(modalColors, tag)}`;
       return (
         <span key={tag} className={tagClass}>
           {tag}
         </span>
       );
     });
-  }, [tagColors]);
+  }, [modalColors]);
 
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
@@ -119,6 +146,11 @@ const TagColorsModal = ({ isOpen, toggle }) => {
           </Row>
         )}
       </ModalBody>
+      <ModalFooter>
+        <LoadingButton block color="success" onClick={() => updateModalColors(modalColors)} loading={loading}>
+          Save Changes
+        </LoadingButton>
+      </ModalFooter>
     </Modal>
   );
 };

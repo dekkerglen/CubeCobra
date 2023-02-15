@@ -9,6 +9,7 @@ draftbots always pick first card in pack
 password recovery might not be working
 draft can hang
 Capitalization issues on front end
+analytics script resets elo to 1200 instead of loading previous state
 
 
 Investigate
