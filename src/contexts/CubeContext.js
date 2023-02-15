@@ -526,6 +526,14 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           }
         }
 
+        // strip editIndex
+        for (const [board] of Object.entries(newCards)) {
+          for (const card of newCards[board]) {
+            delete card.editIndex;
+            delete card.removeIndex;
+          }
+        }
+
         setChanges({});
         setModalSelection([]);
         setCube({
