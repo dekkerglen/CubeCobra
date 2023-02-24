@@ -66,7 +66,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
               <Input type="select" id="viewSelect" value={seatIndex} onChange={handleChangeSeat}>
                 {deck.seats.map((seat, index) => (
                   <option key={seat.title} value={index}>
-                    {`Seat ${index + 1}: ${seat.title}`}
+                    {`Seat ${index + 1}: ${seat.name}`}
                   </option>
                 ))}
               </Input>
@@ -87,7 +87,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     )}
                   />
                 </NavItem>
-                {user && deck.seats[seatIndex].userid === user.id && (
+                {user && deck.seats[seatIndex].owner === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck.id}`}>Edit</NavLink>
                   </NavItem>

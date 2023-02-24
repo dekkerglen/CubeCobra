@@ -89,8 +89,12 @@ const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
                 <div className="changelist-container mb-2">
                   <Changelist />
                 </div>
-                <Input type="hidden" name="title" value={blogpost.title} />
-                <Input type="hidden" name="blog" value={blogpost.html} />
+                {blogpost && (
+                  <>
+                    <Input type="hidden" name="title" value={blogpost.title} />
+                    <Input type="hidden" name="blog" value={blogpost.html} />
+                  </>
+                )}
                 <Button color="accent" type="submit" className="mt-3" block outline>
                   Save Changes
                 </Button>

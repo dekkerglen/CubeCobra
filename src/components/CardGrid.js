@@ -5,7 +5,7 @@ import CardPropType from 'proptypes/CardPropType';
 import { Row, Col } from 'reactstrap';
 
 function cardImage(Tag, card, cardProps, linkDetails) {
-  const cardTag = <Tag card={card} {...cardProps} />;
+  const cardTag = <Tag card={card} {...cardProps} modalProps={{ card }} />;
   if (linkDetails) return <a href={`/tool/card/${card.details._id}`}>{cardTag}</a>;
   return cardTag;
 }

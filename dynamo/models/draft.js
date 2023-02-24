@@ -14,6 +14,7 @@ const FIELDS = {
   TYPE: 'type',
   COMPLETE: 'complete',
   NAME: 'name',
+  SEAT_NAMES: 'seatNames',
 };
 
 const TYPES = {
@@ -21,6 +22,13 @@ const TYPES = {
   DRAFT: 'd',
   UPLOAD: 'u',
   SEALED: 's',
+};
+
+const REVERSE_TYPES = {
+  g: 'Grid Draft',
+  d: 'Draft',
+  u: 'Upload',
+  s: 'Sealed',
 };
 
 const client = createClient({
@@ -52,6 +60,37 @@ const client = createClient({
   ],
   FIELDS,
 });
+
+const assessColors = (mainboard, cards) => {
+  const colors = {
+    W: 0,
+    U: 0,
+    B: 0,
+    R: 0,
+    G: 0,
+  };
+
+  let count = 0;
+  for (const card of mainboard.flat(3)) {
+    const details = carddb.cardFromId(cards[card].cardID);
+    if (!details.type.includes('Land')) {
+      count += 1;
+      for (const color of details.color_identity) {
+        colors[color] += 1;
+      }
+    }
+  }
+
+  const threshold = 0.1;
+
+  const colorKeysFiltered = Object.keys(colors).filter((color) => colors[color] / count > threshold);
+
+  if (colorKeysFiltered.length === 0) {
+    return ['C'];
+  }
+
+  return colorKeysFiltered;
+};
 
 const getCards = async (id) => {
   try {
@@ -230,6 +269,9 @@ module.exports = {
   },
   put: async (document) => {
     const id = document.id || uuid();
+
+    const names = document.seats.map((seat) => assessColors(seat.mainboard, document.cards).join(''));
+
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document.cube,
@@ -238,7 +280,13 @@ module.exports = {
       [FIELDS.DATE]: document.date,
       [FIELDS.TYPE]: document.type,
       [FIELDS.COMPLETE]: document.complete,
+      [FIELDS.NAME]: `${names[0]} ${REVERSE_TYPES[document.type]}`,
+      [FIELDS.SEAT_NAMES]: names,
     });
+
+    for (const seat of document.seats) {
+      seat.name = assessColors(seat.mainboard, document.cards).join('');
+    }
 
     await s3
       .putObject({
@@ -279,6 +327,7 @@ module.exports = {
         [FIELDS.TYPE]: document[FIELDS.TYPE],
         [FIELDS.COMPLETE]: document[FIELDS.COMPLETE],
         [FIELDS.NAME]: document[FIELDS.NAME] ? document[FIELDS.NAME].slice(0, 300) : 'Untitled',
+        [FIELDS.SEAT_NAMES]: document[FIELDS.SEAT_NAMES],
       }));
 
       await client.batchPut(items);
@@ -387,6 +436,7 @@ module.exports = {
         [FIELDS.TYPE]: type,
         [FIELDS.COMPLETE]: true,
         [FIELDS.NAME]: deck.seats[0].name,
+        [FIELDS.SEAT_NAMES]: deck.seats.map((seat) => seat.name),
       });
 
       return [doc];

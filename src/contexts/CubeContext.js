@@ -405,7 +405,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     }
   }, [changes, setChanges]);
 
-  const changedCards = useMemo(() => {
+  const [changedCards, unfilteredChangedCards] = useMemo(() => {
     const changed = JSON.parse(JSON.stringify(cube.cards));
 
     if (useChangedCards) {
@@ -468,7 +468,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       setFilterResult('');
     }
 
-    return result;
+    return [result, changed];
   }, [changes, cube.cards, versionDict, cardFilter]);
 
   const discardAllChanges = useCallback(() => {
@@ -805,6 +805,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setFilterInput,
     filterValid,
     filterResult,
+    unfilteredChangedCards,
   };
 
   return (

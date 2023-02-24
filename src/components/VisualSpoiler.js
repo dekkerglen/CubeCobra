@@ -9,6 +9,9 @@ import SpoilerImage from 'components/SpoilerImage';
 import CardGrid from 'components/CardGrid';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeContext from 'contexts/CubeContext';
+import withCardModal from 'components/WithCardModal';
+
+const CardModalLink = withCardModal(SpoilerImage);
 
 const VisualSpoiler = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
@@ -40,7 +43,7 @@ const VisualSpoiler = ({ cards }) => {
           <PaginationLink onClick={() => setScale('large')}>Large</PaginationLink>
         </PaginationItem>
       </Pagination>
-      <CardGrid cardList={cardList} Tag={SpoilerImage} colProps={{ className: sizes }} />
+      <CardGrid cardList={cardList} Tag={CardModalLink} colProps={{ className: sizes }} />
     </>
   );
 };

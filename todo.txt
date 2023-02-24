@@ -1,12 +1,10 @@
-quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
-draft deck names are nonsense
-draft seat labels are nonsense
 draftbots always pick first card in pack
 password recovery might not be working
 draft can hang
 Capitalization issues on front end
 analytics script resets elo to 1200 instead of loading previous state
-
+login/logout not consistently working
+upload bulk with issues page broken
 
 Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
@@ -19,3 +17,4 @@ have usernames pre-loaded everywhere
 have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
 add timestamp (not just date) to history tab
+quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated

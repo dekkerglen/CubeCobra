@@ -113,8 +113,8 @@ export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues })
           color={color}
           short={short}
           checked={values.includes(short)}
-          setChecked={(checked) => {
-            if (checked) {
+          onClick={() => {
+            if (!values.includes(short)) {
               setValues([...new Set([...values, short])]);
             } else {
               setValues(values.filter((c) => c !== short));
