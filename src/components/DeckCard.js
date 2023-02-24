@@ -90,7 +90,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
           <h4 className="mb-0 me-auto">{seat.name}</h4>
           {!seat.bot && (
             <h6 className="mb-0 font-weight-normal d-none d-sm-block">
-              Drafted by {seat.userid ? <Username user={seat.userid} defaultName={seat.username} /> : 'Anonymous'}
+              Drafted by {seat.owner ? <Username user={seat.owner} defaultName="User" /> : 'Anonymous'}
             </h6>
           )}
         </CardTitle>

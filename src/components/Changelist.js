@@ -159,7 +159,9 @@ Swap.propTypes = {
 };
 
 const Changelist = () => {
-  const { cube, changedCards, changes, revertAdd, revertRemove, revertSwap, revertEdit } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards, changes, revertAdd, revertRemove, revertSwap, revertEdit } =
+    useContext(CubeContext);
+
   return (
     <div>
       {Object.entries(changes).map(([board, { adds, removes, swaps, edits }]) => (
@@ -183,15 +185,15 @@ const Changelist = () => {
                 removes.map((remove, index) => (
                   <Remove
                     key={remove.oldCard.cardID}
-                    card={{ ...remove.oldCard, details: changedCards[board][remove.index].details }}
+                    card={{ ...remove.oldCard, details: unfilteredChangedCards[board][remove.index].details }}
                     revert={() => revertRemove(index, board)}
                   />
                 ))}
               {swaps &&
                 swaps.map((swap, index) => (
                   <Swap
-                    key={changedCards[board][swap.index].cardID}
-                    oldCard={{ ...swap.oldCard, details: changedCards[board][swap.index].details }}
+                    key={unfilteredChangedCards[board][swap.index].cardID}
+                    oldCard={{ ...swap.oldCard, details: unfilteredChangedCards[board][swap.index].details }}
                     card={swap.card}
                     revert={() => revertSwap(index, board)}
                   />
@@ -200,7 +202,7 @@ const Changelist = () => {
                 edits.map((edit, index) => (
                   <Edit
                     key={edit.oldCard.cardID}
-                    card={{ ...edit.newCard, details: changedCards[board][edit.index].details }}
+                    card={{ ...edit.newCard, details: unfilteredChangedCards[board][edit.index].details }}
                     revert={() => revertEdit(index, board)}
                   />
                 ))}
