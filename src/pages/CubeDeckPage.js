@@ -123,6 +123,9 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     <DropdownItem href={`/cube/deck/download/cockatrice/${deck.id}/${seatIndex}`}>
                       Cockatrice (.txt)
                     </DropdownItem>
+                    <DropdownItem href={`/cube/deck/download/topdecked/${deck.id}/${seatIndex}`}>
+                      TopDecked (.csv)
+                    </DropdownItem>
                   </DropdownMenu>
                 </UncontrolledDropdown>
               </Nav>

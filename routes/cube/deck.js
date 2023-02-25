@@ -284,6 +284,71 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
   }
 });
 
+router.get('/download/topdecked/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Draft.getById(req.params.id);
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
+    const seat = deck.seats[0];
+
+    const DECK_CSV_HEADER = 'Quantity,"Name",Scryfall,Zone';
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+
+    res.write(`${DECK_CSV_HEADER}\r\n`);
+
+    const main = {};
+    const mainCardID = {};
+    for (const row of seat.mainboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          const details = carddb.cardFromId(card.cardID);
+          const name = `${details.name}`;
+          if (main[name]) {
+            main[name] += 1;
+          } else {
+            main[name] = 1;
+            mainCardID[name] = `${card.cardID}`;
+          }
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(main)) {
+      res.write(`${value},"${key}",${mainCardID[key]},main\r\n`);
+    }
+
+    const side = {};
+    const sideCardID = {};
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          const details = carddb.cardFromId(card.cardID);
+          const name = `${details.name}`;
+          if (side[name]) {
+            side[name] += 1;
+          } else {
+            side[name] = 1;
+            sideCardID[name] = `${card.cardID}`;
+          }
+        }
+      }
+    }
+    for (const [key, value] of Object.entries(side)) {
+      res.write(`${value},"${key}",${sideCardID[key]},side\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
 router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Draft.getById(req.params.id);
