@@ -21,6 +21,11 @@ const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
 
+// global listeners for promise rejections
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+});
+
 // Init app
 const app = express();
 
