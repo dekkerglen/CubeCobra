@@ -181,6 +181,7 @@ app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/multiplayer', require('./routes/multiplayer'));
 app.use('/packages', require('./routes/packages'));
+app.use('/cache', require('./routes/cache_routes'));
 app.use('/api/private', require('./routes/api/private'));
 
 app.use('', require('./routes/root'));

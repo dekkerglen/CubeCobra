@@ -10,6 +10,7 @@ Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
 	- Make sure feed works as intended
 	- new session, login from landing seems to not work then redirect to landing with no error?
+	- don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 
 Eventually
 redo draftbots into something more basic

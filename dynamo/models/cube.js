@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const _ = require('lodash');
 const createClient = require('../util');
-const s3 = require('../s3client');
+const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const carddb = require('../../serverjs/carddb');
@@ -111,14 +111,8 @@ const stripDetails = (cards) => {
 
 const getCards = async (id) => {
   try {
-    const res = await s3
-      .getObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cube/${id}.json`,
-      })
-      .promise();
+    const cards = await getObject(process.env.DATA_BUCKET, `cube/${id}.json`);
 
-    const cards = JSON.parse(res.Body.toString());
     for (const [board, list] of Object.entries(cards)) {
       if (board !== 'id') {
         addDetails(list);
@@ -151,19 +145,19 @@ module.exports = {
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
     const newHashes = getHashRowsForCube(newMetadata, newCards);
 
-    // get hashes to delete with deep object equality
+    // getObject hashes to delete with deep object equality
     // delete old hash row if no new hash row has this hash
     const hashesToDelete = oldHashes.filter((oldHashRow) => {
       return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
     });
 
-    // get hashes to put with deep object equality
-    // put/update hash row if new hash row doesn't match to an old one
+    // getObject hashes to putObject with deep object equality
+    // putObject/update hash row if new hash row doesn't match to an old one
     const hashesToPut = newHashes.filter((newHashRow) => {
       return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
     });
 
-    // put hashes to delete
+    // putObject hashes to delete
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: id })));
     await cubeHash.batchPut(hashesToPut);
 
@@ -175,20 +169,14 @@ module.exports = {
     }
 
     await client.put(newMetadata);
-    await s3
-      .upload({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cube/${id}.json`,
-        Body: JSON.stringify(newCards),
-      })
-      .promise();
+    await putObject(process.env.DATA_BUCKET, `cube/${id}.json`, newCards);
   },
   deleteById: async (id) => {
     const document = (await client.get(id)).Item;
     const hashes = getHashRowsForMetadata(document);
     await cubeHash.batchDelete(hashes.map((hashRow) => ({ hash: hashRow.hash, cube: id })));
     await client.delete({ id });
-    await s3.deleteObject({ Bucket: process.env.DATA_BUCKET, Key: `cube/${id}.json` }).promise();
+    await deleteObject(process.env.DATA_BUCKET, `cube/${id}.json`);
   },
   getById: async (id) => {
     const byId = await client.get(id);
@@ -286,19 +274,19 @@ module.exports = {
     const oldHashes = getHashRowsForMetadata(oldDocument);
     const newHashes = getHashRowsForMetadata(document);
 
-    // get hashes to delete with deep object equality
+    // getObject hashes to delete with deep object equality
     // delete old hash row if no new hash row has this hash
     const hashesToDelete = oldHashes.filter((oldHashRow) => {
       return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
     });
 
-    // get hashes to put with deep object equality
-    // put/update hash row if new hash row doesn't match to an old one
+    // getObject hashes to putObject with deep object equality
+    // putObject/update hash row if new hash row doesn't match to an old one
     const hashesToPut = newHashes.filter((newHashRow) => {
       return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
     });
 
-    // put hashes to delete
+    // putObject hashes to delete
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: document.id })));
     await cubeHash.batchPut(hashesToPut);
 
@@ -321,13 +309,7 @@ module.exports = {
       }
     }
 
-    return s3
-      .upload({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cube/${document.id}.json`,
-        Body: JSON.stringify(document),
-      })
-      .promise();
+    return putObject(process.env.DATA_BUCKET, `cube/${document.id}.json`, document);
   },
   batchPut: async (documents) => client.batchPut(documents),
   batchPutCards: async (documents) => {
@@ -341,15 +323,7 @@ module.exports = {
     }
 
     await Promise.all(
-      documents.map((document) =>
-        s3
-          .upload({
-            Bucket: process.env.DATA_BUCKET,
-            Key: `cube/${document.id}.json`,
-            Body: JSON.stringify(document),
-          })
-          .promise(),
-      ),
+      documents.map((document) => putObject(process.env.DATA_BUCKET, `cube/${document.id}.json`, document)),
     );
   },
   createTable: async () => client.createTable(),
