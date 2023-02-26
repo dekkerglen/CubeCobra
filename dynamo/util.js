@@ -5,6 +5,8 @@ const uuid = require('uuid/v4');
 const client = require('./client');
 const documentClient = require('./documentClient');
 
+const cache = require('./cache');
+
 const tableName = (name) => `${process.env.DYNAMO_PREFIX}_${name}`;
 
 module.exports = function createClient(config) {
@@ -82,8 +84,15 @@ module.exports = function createClient(config) {
         throw new Error(`Error getting item from table ${config.name} with, id is null`);
       }
 
+      const item = cache.get(`${config.name}:${id}`);
+      console.log(item);
+
+      if (item) {
+        return { Item: item };
+      }
+
       try {
-        return await documentClient
+        const result = await documentClient
           .get({
             TableName: tableName(config.name),
             Key: {
@@ -91,6 +100,12 @@ module.exports = function createClient(config) {
             },
           })
           .promise();
+
+        if (result.Item) {
+          cache.put(`${config.name}:${id}`, result.Item);
+        }
+
+        return result;
       } catch (error) {
         throw new Error(`Error getting item from table ${config.name} with id ${id}: ${error.message}`);
       }
@@ -129,6 +144,10 @@ module.exports = function createClient(config) {
             ...Item,
           };
         }
+
+        await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
+        cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
+
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
         return await Item[config.partitionKey];
       } catch (error) {
@@ -163,10 +182,21 @@ module.exports = function createClient(config) {
         }
         const results = [];
         for (let i = 0; i < ids.length; i += 25) {
+          const fromCache = {};
+          for (let j = i; j < i + 25; j += 1) {
+            const item = cache.get(`${config.name}:${ids[j]}`);
+            if (item) {
+              fromCache[ids[j]] = item;
+              cache.put(`${config.name}:${ids[j]}`, item);
+            }
+          }
+
+          const uncachedIds = ids.slice(i, i + 25).filter((id) => !fromCache[id]);
+
           const params = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: ids.slice(i, i + 25).map((id) => ({
+                Keys: uncachedIds.slice(i, i + 25).map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },
@@ -174,7 +204,7 @@ module.exports = function createClient(config) {
           };
           // eslint-disable-next-line no-await-in-loop
           const result = await documentClient.batchGet(params).promise();
-          results.push(...result.Responses[tableName(config.name)]);
+          results.push(...result.Responses[tableName(config.name)], ...Object.values(fromCache));
         }
         return results;
       } catch (error) {

@@ -1,7 +1,7 @@
 const sanitizeHtml = require('sanitize-html');
 const htmlToText = require('html-to-text');
 const createClient = require('../util');
-const s3 = require('../s3client');
+const { getObject, putObject } = require('../s3client');
 
 const removeSpan = (text) =>
   sanitizeHtml(text, {
@@ -95,14 +95,7 @@ const addBody = async (content) => {
     }
   }
   try {
-    const res = await s3
-      .getObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `content/${content.id}.json`,
-      })
-      .promise();
-
-    const document = JSON.parse(res.Body.toString());
+    const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
 
     if (content.status === STATUS.PUBLISHED) {
       if (Object.keys(bodyCache).length >= MAX_CACHE_SIZE) {
@@ -123,13 +116,7 @@ const addBody = async (content) => {
 
 const putBody = async (content) => {
   if (content.body && content.body.length > 0) {
-    await s3
-      .putObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `content/${content.id}.json`,
-        Body: JSON.stringify(content.body),
-      })
-      .promise();
+    await putObject(process.env.DATA_BUCKET, `content/${content.id}.json`, content.body);
   }
 };
 

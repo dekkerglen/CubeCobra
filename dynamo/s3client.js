@@ -1,8 +1,10 @@
 // Load Environment Variables
 require('dotenv').config();
 
-// Load the AWS SDK for Node.js
 const AWS = require('aws-sdk');
+const { get, put, invalidate } = require('./cache');
+
+// Load the AWS SDK for Node.js
 
 // Set the region
 AWS.config.update({
@@ -11,4 +13,57 @@ AWS.config.update({
   region: 'us-east-2',
 });
 
-module.exports = new AWS.S3();
+const s3 = new AWS.S3();
+
+const getObject = async (bucket, key) => {
+  // Check cache
+  const cached = get(key);
+
+  console.log(cached);
+
+  if (cached) {
+    return cached;
+  }
+
+  const res = await s3
+    .getObject({
+      Bucket: bucket,
+      Key: key,
+    })
+    .promise();
+  const value = JSON.parse(res.Body.toString());
+
+  // Update cache
+  await put(key, value);
+
+  return value;
+};
+
+const putObject = async (bucket, key, value) => {
+  // Update cache
+  await invalidate(key);
+  await put(key, value);
+
+  await s3
+    .putObject({
+      Bucket: bucket,
+      Key: key,
+      Body: JSON.stringify(value),
+    })
+    .promise();
+};
+
+const deleteObject = async (bucket, key) => {
+  await s3
+    .deleteObject({
+      Bucket: bucket,
+      Key: key,
+    })
+    .promise();
+};
+
+module.exports = {
+  getObject,
+  putObject,
+  deleteObject,
+};

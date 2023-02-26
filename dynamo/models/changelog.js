@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const uuid = require('uuid/v4');
 const createClient = require('../util');
-const s3 = require('../s3client');
+const { getObject, putObject } = require('../s3client');
 const carddb = require('../../serverjs/carddb');
 const cardutil = require('../../dist/utils/Card');
 
@@ -110,13 +110,7 @@ const getChangelog = async (cubeId, id) => {
     return changelogCache[id].document;
   }
 
-  const res = await s3
-    .getObject({
-      Bucket: process.env.DATA_BUCKET,
-      Key: `changelog/${cubeId}/${id}.json`,
-    })
-    .promise();
-  const changelog = JSON.parse(res.Body.toString());
+  const changelog = await getObject(process.env.DATA_BUCKET, `changelog/${cubeId}/${id}.json`);
 
   if (Object.keys(changelogCache).length >= MAX_CACHE_SIZE) {
     evictOldest();
@@ -212,13 +206,7 @@ module.exports = {
   },
   put: async (changelog, cube) => {
     const id = uuid();
-    await s3
-      .putObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `changelog/${cube}/${id}.json`,
-        Body: JSON.stringify(sanitizeChangelog(changelog)),
-      })
-      .promise();
+    await putObject(process.env.DATA_BUCKET, `changelog/${cube}/${id}.json`, sanitizeChangelog(changelog));
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: cube,
@@ -236,13 +224,11 @@ module.exports = {
     );
     await Promise.all(
       documents.map(async (document) =>
-        s3
-          .putObject({
-            Bucket: process.env.DATA_BUCKET,
-            Key: `changelog/${document.cubeId}/${document.id}.json`,
-            Body: JSON.stringify(sanitizeChangelog(document.changelog)),
-          })
-          .promise(),
+        putObject(
+          process.env.DATA_BUCKET,
+          `changelog/${document.cubeId}/${document.id}.json`,
+          sanitizeChangelog(document.changelog),
+        ),
       ),
     );
   },
@@ -314,13 +300,7 @@ module.exports = {
   batchGet: async (keys) => {
     const result = await Promise.all(
       keys.map(async (key) => {
-        const { Body } = await s3
-          .getObject({
-            Bucket: process.env.DATA_BUCKET,
-            Key: `changelog/${key.cube}/${key.id}.json`,
-          })
-          .promise();
-        return JSON.parse(Body.toString());
+        return getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`);
       }),
     );
 
