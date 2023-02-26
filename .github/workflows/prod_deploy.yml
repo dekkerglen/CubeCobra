@@ -33,10 +33,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
   
-      - name: Node 12
+      - name: Node 16
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 16
 
       - name: Installing NPM
         run: npm install
