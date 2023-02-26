@@ -274,12 +274,12 @@ module.exports = {
       seat.name = assessColors(seat.mainboard, document.cards).join('');
     }
 
-    await putObject(process.env.DATA_BUCKET, `cardlist/${id}.json`, JSON.stringify(stripDetails(document.cards)));
-    await putObject(
-      process.env.DATA_BUCKET,
-      `seats/${id}.json`,
-      JSON.stringify({ seats: document.seats, basics: document.basics, InitialState: document.InitialState }),
-    );
+    await putObject(process.env.DATA_BUCKET, `cardlist/${id}.json`, stripDetails(document.cards));
+    await putObject(process.env.DATA_BUCKET, `seats/${id}.json`, {
+      seats: document.seats,
+      basics: document.basics,
+      InitialState: document.InitialState,
+    });
 
     return id;
   },

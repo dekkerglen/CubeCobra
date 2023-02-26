@@ -85,7 +85,6 @@ module.exports = function createClient(config) {
       }
 
       const item = cache.get(`${config.name}:${id}`);
-      console.log(item);
 
       if (item) {
         return { Item: item };
@@ -182,21 +181,10 @@ module.exports = function createClient(config) {
         }
         const results = [];
         for (let i = 0; i < ids.length; i += 25) {
-          const fromCache = {};
-          for (let j = i; j < i + 25; j += 1) {
-            const item = cache.get(`${config.name}:${ids[j]}`);
-            if (item) {
-              fromCache[ids[j]] = item;
-              cache.put(`${config.name}:${ids[j]}`, item);
-            }
-          }
-
-          const uncachedIds = ids.slice(i, i + 25).filter((id) => !fromCache[id]);
-
           const params = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: uncachedIds.slice(i, i + 25).map((id) => ({
+                Keys: ids.slice(i, i + 25).map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },
@@ -204,7 +192,7 @@ module.exports = function createClient(config) {
           };
           // eslint-disable-next-line no-await-in-loop
           const result = await documentClient.batchGet(params).promise();
-          results.push(...result.Responses[tableName(config.name)], ...Object.values(fromCache));
+          results.push(...result.Responses[tableName(config.name)]);
         }
         return results;
       } catch (error) {

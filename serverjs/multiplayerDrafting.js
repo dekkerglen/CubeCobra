@@ -281,8 +281,8 @@ const finishDraft = async (draftId, draft) => {
     const picks = await getPlayerPicks(draftId, i);
     const trash = await getPlayerTrash(draftId, i);
 
-    draft.seats[i].pickorder = picks;
-    draft.seats[i].trashorder = trash;
+    draft.seats[i].pickorder = picks.map((p) => parseInt(p, 10));
+    draft.seats[i].trashorder = trash.map((p) => parseInt(p, 10));
 
     const mainboard = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);

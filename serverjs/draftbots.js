@@ -22,7 +22,7 @@ const assessColors = (oracles) => {
 
   let count = 0;
   for (const oracle of oracles) {
-    const details = carddb.cardFromId(carddb.oracleToId(oracle)[0]._id);
+    const details = carddb.cardFromId(carddb.oracleToId[oracle][0]);
 
     if (!details.type.includes('Land')) {
       count += 1;
@@ -32,7 +32,7 @@ const assessColors = (oracles) => {
     }
   }
 
-  const threshold = 0.1;
+  const threshold = 0.25;
 
   const colorKeysFiltered = Object.keys(colors).filter((color) => colors[color] / count > threshold);
 
@@ -48,11 +48,14 @@ const draftbotPick = (drafterState) => {
 
   const colors = assessColors(picked);
 
-  let toPick = cardsInPack.map((oracle) => carddb.cardFromId(carddb.oracleToId(oracle)[0]._id));
+  let toPick = cardsInPack.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]));
 
   if (colors.length > 2) {
     // filter out cards that don't match the colors
-    toPick = toPick.filter((card) => {
+    const filtered = toPick.filter((card) => {
+      if (!card.color) {
+        return true;
+      }
       for (const color of card.color) {
         if (!colors.includes(color)) {
           return false;
@@ -60,6 +63,10 @@ const draftbotPick = (drafterState) => {
       }
       return true;
     });
+
+    if (filtered.length > 0) {
+      toPick = filtered;
+    }
   }
 
   // get the oracle id of the highest elo card
