@@ -32,14 +32,9 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-  
-      - name: Node 16
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
 
       - name: Installing NPM
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Building application
         run: npm run ci-build
