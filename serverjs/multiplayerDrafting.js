@@ -281,8 +281,8 @@ const finishDraft = async (draftId, draft) => {
     const picks = await getPlayerPicks(draftId, i);
     const trash = await getPlayerTrash(draftId, i);
 
-    draft.seats[i].pickorder = picks;
-    draft.seats[i].trashorder = trash;
+    draft.seats[i].pickorder = picks.map((p) => parseInt(p, 10));
+    draft.seats[i].trashorder = trash.map((p) => parseInt(p, 10));
 
     const mainboard = setupPicks(2, 8);
     const sideboard = setupPicks(1, 8);
@@ -438,7 +438,7 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   }
 };
 
-const strToInt = (str) => parseInt(str, 10);
+// const strToInt = (str) => parseInt(str, 10);
 
 const getDraftPick = async (draftId, seat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
@@ -448,25 +448,23 @@ const getDraftPick = async (draftId, seat) => {
     return 0;
   }
 
-  const fullPack = await lrange(packReference, 0, -1);
+  // const fullPack = await lrange(packReference, 0, -1);
 
   // get draft metadata
-  const { currentPack, totalPacks } = await getDraftMetaData(draftId);
+  // const { currentPack, totalPacks } = await getDraftMetaData(draftId);
 
   const cardOracleIds = (await lrange(draftCardsRef(draftId), 0, -1)).map(
     (scryfallId) => carddb.cardFromId(scryfallId).oracle_id,
   ); // all the oracle ids
-  const basics = await lrange(draftBasicsRef(draftId), 0, -1); // Indices of the oracle IDs for the set of basics the drafter has access to unlimited copies of.
   const picked = await getPlayerPicks(draftId, seat); // the cards picked by the user
 
   const drafterState = {
     cardsInPack: cardsInPack.map((card) => cardOracleIds[card]),
-    basics: basics.map((card) => cardOracleIds[card]),
     picked: picked.map((card) => cardOracleIds[card]),
-    pickNum: strToInt(fullPack.length - cardsInPack.length), // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
-    numPicks: strToInt(fullPack.length), // How many cards were in the pack when it was opened.
-    packNum: strToInt(currentPack) - 1, // 0-Indexed pack number
-    numPacks: strToInt(totalPacks), // How many packs will this player open
+    // pickNum: strToInt(fullPack.length - cardsInPack.length), // 0-Indexed pick number from this pack (so this will be the 5th card they've picked since opening the first pack of the draft).
+    // numPicks: strToInt(fullPack.length), // How many cards were in the pack when it was opened.
+    // packNum: strToInt(currentPack) - 1, // 0-Indexed pack number
+    // numPacks: strToInt(totalPacks), // How many packs will this player open
   };
 
   let choice = 0;

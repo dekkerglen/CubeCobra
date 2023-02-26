@@ -19,8 +19,6 @@ const getObject = async (bucket, key) => {
   // Check cache
   const cached = get(key);
 
-  console.log(cached);
-
   if (cached) {
     return cached;
   }

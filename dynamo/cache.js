@@ -94,7 +94,7 @@ const put = (key, value) => {
   }
 
   const size = JSON.stringify(value).length;
-  if (size > MAX_CACHE_SIZE) {
+  if (size > MAX_CACHE_SIZE / 10) {
     return;
   }
 
@@ -117,10 +117,7 @@ const get = (key) => {
 
   const item = cache[key];
   if (item) {
-    return {
-      fromCache: [],
-      ...item.value,
-    };
+    return item.value;
   }
 
   return null;
