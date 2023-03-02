@@ -5,6 +5,8 @@ const uuid = require('uuid/v4');
 const client = require('./client');
 const documentClient = require('./documentClient');
 
+const cache = require('./cache');
+
 const tableName = (name) => `${process.env.DYNAMO_PREFIX}_${name}`;
 
 module.exports = function createClient(config) {
@@ -82,8 +84,14 @@ module.exports = function createClient(config) {
         throw new Error(`Error getting item from table ${config.name} with, id is null`);
       }
 
+      const item = cache.get(`${config.name}:${id}`);
+
+      if (item) {
+        return { Item: item };
+      }
+
       try {
-        return await documentClient
+        const result = await documentClient
           .get({
             TableName: tableName(config.name),
             Key: {
@@ -91,6 +99,12 @@ module.exports = function createClient(config) {
             },
           })
           .promise();
+
+        if (result.Item) {
+          cache.put(`${config.name}:${id}`, result.Item);
+        }
+
+        return result;
       } catch (error) {
         throw new Error(`Error getting item from table ${config.name} with id ${id}: ${error.message}`);
       }
@@ -129,6 +143,10 @@ module.exports = function createClient(config) {
             ...Item,
           };
         }
+
+        await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
+        cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
+
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
         return await Item[config.partitionKey];
       } catch (error) {

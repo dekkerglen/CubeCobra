@@ -3,7 +3,7 @@ require('dotenv').config();
 const uuid = require('uuid/v4');
 const createClient = require('../util');
 const carddb = require('../../serverjs/carddb');
-const s3 = require('../s3client');
+const { getObject, putObject } = require('../s3client');
 
 const FIELDS = {
   ID: 'id',
@@ -94,14 +94,7 @@ const assessColors = (mainboard, cards) => {
 
 const getCards = async (id) => {
   try {
-    const res = await s3
-      .getObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cardlist/${id}.json`,
-      })
-      .promise();
-
-    return JSON.parse(res.Body.toString());
+    return getObject(process.env.DATA_BUCKET, `cardlist/${id}.json`);
   } catch (e) {
     return [];
   }
@@ -125,14 +118,7 @@ const stripDetails = (cards) => {
 
 const getSeats = async (id) => {
   try {
-    const res = await s3
-      .getObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `seats/${id}.json`,
-      })
-      .promise();
-
-    return JSON.parse(res.Body.toString());
+    return getObject(process.env.DATA_BUCKET, `seats/${id}.json`);
   } catch (e) {
     return {};
   }
@@ -288,21 +274,12 @@ module.exports = {
       seat.name = assessColors(seat.mainboard, document.cards).join('');
     }
 
-    await s3
-      .putObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cardlist/${id}.json`,
-        Body: JSON.stringify(stripDetails(document.cards)),
-      })
-      .promise();
-
-    await s3
-      .putObject({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `seats/${id}.json`,
-        Body: JSON.stringify({ seats: document.seats, basics: document.basics, InitialState: document.InitialState }),
-      })
-      .promise();
+    await putObject(process.env.DATA_BUCKET, `cardlist/${id}.json`, stripDetails(document.cards));
+    await putObject(process.env.DATA_BUCKET, `seats/${id}.json`, {
+      seats: document.seats,
+      basics: document.basics,
+      InitialState: document.InitialState,
+    });
 
     return id;
   },
@@ -334,24 +311,16 @@ module.exports = {
 
       await Promise.all(
         filtered.map(async (document) => {
-          await s3
-            .putObject({
-              Bucket: process.env.DATA_BUCKET,
-              Key: `cardlist/${document.id}.json`,
-              Body: JSON.stringify(stripDetails(document.cards)),
-            })
-            .promise();
-          await s3
-            .putObject({
-              Bucket: process.env.DATA_BUCKET,
-              Key: `seats/${document.id}.json`,
-              Body: JSON.stringify({
-                seats: document.seats,
-                basics: document.basics,
-                InitialState: document.InitialState,
-              }),
-            })
-            .promise();
+          await putObject(
+            process.env.DATA_BUCKET,
+            `cardlist/${document.id}.json`,
+            JSON.stringify(stripDetails(document.cards)),
+          );
+          await putObject(process.env.DATA_BUCKET, `seats/${document.id}.json`, {
+            seats: document.seats,
+            basics: document.basics,
+            InitialState: document.InitialState,
+          });
         }),
       );
     } catch (e) {

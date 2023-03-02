@@ -41,7 +41,7 @@ Clone the project into a folder of your choice. Copy `.env_EXAMPLE` to `.env` an
 Once your `.env` file is filled out, run the following commands in the root of the cloned repository:
 
 ```sh
-npm install
+npm install --legacy-peer-deps
 npm run setup                  # This will bundle modules and download Scryfall assets.
 node one_shot_scripts/seed.js  # This will create and seed the mongo database specified in the .env file.
 ```

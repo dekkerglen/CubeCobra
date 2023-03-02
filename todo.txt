@@ -1,4 +1,3 @@
-draftbots always pick first card in pack
 password recovery might not be working
 draft can hang
 Capitalization issues on front end
@@ -10,6 +9,7 @@ Investigate
 	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
 	- Make sure feed works as intended
 	- new session, login from landing seems to not work then redirect to landing with no error?
+	- don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 
 Eventually
 redo draftbots into something more basic
@@ -18,3 +18,4 @@ have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
 add timestamp (not just date) to history tab
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
+batch get and batch put use cache!!

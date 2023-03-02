@@ -96,8 +96,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   const states = [];
   for (let i = 0; i < draft.seats.length; i++) {
     const picksList = [];
-    const pickQueue = draft.seats[i].pickorder.slice();
-    const trashQueue = (draft.seats[i].trashorder || []).slice();
+    const pickQueue = draft.seats[i].pickorder.slice().map((val) => parseInt(val, 10));
+    const trashQueue = (draft.seats[i].trashorder || []).slice().map((val) => parseInt(val, 10));
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
