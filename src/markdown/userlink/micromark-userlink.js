@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { markdownSpace, markdownLineEnding } from 'micromark-util-character';
 
 function tokenizeUserlink(effects, ok, nok) {
@@ -5,6 +6,7 @@ function tokenizeUserlink(effects, ok, nok) {
   return start;
 
   function start(code) {
+    assert(code === 64, 'expected `@`');
     // '@' shouldn't be preceded by an actual character
     if (!self.previous || markdownSpace(self.previous) || markdownLineEnding(self.previous)) {
       effects.enter('userlink');
