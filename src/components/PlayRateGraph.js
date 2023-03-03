@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import useQueryParam from 'hooks/useQueryParam';
-import ChartComponent from 'react-chartjs-2';
+import { Chart } from 'react-chartjs-2';
 import { csrfFetch } from 'utils/CSRF';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';

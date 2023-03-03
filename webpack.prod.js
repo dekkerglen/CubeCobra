@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge} = require('webpack-merge');
 const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 
@@ -16,7 +16,7 @@ const config = {
       minimize: true,
       debug: false,
     }),
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin({resourceRegExp: /^(\.\/locale)|(moment)$/}),
   ],
   optimization: {
     minimize: true,

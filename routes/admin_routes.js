@@ -7,7 +7,6 @@ const { body } = require('express-validator');
 const mailer = require('nodemailer');
 const path = require('path');
 const Email = require('email-templates');
-const parser = require('../dist/markdown/parser');
 const { ensureRole, csrfProtection, flashValidationErrors } = require('./middleware');
 
 const User = require('../dynamo/models/user');
@@ -73,20 +72,6 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has approved and published your content: ${document.title}`,
     );
-
-    const mentions = parser.findUserLinks(document.body).map((x) => x.toLowerCase());
-    for (const username of mentions) {
-      const query = await User.getByUsername(username);
-
-      if (query.items.length === 1) {
-        await util.addNotification(
-          query.items[0],
-          owner,
-          `/content/${document.type}/${document.id}`,
-          `${owner.username} mentioned you in their content`,
-        );
-      }
-    }
   }
 
   const smtpTransport = mailer.createTransport({

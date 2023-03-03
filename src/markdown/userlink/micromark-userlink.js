@@ -1,14 +1,12 @@
-import assert from 'assert';
-import markdownLineEndingOrSpace from 'micromark/dist/character/markdown-line-ending-or-space';
+import { markdownSpace, markdownLineEnding } from 'micromark-util-character';
 
 function tokenizeUserlink(effects, ok, nok) {
   const self = this;
   return start;
 
   function start(code) {
-    assert(code === 64, 'expected `@`');
     // '@' shouldn't be preceded by an actual character
-    if (!self.previous || markdownLineEndingOrSpace(self.previous)) {
+    if (!self.previous || markdownSpace(self.previous) || markdownLineEnding(self.previous)) {
       effects.enter('userlink');
       effects.enter('userlinkMarker');
       effects.consume(code);
