@@ -14,7 +14,7 @@ jobs:
       with:
         node-version: 16
     - name: Setup
-      run: npm install --legacy-peer-deps
+      run: npm install
     - name: Build
       run: npm run ci-build
     - name: Check Code Style

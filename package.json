@@ -28,7 +28,7 @@
     "devstart": "npm run nearley && npm run sass -- --watch & npm run nodemon & npm run webpack-dev-server & npm run webpack -- --watch",
     "setup": "npm run nearley && npm run webpack -- --progress && node --max-old-space-size=4096 force_update.js",
     "cards": "node --max-old-space-size=4096 force_update.js",
-    "start": "npm install --legacy-peer-deps && npm run cards && node server.js",
+    "start": "npm install && npm run cards && node server.js",
     "sass": "sass scss:public/css/bootstrap --no-source-map",
     "run-daily-jobs": "sh jobs/definition/daily.sh",
     "run-weekly-jobs": "sh jobs/definition/weekly.sh",
