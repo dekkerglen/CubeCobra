@@ -1,5 +1,5 @@
 const path = require('path');
-const { merge} = require('webpack-merge');
+const { merge } = require('webpack-merge');
 
 const nodeExternals = require('webpack-node-externals');
 
@@ -27,9 +27,9 @@ const config = {
       {
         test: /\.m?js/,
         resolve: {
-          fullySpecified: false
-        }
-      }
+          fullySpecified: false,
+        },
+      },
     ],
   },
   devtool: 'source-map',

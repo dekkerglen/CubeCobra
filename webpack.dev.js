@@ -1,5 +1,5 @@
 const path = require('path');
-const { merge} = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const webpack = require('webpack');
 const common = require('./webpack.common');
 
@@ -16,7 +16,7 @@ const config = {
           NODE_ENV: JSON.stringify('development'),
           DEBUG: true,
           NODE_DEBUG: false,
-        }
+        },
       },
     }),
   ],

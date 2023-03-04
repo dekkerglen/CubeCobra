@@ -170,13 +170,7 @@ const PlayRateGraph = ({ defaultHistories, cardId }) => {
           <Spinner />
         </div>
       ) : (
-        <>
-          {history.length > 0 ? (
-            <ChartComponent options={options} data={data} type="line" />
-          ) : (
-            <p>No data available.</p>
-          )}
-        </>
+        <>{history.length > 0 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
       )}
     </>
   );
