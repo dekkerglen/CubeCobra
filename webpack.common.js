@@ -1,5 +1,6 @@
 const path = require('path');
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
+
 const nodeExternals = require('webpack-node-externals');
 
 const config = {
@@ -22,6 +23,12 @@ const config = {
       {
         test: /\.b64$/,
         use: 'raw-loader',
+      },
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
       },
     ],
   },
@@ -192,7 +199,7 @@ const serverConfig = merge(config, {
   },
   externals: [
     nodeExternals({
-      whitelist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+      allowlist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
     }),
   ],
 });

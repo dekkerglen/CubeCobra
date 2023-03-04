@@ -1,6 +1,6 @@
 import assert from 'assert';
-import markdownLineEnding from 'micromark/dist/character/markdown-line-ending';
-import chunkedSplice from 'micromark/dist/util/chunked-splice';
+import {  markdownLineEnding } from 'micromark-util-character';
+import { splice } from 'micromark-util-chunked';
 
 function resolveCardrow(events, context) {
   const contentEnd = 4;
@@ -14,8 +14,8 @@ function resolveCardrow(events, context) {
     contentType: 'text',
   };
 
-  chunkedSplice(events, contentEnd, 0, [['exit', text, context]]);
-  chunkedSplice(events, contentStart + 1, 0, [['enter', text, context]]);
+  splice(events, contentEnd, 0, [['exit', text, context]]);
+  splice(events, contentStart + 1, 0, [['enter', text, context]]);
   return events;
 }
 

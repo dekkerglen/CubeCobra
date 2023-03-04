@@ -3,7 +3,6 @@ require('dotenv').config();
 
 const patreon = require('patreon');
 const express = require('express');
-const crypto = require('crypto');
 
 const { ensureAuth } = require('./middleware');
 const util = require('../serverjs/util');

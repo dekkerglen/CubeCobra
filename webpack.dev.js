@@ -1,6 +1,6 @@
 const path = require('path');
-const merge = require('webpack-merge');
-
+const { merge } = require('webpack-merge');
+const webpack = require('webpack');
 const common = require('./webpack.common');
 
 const config = {
@@ -9,13 +9,28 @@ const config = {
   optimization: {
     usedExports: true,
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      process: {
+        env: {
+          NODE_ENV: JSON.stringify('development'),
+          DEBUG: true,
+          NODE_DEBUG: false,
+        },
+      },
+    }),
+  ],
 };
 
 const clientConfig = merge(common.clientConfig, config, {
   devServer: {
     compress: true,
-    contentBase: path.join(__dirname, 'dist'),
-    publicPath: '/js/',
+    devMiddleware: {
+      publicPath: '/js/',
+    },
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
     proxy: [
       {
         context: ['!/js/*.bundle.js', '**'],

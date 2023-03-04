@@ -1,9 +1,8 @@
 import assert from 'assert';
-import markdownSpace from 'micromark/dist/character/markdown-space';
-import markdownLineEnding from 'micromark/dist/character/markdown-line-ending';
-import spaceFactory from 'micromark/dist/tokenize/factory-space';
-import types from 'micromark/lib/constant/types';
-import codes from 'micromark/lib/character/codes';
+import { markdownSpace, markdownLineEnding } from 'micromark-util-character';
+import { factorySpace } from 'micromark-factory-space';
+import { types } from 'micromark-util-symbol/types'
+import { codes } from 'micromark-util-symbol/codes'
 import { shallowEqual } from 'markdown/utils';
 
 function centering() {
@@ -37,7 +36,7 @@ function centering() {
     function after(code) {
       if (size < 3) return nok(code);
       if (markdownSpace(code)) {
-        return spaceFactory(effects, after, types.whitespace)(code);
+        return factorySpace(effects, after, types.whitespace)(code);
       }
       return effects.attempt(oneLineConstruct, markOneLine, ok)(code);
     }
@@ -70,7 +69,7 @@ function centering() {
 
     function after(code) {
       if (markdownSpace(code)) {
-        return spaceFactory(effects, after, types.whitespace)(code);
+        return factorySpace(effects, after, types.whitespace)(code);
       }
 
       if (code === codes.eof || markdownLineEnding(code)) {
@@ -118,7 +117,7 @@ function centering() {
     // the tokenization can be callled twice on the same input, so we have to check where we are as well
     // otherwise the second invocation on the closing fence would return nok, which we don't want
     if (shouldEnd && !shallowEqual(now, endMark)) return nok;
-    return spaceFactory(effects, effects.attempt(endingConstruct, markEnd, ok), types.linePrefix, 4);
+    return factorySpace(effects, effects.attempt(endingConstruct, markEnd, ok), types.linePrefix, 4);
 
     function markEnd(code) {
       // we want to include the closing fence in the block, but exit on the next line

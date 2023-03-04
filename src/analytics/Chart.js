@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import ChartComponent from 'react-chartjs-2';
+import { Chart } from 'react-chartjs-2';
 import { Col, Row, InputGroup, Input, InputGroupText } from 'reactstrap';
 
 import AsfanDropdown from 'components/AsfanDropdown';
@@ -10,7 +10,7 @@ import CubePropType from 'proptypes/CubePropType';
 import { calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Chart = ({ cards, characteristics, cube }) => {
+const ChartComponent = ({ cards, characteristics, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setcharacteristic] = useQueryParam('field', 'Mana Value');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
@@ -139,14 +139,14 @@ const Chart = ({ cards, characteristics, cube }) => {
         useAsfans={useAsfans}
         setUseAsfans={setUseAsfans}
       />
-      <ChartComponent options={options} data={data} type="bar" />
+      <Chart options={options} data={data} type="bar" />
     </>
   );
 };
-Chart.propTypes = {
+ChartComponent.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
   characteristics: PropTypes.shape({}).isRequired,
   cube: CubePropType.isRequired,
 };
 
-export default Chart;
+export default ChartComponent;

@@ -25,6 +25,10 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      
       - name: Cache node modules
         uses: actions/cache@v1
         with:
@@ -34,7 +38,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Installing NPM
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Building application
         run: npm run ci-build
@@ -68,7 +72,7 @@ jobs:
           aws_access_key: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws_secret_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           application_name: CubeCobra
-          environment_name: Cubecobra-env-2
+          environment_name: cubecobra-prod
           region: us-east-2
           version_label: "cubecobra-${{ steps.format-time.outputs.replaced }}"
           deployment_package: deploy.zip

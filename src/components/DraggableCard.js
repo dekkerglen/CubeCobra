@@ -10,10 +10,11 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick
   const { hideCard, setStopAutocard } = useContext(AutocardContext);
 
   const [{ isDragging }, drag, preview] = useDrag({
-    item: { type: 'card', location },
-    begin: () => {
+    type: 'card',
+    item: () => {
       setStopAutocard(true);
       hideCard();
+      return { type: 'card', location };
     },
     end: (item, monitor) => {
       setStopAutocard(false);

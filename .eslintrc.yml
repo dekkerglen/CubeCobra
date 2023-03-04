@@ -1,13 +1,11 @@
 env:
   browser: true
-  jest/globals: true
   node: true
 extends:
   - airbnb
   - prettier
 parser: 'babel-eslint'
 plugins:
-  - jest
   - prettier
   - react-hooks
   - babel

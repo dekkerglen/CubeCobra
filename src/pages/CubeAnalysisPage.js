@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
 
 import Averages from 'analytics/Averages';
-import Chart from 'analytics/Chart';
+import ChartComponent from 'analytics/Chart';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Tokens from 'analytics/Tokens';
@@ -173,7 +173,7 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards }) => {
     },
     {
       name: 'Chart',
-      component: (collection) => <Chart cards={collection} characteristics={characteristics} cube={cube} />,
+      component: (collection) => <ChartComponent cards={collection} characteristics={characteristics} cube={cube} />,
     },
     {
       name: 'Recommender',

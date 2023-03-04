@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import ChartComponent from 'react-chartjs-2';
+import { Chart } from 'react-chartjs-2';
 import { csrfFetch } from 'utils/CSRF';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
@@ -149,13 +149,7 @@ const EloGraph = ({ defaultHistories, cardId }) => {
           <Spinner />
         </div>
       ) : (
-        <>
-          {history.length > 0 ? (
-            <ChartComponent options={options} data={data} type="line" />
-          ) : (
-            <p>No data available.</p>
-          )}
-        </>
+        <>{history.length > 0 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
       )}
     </>
   );

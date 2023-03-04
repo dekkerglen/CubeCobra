@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 
@@ -9,21 +9,25 @@ const config = {
   devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production'),
-      'process.env.DEBUG': false,
+      process: {
+        env: {
+          NODE_ENV: JSON.stringify('production'),
+          DEBUG: false,
+          NODE_DEBUG: false,
+        },
+      },
     }),
     new webpack.LoaderOptionsPlugin({
       minimize: true,
       debug: false,
     }),
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin({ resourceRegExp: /^(\.\/locale)|(moment)$/ }),
   ],
   optimization: {
     minimize: true,
     minimizer: [
       new TerserPlugin({
         parallel: true,
-        sourceMap: true,
       }),
     ],
     usedExports: true,
