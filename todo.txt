@@ -3,6 +3,8 @@ Capitalization issues on front end
 analytics script resets elo to 1200 instead of loading previous state
 login/logout not consistently working
 upload bulk with issues page broken
+card page broken
+markdown broken
 
 Investigate
 	- drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
@@ -12,10 +14,12 @@ Investigate
 	- don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 
 Eventually
-redo draftbots into something more basic
 have usernames pre-loaded everywhere
 have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
-add timestamp (not just date) to history tab
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
 batch get and batch put use cache!!
+
+
+Important
+Have better way to get ip list for cache

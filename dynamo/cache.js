@@ -1,3 +1,5 @@
+const clone = require('clone');
+
 /*
 cache: {
   'key': {
@@ -117,7 +119,7 @@ const get = (key) => {
 
   const item = cache[key];
   if (item) {
-    return item.value;
+    return clone(item.value);
   }
 
   return null;

@@ -205,7 +205,6 @@ const AutocompleteInput = forwardRef(
             treeCache[treeUrl] = fetchTree(treeUrl, treePath);
           }
           setTree(await treeCache[treeUrl]);
-          console.log(treeUrl);
         } catch (e) {
           console.error('Error getting autocomplete tree.', e);
         }

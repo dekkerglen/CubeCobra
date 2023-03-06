@@ -263,11 +263,15 @@ module.exports = {
   update: async (document) => {
     const oldDocument = (await client.get(document.id)).Item;
 
+    console.log(oldDocument);
+
     if (_.isEqual(oldDocument, document)) {
+      console.log('documents are equal, not updating');
       return;
     }
 
     if (!document[FIELDS.ID]) {
+      console.log('Invalid document: No partition key provided');
       throw new Error('Invalid document: No partition key provided');
     }
 
@@ -286,6 +290,7 @@ module.exports = {
       return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
     });
 
+    console.log(hashesToDelete, hashesToPut);
     // putObject hashes to delete
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: document.id })));
     await cubeHash.batchPut(hashesToPut);
