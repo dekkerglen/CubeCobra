@@ -144,10 +144,14 @@ module.exports = function createClient(config) {
           };
         }
 
+        console.log('Invaliding...');
         await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
+        console.log(`Invalidating cache for ${config.name}:${Item[config.partitionKey]}`);
         cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
+        console.log(`Putting item into cache for ${config.name}:${Item[config.partitionKey]}`);
 
-        await documentClient.put({ TableName: tableName(config.name), Item }).promise();
+        const res = await documentClient.put({ TableName: tableName(config.name), Item }).promise();
+        console.log(res);
         return await Item[config.partitionKey];
       } catch (error) {
         throw new Error(`Error putting item into table ${config.name}: ${error.message}`);
@@ -242,18 +246,6 @@ module.exports = function createClient(config) {
         await Promise.all(batches.map((params) => documentClient.batchWrite(params).promise()));
       } catch (error) {
         throw new Error(`Error batch deleting items from table ${config.name}: ${error.message}`);
-      }
-    },
-    update: async (params) => {
-      try {
-        return documentClient
-          .update({
-            TableName: tableName(config.name),
-            ...params,
-          })
-          .promise();
-      } catch (error) {
-        throw new Error(`Error updating item in table ${config.name}: ${error.message}`);
       }
     },
   };

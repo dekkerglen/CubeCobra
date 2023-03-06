@@ -40,7 +40,7 @@ const getObject = async (bucket, key) => {
 const putObject = async (bucket, key, value) => {
   // Update cache
   await invalidate(key);
-  await put(key, value);
+  put(key, value);
 
   await s3
     .putObject({
