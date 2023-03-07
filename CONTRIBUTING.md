@@ -54,7 +54,7 @@ noticed the issue you're seeing, GitHub pull requests and issues are the first
 place you should look. We use GitHub this way because it has great support for
 discovering long-lived tickets even years after the fact. Put simply, it is
 a system of record. This practice, when adhered to vigilantly, leads to
-increased collective productivity and deacreased blocking between community
+increased collective productivity and decreased blocking between community
 members and development efforts.
 
 ## How we use GitHub issues
