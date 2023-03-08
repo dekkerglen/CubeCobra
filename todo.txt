@@ -1,10 +1,12 @@
-password recovery might not be working
-Capitalization issues on front end
-analytics script resets elo to 1200 instead of loading previous state
 login/logout not consistently working
 upload bulk with issues page broken
-card page broken
 markdown broken
+cube analysis page broken
+don't display mainboard header in changelist/changelog if only mainboard was changed
+tag colors don't display in list view
+Capitalization issues on front end
+blog post is created regardless of whether or not the checkbox is checked
+
 
 Investigate
 	- drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?

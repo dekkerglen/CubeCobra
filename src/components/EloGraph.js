@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
+// eslint-disable-next-line no-unused-vars
+import { Chart as ChartJS } from 'chart.js/auto';
 import { Chart } from 'react-chartjs-2';
 import { csrfFetch } from 'utils/CSRF';
+import { formatDate } from 'utils/Date';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
 
@@ -20,7 +23,7 @@ const EloGraph = ({ defaultHistories, cardId }) => {
     }
 
     const plot = {
-      labels: ['Percent'],
+      labels: history.map((point) => formatDate(new Date(point.date))),
       datasets: [
         {
           lineTension: 0,
@@ -28,9 +31,8 @@ const EloGraph = ({ defaultHistories, cardId }) => {
           fill: false,
           borderColor: '#28A745',
           backgroundColor: '#28A745',
-          data: history.map((point) => {
-            return { x: new Date(point.date), y: point.elo || 1200 };
-          }),
+          label: 'Elo',
+          data: history.map((point) => point.elo || 1200),
         },
       ],
     };
@@ -149,7 +151,7 @@ const EloGraph = ({ defaultHistories, cardId }) => {
           <Spinner />
         </div>
       ) : (
-        <>{history.length > 0 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
+        <>{history.length > 1 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
       )}
     </>
   );

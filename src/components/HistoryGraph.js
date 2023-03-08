@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import ChartComponent from 'react-chartjs-2';
+// eslint-disable-next-line no-unused-vars
+import { Chart as ChartJS } from 'chart.js/auto';
+import { Chart } from 'react-chartjs-2';
 import CardHistoryPropType from 'proptypes/CardHistoryPropType';
 
 const formatDate = (date) => `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
@@ -93,7 +95,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
   }
 
   if (plot.datasets[0].data.length > 0) {
-    return <ChartComponent options={options} data={plot} type="line" />;
+    return <Chart options={options} data={plot} type="line" />;
   }
   return <p>No data to show.</p>;
 };

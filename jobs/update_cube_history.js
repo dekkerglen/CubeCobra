@@ -37,41 +37,55 @@ const { getCubeTypes } = require('../serverjs/cubefn');
   } while (lastKey);
 
   console.log('Loaded all changelogs');
-  let firstKey = null;
+  let firstDate = null;
 
   for (const log of changelogs) {
     const date = new Date(log.date);
     const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
 
-    const key = new Date(year, month, day).valueOf();
+    const key = `${year}-${month}-${day}`;
 
     if (!logsByDay[key]) {
       logsByDay[key] = [];
+      keys.push(key);
     }
 
-    if (!firstKey || key < firstKey) {
-      firstKey = key;
+    if (!firstDate || date < firstDate) {
+      firstDate = date;
     }
 
     logsByDay[key].push(log);
   }
 
-  const today = new Date();
-  const [year, month, day] = [today.getFullYear(), today.getMonth(), today.getDate()];
-  const todayKey = new Date(year, month, day).valueOf();
+  const today = new Date().valueOf();
 
-  // get all daily keys from firstKEy to todayKey
-  for (let i = firstKey; i <= todayKey; i += 86400000) {
-    keys.push(i);
+  for (let i = firstDate.valueOf(); i <= today; i += 86400000) {
+    const date = new Date(i);
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+    if (!logsByDay[key]) {
+      logsByDay[key] = [];
+      keys.push(key);
+    }
   }
 
   console.log('Buckets created');
 
   // sort the keys ascending
-  keys.sort((a, b) => a - b);
+  keys.sort((a, b) => {
+    const [yearA, monthA, dayA] = a.split('-');
+    const [yearB, monthB, dayB] = b.split('-');
 
-  // save the files
-  fs.writeFileSync('temp/logsByDay.json', JSON.stringify({ logsByDay, keys }));
+    if (yearA !== yearB) {
+      return yearA - yearB;
+    }
+
+    if (monthA !== monthB) {
+      return monthA - monthB;
+    }
+
+    return dayA - dayB;
+  });
 
   console.log(`Loaded ${keys.length} days of logs`);
 
@@ -81,12 +95,12 @@ const { getCubeTypes } = require('../serverjs/cubefn');
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (fs.existsSync(`./temp/cubes_history/${key}.json`)) {
-      console.log(`Already finished ${i} / ${keys.length}: for ${new Date(key)}`);
-    } else {
-      if (i > 0 && fs.existsSync(`./temp/cubes_history/${keys[i - 1]}.json`)) {
-        cubes = JSON.parse(fs.readFileSync(`./temp/cubes_history/${keys[i - 1]}.json`));
-      }
+      console.log(`Already finished ${i} / ${keys.length}: for ${key}`);
 
+      if (i < keys.length - 1 && !fs.existsSync(`./temp/cubes_history/${keys[i + 1]}.json`)) {
+        cubes = JSON.parse(fs.readFileSync(`./temp/cubes_history/${keys[i]}.json`));
+      }
+    } else {
       const logRows = logsByDay[key] || [];
       const logs = await ChangeLog.batchGet(logRows);
 
@@ -98,19 +112,19 @@ const { getCubeTypes } = require('../serverjs/cubefn');
           cubes[logRow.cube] = [];
         }
 
-        if (log.mainboard.adds) {
+        if (log.mainboard && log.mainboard.adds) {
           for (const add of log.mainboard.adds) {
             cubes[logRow.cube].push(add.cardID);
           }
         }
 
-        if (log.mainboard.removes) {
+        if (log.mainboard && log.mainboard.removes) {
           for (const remove of log.mainboard.removes) {
             cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(remove.oldCard.cardID), 1);
           }
         }
 
-        if (log.mainboard.swaps) {
+        if (log.mainboard && log.mainboard.swaps) {
           for (const swap of log.mainboard.swaps) {
             cubes[logRow.cube].splice(cubes[logRow.cube].indexOf(swap.oldCard.cardID), 1, swap.card.cardID);
           }
@@ -216,11 +230,14 @@ const { getCubeTypes } = require('../serverjs/cubefn');
         oracleToElo = JSON.parse(eloFile).eloByOracleId;
       }
 
+      const [year, month, day] = key.split('-');
+      const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10)).valueOf();
+
       await CardHistory.batchPut(
         Object.entries(data).map(([oracle, history]) => ({
           [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.DAY}`,
           [CardHistory.FIELDS.ORACLE_ID]: oracle,
-          [CardHistory.FIELDS.DATE]: key,
+          [CardHistory.FIELDS.DATE]: date,
           [CardHistory.FIELDS.PICKS]: 0,
           [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
           [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
@@ -243,7 +260,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
           Object.entries(data).map(([oracle, history]) => ({
             [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.WEEK}`,
             [CardHistory.FIELDS.ORACLE_ID]: oracle,
-            [CardHistory.FIELDS.DATE]: key,
+            [CardHistory.FIELDS.DATE]: date,
             [CardHistory.FIELDS.PICKS]: 0,
             [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
             [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
@@ -267,7 +284,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
           Object.entries(data).map(([oracle, history]) => ({
             [CardHistory.FIELDS.ORACLE_TYPE_COMP]: `${oracle}:${CardHistory.TYPES.MONTH}`,
             [CardHistory.FIELDS.ORACLE_ID]: oracle,
-            [CardHistory.FIELDS.DATE]: key,
+            [CardHistory.FIELDS.DATE]: date,
             [CardHistory.FIELDS.PICKS]: 0,
             [CardHistory.FIELDS.SIZE180]: [history.size180, totals.size180],
             [CardHistory.FIELDS.SIZE360]: [history.size360, totals.size360],
@@ -285,7 +302,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
         );
       }
 
-      console.log(`Finished  ${i} / ${keys.length}: Processed ${logRows.length} logs for ${new Date(key)}`);
+      console.log(`Finished  ${i} / ${keys.length}: Processed ${logRows.length} logs for ${key}`);
     }
   }
 

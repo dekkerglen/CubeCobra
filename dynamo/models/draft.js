@@ -125,8 +125,8 @@ const getSeats = async (id) => {
 };
 
 const addS3Fields = async (document) => {
-  const cards = await getCards(document.DraftId || document.id);
-  const seats = await getSeats(document.DraftId || document.id);
+  const cards = await getCards(document.id);
+  const seats = await getSeats(document.id);
 
   return {
     ...document,

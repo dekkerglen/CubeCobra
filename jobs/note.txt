@@ -1,0 +1,46 @@
+update_draft_history
+update_cube_history
+update_metadata_dict
+update_cards
+
+node --max-old-space-size=4096
+
+update_draft_history:
+  creates folders:
+    global_draft_history
+    cube_draft_history
+    all_drafts
+  scan for all drafts, bucket complete drafts by day
+  for each day
+    check if global_draft_history/day exists
+    if it exists
+      load elo dicts for that day
+    else
+      load all logs for that day from s3
+      for each log
+        save the log (used in update_metadata_dict)
+        load cube_draft_history/cubeid or create new one
+        update cube_draft_history fields (picks, passes, mainboards, sideboards, elo)
+  upload all cube_draft_history values to s3 (this is used for cube analytics)
+  save global_draft_history/day
+
+
+update_cube_history:
+  create folders:
+    cubes_history
+  scan for all changelogs, bucket by day
+  get date range from first key to today, ensure all keys line up
+  for each day
+    check if cubes_history/day exists
+    if it exists, and tomorrow doesn't exist
+      load cube state for that day
+    else
+      load all logs for that day from s3
+      for each log
+        apply that log to the respective cube state
+      save that cube state
+      for each cube
+        get all oracles in mainboard
+        for each oracle
+          update global_draft_history for that day
+

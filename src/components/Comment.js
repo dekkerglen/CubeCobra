@@ -128,7 +128,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                   </small>
                 )}
               </div>
-              {comment.owner === user.id && (
+              {user && comment.owner === user.id && (
                 <div>
                   <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                     <small>...</small>

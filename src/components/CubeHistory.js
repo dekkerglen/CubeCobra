@@ -6,48 +6,13 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { Spinner, Card, CardBody, Row, Col, CardHeader } from 'reactstrap';
 import BlogPostChangelog from 'components/BlogPostChangelog';
 import CubeContext from 'contexts/CubeContext';
+import { formatDateTime } from 'utils/Date';
 
 const loader = (
   <div className="centered py-3 my-4">
     <Spinner className="position-absolute" />
   </div>
 );
-
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-const addOrdinal = (num) => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = num % 100;
-  return num + (s[(v - 20) % 10] || s[v] || s[0]);
-};
-
-const formatDate = (date) => {
-  const month = date.getMonth();
-  const day = date.getDate();
-  const year = date.getFullYear();
-
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-
-  const ampm = hour >= 12 ? 'pm' : 'am';
-
-  return `${monthNames[month]} ${addOrdinal(day)}, ${year} - ${hour % 12}:${
-    minute < 10 ? `0${minute}` : minute
-  } ${ampm}`;
-};
 
 const CubeHistory = ({ changes, lastKey }) => {
   const { cube } = useContext(CubeContext);
@@ -124,7 +89,7 @@ const CubeHistory = ({ changes, lastKey }) => {
                 <Card className="my-2 rightArrowBox">
                   <CardHeader className="text-end">
                     <h6>
-                      <h6>{formatDate(new Date(changelog.date))}</h6>
+                      <h6>{formatDateTime(new Date(changelog.date))}</h6>
                     </h6>
                   </CardHeader>
                   <div style={{ overflow: 'auto', height: '15vh' }}>
@@ -143,7 +108,7 @@ const CubeHistory = ({ changes, lastKey }) => {
             {odds.map((changelog) => (
               <Card className="my-2 leftArrowBox">
                 <CardHeader>
-                  <h6>{formatDate(new Date(changelog.date))}</h6>
+                  <h6>{formatDateTime(new Date(changelog.date))}</h6>
                 </CardHeader>
                 <div style={{ overflow: 'auto', height: '15vh' }}>
                   <CardBody>
