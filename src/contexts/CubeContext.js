@@ -193,6 +193,21 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [changes, setChanges],
   );
 
+  const bulkAddCard = useCallback(
+    (newCards, board) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      if (!newChanges[board]) {
+        newChanges[board] = {};
+      }
+      const adds = newChanges[board].adds || [];
+      adds.push(...newCards);
+      newChanges[board].adds = adds;
+      setChanges(newChanges);
+    },
+    [changes, setChanges],
+  );
+
   const revertAdd = useCallback(
     (index, board) => {
       const newChanges = JSON.parse(JSON.stringify(changes));
@@ -765,6 +780,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     hasCustomImages,
     setCube,
     addCard,
+    bulkAddCard,
     removeCard,
     swapCard,
     editCard,
