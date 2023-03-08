@@ -144,11 +144,8 @@ module.exports = function createClient(config) {
           };
         }
 
-        console.log('Invaliding...');
         await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
-        console.log(`Invalidating cache for ${config.name}:${Item[config.partitionKey]}`);
         cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
-        console.log(`Putting item into cache for ${config.name}:${Item[config.partitionKey]}`);
 
         const res = await documentClient.put({ TableName: tableName(config.name), Item }).promise();
         console.log(res);
