@@ -668,7 +668,7 @@ router.get('/ourstory', (req, res) => {
     title: 'Our Story',
     content: [
       {
-        label: 'about the Creator',
+        label: 'About the Creator',
         text: "My name is Gwen, and I'm the creator and Admin of Cube Cobra. Cube Cobra originated as my passion project. It started out with me being frustrated at not having tools that I enjoy for cube management, as cube design is a major hobby for me. I wanted a platform that had exactly the features that I cared about, and from talking to others in the cubing community, the current cube management tools left a lot to be desired. I launched Cube Cobra with my initial minimum feature set in June 2019, and since then I've been adding features. With my 1.3 update, I started sharing my project with the online cubing community and recieved a lot of positive encouragement and praise, which has further driven me to create a cube management tool for cube designers, by a fellow cube designer. I ended up open sourcing Cube Cobra, as I believe that is the best route for the quality and longevity of the project.",
       },
       {

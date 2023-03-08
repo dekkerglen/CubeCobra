@@ -56,7 +56,7 @@ const Feed = ({ items, lastKey }) => {
       endMessage="You've reached the end of the feed!"
     >
       {feedItems.map((item) => (
-        <BlogPost key={item.id} post={item} />
+        <BlogPost key={item.document.id} post={item.document} />
       ))}
     </InfiniteScroll>
   );
