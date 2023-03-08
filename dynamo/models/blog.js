@@ -128,7 +128,7 @@ module.exports = {
       })),
     );
   },
-  batchGet: async (ids) => client.batchGet(ids),
+  batchGet: async (ids) => Promise.all((await client.batchGet(ids)).map(hydrateChangelog)),
   createTable: async () => client.createTable(),
   convertBlog: (blog) => {
     const changelog = Changelog.getChangelogFromBlog(blog);

@@ -5,7 +5,7 @@ const FIELDS = {
   ID: 'id',
   TO: 'to',
   DATE: 'date',
-  TYPE: 'Type',
+  TYPE: 'type',
 };
 
 const client = createClient({
@@ -67,10 +67,8 @@ module.exports = {
 
     // sort back together into one list
     const itemsById = {};
-    results.forEach(({ Items }) => {
-      Items.forEach((item) => {
-        itemsById[item.id] = item;
-      });
+    results.flat().forEach((item) => {
+      itemsById[item.id] = item;
     });
 
     return {

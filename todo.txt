@@ -2,12 +2,9 @@ login/logout not consistently working
 markdown broken
 Capitalization issues on front end
 
+
 Investigate
-	- drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
-	- is indexing of cubes correct after updates? does the most recently cube get put at top of list?
-	- Make sure feed works as intended
-	- new session, login from landing seems to not work then redirect to landing with no error?
-	- don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
+	- validate cache works correctly
 
 Eventually
 have usernames pre-loaded everywhere
@@ -17,7 +14,6 @@ quickly switching cards between deck and sideboard during a sealed playtest, a f
 batch get and batch put use cache!!
 don't display mainboard header in changelist/changelog if only mainboard was changed
 tag colors don't display in list view
+don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
+drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
 
-
-Important
-Have better way to get ip list for cache
