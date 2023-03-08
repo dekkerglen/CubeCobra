@@ -14,7 +14,7 @@ const useLocalStorage = (key, initialValue) => {
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       // If error also return initialValue
-      console.log(error);
+      console.error(error);
       return initialValue;
     }
   });
@@ -32,7 +32,7 @@ const useLocalStorage = (key, initialValue) => {
       }
     } catch (error) {
       // A more advanced implementation would handle the error case
-      console.log(error);
+      console.error(error);
     }
   };
   return [storedValue, setValue];

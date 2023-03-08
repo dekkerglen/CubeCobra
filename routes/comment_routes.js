@@ -101,7 +101,7 @@ router.post(
       await util.addNotification(
         owner,
         user,
-        `/comment/${comment.id}`,
+        `/comment/${id}`,
         `${user.username} left a comment in response to your ${type}.`,
       );
     }
@@ -112,7 +112,7 @@ router.post(
         await util.addNotification(
           query.items[0],
           user,
-          `/comment/${comment._id}`,
+          `/comment/${id}`,
           `${user.username} mentioned you in their comment`,
         );
       }
@@ -189,6 +189,11 @@ router.get(
   '/:id',
   util.wrapAsyncApi(async (req, res) => {
     const comment = await Comment.getById(req.params.id);
+
+    if (!comment) {
+      req.flash('danger', 'Comment not found.');
+      return res.redirect('/404');
+    }
 
     return render(
       req,

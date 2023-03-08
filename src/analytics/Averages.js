@@ -46,7 +46,7 @@ const Averages = ({ cards, characteristics, cube }) => {
               return true;
             })
             .map((card) => {
-              return [asfans[card.cardID] || 1, characteristics[characteristic].get(card)];
+              return [asfans[card.cardID] || 1, parseFloat(characteristics[characteristic].get(card), 10)];
             })
             .filter(([weight, x]) => {
               // Don't include null, undefined, or NaN values, but we still want to include 0 values.

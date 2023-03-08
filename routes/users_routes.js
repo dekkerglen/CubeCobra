@@ -364,7 +364,7 @@ router.get('/login', (req, res) => {
 });
 
 // Login post
-router.post('/login', async (req, res, next) => {
+router.post('/login', async (req, res) => {
   let query;
 
   if (req.body.username.includes('@')) {
@@ -388,15 +388,20 @@ router.post('/login', async (req, res, next) => {
       successRedirect: redirect,
       failureRedirect: '/user/login',
       failureFlash: { type: 'danger' },
-    })(req, res, next);
+    })(req, res, () => {
+      res.redirect('/');
+    });
   }
 });
 
 // logout
 router.get('/logout', (req, res) => {
-  req.logout();
-  req.flash('success', 'You have been logged out');
-  res.redirect('/');
+  req.session.destroy((err) => {
+    if (err) {
+      res.redirect('/');
+    }
+    res.redirect('/');
+  });
 });
 
 router.get('/view/:id', async (req, res) => {

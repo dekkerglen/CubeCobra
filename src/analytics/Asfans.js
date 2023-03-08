@@ -29,8 +29,6 @@ const Asfans = ({ cards, cube }) => {
     [cards, cardAsfans],
   );
 
-  console.log(cardsWithAsfan);
-
   const asfans = useMemo(
     () =>
       Object.entries(sortIntoGroups(cardsWithAsfan, sort)).map(([label, cardsInGroup]) => ({
@@ -39,8 +37,6 @@ const Asfans = ({ cards, cube }) => {
       })),
     [cardsWithAsfan, sort],
   );
-
-  console.log(asfans);
 
   return (
     <>

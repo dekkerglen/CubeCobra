@@ -14,7 +14,7 @@ const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
     });
 
     if (!response.ok) {
-      console.log(response);
+      console.error(response);
     } else if (nextURL) {
       window.location.href = nextURL;
     } else {

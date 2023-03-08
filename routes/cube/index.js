@@ -142,7 +142,7 @@ router.get('/clone/:id', async (req, res) => {
       cardCount: source.cardCount,
     };
 
-    await Cube.put(cube);
+    const id = await Cube.put(cube);
 
     await Cube.putCards({
       ...sourceCards,
@@ -155,7 +155,7 @@ router.get('/clone/:id', async (req, res) => {
       await util.addNotification(
         sourceOwner,
         req.user,
-        `/cube/view/${cube.id}`,
+        `/cube/view/${id}`,
         `${req.user.username} made a cube by cloning yours: ${cube.name}`,
       );
     }
@@ -242,6 +242,15 @@ router.post(
 
     await User.update(user);
     await Cube.update(cube);
+
+    const cubeOwner = await User.getById(cube.owner);
+
+    await util.addNotification(
+      cubeOwner,
+      user,
+      `/cube/overview/${cube.id}`,
+      `${user.username} followed your cube: ${cube.name}`,
+    );
 
     res.status(200).send({
       success: 'true',

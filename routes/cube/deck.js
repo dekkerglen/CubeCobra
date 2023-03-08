@@ -444,11 +444,14 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const baseUser = await User.getById(base.owner);
     const cubeOwner = await User.getById(cube.owner);
 
+    const id = await Draft.put(deck);
+    await Cube.update(cube);
+
     if (cubeOwner.id !== user.id && !cube.disableAlerts) {
       await util.addNotification(
         cubeOwner,
         user,
-        `/cube/deck/${deck.id}`,
+        `/cube/deck/${id}`,
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
@@ -456,13 +459,10 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       await util.addNotification(
         baseUser,
         user,
-        `/cube/deck/${deck.id}`,
+        `/cube/deck/${id}`,
         `${user.username} rebuilt your deck from cube: ${cube.name}`,
       );
     }
-
-    const id = await Draft.put(deck);
-    await Cube.update(cube);
 
     return res.redirect(`/cube/deck/deckbuilder/${id}`);
   } catch (err) {

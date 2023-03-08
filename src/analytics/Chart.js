@@ -20,8 +20,6 @@ const ChartComponent = ({ cards, characteristics, cube }) => {
 
   const groups = sortIntoGroups(cards, sort);
 
-  console.log(groups);
-
   const colorMap = {
     White: '#D8CEAB',
     Blue: '#67A6D3',
