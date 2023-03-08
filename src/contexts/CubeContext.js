@@ -75,6 +75,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
   const [filterResult, setFilterResult] = useState('');
+  const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
 
   const allTags = useMemo(() => {
     const tags = new Set();
@@ -503,6 +504,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           blog,
           changes,
           id: cube.id,
+          useBlog,
         }),
       });
 
@@ -822,6 +824,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     filterValid,
     filterResult,
     unfilteredChangedCards,
+    useBlog,
+    setUseBlog,
   };
 
   return (
