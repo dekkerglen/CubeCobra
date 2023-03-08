@@ -1,10 +1,22 @@
-login/logout not consistently working
 markdown broken
 Capitalization issues on front end
+I added a tag to all cards, then tried to remove the same tag. The radio button for removing tags didn't seem to actually select and then the page crashed
+	Upon refresh can sometimes see my list for a second before it errors again
+	Seems to be related to mouseover on cards
+Grid draft broken
+RSS broken
+cannot do mass edit when there is an active filter
+card page graph labels are off by one
+https://cubecobradev.com/cube/list/Testing101testtest
+	maybeboard is visible despite setting turned off
+
+
 
 
 Investigate
 	- validate cache works correctly
+	- validate patreon integration
+	- validate featured cube rotation
 
 Eventually
 have usernames pre-loaded everywhere

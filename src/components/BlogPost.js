@@ -25,8 +25,6 @@ const BlogPost = ({ post, noScroll }) => {
   const hasChangelist = post.Changelog;
   const hasBody = post.body && post.body.length > 0;
 
-  console.log(post);
-
   return (
     <Card className="shadowed rounded-0 mb-3">
       <CardHeader className="ps-4 pe-0 pt-2 pb-0">

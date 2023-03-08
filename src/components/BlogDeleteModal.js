@@ -14,7 +14,7 @@ const BlogDeleteModal = ({ isOpen, toggle, postID }) => {
     });
 
     if (!response.ok) {
-      console.log(response);
+      console.error(response);
     } else {
       window.location.href = '';
     }

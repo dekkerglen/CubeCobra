@@ -44,10 +44,10 @@ const DevBlogEntry = ({ items, setItems }) => {
         setTitle('');
         setBody('');
       } else {
-        console.log(json);
+        console.error(json);
       }
     } else {
-      console.log(response);
+      console.error(response);
     }
   }, [title, body, setItems, items]);
 
