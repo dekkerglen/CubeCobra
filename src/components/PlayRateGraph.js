@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import useQueryParam from 'hooks/useQueryParam';
+// eslint-disable-next-line no-unused-vars
+import { Chart as ChartJS } from 'chart.js/auto';
 import { Chart } from 'react-chartjs-2';
 import { csrfFetch } from 'utils/CSRF';
+import { formatDate } from 'utils/Date';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
 
@@ -22,7 +25,7 @@ const PlayRateGraph = ({ defaultHistories, cardId }) => {
     }
 
     const plot = {
-      labels: ['Percent'],
+      labels: history.map((point) => formatDate(new Date(point.date))),
       datasets: [
         {
           lineTension: 0,
@@ -30,11 +33,12 @@ const PlayRateGraph = ({ defaultHistories, cardId }) => {
           fill: false,
           borderColor: '#28A745',
           backgroundColor: '#28A745',
+          label: 'Percent',
           data: history.map((point) => {
             if (point[cubeType][1] === 0) {
-              return { x: new Date(point.date), y: 0 };
+              return 0;
             }
-            return { x: new Date(point.date), y: Math.round((point[cubeType][0] / point[cubeType][1]) * 10000) / 100 };
+            return Math.round((point[cubeType][0] / point[cubeType][1]) * 10000) / 100;
           }),
         },
       ],

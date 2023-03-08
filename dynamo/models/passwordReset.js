@@ -25,6 +25,7 @@ module.exports = {
       [FIELDS.OWNER]: document[FIELDS.OWNER],
       [FIELDS.DATE]: document[FIELDS.DATE],
     });
+    return id;
   },
   batchPut: async (documents) => {
     await client.batchPut(documents);

@@ -425,11 +425,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
                 rows={filteredVersions.slice(0).map((version) => (
                   <tr key={version._id}>
                     <td>
-                      <AutocardA
-                        front={version.image_normal}
-                        back={version.image_flip || undefined}
-                        href={`/tool/card/${version._id}`}
-                      >
+                      <AutocardA card={{ details: version }} href={`/tool/card/${version._id}`}>
                         {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
                       </AutocardA>
                     </td>

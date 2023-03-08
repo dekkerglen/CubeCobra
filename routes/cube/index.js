@@ -948,7 +948,7 @@ router.post(
         cube: cube.id,
         owner: req.user.id,
         cubeOwner: cube.owner,
-        date: new Date(),
+        date: new Date().valueOf(),
         type: Draft.TYPES.GRID,
         seats: {},
         cards: [],
@@ -980,7 +980,6 @@ router.post(
       document.seats.push({
         bot: true,
         name: 'Grid Bot',
-        date: new Date().valueOf(),
         userid: null,
         mainboard: pool,
         sideboard: pool,

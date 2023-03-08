@@ -169,7 +169,7 @@ router.post(
         date: new Date(),
       };
 
-      await PasswordReset.put(passwordReset);
+      const id = await PasswordReset.put(passwordReset);
 
       const smtpTransport = mailer.createTransport({
         name: 'CubeCobra.com',
@@ -200,8 +200,7 @@ router.post(
       await email.send({
         template: 'password_reset',
         locals: {
-          id: passwordReset.id,
-          code: passwordReset.Code,
+          id,
         },
       });
 

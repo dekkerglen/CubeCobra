@@ -10,6 +10,11 @@ const CubeAnalytic = require('../dynamo/models/cubeAnalytic');
 const Draft = require('../dynamo/models/draft');
 const { getDrafterState } = require('../dist/drafting/draftutil');
 
+// global listeners for promise rejections
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+});
+
 const ELO_SPEED = 0.1;
 const CUBE_ELO_SPEED = 2;
 
@@ -109,30 +114,41 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
   } while (lastKey);
 
   console.log('Loaded all draftlogs');
-  // save into file
-  fs.writeFileSync('./temp/draftLogs.json', JSON.stringify(draftLogs));
 
   for (const log of draftLogs) {
-    const date = new Date(log.date);
-    const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
+    if (log.complete && log.date) {
+      const date = new Date(log.date);
+      const [year, month, day] = [date.getFullYear(), date.getMonth(), date.getDate()];
 
-    const key = new Date(year, month, day).valueOf();
+      const key = `${year}-${month}-${day}`;
 
-    if (!logsByDay[key]) {
-      keys.push(key);
-      logsByDay[key] = [];
+      if (!logsByDay[key]) {
+        keys.push(key);
+        logsByDay[key] = [];
+      }
+      logsByDay[key].push(log);
     }
-    logsByDay[key].push(log);
   }
 
   console.log('Buckets created');
 
   // sort the keys ascending
-  keys.sort((a, b) => a - b);
+  keys.sort((a, b) => {
+    const [aYear, aMonth, aDay] = a.split('-');
+    const [bYear, bMonth, bDay] = b.split('-');
+
+    if (aYear !== bYear) {
+      return aYear - bYear;
+    }
+
+    if (aMonth !== bMonth) {
+      return aMonth - bMonth;
+    }
+
+    return aDay - bDay;
+  });
 
   console.log(`Loaded ${keys.length} days of logs`);
-
-  let isLoaded = false;
 
   let eloByOracleId = {};
   let picksByOracleId = {};
@@ -140,17 +156,13 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (fs.existsSync(`./temp/global_draft_history/${key}.json`)) {
-      console.log(`Already finished ${i + 1} / ${keys.length + 1}: for ${new Date(key)}`);
+      console.log(`Already finished ${i + 1} / ${keys.length}: for ${key}`);
+      const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`));
+
+      eloByOracleId = loaded.eloByOracleId;
+      picksByOracleId = loaded.picksByOracleId;
     } else {
-      if (i > 0 && !isLoaded) {
-        const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${keys[i - 1]}.json`));
-
-        eloByOracleId = loaded.eloByOracleId;
-        picksByOracleId = loaded.picksByOracleId;
-
-        isLoaded = true;
-      }
-
+      console.log(`Starting ${i + 1} / ${keys.length}: for ${key}`);
       const logRows = logsByDay[key] || [];
 
       const logRowBatches = [];
@@ -163,7 +175,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
       for (const batch of logRowBatches) {
         const drafts = await Draft.batchGet(batch.map((row) => row.id));
 
-        // save these drafts to avoid having to load them again
+        // save these drafts to avoid having to load them again, used in update_metadata_dict
         fs.writeFileSync(
           `./temp/all_drafts/${key}_${index}.json`,
           JSON.stringify(
@@ -296,6 +308,8 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
     }
   }
 
+  console.log('Finished writing global draft history');
+
   // upload the files to S3
   const allCubes = fs.readdirSync('./temp/cube_draft_history');
   const batches = [];
@@ -307,6 +321,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
   let processed = 0;
 
   for (const batch of batches) {
+    console.log(`Uploading ${batch.length} / ${allCubes.length} cube draft histories`);
     await CubeAnalytic.batchPut(
       Object.fromEntries(batch.map((cube) => [cube.split('.')[0], loadAndProcessCubeDraftAnalytics(cube)])),
     );
