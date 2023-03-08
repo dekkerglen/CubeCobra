@@ -1,10 +1,10 @@
-markdown broken
 cube analysis page broken
 don't display mainboard header in changelist/changelog if only mainboard was changed
 tag colors don't display in list view
 Capitalization issues on front end
 blog post is created regardless of whether or not the checkbox is checked
 login/logout not consistently working
+markdown broken
 
 
 Investigate
