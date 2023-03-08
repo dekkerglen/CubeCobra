@@ -1,10 +1,13 @@
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Col, Form, Input, Label, Row, Card, CardBody, CardHeader } from 'reactstrap';
+import useMount from 'hooks/UseMount';
 
+import { Col, Label, Row, Card, CardBody, CardHeader, UncontrolledAlert } from 'reactstrap';
+
+import useLocalStorage from 'hooks/useLocalStorage';
+import CubeContext from 'contexts/CubeContext';
 import AutocompleteInput from 'components/AutocompleteInput';
-import CSRFForm from 'components/CSRFForm';
 import Changelist from 'components/Changelist';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
@@ -13,97 +16,110 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const BulkUploadPageRaw = ({ missing, blogpost, cube, cards }) => {
+const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
+
+const BulkUploadPageRaw = ({ missing, added }) => {
   const [addValue, setAddValue] = useState('');
-  const [loading, setLoading] = useState(false);
+
+  const { alerts, setAlerts, cube, loading, addCard, bulkAddCard, commitChanges } = useContext(CubeContext);
+
+  const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
+  const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
 
   const addInput = useRef();
-  const formRef = useRef();
 
-  const handleChange = useCallback((event) => setAddValue(event.target.value), []);
+  useMount(() => {
+    bulkAddCard(
+      added.map((cardid) => ({ cardID: cardid, addedTmsp: new Date().valueOf(), status: cube.defaultStatus })),
+      'mainboard',
+    );
+  });
+
+  const submit = useCallback(async () => {
+    await commitChanges(postTitle, postContent);
+    setPostTitle(DEFAULT_BLOG_TITLE);
+    setPostContent('');
+
+    // go to cube page
+    window.location.href = `/cube/list/${cube.id}`;
+  }, [commitChanges, cube.id, postContent, postTitle, setPostContent, setPostTitle]);
 
   const handleAdd = useCallback(
-    async (event, newValue) => {
+    async (event, match) => {
       event.preventDefault();
       try {
-        setLoading(true);
-        const card = await getCard(cube.id, newValue || addValue);
+        const card = await getCard(cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
+        addCard({ cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus }, 'mainboard');
         setAddValue('');
-        setLoading(false);
-        if (addInput.current) {
-          addInput.current.focus();
-        }
+
+        addInput.current.focus();
       } catch (e) {
         console.error(e);
       }
     },
-    [addValue, addInput, cube],
+    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard],
   );
-
   return (
-    <CubeLayout cards={cards} cube={cube} activeLink="list">
-      <Card className="mt-3">
-        <CardHeader>
-          <h5>Confirm Upload</h5>
-        </CardHeader>
-        <CardBody>
-          <p>
-            There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through
-            and manually add them. No changes have been saved.
-          </p>
-          <Row>
-            <Col>
-              {missing.map((card, index) => (
-                <Fragment key={/* eslint-disable-line react/no-array-index-key */ index}>
-                  {card}
-                  <br />
-                </Fragment>
-              ))}
-            </Col>
-            <Col>
-              <Form className="mb-2 row row-cols-auto gx-2" onSubmit={handleAdd}>
-                <Col>
-                  <AutocompleteInput
-                    treeUrl="/cube/api/cardnames"
-                    treePath="cardnames"
-                    type="text"
-                    className="me-2"
-                    innerRef={addInput}
-                    value={addValue}
-                    setValue={handleChange}
-                    onSubmit={handleAdd}
-                    placeholder="Card to Add"
-                  />
-                </Col>
-                <Col>
-                  <LoadingButton color="accent" type="submit" disabled={addValue.length === 0} loading={loading}>
-                    Add
-                  </LoadingButton>
-                </Col>
-              </Form>
-              <CSRFForm method="POST" action={`/cube/edit/${cube.id}`} innerRef={formRef}>
-                <Label>Changelist:</Label>
-                <div className="changelist-container mb-2">
-                  <Changelist />
-                </div>
-                {blogpost && (
-                  <>
-                    <Input type="hidden" name="title" value={blogpost.title} />
-                    <Input type="hidden" name="blog" value={blogpost.html} />
-                  </>
-                )}
-                <Button color="accent" type="submit" className="mt-3" block outline>
-                  Save Changes
-                </Button>
-              </CSRFForm>
-            </Col>
-          </Row>
-        </CardBody>
-      </Card>
-    </CubeLayout>
+    <Card className="mt-3">
+      <CardHeader>
+        <h5>Confirm Upload</h5>
+      </CardHeader>
+      <CardBody>
+        <p>
+          There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through and
+          manually add them. No changes have been saved.
+        </p>
+        <Row>
+          <Col>
+            {missing.map((card, index) => (
+              <p key={/* eslint-disable-line react/no-array-index-key */ index}>{card}</p>
+            ))}
+          </Col>
+          <Col>
+            <Row>
+              <Col xs="8">
+                <AutocompleteInput
+                  treeUrl="/cube/api/cardnames"
+                  treePath="cardnames"
+                  type="text"
+                  innerRef={addInput}
+                  value={addValue}
+                  setValue={setAddValue}
+                  placeholder="Card to Add"
+                  noMargin
+                />
+              </Col>
+              <Col xs="4">
+                <LoadingButton
+                  block
+                  color="accent"
+                  disabled={addValue.length === 0}
+                  loading={loading}
+                  onClick={(e) => handleAdd(e, addValue)}
+                >
+                  Add
+                </LoadingButton>
+              </Col>
+            </Row>
+            {alerts.map(({ color, message }) => (
+              <UncontrolledAlert color={color} className="mt-2">
+                {message}
+              </UncontrolledAlert>
+            ))}
+            <Label>Changelist:</Label>
+            <div className="changelist-container mb-2">
+              <Changelist />
+            </div>
+            <LoadingButton loading={loading} color="accent" className="mt-3" block outline onClick={submit}>
+              Save Changes
+            </LoadingButton>
+          </Col>
+        </Row>
+      </CardBody>
+    </Card>
   );
 };
 
@@ -118,10 +134,12 @@ BulkUploadPageRaw.propTypes = {
   }).isRequired,
 };
 
-const BulkUploadPage = ({ cube, added, loginCallback, ...props }) => (
+const BulkUploadPage = ({ cube, cards, added, loginCallback, blogpost, missing }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
-    <BulkUploadPageRaw cube={cube} {...props} />
+    <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
+      <BulkUploadPageRaw added={added} blogpost={blogpost} missing={missing} />
+    </CubeLayout>
   </MainLayout>
 );
 

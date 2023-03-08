@@ -23,12 +23,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
         canEdit: true,
         cubeID: req.params.id,
         missing,
-        added: added.map(({ _id, name, image_normal, image_flip }) => ({
-          _id,
-          name,
-          image_normal,
-          image_flip,
-        })),
+        added: added.map((add) => add._id),
       });
     }
 

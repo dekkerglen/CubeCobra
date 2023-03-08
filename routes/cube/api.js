@@ -822,7 +822,7 @@ router.post('/imagedata', async (req, res) => {
 });
 
 router.post('/commit', async (req, res) => {
-  const { id, changes, title, blog } = req.body;
+  const { id, changes, title, blog, useBlog } = req.body;
 
   const cube = await Cube.getById(id);
 
@@ -835,8 +835,7 @@ router.post('/commit', async (req, res) => {
 
   const changelogId = await Changelog.put(changes, cube.id);
 
-  // TODO: blogpost
-  if (title) {
+  if (useBlog) {
     const blogId = await Blog.put({
       body: blog,
       owner: req.user.id,

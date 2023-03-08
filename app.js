@@ -20,6 +20,7 @@ const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
+const { updatePeers, alertPeers } = require('./dynamo/cache');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -218,10 +219,13 @@ schedule.scheduleJob('0 10 * * *', async () => {
 });
 
 // Start server after carddb is initialized.
-carddb.initializeCardDb().then(() => {
+carddb.initializeCardDb().then(async () => {
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
   console.log(`Server started on port ${process.env.PORT || 5000}...`);
 
   // init socket io
   setup(socketio(server));
+
+  await updatePeers();
+  await alertPeers();
 });

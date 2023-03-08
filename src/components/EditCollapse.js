@@ -83,12 +83,13 @@ const EditCollapse = ({ isOpen }) => {
     alerts,
     setAlerts,
     loading,
+    useBlog,
+    setUseBlog,
   } = useContext(CubeContext);
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
   const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'mainboard');
-  const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
   const handleAdd = useCallback(

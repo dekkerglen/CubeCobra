@@ -75,6 +75,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState({ fn: () => true });
   const [filterResult, setFilterResult] = useState('');
+  const [useBlog, setUseBlog] = useLocalStorage(`${cube.id}-useBlog`, true);
 
   const allTags = useMemo(() => {
     const tags = new Set();
@@ -187,6 +188,21 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       }
       const adds = newChanges[board].adds || [];
       adds.push(card);
+      newChanges[board].adds = adds;
+      setChanges(newChanges);
+    },
+    [changes, setChanges],
+  );
+
+  const bulkAddCard = useCallback(
+    (newCards, board) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      if (!newChanges[board]) {
+        newChanges[board] = {};
+      }
+      const adds = newChanges[board].adds || [];
+      adds.push(...newCards);
       newChanges[board].adds = adds;
       setChanges(newChanges);
     },
@@ -488,6 +504,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           blog,
           changes,
           id: cube.id,
+          useBlog,
         }),
       });
 
@@ -765,6 +782,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     hasCustomImages,
     setCube,
     addCard,
+    bulkAddCard,
     removeCard,
     swapCard,
     editCard,
@@ -806,6 +824,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     filterValid,
     filterResult,
     unfilteredChangedCards,
+    useBlog,
+    setUseBlog,
   };
 
   return (
