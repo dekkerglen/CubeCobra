@@ -1,5 +1,7 @@
 const clone = require('clone');
 
+let peers = [];
+
 /*
 cache: {
   'key': {
@@ -45,7 +47,7 @@ AWS.config.update({
 const autoscaling = new AWS.AutoScaling();
 const ec2 = new AWS.EC2();
 
-const invalidate = async (key) => {
+const updatePeers = async () => {
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // get all ip addresses of all nodes in auto scaling group
@@ -56,7 +58,7 @@ const invalidate = async (key) => {
       const instances = groups.AutoScalingGroups[0].Instances;
 
       // get ip from ec2 instance id
-      const ips = await Promise.all(
+      peers = await Promise.all(
         instances.map((instance) =>
           ec2
             .describeInstances({
@@ -66,10 +68,41 @@ const invalidate = async (key) => {
             .then((res) => res.Reservations[0].Instances[0].PublicIpAddress),
         ),
       );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
 
+const alertPeers = async () => {
+  try {
+    if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
       await Promise.all(
-        ips.map((ip) =>
+        peers.map((ip) =>
+          fetch(`http://${ip}:80/cache/newpeer`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              secret: process.env.CACHE_SECRET,
+            }),
+          }),
+        ),
+      );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const invalidate = async (key) => {
+  try {
+    if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
+      // send invalidate request to each ip address
+      await Promise.all(
+        peers.map((ip) =>
           fetch(`http://${ip}:80/cache/invalidate`, {
             method: 'POST',
             headers: {
@@ -130,4 +163,6 @@ module.exports = {
   get,
   evict,
   invalidate,
+  updatePeers,
+  alertPeers,
 };
