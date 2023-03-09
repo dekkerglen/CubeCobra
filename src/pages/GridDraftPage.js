@@ -168,7 +168,8 @@ const useMutatableGridDraft = (initialGridDraft) => {
 };
 
 export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
-  const { cards, draftType } = initialDraft;
+  const { cards } = initialDraft;
+  const draftType = initialDraft.seats[1].bot ? 'bot' : '2playerlocal';
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
@@ -195,13 +196,12 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
   useEffect(() => {
     (async () => {
       if (doneDrafting) {
-        const submitableGridDraft = {
-          ...gridDraft,
-          cards: gridDraft.cards.map(({ details: _, ...card }) => ({ ...card })),
-        };
         await csrfFetch(`/cube/api/submitgriddraft/${gridDraft.cube}`, {
           method: 'POST',
-          body: JSON.stringify(submitableGridDraft),
+          body: JSON.stringify({
+            seats: gridDraft.seats,
+            id: gridDraft.id,
+          }),
           headers: { 'Content-Type': 'application/json' },
         });
         // eslint-disable-next-line
@@ -232,7 +232,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
             className="d-none"
             innerRef={submitDeckForm}
             method="POST"
-            action={`/cube/deck/submitgriddeck/${initialDraft.cube}`}
+            action={`/cube/deck/submitdeck/${initialDraft.cube}`}
           >
             <Input type="hidden" name="body" value={initialDraft.id} />
           </CSRFForm>

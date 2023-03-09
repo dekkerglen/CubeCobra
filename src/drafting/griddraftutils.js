@@ -1,6 +1,6 @@
 export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
-  const { cards, initial_state } = gridDraft;
-  const numPacks = gridDraft.initial_state.length;
+  const { cards, InitialState } = gridDraft;
+  const numPacks = gridDraft.InitialState.length;
   const seatNum = parseInt(seatNumber, 10);
   let curStep = 0;
   const seen = [];
@@ -8,7 +8,7 @@ export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
   let curPickNum = 0;
   const pickedNums = [0, 0];
   let currentPicker = 0;
-  let cardsInPack = initial_state[0];
+  let cardsInPack = InitialState[0];
   let packNum = 0;
 
   if (currentPicker === seatNum) {
@@ -16,7 +16,7 @@ export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
   }
 
   while (packNum < numPacks && pickedIndices[currentPicker].length > pickedNums[currentPicker]) {
-    cardsInPack = initial_state[packNum].slice();
+    cardsInPack = InitialState[packNum].slice();
     cardsInPack[pickedIndices[currentPicker][pickedNums[currentPicker]]] = null;
     cardsInPack[pickedIndices[currentPicker][pickedNums[currentPicker] + 1]] = null;
     cardsInPack[pickedIndices[currentPicker][pickedNums[currentPicker] + 2]] = null;
@@ -44,8 +44,8 @@ export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
       curStep += 1;
       packNum += 1;
       if (packNum < numPacks && currentPicker === seatNum) {
-        seen.push(...gridDraft.initial_state[packNum]);
-        cardsInPack = initial_state[packNum].slice();
+        seen.push(...gridDraft.InitialState[packNum]);
+        cardsInPack = InitialState[packNum].slice();
       }
     } else {
       // packNum += 1;

@@ -959,26 +959,26 @@ router.post(
         cubeOwner: cube.owner,
         date: new Date().valueOf(),
         type: Draft.TYPES.GRID,
-        seats: {},
+        seats: [],
         cards: [],
-        IniitalState: [],
+        InitialState: [],
         complete: false,
       };
 
       for (let i = 0; i < numPacks; i++) {
         const pack = source.splice(0, 9);
         doc.cards.push(...pack);
-        doc.IniitalState.push(pack.map(({ index }) => index));
+        doc.InitialState.push(pack.map(({ index }) => index));
       }
 
       addBasics(doc, cube.basics);
       const pool = createPool();
 
       // add human
-      document.seats.push({
+      doc.seats.push({
         bot: false,
         name: req.user ? req.user.username : 'Anonymous',
-        userid: req.user ? req.user.id : null,
+        owner: req.user ? req.user.id : null,
         mainboard: pool,
         sideboard: pool,
         pickorder: [],
@@ -986,10 +986,10 @@ router.post(
       });
 
       // add bot
-      document.seats.push({
+      doc.seats.push({
         bot: true,
         name: 'Grid Bot',
-        userid: null,
+        owner: null,
         mainboard: pool,
         sideboard: pool,
         pickorder: [],

@@ -272,7 +272,7 @@ export const createDraft = (format, cubeCards, seats, user, botsOnly = false, se
   draft.seats = draft.initial_state.map((_, seatIndex) => ({
     bot: seatIndex !== 0 || botsOnly,
     name: seatIndex === 0 ? user.username : `Bot ${seatIndex}`,
-    userid: seatIndex === 0 ? user.id : null,
+    owner: seatIndex === 0 ? user.id : null,
     mainboard: [new Array(8).fill([]), new Array(8).fill([])], // organized draft picks
     sideboard: [new Array(8).fill([]), new Array(8).fill([])],
     pickorder: [],

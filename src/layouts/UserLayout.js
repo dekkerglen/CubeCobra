@@ -50,7 +50,7 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
         </NavItem>
         <NavItem className="px-2 align-self-end">
           <NavLink active={activeLink === 'view'} href={`/user/view/${user.id}`}>
-            cubes
+            Cubes
           </NavLink>
         </NavItem>
         <NavItem className="px-2 align-self-end">

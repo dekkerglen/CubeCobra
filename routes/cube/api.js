@@ -718,6 +718,35 @@ router.post(
   }),
 );
 
+router.post('/submitgriddraft/:id', ensureAuth, async (req, res) => {
+  const draft = await Draft.getById(req.body.id);
+
+  if (!draft) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'Draft not found',
+    });
+  }
+
+  if (draft.type !== Draft.TYPES.GRID) {
+    return res.status(400).send({
+      success: 'false',
+      message: 'Draft is not a grid draft',
+    });
+  }
+
+  const { seats } = req.body;
+
+  draft.seats = seats;
+  draft.complete = true;
+
+  await Draft.put(draft);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
 router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
   const draft = await Draft.getById(req.body.id);
 

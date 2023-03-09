@@ -257,7 +257,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   notice.status = Notice.STATUS.PROCESSED;
   Notice.update(notice);
 
-  const user = await User.getById(application.userid);
+  const user = await User.getById(application.user);
 
   const smtpTransport = mailer.createTransport({
     name: 'CubeCobra.com',

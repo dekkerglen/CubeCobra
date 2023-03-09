@@ -116,7 +116,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     <DeckStacks
                       className="border-top"
                       cards={sideboard}
-                      title="sideboard"
+                      title="Sideboard"
                       locationType={DraftLocation.SIDEBOARD}
                       canDrop={canDrop}
                       onMoveCard={handleMoveCard}
