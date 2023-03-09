@@ -1,5 +1,4 @@
 
-cannot do mass edit when there is an active filter
 card page graph labels are off by one
 https://cubecobradev.com/cube/list/Testing101testtest
 	maybeboard is visible despite setting turned off

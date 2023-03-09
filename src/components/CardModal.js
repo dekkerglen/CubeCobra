@@ -338,7 +338,7 @@ const CardModal = ({
                   inputValue={tagInput}
                   handleInputChange={setTagInput}
                   handleInputBlur={(tag) => {
-                    updateField('tags', [...cardTags(card), tag]);
+                    updateField('tags', [...cardTags(card), tag.text]);
                     setTagInput('');
                   }}
                   addTag={(tag) => {

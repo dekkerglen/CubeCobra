@@ -156,15 +156,15 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
       </td>
       <td style={{ minWidth: '15rem' }}>
         <TagInput
-          tags={cardTags(card)}
+          tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
           inputValue={tagInput}
           handleInputChange={setTagInput}
           handleInputBlur={(tag) => {
-            updateField('tags', [...cardTags(card), tag]);
+            updateField('tags', [...cardTags(card), tag.text]);
             setTagInput('');
           }}
           addTag={(tag) => {
-            updateField('tags', [...cardTags(card), tag]);
+            updateField('tags', [...cardTags(card), tag.text]);
             setTagInput('');
           }}
           deleteTag={(index) => {
@@ -285,14 +285,14 @@ const ListView = ({ cards }) => {
             <th className="align-middle">
               <Input type="checkbox" className="d-block mx-auto" onChange={handleCheckAll} />
             </th>
-            <th>name</th>
+            <th>Name</th>
             <th>Version</th>
             <th>Type</th>
             <th>status</th>
             <th>Finish</th>
             <th>MV</th>
             <th>Color</th>
-            <th>tags</th>
+            <th>Tags</th>
           </tr>
         </thead>
       </PagedTable>
