@@ -420,7 +420,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
       owner: req.user.id,
       cubeOwner: base.cubeOwner,
       date: new Date().valueOf(),
-      type: 'draft',
+      type: base.type,
       seats: [],
       cards: base.cards,
       basics: base.basics,

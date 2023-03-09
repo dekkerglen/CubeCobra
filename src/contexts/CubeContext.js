@@ -330,6 +330,95 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [changes, setChanges],
   );
 
+  const moveCard = useCallback(
+    (index, board, newBoard) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      // if this card has already been removed, don't remove it again
+      if (
+        newChanges[board] &&
+        newChanges[board].removes &&
+        newChanges[board].removes.some((remove) => remove.index === index)
+      ) {
+        return;
+      }
+
+      if (!newChanges[board]) {
+        newChanges[board] = {};
+      }
+      const removes = newChanges[board].removes || [];
+
+      const oldCard = JSON.parse(JSON.stringify(cube.cards[board][index]));
+      delete oldCard.details;
+
+      removes.push({ index, oldCard });
+      newChanges[board].removes = removes;
+
+      const swaps = newChanges[board].swaps || [];
+      const edits = newChanges[board].edits || [];
+
+      // remove swaps and edits that refer to this card
+      const newSwaps = swaps.filter((s) => s.index !== index);
+      const newEdits = edits.filter((e) => e.index !== index);
+
+      newChanges[board].swaps = newSwaps;
+      newChanges[board].edits = newEdits;
+
+      // now we add
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = {};
+      }
+      const adds = newChanges[newBoard].adds || [];
+      adds.push(oldCard);
+      newChanges[newBoard].adds = adds;
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges],
+  );
+
+  const bulkMoveCard = useCallback(
+    (cardList, newBoard) => {
+      const newChanges = JSON.parse(JSON.stringify(changes));
+
+      for (const card of cardList) {
+        if (card.board !== newBoard) {
+          if (!newChanges[card.board]) {
+            newChanges[card.board] = {};
+          }
+          if (!newChanges[card.board].removes) {
+            newChanges[card.board].removes = [];
+          }
+
+          // if this card has been edited, remove the edit
+          if (newChanges[card.board].edits) {
+            const editIndex = newChanges[card.board].edits.findIndex((e) => e.index === card.index);
+            if (editIndex !== -1) {
+              newChanges[card.board].edits.splice(editIndex, 1);
+            }
+          }
+
+          newChanges[card.board].removes.push({
+            index: card.index,
+            oldCard: cube.cards[card.board][card.index],
+          });
+        }
+      }
+
+      if (!newChanges[newBoard]) {
+        newChanges[newBoard] = {};
+      }
+      const adds = newChanges[newBoard].adds || [];
+      adds.push(...cardList.filter((card) => card.board !== newBoard));
+      newChanges[newBoard].adds = adds;
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges],
+  );
+
   const removeCard = useCallback(
     (index, board) => {
       const newChanges = JSON.parse(JSON.stringify(changes));
@@ -587,8 +676,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
           const oldCard = JSON.parse(JSON.stringify(cube.cards[edit.board][edit.index]));
           delete oldCard.details;
-          delete oldCard.index;
-          delete oldCard.board;
 
           const newCard = {
             ...card,
@@ -597,8 +684,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             editIndex: newChanges[edit.board].edits.length,
           };
           delete newCard.details;
-          delete newCard.index;
-          delete newCard.board;
 
           // if this card has already been edited, overwrite the edit
           const index = newChanges[edit.board].edits.findIndex((e) => e.index === edit.index);
@@ -834,7 +919,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         {children}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
-          changedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
+          unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
               isOpen={modalOpen}
@@ -846,6 +931,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
               revertRemove={revertRemove}
               removeCard={removeCard}
               tagColors={tagColors}
+              moveCard={moveCard}
             />
           )}
         {modalSelection && Array.isArray(modalSelection) && (
@@ -861,6 +947,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             removeCard={removeCard}
             setModalSelection={setModalSelection}
             tagColors={tagColors}
+            bulkMoveCard={bulkMoveCard}
           />
         )}
       </>

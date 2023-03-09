@@ -53,6 +53,7 @@ const CardModal = ({
   revertRemove,
   removeCard,
   tagColors,
+  moveCard,
 }) => {
   const [versions, setVersions] = useState(null);
   const [tagInput, setTagInput] = useState('');
@@ -133,21 +134,56 @@ const CardModal = ({
                         </Button>
                       </Col>
                     ) : (
-                      <Col xs="12">
-                        <Button
-                          className="my-1"
-                          color="danger"
-                          block
-                          outline
-                          onClick={() => {
-                            removeCard(card.index, card.board);
-                            toggle();
-                          }}
-                        >
-                          <span className="d-none d-sm-inline">Remove from cube</span>
-                          <span className="d-sm-none">Remove</span>
-                        </Button>
-                      </Col>
+                      <>
+                        <Col xs="12">
+                          <Button
+                            className="my-1"
+                            color="danger"
+                            block
+                            outline
+                            onClick={() => {
+                              removeCard(card.index, card.board);
+                              toggle();
+                            }}
+                          >
+                            <span className="d-none d-sm-inline">Remove from cube</span>
+                            <span className="d-sm-none">Remove</span>
+                          </Button>
+                        </Col>
+                        {card.board === 'mainboard' ? (
+                          <Col xs="12">
+                            <Button
+                              className="my-1"
+                              color="warning"
+                              block
+                              outline
+                              onClick={() => {
+                                moveCard(card.index, card.board, 'maybeboard');
+                                toggle();
+                              }}
+                            >
+                              <span className="d-none d-sm-inline">Move to Maybeboard</span>
+                              <span className="d-sm-none">Maybeboard</span>
+                            </Button>
+                          </Col>
+                        ) : (
+                          <Col xs="12">
+                            <Button
+                              className="my-1"
+                              color="warning"
+                              block
+                              outline
+                              onClick={() => {
+                                moveCard(card.index, card.board, 'mainboard');
+                                toggle();
+                              }}
+                            >
+                              <span className="d-none d-sm-inline">Move to Mainboard</span>
+                              <span className="d-sm-none">Mainboard</span>
+                            </Button>
+                          </Col>
+                        )}
+                      </>
                     )}
                     {card.editIndex !== undefined && (
                       <Col xs="12">
@@ -380,6 +416,7 @@ CardModal.propTypes = {
   revertRemove: PropTypes.func.isRequired,
   removeCard: PropTypes.func.isRequired,
   tagColors: PropTypes.arrayOf(PropTypes.string),
+  moveCard: PropTypes.func.isRequired,
 };
 
 CardModal.defaultProps = {

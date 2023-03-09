@@ -34,6 +34,7 @@ const GroupModal = ({
   cards,
   canEdit,
   bulkEditCard,
+  bulkMoveCard,
   bulkRevertEdit,
   bulkRevertRemove,
   bulkRemoveCard,
@@ -212,6 +213,36 @@ const GroupModal = ({
                   Remove all from cube
                 </Button>
               </Col>
+              <Col xs="12">
+                <Button
+                  className="my-1"
+                  color="warning"
+                  block
+                  outline
+                  onClick={() => {
+                    bulkMoveCard(cards, 'maybeboard');
+                    toggle();
+                  }}
+                >
+                  <span className="d-none d-sm-inline">Move all to Maybeboard</span>
+                  <span className="d-sm-none">Maybeboard</span>
+                </Button>
+              </Col>
+              <Col xs="12">
+                <Button
+                  className="my-1"
+                  color="warning"
+                  block
+                  outline
+                  onClick={() => {
+                    bulkMoveCard(cards, 'mainboard');
+                    toggle();
+                  }}
+                >
+                  <span className="d-none d-sm-inline">Move all to Mainboard</span>
+                  <span className="d-sm-none">Mainboard</span>
+                </Button>
+              </Col>
             </Row>
             {anyCardRemoved && (
               <Row>
@@ -245,7 +276,7 @@ const GroupModal = ({
                 <h5>Set status of All</h5>
               </Label>
               <InputGroup className="mb-3">
-                <InputGroupText>status</InputGroupText>
+                <InputGroupText>Status</InputGroupText>
                 <Input
                   type="select"
                   id="groupStatus"
