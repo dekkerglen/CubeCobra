@@ -106,6 +106,7 @@ const stripDetails = (cards) => {
     delete card.details;
     delete card.index;
     delete card.board;
+    delete card.editIndex;
   });
 };
 

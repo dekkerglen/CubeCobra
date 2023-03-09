@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import PropTypes from 'prop-types';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 import DeckPropType from 'proptypes/DeckPropType';
 
 import CommentsSection from 'components/CommentsSection';
+import CardGrid from 'components/CardGrid';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
 import { makeSubtitle } from 'utils/Card';
+import { sortDeep } from 'utils/Sort';
 import Username from 'components/Username';
+import CardImage from 'components/CardImage';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
@@ -83,6 +86,22 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
     row.splice(startCut, row.length - startCut);
   }
 
+  const sorted = useMemo(() => {
+    const deep = sortDeep(
+      seat.mainboard.flat(3).map((cardIndex) => deck.cards[cardIndex]),
+      true,
+      'Unsorted',
+      'Color Category',
+      'Mana Value Full',
+      'Unsorted',
+    );
+    return deep
+      .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
+      .flat(4);
+  }, [deck.cards, seat.mainboard]);
+
+  console.log(sorted);
+
   return (
     <Card>
       <CardHeader>
@@ -138,6 +157,31 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
             </Row>
           )}
         </>
+      )}
+      {view === 'visual' && (
+        <CardBody>
+          <h4>Mainboard</h4>
+          <CardGrid
+            cardList={sorted}
+            Tag={CardImage}
+            colProps={{ className: 'col-1-2' }}
+            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+            linkDetails
+          />
+          {seat.sideboard.flat(2).length > 0 && (
+            <>
+              <hr className="my-4" />
+              <h4 className="mt-4">Sideboard</h4>
+              <CardGrid
+                cardList={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])}
+                Tag={CardImage}
+                colProps={{ className: 'col-1-2' }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+            </>
+          )}
+        </CardBody>
       )}
       <CardBody>
         <Markdown markdown={seat.description} />

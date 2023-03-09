@@ -36,6 +36,12 @@ body {
 	color: var(--success);
 }
 
+
+.col-1-2 {
+	flex: 0 0 10%;
+	max-width: 10%;
+}
+
 @media (max-width: 575.98px) {
 	/* only on xs */
 	.nav-link {

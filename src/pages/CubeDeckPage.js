@@ -74,6 +74,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
             <div className="view-style-select pe-2">
               <Input type="select" id="viewSelect" value={view} onChange={handleChangeView}>
                 <option value="deck">Deck View</option>
+                <option value="visual">Visual Spoiler</option>
                 <option value="picks">Pick by Pick Breakdown</option>
               </Input>
             </div>

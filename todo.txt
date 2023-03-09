@@ -1,15 +1,5 @@
-markdown broken
-Capitalization issues on front end
-I added a tag to all cards, then tried to remove the same tag. The radio button for removing tags didn't seem to actually select and then the page crashed
-	Upon refresh can sometimes see my list for a second before it errors again
-	Seems to be related to mouseover on cards
-Grid draft broken
-RSS broken
-cannot do mass edit when there is an active filter
-card page graph labels are off by one
-https://cubecobradev.com/cube/list/Testing101testtest
-	maybeboard is visible despite setting turned off
 
+https://cubecobradev.com/markdown crashes
 
 
 
@@ -28,4 +18,6 @@ don't display mainboard header in changelist/changelog if only mainboard was cha
 tag colors don't display in list view
 don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
+Capitalization issues on front end
+
 

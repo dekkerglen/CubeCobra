@@ -836,7 +836,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           !Array.isArray(modalSelection) &&
           changedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
-              card={changedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
+              card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
               isOpen={modalOpen}
               toggle={toggle}
               canEdit={canEdit}
@@ -850,7 +850,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           )}
         {modalSelection && Array.isArray(modalSelection) && (
           <GroupModal
-            cards={modalSelection.map((s) => changedCards[s.board][s.index])}
+            cards={modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])}
             isOpen={modalOpen}
             toggle={toggle}
             canEdit={canEdit}

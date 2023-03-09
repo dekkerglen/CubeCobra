@@ -128,11 +128,11 @@ const GroupModal = ({
     if (tags.length > 0) {
       if (addTags) {
         updates.forEach((card) => {
-          card.tags = [...new Set([...card.tags, ...tags])];
+          card.tags = [...new Set([...card.tags, ...tags.map((tag) => tag.text)])];
         });
       } else {
         updates.forEach((card) => {
-          card.tags = card.tags.filter((tag) => !tags.includes(tag));
+          card.tags = card.tags.filter((tag) => !tags.map((t) => t.text).includes(tag));
         });
       }
     }
@@ -315,7 +315,7 @@ const GroupModal = ({
                       type="radio"
                       name="deleteTags"
                       checked={!addTags}
-                      onChange={(e) => setAddTags(e.target.checked)}
+                      onChange={(e) => setAddTags(!e.target.checked)}
                     />{' '}
                     Delete tags from all
                   </Label>

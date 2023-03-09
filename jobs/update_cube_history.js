@@ -231,7 +231,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
       }
 
       const [year, month, day] = key.split('-');
-      const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10)).valueOf();
+      const date = new Date(parseInt(year, 10), parseInt(month, 10), parseInt(day, 10)).valueOf();
 
       await CardHistory.batchPut(
         Object.entries(data).map(([oracle, history]) => ({
