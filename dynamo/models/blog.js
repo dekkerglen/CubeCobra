@@ -5,6 +5,7 @@ const uuid = require('uuid/v4');
 const TurndownService = require('turndown');
 const createClient = require('../util');
 const Changelog = require('./changelog');
+const carddb = require('../../serverjs/carddb');
 
 const turndownService = new TurndownService();
 
@@ -147,6 +148,44 @@ module.exports = {
       [FIELDS.TITLE]: blog.title,
       [FIELDS.CHANGELIST_ID]: changelog.length > 0 ? `${blog._id}` : undefined,
     };
+  },
+  changelogToText: (changelog) => {
+    let result = '';
+
+    for (const [board, name] of [
+      ['mainboard', 'Mainboard'],
+      ['sideboard', 'Sideboard'],
+    ]) {
+      if (changelog[board]) {
+        result += `${name}:\n`;
+
+        if (changelog[board].adds) {
+          result += `Added:\n${changelog[board].adds.map((add) => carddb.cardFromId(add.cardID).name).join('\n')}\n`;
+        }
+
+        if (changelog[board].removes) {
+          result += `Removed:\n${changelog[board].removes
+            .map((remove) => carddb.cardFromId(remove.oldCard.cardID).name)
+            .join('\n')}\n`;
+        }
+
+        if (changelog[board].swaps) {
+          result += `Swapped:\n${changelog[board].swaps
+            .map(
+              (swap) => `${carddb.cardFromId(swap.oldCard.cardID).name} -> ${carddb.cardFromId(swap.card.cardID).name}`,
+            )
+            .join('\n')}\n`;
+        }
+
+        if (changelog[board].edits) {
+          result += `Edited:\n${changelog[board].edits
+            .map((edit) => `${carddb.cardFromId(edit.oldCard.cardID).name}`)
+            .join('\n')}\n`;
+        }
+      }
+    }
+
+    return result;
   },
   FIELDS,
 };

@@ -457,12 +457,28 @@ router.get('/rss/:id', async (req, res) => {
     });
 
     items.forEach((blog) => {
-      feed.item({
-        title: blog.title,
-        description: `${blog.body}\n\n${blog.Changelog}`,
-        guid: blog.id,
-        date: blog.date,
-      });
+      if (blog.body && blog.Changelog) {
+        feed.item({
+          title: blog.title,
+          description: `${blog.body}\n\n${Blog.changelogToText(blog.Changelog)}`,
+          guid: blog.id,
+          date: blog.date,
+        });
+      } else if (blog.body) {
+        feed.item({
+          title: blog.title,
+          description: blog.body,
+          guid: blog.id,
+          date: blog.date,
+        });
+      } else if (blog.Changelog) {
+        feed.item({
+          title: blog.title,
+          description: Blog.changelogToText(blog.Changelog),
+          guid: blog.id,
+          date: blog.date,
+        });
+      }
     });
     res.set('Content-Type', 'text/xml');
     return res.status(200).send(feed.xml());
