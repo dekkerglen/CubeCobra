@@ -1,7 +1,4 @@
 
-card page graph labels are off by one
-https://cubecobradev.com/cube/list/Testing101testtest
-	maybeboard is visible despite setting turned off
 https://cubecobradev.com/markdown crashes
 
 
