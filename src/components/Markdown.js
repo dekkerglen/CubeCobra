@@ -7,7 +7,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
-import { LIMITED_PLUGINS, ALL_PLUGINS } from 'markdown/parser';
+import { LIMITED_PLUGINS, ALL_PLUGINS, REHYPE_PLUGINS, rehypeOptions } from 'markdown/parser';
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -33,7 +33,7 @@ const renderLink = (node) => {
 
   if (isInternalURL(ref)) {
     // heading autolink
-    if (node.node.data?.hChildren) {
+    if (Array.isArray(node.children) && node.children[0]?.props?.className?.includes('icon')) {
       return (
         <a href={ref} className="heading-link">
           <LinkIcon size={16} className="link-icon" />
@@ -65,8 +65,8 @@ const renderCode = (node) => {
   const style = mode === 'dark' ? a11yDark : a11yLight;
 
   return (
-    <SyntaxHighlighter language={node.language || 'text'} style={style}>
-      {node.value || ''}
+    <SyntaxHighlighter language={node.children[0]?.props?.className?.replace('language-', '') || 'text'} style={style}>
+      {node.node?.children[0]?.children[0]?.value?.trimEnd() || ''}
     </SyntaxHighlighter>
   );
 };
@@ -82,7 +82,7 @@ const renderMath = (node) => <Latex trusted={false} displayMode>{`$$ ${node.valu
 const renderInlineMath = (node) => <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
 
 const renderUserlink = (node) => {
-  const name = node.value;
+  const name = node.node.value;
   return (
     <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
       @{name}
@@ -91,11 +91,11 @@ const renderUserlink = (node) => {
 };
 
 const renderSymbol = (node) => {
-  const symbol = node.value.replace('/', '-').toLowerCase();
+  const symbol = node.node.value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };
 
-const renderCardlink = ({ name, id, dfc }) => {
+const renderCardlink = ({ node: { name, id, dfc } }) => {
   const idURL = encodeURIComponent(id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -108,7 +108,7 @@ const renderCardlink = ({ name, id, dfc }) => {
 };
 
 const renderCardImage = (node) => {
-  const idURL = encodeURIComponent(node.id);
+  const idURL = encodeURIComponent(node.node.id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
@@ -131,13 +131,16 @@ const renderCardrow = (node) => (
 
 const RENDERERS = {
   // overridden defaults
-  link: renderLink,
-  linkReference: renderLink,
-  image: renderImage,
-  imageReference: renderImage,
+  a: renderLink,
+  img: renderImage,
   blockquote: renderBlockQuote,
-  heading: renderHeading,
-  code: renderCode,
+  h1: renderHeading,
+  h2: renderHeading,
+  h3: renderHeading,
+  h4: renderHeading,
+  h5: renderHeading,
+  h6: renderHeading,
+  pre: renderCode,
   table: renderTable,
   // plugins
   math: renderMath,
@@ -153,7 +156,13 @@ const RENDERERS = {
 const Markdown = ({ markdown, limited }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
-    <ReactMarkdown className="markdown" plugins={limited ? LIMITED_PLUGINS : ALL_PLUGINS} renderers={RENDERERS}>
+    <ReactMarkdown
+      className="markdown"
+      remarkPlugins={limited ? LIMITED_PLUGINS : ALL_PLUGINS}
+      rehypePlugins={REHYPE_PLUGINS}
+      remarkRehypeOptions={rehypeOptions}
+      components={RENDERERS}
+    >
       {markdownStr}
     </ReactMarkdown>
   );

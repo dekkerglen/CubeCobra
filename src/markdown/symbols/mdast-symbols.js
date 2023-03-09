@@ -1,5 +1,5 @@
 function enterSymbol(token) {
-  this.enter({ type: 'symbol', value: '' }, token);
+  this.enter({ type: 'element', tagName: 'symbol', value: '', children: [] }, token);
   this.buffer();
 }
 

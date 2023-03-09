@@ -4,9 +4,12 @@ import { fromMarkdown } from 'markdown/cardlink/mdast-cardlink';
 import { add } from 'markdown/utils';
 
 function oncard(node, index, parent) {
+  node.type = 'element';
+  node.tagName = 'cardlink';
+  node.children = [];
   if (node.value[0] === '!') {
     node.value = node.value.substring(1);
-    node.type = 'cardimage';
+    node.tagName = 'cardimage';
   }
 
   if (node.value[0] === '/') {
@@ -16,7 +19,7 @@ function oncard(node, index, parent) {
 
   if (node.value[0] === '!' && node.type !== 'cardimage') {
     node.value = node.value.substring(1);
-    node.type = 'cardimage';
+    node.tagName = 'cardimage';
   }
 
   if (node.type === 'cardimage' && (parent.type === 'paragraph' || parent.inParagraph)) {
