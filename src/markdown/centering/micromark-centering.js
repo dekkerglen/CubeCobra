@@ -52,6 +52,8 @@ function centering() {
     return start;
 
     function start(code) {
+      if (code !== 60)
+        return nok(code); // expected <
       effects.enter('centeringSuffix');
       return sequence(code);
     }
