@@ -2,6 +2,7 @@ import unified from 'unified';
 import remark from 'remark-parse';
 import gfm from 'remark-gfm';
 import math from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import slug from 'remark-slug';
 import headings from 'remark-autolink-headings';
 import cardlink from 'markdown/cardlink';
@@ -26,6 +27,12 @@ export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
 export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
 
+export const REHYPE_PLUGINS = [rehypeKatex];
+
+export const rehypeOptions = {
+  passThrough: ['element'],
+};
+
 export function findUserLinks(text) {
   const mentions = [];
   const processor = unified()
@@ -38,6 +45,7 @@ export function findUserLinks(text) {
 
 export default {
   findUserLinks,
+  rehypeOptions,
   VALID_SYMBOLS,
   BASE_PLUGINS,
   LIMITED_PLUGINS,

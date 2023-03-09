@@ -1,5 +1,5 @@
 function enterCentering(token) {
-  this.enter({ type: 'centering', children: [] }, token);
+  this.enter({ type: 'element', tagName: 'centering', children: [] }, token);
 }
 
 function exitCentering(token) {
