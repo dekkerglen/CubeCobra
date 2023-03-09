@@ -9,13 +9,15 @@ function userlink(options = {}) {
   add(data, 'fromMarkdownExtensions', fromMarkdown);
 
   function visitor(node) {
-    options.callback(node.value);
+	node.type = 'element';
+	node.tagName = 'userlink';
+	node.children = [];
+    if (typeof options.callback === 'function') {
+      options.callback(node.value);
+    }
   }
 
-  if (typeof options.callback === 'function') {
-    return (tree) => visit(tree, 'userlink', visitor);
-  }
-  return false;
+  return (tree) => visit(tree, 'userlink', visitor);
 }
 
 export default userlink;

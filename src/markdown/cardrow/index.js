@@ -4,6 +4,8 @@ import { fromMarkdown } from 'markdown/cardrow/mdast-cardrow';
 import { add } from 'markdown/utils';
 
 function oncardrow(node, index, parent) {
+  node.type = 'element';
+  node.tagName = 'cardrow';
   node.inParagraph = parent.type === 'paragraph';
 }
 
