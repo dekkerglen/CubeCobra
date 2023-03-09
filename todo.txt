@@ -1,5 +1,4 @@
 
-[feature] move card to different board
 
 Investigate
 	- validate cache works correctly

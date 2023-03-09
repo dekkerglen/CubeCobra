@@ -243,13 +243,6 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
           onChange={mutations.changeDescription}
           maxLength={5000}
         />
-        <FormText>
-          Having trouble formatting your posts? Check out the{' '}
-          <a href="/markdown" target="_blank">
-            markdown guide
-          </a>
-          .
-        </FormText>
         <FormText className="mt-3 mb-1">
           Card values can either be single tags or filter parameters or a comma separated list to create a ratio (e.g.
           3:1 rare to mythic could be <code>rarity:rare, rarity:rare, rarity:rare, rarity:mythic</code>). tags can be

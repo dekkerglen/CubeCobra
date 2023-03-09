@@ -398,6 +398,7 @@ GroupModal.propTypes = {
   bulkRemoveCard: PropTypes.func.isRequired,
   bulkRevertEdit: PropTypes.func.isRequired,
   bulkRevertRemove: PropTypes.func.isRequired,
+  bulkMoveCard: PropTypes.func.isRequired,
 };
 
 GroupModal.defaultProps = {

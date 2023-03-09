@@ -189,13 +189,6 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             onChange={(event) => setState({ ...state, description: event.target.value })}
             maxLength={100000}
           />
-          <FormText>
-            Having trouble formatting your posts? Check out the{' '}
-            <a href="/markdown" target="_blank">
-              markdown guide
-            </a>
-            .
-          </FormText>
           <br />
           <h6>tags</h6>
           <TagInput
