@@ -52,7 +52,7 @@ const Add = ({ card, revert }) => {
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
-      {!loading ? <TextAutocard card={{ details }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
+      {!loading ? <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
     </li>
   );
 };

@@ -107,6 +107,15 @@ const stripDetails = (cards) => {
     delete card.index;
     delete card.board;
     delete card.editIndex;
+
+    if (card.tags) {
+      card.tags = card.tags.map((tag) => {
+        if (typeof tag === 'object') {
+          return tag.text;
+        }
+        return tag;
+      });
+    }
   });
 };
 

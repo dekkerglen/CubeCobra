@@ -298,11 +298,11 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
                           <h5>By Legality:</h5>
                           <Table bordered>
                             <tbody>
-                              <CountTableRow label="Vintage" value={history[0].vintage || [0, 0]} />
-                              <CountTableRow label="Legacy" value={history[0].legacy || [0, 0]} />
-                              <CountTableRow label="Modern" value={history[0].modern || [0, 0]} />
-                              <CountTableRow label="Peasant" value={history[0].peasant || [0, 0]} />
-                              <CountTableRow label="Pauper" value={history[0].pauper || [0, 0]} />
+                              <CountTableRow label="Vintage" value={history[history.length - 1].vintage || [0, 0]} />
+                              <CountTableRow label="Legacy" value={history[history.length - 1].legacy || [0, 0]} />
+                              <CountTableRow label="Modern" value={history[history.length - 1].modern || [0, 0]} />
+                              <CountTableRow label="Peasant" value={history[history.length - 1].peasant || [0, 0]} />
+                              <CountTableRow label="Pauper" value={history[history.length - 1].pauper || [0, 0]} />
                             </tbody>
                           </Table>
                         </Col>
@@ -310,11 +310,11 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
                           <h5>By Size:</h5>
                           <Table bordered>
                             <tbody>
-                              <CountTableRow label="1-180" value={history[0].size180 || [0, 0]} />
-                              <CountTableRow label="181-360" value={history[0].size360 || [0, 0]} />
-                              <CountTableRow label="361-450" value={history[0].size450 || [0, 0]} />
-                              <CountTableRow label="451-540" value={history[0].size540 || [0, 0]} />
-                              <CountTableRow label="541+" value={history[0].size720 || [0, 0]} />
+                              <CountTableRow label="1-180" value={history[history.length - 1].size180 || [0, 0]} />
+                              <CountTableRow label="181-360" value={history[history.length - 1].size360 || [0, 0]} />
+                              <CountTableRow label="361-450" value={history[history.length - 1].size450 || [0, 0]} />
+                              <CountTableRow label="451-540" value={history[history.length - 1].size540 || [0, 0]} />
+                              <CountTableRow label="541+" value={history[history.length - 1].size720 || [0, 0]} />
                             </tbody>
                           </Table>
                         </Col>

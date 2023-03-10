@@ -420,7 +420,7 @@ router.get('/view/:id', async (req, res) => {
       [user] = query.items;
     }
 
-    const cubes = await Cube.getByOwner(req.params.id);
+    const cubes = await Cube.getByOwner(user.id);
 
     const followers = await User.batchGet(user.following || []);
 
