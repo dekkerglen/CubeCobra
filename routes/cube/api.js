@@ -645,6 +645,17 @@ router.post(
       return c;
     });
 
+    if (!['mainboard', 'maybeboard'].includes(req.body.board)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid board',
+      });
+    }
+
+    if (!cubeCards[req.body.board]) {
+      cubeCards[req.body.board] = [];
+    }
+
     if (tag) {
       cubeCards[req.body.board].push(...adds);
     } else {
@@ -656,7 +667,7 @@ router.post(
     if (tag) {
       const changelist = await Changelog.put(
         {
-          mainboard: { adds },
+          [req.body.board]: { adds },
         },
         cube.id,
       );
@@ -675,11 +686,11 @@ router.post(
       const feedItems = followers.map((user) => ({
         id,
         to: user,
-        date: new Date(),
+        date: new Date().valueOf(),
         type: Feed.TYPES.BLOG,
       }));
 
-      await Feed.put(feedItems);
+      await Feed.batchPut(feedItems);
     }
 
     return res.status(200).send({
