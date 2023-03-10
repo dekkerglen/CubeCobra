@@ -147,8 +147,8 @@ module.exports = function createClient(config) {
         await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
         cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
 
-        const res = await documentClient.put({ TableName: tableName(config.name), Item }).promise();
-        return await Item[config.partitionKey];
+        await documentClient.put({ TableName: tableName(config.name), Item }).promise();
+        return Item[config.partitionKey];
       } catch (error) {
         throw new Error(`Error putting item into table ${config.name}: ${error.message}`);
       }

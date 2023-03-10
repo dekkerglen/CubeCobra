@@ -9,7 +9,6 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
-const onFinished = require('on-finished');
 const uuid = require('uuid/v4');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
@@ -66,19 +65,19 @@ app.use((req, res, next) => {
 
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
-  onFinished(res, (err, finalRes) => {
-    console.log({
-      level: 'info',
-      type: 'request',
-      remoteAddr: req.ip,
-      requestId: req.uuid,
-      method: req.method,
-      path: req.path,
-      status: finalRes.statusCode,
-      length: finalRes.getHeader('content-length'),
-      elapsed: Date.now() - finalRes.startTime,
-    });
-  });
+  // onFinished(res, (err, finalRes) => {
+  //   // console.log({
+  //   //   level: 'info',
+  //   //   type: 'request',
+  //   //   remoteAddr: req.ip,
+  //   //   requestId: req.uuid,
+  //   //   method: req.method,
+  //   //   path: req.path,
+  //   //   status: finalRes.statusCode,
+  //   //   length: finalRes.getHeader('content-length'),
+  //   //   elapsed: Date.now() - finalRes.startTime,
+  //   // });
+  // });
   next();
 });
 
@@ -178,6 +177,7 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
 
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));
+app.use('/cache', require('./routes/cache_routes'));
 app.use('/dev', require('./routes/dev_routes'));
 app.use('/cube', require('./routes/cube/index'));
 app.use('/user', require('./routes/users_routes'));
@@ -187,7 +187,6 @@ app.use('/admin', require('./routes/admin_routes'));
 app.use('/content', require('./routes/content_routes'));
 app.use('/multiplayer', require('./routes/multiplayer'));
 app.use('/packages', require('./routes/packages'));
-app.use('/cache', require('./routes/cache_routes'));
 app.use('/api/private', require('./routes/api/private'));
 
 app.use('', require('./routes/root'));
