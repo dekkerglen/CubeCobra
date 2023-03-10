@@ -1,7 +1,6 @@
 
 
 Investigate
-	- validate cache works correctly
 	- validate patreon integration
 	- validate featured cube rotation
 
