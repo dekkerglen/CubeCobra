@@ -135,7 +135,7 @@ module.exports = function createClient(config) {
         throw new Error(`Error getting item from table ${config.name} with key ${key}: ${error.message}`);
       }
     },
-    put: async (Item) => {
+    put: async (Item, skipCache = false) => {
       try {
         if (!Item[config.partitionKey]) {
           Item = {
@@ -144,8 +144,10 @@ module.exports = function createClient(config) {
           };
         }
 
-        await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
-        cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
+        if (!skipCache) {
+          await cache.invalidate(`${config.name}:${Item[config.partitionKey]}`);
+          cache.put(`${config.name}:${Item[config.partitionKey]}`, Item);
+        }
 
         await documentClient.put({ TableName: tableName(config.name), Item }).promise();
         return Item[config.partitionKey];

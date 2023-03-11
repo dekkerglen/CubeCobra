@@ -420,6 +420,22 @@ router.get(
   }),
 );
 
+router.post(
+  '/cubemetadata/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.getById(req.params.id);
+
+    if (!isCubeViewable(cube, req.status)) {
+      return res.status(404).send('Cube not found.');
+    }
+
+    return res.status(200).send({
+      success: 'true',
+      cube,
+    });
+  }),
+);
+
 router.get(
   '/cubeJSON/:id',
   util.wrapAsyncApi(async (req, res) => {

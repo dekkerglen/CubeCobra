@@ -1,3 +1,4 @@
+copy to clipboard broken
 
 Investigate
 	- validate patreon integration

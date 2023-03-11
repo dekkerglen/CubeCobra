@@ -57,7 +57,7 @@ module.exports = {
     };
   },
   put: async (document) => {
-    return client.put(document);
+    return client.put(document, true);
   },
   batchPut: async (documents) => {
     await client.batchPut(documents);

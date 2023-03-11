@@ -97,22 +97,37 @@ const alertPeers = async () => {
   }
 };
 
+const fetchWithTimeout = async (url, options, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(url, {
+    ...options,
+    signal: controller.signal,
+  });
+  clearTimeout(id);
+  return response;
+};
+
 const invalidate = async (key) => {
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
       await Promise.all(
         peers.map((ip) =>
-          fetch(`http://${ip}:80/cache/invalidate`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          fetchWithTimeout(
+            `http://${ip}:80/cache/invalidate`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                secret: process.env.CACHE_SECRET,
+                key,
+              }),
             },
-            body: JSON.stringify({
-              secret: process.env.CACHE_SECRET,
-              key,
-            }),
-          }),
+            1000,
+          ),
         ),
       );
     } else {

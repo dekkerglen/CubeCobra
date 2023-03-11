@@ -221,16 +221,6 @@ module.exports = {
   getSortedByCardCount,
   getSortedByName,
   getSortedByFollowers,
-  update: async (document) => {
-    if (!document[FIELDS.HASH] || !document[FIELDS.CUBE_ID]) {
-      throw new Error('Invalid document: No partition or sort key provided');
-    }
-    return client.put(document);
-  },
-  put: async (document) =>
-    client.put({
-      ...document,
-    }),
   batchPut: async (documents) => client.batchPut(documents),
   batchDelete: async (keys) => client.batchDelete(keys),
   createTable: async () => client.createTable(),

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
@@ -15,9 +15,32 @@ import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import BlogPostChangelog from 'components/BlogPostChangelog';
 
+import { csrfFetch } from 'utils/CSRF';
+
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
+  const [cubeName, setCubeName] = useState('Cube');
+
+  useEffect(() => {
+    const run = async () => {
+      if (post.cube !== 'DEVBLOG') {
+        const response = await csrfFetch(`/cube/api/cubemetadata/${post.cube}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          console.log(json);
+          setCubeName(json.cube.name);
+        }
+      }
+    };
+    run();
+  }, [post.cube]);
 
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
   const canEdit = user && user.id === post.owner;
@@ -50,7 +73,7 @@ const BlogPost = ({ post, noScroll }) => {
           {post.cube === 'DEVBLOG' ? (
             <a href="/dev/blog">Developer Blog</a>
           ) : (
-            <a href={`/cube/overview/${post.cube}`}>Cube</a>
+            <a href={`/cube/overview/${post.cube}`}>{cubeName}</a>
           )}
           {' - '}
           <TimeAgo date={post.date} />
