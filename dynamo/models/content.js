@@ -79,34 +79,9 @@ const client = createClient({
   FIELDS,
 });
 
-// LRU cache for content bodies
-const bodyCache = {};
-const MAX_CACHE_SIZE = 1000;
-
-const evictOldest = () => {
-  const oldest = Object.entries(bodyCache).sort(([, valuea], [, valueb]) => valuea.date.localeCompare(valueb.date));
-  delete bodyCache[oldest[0][0]];
-};
-
 const addBody = async (content) => {
-  if (content.status === STATUS.PUBLISHED) {
-    if (bodyCache[content.id]) {
-      return bodyCache[content.id].document;
-    }
-  }
   try {
     const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
-
-    if (content.status === STATUS.PUBLISHED) {
-      if (Object.keys(bodyCache).length >= MAX_CACHE_SIZE) {
-        evictOldest();
-      }
-
-      bodyCache[content.id] = {
-        date: new Date(),
-        document,
-      };
-    }
 
     return document;
   } catch (e) {

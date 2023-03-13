@@ -45,26 +45,39 @@ const client = createClient({
   FIELDS,
 });
 
+const getByUsername = async (username, lastKey) => {
+  const result = await client.query({
+    IndexName: 'ByUsername',
+    KeyConditionExpression: `#p1 = :uname`,
+    ExpressionAttributeValues: {
+      ':uname': username.toLowerCase(),
+    },
+    ExpressionAttributeNames: {
+      '#p1': FIELDS.USERNAME_LOWER,
+    },
+    ExclusiveStartKey: lastKey,
+  });
+
+  if (result.Items.length > 0) {
+    return result.Items[0];
+  }
+
+  return null;
+};
+
 module.exports = {
   getById: async (id) => {
     return (await client.get(id)).Item;
   },
-  getByUsername: async (username, lastKey) => {
-    const result = await client.query({
-      IndexName: 'ByUsername',
-      KeyConditionExpression: `#p1 = :uname`,
-      ExpressionAttributeValues: {
-        ':uname': username.toLowerCase(),
-      },
-      ExpressionAttributeNames: {
-        '#p1': FIELDS.USERNAME_LOWER,
-      },
-      ExclusiveStartKey: lastKey,
-    });
-    return {
-      items: result.Items,
-      lastKey: result.LastEvaluatedKey,
-    };
+  getByUsername,
+  getByIdOrUsername: async (idOrUsername) => {
+    const result = await client.get(idOrUsername);
+
+    if (result.Item) {
+      return result.Item;
+    }
+
+    return getByUsername(idOrUsername);
   },
   getByEmail: async (email, lastKey) => {
     const result = await client.query({
@@ -78,10 +91,12 @@ module.exports = {
       },
       ExclusiveStartKey: lastKey,
     });
-    return {
-      items: result.Items,
-      lastKey: result.LastEvaluatedKey,
-    };
+
+    if (result.Items.length > 0) {
+      return result.Items[0];
+    }
+
+    return null;
   },
   update: async (document) => {
     if (!document[FIELDS.ID]) {

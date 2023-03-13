@@ -107,10 +107,10 @@ router.post(
     }
 
     for (const mention of mentions) {
-      const query = await User.getByUsername(mention);
-      if (query.items.length === 1) {
+      const mentioned = await User.getByUsername(mention);
+      if (mentioned) {
         await util.addNotification(
-          query.items[0],
+          mentioned,
           user,
           `/comment/${id}`,
           `${user.username} mentioned you in their comment`,

@@ -22,7 +22,7 @@ const RegisterPage = ({ username, email, loginCallback }) => (
           <FormGroup>
             <Row>
               <Col sm="3">
-                <Label>email Address:</Label>
+                <Label>Email Address:</Label>
               </Col>
               <Col sm="9">
                 <Input maxLength="1000" name="email" id="email" type="text" defaultValue={email} />

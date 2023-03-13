@@ -78,11 +78,11 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     // mentions are only added for new posts and ignored on edits
     if (req.body.mentions) {
       for (const mention of req.body.mentions) {
-        const query = await User.getByUsername(mention);
+        const mentioned = await User.getByUsername(mention);
 
-        if (query.items.length > 0) {
+        if (mentioned) {
           await util.addNotification(
-            query.items[0],
+            mentioned,
             user,
             `/cube/blog/blogpost/${id}`,
             `${user.username} mentioned you in their blog post`,

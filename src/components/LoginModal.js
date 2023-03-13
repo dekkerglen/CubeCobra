@@ -13,7 +13,7 @@ const LoginModal = ({ isOpen, toggle, loginCallback }) => (
         <FormGroup>
           <Row>
             <Col sm="3">
-              <Label>username or email Address:</Label>
+              <Label>Username or Email Address:</Label>
             </Col>
             <Col sm="9">
               <Input maxLength="1000" name="username" id="email" type="text" />
