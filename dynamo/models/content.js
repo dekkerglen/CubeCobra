@@ -2,6 +2,7 @@ const sanitizeHtml = require('sanitize-html');
 const htmlToText = require('html-to-text');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
+const User = require('./user');
 
 const removeSpan = (text) =>
   sanitizeHtml(text, {
@@ -49,6 +50,22 @@ const TYPES = {
   PODCAST: 'p',
 };
 
+const hydrateOwner = async (content) => {
+  content.owner = await User.getById(content.owner);
+
+  return content;
+};
+
+const batchHydrateOwner = async (contents) => {
+  const owners = await User.batchGet(contents.map((content) => content.owner));
+
+  return contents.map((content) => {
+    content.owner = owners.find((owner) => owner.id === content.owner);
+
+    return content;
+  });
+};
+
 const client = createClient({
   name: 'CONTENT',
   partitionKey: FIELDS.ID,
@@ -85,7 +102,7 @@ const addBody = async (content) => {
 
     return document;
   } catch (e) {
-    return '';
+    return content;
   }
 };
 
@@ -96,7 +113,7 @@ const putBody = async (content) => {
 };
 
 module.exports = {
-  getById: async (id) => addBody((await client.get(id)).Item),
+  getById: async (id) => hydrateOwner(await addBody((await client.get(id)).Item)),
   getByStatus: async (status, lastKey) => {
     const result = await client.query({
       IndexName: 'ByStatus',
@@ -111,7 +128,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrateOwner(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -129,7 +146,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrateOwner(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -147,7 +164,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrateOwner(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -158,6 +175,10 @@ module.exports = {
     document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
     document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
 
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
+
     await putBody(document);
     delete document.body;
     return client.put(document);
@@ -166,6 +187,10 @@ module.exports = {
     await putBody(document);
 
     delete document.body;
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
 
     client.put({
       [FIELDS.TYPE]: type,
@@ -177,6 +202,10 @@ module.exports = {
   batchPut: async (documents) => {
     await Promise.all(
       documents.map(async (document) => {
+        if (document.owner.id) {
+          document.owner = document.owner.id;
+        }
+
         await putBody(document);
         delete document.body;
       }),

@@ -1,4 +1,6 @@
-copy to clipboard broken
+
+
+draft lobby needs hydrated users
 
 Investigate
 	- validate patreon integration

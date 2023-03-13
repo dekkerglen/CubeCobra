@@ -40,7 +40,7 @@ const hydrate = async (item) => {
   if (!item.owner) {
     return {
       ...item,
-      user: {
+      owner: {
         id: '404',
         username: 'Anonymous',
       },
@@ -52,14 +52,42 @@ const hydrate = async (item) => {
     };
   }
 
-  const user = await User.getById(item.owner);
-  const ImageData = util.getImageData(user.imageName);
+  item.owner = await User.getById(item.owner);
+  const ImageData = util.getImageData(item.owner.imageName);
 
   return {
     ...item,
-    user,
     ImageData,
   };
+};
+
+const batchHydrate = async (items) => {
+  const owners = await User.batchGet(items.filter((item) => item.owner).map((item) => item.owner));
+
+  return items.map((item) => {
+    if (!item.owner) {
+      return {
+        ...item,
+        owner: {
+          id: '404',
+          username: 'Anonymous',
+        },
+        ImageData: {
+          uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
+          artist: 'Allan Pollack',
+          id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
+        },
+      };
+    }
+
+    item.owner = owners.find((owner) => owner.id === item.owner);
+    const ImageData = util.getImageData(item.owner.imageName);
+
+    return {
+      ...item,
+      ImageData,
+    };
+  });
 };
 
 module.exports = {
@@ -80,12 +108,17 @@ module.exports = {
     });
 
     return {
-      items: await Promise.all(result.Items.map(hydrate)),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
   put: async (document) => {
     const id = document[FIELDS.ID] || uuid();
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
+
     return client.put({
       [FIELDS.ID]: id,
       [FIELDS.DATE]: document.date,
@@ -95,8 +128,8 @@ module.exports = {
       [FIELDS.TYPE]: document.type,
     });
   },
-  update: async (document) => client.put(document),
   batchPut: async (documents) => {
+    // only used for migration
     await client.batchPut(documents);
   },
   createTable: async () => client.createTable(),

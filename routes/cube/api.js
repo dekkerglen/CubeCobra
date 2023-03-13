@@ -69,7 +69,7 @@ router.post(
       });
     }
 
-    if (cube.owner !== user.id) {
+    if (cube.owner.id !== user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -173,7 +173,7 @@ router.post(
       });
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -306,7 +306,7 @@ router.post(
       });
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(401).send({
         success: 'false',
       });
@@ -457,7 +457,7 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
@@ -638,7 +638,7 @@ router.post(
       });
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Cube can only be updated by cube owner.',
@@ -728,7 +728,7 @@ router.post(
         message: 'Cube not found',
       });
     }
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(403).send({
         success: 'false',
         message: 'Unauthorized',
@@ -786,7 +786,7 @@ router.post('/submitdraft/:id', ensureAuth, async (req, res) => {
 
   const { seat } = req.body;
 
-  const index = draft.seats.findIndex(({ owner }) => owner === req.body.owner);
+  const index = draft.seats.findIndex(({ owner }) => owner.id === req.body.owner);
   if (index === -1) {
     return res.status(403).send({
       success: 'false',
@@ -882,7 +882,7 @@ router.post('/commit', async (req, res) => {
 
   const cube = await Cube.getById(id);
 
-  if (cube.owner !== req.user.id) {
+  if (cube.owner.id !== req.user.id) {
     return res.status(403).send({
       success: 'false',
       message: 'Unauthorized',

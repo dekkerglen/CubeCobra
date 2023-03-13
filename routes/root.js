@@ -44,6 +44,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
     const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
+
     const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'DashboardPage', {

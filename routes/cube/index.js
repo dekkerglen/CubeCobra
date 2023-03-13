@@ -86,7 +86,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       cardCount: 0,
     };
 
-    await Cube.put(cube);
+    await Cube.putNewCube(cube);
 
     await Cube.putCards({
       id: cube.id,
@@ -142,18 +142,16 @@ router.get('/clone/:id', async (req, res) => {
       cardCount: source.cardCount,
     };
 
-    const id = await Cube.put(cube);
+    const id = await Cube.putNewCube(cube);
 
     await Cube.putCards({
       ...sourceCards,
       id: cube.id,
     });
 
-    const sourceOwner = await User.getById(source.owner);
-
-    if (!source.disableNotifications) {
+    if (!source.disableNotifications && source.owner) {
       await util.addNotification(
-        sourceOwner,
+        source.owner,
         req.user,
         `/cube/view/${id}`,
         `${req.user.username} made a cube by cloning yours: ${cube.name}`,
@@ -179,7 +177,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/list/404');
     }
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Formats can only be changed by cube owner.');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -243,10 +241,8 @@ router.post(
     await User.update(user);
     await Cube.update(cube);
 
-    const cubeOwner = await User.getById(cube.owner);
-
     await util.addNotification(
-      cubeOwner,
+      cube.owner,
       user,
       `/cube/overview/${cube.id}`,
       `${user.username} followed your cube: ${cube.name}`,
@@ -356,12 +352,6 @@ router.get('/overview/:id', async (req, res) => {
 
     const followers = await User.batchGet(cube.following);
 
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     // calculate cube prices
     const nameToCards = {};
     for (const card of mainboard) {
@@ -428,7 +418,7 @@ router.get('/overview/:id', async (req, res) => {
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return util.handleRouteError(req, res, err, `/landing/${req.params.id}`);
   }
 });
 
@@ -826,7 +816,7 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -854,7 +844,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -883,7 +873,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -972,7 +962,7 @@ router.post(
       const doc = {
         cube: cube.id,
         owner: req.user.id,
-        cubeOwner: cube.owner,
+        cubeOwner: cube.owner.id,
         date: new Date().valueOf(),
         type: Draft.TYPES.GRID,
         seats: [],
@@ -1096,7 +1086,7 @@ router.post(
       const deck = {
         cube: cube.id,
         owner: req.user.id,
-        cubeOwner: cube.owner,
+        cubeOwner: cube.owner.id,
         date: new Date().valueOf(),
         type: Draft.TYPES.SEALED,
         seats: [],
@@ -1120,11 +1110,9 @@ router.post(
 
       await Cube.update(cube);
 
-      const cubeOwner = await User.getById(cube.owner);
-
-      if (!cube.disableNotifications) {
+      if (!cube.disableNotifications && cube.owner) {
         await util.addNotification(
-          cubeOwner,
+          cube.owner,
           user,
           `/cube/deck/${deckId}`,
           `${user.username} built a sealed deck from your cube: ${cube.name}`,
@@ -1205,7 +1193,7 @@ router.post(
       draft.seats = populated.seats;
       draft.cube = cube.id;
       draft.owner = req.user.id;
-      draft.cubeOwner = cube.owner;
+      draft.cubeOwner = cube.owner.id;
       draft.type = Draft.TYPES.DRAFT;
       draft.date = new Date().valueOf();
       draft.cards = populated.cards;
@@ -1241,12 +1229,6 @@ router.get('/griddraft/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('/404');
-    }
-
-    const user = await User.getById(cube.owner);
-    if (!user) {
-      req.flash('danger', 'owner not found');
       return res.redirect('/404');
     }
 
@@ -1324,7 +1306,7 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/overview/404');
     }
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${encodeURIComponent(req.params.id)}`);
     }
@@ -1350,7 +1332,7 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
       });
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(401).send({
         success: 'false',
         message: 'Not authorized.',
@@ -1395,7 +1377,7 @@ router.post(
     const cube = await Cube.getById(cubeid);
     if (
       !isCubeViewable(cube, req.user) ||
-      cube.owner !== req.user.id ||
+      cube.owner.id !== req.user.id ||
       !Number.isInteger(formatId) ||
       formatId >= cube.formats.length ||
       formatId < -1

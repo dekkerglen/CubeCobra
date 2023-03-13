@@ -6,6 +6,7 @@ const createClient = require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
+const User = require('./user');
 const carddb = require('../../serverjs/carddb');
 
 const DEFAULT_BASICS = [
@@ -141,6 +142,21 @@ const getCards = async (id) => {
   }
 };
 
+const hydrate = async (cube) => {
+  cube.owner = await User.getById(cube.owner);
+
+  return cube;
+};
+
+const batchHydrate = async (cubes) => {
+  const owners = await User.batchGet(cubes.map((cube) => cube.owner).filter((owner) => owner));
+
+  return cubes.map((cube) => {
+    cube.owner = owners.find((owner) => owner.id === cube.owner);
+    return cube;
+  });
+};
+
 module.exports = {
   getCards,
   updateCards: async (id, newCards) => {
@@ -191,19 +207,19 @@ module.exports = {
   getById: async (id) => {
     const byId = await client.get(id);
     if (byId.Item) {
-      return byId.Item;
+      return hydrate(byId.Item);
     }
 
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
       const query = await client.get(cubeId);
-      return query.Item;
+      return hydrate(query.Item);
     }
 
     return null;
   },
-  batchGet: async (ids) => client.batchGet(ids),
+  batchGet: async (ids) => batchHydrate(await client.batchGet(ids)),
   getByOwner: async (owner, lastKey) => {
     const result = await client.query({
       IndexName: 'ByOwner',
@@ -218,7 +234,7 @@ module.exports = {
       ScanIndexForward: true,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -236,7 +252,7 @@ module.exports = {
       ScanIndexForward: true,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -245,6 +261,7 @@ module.exports = {
       ExclusiveStartKey: lastKey,
       ScanIndexForward: true,
     });
+    // this is only used for fixing hashes, so we don't need to hydrate
     return {
       items: result.Items,
       lastKey: result.LastEvaluatedKey,
@@ -266,7 +283,7 @@ module.exports = {
       ScanIndexForward: true,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -300,12 +317,25 @@ module.exports = {
     await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: document.id })));
     await cubeHash.batchPut(hashesToPut);
 
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
+
     await client.put(document);
   },
-  put: async (document) => {
+  putNewCube: async (document) => {
+    const existing = await client.get(document.id);
+    if (existing.Item) {
+      throw new Error('This cube ID is already taken');
+    }
+
     const hashRows = getHashRowsForMetadata(document);
 
     await cubeHash.batchPut(hashRows);
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
 
     return client.put({
       ...document,

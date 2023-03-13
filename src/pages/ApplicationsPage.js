@@ -49,8 +49,8 @@ const AdminDashboardPage = ({ loginCallback, applications, count, page }) => (
             </p>
             <p>
               Submitted by by:{' '}
-              <a href={`/user/view/${application.user}`} target="_blank" rel="noopener noreferrer">
-                {application.user}
+              <a href={`/user/view/${application.user.id}`} target="_blank" rel="noopener noreferrer">
+                {application.user.username}
               </a>
               - <TimeAgo date={application.timePosted} />
             </p>

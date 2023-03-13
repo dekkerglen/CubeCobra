@@ -49,7 +49,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   return (
     <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
-      <a href={`/user/view/${comment.owner}`}>
+      <a href={`/user/view/${comment.owner.id}`}>
         <img
           className="profile-thumbnail"
           src={comment.ImageData.uri}
@@ -61,9 +61,9 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
         <div className="flex-container flex-direction-col">
           <div className="flex-container flex-space-between">
             <div>
-              {comment.user.username ? (
-                <a href={`/user/view/${comment.owner}`}>
-                  <small>{comment.user.username}</small>
+              {comment.owner.username ? (
+                <a href={`/user/view/${comment.owner.id}`}>
+                  <small>{comment.owner.username}</small>
                 </a>
               ) : (
                 <small>Anonymous</small>
@@ -75,7 +75,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
                 </small>
               )}
             </div>
-            {user && comment.owner === user.id && (
+            {user && comment.owner.id === user.id && (
               <div>
                 <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
                   <small>...</small>

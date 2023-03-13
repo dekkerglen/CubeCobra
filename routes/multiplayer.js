@@ -174,7 +174,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       const deck = await Draft.getById(draftId);
 
-      if (deck.seats[seat].owner !== req.user.id) {
+      if (deck.seats[seat].owner.id !== req.user.id) {
         return res.status(401).send({
           success: 'false',
         });

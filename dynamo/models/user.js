@@ -45,6 +45,15 @@ const client = createClient({
   FIELDS,
 });
 
+const stripSensitiveData = (user) => {
+  delete user[FIELDS.PASSWORD_HASH];
+  delete user[FIELDS.EMAIL];
+
+  return user;
+};
+
+const batchStripSensitiveData = (users) => users.map(stripSensitiveData);
+
 const getByUsername = async (username, lastKey) => {
   const result = await client.query({
     IndexName: 'ByUsername',
@@ -59,22 +68,20 @@ const getByUsername = async (username, lastKey) => {
   });
 
   if (result.Items.length > 0) {
-    return result.Items[0];
+    return stripSensitiveData(result.Items[0]);
   }
 
   return null;
 };
 
 module.exports = {
-  getById: async (id) => {
-    return (await client.get(id)).Item;
-  },
+  getById: async (id) => stripSensitiveData((await client.get(id)).Item),
   getByUsername,
   getByIdOrUsername: async (idOrUsername) => {
     const result = await client.get(idOrUsername);
 
     if (result.Item) {
-      return result.Item;
+      return stripSensitiveData(result.Item);
     }
 
     return getByUsername(idOrUsername);
@@ -93,7 +100,7 @@ module.exports = {
     });
 
     if (result.Items.length > 0) {
-      return result.Items[0];
+      return stripSensitiveData(result.Items[0]);
     }
 
     return null;
@@ -102,7 +109,20 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
-    return client.put(document);
+
+    const existing = await client.get(document[FIELDS.ID]);
+
+    if (!existing.Item) {
+      throw new Error('Invalid document: No existing document found');
+    }
+
+    for (const [key, value] of Object.entries(document)) {
+      if (key !== FIELDS.ID) {
+        existing.Item[key] = value;
+      }
+    }
+
+    return client.put(existing);
   },
   put: async (document) =>
     client.put({
@@ -110,7 +130,7 @@ module.exports = {
       ...document,
     }),
   batchPut: async (documents) => client.batchPut(documents),
-  batchGet: async (ids) => client.batchGet(ids.map((id) => `${id}`)),
+  batchGet: async (ids) => batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`))),
   createTable: async () => client.createTable(),
   convertUser: (user) => ({
     [FIELDS.ID]: `${user._id}`,

@@ -26,7 +26,7 @@ const PodcastPreview = ({ podcast }) => {
         </a>
         <small>
           <em className="text-muted text-ellipsis">
-            By <Username user={podcast.owner} defaultName={podcast.username} />
+            By <Username user={podcast.owner} />
           </em>
         </small>
       </div>

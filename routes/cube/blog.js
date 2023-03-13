@@ -29,7 +29,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
 
-      if (blog.owner !== user.id) {
+      if (blog.owner.id !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
@@ -51,7 +51,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     // post new blog
-    if (cube.owner !== user.id) {
+    if (cube.owner.id !== user.id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
@@ -124,7 +124,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
     const { id } = req.params;
     const blog = await Blog.getById(id);
 
-    if (blog.owner !== req.user.id) {
+    if (blog.owner.id !== req.user.id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }

@@ -288,7 +288,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Draft.getById(req.params.id);
 
-    if (req.user.id !== deck.owner && req.user.id !== deck.cubeOwner) {
+    if (req.user.id !== deck.owner.id && req.user.id !== deck.cubeOwner.id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -313,7 +313,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const deckOwners = deck.seats.map((seat) => `${seat.owner}`).filter((userid) => userid);
+    const deckOwners = deck.seats.map((seat) => `${seat.owner.id}`).filter((userid) => userid);
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
@@ -418,7 +418,7 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     const deck = {
       cube: base.cube,
       owner: req.user.id,
-      cubeOwner: base.cubeOwner,
+      cubeOwner: base.cubeOwner.id,
       date: new Date().valueOf(),
       type: base.type,
       seats: [],
@@ -441,23 +441,23 @@ router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
     cube.numDecks += 1;
 
     const user = await User.getById(req.user.id);
-    const baseUser = await User.getById(base.owner);
-    const cubeOwner = await User.getById(cube.owner);
+    // const baseUser = await User.getById(base.owner);
+    // const cubeOwner = await User.getById(cube.owner);
 
     const id = await Draft.put(deck);
     await Cube.update(cube);
 
-    if (cubeOwner.id !== user.id && !cube.disableAlerts) {
+    if (cube.owner.id !== user.id && !cube.disableAlerts) {
       await util.addNotification(
-        cubeOwner,
+        cube.owner,
         user,
         `/cube/deck/${id}`,
         `${user.username} rebuilt a deck from your cube: ${cube.name}`,
       );
     }
-    if (baseUser && !baseUser.id === user.id) {
+    if (base.owner && !base.owner.id === user.id) {
       await util.addNotification(
-        baseUser,
+        base.owner,
         user,
         `/cube/deck/${id}`,
         `${user.username} rebuilt your deck from cube: ${cube.name}`,
@@ -474,7 +474,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Draft.getById(req.params.id);
 
-    const deckOwners = deck.seats.map((seat) => seat.owner).filter((userid) => userid !== 'null');
+    const deckOwners = deck.seats.map((seat) => seat.owner.id).filter((userid) => userid !== 'null');
 
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Unauthorized');
@@ -483,7 +483,7 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
 
     const seatIndex = deck.seats
       .map((seat, index) => [seat, index])
-      .find((tuple) => `${tuple[0].owner}` === `${req.user.id}`)[1];
+      .find((tuple) => `${tuple[0].owner.id}` === `${req.user.id}`)[1];
 
     const { main, side, title, description } = req.body;
 
@@ -545,7 +545,7 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
     const draft = {
       cube: base.cube,
       owner: req.user.id,
-      cubeOwner: cube.owner,
+      cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
       type: base.type,
       InitialState: base.InitialState,
@@ -584,7 +584,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     const cubeCards = Cube.getCards(cube);
     const { mainboard } = cubeCards;
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
@@ -653,7 +653,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
     const deck = {
       cube: req.params.id,
       owner: req.user.id,
-      cubeOwner: cube.owner,
+      cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
       type: Draft.TYPES.UPLOAD,
       cards: cardList,

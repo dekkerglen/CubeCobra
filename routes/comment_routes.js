@@ -93,9 +93,7 @@ router.post(
 
     const id = await Comment.put(comment);
 
-    const [ownerid] = await getReplyContext[type](parent);
-
-    const owner = await User.getById(ownerid);
+    const [owner] = await getReplyContext[type](parent);
 
     if (owner) {
       await util.addNotification(
@@ -153,7 +151,7 @@ router.post(
       document.owner = null;
     }
 
-    await Comment.update(document);
+    await Comment.put(document);
 
     return res.status(200).send({
       success: 'true',

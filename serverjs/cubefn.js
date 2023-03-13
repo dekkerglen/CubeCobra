@@ -343,7 +343,7 @@ function isCubeViewable(cube, user) {
     return true;
   }
 
-  return user && (cube.owner === user.id || util.isAdmin(user));
+  return user && (cube.owner.id === user.id || util.isAdmin(user));
 }
 
 const methods = {

@@ -4,6 +4,7 @@ const uuid = require('uuid/v4');
 const createClient = require('../util');
 const carddb = require('../../serverjs/carddb');
 const { getObject, putObject } = require('../s3client');
+const User = require('./user');
 
 const FIELDS = {
   ID: 'id',
@@ -190,15 +191,120 @@ const sanitize = (document) => {
   return document;
 };
 
+const hydrate = async (document) => {
+  const ids = [document.owner, document.cubeOwner];
+  if (document.seats) {
+    for (const seat of document.seats) {
+      if (seat.owner) {
+        ids.push(seat.owner);
+      }
+    }
+  }
+
+  const users = await User.batchGet(ids);
+
+  document.owner = users.find((user) => user.id === document.owner);
+  document.cubeOwner = users.find((user) => user.id === document.cubeOwner);
+
+  if (!document.owner) {
+    document.owner = {
+      username: 'Anonymous',
+      id: '404',
+    };
+  }
+
+  if (!document.cubeOwner) {
+    document.cubeOwner = {
+      username: 'Anonymous',
+      id: '404',
+    };
+  }
+
+  if (document.seats) {
+    for (const seat of document.seats) {
+      if (seat.owner) {
+        seat.owner = users.find((user) => user.id === seat.owner);
+      }
+    }
+  }
+
+  return document;
+};
+
+const dehydrate = (document) => {
+  if (document.owner.id) {
+    document.owner = document.owner.id;
+  }
+
+  if (document.cubeOwner.id) {
+    document.cubeOwner = document.cubeOwner.id;
+  }
+
+  for (const seat of document.seats) {
+    if (seat.owner.id) {
+      seat.owner = seat.owner.id;
+    }
+  }
+
+  return document;
+};
+
+const batchHydrate = async (documents) => {
+  const ids = documents.map((document) => [document.owner, document.cubeOwner]).flat();
+
+  console.log(documents);
+
+  for (const document of documents) {
+    if (document.seats) {
+      for (const seat of document.seats) {
+        if (seat.owner) {
+          ids.push(seat.owner);
+        }
+      }
+    }
+  }
+
+  const users = await User.batchGet(ids);
+
+  for (const document of documents) {
+    document.owner = users.find((user) => user.id === document.owner);
+    document.cubeOwner = users.find((user) => user.id === document.cubeOwner);
+
+    if (!document.owner) {
+      document.owner = {
+        username: 'Anonymous',
+        id: '404',
+      };
+    }
+
+    if (!document.cubeOwner) {
+      document.cubeOwner = {
+        username: 'Anonymous',
+        id: '404',
+      };
+    }
+
+    if (document.seats) {
+      for (const seat of document.seats) {
+        if (seat.owner) {
+          seat.owner = users.find((user) => user.id === seat.owner);
+        }
+      }
+    }
+  }
+
+  return documents;
+};
+
 const draftIsCompleted = (draft) => {
   return draft.complete;
 };
 
 module.exports = {
-  getById: async (id) => addS3Fields((await client.get(id)).Item),
+  getById: async (id) => hydrate(await addS3Fields((await client.get(id)).Item)),
   batchGet: async (ids) => {
     const documents = await client.batchGet(ids);
-    return Promise.all(documents.map((document) => addS3Fields(document)));
+    return batchHydrate(await Promise.all(documents.map((document) => addS3Fields(document))));
   },
   getByOwner: async (owner, lastKey) => {
     const res = await client.query({
@@ -215,7 +321,7 @@ module.exports = {
     });
 
     return {
-      items: res.Items.filter((item) => draftIsCompleted(item)),
+      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -234,7 +340,7 @@ module.exports = {
     });
 
     return {
-      items: res.Items.filter((item) => draftIsCompleted(item)),
+      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -253,7 +359,7 @@ module.exports = {
     });
 
     return {
-      items: res.Items.filter((item) => draftIsCompleted(item)),
+      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -261,6 +367,8 @@ module.exports = {
     const id = document.id || uuid();
 
     const names = document.seats.map((seat) => assessColors(seat.mainboard, document.cards).join(''));
+
+    document = dehydrate(document);
 
     await client.put({
       [FIELDS.ID]: id,
@@ -298,6 +406,8 @@ module.exports = {
           keys.add(document.id);
         }
       }
+
+      documents = documents.map((document) => dehydrate(document));
 
       const items = filtered.map((document) => ({
         [FIELDS.ID]: document[FIELDS.ID],

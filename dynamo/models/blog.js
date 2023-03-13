@@ -6,6 +6,8 @@ const TurndownService = require('turndown');
 const createClient = require('../util');
 const Changelog = require('./changelog');
 const carddb = require('../../serverjs/carddb');
+const User = require('./user');
+const Cube = require('./cube');
 
 const turndownService = new TurndownService();
 
@@ -43,7 +45,10 @@ const client = createClient({
   FIELDS,
 });
 
-const hydrateChangelog = async (document) => {
+const hydrate = async (document) => {
+  document.owner = await User.getById(document.owner);
+  document.cubeName = (await Cube.getById(document.cube)).name;
+
   if (!document.changelist) {
     return document;
   }
@@ -58,8 +63,32 @@ const hydrateChangelog = async (document) => {
   };
 };
 
+const batchHydrate = async (documents) => {
+  const keys = documents
+    .filter((document) => document.changelist)
+    .map((document) => ({ cube: document.cube, id: document.changelist }));
+  const changelists = await Changelog.batchGet(keys);
+
+  const owners = await User.batchGet(documents.map((document) => document.owner));
+  const cubes = await Cube.batchGet(documents.map((document) => document.cube));
+
+  return documents.map((document) => {
+    document.owner = owners.find((owner) => owner.id === document.owner);
+    document.cubeName = cubes.find((cube) => cube.id === document.cube).name;
+
+    if (document.changelist) {
+      const id = keys.findIndex((key) => key.id === document.changelist);
+      document.Changelog = changelists[id];
+    }
+
+    delete document.changelist;
+
+    return document;
+  });
+};
+
 module.exports = {
-  getById: async (id) => hydrateChangelog((await client.get(id)).Item),
+  getById: async (id) => hydrate((await client.get(id)).Item),
   getUnhydrated: async (id) => (await client.get(id)).Item,
   getByCube: async (cube, limit, lastKey) => {
     const result = await client.query({
@@ -76,7 +105,7 @@ module.exports = {
       Limit: limit || 36,
     });
     return {
-      items: await Promise.all(result.Items.map(hydrateChangelog)),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -95,12 +124,16 @@ module.exports = {
       Limit: limit || 36,
     });
     return {
-      items: await Promise.all(result.Items.map(hydrateChangelog)),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
   put: async (document) => {
     const id = document[FIELDS.ID] || uuid();
+
+    if (document.owner.id) {
+      document[FIELDS.OWNER] = document.owner.id;
+    }
 
     client.put({
       [FIELDS.ID]: id,
@@ -122,14 +155,14 @@ module.exports = {
         [FIELDS.ID]: document[FIELDS.ID],
         [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
         [FIELDS.DATE]: document[FIELDS.DATE] || Date.now().valueOf(),
-        [FIELDS.OWNER]: document[FIELDS.OWNER],
+        [FIELDS.OWNER]: document[FIELDS.OWNER].id || document[FIELDS.OWNER],
         [FIELDS.BODY]: document[FIELDS.BODY].substring(0, 10000),
         [FIELDS.TITLE]: document[FIELDS.TITLE],
         [FIELDS.CHANGELIST_ID]: document[FIELDS.CHANGELIST_ID],
       })),
     );
   },
-  batchGet: async (ids) => Promise.all((await client.batchGet(ids)).map(hydrateChangelog)),
+  batchGet: async (ids) => batchHydrate(await client.batchGet(ids)),
   createTable: async () => client.createTable(),
   convertBlog: (blog) => {
     const changelog = Changelog.getChangelogFromBlog(blog);

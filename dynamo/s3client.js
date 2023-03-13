@@ -16,25 +16,31 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 const getObject = async (bucket, key) => {
-  // Check cache
-  const cached = get(key);
+  try {
+    // Check cache
+    const cached = get(key);
 
-  if (cached) {
-    return cached;
+    if (cached) {
+      return cached;
+    }
+
+    const res = await s3
+      .getObject({
+        Bucket: bucket,
+        Key: key,
+      })
+      .promise();
+    const value = JSON.parse(res.Body.toString());
+
+    // Update cache
+    await put(key, value);
+
+    return value;
+  } catch (err) {
+    console.log(`Error getting object ${key} from bucket ${bucket}`);
+    console.log(err);
+    return null;
   }
-
-  const res = await s3
-    .getObject({
-      Bucket: bucket,
-      Key: key,
-    })
-    .promise();
-  const value = JSON.parse(res.Body.toString());
-
-  // Update cache
-  await put(key, value);
-
-  return value;
 };
 
 const putObject = async (bucket, key, value) => {

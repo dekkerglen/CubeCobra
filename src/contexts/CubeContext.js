@@ -775,7 +775,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [cube, changes, setChanges],
   );
 
-  const canEdit = user && cube.owner === user.id;
+  const canEdit = user && cube.owner.id === user.id;
 
   const hasCustomImages = useMemo(
     () =>

@@ -61,13 +61,11 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
   document.status = Content.STATUS.PUBLISHED;
   document.date = new Date().valueOf();
 
-  const owner = await User.getById(document.owner);
-
   await Content.update(document);
 
-  if (owner) {
+  if (document.owner) {
     await util.addNotification(
-      owner,
+      document.owner,
       req.user,
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has approved and published your content: ${document.title}`,
@@ -87,7 +85,7 @@ router.get('/publish/:id', ensureAdmin, async (req, res) => {
   const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: owner.email,
+      to: document.owner.email,
       subject: 'Your content has been published',
     },
     send: true,
@@ -124,13 +122,11 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   document.status = Content.STATUS.DRAFT;
   document.date = new Date().valueOf();
 
-  const owner = await User.getById(document.owner);
-
   await Content.update(document);
 
-  if (owner) {
+  if (document.owner) {
     await util.addNotification(
-      owner,
+      document.owner,
       req.user,
       `/content/${document.type}/${document.id}`,
       `${req.user.username} has declined to publish your content: ${document.title}`,
@@ -150,7 +146,7 @@ router.get('/removereview/:id', ensureAdmin, async (req, res) => {
   const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: owner.email,
+      to: document.owner.email,
       subject: 'Your Content was not published',
     },
     send: true,
@@ -180,7 +176,7 @@ router.get('/ignorereport/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
 
   report.status = Notice.STATUS.PROCESSED;
-  await Notice.update(report);
+  await Notice.put(report);
 
   req.flash('success', 'This report has been ignored.');
   return res.redirect('/admin/notices');
@@ -195,7 +191,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
 
-  await Comment.update(comment);
+  await Comment.put(comment);
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect('/admin/notices');
@@ -204,17 +200,16 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
 router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
-  const user = await User.getById(application.user);
-  if (!user.roles) {
-    user.roles = [];
+  if (!application.user.roles) {
+    application.user.roles = [];
   }
-  if (!user.roles.includes(User.ROLES.CONTENT_CREATOR)) {
-    user.roles.push(User.ROLES.CONTENT_CREATOR);
+  if (!application.user.roles.includes(User.ROLES.CONTENT_CREATOR)) {
+    application.user.roles.push(User.ROLES.CONTENT_CREATOR);
   }
-  await User.update(user);
+  await User.update(application.user);
 
   application.status = Notice.STATUS.PROCESSED;
-  Notice.update(application);
+  Notice.put(application);
 
   const smtpTransport = mailer.createTransport({
     name: 'CubeCobra.com',
@@ -229,7 +224,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
   const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: user.email,
+      to: application.user.email,
       subject: 'Cube Cobra Content Creator',
     },
     send: true,
@@ -247,7 +242,7 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
     locals: {},
   });
 
-  req.flash('success', `Application for ${user.username} approved.`);
+  req.flash('success', `Application for ${application.user.username} approved.`);
   return res.redirect(`/admin/notices`);
 });
 
@@ -255,9 +250,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
   notice.status = Notice.STATUS.PROCESSED;
-  Notice.update(notice);
-
-  const user = await User.getById(application.user);
+  Notice.put(notice);
 
   const smtpTransport = mailer.createTransport({
     name: 'CubeCobra.com',
@@ -272,7 +265,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   const message = new Email({
     message: {
       from: 'Cube Cobra Team <support@cubecobra.com>',
-      to: user.email,
+      to: application.user.email,
       subject: 'Cube Cobra Content Creator',
     },
     send: true,
@@ -373,7 +366,7 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     if (index !== -1) {
       throw new Error('Cube is already in queue');
     }
-    featured.queue.push({ cubeID: cube.id, ownerID: cube.owner });
+    featured.queue.push({ cubeID: cube.id, ownerID: cube.owner.id });
   });
 
   if (!update.ok) {
@@ -381,9 +374,8 @@ router.post('/featuredcubes/queue', ensureAdmin, async (req, res) => {
     return res.redirect('/admin/featuredcubes');
   }
 
-  const user = await User.getById(`${cube.owner}`);
   await util.addNotification(
-    user,
+    cube.owner,
     req.user,
     '/user/account?nav=patreon',
     'An admin added your cube to the featured cubes queue.',

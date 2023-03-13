@@ -33,7 +33,7 @@ const updatePodcast = async (podcast) => {
         body: removeSpan(episode.description),
         url: episode.url,
         date: new Date(episode.date).valueOf(),
-        owner: podcast.owner,
+        owner: podcast.owner.id,
         image: podcast.image,
         username: podcast.username,
         podcast: podcast.id,

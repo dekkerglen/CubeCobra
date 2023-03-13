@@ -14,7 +14,7 @@ const Article = ({ article }) => {
       <CardHeader>
         <h1>{article.title}</h1>
         <h6>
-          By <Username user={article.owner} defaultName={article.username} />
+          By <Username user={article.owner} />
           {' | '}
           <TimeAgo date={article.date} />
         </h6>

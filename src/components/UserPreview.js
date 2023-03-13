@@ -31,7 +31,7 @@ const UserPreview = ({ user }) => {
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">
-          <Username user={user.id} defaultName={user.username} />
+          <Username user={user.id} />
         </h5>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>

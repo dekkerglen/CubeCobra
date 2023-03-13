@@ -181,12 +181,15 @@ module.exports = function createClient(config) {
         if (ids.length === 0) {
           return [];
         }
+
+        const singletonIds = [...new Set(ids)];
+
         const results = [];
-        for (let i = 0; i < ids.length; i += 25) {
+        for (let i = 0; i < singletonIds.length; i += 25) {
           const params = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: ids.slice(i, i + 25).map((id) => ({
+                Keys: singletonIds.slice(i, i + 25).map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },

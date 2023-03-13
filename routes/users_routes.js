@@ -411,16 +411,8 @@ router.get('/view/:id', async (req, res) => {
 
     const followers = await User.batchGet(user.following || []);
 
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     const following = req.user && user.following && user.following.some((id) => id === req.user.id);
     user.following = []; // don't want to leak this info
-    delete user.passwordHash;
-    delete user.email;
 
     return render(req, res, 'UserCubePage', {
       owner: user,
@@ -447,15 +439,6 @@ router.get('/decks/:userid', async (req, res) => {
     }
 
     const followers = await User.batchGet(user.following || []);
-
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
-    delete user.passwordHash;
-    delete user.email;
 
     return render(req, res, 'UserDecksPage', {
       owner: user,
@@ -506,12 +489,6 @@ router.get('/blog/:userid', async (req, res) => {
 
     const posts = await Blog.getByOwner(req.params.userid, 10);
     const followers = await User.batchGet(user.following || []);
-
-    for (const follower of [user, ...followers]) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
 
     return render(
       req,
@@ -698,12 +675,6 @@ router.get('/social', ensureAuth, async (req, res) => {
     const followers = await User.batchGet(req.user.following || []);
     const followedUsers = await User.batchGet(req.user.followedUsers || []);
 
-    for (const follower of [...followers, ...followedUsers]) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     return render(
       req,
       res,
@@ -734,7 +705,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     req.flash('danger', 'Cube not found');
     return res.redirect(redirect);
   }
-  if (cube.owner !== req.user.id) {
+  if (cube.owner.id !== req.user.id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
     return res.redirect(redirect);
   }

@@ -112,7 +112,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cards={cards} cube={cubeState} activeLink="overview">
-        {user && cubeState.owner === user.id ? (
+        {user && cubeState.owner.id === user.id ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
               className="ms-auto"
@@ -266,7 +266,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </CSRFForm>
                 )}
                 {user &&
-                  cubeState.owner !== user.id &&
+                  cubeState.owner.id !== user.id &&
                   (followedState ? (
                     <Button outline color="unsafe" block onClick={unfollow}>
                       Unfollow
