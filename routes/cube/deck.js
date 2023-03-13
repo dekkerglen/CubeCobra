@@ -313,7 +313,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const deckOwners = deck.seats.map((seat) => `${seat.owner.id}`).filter((userid) => userid);
+    const deckOwners = deck.seats.map((seat) => (seat.owner ? seat.owner.id : null)).filter((userid) => userid);
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Only logged in deck owners can build decks.');
       return res.redirect(`/cube/deck/${req.params.id}`);
@@ -474,7 +474,9 @@ router.post('/editdeck/:id', ensureAuth, async (req, res) => {
   try {
     const deck = await Draft.getById(req.params.id);
 
-    const deckOwners = deck.seats.map((seat) => seat.owner.id).filter((userid) => userid !== 'null');
+    const deckOwners = deck.seats
+      .map((seat) => (seat.owner ? seat.owner.id : null))
+      .filter((userid) => userid !== 'null');
 
     if (!req.user || !deckOwners.includes(`${req.user.id}`)) {
       req.flash('danger', 'Unauthorized');

@@ -76,6 +76,7 @@ const getByUsername = async (username, lastKey) => {
 
 module.exports = {
   getById: async (id) => stripSensitiveData((await client.get(id)).Item),
+  getByIdWithSensitiveData: async (id) => (await client.get(id)).Item,
   getByUsername,
   getByIdOrUsername: async (idOrUsername) => {
     const result = await client.get(idOrUsername);

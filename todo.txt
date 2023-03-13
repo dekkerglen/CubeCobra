@@ -1,5 +1,3 @@
-
-
 draft lobby needs hydrated users
 
 Investigate
@@ -18,4 +16,3 @@ don't update cube hashes for followers changes or deck count changes. have this 
 drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
 Capitalization issues on front end
 capitalize board names in cube, including board drop down select
-

@@ -100,8 +100,6 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       .flat(4);
   }, [deck.cards, seat.mainboard]);
 
-  console.log(sorted);
-
   return (
     <Card>
       <CardHeader>

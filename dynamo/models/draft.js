@@ -241,7 +241,7 @@ const dehydrate = (document) => {
   }
 
   for (const seat of document.seats) {
-    if (seat.owner.id) {
+    if (seat.owner && seat.owner.id) {
       seat.owner = seat.owner.id;
     }
   }
@@ -251,8 +251,6 @@ const dehydrate = (document) => {
 
 const batchHydrate = async (documents) => {
   const ids = documents.map((document) => [document.owner, document.cubeOwner]).flat();
-
-  console.log(documents);
 
   for (const document of documents) {
     if (document.seats) {

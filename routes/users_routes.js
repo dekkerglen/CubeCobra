@@ -575,7 +575,7 @@ router.post(
     if (!req.validated) {
       return res.redirect('/user/account');
     }
-    const user = await User.getById(req.user.id);
+    const user = await User.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
