@@ -325,8 +325,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -340,7 +338,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.iamge.uri,
           `https://cubecobra.com/cube/draft/${req.params.id}`,
         ),
       },
@@ -362,8 +360,6 @@ router.get('/decks/:cubeid', async (req, res) => {
 
     const decks = await Draft.getByCube(cube.id);
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -378,7 +374,7 @@ router.get('/decks/:cubeid', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Decks: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/user/decks/${encodeURIComponent(req.params.cubeid)}`,
         ),
       },
@@ -702,8 +698,6 @@ router.get('/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -717,7 +711,7 @@ router.get('/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Deck: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/deck/${req.params.id}`,
         ),
       },

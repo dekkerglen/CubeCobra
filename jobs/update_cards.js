@@ -153,6 +153,7 @@ function addCardToCatalog(card, isExtra) {
     uri: card.art_crop,
     artist: card.artist,
     id: card._id,
+    imageName: normalizedFullName,
   };
   if (isExtra !== true) {
     const cardImages = {

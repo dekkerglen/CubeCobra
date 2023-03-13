@@ -1,37 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Spinner } from 'reactstrap';
-import { csrfFetch } from 'utils/CSRF';
-
-const MtgImage = ({ cardname, showArtist }) => {
-  const [loaded, setLoaded] = useState(false);
-  const [image, setImage] = useState(null);
-
-  useEffect(() => {
-    const getData = async () => {
-      const response = await csrfFetch('/cube/api/imagedata', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ cardname }),
-      });
-      const data = await response.json();
-      setImage(data.data);
-      setLoaded(true);
-    };
-    getData();
-  }, [cardname]);
-
-  if (!loaded) {
-    return (
-      <div className="centered">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
+const MtgImage = ({ image, showArtist }) => {
   if (showArtist) {
     return (
       <div className="position-relative">
@@ -45,7 +15,10 @@ const MtgImage = ({ cardname, showArtist }) => {
 };
 
 MtgImage.propTypes = {
-  cardname: PropTypes.string.isRequired,
+  image: PropTypes.shape({
+    artist: PropTypes.string.isRequired,
+    uri: PropTypes.string.isRequired,
+  }).isRequired,
   showArtist: PropTypes.bool,
 };
 

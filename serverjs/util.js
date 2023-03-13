@@ -187,6 +187,7 @@ function getImageData(imagename) {
         uri: byName.art_crop,
         artist: byName.artist,
         id: byName._id,
+        imagename,
       };
     }
   }

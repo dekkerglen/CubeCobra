@@ -392,8 +392,6 @@ router.get('/overview/:id', async (req, res) => {
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -412,7 +410,7 @@ router.get('/overview/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Overview: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/overview/${req.params.id}`,
         ),
       },
@@ -500,8 +498,6 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 
-    const imagedata = util.getImageData(cubeA.imageName);
-
     return render(
       req,
       res,
@@ -523,7 +519,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
         metadata: generateMeta(
           'Cube Cobra Compare cubes',
           `Comparing "${cubeA.name}" To "${cubeB.name}"`,
-          imagedata.uri,
+          cubeA.image.uri,
           `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
         ),
       },
@@ -543,7 +539,6 @@ router.get('/list/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
-    const imagedata = util.getImageData(cube.imageName);
     return render(
       req,
       res,
@@ -557,7 +552,7 @@ router.get('/list/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
       },
@@ -577,7 +572,6 @@ router.get('/history/:id', async (req, res) => {
 
     const query = await Changelog.getByCube(cube.id, 36);
 
-    const imagedata = util.getImageData(cube.imageName);
     return render(
       req,
       res,
@@ -592,7 +586,7 @@ router.get('/history/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
       },
@@ -624,8 +618,6 @@ router.get('/playtest/:id', async (req, res) => {
 
     const decks = await Draft.getByCube(cube.id);
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -639,7 +631,7 @@ router.get('/playtest/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Playtest: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/playtest/${req.params.id}`,
         ),
       },
@@ -1232,8 +1224,6 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -1247,7 +1237,7 @@ router.get('/griddraft/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Grid Draft: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/griddraft/${req.params.id}`,
         ),
       },
@@ -1273,8 +1263,6 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -1288,7 +1276,7 @@ router.get('/draft/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/draft/${encodeURIComponent(req.params.id)}`,
         ),
       },

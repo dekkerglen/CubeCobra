@@ -868,15 +868,6 @@ router.get(
   }),
 );
 
-router.post('/imagedata', async (req, res) => {
-  const { cardname } = req.body;
-  const data = util.getImageData(cardname);
-  return res.status(200).send({
-    success: 'true',
-    data,
-  });
-});
-
 router.post('/commit', async (req, res) => {
   const { id, changes, title, blog, useBlog } = req.body;
 

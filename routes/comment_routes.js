@@ -116,14 +116,12 @@ router.post(
       }
     }
 
-    const ImageData = util.getImageData(user.imageName);
-
     return res.status(200).send({
       success: 'true',
       comment: {
-        ImageData,
         user: req.user,
         id,
+        image: util.getImageData(req.user.imageName),
         ...comment,
       },
     });

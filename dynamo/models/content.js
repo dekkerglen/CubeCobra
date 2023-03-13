@@ -1,5 +1,6 @@
 const sanitizeHtml = require('sanitize-html');
 const htmlToText = require('html-to-text');
+const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
 const User = require('./user');
@@ -50,17 +51,19 @@ const TYPES = {
   PODCAST: 'p',
 };
 
-const hydrateOwner = async (content) => {
+const hydrate = async (content) => {
   content.owner = await User.getById(content.owner);
+  content.image = getImageData(content.imageName);
 
   return content;
 };
 
-const batchHydrateOwner = async (contents) => {
+const batchHydrate = async (contents) => {
   const owners = await User.batchGet(contents.map((content) => content.owner));
 
   return contents.map((content) => {
     content.owner = owners.find((owner) => owner.id === content.owner);
+    content.image = getImageData(content.imageName);
 
     return content;
   });
@@ -113,7 +116,7 @@ const putBody = async (content) => {
 };
 
 module.exports = {
-  getById: async (id) => hydrateOwner(await addBody((await client.get(id)).Item)),
+  getById: async (id) => hydrate(await addBody((await client.get(id)).Item)),
   getByStatus: async (status, lastKey) => {
     const result = await client.query({
       IndexName: 'ByStatus',
@@ -128,7 +131,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrateOwner(result.Items),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -146,7 +149,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrateOwner(result.Items),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -164,7 +167,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: await batchHydrateOwner(result.Items),
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -172,6 +175,9 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
+
+    delete document.image;
+
     document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
     document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
 
@@ -186,6 +192,7 @@ module.exports = {
   put: async (document, type) => {
     await putBody(document);
 
+    delete document.image;
     delete document.body;
 
     if (document.owner.id) {

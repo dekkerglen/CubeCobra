@@ -1,3 +1,4 @@
+const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 
 const FIELDS = {
@@ -54,6 +55,14 @@ const stripSensitiveData = (user) => {
 
 const batchStripSensitiveData = (users) => users.map(stripSensitiveData);
 
+const hydrate = (user) => {
+  user.image = getImageData(user.imageName);
+
+  return user;
+};
+
+const batchHydrate = (users) => users.map(hydrate);
+
 const getByUsername = async (username, lastKey) => {
   const result = await client.query({
     IndexName: 'ByUsername',
@@ -68,21 +77,21 @@ const getByUsername = async (username, lastKey) => {
   });
 
   if (result.Items.length > 0) {
-    return stripSensitiveData(result.Items[0]);
+    return hydrate(stripSensitiveData(result.Items[0]));
   }
 
   return null;
 };
 
 module.exports = {
-  getById: async (id) => stripSensitiveData((await client.get(id)).Item),
-  getByIdWithSensitiveData: async (id) => (await client.get(id)).Item,
+  getById: async (id) => hydrate(stripSensitiveData((await client.get(id)).Item)),
+  getByIdWithSensitiveData: hydrate(async (id) => (await client.get(id)).Item),
   getByUsername,
   getByIdOrUsername: async (idOrUsername) => {
     const result = await client.get(idOrUsername);
 
     if (result.Item) {
-      return stripSensitiveData(result.Item);
+      return hydrate(stripSensitiveData(result.Item));
     }
 
     return getByUsername(idOrUsername);
@@ -101,7 +110,7 @@ module.exports = {
     });
 
     if (result.Items.length > 0) {
-      return stripSensitiveData(result.Items[0]);
+      return hydrate(stripSensitiveData(result.Items[0]));
     }
 
     return null;
@@ -110,6 +119,8 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
+
+    delete document.image;
 
     const existing = await client.get(document[FIELDS.ID]);
 
@@ -125,13 +136,15 @@ module.exports = {
 
     return client.put(existing);
   },
-  put: async (document) =>
-    client.put({
+  put: async (document) => {
+    delete document.image;
+    await client.put({
       [FIELDS.USERNAME_LOWER]: document[FIELDS.USERNAME].toLowerCase(),
       ...document,
-    }),
+    });
+  },
   batchPut: async (documents) => client.batchPut(documents),
-  batchGet: async (ids) => batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`))),
+  batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),
   convertUser: (user) => ({
     [FIELDS.ID]: `${user._id}`,

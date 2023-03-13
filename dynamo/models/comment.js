@@ -53,12 +53,9 @@ const hydrate = async (item) => {
   }
 
   item.owner = await User.getById(item.owner);
-  const ImageData = util.getImageData(item.owner.imageName);
+  item.image = util.getImageData(item.owner.imageName);
 
-  return {
-    ...item,
-    ImageData,
-  };
+  return item;
 };
 
 const batchHydrate = async (items) => {
@@ -81,12 +78,9 @@ const batchHydrate = async (items) => {
     }
 
     item.owner = owners.find((owner) => owner.id === item.owner);
-    const ImageData = util.getImageData(item.owner.imageName);
+    item.image = util.getImageData(item.owner.imageName);
 
-    return {
-      ...item,
-      ImageData,
-    };
+    return item;
   });
 };
 

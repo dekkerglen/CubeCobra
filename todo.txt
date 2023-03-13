@@ -1,12 +1,11 @@
-draft lobby needs hydrated users
+have cube images pre-loaded everywhere
+
 
 Investigate
 	- validate patreon integration
 	- validate featured cube rotation
 
 Eventually
-have usernames pre-loaded everywhere
-have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
 batch get and batch put use cache!!

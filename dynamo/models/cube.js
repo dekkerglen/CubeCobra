@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const _ = require('lodash');
+const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
 const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
@@ -144,6 +145,7 @@ const getCards = async (id) => {
 
 const hydrate = async (cube) => {
   cube.owner = await User.getById(cube.owner);
+  cube.iamge = getImageData(cube.imageName);
 
   return cube;
 };
@@ -153,6 +155,7 @@ const batchHydrate = async (cubes) => {
 
   return cubes.map((cube) => {
     cube.owner = owners.find((owner) => owner.id === cube.owner);
+    cube.image = getImageData(cube.imageName);
     return cube;
   });
 };

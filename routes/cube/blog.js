@@ -12,7 +12,6 @@ const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
 const User = require('../../dynamo/models/user');
 const Feed = require('../../dynamo/models/feed');
-const { getImageData } = require('../../serverjs/util');
 
 const router = express.Router();
 
@@ -163,8 +162,6 @@ router.get('/:id', async (req, res) => {
 
     const query = await Blog.getByCube(cube.id, 10);
 
-    const imagedata = getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -179,7 +176,7 @@ router.get('/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Blog: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),
       },

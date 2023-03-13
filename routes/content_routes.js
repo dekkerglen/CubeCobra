@@ -10,8 +10,6 @@ const generateMeta = require('../serverjs/meta');
 const Notice = require('../dynamo/models/notice');
 const Content = require('../dynamo/models/content');
 
-const { getImageData } = require('../serverjs/util');
-
 const ensureContentCreator = ensureRole('ContentCreator');
 
 const router = express.Router();
@@ -151,8 +149,6 @@ router.get('/article/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  const imageDetails = getImageData(article.imageName);
-
   return render(
     req,
     res,
@@ -163,7 +159,7 @@ router.get('/article/:id', async (req, res) => {
       metadata: generateMeta(
         article.title,
         article.short || 'An article posted to Cube Cobra',
-        imageDetails.uri,
+        article.image.uri,
         `https://cubecobra.com/content/article/${req.params.id}`,
       ),
     },
@@ -236,8 +232,6 @@ router.get('/video/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  const imageDetails = getImageData(video.imageName);
-
   return render(
     req,
     res,
@@ -248,7 +242,7 @@ router.get('/video/:id', async (req, res) => {
       metadata: generateMeta(
         video.title,
         video.short || 'A video posted to Cube Cobra',
-        imageDetails.uri,
+        video.image.uri,
         `https://cubecobra.com/content/video/${req.params.id}`,
       ),
     },
