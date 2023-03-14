@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-const { evict, updatePeers } = require('../dynamo/cache');
+const { evict, updatePeers, batchEvict } = require('../dynamo/cache');
 
 router.post('/invalidate', (req, res) => {
   const { secret, key } = req.body;
@@ -15,6 +15,23 @@ router.post('/invalidate', (req, res) => {
   }
 
   evict(key);
+
+  return res.status(200).send({
+    success: 'true',
+  });
+});
+
+router.post('/batchinvalidate', (req, res) => {
+  const { secret, keys } = req.body;
+
+  if (secret !== process.env.CACHE_SECRET) {
+    return res.status(401).send({
+      success: 'false',
+      message: 'Invalid secret',
+    });
+  }
+
+  batchEvict(keys);
 
   return res.status(200).send({
     success: 'true',

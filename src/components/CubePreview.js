@@ -14,7 +14,6 @@ const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
-  console.log(cube);
   return (
     <Card
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}

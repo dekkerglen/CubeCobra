@@ -338,7 +338,7 @@ router.get('/deckbuilder/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
           cube.description,
-          cube.iamge.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/draft/${req.params.id}`,
         ),
       },

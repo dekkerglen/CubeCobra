@@ -273,7 +273,7 @@ const GroupModal = ({
           <Col xs="8">
             <fieldset disabled={!canEdit}>
               <Label for="groupStatus">
-                <h5>Set status of All</h5>
+                <h5>Set status of all</h5>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Status</InputGroupText>
@@ -291,7 +291,7 @@ const GroupModal = ({
               </InputGroup>
 
               <Label for="groupStatus">
-                <h5>Set Finish of All</h5>
+                <h5>Set finish of all</h5>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Finish</InputGroupText>

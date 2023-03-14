@@ -184,12 +184,15 @@ module.exports = function createClient(config) {
 
         const singletonIds = [...new Set(ids)];
 
+        const cacheHits = cache.batchGet(singletonIds.map((id) => `${config.name}:${id}`));
+        const cacheMisses = cacheHits.map((hit, index) => (hit ? null : singletonIds[index])).filter((id) => id);
+
         const results = [];
-        for (let i = 0; i < singletonIds.length; i += 25) {
+        for (let i = 0; i < cacheMisses.length; i += 25) {
           const params = {
             RequestItems: {
               [tableName(config.name)]: {
-                Keys: singletonIds.slice(i, i + 25).map((id) => ({
+                Keys: cacheMisses.slice(i, i + 25).map((id) => ({
                   [config.partitionKey]: id,
                 })),
               },
@@ -199,13 +202,21 @@ module.exports = function createClient(config) {
           const result = await documentClient.batchGet(params).promise();
           results.push(...result.Responses[tableName(config.name)]);
         }
-        return results;
+        return [...cacheHits.filter((hit) => hit), ...results];
       } catch (error) {
         throw new Error(`Error batch getting items from table ${config.name}: ${error.message}`);
       }
     },
     batchPut: async (documents) => {
       try {
+        cache.batchPut(
+          Object.fromEntries(
+            documents.map((document) => [`${config.name}:${document[config.partitionKey]}`, document]),
+          ),
+        );
+
+        await cache.batchInvalidate(documents.map((document) => `${config.name}:${document[config.partitionKey]}`));
+
         const batches = [];
         for (let i = 0; i < documents.length; i += 25) {
           const batch = documents.slice(i, i + 25).map((document) => ({

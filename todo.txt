@@ -1,5 +1,3 @@
-have cube images pre-loaded everywhere
-
 
 Investigate
 	- validate patreon integration
@@ -8,10 +6,12 @@ Investigate
 Eventually
 fix proptypes - use object proptypes when possible
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
-batch get and batch put use cache!!
 don't display mainboard header in changelist/changelog if only mainboard was changed
 tag colors don't display in list view
 don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
 Capitalization issues on front end
 capitalize board names in cube, including board drop down select
+when adding through add to cube modal, put in pending changes instead of updating DB
+Filter doesn't work on Tokens page
+

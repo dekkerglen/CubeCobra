@@ -680,14 +680,14 @@ router.post(
 
     await Cube.updateCards(req.params.id, cubeCards);
 
-    if (tag) {
-      const changelist = await Changelog.put(
-        {
-          [req.body.board]: { adds },
-        },
-        cube.id,
-      );
+    const changelist = await Changelog.put(
+      {
+        [req.body.board]: { adds },
+      },
+      cube.id,
+    );
 
+    if (tag) {
       const id = await Blog.put({
         body: `Add from the package [${tag}](/packages/${req.body.packid})`,
         owner: req.user.id,
@@ -870,6 +870,30 @@ router.get(
 
 router.post('/commit', async (req, res) => {
   const { id, changes, title, blog, useBlog } = req.body;
+
+  let changeCount = 0;
+
+  for (const [board] of Object.entries(changes)) {
+    if (changes[board].swaps) {
+      changeCount += changes[board].swaps.length;
+    }
+    if (changes[board].adds) {
+      changeCount += changes[board].adds.length;
+    }
+    if (changes[board].removes) {
+      changeCount += changes[board].removes.length;
+    }
+    if (changes[board].edits) {
+      changeCount += changes[board].edits.length;
+    }
+  }
+
+  if (changeCount <= 0) {
+    return res.status(400).send({
+      success: 'false',
+      message: 'No changes',
+    });
+  }
 
   const cube = await Cube.getById(id);
 

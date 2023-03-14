@@ -136,10 +136,9 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
     }
 
     other.following = other.following.filter((id) => !req.user.id === id);
-    user.followedUsers = user.followedUsers.filter((id) => !id.equals(req.params.id));
+    user.followedUsers = user.followedUsers.filter((id) => id !== req.params.id);
 
     await User.batchPut([user, other]);
-    await Promise.all([user.save(), other.save()]);
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
@@ -412,7 +411,6 @@ router.get('/view/:id', async (req, res) => {
     const followers = await User.batchGet(user.following || []);
 
     const following = req.user && user.following && user.following.some((id) => id === req.user.id);
-    user.following = []; // don't want to leak this info
 
     return render(req, res, 'UserCubePage', {
       owner: user,

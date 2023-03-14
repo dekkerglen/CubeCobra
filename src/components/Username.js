@@ -8,6 +8,10 @@ const Username = ({ user, nolink }) => {
     return <>{user.username || 'User'}</>;
   }
 
+  if (!user) {
+    return <>Anonymous</>;
+  }
+
   return (
     <a data-sublink href={`/user/view/${user.id || user}`}>
       {user.username || 'User'}

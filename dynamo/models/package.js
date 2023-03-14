@@ -1,5 +1,6 @@
 const uuid = require('uuid/v4');
 const createClient = require('../util');
+const User = require('./user');
 
 const FIELDS = {
   ID: 'id',
@@ -48,13 +49,13 @@ const client = createClient({
 });
 
 const hydrate = async (pack) => {
-  pack.owner = await require('./user').getById(pack.owner);
+  pack.owner = await User.getById(pack.owner);
 
   return pack;
 };
 
 const batchHydrate = async (packs) => {
-  const owners = await require('./user').batchGet(packs.map((pack) => pack.owner));
+  const owners = await User.batchGet(packs.map((pack) => pack.owner));
 
   packs.forEach((pack) => {
     pack.owner = owners.find((owner) => owner.id === pack.owner);

@@ -22,6 +22,12 @@ const evict = (key) => {
   }
 };
 
+const batchEvict = (keys) => {
+  keys.forEach((key) => {
+    evict(key);
+  });
+};
+
 const evictOldest = () => {
   let oldestKey = null;
   let oldestDate = null;
@@ -138,6 +144,36 @@ const invalidate = async (key) => {
   }
 };
 
+const batchInvalidate = async (keys) => {
+  try {
+    if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
+      // send invalidate request to each ip address
+      await Promise.all(
+        peers.map((ip) =>
+          fetchWithTimeout(
+            `http://${ip}:80/cache/batchinvalidate`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                secret: process.env.CACHE_SECRET,
+                keys,
+              }),
+            },
+            1000,
+          ),
+        ),
+      );
+    } else {
+      keys.forEach((key) => evict(key));
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const put = (key, value) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
@@ -153,7 +189,7 @@ const put = (key, value) => {
   }
 
   cache[key] = {
-    value,
+    value: clone(value),
     date: new Date().valueOf(),
     size,
   };
@@ -173,6 +209,14 @@ const get = (key) => {
   return null;
 };
 
+const batchGet = (keys) => {
+  return keys.map((key) => get(key));
+};
+
+const batchPut = (dict) => {
+  Object.entries(dict).forEach(([key, value]) => put(key, value));
+};
+
 module.exports = {
   put,
   get,
@@ -180,4 +224,8 @@ module.exports = {
   invalidate,
   updatePeers,
   alertPeers,
+  batchGet,
+  batchPut,
+  batchInvalidate,
+  batchEvict,
 };

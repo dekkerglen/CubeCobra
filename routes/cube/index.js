@@ -507,7 +507,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
         cubeB,
         onlyA: aOracles,
         onlyB: bOracles,
-        both: inBoth.map((card) => card.details.name),
+        both: inBoth.map((card) => card.details.oracle_id),
         cards: allCards.map((card, index) =>
           Object.assign(card, {
             index,

@@ -119,10 +119,10 @@ router.post(
     return res.status(200).send({
       success: 'true',
       comment: {
-        user: req.user,
+        ...comment,
+        owner: req.user,
         id,
         image: util.getImageData(req.user.imageName),
-        ...comment,
       },
     });
   }),
