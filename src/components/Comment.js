@@ -52,9 +52,9 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       <a href={`/user/view/${comment.owner.id}`}>
         <img
           className="profile-thumbnail"
-          src={comment.ImageData.uri}
-          alt={comment.ImageData.artist}
-          title={comment.ImageData.artist}
+          src={comment.image.uri}
+          alt={comment.image.artist}
+          title={comment.image.artist}
         />
       </a>
       <div className="flex-grow ms-2">

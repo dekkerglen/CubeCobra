@@ -20,7 +20,7 @@ const VideoPreview = ({ video }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage cardname={video.imageName} />
+        <MtgImage image={video.image} />
         <h6 className="content-preview-banner video-preview-bg">
           <strong>Video</strong>
         </h6>

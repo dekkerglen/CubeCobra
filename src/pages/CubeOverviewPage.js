@@ -207,7 +207,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
           </CardHeader>
           <Row>
             <Col md="4" className="mb-3 ">
-              <MtgImage cardname={cubeState.imageName} showArtist />
+              <MtgImage image={cubeState.image} showArtist />
               <CardBody className="pt-2 px-3 pb-3">
                 <p className="mb-1">{getCubeDescription(cubeState)}</p>
                 <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>

@@ -145,7 +145,7 @@ const getCards = async (id) => {
 
 const hydrate = async (cube) => {
   cube.owner = await User.getById(cube.owner);
-  cube.iamge = getImageData(cube.imageName);
+  cube.image = getImageData(cube.imageName);
 
   return cube;
 };
@@ -323,6 +323,8 @@ module.exports = {
     if (document.owner.id) {
       document.owner = document.owner.id;
     }
+
+    delete document.image;
 
     await client.put(document);
   },

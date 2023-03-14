@@ -29,7 +29,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
             <Row className="mb-3">
               {owner.image && (
                 <Col xs={4} lg={3}>
-                  <MtgImage cardname={owner.imageName} showArtist />
+                  <MtgImage image={owner.image} showArtist />
                 </Col>
               )}
               <Col xs={owner.image ? 8 : 12} lg={owner.image ? 9 : 12}>

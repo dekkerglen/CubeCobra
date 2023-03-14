@@ -27,7 +27,7 @@ const UserPreview = ({ user }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
-        <MtgImage cardname={user.imageName} showArtist />
+        <MtgImage image={user.image} showArtist />
       </AspectRatioBox>
       <div className="w-100 py-1 px-2 text-muted text-truncate">
         <h5 className="mb-0">

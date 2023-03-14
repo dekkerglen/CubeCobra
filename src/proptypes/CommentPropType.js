@@ -11,7 +11,7 @@ const CommentPropType = PropTypes.shape({
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
   }),
-  ImageData: PropTypes.shape({
+  image: PropTypes.shape({
     uri: PropTypes.string.isRequired,
     artist: PropTypes.string.isRequired,
     id: PropTypes.string.isRequired,

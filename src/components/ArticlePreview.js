@@ -20,7 +20,7 @@ const ArticlePreview = ({ article }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage cardname={article.imageName} />
+        <MtgImage image={article.image} />
         <h6 className="content-preview-banner article-preview-bg">
           <strong>Article</strong>
         </h6>

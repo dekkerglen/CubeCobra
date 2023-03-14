@@ -51,7 +51,7 @@ const useToggle = (parent, type) => {
               id: '404',
               username: 'Anonymous',
             };
-            clone[i].ImageData = {
+            clone[i].image = {
               uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
               artist: 'Allan Pollack',
               id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',

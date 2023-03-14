@@ -163,7 +163,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             <Col xs="12" sm="6" md="6" lg="6">
               <Card>
                 <CardHeader>Preview</CardHeader>
-                <MtgImage cardname={state.imageName} showArtist />
+                <MtgImage image={state.image} showArtist />
               </Card>
             </Col>
           </Row>

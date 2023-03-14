@@ -56,7 +56,7 @@ const stripSensitiveData = (user) => {
 const batchStripSensitiveData = (users) => users.map(stripSensitiveData);
 
 const hydrate = (user) => {
-  user.image = getImageData(user.imageName);
+  user.image = getImageData(user.imageName || 'Ambush Viper');
 
   return user;
 };
@@ -85,7 +85,7 @@ const getByUsername = async (username, lastKey) => {
 
 module.exports = {
   getById: async (id) => hydrate(stripSensitiveData((await client.get(id)).Item)),
-  getByIdWithSensitiveData: hydrate(async (id) => (await client.get(id)).Item),
+  getByIdWithSensitiveData: async (id) => (await client.get(id)).Item,
   getByUsername,
   getByIdOrUsername: async (idOrUsername) => {
     const result = await client.get(idOrUsername);

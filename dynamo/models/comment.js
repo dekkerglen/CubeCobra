@@ -44,7 +44,7 @@ const hydrate = async (item) => {
         id: '404',
         username: 'Anonymous',
       },
-      ImageData: {
+      image: {
         uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
         artist: 'Allan Pollack',
         id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
@@ -69,7 +69,7 @@ const batchHydrate = async (items) => {
           id: '404',
           username: 'Anonymous',
         },
-        ImageData: {
+        image: {
           uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
           artist: 'Allan Pollack',
           id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
