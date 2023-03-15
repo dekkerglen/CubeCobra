@@ -3,11 +3,15 @@ import React, { useState, useContext, useEffect } from 'react';
 import UserContext from 'contexts/UserContext';
 import Advertisment from 'components/Advertisment';
 
+import { Col, Card, CardBody } from 'reactstrap';
+
 const BANNER_RATE = 3; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options = [
   <>
-    Cube Cobra will have planned downtime starting on 3/17 in preparation for our next major update. This downtime may last around 48 hours. During this time, you can still access our <a href="https://www.cubecobradev.com">beta server</a> during this time. Thank you for your patience and support! 
+    Cube Cobra will have planned downtime starting on 3/17 in preparation for our next major update. This downtime may
+    last around 48 hours. During this time, you can still access our{' '}
+    <a href="https://www.cubecobradev.com">beta server</a> during this time. Thank you for your patience and support!
   </>,
   /*
   <>
@@ -49,7 +53,7 @@ const Banner = () => {
   const user = useContext(UserContext);
 
   useEffect(() => {
-    setOption(Math.floor(Math.random() * 3 * BANNER_RATE)); // 3 previously options.length
+    setOption(Math.floor(Math.random() * options.length * BANNER_RATE)); // 3 previously options.length
   }, []);
 
   if (option === -1) {
@@ -60,23 +64,13 @@ const Banner = () => {
 
   if (option < options.length) {
     return (
-      <div className="centered">
-        <a href="https://www.mtgcubecon.com/redirect/cubecobra" target="_blank" rel="noreferrer">
-          <img src={`/content/cubeconbanner${option + 1}.png`} alt="Buy tickets for cube con today!" />
-        </a>
-      </div>
+      <Col xs="12" className="py-2">
+        <Card>
+          <CardBody className="bg-advert">{options[option]}</CardBody>
+        </Card>
+      </Col>
     );
   }
-
-  // if (option < options.length) {
-  //   return (
-  //     <Col xs="12" className="py-2">
-  //       <Card>
-  //         <CardBody className="bg-advert">{options[option]}</CardBody>
-  //       </Card>
-  //     </Col>
-  //   );
-  // }
 
   return (
     <div className="py-2">
