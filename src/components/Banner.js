@@ -7,6 +7,10 @@ const BANNER_RATE = 3; // an alternate message appears with probability of 1/BAN
 
 const options = [
   <>
+    Cube Cobra will have planned downtime starting on 3/17 in preparation for our next major update. This downtime may last around 48 hours. During this time, you can still access our <a href="https://www.cubecobradev.com">beta server</a> during this time. Thank you for your patience and support! 
+  </>,
+  /*
+  <>
     Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
     <strong>
       <a href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
@@ -37,6 +41,7 @@ const options = [
       <a href="/contact">Contact us!</a>
     </strong>
   </>,
+  */
 ];
 
 const Banner = () => {
