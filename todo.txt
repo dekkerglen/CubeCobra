@@ -1,4 +1,3 @@
-Can't add tags to multiple cards via ListView mass edit still, getting that TypeError
 http://cubecobradev.com/cube/list/8211cf67-6d66-4aee-98e6-2c2b0f886c86?f=ledger
 	even with show unsorted enabled
 

@@ -323,7 +323,7 @@ router.post(
     // check if user exists
     const user = await User.getByEmail(req.body.email.toLowerCase());
 
-    if (!user) {
+    if (user) {
       req.flash('danger', 'email already associated with an existing account.');
       return render(req, res, 'RegisterPage', attempt);
     }

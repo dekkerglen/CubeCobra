@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
@@ -15,7 +15,7 @@ const CardModalLink = withCardModal(AutocardListItem);
 const GroupModalLink = withGroupModal(ListGroupItem);
 
 const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => {
-  const sorted = sortDeep(cards, showOther, orderedSort, sort);
+  const sorted = useMemo(() => sortDeep(cards, showOther, orderedSort, sort), [cards, showOther, orderedSort, sort]);
 
   return (
     <ListGroup className="list-outline">

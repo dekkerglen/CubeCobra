@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
@@ -14,7 +14,10 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
   const { compressedView } = useContext(DisplayContext);
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
-  const sorted = sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary);
+  const sorted = useMemo(
+    () => sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary),
+    [cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary],
+  );
 
   return (
     <div className={`table-view-container${className ? ` ${className}` : ''}`}>
