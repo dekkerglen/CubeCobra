@@ -234,7 +234,7 @@ router.post(
       user.followedCubes = [];
     }
 
-    if (!user.followedCubes.some((id) => id.equals(cube.id))) {
+    if (!user.followedCubes.some((id) => id.equals === cube.id)) {
       user.followedCubes.push(cube.id);
     }
 

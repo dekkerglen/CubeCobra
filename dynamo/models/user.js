@@ -143,7 +143,21 @@ module.exports = {
       ...document,
     });
   },
-  batchPut: async (documents) => client.batchPut(documents),
+  batchPut: async (documents) => {
+    const existing = await client.batchGet(documents.map((doc) => doc[FIELDS.ID]));
+
+    for (const item of existing) {
+      const document = documents.find((doc) => doc[FIELDS.ID] === item[FIELDS.ID]);
+
+      for (const [key, value] of Object.entries(document)) {
+        if (key !== FIELDS.ID) {
+          item[key] = value;
+        }
+      }
+    }
+
+    return client.batchPut(existing);
+  },
   batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),
   convertUser: (user) => ({
