@@ -221,7 +221,7 @@ module.exports = {
   getSortedByCardCount,
   getSortedByName,
   getSortedByFollowers,
-  batchPut: async (documents) => client.batchPut(documents),
+  batchPut: async (documents) => client.batchPut(documents, true),
   batchDelete: async (keys) => client.batchDelete(keys),
   createTable: async () => client.createTable(),
   getHashRowsForMetadata: (metadata) => {

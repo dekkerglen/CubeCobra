@@ -207,15 +207,17 @@ module.exports = function createClient(config) {
         throw new Error(`Error batch getting items from table ${config.name}: ${error.message}`);
       }
     },
-    batchPut: async (documents) => {
+    batchPut: async (documents, skipCache = false) => {
       try {
-        cache.batchPut(
-          Object.fromEntries(
-            documents.map((document) => [`${config.name}:${document[config.partitionKey]}`, document]),
-          ),
-        );
+        if (!skipCache) {
+          cache.batchPut(
+            Object.fromEntries(
+              documents.map((document) => [`${config.name}:${document[config.partitionKey]}`, document]),
+            ),
+          );
 
-        await cache.batchInvalidate(documents.map((document) => `${config.name}:${document[config.partitionKey]}`));
+          await cache.batchInvalidate(documents.map((document) => `${config.name}:${document[config.partitionKey]}`));
+        }
 
         const batches = [];
         for (let i = 0; i < documents.length; i += 25) {
