@@ -611,11 +611,13 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
       return res.redirect('/user/account');
     }
 
-    const userByName = await User.getByUsername(req.body.username.toLowerCase());
+    if (req.body.username.toLowerCase() !== user.username.toLowerCase()) {
+      const userByName = await User.getByUsername(req.body.username.toLowerCase());
 
-    if (userByName) {
-      req.flash('danger', 'username already taken.');
-      return res.redirect('/user/account');
+      if (userByName) {
+        req.flash('danger', 'username already taken.');
+        return res.redirect('/user/account');
+      }
     }
 
     user.username = req.body.username;
@@ -634,11 +636,13 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
 });
 
 router.post('/updateemail', ensureAuth, async (req, res) => {
-  const emailUser = await User.getByEmail(req.body.email.toLowerCase());
+  if (req.body.email.toLowerCase() !== req.user.email.toLowerCase()) {
+    const emailUser = await User.getByEmail(req.body.email.toLowerCase());
 
-  if (emailUser) {
-    req.flash('danger', 'username already taken.');
-    return res.redirect('/user/account');
+    if (emailUser) {
+      req.flash('danger', 'email already taken.');
+      return res.redirect('/user/account');
+    }
   }
 
   const user = await User.getById(req.params.id);

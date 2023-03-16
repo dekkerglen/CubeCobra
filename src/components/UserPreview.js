@@ -44,7 +44,6 @@ UserPreview.propTypes = {
     id: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
-    Artist: PropTypes.string.isRequired,
     following: PropTypes.arrayOf(PropTypes.string.isRequired),
     imageName: PropTypes.string.isRequired,
   }).isRequired,

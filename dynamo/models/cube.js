@@ -144,6 +144,10 @@ const getCards = async (id) => {
 };
 
 const hydrate = async (cube) => {
+  if (!cube) {
+    return cube;
+  }
+
   cube.owner = await User.getById(cube.owner);
   cube.image = getImageData(cube.imageName);
 
@@ -252,7 +256,7 @@ module.exports = {
         '#p1': FIELDS.VISIBILITY,
       },
       ExclusiveStartKey: lastKey,
-      ScanIndexForward: true,
+      ScanIndexForward: false,
     });
     return {
       items: await batchHydrate(result.Items),

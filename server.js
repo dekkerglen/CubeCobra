@@ -3,6 +3,7 @@ const forever = require('forever-monitor');
 const child = new forever.Monitor('app.js', {
   silent: false,
   args: [],
+  command: 'node --max-old-space-size=8192',
 });
 
 child.on('watch:restart', (info) => {

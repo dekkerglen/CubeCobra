@@ -56,6 +56,10 @@ const stripSensitiveData = (user) => {
 const batchStripSensitiveData = (users) => users.map(stripSensitiveData);
 
 const hydrate = (user) => {
+  if (!user) {
+    return user;
+  }
+
   user.image = getImageData(user.imageName || 'Ambush Viper');
 
   return user;
@@ -120,8 +124,6 @@ module.exports = {
       throw new Error('Invalid document: No partition key provided');
     }
 
-    delete document.image;
-
     const existing = await client.get(document[FIELDS.ID]);
 
     if (!existing.Item) {
@@ -134,7 +136,8 @@ module.exports = {
       }
     }
 
-    return client.put(existing);
+    delete existing.Item.image;
+    return client.put(existing.Item);
   },
   put: async (document) => {
     delete document.image;

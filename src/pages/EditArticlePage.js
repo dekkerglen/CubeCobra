@@ -42,7 +42,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
   const [title, setTitle] = useState(article.title);
   const [short, setShort] = useState(article.short || '');
   const [imageName, setImageName] = useState(article.imageName);
-  const [imageArtist, setImageArtist] = useState(article.Artist);
+  const [imageArtist, setImageArtist] = useState(article.image.artist);
   const [imageUri, setImageUri] = useState(article.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);
@@ -216,7 +216,6 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       title,
                       body,
                       short,
-                      Artist: imageArtist,
                       imageName,
                       image: imageUri,
                       date: article.date,
@@ -230,7 +229,6 @@ const EditArticlePage = ({ loginCallback, article }) => {
                       title,
                       body,
                       short,
-                      Artist: imageArtist,
                       imageName,
                       image: imageUri,
                       date: article.date,
@@ -245,7 +243,6 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 title,
                 body,
                 short,
-                Artist: imageArtist,
                 imageName,
                 image: imageUri,
                 date: article.date,

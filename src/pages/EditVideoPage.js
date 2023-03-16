@@ -43,7 +43,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
   const [url, setUrl] = useState(video.url);
   const [title, setTitle] = useState(video.title);
   const [imageName, setImageName] = useState(video.imageName);
-  const [imageArtist, setImageArtist] = useState(video.Artist);
+  const [imageArtist, setImageArtist] = useState(video.image.arist);
   const [imageUri, setImageUri] = useState(video.image);
   const [imageDict, setImageDict] = useState({});
   const [loading, setLoading] = useState(true);

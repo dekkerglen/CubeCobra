@@ -5,6 +5,7 @@ const createClient = require('../util');
 const carddb = require('../../serverjs/carddb');
 const { getObject, putObject } = require('../s3client');
 const User = require('./user');
+const Cube = require('./cube');
 
 const FIELDS = {
   ID: 'id',
@@ -192,6 +193,10 @@ const sanitize = (document) => {
 };
 
 const hydrate = async (document) => {
+  if (!document) {
+    return document;
+  }
+
   const ids = [document.owner, document.cubeOwner];
   if (document.seats) {
     for (const seat of document.seats) {
@@ -368,6 +373,8 @@ module.exports = {
 
     document = dehydrate(document);
 
+    const cube = await Cube.getById(document.cube);
+
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.CUBE_ID]: document.cube,
@@ -376,7 +383,7 @@ module.exports = {
       [FIELDS.DATE]: document.date,
       [FIELDS.TYPE]: document.type,
       [FIELDS.COMPLETE]: document.complete,
-      [FIELDS.NAME]: `${names[0]} ${REVERSE_TYPES[document.type]}`,
+      [FIELDS.NAME]: `${names[0]} ${REVERSE_TYPES[document.type]} of ${cube.name}`,
       [FIELDS.SEAT_NAMES]: names,
     });
 

@@ -48,7 +48,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
         <Col xs="12" md="6">
           <Card>
             <CardHeader>
-              <h5>Your cubes</h5>
+              <h5>Your Cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
               <Row className="g-0">
@@ -72,7 +72,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           </Card>
           {featuredPosition === 'left' && (
             <CubesCard
-              title="featured cubes"
+              title="Featured Cubes"
               cubes={featured}
               lean
               header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
@@ -83,7 +83,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           {featuredPosition === 'right' && (
             <CubesCard
               className="mb-4"
-              title="featured cubes"
+              title="Featured Cubes"
               cubes={featured}
               lean
               header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
@@ -91,7 +91,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           )}
           <Card>
             <CardHeader>
-              <h5>Recent Drafts of Your cubes</h5>
+              <h5>Recent Drafts of Your Cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
               {decks.length > 0 ? (
@@ -104,7 +104,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               )}
             </CardBody>
             <CardFooter>
-              <a href="/dashboard/decks/0">View All</a>
+              <a href="/dashboard/decks">View All</a>
             </CardFooter>
           </Card>
         </Col>

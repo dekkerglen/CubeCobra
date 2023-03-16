@@ -1,6 +1,4 @@
-view all recent drafts of your cubes broken
-recently updated cubes in wrong order
-
+all cards are downshifted to common according to that dropdown but still sort and filter with their correct rarity
 
 
 Investigate
@@ -18,7 +16,6 @@ Capitalization issues on front end
 capitalize board names in cube, including board drop down select
 when adding through add to cube modal, put in pending changes instead of updating DB
 Filter doesn't work on Tokens page
-
 
 
 GAME DAY!

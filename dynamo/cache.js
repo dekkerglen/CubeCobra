@@ -13,7 +13,6 @@ cache: {
 */
 const cache = {};
 let cacheSize = 0;
-const MAX_CACHE_SIZE = 1000000;
 
 const evict = (key) => {
   if (cache[key]) {
@@ -53,6 +52,17 @@ AWS.config.update({
 const autoscaling = new AWS.AutoScaling();
 const ec2 = new AWS.EC2();
 
+const fetchWithTimeout = async (url, options, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(url, {
+    ...options,
+    signal: controller.signal,
+  });
+  clearTimeout(id);
+  return response;
+};
+
 const updatePeers = async () => {
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
@@ -64,7 +74,7 @@ const updatePeers = async () => {
       const instances = groups.AutoScalingGroups[0].Instances;
 
       // get ip from ec2 instance id
-      peers = await Promise.all(
+      const ips = await Promise.all(
         instances.map((instance) =>
           ec2
             .describeInstances({
@@ -74,44 +84,29 @@ const updatePeers = async () => {
             .then((res) => res.Reservations[0].Instances[0].PublicIpAddress),
         ),
       );
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
 
-const alertPeers = async () => {
-  try {
-    if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
-      // send invalidate request to each ip address
-      await Promise.all(
-        peers.map((ip) =>
-          fetch(`http://${ip}:80/cache/newpeer`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              secret: process.env.CACHE_SECRET,
-            }),
-          }),
+      // make a health check to each ip address
+      const healthyIps = await Promise.all(
+        ips.map((ip) =>
+          fetchWithTimeout(`http://${ip}:80/cache/health`, {
+            method: 'GET',
+          })
+            .then((res) => res.json())
+            .then((json) => {
+              if (json.status === 'ok') {
+                return ip;
+              }
+              return null;
+            })
+            .catch((err) => console.log(err)),
         ),
       );
+
+      peers = healthyIps.filter((ip) => ip !== undefined);
     }
   } catch (err) {
     console.log(err);
   }
-};
-
-const fetchWithTimeout = async (url, options, timeout = 5000) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(url, {
-    ...options,
-    signal: controller.signal,
-  });
-  clearTimeout(id);
-  return response;
 };
 
 const invalidate = async (key) => {
@@ -180,11 +175,14 @@ const put = (key, value) => {
   }
 
   const size = JSON.stringify(value).length;
-  if (size > MAX_CACHE_SIZE / 10) {
+  const memoryUsage = process.memoryUsage();
+  const availableMemory = (memoryUsage.heapTotal - memoryUsage.heapUsed) / 2;
+
+  if (size > availableMemory / 10) {
     return;
   }
 
-  while (size + cacheSize > MAX_CACHE_SIZE) {
+  while (size + cacheSize > availableMemory) {
     evictOldest();
   }
 
@@ -217,13 +215,15 @@ const batchPut = (dict) => {
   Object.entries(dict).forEach(([key, value]) => put(key, value));
 };
 
+// update peers every 10 minutes
+setInterval(updatePeers, 1000 * 60 * 10);
+
 module.exports = {
   put,
   get,
   evict,
   invalidate,
   updatePeers,
-  alertPeers,
   batchGet,
   batchPut,
   batchInvalidate,

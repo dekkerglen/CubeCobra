@@ -19,7 +19,6 @@ const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
-const { updatePeers, alertPeers } = require('./dynamo/cache');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason, p) => {
@@ -224,7 +223,4 @@ carddb.initializeCardDb().then(async () => {
 
   // init socket io
   setup(socketio(server));
-
-  await updatePeers();
-  await alertPeers();
 });

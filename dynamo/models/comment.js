@@ -35,7 +35,9 @@ const client = createClient({
 });
 
 const hydrate = async (item) => {
-  if (!item) return null;
+  if (!item) {
+    return item;
+  }
 
   if (!item.owner) {
     return {

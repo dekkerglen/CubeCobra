@@ -85,6 +85,18 @@ router.get('/dashboard/decks', ensureAuth, async (req, res) => {
   }
 });
 
+router.post('/getmoredecks', ensureAuth, async (req, res) => {
+  const { lastKey, user } = req.body;
+
+  const result = await Draft.getByCubeOwner(user, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    items: result.items,
+    lastKey: result.lastKey,
+  });
+});
+
 router.get('/landing', async (req, res) => {
   return render(req, res, 'LandingPage');
 });

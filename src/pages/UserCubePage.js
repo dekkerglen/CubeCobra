@@ -59,7 +59,6 @@ UserCubePage.propTypes = {
   owner: PropTypes.shape({
     id: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
-    Artist: PropTypes.string.isRequired,
     about: PropTypes.string.isRequired,
     imageName: PropTypes.string.isRequired,
   }).isRequired,

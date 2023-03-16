@@ -52,6 +52,10 @@ const TYPES = {
 };
 
 const hydrate = async (content) => {
+  if (!content) {
+    return content;
+  }
+
   content.owner = await User.getById(content.owner);
   content.image = getImageData(content.imageName);
 

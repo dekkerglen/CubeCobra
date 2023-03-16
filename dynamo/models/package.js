@@ -49,6 +49,10 @@ const client = createClient({
 });
 
 const hydrate = async (pack) => {
+  if (!pack) {
+    return pack;
+  }
+
   pack.owner = await User.getById(pack.owner);
 
   return pack;

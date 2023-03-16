@@ -40,6 +40,10 @@ const client = createClient({
 });
 
 const hydrate = async (notice) => {
+  if (!notice) {
+    return notice;
+  }
+
   notice.user = await User.getById(notice[FIELDS.USER]);
 
   return notice;

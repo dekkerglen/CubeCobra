@@ -514,7 +514,6 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
     date: new Date().valueOf(),
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
-    Artist: 'Craig J Spearing',
     short: 'This is a brand new article!',
     imageName: 'emmessi tome [mb1-1579]',
     status: Content.STATUS.DRAFT,
@@ -550,7 +549,6 @@ router.get('/newvideo', ensureContentCreator, async (req, res) => {
     date: new Date().valueOf(),
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
-    Artist: 'Craig J Spearing',
     imageName: 'emmessi tome [mb1-1579]',
     status: Content.STATUS.DRAFT,
     username: req.user.username,

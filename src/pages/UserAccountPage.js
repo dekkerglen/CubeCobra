@@ -109,7 +109,7 @@ const RemoveFeaturedButton = withModal(Button, RemoveFeaturedModal);
 const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron, featured }) => {
   const user = useContext(UserContext);
   const [nav, setNav] = useQueryParam('nav', defaultNav);
-  const [imageValue, setImageValue] = useState(user.imageName);
+  const [imageValue, setImageValue] = useState(user.image.imageName);
   const [imageDict, setImageDict] = useState({});
   const [markdown, setMarkdown] = useState(user?.about ?? '');
 
@@ -176,7 +176,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
             </NavItem>
             <NavItem>
               <NavLink href="#" active={nav === 'email'} data-nav="email" onClick={handleClickNav}>
-                Update email
+                Update Email
               </NavLink>
             </NavItem>
             <NavItem>
@@ -199,11 +199,11 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                   <CSRFForm method="POST" action="/user/updateuserinfo">
                     <div className="mb-3">
                       <dl className="row">
-                        <dt className="col-sm-3">username</dt>
+                        <dt className="col-sm-3">Username</dt>
                         <dd className="col-sm-9">
                           <Input name="username" defaultValue={user.username} />
                         </dd>
-                        <dt className="col-sm-3">email</dt>
+                        <dt className="col-sm-3">Email</dt>
                         <dd className="col-sm-9">{user.email}</dd>
                         <dt className="col-sm-3">Profile Pic</dt>
                         <dd className="col-sm-9">
@@ -233,7 +233,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                             </Col>
                           </Row>
                         </dd>
-                        <dt className="col-sm-3">about</dt>
+                        <dt className="col-sm-3">About</dt>
                         <dd className="col-sm-9">
                           <TextEntry maxLength={2500} onChange={handleChangeMarkdown} name="body" value={markdown} />
                         </dd>

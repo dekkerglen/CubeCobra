@@ -22,8 +22,6 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
           email: req.user.email,
           about: req.user.about,
           image: req.user.image,
-          imageName: req.user.imageName,
-          Artist: req.user.Artist,
           roles: req.user.roles,
           theme: req.user.theme,
           hideFeatured: req.user.hideFeatured,

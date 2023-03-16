@@ -46,6 +46,10 @@ const client = createClient({
 });
 
 const hydrate = async (document) => {
+  if (!document) {
+    return document;
+  }
+
   document.owner = await User.getById(document.owner);
   document.cubeName = (await Cube.getById(document.cube)).name;
 

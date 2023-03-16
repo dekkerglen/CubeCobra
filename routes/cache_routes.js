@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 
-const { evict, updatePeers, batchEvict } = require('../dynamo/cache');
+const { evict, batchEvict } = require('../dynamo/cache');
 
 router.post('/invalidate', (req, res) => {
   const { secret, key } = req.body;
@@ -38,20 +38,9 @@ router.post('/batchinvalidate', (req, res) => {
   });
 });
 
-router.post('/newpeer', async (req, res) => {
-  const { secret } = req.body;
-
-  if (secret !== process.env.CACHE_SECRET) {
-    return res.status(401).send({
-      success: 'false',
-      message: 'Invalid secret',
-    });
-  }
-
-  await updatePeers();
-
+router.get('/health', (req, res) => {
   return res.status(200).send({
-    success: 'true',
+    status: 'ok',
   });
 });
 
