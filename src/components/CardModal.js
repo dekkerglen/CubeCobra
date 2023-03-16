@@ -312,7 +312,9 @@ const CardModal = ({
                     onChange={(event) => updateField('rarity', event.target.value)}
                   >
                     {getLabels(null, 'Rarity').map((rarity) => (
-                      <option key={rarity}>{rarity}</option>
+                      <option key={rarity} value={rarity.toLowerCase()}>
+                        {rarity}
+                      </option>
                     ))}
                   </Input>
                 </InputGroup>

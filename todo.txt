@@ -1,5 +1,3 @@
-all cards are downshifted to common according to that dropdown but still sort and filter with their correct rarity
-
 
 Investigate
 	- validate patreon integration

@@ -13,8 +13,11 @@ cache: {
 */
 const cache = {};
 let cacheSize = 0;
+// 4GB
+const cacheLimit = 4 * 1024 * 1024 * 1024;
 
 const evict = (key) => {
+  console.log(`EVICTING ${key}`);
   if (cache[key]) {
     cacheSize -= cache[key].size;
     delete cache[key];
@@ -85,6 +88,8 @@ const updatePeers = async () => {
         ),
       );
 
+      console.log('PEERS: [', `${ips.join(', ')}]`);
+
       // make a health check to each ip address
       const healthyIps = await Promise.all(
         ips.map((ip) =>
@@ -102,6 +107,7 @@ const updatePeers = async () => {
         ),
       );
 
+      console.log('HEALTHY PEERS: [', `${healthyIps.join(', ')}]`);
       peers = healthyIps.filter((ip) => ip !== undefined);
     }
   } catch (err) {
@@ -110,6 +116,7 @@ const updatePeers = async () => {
 };
 
 const invalidate = async (key) => {
+  console.log(`INVALIDATING ${key}`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
@@ -140,6 +147,7 @@ const invalidate = async (key) => {
 };
 
 const batchInvalidate = async (keys) => {
+  console.log(`BATCH INVALIDATING [${keys.join(', ')}]`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
@@ -170,19 +178,19 @@ const batchInvalidate = async (keys) => {
 };
 
 const put = (key, value) => {
+  console.log(`PUTTING ${key}`);
+
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
 
   const size = JSON.stringify(value).length;
-  const memoryUsage = process.memoryUsage();
-  const availableMemory = (memoryUsage.heapTotal - memoryUsage.heapUsed) / 2;
 
-  if (size > availableMemory / 10) {
+  if (size > cacheLimit / 100) {
     return;
   }
 
-  while (size + cacheSize > availableMemory) {
+  while (size + cacheSize > cacheLimit) {
     evictOldest();
   }
 
@@ -201,8 +209,11 @@ const get = (key) => {
 
   const item = cache[key];
   if (item) {
+    console.log(`CACHE HIT ${key}`);
     return clone(item.value);
   }
+
+  console.log(`CACHE MISS ${key}`);
 
   return null;
 };
@@ -215,8 +226,9 @@ const batchPut = (dict) => {
   Object.entries(dict).forEach(([key, value]) => put(key, value));
 };
 
-// update peers every 10 minutes
-setInterval(updatePeers, 1000 * 60 * 10);
+// update peers now, and every minute
+updatePeers();
+setInterval(updatePeers, 1000 * 60);
 
 module.exports = {
   put,
