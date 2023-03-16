@@ -10,8 +10,6 @@ const generateMeta = require('../serverjs/meta');
 const Notice = require('../dynamo/models/notice');
 const Content = require('../dynamo/models/content');
 
-const { getImageData } = require('../serverjs/util');
-
 const ensureContentCreator = ensureRole('ContentCreator');
 
 const router = express.Router();
@@ -151,8 +149,6 @@ router.get('/article/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  const imageDetails = getImageData(article.imageName);
-
   return render(
     req,
     res,
@@ -163,7 +159,7 @@ router.get('/article/:id', async (req, res) => {
       metadata: generateMeta(
         article.title,
         article.short || 'An article posted to Cube Cobra',
-        imageDetails.uri,
+        article.image.uri,
         `https://cubecobra.com/content/article/${req.params.id}`,
       ),
     },
@@ -236,8 +232,6 @@ router.get('/video/:id', async (req, res) => {
     return res.redirect('/content/browse');
   }
 
-  const imageDetails = getImageData(video.imageName);
-
   return render(
     req,
     res,
@@ -248,7 +242,7 @@ router.get('/video/:id', async (req, res) => {
       metadata: generateMeta(
         video.title,
         video.short || 'A video posted to Cube Cobra',
-        imageDetails.uri,
+        video.image.uri,
         `https://cubecobra.com/content/video/${req.params.id}`,
       ),
     },
@@ -262,7 +256,7 @@ router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
     return res.redirect('/404');
   }
 
-  if (!req.user.id === article.owner) {
+  if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
     return res.redirect(`/content/article/${article.id}`);
   }
@@ -283,7 +277,7 @@ router.get('/podcast/edit/:id', ensureContentCreator, async (req, res) => {
     return res.redirect('/404');
   }
 
-  if (!req.user.id === podcast.owner) {
+  if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
     return res.redirect(`/content/podcast/${podcast.id}`);
   }
@@ -304,7 +298,7 @@ router.get('/podcast/update/:id', ensureContentCreator, async (req, res) => {
     return res.redirect('/404');
   }
 
-  if (!req.user.id === podcast.owner) {
+  if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can fetch podcast episodes.');
     return res.redirect(`/content/podcast/${podcast.id}`);
   }
@@ -329,7 +323,7 @@ router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
     return res.redirect('/404');
   }
 
-  if (!req.user.id === video.owner) {
+  if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
     return res.redirect(`/content/video/${video.id}`);
   }
@@ -347,7 +341,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
 
   const article = await Content.getById(articleid);
 
-  if (!req.user.id === article.owner) {
+  if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
     return res.redirect(`/content/article/${article.id}`);
   }
@@ -372,7 +366,7 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 
   const podcast = await Content.getById(podcastid);
 
-  if (!req.user.id === podcast.owner) {
+  if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
     return res.redirect(`/content/podcast/${podcast.id}`);
   }
@@ -399,7 +393,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 
   const video = await Content.getById(videoid);
 
-  if (!req.user.id === video.owner) {
+  if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
     return res.redirect(`/content/video/${video.id}`);
   }
@@ -425,7 +419,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
 
   const article = await Content.getById(articleid);
 
-  if (!req.user.id === article.owner) {
+  if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
     return res.redirect(`/content/article/${article.id}`);
   }
@@ -455,7 +449,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
 
   const podcast = await Content.getById(podcastid);
 
-  if (!req.user.id === podcast.owner) {
+  if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
     return res.redirect(`/content/podcast/${podcast.id}`);
   }
@@ -487,7 +481,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
 
   const video = await Content.getById(videoid);
 
-  if (!req.user.id === video.owner) {
+  if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
     return res.redirect(`/content/video/${video.id}`);
   }

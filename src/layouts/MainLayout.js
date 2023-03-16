@@ -72,8 +72,8 @@ const MainLayout = ({ children, loginCallback }) => {
                 Cards
               </DropdownToggle>
               <DropdownMenu end>
-                <DropdownItem href="/tool/topcards">Top cards</DropdownItem>
-                <DropdownItem href="/tool/searchcards">Search cards</DropdownItem>
+                <DropdownItem href="/tool/topcards">Top Cards</DropdownItem>
+                <DropdownItem href="/tool/searchcards">Search Cards</DropdownItem>
                 <DropdownItem href="/packages/browse">Packages</DropdownItem>
                 <DropdownItem href="/filters">Filter Syntax</DropdownItem>
               </DropdownMenu>
@@ -88,8 +88,6 @@ const MainLayout = ({ children, loginCallback }) => {
                 <DropdownItem href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
                   Merchandise
                 </DropdownItem>
-                <DropdownItem href="/ourstory">Our Story</DropdownItem>
-                <DropdownItem href="/faq">FAQ</DropdownItem>
                 <DropdownItem href="/donate">Donate</DropdownItem>
                 <DropdownItem href="https://github.com/dekkerglen/CubeCobra">Github</DropdownItem>
               </DropdownMenu>

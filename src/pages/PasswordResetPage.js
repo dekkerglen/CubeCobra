@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const LostPassword = ({ loginCallback }) => (
+const PasswordResetPage = ({ loginCallback, code }) => (
   <MainLayout loginCallback={loginCallback}>
     <Banner />
     <DynamicFlash />
@@ -18,24 +18,14 @@ const LostPassword = ({ loginCallback }) => (
         <h5>Reset Password</h5>
       </CardHeader>
       <CardBody>
-        <CSRFForm method="POST" action="/user/lostpasswordreset">
+        <CSRFForm method="POST" action={`/user/lostpasswordreset/${code}`}>
           <FormGroup>
             <Row>
               <Col sm="4">
-                <Label>email Address:</Label>
+                <Label>Email Address:</Label>
               </Col>
               <Col sm="8">
                 <Input maxLength="1000" name="email" id="email" type="text" />
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-              <Col sm="4">
-                <Label>Recovery Code:</Label>
-              </Col>
-              <Col sm="8">
-                <Input maxLength="1000" name="code" id="code" type="text" />
               </Col>
             </Row>
           </FormGroup>
@@ -68,12 +58,13 @@ const LostPassword = ({ loginCallback }) => (
   </MainLayout>
 );
 
-LostPassword.propTypes = {
+PasswordResetPage.propTypes = {
   loginCallback: PropTypes.string,
+  code: PropTypes.string.isRequired,
 };
 
-LostPassword.defaultProps = {
+PasswordResetPage.defaultProps = {
   loginCallback: '/',
 };
 
-export default RenderToRoot(LostPassword);
+export default RenderToRoot(PasswordResetPage);

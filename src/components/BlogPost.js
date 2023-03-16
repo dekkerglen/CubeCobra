@@ -18,9 +18,8 @@ import BlogPostChangelog from 'components/BlogPostChangelog';
 const BlogPost = ({ post, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
-
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.id === post.owner;
+  const canEdit = user && user.id === post.owner.id;
 
   const hasChangelist = post.Changelog;
   const hasBody = post.body && post.body.length > 0;
@@ -50,7 +49,7 @@ const BlogPost = ({ post, noScroll }) => {
           {post.cube === 'DEVBLOG' ? (
             <a href="/dev/blog">Developer Blog</a>
           ) : (
-            <a href={`/cube/overview/${post.cube}`}>Cube</a>
+            <a href={`/cube/overview/${post.cube}`}>{post.cubeName}</a>
           )}
           {' - '}
           <TimeAgo date={post.date} />

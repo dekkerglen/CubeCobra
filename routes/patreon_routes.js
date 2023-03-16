@@ -79,7 +79,7 @@ router.post('/hook', async (req, res) => {
     const user = await User.getById(document.owner);
 
     if (!user) {
-      req.logger.info(`Recieved a patreon hook without a found user: "${document.owner}"`);
+      req.logger.info(`Recieved a patreon hook without a found user: "${document.owner.id}"`);
 
       return res.status(200).send({
         success: 'false',

@@ -6,15 +6,15 @@ module.exports = (passport) => {
   // Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const queryResult = await User.getByUsername(username);
+      const byUsername = await User.getByUsername(username);
 
-      if (queryResult.items.length !== 1) {
+      const user = await User.getByIdWithSensitiveData(byUsername.id);
+
+      if (!user) {
         return done(null, false, {
           message: 'Incorrect username',
         });
       }
-
-      const user = queryResult.items[0];
 
       // Match password
       return bcrypt.compare(password, user.passwordHash, (err, isMatch) => {

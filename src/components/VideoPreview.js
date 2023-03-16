@@ -20,7 +20,7 @@ const VideoPreview = ({ video }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage cardname={video.imageName} />
+        <MtgImage image={video.image} />
         <h6 className="content-preview-banner video-preview-bg">
           <strong>Video</strong>
         </h6>
@@ -35,7 +35,7 @@ const VideoPreview = ({ video }) => {
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-start">
-          By <Username user={video.owner} defaultName={video.username} />
+          By <Username user={video.owner} />
         </small>
         <small className="float-end">
           <TimeAgo date={video.date} />

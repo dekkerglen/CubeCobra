@@ -93,9 +93,7 @@ router.post(
 
     const id = await Comment.put(comment);
 
-    const [ownerid] = await getReplyContext[type](parent);
-
-    const owner = await User.getById(ownerid);
+    const [owner] = await getReplyContext[type](parent);
 
     if (owner) {
       await util.addNotification(
@@ -107,10 +105,10 @@ router.post(
     }
 
     for (const mention of mentions) {
-      const query = await User.getByUsername(mention);
-      if (query.items.length === 1) {
+      const mentioned = await User.getByUsername(mention);
+      if (mentioned) {
         await util.addNotification(
-          query.items[0],
+          mentioned,
           user,
           `/comment/${id}`,
           `${user.username} mentioned you in their comment`,
@@ -118,15 +116,13 @@ router.post(
       }
     }
 
-    const ImageData = util.getImageData(user.imageName);
-
     return res.status(200).send({
       success: 'true',
       comment: {
-        ImageData,
-        user: req.user,
-        id,
         ...comment,
+        owner: req.user,
+        id,
+        image: util.getImageData(req.user.imageName),
       },
     });
   }),
@@ -153,7 +149,7 @@ router.post(
       document.owner = null;
     }
 
-    await Comment.update(document);
+    await Comment.put(document);
 
     return res.status(200).send({
       success: 'true',

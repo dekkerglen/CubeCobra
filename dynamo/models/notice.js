@@ -1,4 +1,5 @@
 const createClient = require('../util');
+const User = require('./user');
 
 const FIELDS = {
   ID: 'id',
@@ -38,8 +39,24 @@ const client = createClient({
   FIELDS,
 });
 
+const hydrate = async (notice) => {
+  notice.user = await User.getById(notice[FIELDS.USER]);
+
+  return notice;
+};
+
+const batchHydrate = async (notices) => {
+  const users = await User.batchGet(notices.map((notice) => notice[FIELDS.USER]));
+
+  return notices.map((notice) => {
+    notice.user = users.find((user) => user[FIELDS.ID] === notice[FIELDS.USER]);
+
+    return notice;
+  });
+};
+
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
+  getById: async (id) => hydrate((await client.get(id)).Item),
   getByStatus: async (to, lastKey) => {
     const result = await client.query({
       IndexName: 'ByStatus',
@@ -54,21 +71,20 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
-  update: async (document) => {
-    if (!document[FIELDS.ID]) {
-      throw new Error('Invalid document: No partition key provided');
+  put: async (document) => {
+    if (document[FIELDS.USER].id) {
+      document[FIELDS.USER] = document[FIELDS.USER].id;
     }
-    return client.put(document);
-  },
-  put: async (document) =>
-    client.put({
+
+    await client.put({
       [FIELDS.STATUS]: STATUS.ACTIVE,
       ...document,
-    }),
+    });
+  },
   batchPut: async (documents) => client.batchPut(documents),
   createTable: async () => client.createTable(),
   STATUS,

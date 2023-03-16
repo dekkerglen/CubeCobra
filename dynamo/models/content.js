@@ -1,7 +1,9 @@
 const sanitizeHtml = require('sanitize-html');
 const htmlToText = require('html-to-text');
+const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
+const User = require('./user');
 
 const removeSpan = (text) =>
   sanitizeHtml(text, {
@@ -49,6 +51,24 @@ const TYPES = {
   PODCAST: 'p',
 };
 
+const hydrate = async (content) => {
+  content.owner = await User.getById(content.owner);
+  content.image = getImageData(content.imageName);
+
+  return content;
+};
+
+const batchHydrate = async (contents) => {
+  const owners = await User.batchGet(contents.map((content) => content.owner));
+
+  return contents.map((content) => {
+    content.owner = owners.find((owner) => owner.id === content.owner);
+    content.image = getImageData(content.imageName);
+
+    return content;
+  });
+};
+
 const client = createClient({
   name: 'CONTENT',
   partitionKey: FIELDS.ID,
@@ -79,38 +99,13 @@ const client = createClient({
   FIELDS,
 });
 
-// LRU cache for content bodies
-const bodyCache = {};
-const MAX_CACHE_SIZE = 1000;
-
-const evictOldest = () => {
-  const oldest = Object.entries(bodyCache).sort(([, valuea], [, valueb]) => valuea.date.localeCompare(valueb.date));
-  delete bodyCache[oldest[0][0]];
-};
-
 const addBody = async (content) => {
-  if (content.status === STATUS.PUBLISHED) {
-    if (bodyCache[content.id]) {
-      return bodyCache[content.id].document;
-    }
-  }
   try {
     const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
 
-    if (content.status === STATUS.PUBLISHED) {
-      if (Object.keys(bodyCache).length >= MAX_CACHE_SIZE) {
-        evictOldest();
-      }
-
-      bodyCache[content.id] = {
-        date: new Date(),
-        document,
-      };
-    }
-
     return document;
   } catch (e) {
-    return '';
+    return content;
   }
 };
 
@@ -121,7 +116,7 @@ const putBody = async (content) => {
 };
 
 module.exports = {
-  getById: async (id) => addBody((await client.get(id)).Item),
+  getById: async (id) => hydrate(await addBody((await client.get(id)).Item)),
   getByStatus: async (status, lastKey) => {
     const result = await client.query({
       IndexName: 'ByStatus',
@@ -136,7 +131,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -154,7 +149,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -172,7 +167,7 @@ module.exports = {
       ScanIndexForward: false,
     });
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -180,8 +175,15 @@ module.exports = {
     if (!document[FIELDS.ID]) {
       throw new Error('Invalid document: No partition key provided');
     }
+
+    delete document.image;
+
     document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
     document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
 
     await putBody(document);
     delete document.body;
@@ -190,7 +192,12 @@ module.exports = {
   put: async (document, type) => {
     await putBody(document);
 
+    delete document.image;
     delete document.body;
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
 
     client.put({
       [FIELDS.TYPE]: type,
@@ -202,6 +209,10 @@ module.exports = {
   batchPut: async (documents) => {
     await Promise.all(
       documents.map(async (document) => {
+        if (document.owner.id) {
+          document.owner = document.owner.id;
+        }
+
         await putBody(document);
         delete document.body;
       }),

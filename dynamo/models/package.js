@@ -1,5 +1,6 @@
 const uuid = require('uuid/v4');
 const createClient = require('../util');
+const User = require('./user');
 
 const FIELDS = {
   ID: 'id',
@@ -47,10 +48,31 @@ const client = createClient({
   FIELDS,
 });
 
+const hydrate = async (pack) => {
+  pack.owner = await User.getById(pack.owner);
+
+  return pack;
+};
+
+const batchHydrate = async (packs) => {
+  const owners = await User.batchGet(packs.map((pack) => pack.owner));
+
+  packs.forEach((pack) => {
+    pack.owner = owners.find((owner) => owner.id === pack.owner);
+  });
+
+  return packs;
+};
+
 module.exports = {
-  getById: async (id) => (await client.get(id)).Item,
+  getById: async (id) => hydrate((await client.get(id)).Item),
   put: async (document) => {
     const id = document[FIELDS.ID] || uuid();
+
+    if (document.owner.id) {
+      document.owner = document.owner.id;
+    }
+
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.TITLE]: document[FIELDS.TITLE],
@@ -85,7 +107,7 @@ module.exports = {
     }
 
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },
@@ -105,7 +127,7 @@ module.exports = {
     const result = await client.query(query);
 
     return {
-      items: result.Items,
+      items: await batchHydrate(result.Items),
       lastKey: result.LastEvaluatedKey,
     };
   },

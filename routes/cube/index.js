@@ -86,7 +86,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       cardCount: 0,
     };
 
-    await Cube.put(cube);
+    await Cube.putNewCube(cube);
 
     await Cube.putCards({
       id: cube.id,
@@ -142,18 +142,16 @@ router.get('/clone/:id', async (req, res) => {
       cardCount: source.cardCount,
     };
 
-    const id = await Cube.put(cube);
+    const id = await Cube.putNewCube(cube);
 
     await Cube.putCards({
       ...sourceCards,
       id: cube.id,
     });
 
-    const sourceOwner = await User.getById(source.owner);
-
-    if (!source.disableNotifications) {
+    if (!source.disableNotifications && source.owner) {
       await util.addNotification(
-        sourceOwner,
+        source.owner,
         req.user,
         `/cube/view/${id}`,
         `${req.user.username} made a cube by cloning yours: ${cube.name}`,
@@ -179,7 +177,7 @@ router.post('/format/add/:id', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/list/404');
     }
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Formats can only be changed by cube owner.');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -236,17 +234,15 @@ router.post(
       user.followedCubes = [];
     }
 
-    if (!user.followedCubes.some((id) => id.equals(cube.id))) {
+    if (!user.followedCubes.some((id) => id.equals === cube.id)) {
       user.followedCubes.push(cube.id);
     }
 
     await User.update(user);
     await Cube.update(cube);
 
-    const cubeOwner = await User.getById(cube.owner);
-
     await util.addNotification(
-      cubeOwner,
+      cube.owner,
       user,
       `/cube/overview/${cube.id}`,
       `${user.username} followed your cube: ${cube.name}`,
@@ -356,12 +352,6 @@ router.get('/overview/:id', async (req, res) => {
 
     const followers = await User.batchGet(cube.following);
 
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     // calculate cube prices
     const nameToCards = {};
     for (const card of mainboard) {
@@ -402,8 +392,6 @@ router.get('/overview/:id', async (req, res) => {
       totalPricePurchase += cheapestDict[card.details.name] || 0;
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -422,13 +410,13 @@ router.get('/overview/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Overview: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/overview/${req.params.id}`,
         ),
       },
     );
   } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/overview/${req.params.id}`);
+    return util.handleRouteError(req, res, err, `/landing/${req.params.id}`);
   }
 });
 
@@ -510,8 +498,6 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 
-    const imagedata = util.getImageData(cubeA.imageName);
-
     return render(
       req,
       res,
@@ -521,7 +507,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
         cubeB,
         onlyA: aOracles,
         onlyB: bOracles,
-        both: inBoth.map((card) => card.details.name),
+        both: inBoth.map((card) => card.details.oracle_id),
         cards: allCards.map((card, index) =>
           Object.assign(card, {
             index,
@@ -533,7 +519,7 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
         metadata: generateMeta(
           'Cube Cobra Compare cubes',
           `Comparing "${cubeA.name}" To "${cubeB.name}"`,
-          imagedata.uri,
+          cubeA.image.uri,
           `https://cubecobra.com/cube/compare/${idA}/to/${idB}`,
         ),
       },
@@ -553,7 +539,6 @@ router.get('/list/:id', async (req, res) => {
 
     const cards = await Cube.getCards(cube.id);
 
-    const imagedata = util.getImageData(cube.imageName);
     return render(
       req,
       res,
@@ -567,7 +552,7 @@ router.get('/list/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
       },
@@ -587,7 +572,6 @@ router.get('/history/:id', async (req, res) => {
 
     const query = await Changelog.getByCube(cube.id, 36);
 
-    const imagedata = util.getImageData(cube.imageName);
     return render(
       req,
       res,
@@ -602,7 +586,7 @@ router.get('/history/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra List: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/list/${req.params.id}`,
         ),
       },
@@ -634,8 +618,6 @@ router.get('/playtest/:id', async (req, res) => {
 
     const decks = await Draft.getByCube(cube.id);
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -649,7 +631,7 @@ router.get('/playtest/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Playtest: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/playtest/${req.params.id}`,
         ),
       },
@@ -826,7 +808,7 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -854,7 +836,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -883,7 +865,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -972,7 +954,7 @@ router.post(
       const doc = {
         cube: cube.id,
         owner: req.user.id,
-        cubeOwner: cube.owner,
+        cubeOwner: cube.owner.id,
         date: new Date().valueOf(),
         type: Draft.TYPES.GRID,
         seats: [],
@@ -1096,7 +1078,7 @@ router.post(
       const deck = {
         cube: cube.id,
         owner: req.user.id,
-        cubeOwner: cube.owner,
+        cubeOwner: cube.owner.id,
         date: new Date().valueOf(),
         type: Draft.TYPES.SEALED,
         seats: [],
@@ -1120,11 +1102,9 @@ router.post(
 
       await Cube.update(cube);
 
-      const cubeOwner = await User.getById(cube.owner);
-
-      if (!cube.disableNotifications) {
+      if (!cube.disableNotifications && cube.owner) {
         await util.addNotification(
-          cubeOwner,
+          cube.owner,
           user,
           `/cube/deck/${deckId}`,
           `${user.username} built a sealed deck from your cube: ${cube.name}`,
@@ -1205,7 +1185,7 @@ router.post(
       draft.seats = populated.seats;
       draft.cube = cube.id;
       draft.owner = req.user.id;
-      draft.cubeOwner = cube.owner;
+      draft.cubeOwner = cube.owner.id;
       draft.type = Draft.TYPES.DRAFT;
       draft.date = new Date().valueOf();
       draft.cards = populated.cards;
@@ -1244,14 +1224,6 @@ router.get('/griddraft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const user = await User.getById(cube.owner);
-    if (!user) {
-      req.flash('danger', 'owner not found');
-      return res.redirect('/404');
-    }
-
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -1265,7 +1237,7 @@ router.get('/griddraft/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Grid Draft: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/griddraft/${req.params.id}`,
         ),
       },
@@ -1291,8 +1263,6 @@ router.get('/draft/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    const imagedata = util.getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -1306,7 +1276,7 @@ router.get('/draft/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Draft: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/draft/${encodeURIComponent(req.params.id)}`,
         ),
       },
@@ -1324,7 +1294,7 @@ router.post('/remove/:id', ensureAuth, async (req, res) => {
       req.flash('danger', 'Cube not found');
       return res.redirect('/cube/overview/404');
     }
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/overview/${encodeURIComponent(req.params.id)}`);
     }
@@ -1350,7 +1320,7 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
       });
     }
 
-    if (cube.owner !== req.user.id) {
+    if (cube.owner.id !== req.user.id) {
       return res.status(401).send({
         success: 'false',
         message: 'Not authorized.',
@@ -1395,7 +1365,7 @@ router.post(
     const cube = await Cube.getById(cubeid);
     if (
       !isCubeViewable(cube, req.user) ||
-      cube.owner !== req.user.id ||
+      cube.owner.id !== req.user.id ||
       !Number.isInteger(formatId) ||
       formatId >= cube.formats.length ||
       formatId < -1

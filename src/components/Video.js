@@ -15,7 +15,7 @@ const Video = ({ video }) => {
       <CardHeader>
         <h1>{video.title}</h1>
         <h6>
-          By <Username user={video.owner} defaultName={video.username} />
+          By <Username user={video.owner} />
           {' | '}
           <TimeAgo date={video.date} />
         </h6>

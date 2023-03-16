@@ -25,17 +25,6 @@ const client = createClient({
 });
 
 const BLOG_HTML_PARSE = />([^</]+)<\//g;
-const MAX_CACHE_SIZE = 10000;
-
-// LRU cache for changelog
-const changelogCache = {};
-
-const evictOldest = () => {
-  const oldest = Object.entries(changelogCache).sort(([, valuea], [, valueb]) =>
-    valuea.date.localeCompare(valueb.date),
-  );
-  delete changelogCache[oldest[0][0]];
-};
 
 const sanitizeChangelog = (changelog) => {
   for (const [, value] of Object.entries(changelog)) {
@@ -106,20 +95,7 @@ const hydrateChangelog = (changelog) => {
 };
 
 const getChangelog = async (cubeId, id) => {
-  if (changelogCache[id]) {
-    return changelogCache[id].document;
-  }
-
   const changelog = await getObject(process.env.DATA_BUCKET, `changelog/${cubeId}/${id}.json`);
-
-  if (Object.keys(changelogCache).length >= MAX_CACHE_SIZE) {
-    evictOldest();
-  }
-
-  changelogCache[id] = {
-    date: new Date(),
-    document: changelog,
-  };
 
   return hydrateChangelog(changelog);
 };
@@ -300,7 +276,7 @@ module.exports = {
   batchGet: async (keys) => {
     const result = await Promise.all(
       keys.map(async (key) => {
-        return getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`);
+        return hydrateChangelog(await getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`));
       }),
     );
 

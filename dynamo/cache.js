@@ -22,6 +22,12 @@ const evict = (key) => {
   }
 };
 
+const batchEvict = (keys) => {
+  keys.forEach((key) => {
+    evict(key);
+  });
+};
+
 const evictOldest = () => {
   let oldestKey = null;
   let oldestDate = null;
@@ -97,26 +103,71 @@ const alertPeers = async () => {
   }
 };
 
+const fetchWithTimeout = async (url, options, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(url, {
+    ...options,
+    signal: controller.signal,
+  });
+  clearTimeout(id);
+  return response;
+};
+
 const invalidate = async (key) => {
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
       await Promise.all(
         peers.map((ip) =>
-          fetch(`http://${ip}:80/cache/invalidate`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          fetchWithTimeout(
+            `http://${ip}:80/cache/invalidate`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                secret: process.env.CACHE_SECRET,
+                key,
+              }),
             },
-            body: JSON.stringify({
-              secret: process.env.CACHE_SECRET,
-              key,
-            }),
-          }),
+            1000,
+          ),
         ),
       );
     } else {
       evict(key);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const batchInvalidate = async (keys) => {
+  try {
+    if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
+      // send invalidate request to each ip address
+      await Promise.all(
+        peers.map((ip) =>
+          fetchWithTimeout(
+            `http://${ip}:80/cache/batchinvalidate`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                secret: process.env.CACHE_SECRET,
+                keys,
+              }),
+            },
+            1000,
+          ),
+        ),
+      );
+    } else {
+      keys.forEach((key) => evict(key));
     }
   } catch (err) {
     console.log(err);
@@ -138,7 +189,7 @@ const put = (key, value) => {
   }
 
   cache[key] = {
-    value,
+    value: clone(value),
     date: new Date().valueOf(),
     size,
   };
@@ -158,6 +209,14 @@ const get = (key) => {
   return null;
 };
 
+const batchGet = (keys) => {
+  return keys.map((key) => get(key));
+};
+
+const batchPut = (dict) => {
+  Object.entries(dict).forEach(([key, value]) => put(key, value));
+};
+
 module.exports = {
   put,
   get,
@@ -165,4 +224,8 @@ module.exports = {
   invalidate,
   updatePeers,
   alertPeers,
+  batchGet,
+  batchPut,
+  batchInvalidate,
+  batchEvict,
 };

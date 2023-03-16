@@ -88,7 +88,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
                     )}
                   />
                 </NavItem>
-                {user && deck.seats[seatIndex].owner === user.id && (
+                {user && deck.seats[seatIndex].owner && deck.seats[seatIndex].owner.id === user.id && (
                   <NavItem>
                     <NavLink href={`/cube/deck/deckbuilder/${deck.id}`}>Edit</NavLink>
                   </NavItem>

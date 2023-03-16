@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import useMount from 'hooks/UseMount';
@@ -29,6 +29,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
   const [order, setOrder] = React.useState({});
   const [players, setPlayers] = React.useState([]);
+  const [playerNameMap, setPlayerNameMap] = React.useState({});
   const user = useContext(UserContext);
   const domain = useContext(DomainContext);
 
@@ -76,7 +77,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     return {
       element: (
         <div className="tag-color-row clickable pb-3" key={i}>
-          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={seats[i]} nolink />}
+          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
         </div>
       ),
       key: i,
@@ -97,6 +98,16 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     setOrder(newSeats);
   };
 
+  useMemo(() => {
+    const run = async () => {
+      const res = await callApi('/multiplayer/getusernames', { ids: players });
+      const json = await res.json();
+
+      setPlayerNameMap(json.users);
+    };
+    run();
+  }, [players]);
+
   if (user.id !== players[0]) {
     return (
       <Card className="mt-4">
@@ -110,7 +121,8 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
           <p>The draft owner is currently setting up the draft, please wait.</p>
           {seats.map((seat, i) => (
             <div className="pb-3" key={i}>
-              {`Seat ${i + 1}: `} {seat === BOT_NAME ? BOT_NAME : <Username user={seat} nolink />}
+              {`Seat ${i + 1}: `}{' '}
+              {seat === BOT_NAME ? BOT_NAME : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
             </div>
           ))}
         </CardBody>

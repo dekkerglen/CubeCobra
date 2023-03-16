@@ -1,3 +1,6 @@
+view all recent drafts of your cubes broken
+recently updated cubes in wrong order
+
 
 
 Investigate
@@ -5,15 +8,32 @@ Investigate
 	- validate featured cube rotation
 
 Eventually
-have usernames pre-loaded everywhere
-have cube images pre-loaded everywhere
 fix proptypes - use object proptypes when possible
 quickly switching cards between deck and sideboard during a sealed playtest, a few cards got duplicated
-batch get and batch put use cache!!
 don't display mainboard header in changelist/changelog if only mainboard was changed
 tag colors don't display in list view
 don't update cube hashes for followers changes or deck count changes. have this be picked up by sweeper
 drafts freezing is b/c they are getting stuck in "done" state by mistake, possible that we're not checking this in a consistent way?
 Capitalization issues on front end
 capitalize board names in cube, including board drop down select
+when adding through add to cube modal, put in pending changes instead of updating DB
+Filter doesn't work on Tokens page
 
+
+
+GAME DAY!
+
+1. Take down prod server by setting downtime flag
+2. Run mongodump to s3: https://bansalnagesh.medium.com/backing-up-mongodb-on-aws-ec2-to-s3-b045b5727fd6
+3. Meanwhile, setup new enviornment and validate it works correctly
+	- security groups for elasticache, and our cache
+	- make sure multiplayer drafting looks good
+4. When 2 is done, download from s3 to local
+5. delete nodecube on local
+5. Run mongorestore to local
+6. set env variables to prod
+7. run createtables, migratetables, then migrate drafts
+8. when 7 is done, change dns to point to new enviornment
+9. run analytics scripts
+10. delete old enviornment
+11. write some release notes :D

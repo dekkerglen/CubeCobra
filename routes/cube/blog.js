@@ -12,7 +12,6 @@ const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
 const User = require('../../dynamo/models/user');
 const Feed = require('../../dynamo/models/feed');
-const { getImageData } = require('../../serverjs/util');
 
 const router = express.Router();
 
@@ -29,7 +28,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
 
-      if (blog.owner !== user.id) {
+      if (blog.owner.id !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
@@ -51,7 +50,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     // post new blog
-    if (cube.owner !== user.id) {
+    if (cube.owner.id !== user.id) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
@@ -78,11 +77,11 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     // mentions are only added for new posts and ignored on edits
     if (req.body.mentions) {
       for (const mention of req.body.mentions) {
-        const query = await User.getByUsername(mention);
+        const mentioned = await User.getByUsername(mention);
 
-        if (query.items.length > 0) {
+        if (mentioned) {
           await util.addNotification(
-            query.items[0],
+            mentioned,
             user,
             `/cube/blog/blogpost/${id}`,
             `${user.username} mentioned you in their blog post`,
@@ -124,7 +123,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
     const { id } = req.params;
     const blog = await Blog.getById(id);
 
-    if (blog.owner !== req.user.id) {
+    if (blog.owner.id !== req.user.id) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }
@@ -163,8 +162,6 @@ router.get('/:id', async (req, res) => {
 
     const query = await Blog.getByCube(cube.id, 10);
 
-    const imagedata = getImageData(cube.imageName);
-
     return render(
       req,
       res,
@@ -179,7 +176,7 @@ router.get('/:id', async (req, res) => {
         metadata: generateMeta(
           `Cube Cobra Blog: ${cube.name}`,
           cube.description,
-          imagedata.uri,
+          cube.image.uri,
           `https://cubecobra.com/cube/blog/${encodeURIComponent(req.params.id)}`,
         ),
       },

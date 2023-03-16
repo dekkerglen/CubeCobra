@@ -255,7 +255,7 @@ const CardModal = ({
                   </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>status</InputGroupText>
+                  <InputGroupText>Status</InputGroupText>
                   <Input
                     type="select"
                     name="status"
@@ -317,7 +317,7 @@ const CardModal = ({
                   </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>image URL</InputGroupText>
+                  <InputGroupText>Image URL</InputGroupText>
                   <Input
                     type="text"
                     name="imgUrl"
@@ -326,7 +326,7 @@ const CardModal = ({
                   />
                 </InputGroup>
                 <InputGroup className="mb-3">
-                  <InputGroupText>image Back URL</InputGroupText>
+                  <InputGroupText>Image Back URL</InputGroupText>
                   <Input
                     type="text"
                     name="imgBackUrl"
@@ -367,7 +367,7 @@ const CardModal = ({
                   />
                 </InputGroup>
 
-                <h5>tags</h5>
+                <h5>Tags</h5>
                 <TagInput
                   tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}

@@ -36,8 +36,8 @@ const NoticePage = ({ loginCallback, notices }) => {
               </p>
               <p>
                 Submitted by by:{' '}
-                <a href={`/user/view/${application.user}`} target="_blank" rel="noopener noreferrer">
-                  {application.user}
+                <a href={`/user/view/${application.user.id}`} target="_blank" rel="noopener noreferrer">
+                  {application.user.username}
                 </a>
                 - <TimeAgo date={application.date} />
               </p>
@@ -73,8 +73,8 @@ const NoticePage = ({ loginCallback, notices }) => {
               <p>Reason: {report.body}</p>
               <p>
                 Reported by:{' '}
-                <a href={`/user/view/${report.user}`} target="_blank" rel="noopener noreferrer">
-                  {report.user}
+                <a href={`/user/view/${report.user.id}`} target="_blank" rel="noopener noreferrer">
+                  {report.user.username}
                 </a>
                 - <TimeAgo date={report.date} />
               </p>

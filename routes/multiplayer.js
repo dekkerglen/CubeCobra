@@ -22,6 +22,7 @@ const {
 } = require('../serverjs/multiplayerDrafting');
 
 const Draft = require('../dynamo/models/draft');
+const User = require('../dynamo/models/user');
 
 const router = express.Router();
 
@@ -45,6 +46,17 @@ router.post('/getlobbyseats', ensureAuth, async (req, res) => {
     success: 'true',
     players,
     seats,
+  });
+});
+
+router.post('/getusernames', ensureAuth, async (req, res) => {
+  const { ids } = req.body;
+
+  const users = await User.batchGet(ids);
+
+  return res.status(200).send({
+    success: 'true',
+    users: Object.fromEntries(users.map((user) => [user.id, user])),
   });
 });
 
@@ -174,7 +186,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
 
       const deck = await Draft.getById(draftId);
 
-      if (deck.seats[seat].owner !== req.user.id) {
+      if (deck.seats[seat].owner.id !== req.user.id) {
         return res.status(401).send({
           success: 'false',
         });

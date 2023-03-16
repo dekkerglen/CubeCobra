@@ -20,7 +20,7 @@ const ArticlePreview = ({ article }) => {
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage cardname={article.imageName} />
+        <MtgImage image={article.image} />
         <h6 className="content-preview-banner article-preview-bg">
           <strong>Article</strong>
         </h6>
@@ -35,7 +35,7 @@ const ArticlePreview = ({ article }) => {
       </div>
       <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
         <small className="float-start">
-          Written by <Username user={article.owner} defaultName={article.username} />
+          Written by <Username user={article.owner} />
         </small>
         <small className="float-end">
           <TimeAgo date={article.date} />

@@ -108,7 +108,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
     if (!other.following.some((id) => id === user.id)) {
       other.following.push(user.id);
     }
-    if (!user.followedUsers.some((id) => id.equals(other.id))) {
+    if (!user.followedUsers.some((id) => id.equals === other.id)) {
       user.followedUsers.push(other.id);
     }
 
@@ -136,10 +136,9 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
     }
 
     other.following = other.following.filter((id) => !req.user.id === id);
-    user.followedUsers = user.followedUsers.filter((id) => !id.equals(req.params.id));
+    user.followedUsers = user.followedUsers.filter((id) => id !== req.params.id);
 
     await User.batchPut([user, other]);
-    await Promise.all([user.save(), other.save()]);
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
@@ -164,9 +163,14 @@ router.post(
 
       const user = await User.getByEmail(recoveryEmail);
 
+      if (!user) {
+        req.flash('danger', 'No user with that email found.');
+        return render(req, res, 'LostPasswordPage');
+      }
+
       const passwordReset = {
         owner: user.id,
-        date: new Date(),
+        date: new Date().valueOf(),
       };
 
       const id = await PasswordReset.put(passwordReset);
@@ -184,7 +188,7 @@ router.post(
       const email = new Email({
         message: {
           from: 'Cube Cobra Team <support@cubecobra.com>',
-          to: passwordReset.email,
+          to: user.email,
           subject: 'Password Reset',
         },
         send: true,
@@ -213,16 +217,16 @@ router.post(
 );
 
 router.get('/passwordreset/:id', async (req, res) => {
-  const document = await PasswordReset.getById();
+  const document = await PasswordReset.getById(req.params.id);
   if (!document || Date.now().valueOf() > document.date + 6 * 60 * 60 * 1000) {
     req.flash('danger', 'Password recovery link expired');
     return res.redirect('/');
   }
-  return render(req, res, 'PasswordResetPage');
+  return render(req, res, 'PasswordResetPage', { code: req.params.id });
 });
 
 router.post(
-  '/lostpasswordreset',
+  '/lostpasswordreset/:code',
   [
     body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
     body('password', 'New passwords must match.').custom(checkPasswordsMatch),
@@ -231,30 +235,25 @@ router.post(
   async (req, res) => {
     try {
       if (!req.validated) {
-        return render(req, res, 'PasswordResetPage');
+        return render(req, res, 'PasswordResetPage', { code: req.params.code });
       }
       const recoveryEmail = req.body.email.toLowerCase();
-      const passwordreset = await PasswordReset.findOne({
-        code: req.body.code,
-        email: recoveryEmail,
-      });
+      const passwordreset = await PasswordReset.getById(req.params.code);
 
       if (!passwordreset) {
         req.flash('danger', 'Incorrect email and recovery code combination.');
-        return render(req, res, 'PasswordResetPage');
+        return render(req, res, 'PasswordResetPage', { code: req.params.code });
       }
-      const query = await User.getByEmail(recoveryEmail);
+      const user = await User.getByEmail(recoveryEmail);
 
-      if (query.items.length !== 1) {
+      if (!user) {
         req.flash('danger', 'No user with that email found! Are you sure you created an account?');
-        return render(req, res, 'PasswordResetPage');
+        return render(req, res, 'PasswordResetPage', { code: req.params.code });
       }
-
-      const user = query.items[0];
 
       if (req.body.password2 !== req.body.password) {
         req.flash('danger', "New passwords don't match");
-        return render(req, res, 'PasswordResetPage');
+        return render(req, res, 'PasswordResetPage', { code: req.params.code });
       }
 
       return bcrypt.genSalt(10, (err4, salt) => {
@@ -265,7 +264,7 @@ router.post(
           if (err5) {
             return util.handleRouteError(req, res, err5, `/`);
           }
-          user.Password = hash;
+          user.passwordHash = hash;
           try {
             await User.update(user);
             req.flash('success', 'Password updated successfully');
@@ -314,17 +313,17 @@ router.post(
       return render(req, res, 'RegisterPage', attempt);
     }
 
-    const usernameQuery = await User.getByUsername(req.body.username.toLowerCase());
+    const userByName = await User.getByUsername(req.body.username.toLowerCase());
 
-    if (usernameQuery.items.length > 0) {
+    if (userByName) {
       req.flash('danger', 'username already taken.');
       return render(req, res, 'RegisterPage', attempt);
     }
 
     // check if user exists
-    const emailQuery = await User.getByEmail(req.body.email.toLowerCase());
+    const user = await User.getByEmail(req.body.email.toLowerCase());
 
-    if (emailQuery.items.length > 0) {
+    if (user) {
       req.flash('danger', 'email already associated with an existing account.');
       return render(req, res, 'RegisterPage', attempt);
     }
@@ -365,19 +364,18 @@ router.get('/login', (req, res) => {
 
 // Login post
 router.post('/login', async (req, res) => {
-  let query;
+  let user;
 
   if (req.body.username.includes('@')) {
-    query = await User.getByEmail(req.body.username.toLowerCase());
+    user = await User.getByEmail(req.body.username.toLowerCase());
   } else {
-    query = await User.getByUsername(req.body.username.toLowerCase());
+    user = await User.getByUsername(req.body.username.toLowerCase());
   }
 
-  if (query.items.length !== 1) {
-    req.flash('danger', 'Incorrect username or email address.');
+  if (!user) {
+    req.flash('danger', 'Incorrect Username or email address.');
     res.redirect('/user/login');
   } else {
-    const user = query.items[0];
     req.body.username = user.username;
     // TODO: fix confirmation and check it here.
     let redirect = '/';
@@ -406,34 +404,13 @@ router.get('/logout', (req, res) => {
 
 router.get('/view/:id', async (req, res) => {
   try {
-    let user = await User.getById(req.params.id);
-
-    // eslint-disable-next-line no-empty
-    if (!user) {
-      const query = await User.getByUsername(req.params.id.toLowerCase());
-
-      if (query.items.length !== 1) {
-        req.flash('danger', 'User not found');
-        return res.redirect('/404');
-      }
-
-      [user] = query.items;
-    }
+    const user = await User.getByIdOrUsername(req.params.id);
 
     const cubes = await Cube.getByOwner(user.id);
 
     const followers = await User.batchGet(user.following || []);
 
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     const following = req.user && user.following && user.following.some((id) => id === req.user.id);
-    user.following = []; // don't want to leak this info
-    delete user.passwordHash;
-    delete user.email;
 
     return render(req, res, 'UserCubePage', {
       owner: user,
@@ -460,15 +437,6 @@ router.get('/decks/:userid', async (req, res) => {
     }
 
     const followers = await User.batchGet(user.following || []);
-
-    for (const follower of followers) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
-    delete user.passwordHash;
-    delete user.email;
 
     return render(req, res, 'UserDecksPage', {
       owner: user,
@@ -515,27 +483,10 @@ router.post('/getmorenotifications', ensureAuth, async (req, res) => {
 
 router.get('/blog/:userid', async (req, res) => {
   try {
-    let user = await User.getById(req.params.userid);
-
-    if (!user) {
-      const userQuery = await User.getByUsername(req.params.userid.toLowerCase());
-
-      if (userQuery.items.length !== 1) {
-        req.flash('danger', 'User not found');
-        return res.redirect('/404');
-      }
-
-      [user] = userQuery.items;
-    }
+    const user = await User.getByIdOrUsername(req.params.userid);
 
     const posts = await Blog.getByOwner(req.params.userid, 10);
     const followers = await User.batchGet(user.following || []);
-
-    for (const follower of [user, ...followers]) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
 
     return render(
       req,
@@ -622,7 +573,7 @@ router.post(
     if (!req.validated) {
       return res.redirect('/user/account');
     }
-    const user = await User.getById(req.user.id);
+    const user = await User.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
@@ -660,11 +611,9 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
       return res.redirect('/user/account');
     }
 
-    const usernameQuery = await User.getByUsername(req.body.username.toLowerCase());
+    const userByName = await User.getByUsername(req.body.username.toLowerCase());
 
-    usernameQuery.items = usernameQuery.items.filter((item) => item.id !== user.id);
-
-    if (usernameQuery.items.length > 0) {
+    if (userByName) {
       req.flash('danger', 'username already taken.');
       return res.redirect('/user/account');
     }
@@ -685,11 +634,9 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
 });
 
 router.post('/updateemail', ensureAuth, async (req, res) => {
-  const emailQuery = await User.getByEmail(req.body.email.toLowerCase());
+  const emailUser = await User.getByEmail(req.body.email.toLowerCase());
 
-  emailQuery.items = emailQuery.items.filter((item) => item.id !== req.user.id);
-
-  if (emailQuery.items.length > 0) {
+  if (emailUser) {
     req.flash('danger', 'username already taken.');
     return res.redirect('/user/account');
   }
@@ -726,12 +673,6 @@ router.get('/social', ensureAuth, async (req, res) => {
     const followers = await User.batchGet(req.user.following || []);
     const followedUsers = await User.batchGet(req.user.followedUsers || []);
 
-    for (const follower of [...followers, ...followedUsers]) {
-      // don't leak this info
-      delete follower.passwordHash;
-      delete follower.email;
-    }
-
     return render(
       req,
       res,
@@ -762,7 +703,7 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     req.flash('danger', 'Cube not found');
     return res.redirect(redirect);
   }
-  if (cube.owner !== req.user.id) {
+  if (cube.owner.id !== req.user.id) {
     req.flash('danger', 'Only an owner of a cube can add it to the queue');
     return res.redirect(redirect);
   }
