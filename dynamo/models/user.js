@@ -47,6 +47,10 @@ const client = createClient({
 });
 
 const stripSensitiveData = (user) => {
+  if (!user) {
+    return user;
+  }
+
   delete user[FIELDS.PASSWORD_HASH];
   delete user[FIELDS.EMAIL];
 
@@ -160,6 +164,9 @@ module.exports = {
     }
 
     return client.batchPut(existing);
+  },
+  batchAdd: async (documents) => {
+    return client.batchPut(documents);
   },
   batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),

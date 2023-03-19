@@ -11,7 +11,7 @@ const Deck = require('../models/old/deck');
 const draftModel = require('../dynamo/models/draft');
 
 const batchSize = 100;
-const skip = 0;
+const skip = 10400;
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);

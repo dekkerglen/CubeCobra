@@ -49,7 +49,7 @@ const migrations = [
     source: User,
     conversions: [
       [notification.getNotificationsFromUser, notification.batchPut],
-      [user.convertUser, user.batchPut],
+      [user.convertUser, user.batchAdd],
     ],
   },
   {

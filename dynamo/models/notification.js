@@ -110,7 +110,7 @@ module.exports = {
       [FIELDS.URL]: item.url,
       [FIELDS.BODY]: item.text,
       [FIELDS.STATUS]: item[FIELDS.STATUS],
-      [FIELDS.TO_STATUS_COMP]: `${user.id}:${item[FIELDS.STATUS]}`,
+      [FIELDS.TO_STATUS_COMP]: `${user._id}:${item[FIELDS.STATUS]}`,
     }));
   },
   STATUS,

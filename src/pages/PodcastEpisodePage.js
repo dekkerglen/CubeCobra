@@ -20,7 +20,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
         <CardHeader>
           <h1>{episode.Ttitle}</h1>
           <h6>
-            from <a href={`/content/podcast/${episode.Podcast}`}>{episode.podcastName}</a>
+            from <a href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</a>
             {' - '}
             <TimeAgo date={episode.date} />
           </h6>

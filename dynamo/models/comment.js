@@ -80,7 +80,7 @@ const batchHydrate = async (items) => {
     }
 
     item.owner = owners.find((owner) => owner.id === item.owner);
-    item.image = util.getImageData(item.owner.imageName);
+    item.image = util.getImageData(item.owner ? item.owner.imageName : 'Ambush Viper');
 
     return item;
   });

@@ -44,6 +44,7 @@ const client = createClient({
     [FIELDS.STATUS]: 'S',
     [FIELDS.VOTECOUNT]: 'N',
     [FIELDS.DATE]: 'N',
+    [FIELDS.OWNER]: 'S',
   },
   FIELDS,
 });

@@ -425,26 +425,30 @@ module.exports = {
   convertCubeToCards: (cube) => {
     return {
       id: `${cube._id}`,
-      mainboard: cube.cards.map((card) => {
-        delete card._id;
-        delete card.details;
-        if (card.addedTmsp) {
-          card.addedTmsp = card.addedTmsp.valueOf();
-        } else {
-          card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
-        }
-        return card;
-      }),
-      maybeboard: cube.maybe.map((card) => {
-        delete card._id;
-        delete card.details;
-        if (card.addedTmsp) {
-          card.addedTmsp = card.addedTmsp.valueOf();
-        } else {
-          card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
-        }
-        return card;
-      }),
+      mainboard: cube.cards
+        .filter((card) => card)
+        .map((card) => {
+          delete card._id;
+          delete card.details;
+          if (card.addedTmsp) {
+            card.addedTmsp = card.addedTmsp.valueOf();
+          } else {
+            card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
+          }
+          return card;
+        }),
+      maybeboard: cube.maybe
+        .filter((card) => card)
+        .map((card) => {
+          delete card._id;
+          delete card.details;
+          if (card.addedTmsp) {
+            card.addedTmsp = card.addedTmsp.valueOf();
+          } else {
+            card.addedTmsp = new Date().valueOf() - MILLISECONDS_IN_YEAR * 3;
+          }
+          return card;
+        }),
     };
   },
   VISIBILITY,

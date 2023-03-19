@@ -13,10 +13,14 @@ cache: {
 */
 const cache = {};
 let cacheSize = 0;
-// 4GB
-const cacheLimit = 4 * 1024 * 1024 * 1024;
+// 2GB
+const cacheLimit = 2 * 1024 * 1024 * 1024;
 
 const evict = (key) => {
+  if (process.env.CACHE_ENABLED !== 'true') {
+    return;
+  }
+
   console.log(`EVICTING ${key}`);
   if (cache[key]) {
     cacheSize -= cache[key].size;
@@ -25,6 +29,10 @@ const evict = (key) => {
 };
 
 const batchEvict = (keys) => {
+  if (process.env.CACHE_ENABLED !== 'true') {
+    return;
+  }
+
   keys.forEach((key) => {
     evict(key);
   });
@@ -116,6 +124,10 @@ const updatePeers = async () => {
 };
 
 const invalidate = async (key) => {
+  if (process.env.CACHE_ENABLED !== 'true') {
+    return;
+  }
+
   console.log(`INVALIDATING ${key}`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
@@ -147,6 +159,10 @@ const invalidate = async (key) => {
 };
 
 const batchInvalidate = async (keys) => {
+  if (process.env.CACHE_ENABLED !== 'true') {
+    return;
+  }
+
   console.log(`BATCH INVALIDATING [${keys.join(', ')}]`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
@@ -178,6 +194,10 @@ const batchInvalidate = async (keys) => {
 };
 
 const put = (key, value) => {
+  if (process.env.CACHE_ENABLED !== 'true') {
+    return;
+  }
+
   console.log(`PUTTING ${key}`);
 
   if (process.env.CACHE_ENABLED !== 'true') {
@@ -226,9 +246,11 @@ const batchPut = (dict) => {
   Object.entries(dict).forEach(([key, value]) => put(key, value));
 };
 
-// update peers now, and every minute
-updatePeers();
-setInterval(updatePeers, 1000 * 60);
+if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
+  // update peers now, and every minute
+  updatePeers();
+  setInterval(updatePeers, 1000 * 60);
+}
 
 module.exports = {
   put,

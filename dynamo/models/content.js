@@ -56,8 +56,13 @@ const hydrate = async (content) => {
     return content;
   }
 
-  content.owner = await User.getById(content.owner);
-  content.image = getImageData(content.imageName);
+  if (content.body) {
+    content.owner = await User.getById(content.owner);
+  }
+
+  if (content.imageName) {
+    content.image = getImageData(content.imageName);
+  }
 
   return content;
 };
@@ -67,7 +72,9 @@ const batchHydrate = async (contents) => {
 
   return contents.map((content) => {
     content.owner = owners.find((owner) => owner.id === content.owner);
-    content.image = getImageData(content.imageName);
+    if (content.imageName) {
+      content.image = getImageData(content.imageName);
+    }
 
     return content;
   });
@@ -107,7 +114,10 @@ const addBody = async (content) => {
   try {
     const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
 
-    return document;
+    return {
+      body: document,
+      ...content,
+    };
   } catch (e) {
     return content;
   }
