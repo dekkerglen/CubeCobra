@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
-import { Card, CardHeader, CardBody, Row, Col, CardTitle } from 'reactstrap';
+import { Card, Row, Col } from 'reactstrap';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
@@ -8,7 +8,6 @@ import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import TextEntry from 'components/TextEntry';
 import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -80,9 +79,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
   currentDeck.mainboard = deck;
   currentDeck.sideboard = sideboard;
 
-  const [name, setName] = useState(initialDeck.seats[seat].name);
-  const [description, setDescription] = useState(initialDeck.seats[seat].description);
-
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider cubeID={cube.id}>
@@ -90,8 +86,8 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
           <DeckbuilderNavbar
             deck={currentDeck}
             addBasics={addBasics}
-            name={name}
-            description={description}
+            name={initialDeck.seats[seat].name}
+            description={initialDeck.seats[seat].description}
             className="mb-3"
             setDeck={setDeck}
             setSideboard={setSideboard}
@@ -124,25 +120,6 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
                     />
                   </DndProvider>
                 </ErrorBoundary>
-                <CardHeader className="border-top">
-                  <CardTitle className="mb-0 d-flex flex-row align-items-end">
-                    <h4 className="mb-0 me-auto">about</h4>
-                  </CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <h6>Deck name</h6>
-                  <input
-                    className="form-control"
-                    name="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength="100"
-                  />
-                  <br />
-                  <h6>description</h6>
-                  <TextEntry value={description} onChange={(e) => setDescription(e.target.value)} maxLength="10000" />
-                </CardBody>
               </Card>
             </Col>
           </Row>

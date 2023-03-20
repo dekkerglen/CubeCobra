@@ -1,36 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
 
 import { BellFillIcon } from '@primer/octicons-react';
 import { csrfFetch } from 'utils/CSRF';
 import LinkButton from 'components/LinkButton';
-import useMount from 'hooks/UseMount';
+import UserContext from 'contexts/UserContext';
 
 const NotificationsNav = () => {
-  const [items, setItems] = useState([]);
+  const { notifications } = useContext(UserContext);
 
-  useMount(() => {
-    const fetch = async () => {
-      const response = await csrfFetch(`/user/getusernotifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lastKey: null,
-        }),
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          setItems([...items, ...json.notifications]);
-        }
-      }
-    };
-    fetch();
-  });
+  const [items, setItems] = useState(notifications);
 
   const clear = async () => {
     await csrfFetch('/user/clearnotifications', {

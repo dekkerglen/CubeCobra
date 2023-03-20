@@ -28,7 +28,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
 
-      if (blog.owner.id !== user.id) {
+      if (blog.owner !== user.id) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }

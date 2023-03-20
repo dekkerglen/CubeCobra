@@ -1,10 +1,12 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useContext } from 'react';
 import cx from 'classnames';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
-import { getCardColorClass } from 'utils/Util';
+import { getCardTagColorClass } from 'utils/Util';
 
 import withAutocard from 'components/WithAutocard';
+import TagColorContext from 'contexts/TagColorContext';
+import UserContext from 'contexts/UserContext';
 
 const AutocardDiv = withAutocard('li');
 
@@ -20,6 +22,8 @@ const styles = {
 };
 
 const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...props }) => {
+  const tagColors = useContext(TagColorContext);
+  const user = useContext(UserContext);
   const [cardName, cardId] = useMemo(
     () => (card && card.details ? [card.details.name, card.details._id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
@@ -39,7 +43,12 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
     [openCardToolWindow],
   );
 
-  const colorClassname = useMemo(() => getCardColorClass(card), [card]);
+  const colorClassname = useMemo(() => {
+    if (user.hideTagColors) {
+      return getCardTagColorClass([], card);
+    }
+    return getCardTagColorClass(tagColors, card);
+  }, [card, tagColors, user.hideTagColors]);
 
   return (
     <AutocardDiv

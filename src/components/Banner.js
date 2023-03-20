@@ -44,6 +44,19 @@ const Banner = () => {
   const user = useContext(UserContext);
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
+
+  return (
+    <Col xs="12" className="py-2">
+      <Card>
+        <CardBody className="bg-advert">
+          CubeCobra is live, but still undergoing the last steps of our data migration. Old decks are still being moved
+          over, and card analytics will be missing until we finish. Thank you for your patience and support during this
+          migration!
+        </CardBody>
+      </Card>
+    </Col>
+  );
+
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
   if (option < options.length) {
     return (

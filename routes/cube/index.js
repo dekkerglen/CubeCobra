@@ -784,6 +784,8 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
           src: card.imgUrl || card.details.image_normal,
           x: CARD_WIDTH * (index % width),
           y: CARD_HEIGHT * Math.floor(index / width),
+          height: CARD_HEIGHT,
+          width: CARD_WIDTH,
         };
       });
 

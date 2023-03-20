@@ -6,9 +6,13 @@ module.exports = (passport) => {
   // Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const byUsername = await User.getByUsername(username);
+      let fromQuery = await User.getByUsername(username);
 
-      const user = await User.getByIdWithSensitiveData(byUsername.id);
+      if (!fromQuery) {
+        fromQuery = await User.getByEmail(username);
+      }
+
+      const user = await User.getByIdWithSensitiveData(fromQuery.id);
 
       if (!user) {
         return done(null, false, {

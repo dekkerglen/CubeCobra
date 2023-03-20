@@ -7,6 +7,7 @@ const generateMeta = require('../../serverjs/meta');
 const cardutil = require('../../dist/utils/Card');
 const { ensureAuth } = require('../middleware');
 const { createLobby } = require('../../serverjs/multiplayerDrafting');
+const { addBasics } = require('./helper');
 
 const { abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
 
@@ -579,7 +580,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    const cubeCards = Cube.getCards(cube);
+    const cubeCards = await Cube.getCards(cube.id);
     const { mainboard } = cubeCards;
 
     if (cube.owner.id !== req.user.id) {
@@ -664,7 +665,10 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
         },
       ],
       complete: true,
+      basics: cube.basics,
     };
+
+    addBasics(deck, cube.basics);
 
     const id = await Draft.put(deck);
 

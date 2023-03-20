@@ -171,11 +171,11 @@ export function getCubeId(cube) {
   return cube.shortId || cube.id;
 }
 
-export function getCubeDescription(cube) {
+export function getCubeDescription(cube, changedCards) {
   const overridePrefixes =
     cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
 
-  const { cardCount } = cube;
+  const cardCount = changedCards ? changedCards.mainboard.length : cube.cardCount;
 
   if (cube.categoryOverride) {
     return `${cardCount} Card ${overridePrefixes}${cube.categoryOverride} Cube`;
@@ -235,9 +235,11 @@ export function getCardColorClass(card) {
 }
 
 export function getCardTagColorClass(tagColors, card) {
-  const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
-  if (tagColor && tagColor.color) {
-    return `tag-color tag-${tagColor.color}`;
+  if (tagColors) {
+    const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
+    if (tagColor && tagColor.color && tagColor.color !== 'no-color') {
+      return `tag-color tag-${tagColor.color}`;
+    }
   }
   return getCardColorClass(card);
 }

@@ -1,11 +1,13 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext } from 'react';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
 import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
+import TagColorContext from 'contexts/TagColorContext';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { getCubeDescription, getCubeId } from 'utils/Util';
+import { getCubeId } from 'utils/Util';
+import CubeSubtitle from 'components/CubeSubtitle';
 
 import { NavItem, NavLink } from 'reactstrap';
 
@@ -30,8 +32,21 @@ CubeNavItem.defaultProps = {
   children: false,
 };
 
+const CubeLayoutInner = ({ children }) => {
+  const { tagColors } = useContext(CubeContext);
+
+  return (
+    <TagColorContext.Provider value={tagColors}>
+      <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
+    </TagColorContext.Provider>
+  );
+};
+
+CubeLayoutInner.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useChangedCards }) => {
-  const subtitle = useMemo(() => getCubeDescription(cube), [cube]);
   return (
     <CubeContextProvider
       initialCube={cube}
@@ -41,10 +56,7 @@ const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useCha
     >
       <div className="mb-3">
         <ul className="cubenav nav nav-tabs nav-fill d-flex flex-column flex-sm-row pt-2">
-          <div className="nav-item px-lg-4 px-3 text-sm-start text-center font-weight-boldish mt-auto mb-2">
-            {cube.name}
-            <span className="d-sm-inline"> ({subtitle})</span>
-          </div>
+          <CubeSubtitle />
           <div className="d-flex flex-row flex-wrap">
             <CubeNavItem link="overview" activeLink={activeLink}>
               Overview
@@ -66,7 +78,7 @@ const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useCha
             </CubeNavItem>
           </div>
         </ul>
-        <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
+        <CubeLayoutInner>{children}</CubeLayoutInner>
       </div>
     </CubeContextProvider>
   );

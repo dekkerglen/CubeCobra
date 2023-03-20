@@ -118,7 +118,7 @@ module.exports = {
     });
 
     if (result.Items.length > 0) {
-      return hydrate(stripSensitiveData(result.Items[0]));
+      return hydrate(result.Items[0]);
     }
 
     return null;
@@ -141,6 +141,7 @@ module.exports = {
     }
 
     delete existing.Item.image;
+
     return client.put(existing.Item);
   },
   put: async (document) => {

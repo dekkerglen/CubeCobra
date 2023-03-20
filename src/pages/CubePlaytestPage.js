@@ -168,8 +168,8 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
             <GridDraftCard className="mb-3" />
           </Col>
           <Col xs="12" md="6" xl="6">
-            {decks.length !== 0 && <PlaytestDecksCard decks={decks} className="mb-3" />}
             <SamplePackCard className="mb-3" />
+            {decks.length !== 0 && <PlaytestDecksCard decks={decks} className="mb-3" />}
           </Col>
         </Row>
         <CustomDraftFormatModal

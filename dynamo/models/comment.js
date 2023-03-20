@@ -39,7 +39,7 @@ const hydrate = async (item) => {
     return item;
   }
 
-  if (!item.owner) {
+  if (!item.owner || item.owner === 'null') {
     return {
       ...item,
       owner: {
@@ -64,7 +64,7 @@ const batchHydrate = async (items) => {
   const owners = await User.batchGet(items.filter((item) => item.owner).map((item) => item.owner));
 
   return items.map((item) => {
-    if (!item.owner) {
+    if (!item.owner || item.owner === 'null') {
       return {
         ...item,
         owner: {

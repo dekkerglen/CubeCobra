@@ -210,7 +210,7 @@ function writeCard(res, card, maybe) {
   res.write(`${maybe},`);
   res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);
-  card.tags.forEach((tag, tagIndex) => {
+  (card.tags || []).forEach((tag, tagIndex) => {
     if (tagIndex !== 0) {
       res.write(';');
     }

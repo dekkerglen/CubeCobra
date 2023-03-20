@@ -1,4 +1,11 @@
 
+Migration related
+cube
+	custom draft formats not migrated
+deck
+	decks are saved as strings instead of json
+	put errored doc ids in a file, investigate separetely. There's too many for just spillage
+
 Investigate
 	- validate patreon integration
 	- validate featured cube rotation
@@ -20,20 +27,20 @@ GAME DAY!
 DONE
 1. Take down prod server by setting downtime flag
 2. Run mongodump to s3: https://bansalnagesh.medium.com/backing-up-mongodb-on-aws-ec2-to-s3-b045b5727fd6
-4. When 2 is done, download from s3 to local
-5. delete nodecube on local
-5. Run mongorestore to local
-6. set env variables to prod
-8. when 7 is done, change dns to point to new enviornment
-
-IN PROGRESS
-
-
-TODO
 3. Meanwhile, setup new enviornment and validate it works correctly
 	- security groups for elasticache, and our cache
 	- make sure multiplayer drafting looks good
-7. run createtables, migratetables, then migrate drafts
+4. When 2 is done, download from s3 to local
+5. delete nodecube on local, Run mongorestore to local
+6. set env variables to prod
+7. run createtables, migratetables, then 
+8. when 7 is done, change dns to point to new enviornment
+11. write some release notes :D
+
+IN PROGRESS
+migrate drafts
+
+
+TODO
 9. run analytics scripts
 10. delete old enviornment
-11. write some release notes :D

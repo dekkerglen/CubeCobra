@@ -75,7 +75,7 @@ module.exports = {
       items: result.Items.map((document) => ({
         type: document[FIELDS.TYPE],
         document: itemsById[document[FIELDS.ID]],
-      })),
+      })).filter((item) => item.document),
       lastKey: result.LastEvaluatedKey,
     };
   },

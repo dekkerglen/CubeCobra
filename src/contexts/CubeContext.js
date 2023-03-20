@@ -97,7 +97,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     ...(cube.tagColors || []),
     ...allTags
       .filter((tag) => !(cube.tagColors || []).map((tc) => tc.tag).includes(tag))
-      .map((tag) => ({ tag, color: 'None' })),
+      .map((tag) => ({ tag, color: 'no-color' })),
   ]);
 
   useMount(() => {
@@ -243,7 +243,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       delete oldCard.index;
       delete oldCard.board;
 
-      swaps.push({ index, card, oldCard });
+      swaps.push({ index, card: { ...card, index }, oldCard });
       newChanges[board].swaps = swaps;
       setChanges(newChanges);
     },
@@ -598,7 +598,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       });
 
       if (result.status === 200) {
-        const newCards = JSON.parse(JSON.stringify(changedCards));
+        const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
 
         for (const [board] of Object.entries(changes)) {
           // swaps

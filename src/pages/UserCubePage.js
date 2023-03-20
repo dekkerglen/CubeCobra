@@ -23,7 +23,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
         <DynamicFlash />
         <Card>
           <CardHeader>
-            <h5 className="mb-0">about</h5>
+            <h5 className="mb-0">About</h5>
           </CardHeader>
           <CardBody>
             <Row className="mb-3">

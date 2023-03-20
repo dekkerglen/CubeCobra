@@ -93,7 +93,13 @@ module.exports = {
       [FIELDS.STATUS]: STATUS.UNREAD,
       ...document,
     }),
-  batchPut: async (documents) => client.batchPut(documents),
+  batchPut: async (documents) =>
+    client.batchPut(
+      documents.map((item) => ({
+        ...item,
+        [FIELDS.TO_STATUS_COMP]: `${item.to}:${item.status}`,
+      })),
+    ),
   createTable: async () => client.createTable(),
   getNotificationsFromUser: (user) => {
     const notifications = [

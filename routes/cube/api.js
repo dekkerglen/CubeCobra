@@ -340,7 +340,7 @@ router.get(
 
     if (req.query.b_id) {
       const cubeB = await Cube.getById(req.query.b_id);
-      const cubeBCards = Cube.getCards(req.query.b_id);
+      const cubeBCards = await Cube.getCards(req.query.b_id);
 
       if (!isCubeViewable(cubeB, req.user)) {
         return res.status(404).send({
@@ -363,41 +363,6 @@ router.get(
       success: 'true',
       tagColors,
       showTagColors,
-    });
-  }),
-);
-
-router.get(
-  '/getcardfromcube/:id',
-  util.wrapAsyncApi(async (req, res) => {
-    const split = req.params.id.split(';');
-    const cubeid = split[0];
-    let cardname = split[1];
-    cardname = cardutil.decodeName(cardname);
-    cardname = cardutil.normalizeName(cardname);
-
-    const cube = await Cube.getById(cubeid);
-
-    if (!isCubeViewable(cube, req.user)) {
-      return req.status(404).send({
-        success: 'false',
-        message: 'Not Found',
-      });
-    }
-
-    const cubeCards = Cube.getCards(cubeid);
-
-    for (const card of cubeCards) {
-      if (carddb.cardFromId(card.cardID).name_lower === cardname) {
-        card.details = carddb.cardFromId(card.cardID);
-        return res.status(200).send({
-          success: 'true',
-          card: card.details,
-        });
-      }
-    }
-    return res.status(200).send({
-      success: 'true',
     });
   }),
 );

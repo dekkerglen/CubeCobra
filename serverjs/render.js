@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const serialize = require('serialize-javascript');
 const Cube = require('../dynamo/models/cube');
+const Notification = require('../dynamo/models/notification');
 
 const getCubes = async (req, callback) => {
   if (!req.user) {
@@ -14,20 +15,24 @@ const getCubes = async (req, callback) => {
 };
 
 const render = (req, res, page, reactProps = {}, options = {}) => {
-  getCubes(req, (cubes) => {
-    reactProps.user = req.user
-      ? {
-          id: req.user.id,
-          username: req.user.username,
-          email: req.user.email,
-          about: req.user.about,
-          image: req.user.image,
-          roles: req.user.roles,
-          theme: req.user.theme,
-          hideFeatured: req.user.hideFeatured,
-          cubes,
-        }
-      : null;
+  getCubes(req, async (cubes) => {
+    if (req.user) {
+      const notifications = await Notification.getByToAndStatus(req.user.id, Notification.STATUS.UNREAD);
+
+      reactProps.user = {
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        about: req.user.about,
+        image: req.user.image,
+        roles: req.user.roles,
+        theme: req.user.theme,
+        hideFeatured: req.user.hideFeatured,
+        hideTagColors: req.user.hideTagColors,
+        cubes,
+        notifications: notifications.items,
+      };
+    }
 
     reactProps.loginCallback = req.baseUrl + req.path;
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';

@@ -430,11 +430,7 @@ module.exports = {
 
       await Promise.all(
         filtered.map(async (document) => {
-          await putObject(
-            process.env.DATA_BUCKET,
-            `cardlist/${document.id}.json`,
-            JSON.stringify(stripDetails(document.cards)),
-          );
+          await putObject(process.env.DATA_BUCKET, `cardlist/${document.id}.json`, stripDetails(document.cards));
           await putObject(process.env.DATA_BUCKET, `seats/${document.id}.json`, {
             seats: document.seats,
             basics: document.basics,

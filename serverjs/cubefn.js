@@ -296,7 +296,9 @@ const generateSamplepackImage = async (sources = [], width, height) => {
       const res = await fetch(source.src);
 
       return {
-        input: Buffer.from(await res.arrayBuffer()),
+        input: await sharp(Buffer.from(await res.arrayBuffer()))
+          .resize({ width: source.width, height: source.height })
+          .toBuffer(),
         top: source.y,
         left: source.x,
       };

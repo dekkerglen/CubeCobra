@@ -238,7 +238,8 @@ module.exports = {
         '#p1': FIELDS.OWNER,
       },
       ExclusiveStartKey: lastKey,
-      ScanIndexForward: true,
+      ScanIndexForward: false,
+      Limit: 100,
     });
     return {
       items: await batchHydrate(result.Items),

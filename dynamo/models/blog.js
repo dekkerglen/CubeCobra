@@ -51,7 +51,10 @@ const hydrate = async (document) => {
   }
 
   document.owner = await User.getById(document.owner);
-  document.cubeName = (await Cube.getById(document.cube)).name;
+
+  if (document.cube && document.cube !== 'DEVBLOG') {
+    document.cubeName = (await Cube.getById(document.cube)).name;
+  }
 
   if (!document.changelist) {
     return document;
@@ -78,7 +81,9 @@ const batchHydrate = async (documents) => {
 
   return documents.map((document) => {
     document.owner = owners.find((owner) => owner.id === document.owner);
-    document.cubeName = cubes.find((cube) => cube.id === document.cube).name;
+    if (document.cube && document.cube !== 'DEVBLOG') {
+      document.cubeName = cubes.find((cube) => cube.id === document.cube).name;
+    }
 
     if (document.changelist) {
       const id = keys.findIndex((key) => key.id === document.changelist);

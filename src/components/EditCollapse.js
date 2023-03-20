@@ -123,7 +123,7 @@ const EditCollapse = ({ isOpen }) => {
         const board = changedCards[showMaybeboard ? activeBoard : 'mainboard'];
         for (let i = 0; i < board.length; i++) {
           if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
-            removeIndex = i;
+            removeIndex = board[i].index;
           }
         }
 
