@@ -609,7 +609,7 @@ router.post(
         message: 'Cube can only be updated by cube owner.',
       });
     }
-    const cubeCards = await Cube.getCards(req.params.id);
+    const cubeCards = await Cube.getCards(req.params.id, true);
 
     let tag = null;
     if (req.body.packid) {
@@ -893,7 +893,7 @@ router.post('/commit', async (req, res) => {
     await Feed.batchPut(feedItems);
   }
 
-  const cards = await Cube.getCards(cube.id);
+  const cards = await Cube.getCards(cube.id, true);
 
   for (const [board] of Object.entries(changes)) {
     // swaps

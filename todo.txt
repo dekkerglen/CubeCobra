@@ -1,4 +1,8 @@
 I got a 404 error comparing cubes, using Curiosity as my base and Pink as the comparison (those are cube ids)
+articles not loading
+podcasts 401 can't publish
+podcast images wrong
+
 
 Migration related
 cube

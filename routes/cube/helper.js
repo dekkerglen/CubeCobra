@@ -98,7 +98,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 }
 
 async function bulkUpload(req, res, list, cube) {
-  const cards = await Cube.getCards(cube.id);
+  const cards = await Cube.getCards(cube.id, true);
   const { mainboard } = cards;
   const { maybeboard } = cards;
 

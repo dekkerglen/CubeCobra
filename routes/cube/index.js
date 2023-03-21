@@ -860,7 +860,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 
     const cube = await Cube.getById(req.params.id);
     // use this to maintain customized fields
-    const cards = await Cube.getCards(cube.id);
+    const cards = await Cube.getCards(cube.id, true);
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');

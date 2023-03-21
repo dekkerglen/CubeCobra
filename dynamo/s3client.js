@@ -15,12 +15,12 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-const getObject = async (bucket, key) => {
+const getObject = async (bucket, key, skipcache = false) => {
   try {
     // Check cache
     const cached = get(key);
 
-    if (cached) {
+    if (cached && !skipcache) {
       return cached;
     }
 

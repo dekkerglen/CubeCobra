@@ -121,9 +121,9 @@ const stripDetails = (cards) => {
   });
 };
 
-const getCards = async (id) => {
+const getCards = async (id, skipcache = false) => {
   try {
-    const cards = await getObject(process.env.DATA_BUCKET, `cube/${id}.json`);
+    const cards = await getObject(process.env.DATA_BUCKET, `cube/${id}.json`, skipcache);
 
     for (const [board, list] of Object.entries(cards)) {
       if (board !== 'id') {
