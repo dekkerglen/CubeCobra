@@ -237,7 +237,7 @@ export function getCardColorClass(card) {
 export function getCardTagColorClass(tagColors, card) {
   if (tagColors) {
     const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
-    if (tagColor && tagColor.color && tagColor.color !== 'no-color') {
+    if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
       return `tag-color tag-${tagColor.color}`;
     }
   }
