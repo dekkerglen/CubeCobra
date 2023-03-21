@@ -10,7 +10,7 @@ const removeSpan = (text) =>
   });
 
 const updatePodcast = async (podcast) => {
-  const episodes = await getFeedEpisodes(podcast.rss);
+  const episodes = await getFeedEpisodes(podcast.url);
   const existingGuids = episodes.map((episode) => episode.guid);
 
   let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);

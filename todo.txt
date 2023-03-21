@@ -1,3 +1,4 @@
+I got a 404 error comparing cubes, using Curiosity as my base and Pink as the comparison (those are cube ids)
 
 Migration related
 cube

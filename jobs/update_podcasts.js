@@ -1,25 +1,25 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const mongoose = require('mongoose');
-
 const { updatePodcast } = require('../serverjs/podcast');
 const Content = require('../dynamo/models/content');
-const { winston } = require('../serverjs/cloudwatch');
 
 const tryUpdate = async (podcast) => {
   try {
     await updatePodcast(podcast);
   } catch (err) {
-    winston.error(`Failed to update podcast: ${podcast.title}`, { error: err });
+    console.error(`Failed to update podcast: ${podcast.title}`, { error: err });
   }
 };
 const run = async () => {
-  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS_TYPES.PUBLISHED);
+  const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
 
   console.log({ message: 'Updating podcasts...' });
 
-  await Promise.all(podcasts.map(tryUpdate));
+  for (const podcast of podcasts.items) {
+    // eslint-disable-next-line no-await-in-loop
+    await tryUpdate(podcast);
+  }
 
   console.log({ message: 'Finished updating podcasts.' });
 
@@ -31,13 +31,4 @@ const run = async () => {
   process.exit();
 };
 
-// Connect db
-mongoose
-  .connect(process.env.MONGODB_URL, {
-    useCreateIndex: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    run();
-  });
+run();

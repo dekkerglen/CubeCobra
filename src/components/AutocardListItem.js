@@ -44,11 +44,11 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
   );
 
   const colorClassname = useMemo(() => {
-    if (user.hideTagColors) {
+    if (user && user.hideTagColors) {
       return getCardTagColorClass([], card);
     }
     return getCardTagColorClass(tagColors, card);
-  }, [card, tagColors, user.hideTagColors]);
+  }, [card, tagColors, user]);
 
   return (
     <AutocardDiv

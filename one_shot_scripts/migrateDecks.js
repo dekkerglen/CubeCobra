@@ -1,6 +1,8 @@
 // Load Environment Variables
 require('dotenv').config();
 
+const fs = require('fs');
+
 const mongoose = require('mongoose');
 const carddb = require('../serverjs/carddb');
 
@@ -11,7 +13,7 @@ const Deck = require('../models/old/deck');
 const draftModel = require('../dynamo/models/draft');
 
 const batchSize = 100;
-const skip = 10400;
+const skip = 0;
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);
@@ -21,6 +23,7 @@ const skip = 10400;
   const count = await Deck.countDocuments();
   const cursor = Deck.find().skip(skip).lean().cursor();
   const starttime = new Date();
+  const failed = [];
 
   console.log(`Deck: Found ${count} items. Starting migration...`);
 
@@ -57,7 +60,17 @@ const skip = 10400;
       }),
     );
 
-    let converted = withDraft.map(([deck, draft, type]) => draftModel.convertDeck(deck, draft, type));
+    let converted = [];
+
+    for (const [deck, draft, type] of withDraft) {
+      try {
+        console.log(`Deck: Converting deck ${deck._id} with draft ${deck.draft}`);
+        converted.push(draftModel.convertDeck(deck, draft, type));
+      } catch (err) {
+        console.log(`Deck: Failed to convert deck ${deck._id}`);
+        failed.push({ deck, draft, type });
+      }
+    }
 
     // check for a 1:N relationship
     if (Array.isArray(converted[0])) {
@@ -77,6 +90,8 @@ const skip = 10400;
         Math.round(timeElapsed / 36) / 100
       } hours. Time remaining: ${Math.round(timeRemaining / 36) / 100} hours`,
     );
+    // sync failed with /temp/failed.txt
+    fs.writeFileSync('./temp/failed.txt', JSON.stringify(failed));
   }
   process.exit();
 })();

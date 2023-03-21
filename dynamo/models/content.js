@@ -190,8 +190,6 @@ module.exports = {
       throw new Error('Invalid document: No partition key provided');
     }
 
-    delete document.image;
-
     document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
     document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
 
