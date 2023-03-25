@@ -275,26 +275,6 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByVisibilityBefore: async (visibility, before, lastKey) => {
-    const result = await client.query({
-      IndexName: 'ByVisiblity',
-      KeyConditionExpression: `#p1 = :visibility and #p2 < :before`,
-      ExpressionAttributeValues: {
-        ':visibility': visibility,
-        ':before': before,
-      },
-      ExpressionAttributeNames: {
-        '#p1': FIELDS.VISIBILITY,
-        '#p2': FIELDS.DATE,
-      },
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: true,
-    });
-    return {
-      items: await batchHydrate(result.Items),
-      lastKey: result.LastEvaluatedKey,
-    };
-  },
   update: async (document) => {
     const oldDocument = (await client.get(document.id)).Item;
 

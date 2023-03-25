@@ -30,12 +30,7 @@ const getObject = async (bucket, key, skipcache = false) => {
         Key: key,
       })
       .promise();
-    let value = JSON.parse(res.Body.toString());
-
-    // if value is a string, need to parse it again
-    if (typeof value === 'string') {
-      value = JSON.parse(value);
-    }
+    const value = JSON.parse(res.Body.toString());
 
     // Update cache
     await put(key, value);

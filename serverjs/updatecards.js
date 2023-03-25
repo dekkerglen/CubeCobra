@@ -29,6 +29,7 @@ async function updateCardbase(basePath = 'private', defaultPath = null, allPath 
   }
 
   await downloadFromS3(basePath, defaultPath, allPath);
+  await carddb.loadAllFiles();
 }
 
 module.exports = {

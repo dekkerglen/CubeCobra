@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const fs = require('fs');
+const json = require('big-json');
 const { winston } = require('./cloudwatch');
 
 const { SortFunctions } = require('../dist/utils/Sort');
@@ -88,31 +89,37 @@ function getCardDetails(card) {
 }
 
 async function loadJSONFile(filename, attribute) {
-  try {
-    data[attribute] = JSON.parse(await fs.promises.readFile(filename, 'utf8'));
-    console.log(`Loaded ${filename}.`);
-  } catch (e) {
-    console.error(`Error loading ${filename}.`, { error: e });
-  }
+  return new Promise((resolve, reject) => {
+    try {
+      const readStream = fs.createReadStream(filename);
+      const parseStream = json.createParseStream();
+
+      parseStream.on('data', (parsed) => {
+        data[attribute] = parsed;
+      });
+
+      readStream.pipe(parseStream);
+
+      readStream.on('end', () => {
+        console.log(`Loaded ${filename}.`);
+        resolve();
+      });
+    } catch (e) {
+      console.error(`Error loading ${filename}.`, { error: e });
+      reject(e);
+    }
+  });
 }
 
-function registerFileWatcher(filename, attribute) {
-  fs.watchFile(filename, () => {
-    console.log(`File Changed: ${filename}`);
-    loadJSONFile(filename, attribute);
-  });
+async function loadAllFiles() {
+  await Promise.all(
+    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
+  );
 }
 
 async function initializeCardDb() {
   console.log('Loading carddb...');
-
-  await Promise.all(
-    Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`private/${filename}`, attribute)),
-  );
-
-  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
-    registerFileWatcher(`private/${filename}`, attribute);
-  }
+  await loadAllFiles();
 
   data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
 
@@ -258,6 +265,7 @@ data = {
   reasonableCard,
   normalizedName: (card) => card.name_lower,
   fileToAttribute,
+  loadAllFiles,
 };
 
 module.exports = data;

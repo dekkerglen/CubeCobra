@@ -210,6 +210,10 @@ export function isSamePageURL(to) {
   }
 }
 export function getCardColorClass(card) {
+  if (!card) {
+    return 'colorless';
+  }
+
   const type = card.type_line || card.details.type;
   const colors = card.colors || card.details.color_identity;
   if (type.toLowerCase().includes('land')) {

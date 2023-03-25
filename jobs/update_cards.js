@@ -7,6 +7,8 @@ const JSONStream = require('JSONStream');
 const es = require('event-stream');
 const fetch = require('node-fetch');
 const AWS = require('aws-sdk');
+const json = require('big-json');
+const stream = require('stream');
 const cardutil = require('../dist/utils/Card');
 
 const util = require('../serverjs/util');
@@ -107,14 +109,14 @@ function downloadFile(url, filePath) {
           return;
         }
 
-        const stream = response.pipe(file);
+        const pipe = response.pipe(file);
         response.on('error', (err) => {
           reject(new Error(`Response error downloading file from '${url}':\n${err.message}`));
-          response.unpipe(stream);
-          stream.destroy();
+          response.unpipe(pipe);
+          pipe.destroy();
         });
-        stream.on('error', (err) => reject(new Error(`Pipe error downloading file from '${url}':\n${err.message}`)));
-        stream.on('finish', resolve);
+        pipe.on('error', (err) => reject(new Error(`Pipe error downloading file from '${url}':\n${err.message}`)));
+        pipe.on('finish', resolve);
       })
       .on('error', (err) => reject(new Error(`Download error for '${url}':\n${err.message}`)));
   });
@@ -126,9 +128,9 @@ async function downloadDefaultCards() {
 
   const res = await fetch('https://api.scryfall.com/bulk-data');
   if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
-  const json = await res.json();
+  const resjson = await res.json();
 
-  for (const data of json.data) {
+  for (const data of resjson.data) {
     if (data.type === 'default_cards') {
       defaultUrl = data.download_uri;
     } else if (data.type === 'all_cards') {
@@ -181,16 +183,28 @@ function addCardToCatalog(card, isExtra) {
   util.binaryInsert(normalizedFullName, catalog.full_names);
 }
 
-function writeFile(filepath, data) {
+async function writeFile(filepath, data) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(filepath, data, 'utf8', (err) => {
-      if (err) {
-        console.error(`An error occured while writing ${filepath}`, { error: err });
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
+    try {
+      // data is too big to stringify, so we write it to a file using big-json
+      const stringifyStream = json.createStringifyStream({
+        body: data,
+      });
+
+      // create empty file
+      const fd = fs.openSync(filepath, 'w');
+
+      stringifyStream.on('data', (strChunk) => {
+        fs.writeSync(fd, strChunk);
+      });
+
+      stringifyStream.on('end', () => {
+        fs.closeSync(fd);
+        resolve();
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -793,27 +807,22 @@ function addLanguageMapping(card) {
   }
 }
 
-function writeCatalog(basePath = 'private') {
+async function writeCatalog(basePath = 'private') {
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath);
   }
-  const pendingWrites = [];
-  pendingWrites.push(writeFile(path.join(basePath, 'names.json'), JSON.stringify(catalog.names)));
-  pendingWrites.push(writeFile(path.join(basePath, 'cardtree.json'), JSON.stringify(util.turnToTree(catalog.names))));
-  pendingWrites.push(writeFile(path.join(basePath, 'carddict.json'), JSON.stringify(catalog.dict)));
-  pendingWrites.push(writeFile(path.join(basePath, 'nameToId.json'), JSON.stringify(catalog.nameToId)));
-  pendingWrites.push(writeFile(path.join(basePath, 'oracleToId.json'), JSON.stringify(catalog.oracleToId)));
-  pendingWrites.push(writeFile(path.join(basePath, 'english.json'), JSON.stringify(catalog.english)));
-  pendingWrites.push(
-    writeFile(path.join(basePath, 'full_names.json'), JSON.stringify(util.turnToTree(catalog.full_names))),
-  );
-  pendingWrites.push(writeFile(path.join(basePath, 'imagedict.json'), JSON.stringify(catalog.imagedict)));
-  pendingWrites.push(writeFile(path.join(basePath, 'cardimages.json'), JSON.stringify(catalog.cardimages)));
-  const allWritesPromise = Promise.all(pendingWrites);
-  allWritesPromise.then(() => {
-    console.info('All JSON files saved.');
-  });
-  return allWritesPromise;
+
+  await writeFile(path.join(basePath, 'names.json'), catalog.names);
+  await writeFile(path.join(basePath, 'cardtree.json'), util.turnToTree(catalog.names));
+  await writeFile(path.join(basePath, 'carddict.json'), catalog.dict);
+  await writeFile(path.join(basePath, 'nameToId.json'), catalog.nameToId);
+  await writeFile(path.join(basePath, 'oracleToId.json'), catalog.oracleToId);
+  await writeFile(path.join(basePath, 'english.json'), catalog.english);
+  await writeFile(path.join(basePath, 'full_names.json'), util.turnToTree(catalog.full_names));
+  await writeFile(path.join(basePath, 'imagedict.json'), catalog.imagedict);
+  await writeFile(path.join(basePath, 'cardimages.json'), catalog.cardimages);
+
+  console.info('All JSON files saved.');
 }
 
 function saveEnglishCard(card, metadata) {
@@ -875,19 +884,40 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const uploadCardDb = async () => {
-  await carddb.initializeCardDb();
+const uploadStream = (key) => {
+  const pass = new stream.PassThrough();
+  return {
+    writeStream: pass,
+    promise: s3.upload({ Bucket: process.env.DATA_BUCKET, Key: key, Body: pass }).promise(),
+  };
+};
 
-  for (const [file, object] of Object.entries(carddb.fileToAttribute)) {
+const uploadLargeObjectToS3 = async (file, key) => {
+  await new Promise((resolve, reject) => {
+    try {
+      const { writeStream, promise } = uploadStream(key);
+      const readStream = fs.createReadStream(file);
+
+      readStream.pipe(writeStream);
+
+      promise
+        .then(() => {
+          resolve();
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const uploadCardDb = async () => {
+  for (const file of Object.keys(carddb.fileToAttribute)) {
     console.log(`Uploading ${file}...`);
     // eslint-disable-next-line no-await-in-loop
-    await s3
-      .upload({
-        Bucket: process.env.DATA_BUCKET,
-        Key: `cards/${file}`,
-        Body: JSON.stringify(carddb[object]),
-      })
-      .promise();
+    await uploadLargeObjectToS3(`private/${file}`, `cards/${file}`);
 
     console.log(`Finished ${file}`);
   }

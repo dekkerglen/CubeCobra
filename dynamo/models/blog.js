@@ -82,7 +82,12 @@ const batchHydrate = async (documents) => {
   return documents.map((document) => {
     document.owner = owners.find((owner) => owner.id === document.owner);
     if (document.cube && document.cube !== 'DEVBLOG') {
-      document.cubeName = cubes.find((cube) => cube.id === document.cube).name;
+      const cube = cubes.find((c) => c.id === document.cube);
+      if (cube) {
+        document.cubeName = cube.name;
+      } else {
+        document.cubeName = 'Unknown';
+      }
     }
 
     if (document.changelist) {

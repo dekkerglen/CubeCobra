@@ -198,15 +198,15 @@ function writeCard(res, card, maybe) {
     imgBackUrl = '';
   }
   res.write(`"${name.replace(/"/, '""')}",`);
-  res.write(`${card.cmc},`);
+  res.write(`${card.cmc || ''},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${(card.colors || []).join('')},`);
   res.write(`"${carddb.cardFromId(card.cardID).set}",`);
   res.write(`"${carddb.cardFromId(card.cardID).collector_number}",`);
   res.write(`${card.rarity && card.rarity !== 'undefined' ? card.rarity : rarity},`);
   res.write(`${card.colorCategory || colorcategory},`);
-  res.write(`${card.status},`);
-  res.write(`${card.finish},`);
+  res.write(`${card.status || ''},`);
+  res.write(`${card.finish || ''},`);
   res.write(`${maybe},`);
   res.write(`${imgUrl},`);
   res.write(`${imgBackUrl},"`);

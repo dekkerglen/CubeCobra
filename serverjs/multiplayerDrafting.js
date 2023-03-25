@@ -65,8 +65,6 @@ const pickedRef = (draftId, seat, pack) => `draft:${draftId}:picked:${seat}-${pa
 // returns the reference to the cards picked by a user
 const userPicksRef = (draftId, seat) => `draft:${draftId}:userpicks:${seat}`;
 
-const userSeenRef = (draftId, userId) => `draft:${draftId}:userseen:${userId}`;
-
 // returns the reference to the cards trashed by a user
 const userTrashRef = (draftId, seat) => `draft:${draftId}:usertrash:${seat}`;
 
@@ -162,10 +160,6 @@ const openPack = async (draftId) => {
       await rpop(seat);
       await rpush(seat, packRef(draftId, i, currentPack));
       await expire(seat, 60 * 60 * 24 * 2); // 2 days
-
-      // add pack to this player's seen
-      await rpush(userSeenRef(draftId, i), await getPlayerPack(draftId, i));
-      await expire(userSeenRef(draftId, i), 60 * 60 * 24 * 2); // 2 days
     }
 
     // increment the current pack

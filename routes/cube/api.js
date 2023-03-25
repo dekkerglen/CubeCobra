@@ -20,6 +20,7 @@ const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
 const Feed = require('../../dynamo/models/feed');
 const User = require('../../dynamo/models/user');
+const { isCubeListed } = require('../../serverjs/cubefn');
 
 const router = express.Router();
 
@@ -209,7 +210,7 @@ router.get('/fullnames', (_, res) => {
 });
 
 router.get('/usercubes/:id', async (req, res) => {
-  const cubes = await Cube.getByOwner(req.params.id);
+  const cubes = (await Cube.getByOwner(req.params.id)).filter((cube) => isCubeListed(cube, req.user));
 
   res.status(200).send({
     success: 'true',
@@ -378,7 +379,7 @@ router.get(
 
     const cubeCards = await Cube.getCards(cube.id);
 
-    const names = cubeCards.map((card) => carddb.cardFromId(card.cardID).name);
+    const names = cubeCards.mainboard.map((card) => carddb.cardFromId(card.cardID).name);
     res.contentType('text/plain');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));

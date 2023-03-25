@@ -1,7 +1,9 @@
-I got a 404 error comparing cubes, using Curiosity as my base and Pink as the comparison (those are cube ids)
-articles not loading
-podcasts 401 can't publish
-podcast images wrong
+only whitespace filter errors
+content creator dashboard needs full auditing
+recover: Phyrexia: All Will Be One Cube Update article
+some lingering issues with multiple edits w/o refresh
+filtering on recommended cards does not seem to work anymore
+filtercollapse should require a submit button again
 
 
 Migration related

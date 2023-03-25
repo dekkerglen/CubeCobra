@@ -10,6 +10,39 @@ const ChangeLog = require('../dynamo/models/changelog');
 const CardHistory = require('../dynamo/models/cardhistory');
 const { getCubeTypes } = require('../serverjs/cubefn');
 
+const saveCubesHistory = async (cubes, key) => {
+  const uniqueOracles = [...new Set(Object.values(cubes).flat())];
+
+  const oracleToIndexMap = Object.fromEntries(uniqueOracles.map((oracle, index) => [oracle, index]));
+  const indexToOracleMap = Object.fromEntries(uniqueOracles.map((oracle, index) => [index, oracle]));
+
+  const cubeHistory = {
+    cubes: {},
+    indexToOracleMap,
+  };
+
+  for (const [cubeId, cube] of Object.entries(cubes)) {
+    cubeHistory.cubes[cubeId] = cube.map((card) => oracleToIndexMap[card]);
+  }
+
+  fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubeHistory));
+};
+
+const loadCubesHistory = async (key) => {
+  const data = JSON.parse(fs.readFileSync(`temp/cubes_history/${key}.json`));
+
+  if (data.cubes) {
+    const cubes = {};
+    for (const [cubeId, cube] of Object.entries(data.cubes)) {
+      cubes[cubeId] = cube.map((index) => data.indexToOracleMap[index]);
+    }
+
+    return cubes;
+  }
+
+  return data;
+};
+
 (async () => {
   await carddb.initializeCardDb();
 
@@ -98,7 +131,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
       console.log(`Already finished ${i} / ${keys.length}: for ${key}`);
 
       if (i < keys.length - 1 && !fs.existsSync(`./temp/cubes_history/${keys[i + 1]}.json`)) {
-        cubes = JSON.parse(fs.readFileSync(`./temp/cubes_history/${keys[i]}.json`));
+        cubes = await loadCubesHistory(key);
       }
     } else {
       const logRows = logsByDay[key] || [];
@@ -131,7 +164,7 @@ const { getCubeTypes } = require('../serverjs/cubefn');
         }
       }
 
-      fs.writeFileSync(`temp/cubes_history/${key}.json`, JSON.stringify(cubes));
+      await saveCubesHistory(cubes, key);
 
       const totals = {
         size180: 0,

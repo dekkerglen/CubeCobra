@@ -21,7 +21,7 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
     // intentionally wait to avoid too many DB queries
     await wait(2000);
 
-    const response = await csrfFetch(`/content/getcreatorcontent`, {
+    const response = await csrfFetch(`/getmoredecks`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        setItems([...items, ...json.content]);
+        setItems([...items, ...json.items]);
         setLastKey(json.lastKey);
       }
     }
@@ -58,14 +58,14 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
               <h5>Recent drafts of your cubes</h5>
             </CardHeader>
             <CardBody className="p-0">
-              {decks.length > 0 ? (
+              {items.length > 0 ? (
                 <InfiniteScroll
                   dataLength={items.length}
                   next={fetchMoreData}
                   hasMore={currentLastKey != null}
                   loader={loader}
                 >
-                  {decks.map((deck) => (
+                  {items.map((deck) => (
                     <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" canEdit />
                   ))}
                 </InfiniteScroll>

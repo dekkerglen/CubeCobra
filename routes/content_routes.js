@@ -298,7 +298,7 @@ router.get('/podcast/update/:id', ensureContentCreator, async (req, res) => {
     return res.redirect('/404');
   }
 
-  if (!req.user.id === podcast.owner.id) {
+  if (req.user.id !== podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can fetch podcast episodes.');
     return res.redirect(`/content/podcast/${podcast.id}`);
   }

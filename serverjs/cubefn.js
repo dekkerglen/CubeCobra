@@ -70,9 +70,12 @@ function getCubeTypes(cards, carddb) {
     }
     if (!pauper && peasant) {
       // check rarities of all card versions
-      const rarities = carddb.allVersions(carddb.cardFromId(card.cardID)).map((id) => carddb.cardFromId(id).rarity);
-      if (!rarities.includes('common') && !rarities.includes('uncommon')) {
-        peasant = false;
+      const versions = carddb.allVersions(carddb.cardFromId(card.cardID));
+      if (versions) {
+        const rarities = versions.map((id) => carddb.cardFromId(id).rarity);
+        if (!rarities.includes('common') && !rarities.includes('uncommon')) {
+          peasant = false;
+        }
       }
     }
     while (type > 0 && !cardIsLegal(carddb.cardFromId(card.cardID), intToLegality(type))) {
@@ -341,6 +344,18 @@ function isCubeViewable(cube, user) {
     return false;
   }
 
+  if (cube.visibility === Cube.VISIBILITY.PUBLIC || cube.visibility === Cube.VISIBILITY.UNLISTED) {
+    return true;
+  }
+
+  return user && (cube.owner.id === user.id || util.isAdmin(user));
+}
+
+function isCubeListed(cube, user) {
+  if (!cube) {
+    return false;
+  }
+
   if (cube.visibility === Cube.VISIBILITY.PUBLIC) {
     return true;
   }
@@ -404,6 +419,7 @@ const methods = {
   generateSamplepackImage,
   cachePromise,
   isCubeViewable,
+  isCubeListed,
   getCubeTypes,
 };
 

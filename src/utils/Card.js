@@ -135,7 +135,7 @@ export const cardPrice = (card) => {
       prices = [cardEtchedPrice(card), cardFoilPrice(card), cardNormalPrice(card)];
       break;
     default:
-      console.error('Unknown finish:', cardFinish(card));
+      prices = [cardNormalPrice(card), cardFoilPrice(card), cardEtchedPrice(card)];
   }
 
   return prices.find((p) => typeof p !== 'undefined');

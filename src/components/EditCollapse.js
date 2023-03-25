@@ -87,8 +87,8 @@ const EditCollapse = ({ isOpen }) => {
     setUseBlog,
   } = useContext(CubeContext);
 
-  const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
-  const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
+  const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
+  const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'mainboard');
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 

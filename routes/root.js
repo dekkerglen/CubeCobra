@@ -10,6 +10,7 @@ const Feed = require('../dynamo/models/feed');
 
 const { render } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
+const { isCubeListed } = require('../serverjs/cubefn');
 
 const router = express.Router();
 
@@ -19,7 +20,9 @@ router.use(csrfProtection);
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const recentsQuery = await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC);
+  const recentsQuery = (await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC)).filter((cube) =>
+    isCubeListed(cube, req.user),
+  );
   const recents = recentsQuery.items;
 
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
@@ -77,7 +80,7 @@ router.get('/dashboard/decks', ensureAuth, async (req, res) => {
 
     return render(req, res, 'RecentDraftsPage', {
       decks: decks.items,
-      lastKey: decks.lastKey,
+      lastKey: decks.lastEvaluatedKey,
     });
   } catch (err) {
     req.logger.error(err);
@@ -86,14 +89,14 @@ router.get('/dashboard/decks', ensureAuth, async (req, res) => {
 });
 
 router.post('/getmoredecks', ensureAuth, async (req, res) => {
-  const { lastKey, user } = req.body;
+  const { lastKey } = req.body;
 
-  const result = await Draft.getByCubeOwner(user, lastKey);
+  const result = await Draft.getByCubeOwner(lastKey.cubeOwner, lastKey);
 
   return res.status(200).send({
     success: 'true',
     items: result.items,
-    lastKey: result.lastKey,
+    lastKey: result.lastEvaluatedKey,
   });
 });
 
@@ -115,7 +118,7 @@ router.get('/search', async (req, res) => {
   });
 });
 
-const searchCubes = async (query, order, lastKey, ascending) => {
+const searchCubes = async (query, order, lastKey, ascending, user) => {
   let updatedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
   const split = updatedQuery.split(':');
 
@@ -139,7 +142,9 @@ const searchCubes = async (query, order, lastKey, ascending) => {
 
   const result = await CubeHash.query(updatedQuery, ascending, lastKey, order);
 
-  const items = result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : [];
+  const items = (result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : []).filter(
+    (cube) => isCubeListed(cube, user),
+  );
 
   // make sure items is in same order as result.items
   const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube));
@@ -154,7 +159,7 @@ router.get('/search/:query', async (req, res) => {
   const ascending = req.query.ascending || false;
   const order = req.query.order || 'pop';
 
-  const result = await searchCubes(req.params.query, order, null, ascending);
+  const result = await searchCubes(req.params.query, order, null, ascending, req.user);
 
   return render(req, res, 'SearchPage', {
     query: req.params.query,
@@ -168,7 +173,7 @@ router.get('/search/:query', async (req, res) => {
 router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
   const { lastKey, query, order, ascending } = req.body;
 
-  const result = await searchCubes(query, order, lastKey, ascending);
+  const result = await searchCubes(query, order, lastKey, ascending, req.user);
 
   return res.status(200).send({
     success: 'true',

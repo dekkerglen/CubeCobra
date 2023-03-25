@@ -102,7 +102,22 @@ const getCards = async (id) => {
   }
 };
 
-const addDetails = (cards) => {
+const addDetails = (cards, id) => {
+  if (!cards) {
+    return cards;
+  }
+
+  // if cards is string
+  if (typeof cards === 'string') {
+    console.log(`Parsing cardlist for draft ${id}`);
+    try {
+      cards = JSON.parse(cards);
+    } catch (e) {
+      console.error(`Error parsing cardlist for draft ${id}`);
+      return [];
+    }
+  }
+
   cards.forEach((card) => {
     card.details = {
       ...carddb.cardFromId(card.cardID),
@@ -139,7 +154,7 @@ const addS3Fields = async (document) => {
     seats: seats.seats,
     basics: seats.basics,
     InitialState: seats.InitialState,
-    cards: addDetails(cards),
+    cards: addDetails(cards, document.id),
   };
 };
 
@@ -457,11 +472,28 @@ module.exports = {
 
     let cards = [];
     let initialState = {};
-    let seatsForPickOrder = {};
+    let pickorders = [];
+    const trashorders = [];
 
     if (type === TYPES.DRAFT) {
-      seatsForPickOrder = draft.seats;
       cards = deck.cards;
+
+      pickorders = draft.seats.map((seat) =>
+        seat.pickorder.map((pick) => {
+          // if it's a number, we need to convert from draft cards index to deck cards index
+          if (typeof pick === 'number') {
+            return cards.findIndex((card) => draft.cards[pick].cardID === card.cardID);
+          }
+
+          // if it's an object, we need to find the cardID
+          if (typeof pick === 'object') {
+            return cards.findIndex((card) => pick.cardID === card.cardID);
+          }
+
+          return -1;
+        }),
+      );
+
       initialState = draft.initial_state.map((seat) =>
         seat.map((pack) => {
           if (pack.cards) {
@@ -481,18 +513,15 @@ module.exports = {
         }),
       );
     } else if (type === TYPES.GRID) {
-      seatsForPickOrder = draft.seats;
+      pickorders = draft.seats.map((seat) => seat.pickorder);
+
       cards = draft.cards;
       initialState = draft.initial_state.map((pack) =>
         pack.map((idx) => cards.findIndex((card) => draft.cards[idx].cardID === card.cardID)),
       );
     } else {
-      seatsForPickOrder = deck.seats;
+      pickorders = deck.seats.map((seat) => seat.pickorder);
       cards = deck.cards;
-    }
-
-    if (!seatsForPickOrder[0].pickorder || seatsForPickOrder[0].pickorder.length === 0) {
-      seatsForPickOrder = null;
     }
 
     const doc = sanitize({
@@ -507,16 +536,16 @@ module.exports = {
         owner: `${seat.userid}`,
         mainboard: seat.deck,
         sideboard: seat.sideboard,
-        pickorder: seatsForPickOrder ? seatsForPickOrder[index].pickorder : null,
-        trashorder: seatsForPickOrder ? seatsForPickOrder[index].trashorder : null,
-        title: seat.name,
+        pickorder: pickorders[index],
+        trashorder: trashorders[index],
+        name: assessColors(seat.deck, cards).join(''),
         body: seat.description,
         Bot: seat.bot,
       })),
       InitialState: initialState,
       [FIELDS.TYPE]: type,
       [FIELDS.COMPLETE]: true,
-      [FIELDS.NAME]: deck.seats[0].name,
+      [FIELDS.NAME]: `${assessColors(deck.seats[0].deck, cards).join('')} ${REVERSE_TYPES[type]} of ${deck.cubename}`,
       [FIELDS.SEAT_NAMES]: deck.seats.map((seat) => seat.name),
     });
 

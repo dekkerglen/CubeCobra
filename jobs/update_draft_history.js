@@ -150,6 +150,12 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
   console.log(`Loaded ${keys.length} days of logs`);
 
+  for (const key of keys) {
+    const logRows = logsByDay[key] || [];
+
+    fs.writeFileSync(`./temp/drafts_by_day/${key}.json`, JSON.stringify(logRows));
+  }
+
   let eloByOracleId = {};
   let picksByOracleId = {};
 
@@ -235,7 +241,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
                 const picked = drafterState.selection;
                 const pack = drafterState.cardsInPack;
 
-                if (picked < 0 || picked >= draft.cards.length) {
+                if (picked < 0 || picked >= draft.cards.length || !draft.cards[picked]) {
                   // eslint-disable-next-line no-continue
                   continue;
                 }
@@ -293,9 +299,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
         }
       }
 
-      console.log(
-        `Finished writing ${i + 1} / ${keys.length + 1}: Processed ${logRows.length} logs for ${new Date(key)}`,
-      );
+      console.log(`Finished writing ${i + 1} / ${keys.length + 1}: Processed ${logRows.length} logs for ${key}`);
 
       // and save the file locally
       await fs.promises.writeFile(

@@ -7,6 +7,7 @@ const mailer = require('nodemailer');
 const { body } = require('express-validator');
 const Email = require('email-templates');
 const path = require('path');
+const { isCubeListed } = require('../serverjs/cubefn');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 const { render } = require('../serverjs/render');
@@ -407,7 +408,7 @@ router.get('/view/:id', async (req, res) => {
   try {
     const user = await User.getByIdOrUsername(req.params.id);
 
-    const cubes = await Cube.getByOwner(user.id);
+    const cubes = (await Cube.getByOwner(user.id)).filter((cube) => isCubeListed(cube, req.user));
 
     const followers = await User.batchGet(user.following || []);
 

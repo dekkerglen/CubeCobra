@@ -12,9 +12,14 @@ const correlationLimit = 36;
 
   // load most recent cube history
   const cubeHistoryFiles = fs.readdirSync('./temp/cubes_history').sort();
-  const cubeHistory = JSON.parse(
+  const cubeHistoryData = JSON.parse(
     fs.readFileSync(`./temp/cubes_history/${cubeHistoryFiles[cubeHistoryFiles.length - 1]}`),
   );
+  const cubeHistory = {};
+
+  for (const [cubeId, cube] of Object.entries(cubeHistoryData.cubes)) {
+    cubeHistory[cubeId] = cube.map((index) => cubeHistoryData.indexToOracleMap[index]);
+  }
 
   // load most recent global history
   const draftHistoryFiles = fs.readdirSync('./temp/global_draft_history').sort();

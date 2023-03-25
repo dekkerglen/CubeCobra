@@ -129,11 +129,11 @@ const GroupModal = ({
     if (tags.length > 0) {
       if (addTags) {
         updates.forEach((card) => {
-          card.tags = [...new Set([...card.tags, ...tags.map((tag) => tag.text)])];
+          card.tags = [...new Set([...(card.tags || []), ...tags.map((tag) => tag.text)])];
         });
       } else {
         updates.forEach((card) => {
-          card.tags = card.tags.filter((tag) => !tags.map((t) => t.text).includes(tag));
+          card.tags = (card.tags || []).filter((tag) => !tags.map((t) => t.text).includes(tag));
         });
       }
     }

@@ -13,15 +13,17 @@ const Deck = require('../models/old/deck');
 const draftModel = require('../dynamo/models/draft');
 
 const batchSize = 100;
-const skip = 0;
+const skip = 1078200;
+
+const query = {};
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URL);
   await carddb.initializeCardDb();
 
   console.log(`Moving over decks`);
-  const count = await Deck.countDocuments();
-  const cursor = Deck.find().skip(skip).lean().cursor();
+  const count = await Deck.countDocuments(query);
+  const cursor = Deck.find(query).skip(skip).lean().cursor();
   const starttime = new Date();
   const failed = [];
 
@@ -64,11 +66,9 @@ const skip = 0;
 
     for (const [deck, draft, type] of withDraft) {
       try {
-        console.log(`Deck: Converting deck ${deck._id} with draft ${deck.draft}`);
         converted.push(draftModel.convertDeck(deck, draft, type));
       } catch (err) {
-        console.log(`Deck: Failed to convert deck ${deck._id}`);
-        failed.push({ deck, draft, type });
+        failed.push({ deck: deck._id, draft: draft._id, type });
       }
     }
 

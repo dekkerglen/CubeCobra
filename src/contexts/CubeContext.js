@@ -149,7 +149,12 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       for (const [board, list] of Object.entries(cube.cards)) {
         if (board !== 'id') {
           for (const card of list) {
-            ids.push(card.cardID);
+            if (!card.cardID) {
+              console.error(`Card ${card.details.name} has no cardID`);
+              console.log(card);
+            } else {
+              ids.push(card.cardID);
+            }
           }
         }
       }

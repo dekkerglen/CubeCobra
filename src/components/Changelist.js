@@ -171,7 +171,7 @@ const Changelist = () => {
               <Col>{capitalizeFirstLetter(board)} Changelist</Col>
               <Col className="col-sm-auto">
                 <div className="text-secondary">
-                  +{(adds || []).length}, -{(removes || []).length},{' '}
+                  +{(adds || []).length + (edits || []).length}, -{(removes || []).length + (edits || []).length},{' '}
                   {cube.cards[board].length + (adds || []).length - (removes || []).length} Total
                 </div>
               </Col>

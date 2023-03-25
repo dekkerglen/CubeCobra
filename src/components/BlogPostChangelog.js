@@ -91,7 +91,7 @@ const BlogPostChangelog = ({ changelog }) => {
               <Col>{capitalizeFirstLetter(board)} Changelist</Col>
               <Col className="col-auto">
                 <div className="text-secondary">
-                  +{(adds || []).length}, -{(removes || []).length}
+                  +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
                 </div>
               </Col>
             </Row>

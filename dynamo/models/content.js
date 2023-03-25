@@ -115,8 +115,8 @@ const addBody = async (content) => {
     const document = await getObject(process.env.DATA_BUCKET, `content/${content.id}.json`);
 
     return {
-      body: document,
       ...content,
+      body: document,
     };
   } catch (e) {
     return content;
@@ -221,7 +221,7 @@ module.exports = {
   batchPut: async (documents) => {
     await Promise.all(
       documents.map(async (document) => {
-        if (document.owner.id) {
+        if (document.owner && document.owner.id) {
           document.owner = document.owner.id;
         }
 

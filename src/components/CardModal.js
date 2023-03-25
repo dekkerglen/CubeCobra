@@ -60,7 +60,7 @@ const CardModal = ({
 
   useEffect(() => {
     if (!versionDict[normalizeName(card.details.name)]) {
-      setVersions(null);
+      setVersions({});
     } else {
       setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v._id, v])));
     }
