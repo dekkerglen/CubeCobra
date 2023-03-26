@@ -4,6 +4,7 @@ recover: Phyrexia: All Will Be One Cube Update article
 some lingering issues with multiple edits w/o refresh
 filtering on recommended cards does not seem to work anymore
 filtercollapse should require a submit button again
+look into failed deck migrations and get those moved over too
 
 Migration related
 cube

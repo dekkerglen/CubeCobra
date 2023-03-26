@@ -227,6 +227,7 @@ module.exports = {
     return null;
   },
   batchGet: async (ids) => batchHydrate(await client.batchGet(ids)),
+  batchGetUnhydrated: async (ids) => client.batchGet(ids),
   getByOwner: async (owner, lastKey) => {
     const result = await client.query({
       IndexName: 'ByOwner',
