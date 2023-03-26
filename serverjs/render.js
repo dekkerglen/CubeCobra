@@ -48,18 +48,22 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
       });
     }
 
-    const theme = (req && req.user && req.user.theme) || 'default';
-    res.render('main', {
-      reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
-      reactProps: serialize(reactProps),
-      page,
-      metadata: options.metadata,
-      title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
-      colors: `/css/${theme}.css`,
-      bootstrap: `/css/bootstrap/bs-${theme}.css`,
-      patron: req.user && (req.user.roles || []).includes('Patron'),
-      notice: process.env.NOTICE,
-    });
+    try {
+      const theme = (req && req.user && req.user.theme) || 'default';
+      res.render('main', {
+        reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
+        reactProps: serialize(reactProps),
+        page,
+        metadata: options.metadata,
+        title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
+        colors: `/css/${theme}.css`,
+        bootstrap: `/css/bootstrap/bs-${theme}.css`,
+        patron: req.user && (req.user.roles || []).includes('Patron'),
+        notice: process.env.NOTICE,
+      });
+    } catch (err) {
+      res.status(500).send('Error rendering page');
+    }
   });
 };
 

@@ -64,6 +64,8 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
     }
 
     if (Object.keys(changelog).length > 0) {
+      await Cube.updateCards(cube.id, cards);
+
       const changelist = await Changelog.put(changelog, cube.id);
 
       const id = await Blog.put({
@@ -85,7 +87,6 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
       await Feed.batchPut(feedItems);
 
-      await Cube.updateCards(cube.id, cards);
       req.flash('success', 'All cards successfully added.');
     } else {
       req.flash('danger', 'No changes made.');

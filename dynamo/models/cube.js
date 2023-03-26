@@ -18,6 +18,7 @@ const DEFAULT_BASICS = [
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
 
+const CARD_LIMIT = 10000;
 const MILLISECONDS_IN_YEAR = 1000 * 60 * 60 * 24 * 365;
 
 const FIELDS = {
@@ -125,6 +126,12 @@ const getCards = async (id, skipcache = false) => {
   try {
     const cards = await getObject(process.env.DATA_BUCKET, `cube/${id}.json`, skipcache);
 
+    const totalCardCount = cards.mainboard.length + cards.maybeboard.length;
+
+    if (totalCardCount > CARD_LIMIT) {
+      throw new Error(`Cannot load cube: ${id} - too many cards: ${totalCardCount}`);
+    }
+
     for (const [board, list] of Object.entries(cards)) {
       if (board !== 'id') {
         addDetails(list);
@@ -174,6 +181,12 @@ module.exports = {
 
     const main = newCards.mainboard;
     newMetadata.cardCount = main.length;
+
+    const totalCards = main.length + newCards.maybeboard.length;
+
+    if (totalCards > CARD_LIMIT) {
+      throw new Error(`Cannot save cube: too many cards (${totalCards}/${CARD_LIMIT})`);
+    }
 
     const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
     const newHashes = getHashRowsForCube(newMetadata, newCards);
@@ -226,7 +239,7 @@ module.exports = {
 
     return null;
   },
-  batchGet: async (ids) => batchHydrate(await client.batchGet(ids)),
+  batchGet: async (ids) => (await batchHydrate(await client.batchGet(ids))).filter((cube) => cube),
   batchGetUnhydrated: async (ids) => client.batchGet(ids),
   getByOwner: async (owner, lastKey) => {
     const result = await client.query({

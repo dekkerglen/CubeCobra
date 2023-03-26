@@ -147,7 +147,7 @@ const searchCubes = async (query, order, lastKey, ascending, user) => {
   );
 
   // make sure items is in same order as result.items
-  const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube));
+  const cubes = result.items.map((hash) => items.find((cube) => cube.id === hash.cube)).filter((cube) => cube);
 
   return {
     cubes,

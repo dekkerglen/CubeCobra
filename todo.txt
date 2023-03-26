@@ -5,13 +5,7 @@ some lingering issues with multiple edits w/o refresh
 filtering on recommended cards does not seem to work anymore
 filtercollapse should require a submit button again
 look into failed deck migrations and get those moved over too
-
-Migration related
-cube
-	custom draft formats not migrated
-deck
-	decks are saved as strings instead of json
-	put errored doc ids in a file, investigate separetely. There's too many for just spillage
+analytics count each instance of each card instead of just once per cube
 
 Investigate
 	- validate patreon integration

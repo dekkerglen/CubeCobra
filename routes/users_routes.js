@@ -408,7 +408,7 @@ router.get('/view/:id', async (req, res) => {
   try {
     const user = await User.getByIdOrUsername(req.params.id);
 
-    const cubes = (await Cube.getByOwner(user.id)).filter((cube) => isCubeListed(cube, req.user));
+    const cubes = (await Cube.getByOwner(user.id)).items.filter((cube) => isCubeListed(cube, req.user));
 
     const followers = await User.batchGet(user.following || []);
 
@@ -416,7 +416,7 @@ router.get('/view/:id', async (req, res) => {
 
     return render(req, res, 'UserCubePage', {
       owner: user,
-      cubes: cubes.items,
+      cubes,
       followers,
       following,
     });

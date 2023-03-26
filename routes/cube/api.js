@@ -870,30 +870,6 @@ router.post('/commit', async (req, res) => {
     });
   }
 
-  const changelogId = await Changelog.put(changes, cube.id);
-
-  if (useBlog) {
-    const blogId = await Blog.put({
-      body: blog,
-      owner: req.user.id,
-      date: new Date().valueOf(),
-      cube: cube.id,
-      title,
-      changelist: changelogId,
-    });
-
-    const followers = [...new Set([...(req.user.following || []), ...cube.following])];
-
-    const feedItems = followers.map((user) => ({
-      id: blogId,
-      to: user,
-      date: new Date().valueOf(),
-      type: Feed.TYPES.BLOG,
-    }));
-
-    await Feed.batchPut(feedItems);
-  }
-
   const cards = await Cube.getCards(cube.id, true);
 
   for (const [board] of Object.entries(changes)) {
@@ -931,6 +907,30 @@ router.post('/commit', async (req, res) => {
   }
 
   await Cube.updateCards(cube.id, cards);
+
+  const changelogId = await Changelog.put(changes, cube.id);
+
+  if (useBlog) {
+    const blogId = await Blog.put({
+      body: blog,
+      owner: req.user.id,
+      date: new Date().valueOf(),
+      cube: cube.id,
+      title,
+      changelist: changelogId,
+    });
+
+    const followers = [...new Set([...(req.user.following || []), ...cube.following])];
+
+    const feedItems = followers.map((user) => ({
+      id: blogId,
+      to: user,
+      date: new Date().valueOf(),
+      type: Feed.TYPES.BLOG,
+    }));
+
+    await Feed.batchPut(feedItems);
+  }
 
   return res.status(200).send({
     success: 'true',
