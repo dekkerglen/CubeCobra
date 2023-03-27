@@ -5,6 +5,7 @@ const carddb = require('./carddb');
 const { draftbotPick } = require('./draftbots');
 
 const Draft = require('../dynamo/models/draft');
+const User = require('../dynamo/models/user');
 
 const {
   hget,
@@ -514,6 +515,64 @@ const tryBotPicks = async (draftId) => {
   return res || 'done'; // could be null if we fail to obtain a lock
 };
 
+const dumpDraft = async (draftId) => {
+  // this should return the entire state of the draft in redis
+  const draft = await Draft.getById(draftId);
+
+  const metadata = await getDraftMetaData(draftId);
+  const bots = await getDraftBotsSeats(draftId);
+  const seats = await getLobbySeatOrder(draft.id);
+
+  const order = Object.fromEntries(Object.entries(seats).map(([s, i]) => [parseInt(i, 10), s]));
+
+  const seatState = [];
+  for (let i = 0; i < metadata.seats; i++) {
+    if (order[i]) {
+      const user = await User.getById(order[i]);
+      seatState.push({
+        seat: i,
+        picks: await getPlayerPicks(draftId, i),
+        trash: await getPlayerTrash(draftId, i),
+        packQueue: await lrange(seatRef(draftId, i), 0, -1),
+        bot: bots.includes(i),
+        user: {
+          id: user.id,
+          username: user.username,
+        },
+      });
+    } else {
+      // current picks
+      seatState.push({
+        seat: i,
+        picks: await getPlayerPicks(draftId, i),
+        trash: await getPlayerTrash(draftId, i),
+        packQueue: await lrange(seatRef(draftId, i), 0, -1),
+        bot: bots.includes(i),
+      });
+    }
+  }
+
+  const packs = {};
+  for (let i = 0; i < metadata.totalPacks; i++) {
+    for (let j = 0; j < metadata.seats; j++) {
+      const ref = packRef(draftId, i, j);
+
+      packs[ref] = {
+        pack: await lrange(ref, 0, -1),
+        picked: await lrange(pickedRef(draftId, i, j), 0, -1),
+      };
+    }
+  }
+
+  return {
+    draft,
+    metadata,
+    seatState,
+    packs,
+    seats,
+  };
+};
+
 module.exports = {
   setup,
   getDraftMetaData,
@@ -541,4 +600,5 @@ module.exports = {
   getCurrentPackStep,
   getCurrentPackStepQueue,
   tryBotPicks,
+  dumpDraft,
 };

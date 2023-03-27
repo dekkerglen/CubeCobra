@@ -314,10 +314,6 @@ const batchHydrate = async (documents) => {
   return documents;
 };
 
-const draftIsCompleted = (draft) => {
-  return draft.complete;
-};
-
 module.exports = {
   getById: async (id) => hydrate(await addS3Fields((await client.get(id)).Item)),
   batchGet: async (ids) => {
@@ -328,18 +324,22 @@ module.exports = {
     const res = await client.query({
       IndexName: 'ByOwner',
       KeyConditionExpression: '#owner = :owner',
+      FilterExpression: '#complete = :complete',
       ExpressionAttributeNames: {
         '#owner': FIELDS.OWNER,
+        '#complete': FIELDS.COMPLETE,
       },
       ExpressionAttributeValues: {
         ':owner': owner,
+        ':complete': true,
       },
+      Limit: 200,
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
 
     return {
-      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
+      items: await batchHydrate(res.Items),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -347,18 +347,22 @@ module.exports = {
     const res = await client.query({
       IndexName: 'ByCube',
       KeyConditionExpression: '#cubeId = :cube',
+      FilterExpression: '#complete = :complete',
       ExpressionAttributeNames: {
         '#cubeId': FIELDS.CUBE_ID,
+        '#complete': FIELDS.COMPLETE,
       },
       ExpressionAttributeValues: {
         ':cube': cubeId,
+        ':complete': true,
       },
+      Limit: 200,
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
 
     return {
-      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
+      items: await batchHydrate(res.Items),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },
@@ -366,18 +370,22 @@ module.exports = {
     const res = await client.query({
       IndexName: 'ByCubeOwner',
       KeyConditionExpression: '#cubeOwner = :cubeOwner',
+      FilterExpression: '#complete = :complete',
       ExpressionAttributeNames: {
         '#cubeOwner': FIELDS.CUBE_OWNER,
+        '#complete': FIELDS.COMPLETE,
       },
       ExpressionAttributeValues: {
         ':cubeOwner': cubeOwner,
+        ':complete': true,
       },
+      Limit: 200,
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });
 
     return {
-      items: await batchHydrate(res.Items.filter((item) => draftIsCompleted(item))),
+      items: await batchHydrate(res.Items),
       lastEvaluatedKey: res.LastEvaluatedKey,
     };
   },

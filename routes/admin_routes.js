@@ -20,6 +20,8 @@ const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
 const notice = require('../dynamo/models/notice');
 
+const { dumpDraft } = require('../serverjs/multiplayerDrafting');
+
 const ensureAdmin = ensureRole('Admin');
 
 const router = express.Router();
@@ -443,5 +445,11 @@ router.post(
     return res.redirect('/admin/featuredcubes');
   },
 );
+
+router.get('/dumpdraft/:id', ensureAdmin, async (req, res) => {
+  const dump = await dumpDraft(req.params.id);
+
+  return res.status(200).send(dump);
+});
 
 module.exports = router;

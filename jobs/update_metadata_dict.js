@@ -101,7 +101,7 @@ const correlationLimit = 36;
   // calculate cubedwith
   processed = 0;
   for (const cube of Object.keys(cubeHistory)) {
-    const oracles = cubeHistory[cube].map((cardId) => carddb.cardFromId(cardId).oracle_id);
+    const oracles = [...new Set(cubeHistory[cube].map((cardId) => carddb.cardFromId(cardId).oracle_id))];
 
     for (let i = 0; i < oracles.length; i += 1) {
       cubeCount[oracleToIndex[oracles[i]]] += 1;
