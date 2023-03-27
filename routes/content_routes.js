@@ -251,6 +251,7 @@ router.get('/video/:id', async (req, res) => {
 
 router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
   const article = await Content.getById(req.params.id);
+
   if (!article) {
     req.flash('danger', 'Article not found');
     return res.redirect('/404');
@@ -510,7 +511,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
 router.get('/newarticle', ensureContentCreator, async (req, res) => {
   const article = {
     title: 'New Article',
-    owner: `${req.user.id}`,
+    owner: req.user.id,
     date: new Date().valueOf(),
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
@@ -528,7 +529,7 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
 router.get('/newpodcast', ensureContentCreator, async (req, res) => {
   const podcast = {
     title: 'New Podcast',
-    owner: `${req.user.id}`,
+    owner: req.user.id,
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',
     date: new Date().valueOf(),
@@ -545,7 +546,7 @@ router.get('/newvideo', ensureContentCreator, async (req, res) => {
   const video = {
     title: 'New Video',
     short: 'This is a brand new video!',
-    owner: `${req.user.id}`,
+    owner: req.user.id,
     date: new Date().valueOf(),
     image:
       'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/d/e/decb78dd-03d7-43a0-8ff5-1b97c6f515c9.jpg?1580015192',

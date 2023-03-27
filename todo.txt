@@ -1,11 +1,11 @@
-only whitespace filter errors
-content creator dashboard needs full auditing
-recover: Phyrexia: All Will Be One Cube Update article
 some lingering issues with multiple edits w/o refresh
 filtering on recommended cards does not seem to work anymore
 filtercollapse should require a submit button again
 look into failed deck migrations and get those moved over too
 analytics count each instance of each card instead of just once per cube
+Recently drafted cubes don't show up if all the recent ones are not finished
+after multiplayer draft, non-host seats error
+seat names should include player name or bot instead of just the deck color
 
 Investigate
 	- validate patreon integration
@@ -22,3 +22,6 @@ capitalize board names in cube, including board drop down select
 when adding through add to cube modal, put in pending changes instead of updating DB
 Filter doesn't work on Tokens page
 
+multiplayer drafting
+ - create an endpoint to dump all the redis state and return json
+ - request users to report broken draft ids

@@ -848,7 +848,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   useEffect(
     (overrideFilter) => {
       const input = overrideFilter ?? filterInput;
-      if ((input ?? '') === '') {
+      if ((input.trim() ?? '') === '') {
         setCardFilter({ fn: () => true });
         return;
       }

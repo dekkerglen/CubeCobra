@@ -125,7 +125,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>status:</Label>
+                    <Label>Status:</Label>
                   </Col>
                   <Col sm="10">
                     <Input disabled value={CONVERT_STATUS[article.status]} />
@@ -135,7 +135,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>title:</Label>
+                    <Label>Title:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -145,7 +145,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
               <FormGroup>
                 <Row>
                   <Col sm="2">
-                    <Label>short description:</Label>
+                    <Label>Short Description:</Label>
                   </Col>
                   <Col sm="10">
                     <Input maxLength="1000" value={short} onChange={(event) => setShort(event.target.value)} />
@@ -212,12 +212,16 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Col xs="12" sm="6" md="4" className="mb-3">
                   <ArticlePreview
                     article={{
+                      id: article.id,
                       username: user.username,
                       title,
                       body,
                       short,
                       imageName,
-                      image: imageUri,
+                      image: {
+                        uri: imageUri,
+                        artist: imageArtist,
+                      },
                       date: article.date,
                     }}
                   />
@@ -225,12 +229,16 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
                   <ArticlePreview
                     article={{
+                      id: article.id,
                       username: user.username,
                       title,
                       body,
                       short,
                       imageName,
-                      image: imageUri,
+                      image: {
+                        uri: imageUri,
+                        artist: imageArtist,
+                      },
                       date: article.date,
                     }}
                   />
@@ -239,6 +247,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
             </CardBody>
             <Article
               article={{
+                id: article.id,
                 username: user.username,
                 title,
                 body,

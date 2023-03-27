@@ -20,10 +20,9 @@ router.use(csrfProtection);
 router.get('/', async (req, res) => (req.user ? res.redirect('/dashboard') : res.redirect('/landing')));
 
 router.get('/explore', async (req, res) => {
-  const recentsQuery = (await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC)).filter((cube) =>
+  const recents = (await Cube.getByVisibility(Cube.VISIBILITY.PUBLIC)).items.filter((cube) =>
     isCubeListed(cube, req.user),
   );
-  const recents = recentsQuery.items;
 
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
   const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));

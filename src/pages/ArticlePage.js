@@ -7,7 +7,6 @@ import { CardHeader, Card } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
 import DynamicFlash from 'components/DynamicFlash';
 import Article from 'components/Article';
-import ButtonLink from 'components/ButtonLink';
 import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
@@ -24,9 +23,7 @@ const ArticlePage = ({ loginCallback, article }) => {
           <CardHeader>
             <h5>
               <em className="pe-3">*Draft*</em>
-              <ButtonLink color="accent" outline href={`/content/article/edit/${article.id}`}>
-                Edit
-              </ButtonLink>
+              <a href={`/content/article/edit/${article.id}`}>Edit</a>
             </h5>
           </CardHeader>
         )}

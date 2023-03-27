@@ -3,7 +3,7 @@ import { csrfFetch } from 'utils/CSRF';
 import { findUserLinks } from 'markdown/parser';
 import { wait } from 'utils/Util';
 
-const useToggle = (parent, type) => {
+const useComments = (parent, type) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastKey, setLastKey] = useState(null);
@@ -116,4 +116,4 @@ const useToggle = (parent, type) => {
   return [comments, addComment, loading, editComment, lastKey, getMore];
 };
 
-export default useToggle;
+export default useComments;

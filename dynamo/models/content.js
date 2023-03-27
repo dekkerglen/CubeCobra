@@ -211,7 +211,7 @@ module.exports = {
       document.owner = document.owner.id;
     }
 
-    client.put({
+    return client.put({
       [FIELDS.TYPE]: type,
       [FIELDS.TYPE_OWNER_COMP]: `${type}:${document.owner}`,
       [FIELDS.TYPE_STATUS_COMP]: `${type}:${document.status}`,

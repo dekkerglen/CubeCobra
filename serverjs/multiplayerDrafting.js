@@ -432,8 +432,6 @@ const makePick = async (draftId, seat, pick, nextSeat) => {
   }
 };
 
-// const strToInt = (str) => parseInt(str, 10);
-
 const getDraftPick = async (draftId, seat) => {
   const packReference = await getPlayerPackReference(draftId, seat);
   const cardsInPack = await getCurrentPackCards(packReference);

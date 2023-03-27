@@ -210,7 +210,7 @@ router.get('/fullnames', (_, res) => {
 });
 
 router.get('/usercubes/:id', async (req, res) => {
-  const cubes = (await Cube.getByOwner(req.params.id)).filter((cube) => isCubeListed(cube, req.user));
+  const cubes = await Cube.getByOwner(req.params.id);
 
   res.status(200).send({
     success: 'true',

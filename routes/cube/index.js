@@ -226,9 +226,7 @@ router.post(
       });
     }
 
-    if (!cube.following.some((id) => id === user.id)) {
-      cube.following.push(user.id);
-    }
+    cube.following = [...new Set([...(cube.following || []), user.id])];
 
     if (!user.followedCubes) {
       user.followedCubes = [];
@@ -268,7 +266,7 @@ router.post(
     }
 
     const { user } = req;
-    cube.following = cube.following.filter((id) => !req.user.id === id);
+    cube.following = cube.following.filter((id) => req.user.id !== id);
     user.followedCubes = user.followedCubes.filter((id) => cube.id !== id);
 
     await User.update(user);

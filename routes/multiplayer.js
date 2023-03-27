@@ -3,7 +3,6 @@
 require('dotenv').config();
 const express = require('express');
 const { fromEntries } = require('../serverjs/util');
-const { lpush } = require('../serverjs/redis');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const {
   setup,
@@ -27,14 +26,6 @@ const User = require('../dynamo/models/user');
 const router = express.Router();
 
 router.use(csrfProtection);
-
-router.post('/publishmessage', ensureAuth, async (req, res) => {
-  await lpush(req.body.room, req.body.message);
-
-  return res.status(200).send({
-    success: 'true',
-  });
-});
 
 router.post('/getlobbyseats', ensureAuth, async (req, res) => {
   const { draft } = req.body;

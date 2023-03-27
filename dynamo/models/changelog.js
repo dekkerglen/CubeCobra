@@ -7,6 +7,8 @@ const { getObject, putObject } = require('../s3client');
 const carddb = require('../../serverjs/carddb');
 const cardutil = require('../../dist/utils/Card');
 
+const CARD_LIMIT = 10000;
+
 const FIELDS = {
   CUBE_ID: 'cube',
   DATE: 'date',
@@ -55,6 +57,27 @@ const sanitizeChangelog = (changelog) => {
 };
 
 const hydrateChangelog = (changelog) => {
+  let totalCards = 0;
+
+  for (const [, value] of Object.entries(changelog)) {
+    if (value.adds) {
+      totalCards += value.adds.length;
+    }
+    if (value.removes) {
+      totalCards += value.removes.length;
+    }
+    if (value.swaps) {
+      totalCards += value.swaps.length;
+    }
+    if (value.edits) {
+      totalCards += value.edits.length;
+    }
+  }
+
+  if (totalCards > CARD_LIMIT) {
+    throw new Error('Too many cards to load this changelog');
+  }
+
   for (const [, value] of Object.entries(changelog)) {
     if (value.adds) {
       for (let i = 0; i < value.adds.length; i++) {
