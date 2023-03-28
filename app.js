@@ -14,15 +14,15 @@ const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
 const DynamoDBStore = require('dynamodb-store');
-const { winston } = require('./serverjs/cloudwatch');
+const cloudwatch = require('./serverjs/cloudwatch');
 const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
 
 // global listeners for promise rejections
-process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+process.on('unhandledRejection', (reason) => {
+  cloudwatch.info('Unhandled Rejection at: Promise ', reason, reason.stack);
 });
 
 // Init app
@@ -53,29 +53,29 @@ app.use((req, res, next) => {
   req.logger = {
     error: (err) => {
       // err.requst = req;
-      winston.error({
+      cloudwatch.error({
         message: err.message,
         stack: err.stack,
         request: req,
       });
     },
-    info: (message) => winston.info(message),
+    info: (message) => cloudwatch.info(message),
   };
 
   res.locals.requestId = req.uuid;
   res.startTime = Date.now();
   // onFinished(res, (err, finalRes) => {
-  //   // console.log({
-  //   //   level: 'info',
-  //   //   type: 'request',
-  //   //   remoteAddr: req.ip,
-  //   //   requestId: req.uuid,
-  //   //   method: req.method,
-  //   //   path: req.path,
-  //   //   status: finalRes.statusCode,
-  //   //   length: finalRes.getHeader('content-length'),
-  //   //   elapsed: Date.now() - finalRes.startTime,
-  //   // });
+  //   cloudwatch.info({
+  //     level: 'info',
+  //     type: 'request',
+  //     remoteAddr: req.ip,
+  //     requestId: req.uuid,
+  //     method: req.method,
+  //     path: req.path,
+  //     status: finalRes.statusCode,
+  //     length: finalRes.getHeader('content-length'),
+  //     elapsed: Date.now() - finalRes.startTime,
+  //   });
   // });
   next();
 });
@@ -212,14 +212,14 @@ app.use((err, req, res, next) => {
 
 // scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  console.log('starting midnight cardbase update...');
+  cloudwatch.info('starting midnight cardbase update...');
   await updateCardbase();
 });
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(async () => {
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
-  console.log(`Server started on port ${process.env.PORT || 5000}...`);
+  cloudwatch.info(`Server started on port ${process.env.PORT || 5000}...`);
 
   // init socket io
   setup(socketio(server));

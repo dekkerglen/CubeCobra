@@ -224,8 +224,8 @@ module.exports = {
     await client.delete({ id });
     await deleteObject(process.env.DATA_BUCKET, `cube/${id}.json`);
   },
-  getById: async (id) => {
-    const byId = await client.get(id);
+  getById: async (id, skipCache = false) => {
+    const byId = await client.get(id, skipCache);
     if (byId.Item) {
       return hydrate(byId.Item);
     }
@@ -233,7 +233,7 @@ module.exports = {
     const byShortId = await cubeHash.getSortedByName(`shortid:${id}`);
     if (byShortId.items.length > 0) {
       const cubeId = byShortId.items[0].cube;
-      const query = await client.get(cubeId);
+      const query = await client.get(cubeId, skipCache);
       return hydrate(query.Item);
     }
 

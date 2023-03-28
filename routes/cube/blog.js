@@ -101,12 +101,17 @@ router.get('/blogpost/:id', async (req, res) => {
   try {
     const post = await Blog.getById(req.params.id);
 
+    if (!post) {
+      req.flash('danger', 'Blog post not found');
+      return res.redirect('/404');
+    }
+
     if (post.cube !== 'DEVBLOG') {
       const cube = await Cube.getById(post.cube);
 
       if (!isCubeViewable(cube, req.user)) {
         req.flash('danger', 'Blog post not found');
-        return res.redirect('/cube/blog/404');
+        return res.redirect('/404');
       }
     }
 

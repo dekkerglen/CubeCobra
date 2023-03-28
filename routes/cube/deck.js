@@ -31,7 +31,7 @@ router.get('/download/xmage/:id/:seat', async (req, res) => {
 
     const seat = deck.seats[req.params.seat];
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`NAME:${seat.name}\r\n`);

@@ -137,7 +137,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    other.following = other.following.filter((id) => !req.user.id === id);
+    other.following = other.following.filter((id) => req.user.id !== id);
     user.followedUsers = user.followedUsers.filter((id) => id !== req.params.id);
 
     await User.batchPut([user, other]);
@@ -529,7 +529,7 @@ router.get('/account', ensureAuth, async (req, res) => {
   const i = entireQueue.findIndex((f) => f.owner === req.user.id);
   let myFeatured;
   if (i !== -1) {
-    const cube = await Cube.getById(entireQueue[i].cubeID);
+    const cube = await Cube.getById(entireQueue[i].cube);
     myFeatured = { cube, position: i + 1 };
   }
 

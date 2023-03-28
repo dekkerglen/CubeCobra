@@ -1,90 +1,132 @@
 // Load Environment Variables
 require('dotenv').config();
 
-/*
-const winston = require('winston');
+const {
+  CloudWatchLogsClient,
+  PutLogEventsCommand,
+  CreateLogStreamCommand,
+} = require('@aws-sdk/client-cloudwatch-logs');
 const uuid = require('uuid/v4');
-const WinstonCloudWatch = require('winston-cloudwatch');
-const AWS = require('aws-sdk');
 
-const formatInfo = ({ message }) => {
-  try {
-    return JSON.stringify(message);
-  } catch (err) {
-    return 'Error formatting info';
-  }
-};
-const formatError = ({ message, stack, request }) =>
-  JSON.stringify({
-    level: 'error',
-    message,
-    target: request ? request.originalUrl : null,
-    uuid: request ? request.uuid : null,
-    stack: (stack || '').split('\n'),
-  });
-
-const linearFormat = winston.format((info) => {
-  if (info.message) {
-    if (info.message.type === 'request') {
-      info.message = `request: ${info.message.path}`;
-    } else if (info.level === 'error') {
-      info.message = `${info.message} ${info.stack}`;
-      delete info.stack;
-      delete info.request;
-    }
-    delete info.type;
-  }
-  return info;
+const client = new CloudWatchLogsClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
-const consoleFormat = winston.format.combine(linearFormat(), winston.format.simple());
+let infoLogs = [];
+let errorLogs = [];
 
-if (process.env.ENV === 'production') {
-  winston.configure({
-    level: 'info',
-    format: winston.format.json(),
-    exitOnError: false,
-    transports: [
-      new WinstonCloudWatch({
-        level: 'info',
-        cloudWatchLogs: new AWS.CloudWatchLogs(),
-        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_info`,
-        logStreamName: uuid(),
-        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
-        awsRegion: process.env.AWS_REGION,
-        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
-        messageFormatter: formatInfo,
+const id = uuid();
+
+const cloudwatchEnabled = process.env.ENV === 'production';
+
+if (cloudwatchEnabled) {
+  // create log streams
+  client
+    .send(
+      new CreateLogStreamCommand({
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
+        logStreamName: `${id}`,
       }),
-      new WinstonCloudWatch({
-        level: 'error',
-        cloudWatchLogs: new AWS.CloudWatchLogs(),
-        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_error`,
-        logStreamName: uuid(),
-        awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
-        awsRegion: process.env.AWS_REGION,
-        retentionInDays: parseInt(process.env.LOG_RETENTION_DAYS, 10),
-        messageFormatter: formatError,
+    )
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    });
+
+  client
+    .send(
+      new CreateLogStreamCommand({
+        logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
+        logStreamName: `${id}`,
       }),
-      new winston.transports.Console({ format: consoleFormat }),
-    ],
-  });
-} else {
-  winston.configure({
-    level: 'info',
-    format: winston.format.json(),
-    exitOnError: false,
-    transports: [new winston.transports.Console({ format: consoleFormat })],
-  });
+    )
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    });
 }
-*/
 
 module.exports = {
-  winston: {
-    // eslint-disable-next-line no-console
-    info: () => {}, // console.log(...params),
-    // eslint-disable-next-line no-console
-    error: (error) => console.log({ message: error.message, stack: error.stack }),
+  info: (...messages) => {
+    if (cloudwatchEnabled) {
+      infoLogs.push({
+        message: messages.join('\n'),
+        timestamp: new Date().valueOf(),
+      });
+      if (infoLogs.length > 100 || infoLogs[0].timestamp < new Date(Date.now() - 60000).valueOf()) {
+        // eslint-disable-next-line no-console
+        console.log(`Sending ${infoLogs.length} info logs to CloudWatch...`);
+        client
+          .send(
+            new PutLogEventsCommand({
+              logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
+              logStreamName: `${id}`,
+              logEvents: infoLogs,
+            }),
+          )
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(err);
+          });
+        infoLogs = [];
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.log(messages.join('\n'));
+    }
+  },
+  // eslint-disable-next-line no-console
+  error: (error) => {
+    if (cloudwatchEnabled) {
+      errorLogs.push({
+        message: JSON.stringify(
+          {
+            message: error.message,
+            stack: error.stack,
+            request: {
+              id: error.request.id,
+              method: error.request.method,
+              path: error.request.path,
+              query: error.request.query,
+              originalUrl: error.request.originalUrl,
+              user: error.request.user
+                ? {
+                    id: error.request.user.id,
+                    username: error.request.user.username,
+                  }
+                : null,
+            },
+          },
+          null,
+          2,
+        ),
+        timestamp: new Date().valueOf(),
+      });
+
+      if (errorLogs.length > 100 || errorLogs[0].timestamp < new Date(Date.now() - 60000).valueOf()) {
+        // eslint-disable-next-line no-console
+        console.log(`Sending ${errorLogs.length} error logs to CloudWatch...`);
+        client
+          .send(
+            new PutLogEventsCommand({
+              logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
+              logStreamName: `${id}`,
+              logEvents: errorLogs,
+            }),
+          )
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(err);
+          });
+        errorLogs = [];
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   },
 };

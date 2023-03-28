@@ -13,15 +13,14 @@ cache: {
 */
 const cache = {};
 let cacheSize = 0;
-// 2GB
-const cacheLimit = 2 * 1024 * 1024 * 1024;
+// 1GB
+const cacheLimit = 1024 * 1024 * 1024;
 
 const evict = (key) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
 
-  console.log(`EVICTING ${key}`);
   if (cache[key]) {
     cacheSize -= cache[key].size;
     delete cache[key];
@@ -96,8 +95,6 @@ const updatePeers = async () => {
         ),
       );
 
-      console.log('PEERS: [', `${ips.join(', ')}]`);
-
       // make a health check to each ip address
       const healthyIps = await Promise.all(
         ips.map((ip) =>
@@ -111,15 +108,14 @@ const updatePeers = async () => {
               }
               return null;
             })
-            .catch((err) => console.log(err)),
+            .catch(() => {}),
         ),
       );
 
-      console.log('HEALTHY PEERS: [', `${healthyIps.join(', ')}]`);
       peers = healthyIps.filter((ip) => ip !== undefined);
     }
   } catch (err) {
-    console.log(err);
+    // swallow
   }
 };
 
@@ -128,7 +124,6 @@ const invalidate = async (key) => {
     return;
   }
 
-  console.log(`INVALIDATING ${key}`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
@@ -154,7 +149,7 @@ const invalidate = async (key) => {
       evict(key);
     }
   } catch (err) {
-    console.log(err);
+    // swallow
   }
 };
 
@@ -163,7 +158,6 @@ const batchInvalidate = async (keys) => {
     return;
   }
 
-  console.log(`BATCH INVALIDATING [${keys.join(', ')}]`);
   try {
     if (process.env.AUTOSCALING_GROUP && process.env.AUTOSCALING_GROUP !== '') {
       // send invalidate request to each ip address
@@ -189,7 +183,7 @@ const batchInvalidate = async (keys) => {
       keys.forEach((key) => evict(key));
     }
   } catch (err) {
-    console.log(err);
+    // swallow
   }
 };
 
@@ -197,8 +191,6 @@ const put = (key, value) => {
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
   }
-
-  console.log(`PUTTING ${key}`);
 
   if (process.env.CACHE_ENABLED !== 'true') {
     return;
@@ -229,11 +221,8 @@ const get = (key) => {
 
   const item = cache[key];
   if (item) {
-    console.log(`CACHE HIT ${key}`);
     return clone(item.value);
   }
-
-  console.log(`CACHE MISS ${key}`);
 
   return null;
 };

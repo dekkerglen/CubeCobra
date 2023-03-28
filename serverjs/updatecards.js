@@ -16,8 +16,6 @@ const downloadFromS3 = async (basePath = 'private') => {
           Key: `cards/${file}`,
         })
         .promise();
-      // eslint-disable-next-line no-console
-      console.log(`Writing ${basePath}/${file}`);
       await fs.writeFileSync(`${basePath}/${file}`, res.Body);
     }),
   );

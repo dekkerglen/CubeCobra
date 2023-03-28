@@ -37,8 +37,6 @@ const getObject = async (bucket, key, skipcache = false) => {
 
     return value;
   } catch (err) {
-    console.log(`Error getting object ${key} from bucket ${bucket}`);
-    console.log(err);
     return null;
   }
 };

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const fs = require('fs');
 const json = require('big-json');
-const { winston } = require('./cloudwatch');
+const cloudwatch = require('./cloudwatch');
 
 const { SortFunctions } = require('../dist/utils/Sort');
 
@@ -63,8 +63,6 @@ function cardFromId(id, fields) {
   if (data._carddict[id]) {
     details = data._carddict[id];
   } else {
-    // TODO: replace this back with error. it was clogging the logs.
-    // console.log(null, { error: new Error(`Could not find card from id: ${JSON.stringify(id, null, 2)}`) });
     details = getPlaceholderCard(id);
   }
 
@@ -84,7 +82,6 @@ function getCardDetails(card) {
     card.details = details;
     return details;
   }
-  winston.error(null, { error: new Error(`Could not find card details: ${card.cardID}`) });
   return getPlaceholderCard(card.cardID);
 }
 
@@ -101,7 +98,7 @@ async function loadJSONFile(filename, attribute) {
       readStream.pipe(parseStream);
 
       readStream.on('end', () => {
-        console.log(`Loaded ${filename}.`);
+        cloudwatch.info(`Loaded ${filename}.`);
         resolve();
       });
     } catch (e) {
@@ -118,25 +115,12 @@ async function loadAllFiles() {
 }
 
 async function initializeCardDb() {
-  console.log('Loading carddb...');
+  cloudwatch.info('Loading carddb...');
   await loadAllFiles();
 
   data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
 
-  console.log('Finished loading carddb.');
-}
-
-function unloadCardDb() {
-  for (const [filename, attribute] of Object.entries(fileToAttribute)) {
-    delete data[attribute];
-    try {
-      fs.unwatchFile(filename);
-    } catch (e) {
-      // This is likely just because we didn't register them.
-      winston.warn(null, { error: new Error(`Failed to unwatch file ${filename}.`) });
-    }
-  }
-  delete data.printedCardList;
+  cloudwatch.info('Finished loading carddb.');
 }
 
 function reasonableCard(card) {
@@ -226,7 +210,6 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
 function getMostReasonableById(id, printing = 'recent', filter = null) {
   const card = cardFromId(id);
   if (card.error) {
-    console.log(`Error finding most reasonable for id ${id}`);
     return null;
   }
   return getMostReasonable(card.name, printing, filter);
@@ -257,7 +240,6 @@ data = {
   initializeCardDb,
   loadJSONFile,
   getPlaceholderCard,
-  unloadCardDb,
   getMostReasonable,
   getMostReasonableById,
   getFirstReasonable,

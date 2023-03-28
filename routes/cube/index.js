@@ -217,7 +217,7 @@ router.post(
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
     const { user } = req;
-    const cube = await Cube.getById(req.params.id);
+    const cube = await Cube.getById(req.params.id, true);
 
     if (!isCubeViewable(cube, user)) {
       req.flash('danger', 'Cube not found');
@@ -926,6 +926,11 @@ router.post(
   body('defaultStatus', 'status must be valid.').isIn(['bot', '2playerlocal']),
   async (req, res) => {
     try {
+      if (!req.user) {
+        req.flash('danger', 'You must be logged in to start a draft.');
+        return res.redirect(`/cube/playtest/${req.params.id}`);
+      }
+
       const numPacks = parseInt(req.body.packs, 10);
 
       const numCards = numPacks * 9;

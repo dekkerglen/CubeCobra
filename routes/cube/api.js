@@ -20,7 +20,6 @@ const Blog = require('../../dynamo/models/blog');
 const Changelog = require('../../dynamo/models/changelog');
 const Feed = require('../../dynamo/models/feed');
 const User = require('../../dynamo/models/user');
-const { isCubeListed } = require('../../serverjs/cubefn');
 
 const router = express.Router();
 

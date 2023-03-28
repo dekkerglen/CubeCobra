@@ -99,8 +99,6 @@ const hashOracles = (cards) => {
 
     if (oracle) {
       res.push(`oracle:${carddb.cardFromId(card.cardID).oracle_id}`);
-    } else {
-      console.log(`No oracle for `, card.cardID);
     }
   }
 

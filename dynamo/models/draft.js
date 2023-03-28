@@ -102,18 +102,16 @@ const getCards = async (id) => {
   }
 };
 
-const addDetails = (cards, id) => {
+const addDetails = (cards) => {
   if (!cards) {
     return cards;
   }
 
   // if cards is string
   if (typeof cards === 'string') {
-    console.log(`Parsing cardlist for draft ${id}`);
     try {
       cards = JSON.parse(cards);
     } catch (e) {
-      console.error(`Error parsing cardlist for draft ${id}`);
       return [];
     }
   }

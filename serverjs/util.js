@@ -1,5 +1,4 @@
 const shuffleSeed = require('shuffle-seed');
-const { winston } = require('./cloudwatch');
 const Notification = require('../dynamo/models/notification');
 const cardutil = require('../dist/utils/Card');
 
@@ -102,7 +101,6 @@ function newCard(cardDetails, tags, defaultStatus = 'Owned') {
 
 function addCardToBoard(board, cube, cardDetails, tags) {
   if (cardDetails.error) {
-    winston.error('Attempted to add invalid card to cube.');
     return;
   }
 

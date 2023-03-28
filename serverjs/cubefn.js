@@ -181,10 +181,12 @@ function buildTagColors(cube, cards) {
 function cubeCardTags(cubeCards) {
   const tags = [];
   for (const card of cubeCards) {
-    for (let tag of card.tags) {
-      tag = tag.trim();
-      if (!tags.includes(tag)) {
-        tags.push(tag);
+    if (card.tags) {
+      for (let tag of card.tags) {
+        tag = tag.trim();
+        if (!tags.includes(tag)) {
+          tags.push(tag);
+        }
       }
     }
   }

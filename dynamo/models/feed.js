@@ -32,7 +32,7 @@ const TYPES = {
 };
 
 module.exports = {
-  batchPut: async (documents) => client.batchPut(documents),
+  batchPut: async (documents) => client.batchPut(documents, true),
   getByTo: async (user, lastKey) => {
     const result = await client.query({
       IndexName: 'ByTo',
