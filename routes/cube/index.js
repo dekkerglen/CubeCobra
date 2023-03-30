@@ -483,8 +483,6 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
 
     const [cubeA, cubeB] = await Promise.all([cubeAq, cubeBq]);
 
-    const [cardsA, cardsB] = await Promise.all([Cube.getCards(cubeA.id), Cube.getCards(cubeB.id)]);
-
     if (!isCubeViewable(cubeA, req.user)) {
       req.flash('danger', `Base cube not found: ${idA}`);
       return res.redirect('/404');
@@ -493,6 +491,8 @@ router.get('/compare/:idA/to/:idB', async (req, res) => {
       req.flash('danger', `Comparison cube not found: ${idB}`);
       return res.redirect('/404');
     }
+
+    const [cardsA, cardsB] = await Promise.all([Cube.getCards(cubeA.id), Cube.getCards(cubeB.id)]);
 
     const { aOracles, bOracles, inBoth, allCards } = await compareCubes(cardsA, cardsB);
 
@@ -1352,7 +1352,7 @@ router.delete('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(
       success: 'true',
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting format.',

@@ -82,7 +82,7 @@ router.get('/api/topcards', async (req, res) => {
       numResults,
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     res.status(500).send({
       success: 'false',
       numResults: 0,
@@ -109,7 +109,7 @@ router.get('/api/searchcards', async (req, res) => {
       numResults,
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     res.status(500).send({
       success: 'false',
       numResults: 0,
@@ -185,7 +185,7 @@ router.post('/cardhistory', async (req, res) => {
       data: history.items.reverse(),
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
       data: [],

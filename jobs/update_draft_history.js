@@ -163,10 +163,14 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
     const key = keys[i];
     if (fs.existsSync(`./temp/global_draft_history/${key}.json`)) {
       console.log(`Already finished ${i + 1} / ${keys.length}: for ${key}`);
-      const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`));
 
-      eloByOracleId = loaded.eloByOracleId;
-      picksByOracleId = loaded.picksByOracleId;
+      // only do this if the next day is not loaded
+      if (i + 1 < keys.length && !fs.existsSync(`./temp/global_draft_history/${keys[i + 1]}.json`)) {
+        const loaded = JSON.parse(await fs.promises.readFile(`./temp/global_draft_history/${key}.json`));
+
+        eloByOracleId = loaded.eloByOracleId;
+        picksByOracleId = loaded.picksByOracleId;
+      }
     } else {
       console.log(`Starting ${i + 1} / ${keys.length}: for ${key}`);
       const logRows = logsByDay[key] || [];
@@ -179,23 +183,25 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
 
       let index = 0;
       for (const batch of logRowBatches) {
-        const drafts = await Draft.batchGet(batch.map((row) => row.id));
+        const drafts = await Draft.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
 
         // save these drafts to avoid having to load them again, used in update_metadata_dict
         fs.writeFileSync(
           `./temp/all_drafts/${key}_${index}.json`,
           JSON.stringify(
-            drafts.map((draft) =>
-              draft.seats[0].mainboard
-                .flat(3)
-                .map((cardIndex) => {
-                  if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
-                    return draft.cards[cardIndex].details.oracle_id;
-                  }
-                  return null;
-                })
-                .filter((oracleId) => oracleId),
-            ),
+            drafts
+              .filter((draft) => draft.seats)
+              .map((draft) =>
+                draft.seats[0].mainboard
+                  .flat(3)
+                  .map((cardIndex) => {
+                    if (typeof cardIndex === 'number' && cardIndex < draft.cards.length && cardIndex >= 0) {
+                      return draft.cards[cardIndex].details.oracle_id;
+                    }
+                    return null;
+                  })
+                  .filter((oracleId) => oracleId),
+              ),
           ),
         );
         index += 1;

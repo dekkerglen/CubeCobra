@@ -102,7 +102,6 @@ async function loadJSONFile(filename, attribute) {
         resolve();
       });
     } catch (e) {
-      console.error(`Error loading ${filename}.`, { error: e });
       reject(e);
     }
   });

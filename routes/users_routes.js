@@ -62,7 +62,7 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(notification.url);
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
       message: err,
@@ -85,7 +85,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
       success: 'true',
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
     });
@@ -120,7 +120,7 @@ router.get('/follow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
     });
@@ -144,7 +144,7 @@ router.get('/unfollow/:id', ensureAuth, async (req, res) => {
 
     return res.redirect(`/user/view/${req.params.id}`);
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
     });
@@ -346,7 +346,7 @@ router.post(
     return bcrypt.genSalt(10, (err3, salt) => {
       bcrypt.hash(password, salt, async (err4, hash) => {
         if (err4) {
-          req.logger.error(err4);
+          req.logger.error(err4.message, err4.stack);
         } else {
           newUser.passwordHash = hash;
           await User.put(newUser);
@@ -367,6 +367,11 @@ router.get('/login', (req, res) => {
 // Login post
 router.post('/login', async (req, res) => {
   let user;
+
+  if (!req.body.username) {
+    req.flash('danger', 'Incorrect Username or email address.');
+    res.redirect('/user/login');
+  }
 
   if (req.body.username.includes('@')) {
     user = await User.getByEmail(req.body.username.toLowerCase());
@@ -421,7 +426,7 @@ router.get('/view/:id', async (req, res) => {
       following,
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send(err);
   }
 });
@@ -583,7 +588,7 @@ router.post(
       return bcrypt.genSalt(10, (err3, salt) => {
         bcrypt.hash(req.body.password2, salt, async (err4, hash) => {
           if (err4) {
-            return req.logger.error(err4);
+            return req.logger.error(err4.message, err4.stack);
           }
           user.passwordHash = hash;
           await User.update(user);

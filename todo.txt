@@ -1,4 +1,5 @@
-followers on cubes still being wiped
+followers on cubes still being wiped?
+
 some lingering issues with multiple edits w/o refresh
 "Maramas" can't access account overview
 explore->recently drafted cubes empty
@@ -7,6 +8,14 @@ https://cubecobra.com/user/view/60f1de4a0526d010295cbb81
 im getting this wierd error when i type "sync" into the "card to add" field. adding other cards works fine its just typing the word "sync" causes an error
 When I try a grid draft with 2 player local, it still does a bot draft.
 add limit to recent drafts of your cube on dashboard
+remove comment from notice broken
+admin dashboard -> featured cubes queue
+"Phyrexia: All Will Be One Cube Update"
+card packages don't load correctly
+I am no longer getting any notifications
+and the "your cubes" list on the main dashboard is no longer sorted by last edited/updated date
+it just seems locked in whatever order it happened to be in before the last update
+apostrophies don't work for autocard markdown
 
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color

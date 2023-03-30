@@ -126,7 +126,7 @@ router.post(
         });
       }
 
-      for (let i = 0; i < updatedCube.categoryPrefixes.length; i += 1) {
+      for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
         if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
           return res.status(400).send({
             success: 'false',
@@ -258,7 +258,7 @@ router.get(
     }
 
     const cubeCards = await Cube.getCards(cube.id);
-    const tags = cubeCardTags(cubeCards);
+    const tags = cubeCardTags([...cubeCards.mainboard, ...cubeCards.maybeboard]);
 
     return res.status(200).send({
       success: 'true',
@@ -541,9 +541,7 @@ router.post(
       )}&num_recs=${1000}&root=${encodeURIComponent(process.env.HOST)}`,
     );
     if (!response.ok) {
-      req.logger.error({
-        message: 'Flask server response not OK.',
-      });
+      req.logger.error('Flask server response not OK.');
       return res.status(500).send({
         success: 'false',
         result: {},
@@ -834,106 +832,124 @@ router.get(
 );
 
 router.post('/commit', async (req, res) => {
-  const { id, changes, title, blog, useBlog } = req.body;
+  try {
+    const { id, changes, title, blog, useBlog } = req.body;
 
-  let changeCount = 0;
+    let changeCount = 0;
 
-  for (const [board] of Object.entries(changes)) {
-    if (changes[board].swaps) {
-      changeCount += changes[board].swaps.length;
-    }
-    if (changes[board].adds) {
-      changeCount += changes[board].adds.length;
-    }
-    if (changes[board].removes) {
-      changeCount += changes[board].removes.length;
-    }
-    if (changes[board].edits) {
-      changeCount += changes[board].edits.length;
-    }
-  }
-
-  if (changeCount <= 0) {
-    return res.status(400).send({
-      success: 'false',
-      message: 'No changes',
-    });
-  }
-
-  const cube = await Cube.getById(id);
-
-  if (cube.owner.id !== req.user.id) {
-    return res.status(403).send({
-      success: 'false',
-      message: 'Unauthorized',
-    });
-  }
-
-  const cards = await Cube.getCards(cube.id, true);
-
-  for (const [board] of Object.entries(changes)) {
-    // swaps
-    if (changes[board].swaps) {
-      for (const swap of changes[board].swaps) {
-        cards[board][swap.index] = swap.card;
+    for (const [board] of Object.entries(changes)) {
+      if (changes[board].swaps) {
+        changeCount += changes[board].swaps.length;
+      }
+      if (changes[board].adds) {
+        changeCount += changes[board].adds.length;
+      }
+      if (changes[board].removes) {
+        changeCount += changes[board].removes.length;
+      }
+      if (changes[board].edits) {
+        changeCount += changes[board].edits.length;
       }
     }
-    // edits
-    if (changes[board].edits) {
-      for (const edit of changes[board].edits) {
-        cards[board][edit.index] = {
-          ...cards[board][edit.index],
-          ...edit.newCard,
-        };
+
+    if (changeCount <= 0) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'No changes',
+      });
+    }
+
+    const cube = await Cube.getById(id);
+
+    if (cube.owner.id !== req.user.id) {
+      return res.status(403).send({
+        success: 'false',
+        message: 'Unauthorized',
+      });
+    }
+
+    const cards = await Cube.getCards(cube.id, true);
+
+    for (const [board] of Object.entries(changes)) {
+      // swaps
+      if (changes[board].swaps) {
+        for (const swap of changes[board].swaps) {
+          cards[board][swap.index] = swap.card;
+        }
+      }
+      // edits
+      if (changes[board].edits) {
+        for (const edit of changes[board].edits) {
+          cards[board][edit.index] = {
+            ...cards[board][edit.index],
+            ...edit.newCard,
+          };
+        }
+      }
+      // removes
+      if (changes[board].removes) {
+        // sort removals desc
+        const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
+        for (const remove of sorted) {
+          cards[board].splice(remove.index, 1);
+        }
+      }
+      // adds
+      if (changes[board].adds) {
+        for (const add of changes[board].adds) {
+          cards[board].push({
+            ...add,
+          });
+        }
       }
     }
-    // removes
-    if (changes[board].removes) {
-      // sort removals desc
-      const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
-      for (const remove of sorted) {
-        cards[board].splice(remove.index, 1);
-      }
-    }
-    // adds
-    if (changes[board].adds) {
-      for (const add of changes[board].adds) {
-        cards[board].push({
-          ...add,
+
+    await Cube.updateCards(cube.id, cards);
+    try {
+      const changelogId = await Changelog.put(changes, cube.id);
+
+      if (useBlog) {
+        const blogId = await Blog.put({
+          body: blog,
+          owner: req.user.id,
+          date: new Date().valueOf(),
+          cube: cube.id,
+          title,
+          changelist: changelogId,
         });
+
+        const followers = [...new Set([...(req.user.following || []), ...cube.following])];
+
+        const feedItems = followers.map((user) => ({
+          id: blogId,
+          to: user,
+          date: new Date().valueOf(),
+          type: Feed.TYPES.BLOG,
+        }));
+
+        await Feed.batchPut(feedItems);
       }
+
+      return res.status(200).send({
+        success: 'true',
+        updateApplied: true,
+      });
+    } catch (err) {
+      req.logger.error(err.message, err.stack);
+      return res.status(500).send({
+        success: 'false',
+        message: `Changes applied succesfully, but encountered an error creating history/blog/feed items: ${err.message}\n${err.stack}`,
+        updateApplied: true,
+      });
     }
-  }
-
-  await Cube.updateCards(cube.id, cards);
-
-  const changelogId = await Changelog.put(changes, cube.id);
-
-  if (useBlog) {
-    const blogId = await Blog.put({
-      body: blog,
-      owner: req.user.id,
-      date: new Date().valueOf(),
-      cube: cube.id,
-      title,
-      changelist: changelogId,
+  } catch (err) {
+    req.logger.error(err.message, err.stack);
+    return res.status(500).send({
+      success: 'false',
+      message: `Failed to commit cube changes. ${err.message}\n${err.stack}`,
+      updateApplied: true,
     });
-
-    const followers = [...new Set([...(req.user.following || []), ...cube.following])];
-
-    const feedItems = followers.map((user) => ({
-      id: blogId,
-      to: user,
-      date: new Date().valueOf(),
-      type: Feed.TYPES.BLOG,
-    }));
-
-    await Feed.batchPut(feedItems);
   }
-
-  return res.status(200).send({
-    success: 'true',
-  });
 });
 
 module.exports = router;

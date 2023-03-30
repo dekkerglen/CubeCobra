@@ -6,6 +6,7 @@ const { draftbotPick } = require('./draftbots');
 
 const Draft = require('../dynamo/models/draft');
 const User = require('../dynamo/models/user');
+const cloudwatch = require('./cloudwatch');
 
 const {
   hget,
@@ -465,7 +466,7 @@ const getDraftPick = async (draftId, seat) => {
     choice = await draftbotPick(drafterState);
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error(e);
+    cloudwatch.error(e.message, e.stack);
   }
 
   return Math.max(0, choice);

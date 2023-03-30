@@ -117,7 +117,7 @@ router.post('/hook', async (req, res) => {
       success: 'false',
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
     });
@@ -218,7 +218,7 @@ router.get('/redirect', ensureAuth, (req, res) => {
       return res.redirect('/user/account?nav=patreon');
     })
     .catch((err) => {
-      req.logger.error(err);
+      req.logger.error(err.message, err.stack);
 
       req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
       return res.redirect('/user/account?nav=patreon');

@@ -15,7 +15,7 @@ export const setupPicks = (rows, cols) => {
   return res;
 };
 
-export const getCardCol = (draft, cardIndex) => Math.min(7, cardCmc(draft.cards[cardIndex]));
+export const getCardCol = (draft, cardIndex) => Math.max(0, Math.min(7, cardCmc(draft.cards[cardIndex])));
 
 export const defaultStepsForLength = (length) =>
   new Array(length)

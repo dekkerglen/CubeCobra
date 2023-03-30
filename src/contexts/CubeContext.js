@@ -601,7 +601,9 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         }),
       });
 
-      if (result.status === 200) {
+      const json = await result.json();
+
+      if (json.updateApplied) {
         const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
 
         for (const [board] of Object.entries(changes)) {
@@ -650,8 +652,9 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
           ...cube,
           cards: newCards,
         });
-      } else {
-        setAlerts([{ type: 'error', message: `Failed to commit changes: ${result.message}` }]);
+      }
+      if (result.status === 500) {
+        setAlerts([{ type: 'error', message: json.message }]);
       }
       setLoading(false);
     },

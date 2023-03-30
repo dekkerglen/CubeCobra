@@ -53,7 +53,12 @@ const hydrate = async (document) => {
   document.owner = await User.getById(document.owner);
 
   if (document.cube && document.cube !== 'DEVBLOG') {
-    document.cubeName = (await Cube.getById(document.cube)).name;
+    const cube = await Cube.getById(document.cube);
+    if (cube) {
+      document.cubeName = cube.name;
+    } else {
+      document.cubeName = 'Unknown';
+    }
   }
 
   if (!document.changelist) {

@@ -80,30 +80,10 @@ module.exports = {
     }
   },
   // eslint-disable-next-line no-console
-  error: (error) => {
+  error: (...messages) => {
     if (cloudwatchEnabled) {
       errorLogs.push({
-        message: JSON.stringify(
-          {
-            message: error.message,
-            stack: error.stack,
-            request: {
-              id: error.request.id,
-              method: error.request.method,
-              path: error.request.path,
-              query: error.request.query,
-              originalUrl: error.request.originalUrl,
-              user: error.request.user
-                ? {
-                    id: error.request.user.id,
-                    username: error.request.user.username,
-                  }
-                : null,
-            },
-          },
-          null,
-          2,
-        ),
+        message: messages.join('\n'),
         timestamp: new Date().valueOf(),
       });
 
@@ -126,7 +106,7 @@ module.exports = {
       }
     } else {
       // eslint-disable-next-line no-console
-      console.error(error);
+      console.error(messages);
     }
   },
 };

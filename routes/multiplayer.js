@@ -127,7 +127,7 @@ router.post('/getpack', ensureAuth, async (req, res) => {
       },
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send({
       success: 'false',
       error: err,
@@ -193,7 +193,7 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
       });
     } catch (err) {
       req.logger.info(`Error saving deck, retry ${retry}`);
-      req.logger.error(err);
+      req.logger.error(err.message, err.stack);
     }
   }
 

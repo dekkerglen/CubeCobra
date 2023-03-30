@@ -145,7 +145,16 @@ const addS3Fields = async (document) => {
   }
 
   const cards = await getCards(document.id);
+
+  if (!cards) {
+    return document;
+  }
+
   const seats = await getSeats(document.id);
+
+  if (!seats) {
+    return document;
+  }
 
   return {
     ...document,

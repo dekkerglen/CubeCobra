@@ -22,7 +22,7 @@ const { setup } = require('./serverjs/socketio');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
-  cloudwatch.info('Unhandled Rejection at: Promise ', reason, reason.stack);
+  cloudwatch.error('Unhandled Rejection at: Promise ', reason, reason.stack);
 });
 
 // Init app
@@ -49,17 +49,36 @@ app.use((req, res, next) => {
 // per-request logging configuration
 app.use((req, res, next) => {
   req.uuid = uuid();
-
   req.logger = {
-    error: (err) => {
-      // err.requst = req;
-      cloudwatch.error({
-        message: err.message,
-        stack: err.stack,
-        request: req,
-      });
+    error: (...messages) => {
+      cloudwatch.error(
+        ...messages,
+        JSON.stringify(
+          {
+            id: req.id,
+            method: req.method,
+            path: req.path,
+            query: req.query,
+            originalUrl: req.originalUrl,
+            user: req.user
+              ? {
+                  id: req.user.id,
+                  username: req.user.username,
+                }
+              : null,
+          },
+          null,
+          2,
+        ),
+      );
     },
-    info: (message) => cloudwatch.info(message),
+    info: (message) => {
+      if (req.user) {
+        cloudwatch.info(`${req.method} ${req.originalUrl} - ${req.user.id}:${req.user.username}`, message);
+      } else {
+        cloudwatch.info(`${req.method} ${req.originalUrl}`, message);
+      }
+    },
   };
 
   res.locals.requestId = req.uuid;
@@ -199,7 +218,7 @@ app.use((req, res) => {
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  req.logger.error(err);
+  req.logger.error(err.message, err.stack);
   if (!res.statusCode) {
     res.status(500);
   }

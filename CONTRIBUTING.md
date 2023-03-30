@@ -2,7 +2,7 @@
 
 ### What is Cube Cobra?
 
-The main goal with Cube Cobra is to create a cube management tool that doesn't need to be supplemented with any other tool such as excel, gatherer, or another cube management app. I want to create a platform that is easy to use, that still has advanced features that allow users a high degree of freedom to organize and analyze their cube in a way that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.
+The main goal with Cube Cobra is to create the best cube management tool. I want to create a platform that is easy to use, that still has advanced features that allow users a high degree of freedom to organize and analyze their cube in a way that makes sense to them. I want to create the best possible platform for users to build, playtest, and share their cube.
 
 ### Why contribute?
 
@@ -174,9 +174,6 @@ Cube Cobra currently uses 4 languages: Javascript, Jade/PUG, CSS, and JSX. Befor
 The development server can be accessed at: http://cubecobradev.com/
 This server usually runs on a more up to date, experimental branch than the production server. The development server is a great way to test new features in an environment closer to the live server. Please report any bugs you see on the development server as an issue. The development server database is not wiped periodically, but it is subject to instability, so don't use it as a reliable way to store any data.
 
-# Release Schedule
-
-Releases are created every two weeks, on friday night. There is a feature freeze 3 days before the release where no feature pull requests will be approved, only bugfixes. This goes into affect the Tuesday before a release. This is to prevent regression on the live server. 
 
 # How to report a bug
 

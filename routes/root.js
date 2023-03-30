@@ -82,7 +82,7 @@ router.get('/dashboard/decks', ensureAuth, async (req, res) => {
       lastKey: decks.lastEvaluatedKey,
     });
   } catch (err) {
-    req.logger.error(err);
+    req.logger.error(err.message, err.stack);
     return res.status(500).send(err);
   }
 });
