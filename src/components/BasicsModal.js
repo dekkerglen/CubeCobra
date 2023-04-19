@@ -2,10 +2,8 @@ import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
+import { csrfFetch } from 'utils/CSRF';
 import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card } from 'reactstrap';
-
-import { buildDeck } from 'drafting/deckutil';
-import { fromEntries } from 'utils/Util';
 
 const MAX_BASICS = 21;
 
@@ -19,22 +17,36 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
   }, [addBasics, toggle, basics, counts]);
 
   const calculateBasics = useCallback(async () => {
-    const { deck: newDeck } = await buildDeck(cards, deck, basics);
-    const basicIds = fromEntries(basics.map((ci, idx) => [ci, idx]));
+    const response = await csrfFetch('/cube/api/calculatebasics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mainboard: deck.map((index) => cards[index].details),
+        basics: basics.map((index) => cards[index].details),
+      }),
+    });
 
-    const newCounts = basics.map(() => 0);
+    const json = await response.json();
 
-    for (const row of newDeck) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          if (basicIds[cardIndex] || basicIds[cardIndex] === 0) {
-            newCounts[basicIds[cardIndex]] += 1;
-          }
-        }
+    if (json.success === 'true') {
+      const newCounts = basics.map(() => 0);
+
+      const toIndex = json.basics.map((card) =>
+        basics.findIndex((index) => cards[index].details.oracle_id === card.oracle_id),
+      );
+
+      console.log(toIndex);
+
+      for (const index of toIndex) {
+        newCounts[index] += 1;
       }
-    }
 
-    setCounts(newCounts);
+      setCounts(newCounts);
+    } else {
+      console.error(json);
+    }
   }, [deck, basics, cards]);
 
   return (

@@ -239,7 +239,7 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     }
     const seat = deck.seats[req.params.seat];
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     const main = {};

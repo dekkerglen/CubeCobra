@@ -26,6 +26,8 @@ const {
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
 
+const { recommend } = require('../../serverjs/ml');
+
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
@@ -675,6 +677,8 @@ router.get('/analysis/:id', async (req, res) => {
 
     const cubeAnalytics = await CubeAnalytic.getByCube(cube.id);
 
+    const { adds, cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
+
     return render(
       req,
       res,
@@ -684,6 +688,20 @@ router.get('/analysis/:id', async (req, res) => {
         cards,
         cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
+        adds: adds.map((item) => {
+          const card = carddb.getReasonableCardByOracle(item.oracle);
+          return {
+            details: card,
+            cardID: card._id,
+          };
+        }),
+        cuts: cuts.map((item) => {
+          const card = carddb.getReasonableCardByOracle(item.oracle);
+          return {
+            details: card,
+            cardID: card._id,
+          };
+        }),
       },
       {
         metadata: generateMeta(
@@ -1017,6 +1035,11 @@ router.post(
   body('cards').toInt(),
   async (req, res) => {
     try {
+      if (!req.user) {
+        req.flash('danger', 'You must be logged in to start a sealed draft.');
+        return res.redirect(`/cube/playtest/${req.params.id}`);
+      }
+
       const user = await User.getById(req.user.id);
 
       if (!user) {

@@ -6,11 +6,11 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import { cardsAreEquivalent } from 'utils/Card';
 
+import { csrfFetch } from 'utils/CSRF';
 import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'reactstrap';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import { buildDeck } from 'drafting/deckutil';
 import BasicsModal from 'components/BasicsModal';
 import withModal from 'components/WithModal';
 
@@ -71,13 +71,79 @@ const DeckbuilderNavbar = ({
   }, [deck]);
 
   const autoBuildDeck = useCallback(async () => {
-    const main = [...deck.seats[seat].mainboard.flat(3), ...deck.seats[seat].sideboard.flat(3)];
-    const { sideboard: side, deck: newDeck } = await buildDeck(deck.cards, main, deck.basics);
-    const newSide = side.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
-    const newDeckCards = newDeck.map((row) => row.map((col) => col.map((ci) => deck.cards[ci])));
-    setSideboard(newSide);
-    setDeck(newDeckCards);
-  }, [deck.seats, deck.cards, seat, deck.basics, setSideboard, setDeck]);
+    const response = await csrfFetch('/cube/api/deckbuild', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pool: [
+          ...deck.mainboard.flat(3).map(({ index }) => index),
+          ...deck.sideboard.flat(3).map(({ index }) => index),
+        ].map((index) => deck.cards[index].details),
+        basics: deck.basics.map((index) => deck.cards[index].details),
+      }),
+    });
+
+    const json = await response.json();
+
+    console.log(json);
+
+    if (json.success === 'true') {
+      const pool = [
+        ...deck.mainboard.flat(3).map(({ index }) => index),
+        ...deck.sideboard.flat(3).map(({ index }) => index),
+      ];
+      const newMainboard = [];
+
+      for (const oracle of json.mainboard) {
+        const poolIndex = pool.findIndex((cardindex) => deck.cards[cardindex].details.oracle_id === oracle);
+        if (poolIndex === -1) {
+          // try basics
+          const basicsIndex = deck.basics.findIndex((cardindex) => deck.cards[cardindex].details.oracle_id === oracle);
+          if (basicsIndex !== -1) {
+            newMainboard.push(deck.basics[basicsIndex]);
+          } else {
+            console.error(`Could not find card ${oracle} in pool or basics`);
+          }
+        } else {
+          newMainboard.push(pool[poolIndex]);
+          pool.splice(poolIndex, 1);
+        }
+      }
+
+      // format mainboard
+      const formattedMainboard = [[], []];
+      const formattedSideboard = [[]];
+      for (let i = 0; i < 8; i++) {
+        formattedMainboard[0].push([]);
+        formattedMainboard[1].push([]);
+        formattedSideboard[0].push([]);
+      }
+
+      for (const index of newMainboard) {
+        const card = deck.cards[index];
+        const row = card.details.type.includes('Creature') || card.details.type.includes('Basic') ? 0 : 1;
+        const column = Math.max(0, Math.min(card.details.cmc, 7));
+
+        formattedMainboard[row][column].push(deck.cards[index]);
+      }
+
+      for (const index of pool) {
+        if (!deck.basics.includes(index)) {
+          const card = deck.cards[index];
+          const column = Math.max(0, Math.min(card.details.cmc, 7));
+
+          formattedSideboard[0][column].push(deck.cards[index]);
+        }
+      }
+
+      setDeck(formattedMainboard);
+      setSideboard(formattedSideboard);
+    } else {
+      console.error(json);
+    }
+  }, [deck.mainboard, deck.sideboard, deck.basics, deck.cards, setDeck, setSideboard]);
 
   return (
     <Navbar expand="md" light className={`usercontrols ${className}`} {...props}>

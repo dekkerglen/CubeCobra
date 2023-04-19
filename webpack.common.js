@@ -185,7 +185,6 @@ const serverConfig = merge(config, {
     'utils/Card': './src/utils/Card.js',
     'drafting/createdraft': './src/drafting/createdraft.js',
     'drafting/draftutil': './src/drafting/draftutil.js',
-    'drafting/deckutil': './src/drafting/deckutil.js',
     'filtering/FilterCards': './src/filtering/FilterCards.js',
     'utils/Sort': './src/utils/Sort.js',
     'utils/Util': './src/utils/Util.js',

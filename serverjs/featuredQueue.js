@@ -4,7 +4,7 @@ const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
 
 function canBeFeatured(patron) {
-  return patron && patron.status === Patron.STATUSES.Active && patron.level > 1;
+  return patron && patron.status === Patron.STATUSES.ACTIVE;
 }
 
 async function rotateFeatured(queue) {
@@ -15,8 +15,8 @@ async function rotateFeatured(queue) {
   const [old1, old2, new1, new2] = queue.slice(0, 4);
 
   // re-queue cubes only if owners are still eligible
-  const owner1 = await Patron.getById(old1.ownerID);
-  const owner2 = await Patron.getById(old2.ownerID);
+  const owner1 = await Patron.getById(old1.owner);
+  const owner2 = await Patron.getById(old2.owner);
 
   for (const [owner, cube] of [
     [owner1, old1],

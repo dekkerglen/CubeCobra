@@ -936,10 +936,11 @@ const uploadCardDb = async () => {
 };
 
 const loadMetadatadict = async () => {
-  if (!fs.existsSync('./temp') && !fs.existsSync('./temp/metadatadict.json')) {
+  if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
     return fs.promises.readFile('./temp/metadatadict.json', 'utf8').then((data) => JSON.parse(data));
   }
 
+  console.log("Couldn't find metadatadict.json");
   return {};
 };
 

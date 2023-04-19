@@ -2,12 +2,12 @@ require('dotenv').config();
 const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body } = require('express-validator');
-const fetch = require('node-fetch');
 
 const cardutil = require('../../dist/utils/Card');
 const carddb = require('../../serverjs/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../serverjs/util');
+const { deckbuild, calculateBasics } = require('../../serverjs/draftbots');
 
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../serverjs/cubefn');
 
@@ -533,62 +533,6 @@ router.post(
 );
 
 router.post(
-  '/adds/:id',
-  util.wrapAsyncApi(async (req, res) => {
-    const response = await fetch(
-      `${process.env.FLASKROOT}/?cube_name=${encodeURIComponent(
-        req.params.id,
-      )}&num_recs=${1000}&root=${encodeURIComponent(process.env.HOST)}`,
-    );
-    if (!response.ok) {
-      req.logger.error('Flask server response not OK.');
-      return res.status(500).send({
-        success: 'false',
-        result: {},
-      });
-    }
-    const { cuts, additions } = await response.json();
-
-    // use this instead if you want debug data
-    // const additions = { island: 1, mountain: 1, plains: 1, forest: 1, swamp: 1, wastes: 1 };
-    // const cuts = { ...additions };
-
-    const pids = new Set();
-    const cardNames = new Set();
-
-    const formatTuple = (tuple) => {
-      const details = carddb.getMostReasonable(tuple[0]);
-      const card = util.newCard(details);
-      card.details = details;
-
-      if (card.details.tcgplayer_id) {
-        pids.add(card.details.tcgplayer_id);
-      }
-      cardNames.add(card.details.name);
-
-      return card;
-    };
-
-    const addlist = Object.entries(additions)
-      .sort((a, b) => b[1] - a[1])
-      .map(formatTuple);
-
-    // this is sorted the opposite way, as lower numbers mean we want to cut it
-    const cutlist = Object.entries(cuts)
-      .sort((a, b) => a[1] - b[1])
-      .map(formatTuple);
-
-    return res.status(200).send({
-      success: 'true',
-      result: {
-        toAdd: addlist,
-        toCut: cutlist,
-      },
-    });
-  }),
-);
-
-router.post(
   '/addtocube/:id',
   ensureAuth,
   util.wrapAsyncApi(async (req, res) => {
@@ -620,7 +564,7 @@ router.post(
     const adds = req.body.cards.map((id) => {
       const c = util.newCard(carddb.cardFromId(id));
       c.tags = [tag];
-      c.notes = `Added from package "${tag}": ${process.env.HOST}/packages/${req.body.packid}`;
+      c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
       return c;
     });
 
@@ -948,6 +892,41 @@ router.post('/commit', async (req, res) => {
       success: 'false',
       message: `Failed to commit cube changes. ${err.message}\n${err.stack}`,
       updateApplied: true,
+    });
+  }
+});
+
+router.post('/deckbuild', async (req, res) => {
+  try {
+    const { pool, basics } = req.body;
+
+    const { mainboard, sideboard } = await deckbuild(pool, basics);
+
+    return res.status(200).send({
+      success: 'true',
+      mainboard,
+      sideboard,
+    });
+  } catch (err) {
+    req.logger.error(err.message, err.stack);
+    return res.status(500).send({
+      success: 'false',
+    });
+  }
+});
+
+router.post('/calculatebasics', async (req, res) => {
+  try {
+    const { mainboard, basics } = req.body;
+
+    return res.status(200).send({
+      success: 'true',
+      basics: await calculateBasics(mainboard, basics),
+    });
+  } catch (err) {
+    req.logger.error(err.message, err.stack);
+    return res.status(500).send({
+      success: 'false',
     });
   }
 });

@@ -226,6 +226,14 @@ function getVersionsByOracleId(oracleId) {
   return data.oracleToId[oracleId];
 }
 
+const getReasonableCardByOracle = (oracleId) => {
+  return cardFromId(data.oracleToId[oracleId][0]);
+};
+
+function isOracleBasic(oracleId) {
+  return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');
+}
+
 data = {
   ...data,
   cardFromId,
@@ -247,6 +255,8 @@ data = {
   normalizedName: (card) => card.name_lower,
   fileToAttribute,
   loadAllFiles,
+  isOracleBasic,
+  getReasonableCardByOracle,
 };
 
 module.exports = data;

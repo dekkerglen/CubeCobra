@@ -106,7 +106,7 @@ router.get('/landing', async (req, res) => {
 router.get('/version', async (req, res) => {
   return render(req, res, 'VersionPage', {
     version: process.env.CUBECOBRA_VERSION,
-    host: process.env.HOST,
+    host: process.env.DOMAIN,
   });
 });
 

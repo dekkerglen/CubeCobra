@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
@@ -33,16 +33,14 @@ import {
   mainboardRate,
   pickRate,
 } from 'utils/Card';
-import { csrfFetch } from 'utils/CSRF';
+
 import RenderToRoot from 'utils/RenderToRoot';
 import { getLabels, cardIsLabel } from 'utils/Sort';
+import CardPropType from 'proptypes/CardPropType';
 
-const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards }) => {
+const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cuts }) => {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useQueryParam('tab', 0);
-  const [adds, setAdds] = useState([]);
-  const [cuts, setCuts] = useState([]);
-  const [loading, setLoading] = useState('loading');
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
   const filteredCards = useMemo(() => {
@@ -177,15 +175,8 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards }) => {
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj, addCards, cutCards, loadState) => (
-        <Suggestions
-          cards={collection}
-          cube={cubeObj}
-          adds={addCards}
-          cuts={cutCards}
-          filter={filter}
-          loadState={loadState}
-        />
+      component: (collection, cubeObj, addCards, cutCards) => (
+        <Suggestions cards={collection} cube={cubeObj} adds={addCards} cuts={cutCards} filter={filter} />
       ),
     },
     {
@@ -197,31 +188,6 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards }) => {
       component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
     },
   ];
-
-  async function getData(url = '') {
-    // Default options are marked with *
-    const response = await csrfFetch(url, {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    const val = await response.json(); // parses JSON response into native JavaScript objects
-    return val.result;
-  }
-
-  useEffect(() => {
-    getData(`/cube/api/adds/${cube.id}`)
-      .then(({ toCut, toAdd }) => {
-        setAdds(toAdd);
-        setCuts(toCut);
-        setLoading('loaded');
-      })
-      .catch(() => {
-        setLoading('error');
-      });
-  }, [cube.id]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -261,9 +227,7 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards }) => {
               </Card>
               <Card>
                 <CardBody>
-                  <ErrorBoundary>
-                    {analytics[activeTab].component(filteredCards, cube, adds, cuts, loading)}
-                  </ErrorBoundary>
+                  <ErrorBoundary>{analytics[activeTab].component(filteredCards, cube, adds, cuts)}</ErrorBoundary>
                 </CardBody>
               </Card>
             </Col>
@@ -281,10 +245,14 @@ CubeAnalysisPage.propTypes = {
   }).isRequired,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
+  adds: PropTypes.arrayOf(CardPropType),
+  cuts: PropTypes.arrayOf(CardPropType),
 };
 
 CubeAnalysisPage.defaultProps = {
   loginCallback: '/',
+  adds: [],
+  cuts: [],
 };
 
 export default RenderToRoot(CubeAnalysisPage);

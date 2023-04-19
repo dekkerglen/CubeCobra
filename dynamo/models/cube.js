@@ -260,7 +260,7 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
-  getByVisibility: async (visibility, lastKey) => {
+  getByVisibility: async (visibility, lastKey, limit = 36) => {
     const result = await client.query({
       IndexName: 'ByVisiblity',
       KeyConditionExpression: `#p1 = :visibility`,
@@ -272,6 +272,7 @@ module.exports = {
       },
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
+      Limit: limit,
     });
     return {
       items: await batchHydrate(result.Items),

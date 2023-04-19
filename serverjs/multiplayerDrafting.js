@@ -2,7 +2,7 @@
 const uuid = require('uuid/v4');
 const { cardType } = require('../dist/utils/Card');
 const carddb = require('./carddb');
-const { draftbotPick } = require('./draftbots');
+const { draftbotPick, deckbuild } = require('./draftbots');
 
 const Draft = require('../dynamo/models/draft');
 const User = require('../dynamo/models/user');
@@ -263,6 +263,62 @@ const cleanUp = async (draftId) => {
   }
 };
 
+const buildBotDeck = (picks, draft) => {
+  const { mainboard } = deckbuild(
+    picks.map((index) => draft.cards[index].details),
+    draft.basics.map((index) => draft.cards[index].details),
+  );
+
+  const pool = picks.slice();
+
+  const newMainboard = [];
+
+  for (const oracle of mainboard) {
+    const poolIndex = pool.findIndex((cardindex) => draft.cards[cardindex].details.oracle_id === oracle);
+    if (poolIndex === -1) {
+      // try basics
+      const basicsIndex = draft.basics.findIndex((cardindex) => draft.cards[cardindex].details.oracle_id === oracle);
+      if (basicsIndex !== -1) {
+        newMainboard.push(draft.basics[basicsIndex]);
+      }
+    } else {
+      newMainboard.push(pool[poolIndex]);
+      pool.splice(poolIndex, 1);
+    }
+  }
+
+  // format mainboard
+  const formattedMainboard = [[], []];
+  const formattedSideboard = [[]];
+  for (let i = 0; i < 8; i++) {
+    formattedMainboard[0].push([]);
+    formattedMainboard[1].push([]);
+    formattedSideboard[0].push([]);
+  }
+
+  for (const index of newMainboard) {
+    const card = draft.cards[index];
+    const row = card.details.type.includes('Creature') || card.details.type.includes('Basic') ? 0 : 1;
+    const column = Math.max(0, Math.min(card.details.cmc, 7));
+
+    formattedMainboard[row][column].push(index);
+  }
+
+  for (const index of pool) {
+    if (!draft.basics.includes(index)) {
+      const card = draft.cards[index];
+      const column = Math.max(0, Math.min(card.details.cmc, 7));
+
+      formattedSideboard[0][column].push(index);
+    }
+  }
+
+  return {
+    mainboard: formattedMainboard,
+    sideboard: formattedSideboard,
+  };
+};
+
 const finishDraft = async (draftId, draft) => {
   // ensure this is only called once
   const lock = await obtainLock(`finishdraft:${draftId}`, uuid(), 30000);
@@ -280,19 +336,28 @@ const finishDraft = async (draftId, draft) => {
     draft.seats[i].pickorder = picks.map((p) => parseInt(p, 10));
     draft.seats[i].trashorder = trash.map((p) => parseInt(p, 10));
 
-    const mainboard = setupPicks(2, 8);
-    const sideboard = setupPicks(1, 8);
-    for (const cardIndex of picks) {
-      const col = getCardCol(draft, cardIndex);
-      const row = cardType(draft.cards[cardIndex]).toLowerCase().includes('creature') ? 0 : 1;
-      mainboard[row][col].push(parseInt(cardIndex, 10));
-    }
+    if (draft.seats[i].owner) {
+      const mainboard = setupPicks(2, 8);
+      const sideboard = setupPicks(1, 8);
 
-    draft.seats[i].sideboard = sideboard;
-    draft.seats[i].mainboard = mainboard;
+      for (const cardIndex of picks) {
+        const col = getCardCol(draft, cardIndex);
+        const row = cardType(draft.cards[cardIndex]).toLowerCase().includes('creature') ? 0 : 1;
+        mainboard[row][col].push(parseInt(cardIndex, 10));
+      }
+
+      draft.seats[i].sideboard = sideboard;
+      draft.seats[i].mainboard = mainboard;
+    } else {
+      // bot build
+      const result = buildBotDeck(picks, draft);
+
+      draft.seats[i].sideboard = result.sideboard;
+      draft.seats[i].mainboard = result.mainboard;
+    }
   }
 
-  draft.compelted = true;
+  draft.completed = true;
   await Draft.put(draft);
   await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);

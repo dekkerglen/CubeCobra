@@ -14,7 +14,6 @@ const DAYS_BETWEEN_ROTATIONS = 7;
 
     const { items } = queue;
 
-    console.log(queue);
     const msTimeDiff = Date.now() - items[0].featuredOn;
     const daysTimeDiff = msTimeDiff / MS_PER_DAY;
 
@@ -22,7 +21,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
       console.log(
         `Rotation period elapsed (period=${DAYS_BETWEEN_ROTATIONS}, elapsed=${daysTimeDiff}). Rotating featured cubes.`,
       );
-      const rotate = await fq.rotateFeatured();
+      const rotate = await fq.rotateFeatured(items);
       for (const message of rotate.messages) {
         console.warn(message);
       }

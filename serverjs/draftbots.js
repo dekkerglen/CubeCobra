@@ -1,4 +1,5 @@
 const carddb = require('./carddb');
+const { draft, build } = require('./ml');
 
 /*
   drafterState = {
@@ -10,6 +11,17 @@ const carddb = require('./carddb');
     numPacks: number, // How many packs will this player open
   };
   */
+
+const draftbotPick = (drafterState) => {
+  const { cardsInPack, picked } = drafterState;
+
+  const packOracles = cardsInPack.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
+  const poolOracles = picked.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]).oracle_id);
+
+  const result = draft(packOracles, poolOracles);
+
+  return cardsInPack.indexOf(result[0].oracle);
+};
 
 const assessColors = (oracles) => {
   const colors = {
@@ -43,43 +55,119 @@ const assessColors = (oracles) => {
   return colorKeysFiltered;
 };
 
-const draftbotPick = (drafterState) => {
-  const { cardsInPack, picked } = drafterState;
+const listOverlaps = (lista, listb) => {
+  if (lista.length === 0 || listb.length === 0) {
+    return true;
+  }
 
-  const colors = assessColors(picked);
+  const setb = new Set(listb);
+  return lista.filter((x) => setb.has(x)).length > 0;
+};
 
-  let toPick = cardsInPack.map((oracle) => carddb.cardFromId(carddb.oracleToId[oracle][0]));
+const pipsPerSource = (cards) => {
+  const pips = {
+    W: 0.0,
+    U: 0.0,
+    B: 0.0,
+    R: 0.0,
+    G: 0.0,
+  };
 
-  if (colors.length > 2) {
-    // filter out cards that don't match the colors
-    const filtered = toPick.filter((card) => {
-      if (!card.color) {
-        return true;
+  const sources = {
+    W: 1.0,
+    U: 1.0,
+    B: 1.0,
+    R: 1.0,
+    G: 1.0,
+  };
+
+  for (const card of cards) {
+    if (card.type.includes('Land')) {
+      for (const color of card.color_identity) {
+        sources[color] += 1;
       }
-      for (const color of card.color) {
-        if (!colors.includes(color)) {
-          return false;
+    } else {
+      for (const color of card.parsed_cost) {
+        if (Object.keys(pips).includes(color.toUpperCase())) {
+          pips[color.toUpperCase()] += 1;
         }
       }
-      return true;
-    });
-
-    if (filtered.length > 0) {
-      toPick = filtered;
     }
   }
 
-  // get the oracle id of the highest elo card
-  const highestElo = toPick.reduce((acc, card) => {
-    if (card.elo > acc.elo) {
-      return card;
-    }
-    return acc;
-  });
+  return {
+    W: pips.W / sources.W,
+    U: pips.U / sources.U,
+    B: pips.B / sources.B,
+    R: pips.R / sources.R,
+    G: pips.G / sources.G,
+  };
+};
 
-  return cardsInPack.indexOf(highestElo.oracle_id);
+const calculateBasics = (mainboard, basics) => {
+  const result = [];
+
+  const basicsNeeded = 40 - mainboard.length;
+
+  const basicLands = basics.filter((card) => card.type.includes('Land'));
+
+  for (let i = 0; i < basicsNeeded; i++) {
+    const pips = pipsPerSource([...mainboard, ...result]);
+
+    let bestBasic = 0;
+    let score = basicLands[0].color_identity.map((color) => pips[color]).reduce((a, b) => a + b, 0);
+    for (let j = 1; j < basicLands.length; j++) {
+      const newScore = basicLands[j].color_identity.map((color) => pips[color]).reduce((a, b) => a + b, 0);
+      if (newScore > score) {
+        bestBasic = j;
+        score = newScore;
+      }
+    }
+
+    result.push(basicLands[bestBasic]);
+  }
+
+  return result;
+};
+
+const deckbuild = (pool, basics) => {
+  const poolOracles = pool.map((card) => card.oracle_id);
+
+  const result = build(poolOracles);
+
+  const nonlands = result.filter((item) => !carddb.cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
+  const lands = result.filter((item) => carddb.cardFromId(carddb.oracleToId[item.oracle][0]).type.includes('Land'));
+
+  const mainboard = nonlands.map((item) => item.oracle).slice(0, 23);
+  const sideboard = [];
+  if (nonlands.length > 23) {
+    sideboard.push(...nonlands.map((item) => item.oracle).slice(24));
+  }
+
+  const colors = assessColors(mainboard).filter((color) => color !== 'C');
+
+  const landsInColors = lands.filter((item) =>
+    listOverlaps(colors, carddb.getReasonableCardByOracle(item.oracle).color_identity),
+  );
+
+  mainboard.push(...landsInColors.slice(0, 17).map((item) => item.oracle));
+
+  if (landsInColors.length >= 17) {
+    sideboard.push(...landsInColors.slice(17).map((item) => item.oracle));
+  }
+
+  mainboard.push(
+    ...calculateBasics(mainboard.map(carddb.getReasonableCardByOracle), basics).map((card) => card.oracle_id),
+  );
+
+  return {
+    mainboard: mainboard.sort(),
+    sideboard: sideboard.sort(),
+  };
 };
 
 module.exports = {
   draftbotPick,
+  deckbuild,
+  calculateBasics,
 };

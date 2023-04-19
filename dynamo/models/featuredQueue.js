@@ -74,6 +74,6 @@ module.exports = {
       [FIELDS.STATUS]: STATUS.ACTIVE,
     }));
   },
-  delete: async (id) => client.delete({ id }),
+  delete: async (id) => client.delete({ cube: id }),
   FIELDS,
 };
