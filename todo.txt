@@ -24,6 +24,7 @@ accepting content creator application times out
 I have a cube with multiples of cards, and I can now only change out one at a time. When I try and swap them all at the same time, only one gets updated
 remigrate patron levels, as a lot are -1 for some reason	
 add battle as type
+cubes with no basics crash deckbuilder
 
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color
