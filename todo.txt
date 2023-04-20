@@ -1,13 +1,4 @@
-followers on cubes still being wiped?
-
-some lingering issues with multiple edits w/o refresh
-"Maramas" can't access account overview
-explore->recently drafted cubes empty
-https://cubecobra.com/user/view/60f1de4a0526d010295cbb81
-	can't login
-im getting this wierd error when i type "sync" into the "card to add" field. adding other cards works fine its just typing the word "sync" causes an error
 When I try a grid draft with 2 player local, it still does a bot draft.
-add limit to recent drafts of your cube on dashboard
 remove comment from notice broken
 admin dashboard -> featured cubes queue
 "Phyrexia: All Will Be One Cube Update"
@@ -23,15 +14,16 @@ legality=modern shouldn't include cards banned in modern
 accepting content creator application times out
 I have a cube with multiples of cards, and I can now only change out one at a time. When I try and swap them all at the same time, only one gets updated
 remigrate patron levels, as a lot are -1 for some reason	
-add battle as type
 cubes with no basics crash deckbuilder
+tags not autocompleting
+I am unable to update my email address for my Cube Cobra account from the account information page.
+After entering the new email and confirming password, the page hangs for a minute and then times out with a 504 Gateway Time-out.
 
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color
 
 Investigate
 	- validate patreon integration
-	- validate featured cube rotation
 
 Eventually
 fix proptypes - use object proptypes when possible
@@ -53,15 +45,3 @@ multiplayer drafting
 fbd0f99f-7e82-4145-b8bc-82115f1c6224
 	Got stuck, picks were piling up on seat 7 and bot picks were not being made
 	after refresh, things were working normally and draft finished
-
-
-
-3 exports
-	cube lists
-	deck lists
-		mainboard
-		sideboard
-	draft picks
-		pack
-		pick
-		pool

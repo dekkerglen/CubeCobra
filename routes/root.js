@@ -30,10 +30,13 @@ router.get('/explore', async (req, res) => {
   const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
   const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
 
+  const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
+  const recentlyDrafted = await Cube.batchGet(recentDecks.items.map((deck) => deck.cube));
+
   return render(req, res, 'ExplorePage', {
     recents: recents.sort((a, b) => b.date - a.date).slice(0, 12),
     featured,
-    drafted: [],
+    drafted: recentlyDrafted.sort((a, b) => b.date - a.date).slice(0, 12),
     popular: popular.sort((a, b) => b.following.length - a.following.length).slice(0, 12),
   });
 });

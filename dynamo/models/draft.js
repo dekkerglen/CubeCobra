@@ -59,6 +59,11 @@ const client = createClient({
       partitionKey: FIELDS.CUBE_OWNER,
       sortKey: FIELDS.DATE,
     },
+    {
+      name: 'ByTypeAndDate',
+      partitionKey: FIELDS.TYPE,
+      sortKey: FIELDS.DATE,
+    },
   ],
   FIELDS,
 });
@@ -387,6 +392,26 @@ module.exports = {
         ':complete': true,
       },
       Limit: 200,
+      ExclusiveStartKey: lastKey,
+      ScanIndexForward: false,
+    });
+
+    return {
+      items: await batchHydrate(res.Items),
+      lastEvaluatedKey: res.LastEvaluatedKey,
+    };
+  },
+  queryByTypeAndDate: async (type, lastKey) => {
+    const res = await client.query({
+      IndexName: 'ByTypeAndDate',
+      KeyConditionExpression: '#type = :type',
+      ExpressionAttributeNames: {
+        '#type': FIELDS.TYPE,
+      },
+      ExpressionAttributeValues: {
+        ':type': type,
+      },
+      Limit: 100,
       ExclusiveStartKey: lastKey,
       ScanIndexForward: false,
     });

@@ -46,14 +46,12 @@ const carddb = require('../serverjs/carddb');
               // put hashes to delete
               if (hashesToDelete.length > 0) {
                 console.log(`Deleting ${hashesToDelete.length} hashes for cube ${cube.id}`);
-                console.log(hashesToDelete.map((hashRow) => hashRow.hash));
                 await CubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: cube.id })));
               }
 
               // put hashes to put
               if (hashesToPut.length > 0) {
                 console.log(`Putting ${hashesToPut.length} hashes for cube ${cube.id}`);
-                console.log(hashesToPut.map((hashRow) => hashRow.hash));
                 await CubeHash.batchPut(hashesToPut);
               }
             } catch (err) {

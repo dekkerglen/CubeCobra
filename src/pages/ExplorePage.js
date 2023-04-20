@@ -16,12 +16,12 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
       <DynamicFlash />
       <Row>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="featured cubes" className="mt-4" cubes={featured} />
-          <CubesCard title="Recently Updated cubes" className="mt-4" cubes={recents} />
+          <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} />
+          <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />
         </Col>
         <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Most Popular cubes" className="mt-4" cubes={popular} />
-          <CubesCard title="Recently drafted cubes" className="mt-4" cubes={drafted} />
+          <CubesCard title="Most Popular Cubes" className="mt-4" cubes={popular} />
+          <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={drafted} />
         </Col>
       </Row>
     </MainLayout>

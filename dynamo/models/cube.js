@@ -5,7 +5,7 @@ const _ = require('lodash');
 const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject, deleteObject } = require('../s3client');
-const { getHashRowsForMetadata, getHashRowsForCube } = require('./cubeHash');
+const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
 const carddb = require('../../serverjs/carddb');
@@ -174,8 +174,6 @@ const batchHydrate = async (cubes) => {
 module.exports = {
   getCards,
   updateCards: async (id, newCards) => {
-    const oldCards = await getCards(id);
-
     const oldMetadata = (await client.get(id)).Item;
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 
@@ -187,25 +185,6 @@ module.exports = {
     if (totalCards > CARD_LIMIT) {
       throw new Error(`Cannot save cube: too many cards (${totalCards}/${CARD_LIMIT})`);
     }
-
-    const oldHashes = getHashRowsForCube(oldMetadata, oldCards);
-    const newHashes = getHashRowsForCube(newMetadata, newCards);
-
-    // getObject hashes to delete with deep object equality
-    // delete old hash row if no new hash row has this hash
-    const hashesToDelete = oldHashes.filter((oldHashRow) => {
-      return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
-    });
-
-    // getObject hashes to putObject with deep object equality
-    // putObject/update hash row if new hash row doesn't match to an old one
-    const hashesToPut = newHashes.filter((newHashRow) => {
-      return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
-    });
-
-    // putObject hashes to delete
-    await cubeHash.batchDelete(hashesToDelete.map((hashRow) => ({ hash: hashRow.hash, cube: id })));
-    await cubeHash.batchPut(hashesToPut);
 
     // strip details from cards
     for (const [board, list] of Object.entries(newCards)) {

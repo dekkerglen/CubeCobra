@@ -20,6 +20,11 @@ const draftbotPick = (drafterState) => {
 
   const result = draft(packOracles, poolOracles);
 
+  if (result.length === 0) {
+    // we don't recognize any of these oracle ids
+    return 0;
+  }
+
   return cardsInPack.indexOf(result[0].oracle);
 };
 

@@ -73,6 +73,7 @@ const CARD_TYPES = [
   'Scheme',
   'Vanguard',
   'Land',
+  'Battle',
 ];
 
 const SINGLE_COLOR = ['White', 'Blue', 'Black', 'Red', 'Green'];
@@ -375,7 +376,7 @@ function getLabelsRaw(cube, sort, showOther) {
     }
     ret = [...types];
   } else if (sort === 'Types-Multicolor') {
-    ret = CARD_TYPES.slice(0, -1)
+    ret = CARD_TYPES.filter((type) => type !== 'Land')
       .concat(GUILDS)
       .concat(SHARDS_AND_WEDGES)
       .concat(FOUR_AND_FIVE_COLOR)
@@ -601,6 +602,7 @@ export function cardGetLabels(card, sort, showOther) {
           'Scheme',
           'Vanguard',
           'Land',
+          'Battle',
         ].includes(type)
       ) {
         ret = ['Other'];
