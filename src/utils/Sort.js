@@ -365,7 +365,8 @@ function getLabelsRaw(cube, sort, showOther) {
   } else if (sort === 'Subtype') {
     const types = new Set();
     for (const card of cube) {
-      const split = card.type_line.split(/[-–—]/);
+      console.log(card.type_line);
+      const split = (card.type_line || '').split(/[-–—]/);
       if (split.length > 1) {
         const subtypes = split[1].trim().split(' ');
         const nonemptySubtypes = subtypes.filter((x) => x.trim());

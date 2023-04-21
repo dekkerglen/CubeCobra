@@ -229,16 +229,16 @@ router.get('/card/:id', async (req, res) => {
       history.items.push({});
     }
 
+    const related = carddb.getRelatedCards(card.oracle_id);
+
     const draftedWith = {};
     const cubedWith = {};
+    const synergistic = {};
 
     for (const category of ['top', 'spells', 'creatures', 'other']) {
-      draftedWith[category] = card.draftedWith[category].map((oracle) =>
-        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
-      );
-      cubedWith[category] = card.cubedWith[category].map((oracle) =>
-        carddb.getMostReasonableById(carddb.oracleToId[oracle][0]),
-      );
+      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
     }
 
     return render(
@@ -254,6 +254,7 @@ router.get('/card/:id', async (req, res) => {
           .map((cardid) => carddb.cardFromId(cardid)),
         draftedWith,
         cubedWith,
+        synergistic,
       },
       {
         title: `${card.name}`,

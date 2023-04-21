@@ -15,6 +15,8 @@ let data = {
   oracleToId: {},
   english: {},
   _carddict: {},
+  indexToOracle: [],
+  metadatadict: {},
   printedCardList: [], // for card filters
 };
 
@@ -28,6 +30,8 @@ const fileToAttribute = {
   'imagedict.json': 'imagedict',
   'cardimages.json': 'cardimages',
   'english.json': 'english',
+  'indexToOracle.json': 'indexToOracle',
+  'metadatadict.json': 'metadatadict',
 };
 
 function getPlaceholderCard(_id) {
@@ -234,6 +238,46 @@ function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');
 }
 
+function getRelatedCards(oracleId) {
+  const related = data.metadatadict[oracleId];
+
+  if (!related) {
+    return {
+      cubedWith: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      draftedWith: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+      synegistic: {
+        top: [],
+        creatures: [],
+        spells: [],
+        other: [],
+      },
+    };
+  }
+
+  return Object.fromEntries(
+    Object.entries(related).map(([label, category]) => {
+      return [
+        label,
+        Object.fromEntries(
+          Object.entries(category).map(([type, indexes]) => {
+            return [type, indexes.map((id) => data.indexToOracle[id])];
+          }),
+        ),
+      ];
+    }),
+  );
+}
+
 data = {
   ...data,
   cardFromId,
@@ -257,6 +301,7 @@ data = {
   loadAllFiles,
   isOracleBasic,
   getReasonableCardByOracle,
+  getRelatedCards,
 };
 
 module.exports = data;

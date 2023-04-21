@@ -1,7 +1,4 @@
-When I try a grid draft with 2 player local, it still does a bot draft.
-remove comment from notice broken
-admin dashboard -> featured cubes queue
-"Phyrexia: All Will Be One Cube Update"
+
 card packages don't load correctly
 I am no longer getting any notifications
 and the "your cubes" list on the main dashboard is no longer sorted by last edited/updated date
@@ -18,6 +15,8 @@ cubes with no basics crash deckbuilder
 tags not autocompleting
 I am unable to update my email address for my Cube Cobra account from the account information page.
 After entering the new email and confirming password, the page hangs for a minute and then times out with a 504 Gateway Time-out.
+add premodern as cube type overrid=9+-+0 
+remove comment from notice broken
 
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color

@@ -3,8 +3,14 @@ require('dotenv').config();
 
 const fs = require('fs');
 const carddb = require('../serverjs/carddb');
+const { encode } = require('../serverjs/ml');
 
 const correlationLimit = 36;
+
+const cosineSimilarity = (a, magA, b, magB) => {
+  const dotProduct = a.reduce((acc, val, index) => acc + val * b[index], 0);
+  return dotProduct / (magA * magB);
+};
 
 (async () => {
   console.log('Loading card database');
@@ -59,6 +65,7 @@ const correlationLimit = 36;
   // allocate space for the correlations
   const cubedWith = new Int32Array(oracleCount * oracleCount);
   const draftedWith = new Int32Array(oracleCount * oracleCount);
+  const synergyWith = new Float32Array(oracleCount * oracleCount);
 
   const cubeCount = new Int32Array(oracleCount);
 
@@ -73,6 +80,35 @@ const correlationLimit = 36;
     matrix[index1] += 1;
     matrix[index2] += 1;
   };
+
+  console.log('Calculating encodings');
+  const encodings = [];
+  const magnitudes = [];
+  for (let i = 0; i < oracleCount; i += 1) {
+    const encoding = encode([indexToOracle[i]]);
+    encodings.push(encoding);
+    magnitudes.push(Math.sqrt(encoding.reduce((acc, val) => acc + val * val, 0)));
+
+    if (i % 100 === 0) {
+      console.log(`Processed ${Math.min(i, oracleCount)} / ${oracleCount} oracles`);
+    }
+  }
+  console.log(`Processed ${oracleCount} / ${oracleCount} oracles`);
+
+  console.log('Calculating synergy');
+  for (let i = 0; i < oracleCount; i += 1) {
+    for (let j = i + 1; j < oracleCount; j += 1) {
+      const index1 = i * oracleCount + j;
+      const index2 = j * oracleCount + i;
+
+      const value = cosineSimilarity(encodings[i], magnitudes[i], encodings[j], magnitudes[j]);
+
+      synergyWith[index1] = value;
+      synergyWith[index2] = value;
+    }
+    console.log(`Processed ${Math.min(i, oracleCount)} / ${oracleCount} oracle pairs`);
+  }
+  console.log(`Processed ${oracleCount} / ${oracleCount} oracle pairs`);
 
   // calculate draftedwith
 
@@ -133,6 +169,12 @@ const correlationLimit = 36;
       spells: [OracleId],
       other: [OracleId],
     },
+    synegistic: {
+      top: [OracleId],
+      creatures: [OracleId],
+      spells: [OracleId],
+      other: [OracleId],
+    },
     elo: Number,
     picks: Number,
     cubes: Number,
@@ -150,6 +192,7 @@ const correlationLimit = 36;
       popularity: (100 * cubeCount[oracleToIndex[oracle]]) / Object.keys(cubeHistory).length,
       cubedWith: {},
       draftedWith: {},
+      synergistic: {},
     };
 
     if (draftHistory.eloByOracleId[oracle]) {
@@ -162,6 +205,7 @@ const correlationLimit = 36;
     for (const [targetDict, sourceMatrix] of [
       [metadatadict[oracle].draftedWith, draftedWith],
       [metadatadict[oracle].cubedWith, cubedWith],
+      [metadatadict[oracle].synergistic, synergyWith],
     ]) {
       const cards = [
         ...sourceMatrix.slice(oracleToIndex[oracle] * oracleCount, (oracleToIndex[oracle] + 1) * oracleCount),
@@ -174,19 +218,19 @@ const correlationLimit = 36;
         .filter((item) => item.count > 0 && !isOracleBasicLand[item.oracle])
         .sort((a, b) => b.count - a.count);
 
-      targetDict.top = cards.slice(0, correlationLimit).map((item) => item.oracle);
+      targetDict.top = cards.slice(0, correlationLimit).map((item) => oracleToIndex[item.oracle]);
       targetDict.creatures = cards
         .filter((item) => isOracleCreature[item.oracle])
         .slice(0, correlationLimit)
-        .map((item) => item.oracle);
+        .map((item) => oracleToIndex[item.oracle]);
       targetDict.spells = cards
         .filter((item) => isOracleSpell[item.oracle])
         .slice(0, correlationLimit)
-        .map((item) => item.oracle);
+        .map((item) => oracleToIndex[item.oracle]);
       targetDict.other = cards
         .filter((item) => isOracleOther[item.oracle])
         .slice(0, correlationLimit)
-        .map((item) => item.oracle);
+        .map((item) => oracleToIndex[item.oracle]);
     }
 
     processed += 1;
@@ -198,6 +242,7 @@ const correlationLimit = 36;
   console.log('Finished all oracles, Writing metadatadict.json');
 
   await fs.promises.writeFile(`./temp/metadatadict.json`, JSON.stringify(metadatadict));
+  await fs.promises.writeFile(`./temp/indexToOracle.json`, JSON.stringify(indexToOracle));
 
   console.log('Complete');
 

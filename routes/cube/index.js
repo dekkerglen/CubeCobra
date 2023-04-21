@@ -941,7 +941,7 @@ router.post(
     min: 1,
     max: 16,
   }),
-  body('defaultStatus', 'status must be valid.').isIn(['bot', '2playerlocal']),
+  body('type', 'type must be valid.').isIn(['bot', '2playerlocal']),
   async (req, res) => {
     try {
       if (!req.user) {
@@ -1006,16 +1006,29 @@ router.post(
         pickedIndices: [],
       });
 
-      // add bot
-      doc.seats.push({
-        bot: true,
-        name: 'Grid Bot',
-        owner: null,
-        mainboard: pool,
-        sideboard: pool,
-        pickorder: [],
-        pickedIndices: [],
-      });
+      if (req.body.type === '2playerlocal') {
+        // add human
+        doc.seats.push({
+          bot: false,
+          name: req.user ? req.user.username : 'Anonymous',
+          owner: req.user ? req.user.id : null,
+          mainboard: pool,
+          sideboard: pool,
+          pickorder: [],
+          pickedIndices: [],
+        });
+      } else {
+        // add bot
+        doc.seats.push({
+          bot: true,
+          name: 'Grid Bot',
+          owner: null,
+          mainboard: pool,
+          sideboard: pool,
+          pickorder: [],
+          pickedIndices: [],
+        });
+      }
 
       const id = await Draft.put(doc);
 

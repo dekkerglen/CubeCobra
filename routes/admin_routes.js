@@ -291,8 +291,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
   const featured = await FeaturedQueue.querySortedByDate();
-  const ids = featured.items.queue.map((f) => f.cube);
-  const cubes = await Cube.batchGet(ids.map((id) => `${id}`));
+  const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
 
   return render(req, res, 'FeaturedCubesQueuePage', {
     cubes,

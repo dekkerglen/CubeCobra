@@ -261,7 +261,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
                   </span>
                 </SetRotationButton>
               </h6>
-              <h6>Last rotation: {lastRotation.toLocaleDateString()}</h6>
+              <h6>Last rotation: {new Date(lastRotation).toLocaleDateString()}</h6>
             </Col>
             <Col className="mb-4">
               <AddCubeButton outline color="accent" className="me-md-4 mb-xs-2 mb-md-0">

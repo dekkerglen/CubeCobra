@@ -9,6 +9,7 @@ const { getHashRowsForMetadata } = require('./cubeHash');
 const cubeHash = require('./cubeHash');
 const User = require('./user');
 const carddb = require('../../serverjs/carddb');
+const cloudwatch = require('../../serverjs/cloudwatch');
 
 const DEFAULT_BASICS = [
   '1d7dba1c-a702-43c0-8fca-e47bbad4a00f',
@@ -143,10 +144,8 @@ const getCards = async (id, skipcache = false) => {
     }
     return cards;
   } catch (e) {
-    return {
-      mainboard: [],
-      maybeboard: [],
-    };
+    cloudwatch.error(`Failed to load cards for cube: ${id} - ${e.message}`, e.stack);
+    throw new Error(`Failed to load cards for cube: ${id} - ${e.message}`);
   }
 };
 

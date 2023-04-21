@@ -110,7 +110,7 @@ CardIdBadge.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallback }) => {
+const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic, loginCallback }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
   const [imageUsed, setImageUsed] = useState(card.image_normal);
@@ -520,8 +520,50 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, loginCallba
               <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="1">
                 <h5>Often Cubed With</h5>
               </Tab>
+              <Tab tab={correlatedTab} setTab={setCorrelatedTab} index="2">
+                <h5>Synergistic Cards</h5>
+              </Tab>
             </Nav>
           </CardHeader>
+          {correlatedTab === '2' && (
+            <CardBody>
+              <h4>Top cards</h4>
+              <CardGrid
+                cardList={synergistic.top.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Creatures</h4>
+              <CardGrid
+                cardList={synergistic.creatures.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Spells</h4>
+              <CardGrid
+                cardList={synergistic.spells.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+              <hr />
+              <h4>Other</h4>
+              <CardGrid
+                cardList={synergistic.other.map((item) => ({ details: item }))}
+                Tag={CardImage}
+                colProps={{ xs: 4, sm: 3, md: 2 }}
+                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+                linkDetails
+              />
+            </CardBody>
+          )}
           {correlatedTab === '0' && (
             <CardBody>
               <h4>Top cards</h4>
@@ -616,12 +658,6 @@ CardPage.propTypes = {
         image_normal: PropTypes.string.isRequired,
       }),
     ).isRequired,
-    synergistic: PropTypes.arrayOf(
-      PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        image_normal: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
     creatures: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,
@@ -648,7 +684,27 @@ CardPage.propTypes = {
         image_normal: PropTypes.string.isRequired,
       }),
     ).isRequired,
-    synergistic: PropTypes.arrayOf(
+    creatures: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    spells: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+    other: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        image_normal: PropTypes.string.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
+  synergistic: PropTypes.shape({
+    top: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,
         image_normal: PropTypes.string.isRequired,

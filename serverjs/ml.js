@@ -66,6 +66,18 @@ const encodeIndeces = (indeces) => {
   return tensor;
 };
 
+const encode = (oracles) => {
+  if (!encoder) {
+    return [];
+  }
+
+  const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+  const tensor = tf.tensor(vector);
+
+  const encoded = encoder.predict(tensor);
+  return encoded.dataSync();
+};
+
 const recommend = (oracles) => {
   if (!encoder || !recommendDecoder) {
     return {
@@ -171,4 +183,5 @@ module.exports = {
   recommend,
   build,
   draft,
+  encode,
 };

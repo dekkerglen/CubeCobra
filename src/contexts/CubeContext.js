@@ -607,59 +607,59 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
         if (result.status === 500) {
           setAlerts([{ type: 'error', message: json.message }]);
+        } else {
+          const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
+
+          for (const [board] of Object.entries(changes)) {
+            // swaps
+            if (changes[board].swaps) {
+              for (const swap of changes[board].swaps) {
+                newCards[board][swap.index] = swap.card;
+                newCards[board][swap.index].details = await getDetails(swap.card.cardID);
+              }
+            }
+            // removes
+            if (changes[board].removes) {
+              // sort removals desc
+              const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
+              for (const remove of sorted) {
+                newCards[board].splice(remove.index, 1);
+              }
+            }
+            // adds
+            if (changes[board].adds) {
+              for (const add of changes[board].adds) {
+                newCards[board].push({
+                  ...add,
+                });
+                newCards[board][newCards[board].length - 1].details = await getDetails(add.cardID);
+              }
+            }
+
+            for (let i = 0; i < newCards[board].length; i++) {
+              newCards[board][i].index = i;
+              newCards[board][i].board = board;
+            }
+          }
+
+          // strip editIndex
+          for (const [board] of Object.entries(newCards)) {
+            for (const card of newCards[board]) {
+              delete card.editIndex;
+              delete card.removeIndex;
+            }
+          }
+
+          setChanges({});
+          setModalSelection([]);
+          setCube({
+            ...cube,
+            cards: newCards,
+          });
         }
       } catch (e) {
         setAlerts([{ type: 'error', message: 'Operation timed out' }]);
       }
-
-      const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
-
-      for (const [board] of Object.entries(changes)) {
-        // swaps
-        if (changes[board].swaps) {
-          for (const swap of changes[board].swaps) {
-            newCards[board][swap.index] = swap.card;
-            newCards[board][swap.index].details = await getDetails(swap.card.cardID);
-          }
-        }
-        // removes
-        if (changes[board].removes) {
-          // sort removals desc
-          const sorted = changes[board].removes.sort((a, b) => b.index - a.index);
-          for (const remove of sorted) {
-            newCards[board].splice(remove.index, 1);
-          }
-        }
-        // adds
-        if (changes[board].adds) {
-          for (const add of changes[board].adds) {
-            newCards[board].push({
-              ...add,
-            });
-            newCards[board][newCards[board].length - 1].details = await getDetails(add.cardID);
-          }
-        }
-
-        for (let i = 0; i < newCards[board].length; i++) {
-          newCards[board][i].index = i;
-          newCards[board][i].board = board;
-        }
-      }
-
-      // strip editIndex
-      for (const [board] of Object.entries(newCards)) {
-        for (const card of newCards[board]) {
-          delete card.editIndex;
-          delete card.removeIndex;
-        }
-      }
-
-      setChanges({});
-      setModalSelection([]);
-      setCube({
-        ...cube,
-        cards: newCards,
-      });
 
       setLoading(false);
     },

@@ -92,8 +92,8 @@ function initializeCatalog() {
   catalog.cardimages = {};
   catalog.oracleToId = {};
   catalog.english = {};
-  catalog.elodict = {};
-  catalog.embeddingdict = {};
+  catalog.metadatadict = {};
+  catalog.indexToOracleId = [];
 }
 
 initializeCatalog();
@@ -678,8 +678,9 @@ function convertCard(card, metadata, isExtra) {
   newcard.pickCount = 0;
 
   if (metadata) {
-    newcard.cubedWith = metadata.cubedWith;
-    newcard.draftedWith = metadata.draftedWith;
+    // this information is only used in card pages and shoudn't bloat this data
+    // newcard.cubedWith = metadata.cubedWith;
+    // newcard.draftedWith = metadata.draftedWith;
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;
     newcard.cubeCount = metadata.cubes;
@@ -821,6 +822,8 @@ async function writeCatalog(basePath = 'private') {
   await writeFile(path.join(basePath, 'full_names.json'), util.turnToTree(catalog.full_names));
   await writeFile(path.join(basePath, 'imagedict.json'), catalog.imagedict);
   await writeFile(path.join(basePath, 'cardimages.json'), catalog.cardimages);
+  await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
+  await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracle);
 
   console.info('All JSON files saved.');
 }
@@ -832,7 +835,7 @@ function saveEnglishCard(card, metadata) {
   addCardToCatalog(convertCard(card, metadata));
 }
 
-async function saveAllCards(metadatadict) {
+async function saveAllCards(metadatadict, indexToOracle) {
   console.info('Processing cards...');
   await new Promise((resolve) =>
     fs
@@ -851,11 +854,14 @@ async function saveAllCards(metadatadict) {
       .on('close', resolve),
   );
 
+  catalog.indexToOracle = indexToOracle;
+  catalog.metadatadict = metadatadict;
+
   console.info('Saving cardbase files...');
   await writeCatalog('./private');
 }
 
-const downloadFromScryfall = async (metadatadict) => {
+const downloadFromScryfall = async (metadatadict, indexToOracle) => {
   console.info('Downloading files from scryfall...');
   try {
     // the module.exports line is necessary to correctly mock this function in unit tests
@@ -869,7 +875,7 @@ const downloadFromScryfall = async (metadatadict) => {
 
   console.info('Creating objects...');
   try {
-    await saveAllCards(metadatadict);
+    await saveAllCards(metadatadict, indexToOracle);
   } catch (error) {
     console.error('Updating cardbase objects failed:');
     console.error(error.message, error);
@@ -937,17 +943,26 @@ const uploadCardDb = async () => {
 
 const loadMetadatadict = async () => {
   if (fs.existsSync('./temp') && fs.existsSync('./temp/metadatadict.json')) {
-    return fs.promises.readFile('./temp/metadatadict.json', 'utf8').then((data) => JSON.parse(data));
+    const metadatadict = JSON.parse(fs.readFileSync('./temp/metadatadict.json'));
+    const indexToOracle = JSON.parse(fs.readFileSync('./temp/indexToOracle.json'));
+
+    return {
+      metadatadict,
+      indexToOracle,
+    };
   }
 
   console.log("Couldn't find metadatadict.json");
-  return {};
+  return {
+    metadatadict: {},
+    indexToOracle: [],
+  };
 };
 
 (async () => {
   try {
-    const metadatadict = await loadMetadatadict();
-    await downloadFromScryfall(metadatadict);
+    const { metadatadict, indexToOracle } = await loadMetadatadict();
+    await downloadFromScryfall(metadatadict, indexToOracle);
     await uploadCardDb();
 
     console.log('Complete');
