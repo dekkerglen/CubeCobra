@@ -1,4 +1,4 @@
-const cubeId = '002cfa9e-9ad8-460e-b031-ba5bf8a0c93b';
+const cubeId = '31e17555-c25d-4b8d-80f8-1fa2ff81ee36';
 
 const carddb = require('../serverjs/carddb');
 

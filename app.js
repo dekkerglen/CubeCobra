@@ -46,59 +46,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// per-request logging configuration
-app.use((req, res, next) => {
-  req.uuid = uuid();
-  req.logger = {
-    error: (...messages) => {
-      cloudwatch.error(
-        ...messages,
-        JSON.stringify(
-          {
-            id: req.id,
-            method: req.method,
-            path: req.path,
-            query: req.query,
-            originalUrl: req.originalUrl,
-            user: req.user
-              ? {
-                  id: req.user.id,
-                  username: req.user.username,
-                }
-              : null,
-          },
-          null,
-          2,
-        ),
-      );
-    },
-    info: (message) => {
-      if (req.user) {
-        cloudwatch.info(`${req.method} ${req.originalUrl} - ${req.user.id}:${req.user.username}`, message);
-      } else {
-        cloudwatch.info(`${req.method} ${req.originalUrl}`, message);
-      }
-    },
-  };
-
-  res.locals.requestId = req.uuid;
-  res.startTime = Date.now();
-  // onFinished(res, (err, finalRes) => {
-  //   cloudwatch.info({
-  //     level: 'info',
-  //     type: 'request',
-  //     remoteAddr: req.ip,
-  //     requestId: req.uuid,
-  //     method: req.method,
-  //     path: req.path,
-  //     status: finalRes.statusCode,
-  //     length: finalRes.getHeader('content-length'),
-  //     elapsed: Date.now() - finalRes.startTime,
-  //   });
-  // });
-  next();
-});
-
 // upload file middleware
 app.use(fileUpload());
 
@@ -183,6 +130,55 @@ const apiLimiter = rateLimit({
 });
 app.use('/cube/api/cubeJSON', apiLimiter);
 
+// per-request logging configuration
+app.use((req, res, next) => {
+  req.uuid = uuid();
+
+  cloudwatch.info(
+    JSON.stringify(
+      {
+        id: req.uuid,
+        method: req.method,
+        path: req.originalUrl,
+        user_id: req.user ? req.user.id : null,
+        username: req.user ? req.user.username : null,
+        remoteAddr: req.ip,
+        body: req.body,
+      },
+      null,
+      2,
+    ),
+  );
+
+  req.logger = {
+    error: (...messages) => {
+      cloudwatch.error(
+        ...messages,
+        JSON.stringify(
+          {
+            id: req.uuid,
+            method: req.method,
+            path: req.path,
+            query: req.query,
+            originalUrl: req.originalUrl,
+            user: req.user
+              ? {
+                  id: req.user.id,
+                  username: req.user.username,
+                }
+              : null,
+          },
+          null,
+          2,
+        ),
+      );
+    },
+  };
+
+  res.locals.requestId = req.uuid;
+  next();
+});
+
 // check for downtime
 
 if (process.env.DOWNTIME_ACTIVE === 'true') {
@@ -231,14 +227,14 @@ app.use((err, req, res, next) => {
 
 // scryfall updates this data at 9, so this will minimize staleness
 schedule.scheduleJob('0 10 * * *', async () => {
-  cloudwatch.info('starting midnight cardbase update...');
+  console.info('starting midnight cardbase update...');
   await updateCardbase();
 });
 
 // Start server after carddb is initialized.
 carddb.initializeCardDb().then(async () => {
   const server = http.createServer(app).listen(process.env.PORT || 5000, '127.0.0.1');
-  cloudwatch.info(`Server started on port ${process.env.PORT || 5000}...`);
+  console.info(`Server started on port ${process.env.PORT || 5000}...`);
 
   // init socket io
   setup(socketio(server));

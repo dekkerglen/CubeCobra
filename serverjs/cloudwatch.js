@@ -48,6 +48,47 @@ if (cloudwatchEnabled) {
       // eslint-disable-next-line no-console
       console.error(err);
     });
+
+  // push logs every 60 seconds
+  setInterval(() => {
+    if (infoLogs.length > 0) {
+      const logEvents = infoLogs.slice(0);
+      // eslint-disable-next-line no-console
+      console.log(`Sending ${logEvents.length} info logs to CloudWatch...`);
+      infoLogs = [];
+      client
+        .send(
+          new PutLogEventsCommand({
+            logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
+            logStreamName: `${id}`,
+            logEvents,
+          }),
+        )
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error(err);
+        });
+    }
+
+    if (errorLogs.length > 0) {
+      const logEvents = errorLogs.slice(0);
+      errorLogs = [];
+      // eslint-disable-next-line no-console
+      console.log(`Sending ${logEvents.length} error logs to CloudWatch...`);
+      client
+        .send(
+          new PutLogEventsCommand({
+            logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
+            logStreamName: `${id}`,
+            logEvents,
+          }),
+        )
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error(err);
+        });
+    }
+  }, 60000);
 }
 
 module.exports = {
@@ -57,23 +98,6 @@ module.exports = {
         message: messages.join('\n'),
         timestamp: new Date().valueOf(),
       });
-      if (infoLogs.length > 100 || infoLogs[0].timestamp < new Date(Date.now() - 60000).valueOf()) {
-        // eslint-disable-next-line no-console
-        console.log(`Sending ${infoLogs.length} info logs to CloudWatch...`);
-        client
-          .send(
-            new PutLogEventsCommand({
-              logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_INFO`,
-              logStreamName: `${id}`,
-              logEvents: infoLogs,
-            }),
-          )
-          .catch((err) => {
-            // eslint-disable-next-line no-console
-            console.error(err);
-          });
-        infoLogs = [];
-      }
     } else {
       // eslint-disable-next-line no-console
       console.log(messages.join('\n'));
@@ -86,24 +110,6 @@ module.exports = {
         message: messages.join('\n'),
         timestamp: new Date().valueOf(),
       });
-
-      if (errorLogs.length > 100 || errorLogs[0].timestamp < new Date(Date.now() - 60000).valueOf()) {
-        // eslint-disable-next-line no-console
-        console.log(`Sending ${errorLogs.length} error logs to CloudWatch...`);
-        client
-          .send(
-            new PutLogEventsCommand({
-              logGroupName: `${process.env.AWS_LOG_GROUP}_${process.env.AWS_LOG_STREAM}_ERROR`,
-              logStreamName: `${id}`,
-              logEvents: errorLogs,
-            }),
-          )
-          .catch((err) => {
-            // eslint-disable-next-line no-console
-            console.error(err);
-          });
-        errorLogs = [];
-      }
     } else {
       // eslint-disable-next-line no-console
       console.error(messages);

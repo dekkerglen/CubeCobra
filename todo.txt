@@ -1,4 +1,3 @@
-
 card packages don't load correctly
 I am no longer getting any notifications
 and the "your cubes" list on the main dashboard is no longer sorted by last edited/updated date

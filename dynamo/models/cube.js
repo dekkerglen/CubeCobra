@@ -170,9 +170,22 @@ const batchHydrate = async (cubes) => {
   });
 };
 
+const numNull = (arr) => {
+  const serialized = JSON.stringify(arr);
+  const parsed = JSON.parse(serialized);
+
+  return parsed.filter((card) => card === null).length;
+};
+
 module.exports = {
   getCards,
   updateCards: async (id, newCards) => {
+    const nullCards = numNull(newCards.mainboard) + numNull(newCards.maybeboard);
+
+    if (nullCards > 0) {
+      throw new Error(`Cannot save cube: ${nullCards} null cards`);
+    }
+
     const oldMetadata = (await client.get(id)).Item;
     const newMetadata = JSON.parse(JSON.stringify(oldMetadata));
 

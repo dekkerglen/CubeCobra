@@ -11,27 +11,28 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.post('/getpackages', async (req, res) => {
-  const { status, keywords, lastKey, ascending } = req.body;
+router.get('/browse', async (req, res) => {
+  return res.redirect('/packages/approved');
+});
+
+router.get('/approved', async (req, res) => {
+  const packages = await Package.querySortedByVoteCount(Package.STATUSES.APPROVED, '', false);
+
+  return render(req, res, 'ApprovedPackagesPage', {
+    items: packages.items,
+    lastKey: packages.lastKey,
+  });
+});
+
+router.post('/getmoreapproved', async (req, res) => {
+  const { keywords, lastKey, ascending, sort } = req.body;
 
   let packages = [];
 
-  if (status === 'yourpackages') {
-    if (!req.user) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'You must be logged in to view your packages.',
-      });
-    }
-
-    packages = await Package.queryByOwner(req.user.id, lastKey);
+  if (sort === 'votes') {
+    packages = await Package.querySortedByVoteCount(Package.STATUSES.APPROVED, keywords, ascending, lastKey);
   } else {
-    const parsedStatus = {
-      approved: Package.STATUSES.APPROVED,
-      pending: Package.STATUSES.SUBMITTED,
-    }[status];
-
-    packages = await Package.querySortedByDate(parsedStatus, keywords, ascending, lastKey);
+    packages = await Package.querySortedByDate(Package.STATUSES.APPROVED, keywords, ascending, lastKey);
   }
 
   return res.status(200).send({
@@ -40,8 +41,54 @@ router.post('/getpackages', async (req, res) => {
   });
 });
 
-router.get('/browse', async (req, res) => {
-  return render(req, res, 'BrowsePackagesPage', {});
+router.get('/submitted', async (req, res) => {
+  const packages = await Package.querySortedByDate(Package.STATUSES.APPROVED, '', false);
+
+  return render(req, res, 'SubmittedPackagesPage', {
+    items: packages.items,
+    lastKey: packages.lastKey,
+  });
+});
+
+router.post('/getmoresubmitted', async (req, res) => {
+  const { keywords, lastKey, ascending, sort } = req.body;
+
+  let packages = [];
+
+  if (sort === 'votes') {
+    packages = await Package.querySortedByVoteCount(Package.STATUSES.SUBMITTED, keywords, ascending, lastKey);
+  } else {
+    packages = await Package.querySortedByDate(Package.STATUSES.SUBMITTED, keywords, ascending, lastKey);
+  }
+
+  return res.status(200).send({
+    packages: packages.items,
+    lastKey: packages.lastKey,
+  });
+});
+
+router.get('/user', async (req, res) => {
+  if (!req.user) {
+    req.flash('danger', 'You must be logged in to view your packages.');
+    return res.redirect('/404');
+  }
+  const packages = await Package.queryByOwner(req.user.id);
+
+  return render(req, res, 'UserPackagesPage', {
+    items: packages.items,
+    lastKey: packages.lastKey,
+  });
+});
+
+router.post('/getmoreuser', async (req, res) => {
+  const { lastKey } = req.body;
+
+  const packages = await Package.queryByOwner(req.user.id, lastKey);
+
+  return res.status(200).send({
+    packages: packages.items,
+    lastKey: packages.lastKey,
+  });
 });
 
 router.post('/submit', ensureAuth, async (req, res) => {

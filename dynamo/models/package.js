@@ -103,11 +103,38 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
+      limit: 10,
     };
 
     const result = await client.query(query);
 
     if (keywords) {
+      result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].some((keyword) => keywords.includes(keyword)));
+    }
+
+    return {
+      items: await batchHydrate(result.Items),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  querySortedByVoteCount: async (status, keywords, ascending, lastKey) => {
+    const query = {
+      IndexName: 'ByVoteCount',
+      KeyConditionExpression: '#status = :status',
+      ExpressionAttributeNames: {
+        '#status': FIELDS.STATUS,
+      },
+      ExpressionAttributeValues: {
+        ':status': status,
+      },
+      ScanIndexForward: ascending,
+      ExclusiveStartKey: lastKey,
+      limit: 10,
+    };
+
+    const result = await client.query(query);
+
+    if (keywords && keywords.length > 0) {
       result.Items = result.Items.filter((item) => item[FIELDS.KEYWORDS].some((keyword) => keywords.includes(keyword)));
     }
 
@@ -127,6 +154,7 @@ module.exports = {
         ':owner': owner,
       },
       ExclusiveStartKey: lastKey,
+      limit: 10,
     };
 
     const result = await client.query(query);

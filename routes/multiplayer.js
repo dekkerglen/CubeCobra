@@ -192,7 +192,6 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
         deck: deck.id,
       });
     } catch (err) {
-      req.logger.info(`Error saving deck, retry ${retry}`);
       req.logger.error(err.message, err.stack);
     }
   }

@@ -16,7 +16,8 @@ let draftDecoder;
 tf.loadGraphModel('file://./model/encoder/model.json')
   .then((model) => {
     encoder = model;
-    cloudwatch.info('encoder loaded');
+    // eslint-disable-next-line no-console
+    console.info('encoder loaded');
   })
   .catch((err) => {
     cloudwatch.error(err.message, err.stack);
@@ -25,7 +26,8 @@ tf.loadGraphModel('file://./model/encoder/model.json')
 tf.loadGraphModel('file://./model/cube_decoder/model.json')
   .then((model) => {
     recommendDecoder = model;
-    cloudwatch.info('recommend_decoder loaded');
+    // eslint-disable-next-line no-console
+    console.info('recommend_decoder loaded');
   })
   .catch((err) => {
     cloudwatch.error(err.message, err.stack);
@@ -34,7 +36,8 @@ tf.loadGraphModel('file://./model/cube_decoder/model.json')
 tf.loadGraphModel('file://./model/deck_build_decoder/model.json')
   .then((model) => {
     deckbuilderDecoder = model;
-    cloudwatch.info('deck_build_decoder loaded');
+    // eslint-disable-next-line no-console
+    console.info('deck_build_decoder loaded');
   })
   .catch((err) => {
     cloudwatch.error(err.message, err.stack);
@@ -43,7 +46,8 @@ tf.loadGraphModel('file://./model/deck_build_decoder/model.json')
 tf.loadGraphModel('file://./model/draft_decoder/model.json')
   .then((model) => {
     draftDecoder = model;
-    cloudwatch.info('draft_decoder loaded');
+    // eslint-disable-next-line no-console
+    console.info('draft_decoder loaded');
   })
   .catch((err) => {
     cloudwatch.error(err.message, err.stack);

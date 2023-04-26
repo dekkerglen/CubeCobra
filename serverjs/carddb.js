@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 const fs = require('fs');
 const json = require('big-json');
-const cloudwatch = require('./cloudwatch');
 
 const { SortFunctions } = require('../dist/utils/Sort');
 
@@ -102,7 +101,7 @@ async function loadJSONFile(filename, attribute) {
       readStream.pipe(parseStream);
 
       readStream.on('end', () => {
-        cloudwatch.info(`Loaded ${filename}.`);
+        console.info(`Loaded ${filename}.`);
         resolve();
       });
     } catch (e) {
@@ -118,12 +117,12 @@ async function loadAllFiles() {
 }
 
 async function initializeCardDb() {
-  cloudwatch.info('Loading carddb...');
+  console.info('Loading carddb...');
   await loadAllFiles();
 
   data.printedCardList = Object.values(data._carddict).filter((card) => !card.digital && !card.isToken);
 
-  cloudwatch.info('Finished loading carddb.');
+  console.info('Finished loading carddb.');
 }
 
 function reasonableCard(card) {

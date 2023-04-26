@@ -45,7 +45,6 @@ router.post('/hook', async (req, res) => {
   try {
     const action = req.headers['x-patreon-event'];
     const signature = req.headers['x-patreon-signature'];
-    req.logger.info(req.body);
 
     if (!isValidPatreonSignature(signature, req.body)) {
       return res.status(401).send({
@@ -58,7 +57,7 @@ router.post('/hook', async (req, res) => {
     const users = included.filter((item) => item.id === data.relationships.patron.data.id);
 
     if (users.length !== 1) {
-      req.logger.info('Recieved a patreon hook with not exactly one user');
+      req.logger.error('Recieved a patreon hook with not exactly one user');
       return res.status(500).send({
         success: 'false',
       });
@@ -69,7 +68,7 @@ router.post('/hook', async (req, res) => {
     const document = await Patron.getByEmail(email);
 
     if (!document) {
-      req.logger.info(`Recieved a patreon hook without a found email: "${email}"`);
+      req.logger.error(`Recieved a patreon hook without a found email: "${email}"`);
 
       return res.status(200).send({
         success: 'false',
@@ -79,7 +78,7 @@ router.post('/hook', async (req, res) => {
     const user = await User.getById(document.owner);
 
     if (!user) {
-      req.logger.info(`Recieved a patreon hook without a found user: "${document.owner.id}"`);
+      req.logger.error(`Recieved a patreon hook without a found user: "${document.owner.id}"`);
 
       return res.status(200).send({
         success: 'false',
@@ -104,7 +103,7 @@ router.post('/hook', async (req, res) => {
       document.status = Patron.STATUSES.INACTIVE;
       user.roles = user.roles.filter((role) => role !== 'Patron');
     } else {
-      req.logger.info(`Recieved an unsupported patreon hook action: "${action}"`);
+      req.logger.error(`Recieved an unsupported patreon hook action: "${action}"`);
       return res.status(500).send({
         success: 'false',
       });
