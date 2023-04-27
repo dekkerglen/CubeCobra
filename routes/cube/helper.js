@@ -23,7 +23,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
         canEdit: true,
         cubeID: req.params.id,
         missing,
-        added: added.map((add) => add._id),
+        added: added.map((add) => add.scryfall_id),
       });
     }
 
@@ -154,7 +154,7 @@ async function bulkUpload(req, res, list, cube) {
           }
         } else {
           const selectedCard = carddb.getMostReasonable(name, cube.defaultPrinting);
-          selectedId = selectedCard ? selectedCard._id : null;
+          selectedId = selectedCard ? selectedCard.scryfall_id : null;
         }
 
         if (selectedId) {
@@ -273,7 +273,7 @@ const addBasics = (document, basics) => {
     const details = carddb.cardFromId(cardID);
     if (document.cards) {
       const populatedCard = {
-        cardID: details._id,
+        cardID: details.scryfall_id,
         index: document.cards.length,
         isUnlimited: true,
         type_line: details.type,
@@ -283,7 +283,7 @@ const addBasics = (document, basics) => {
     }
     if (document.cards) {
       const populatedCard = {
-        cardID: details._id,
+        cardID: details.scryfall_id,
         index: document.cards.length,
         isUnlimited: true,
         type_line: details.type,

@@ -249,7 +249,7 @@ const ListView = ({ cards }) => {
             card={card}
             versions={
               versionDict[normalizeName(card.details.name)]
-                ? Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v._id, v]))
+                ? Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v.scryfall_id, v]))
                 : defaultVersions(card)
             }
             checked={checked.includes(`${card.board}:${card.index}`)}

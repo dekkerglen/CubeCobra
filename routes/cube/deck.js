@@ -629,7 +629,7 @@ router.post('/uploaddecklist/:id', ensureAuth, async (req, res) => {
             };
           } else {
             const reasonableCard = carddb.getMostReasonable(normalizedName, cube.defaultPrinting);
-            const reasonableId = reasonableCard ? reasonableCard._id : null;
+            const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
             const selectedId = reasonableId || potentialIds[0];
             selected = {
               cardID: selectedId,

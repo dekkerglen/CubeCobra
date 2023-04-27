@@ -126,7 +126,6 @@ Averages.propTypes = {
     formats: PropTypes.arrayOf(
       PropTypes.shape({
         title: PropTypes.string.isRequired,
-        _id: PropTypes.string.isRequired,
       }),
     ).isRequired,
     defaultDraftFormat: PropTypes.number,

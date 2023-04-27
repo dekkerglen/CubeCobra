@@ -1,6 +1,7 @@
 const uuid = require('uuid/v4');
 const createClient = require('../util');
 const User = require('./user');
+const carddb = require('../../serverjs/carddb');
 
 const FIELDS = {
   ID: 'id',
@@ -55,6 +56,7 @@ const hydrate = async (pack) => {
   }
 
   pack.owner = await User.getById(pack.owner);
+  pack.cards = pack.cards.map((id) => carddb.cardFromId(id));
 
   return pack;
 };
@@ -64,6 +66,7 @@ const batchHydrate = async (packs) => {
 
   packs.forEach((pack) => {
     pack.owner = owners.find((owner) => owner.id === pack.owner);
+    pack.cards = pack.cards.map((id) => carddb.cardFromId(id));
   });
 
   return packs;
@@ -103,7 +106,7 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 10,
+      Limit: 10,
     };
 
     const result = await client.query(query);
@@ -129,7 +132,7 @@ module.exports = {
       },
       ScanIndexForward: ascending,
       ExclusiveStartKey: lastKey,
-      limit: 10,
+      Limit: 10,
     };
 
     const result = await client.query(query);

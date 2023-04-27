@@ -189,7 +189,7 @@ const sanitize = (document) => {
       const index = cards.findIndex((c) => c.cardID === card.cardID);
 
       if (index === -1) {
-        return cards.findIndex((c) => c._id && c._id.equals(card.cardID));
+        return cards.findIndex((c) => c.scryfall_id && c.scryfall_id === card.cardID);
       }
 
       return index;

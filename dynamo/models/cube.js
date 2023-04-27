@@ -415,7 +415,7 @@ module.exports = {
       mainboard: cube.cards
         .filter((card) => card)
         .map((card) => {
-          delete card._id;
+          delete card.scryfall_id;
           delete card.details;
           if (card.addedTmsp) {
             card.addedTmsp = card.addedTmsp.valueOf();
@@ -427,7 +427,7 @@ module.exports = {
       maybeboard: cube.maybe
         .filter((card) => card)
         .map((card) => {
-          delete card._id;
+          delete card.scryfall_id;
           delete card.details;
           if (card.addedTmsp) {
             card.addedTmsp = card.addedTmsp.valueOf();

@@ -33,10 +33,11 @@ const fileToAttribute = {
   'metadatadict.json': 'metadatadict',
 };
 
-function getPlaceholderCard(_id) {
+// eslint-disable-next-line camelcase
+function getPlaceholderCard(scryfall_id) {
   // placeholder card if we don't find the one due to a scryfall ID update bug
   return {
-    _id,
+    scryfall_id,
     set: '',
     collector_number: '',
     promo: false,
@@ -152,7 +153,7 @@ function getIdsFromName(name) {
     return getIdsFromName(split[0])
       .map((id) => cardFromId(id))
       .filter((card) => card.full_name.toLowerCase() === name)
-      .map((card) => card._id);
+      .map((card) => card.scryfall_id);
   }
 
   return data.nameToId[
@@ -177,7 +178,7 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
     ids = ids
       .map((id) => ({ details: cardFromId(id) }))
       .filter(filter)
-      .map((card) => card.details._id);
+      .map((card) => card.details.scryfall_id);
   }
 
   if (ids.length === 0) {
@@ -198,7 +199,7 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
     return SortFunctions['Collector number'](a, b);
   });
 
-  ids = cards.map((card) => card.details._id);
+  ids = cards.map((card) => card.details.scryfall_id);
 
   // Ids are stored in reverse chronological order, so reverse if we want first printing.
   if (printing !== 'recent') {

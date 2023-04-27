@@ -1,5 +1,4 @@
-import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
+import React, { useContext, useState, useCallback } from 'react';
 import TimeAgo from 'react-timeago';
 
 import UserContext from 'contexts/UserContext';
@@ -9,64 +8,44 @@ import AddGroupToCubeModal from 'components/AddGroupToCubeModal';
 import withModal from 'components/WithModal';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import CommentsSection from 'components/CommentsSection';
 
 import Username from 'components/Username';
 
-import { CardHeader, Card, CardBody, Row, Col, Button } from 'reactstrap';
+import { CardHeader, Card, CardBody, Row, Col, Button, Spinner } from 'reactstrap';
 
 import { csrfFetch } from 'utils/CSRF';
 
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 const AutocardA = withAutocard('a');
 
-const CardPackage = ({ cardPackage, refresh }) => {
+const CardPackage = ({ cardPackage }) => {
   const user = useContext(UserContext);
+  const [voters, setVoters] = useState(cardPackage.voters);
+  const [loading, setLoading] = useState(false);
 
-  const voted = user ? cardPackage.voters.includes(user.id) : false;
+  const voted = user ? voters.includes(user.id) : false;
 
-  const toggleVote = async () => {
-    if (voted) {
-      // downvote
-      const response = await csrfFetch(`/packages/downvote/${cardPackage.id}`);
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          refresh();
-        }
-      }
-    } else {
-      // upvote
-      const response = await csrfFetch(`/packages/upvote/${cardPackage.id}`);
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          refresh();
-        }
+  const toggleVote = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+    const response = await csrfFetch(`/packages/${voted ? 'downvote' : 'upvote'}/${cardPackage.id}`);
+    if (response.ok) {
+      const json = await response.json();
+      if (json.success === 'true') {
+        setVoters(json.voters);
       }
     }
-  };
+    setLoading(false);
+  }, [cardPackage.id, loading, voted]);
 
-  const approve = async () => {
-    const response = await csrfFetch(`/packages/approve/${cardPackage.id}`);
-    if (response.ok) {
-      refresh();
-    }
-  };
+  const approve = async () => csrfFetch(`/packages/approve/${cardPackage.id}`);
 
-  const unapprove = async () => {
-    const response = await csrfFetch(`/packages/unapprove/${cardPackage.id}`);
-    if (response.ok) {
-      refresh();
-    }
-  };
+  const unapprove = async () => csrfFetch(`/packages/unapprove/${cardPackage.id}`);
 
-  const remove = async () => {
-    const response = await csrfFetch(`/packages/remove/${cardPackage.id}`);
-    if (response.ok) {
-      refresh();
-    }
-  };
+  const remove = async () => csrfFetch(`/packages/remove/${cardPackage.id}`);
 
   return (
     <Card className="mb-4">
@@ -87,18 +66,22 @@ const CardPackage = ({ cardPackage, refresh }) => {
             <Col xs="12" sm="6" className="pb-2">
               <div className="flex-container flex-row-reverse">
                 <TextBadge name="Votes" className="mx-2">
-                  <Tooltip text={voted ? 'Click to remove your upvote' : 'Click to upvote this package'}>
-                    <button
-                      type="button"
-                      className="cube-id-btn"
-                      onKeyDown={() => {}}
-                      onClick={() => {
-                        toggleVote();
-                      }}
-                    >
-                      {voted ? <b>{cardPackage.voteCount}</b> : cardPackage.voteCount}
-                    </button>
-                  </Tooltip>
+                  {loading ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <Tooltip text={voted ? 'Click to remove your upvote' : 'Click to upvote this package'}>
+                      <button
+                        type="button"
+                        className="cube-id-btn"
+                        onKeyDown={() => {}}
+                        onClick={() => {
+                          toggleVote();
+                        }}
+                      >
+                        {voted ? <b>{voters.length}</b> : voters.length}
+                      </button>
+                    </Tooltip>
+                  )}
                 </TextBadge>
 
                 <AddGroupToCubeModalLink
@@ -130,7 +113,7 @@ const CardPackage = ({ cardPackage, refresh }) => {
             <Col xs="6">
               <div className="float-end">
                 <TextBadge name="Votes" className="me-2">
-                  <Tooltip text="Login to upvote">{cardPackage.votes}</Tooltip>
+                  <Tooltip text="Login to upvote">{voters.length}</Tooltip>
                 </TextBadge>
               </div>
             </Col>
@@ -139,31 +122,23 @@ const CardPackage = ({ cardPackage, refresh }) => {
       </CardHeader>
       <CardBody>
         <Row>
-          {cardPackage.cards.map((cardId) => (
-            <Col key={`${cardPackage.id}-${cardId}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
+          {cardPackage.cards.map((card) => (
+            <Col key={`${cardPackage.id}-${card.scryfall_id}`} className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4">
               <Card className="mb-3">
-                <AutocardA href={`/tool/card/${cardId}`} image={`/tool/cardimage/${cardId}`} target="_blank">
-                  <img className="w-100" src={`/tool/cardimage/${cardId}`} alt={cardId} />
+                <AutocardA href={`/tool/card/${card.scryfall_id}`} image={card.image_normal} target="_blank">
+                  <img className="w-100" src={card.image_normal} alt={card.name} />
                 </AutocardA>
               </Card>
             </Col>
           ))}
         </Row>
       </CardBody>
-      <div className="border-top">
-        <CommentsSection parentType="package" parent={cardPackage.id} collapse />
-      </div>
     </Card>
   );
 };
 
 CardPackage.propTypes = {
   cardPackage: CardPackagePropType.isRequired,
-  refresh: PropTypes.func,
-};
-
-CardPackage.defaultProps = {
-  refresh: () => {},
 };
 
 export default CardPackage;

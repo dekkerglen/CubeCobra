@@ -52,7 +52,7 @@ const BulkUploadPageRaw = ({ missing, added }) => {
         if (!card) {
           return;
         }
-        addCard({ cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus }, 'mainboard');
+        addCard({ cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus }, 'mainboard');
         setAddValue('');
 
         addInput.current.focus();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import { csrfFetch } from 'utils/CSRF';
@@ -13,7 +13,6 @@ import {
   InputGroup,
   InputGroupText,
   UncontrolledAlert,
-  Spinner,
   ListGroup,
   ListGroupItem,
   Input,
@@ -25,33 +24,7 @@ const AutocardItem = withAutocard(ListGroupItem);
 const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
   const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [details, setDetails] = useState([]);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await csrfFetch(`/cube/api/getdetailsforcards`, {
-        method: 'POST',
-        body: JSON.stringify({
-          cards,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          setDetails(json.details);
-          setLoading(false);
-        }
-      }
-      return [];
-    };
-    fetchData();
-  }, [cards, setDetails, setLoading]);
 
   const add = async (board) => {
     setLoadingSubmit(true);
@@ -59,7 +32,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
-          cards,
+          cards: cards.map((card) => card.scryfall_id),
           packid,
           board,
         }),
@@ -81,29 +54,13 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
     setLoadingSubmit(false);
   };
 
-  if (loading) {
-    return (
-      <Modal isOpen={isOpen} toggle={toggle} size="xs">
-        <ModalHeader toggle={toggle}>Add Package to Cube</ModalHeader>
-        <div className="centered py-3 my-4">
-          <Spinner className="position-absolute" />
-        </div>
-        <ModalFooter>
-          <Button color="unsafe" onClick={toggle}>
-            Close
-          </Button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-
   if (!cubes || cubes.length === 0) {
     return (
       <Modal isOpen={isOpen} toggle={toggle} size="xs">
         <ModalHeader toggle={toggle}>Add Package to Cube</ModalHeader>
         <ModalBody>
           <ListGroup className="list-outline">
-            {details.map((card) => (
+            {cards.map((card) => (
               <AutocardItem
                 key={card.index}
                 card={{ details: card }}
@@ -137,7 +94,7 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           </UncontrolledAlert>
         ))}
         <ListGroup className="list-outline">
-          {details.map((card) => (
+          {cards.map((card) => (
             <AutocardItem
               key={card.index}
               card={{ details: card }}

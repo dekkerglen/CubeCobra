@@ -1,13 +1,3 @@
-card packages don't load correctly
-I am no longer getting any notifications
-and the "your cubes" list on the main dashboard is no longer sorted by last edited/updated date
-it just seems locked in whatever order it happened to be in before the last update
-apostrophies don't work for autocard markdown
-anchors on the overview pages broken? They don't seem to go to take you to any particular spot on the page
-in multiplayer drafts, the non host seats look like bots
-can't filter recommendations by maybeboard anymore
-legality=modern shouldn't include cards banned in modern
-accepting content creator application times out
 I have a cube with multiples of cards, and I can now only change out one at a time. When I try and swap them all at the same time, only one gets updated
 remigrate patron levels, as a lot are -1 for some reason	
 cubes with no basics crash deckbuilder
@@ -16,9 +6,13 @@ I am unable to update my email address for my Cube Cobra account from the accoun
 After entering the new email and confirming password, the page hangs for a minute and then times out with a 504 Gateway Time-out.
 add premodern as cube type overrid=9+-+0 
 remove comment from notice broken
+accepting content creator application times out
+
 
 after multiplayer draft, non-host seats error
 seat names should include player name or bot instead of just the deck color
+in multiplayer drafts, the non host seats look like bots ???
+
 
 Investigate
 	- validate patreon integration

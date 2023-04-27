@@ -129,7 +129,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
   });
 
   const filteredVersions = sortedVersions.filter((version) => {
-    return version._id !== card._id;
+    return version.scryfall_id !== card.scryfall_id;
   });
 
   return (
@@ -168,7 +168,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
               <AddModal color="accent" block outline className="mb-1 me-2" modalProps={{ card, hideAnalytics: true }}>
                 Add to Cube...
               </AddModal>
-              <CardIdBadge id={card._id} />
+              <CardIdBadge id={card.scryfall_id} />
               {card.prices && Number.isFinite(cardNormalPrice({ details: card })) && (
                 <TextBadge name="Price" className="mt-1" fill>
                   <Tooltip text="TCGPlayer Market Price">${cardNormalPrice({ details: card }).toFixed(2)}</Tooltip>
@@ -423,9 +423,9 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                   </table>
                 )}
                 rows={filteredVersions.slice(0).map((version) => (
-                  <tr key={version._id}>
+                  <tr key={version.scryfall_id}>
                     <td>
-                      <AutocardA card={{ details: version }} href={`/tool/card/${version._id}`}>
+                      <AutocardA card={{ details: version }} href={`/tool/card/${version.scryfall_id}`}>
                         {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
                       </AutocardA>
                     </td>

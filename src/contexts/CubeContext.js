@@ -532,7 +532,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
 
             if (versionDict[normalizeName(card.details.name)] && edit.newCard.cardID !== card.cardID) {
               const newDetails = versionDict[normalizeName(card.details.name)].find(
-                (v) => v._id === edit.newCard.cardID,
+                (v) => v.scryfall_id === edit.newCard.cardID,
               );
               changed[board][edit.index].details = {
                 ...card.details,

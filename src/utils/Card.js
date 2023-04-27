@@ -98,7 +98,7 @@ export const cardColorIdentity = (card) => card.colors ?? card.details.color_ide
 
 export const cardCmc = (card) => parseInt(card.cmc ?? card.details.cmc, 10);
 
-export const cardId = (card) => card.cardID ?? card.details._id;
+export const cardId = (card) => card.cardID ?? card.details.scryfall_id;
 
 export const cardType = (card) => card.type_line ?? card.details.type;
 

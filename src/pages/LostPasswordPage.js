@@ -43,9 +43,7 @@ const LostPassword = ({ loginCallback }) => (
 );
 
 LostPassword.propTypes = {
-  post: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
+  post: PropTypes.shape({}).isRequired,
   loginCallback: PropTypes.string,
 };
 

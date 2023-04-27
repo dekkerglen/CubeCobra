@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 const CardPropType = PropTypes.shape({
-  _id: PropTypes.string.isRequired,
+  scryfall_id: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
   date: PropTypes.string.isRequired,
   userid: PropTypes.string.isRequired,

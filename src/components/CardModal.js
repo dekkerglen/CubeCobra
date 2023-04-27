@@ -62,7 +62,7 @@ const CardModal = ({
     if (!versionDict[normalizeName(card.details.name)]) {
       setVersions({});
     } else {
-      setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v._id, v])));
+      setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v.scryfall_id, v])));
     }
   }, [card, versionDict]);
 

@@ -6,7 +6,9 @@ const { draftbotPick, deckbuild } = require('./draftbots');
 
 const Draft = require('../dynamo/models/draft');
 const User = require('../dynamo/models/user');
+const Cube = require('../dynamo/models/cube');
 const cloudwatch = require('./cloudwatch');
+const util = require('./util');
 
 const {
   hget,
@@ -319,13 +321,17 @@ const buildBotDeck = (picks, draft) => {
   };
 };
 
-const finishDraft = async (draftId, draft) => {
+const finishDraft = async (draftId) => {
   // ensure this is only called once
   const lock = await obtainLock(`finishdraft:${draftId}`, uuid(), 30000);
 
   if (!lock) {
     return;
   }
+
+  const draft = await Draft.getById(draftId);
+  const cube = await Cube.getById(draft.cube);
+  const draftOwner = draft.seats[0].owner;
 
   const { seats } = await getDraftMetaData(draftId);
   // set user picks to the actual picks
@@ -361,6 +367,15 @@ const finishDraft = async (draftId, draft) => {
   await Draft.put(draft);
   await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);
+
+  if (cube.owner.id !== draftOwner.id && !cube.disableAlerts) {
+    await util.addNotification(
+      cube.owner,
+      draftOwner,
+      `/cube/deck/${draft.id}`,
+      `${draftOwner.username} drafted your cube: ${cube.name}`,
+    );
+  }
 };
 
 const createLobby = async (draft, hostUser) => {
@@ -572,7 +587,7 @@ const tryBotPicks = async (draftId) => {
         return 'in_progress';
       }
       // draft is done
-      await finishDraft(draftId, await Draft.getById(draftId));
+      await finishDraft(draftId);
       return 'done';
     }
     return 'in_progress';

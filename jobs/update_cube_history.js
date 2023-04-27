@@ -186,7 +186,7 @@ const loadCubesHistory = async (key) => {
         const cubeCards = cube.map((id) => carddb.cardFromId(id));
         const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
         const { pauper, peasant, type } = getCubeTypes(
-          cubeCards.map((card) => ({ cardID: card._id })),
+          cubeCards.map((card) => ({ cardID: card.scryfall_id })),
           carddb,
         );
 

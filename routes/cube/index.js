@@ -663,7 +663,7 @@ router.get('/analysis/:id', async (req, res) => {
                 status: 'Not Owned',
                 colors: tokenDetails.color_identity,
                 cmc: tokenDetails.cmc,
-                cardID: tokenDetails._id,
+                cardID: tokenDetails.scryfall_id,
                 type_line: tokenDetails.type,
                 addedTmsp: new Date(),
                 finish: 'Non-foil',
@@ -692,14 +692,14 @@ router.get('/analysis/:id', async (req, res) => {
           const card = carddb.getReasonableCardByOracle(item.oracle);
           return {
             details: card,
-            cardID: card._id,
+            cardID: card.scryfall_id,
           };
         }),
         cuts: cuts.map((item) => {
           const card = carddb.getReasonableCardByOracle(item.oracle);
           return {
             details: card,
-            cardID: card._id,
+            cardID: card.scryfall_id,
           };
         }),
       },

@@ -25,7 +25,8 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
   const [cardName, cardId] = useMemo(
-    () => (card && card.details ? [card.details.name, card.details._id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
+    () =>
+      card && card.details ? [card.details.name, card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK],
     [card],
   );
 

@@ -70,11 +70,7 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
 };
 
 Notifications.propTypes = {
-  notifications: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   lastKey: PropTypes.shape({}),
   loginCallback: PropTypes.string,
 };

@@ -175,8 +175,8 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj, addCards, cutCards) => (
-        <Suggestions cards={collection} cube={cubeObj} adds={addCards} cuts={cutCards} filter={filter} />
+      component: (collection, cubeObj, addCards, cutCards, maybeboard) => (
+        <Suggestions maybeboard={maybeboard} cube={cubeObj} adds={addCards} cuts={cutCards} filter={filter} />
       ),
     },
     {
@@ -227,7 +227,9 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
               </Card>
               <Card>
                 <CardBody>
-                  <ErrorBoundary>{analytics[activeTab].component(filteredCards, cube, adds, cuts)}</ErrorBoundary>
+                  <ErrorBoundary>
+                    {analytics[activeTab].component(filteredCards, cube, adds, cuts, cards.maybeboard)}
+                  </ErrorBoundary>
                 </CardBody>
               </Card>
             </Col>
@@ -242,6 +244,7 @@ CubeAnalysisPage.propTypes = {
   cube: CubePropType.isRequired,
   cards: PropTypes.shape({
     mainboard: PropTypes.arrayOf(PropTypes.object),
+    maybeboard: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,

@@ -42,7 +42,7 @@ router.post('/getmoreapproved', async (req, res) => {
 });
 
 router.get('/submitted', async (req, res) => {
-  const packages = await Package.querySortedByDate(Package.STATUSES.APPROVED, '', false);
+  const packages = await Package.querySortedByDate(Package.STATUSES.SUBMITTED, '', false);
 
   return render(req, res, 'SubmittedPackagesPage', {
     items: packages.items,
@@ -170,7 +170,7 @@ router.get('/upvote/:id', ensureAuth, async (req, res) => {
 
   return res.status(200).send({
     success: 'true',
-    votes: pack.votes,
+    voters: pack.voters,
   });
 });
 
@@ -182,7 +182,7 @@ router.get('/downvote/:id', ensureAuth, async (req, res) => {
 
   return res.status(200).send({
     success: 'true',
-    votes: pack.votes,
+    voters: pack.voters,
   });
 });
 

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
 const DeckPropType = PropTypes.shape({
-  _id: PropTypes.string,
+  id: PropTypes.string,
   cube: PropTypes.string,
   owner: PropTypes.string,
   cubeOwner: PropTypes.string,

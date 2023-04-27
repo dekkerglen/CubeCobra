@@ -43,7 +43,7 @@ const Tokens = ({ cube, cards }) => {
     return sorted.map(([, tokenData]) => ({
       card: tokenData.token,
       cardDescription: sortCards(dedupeCards(tokenData.cards))
-        .map(({ position }) => `[[${cards[position].details.name}|${cards[position].details._id}]]`)
+        .map(({ position }) => `[[${cards[position].details.name}|${cards[position].details.scryfall_id}]]`)
         .join('\n\n'),
     }));
   }, [cards]);

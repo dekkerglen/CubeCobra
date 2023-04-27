@@ -86,12 +86,12 @@ const TopCardsTable = () => {
 
         <tbody>
           {data.map((card) => (
-            <tr key={card._id}>
+            <tr key={card.scryfall_id}>
               <td>
                 <AutocardA
                   front={card.image_normal}
                   back={card.image_back || undefined}
-                  href={`/tool/card/${card._id}`}
+                  href={`/tool/card/${card.scryfall_id}`}
                   card={{ details: card }}
                 >
                   {card.name}

@@ -101,7 +101,7 @@ const EditCollapse = ({ isOpen }) => {
           return;
         }
         addCard(
-          { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+          { cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
           showMaybeboard ? activeBoard : 'mainboard',
         );
         setAddValue('');
@@ -145,7 +145,7 @@ const EditCollapse = ({ isOpen }) => {
           }
           swapCard(
             removeIndex,
-            { cardID: card._id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+            { cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
             showMaybeboard ? activeBoard : 'mainboard',
           );
         } else {

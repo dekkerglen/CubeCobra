@@ -31,7 +31,7 @@ const getAllMostReasonable = (filter) => {
   const filtered = [];
   for (const card of cards) {
     if (!keys.has(card.name_lower)) {
-      filtered.push(carddb.getMostReasonableById(card._id, 'recent', filter));
+      filtered.push(carddb.getMostReasonableById(card.scryfall_id, 'recent', filter));
       keys.add(card.name_lower);
     }
   }
@@ -201,7 +201,7 @@ router.get('/card/:id', async (req, res) => {
     const possibleName = cardutil.decodeName(id);
     const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName)._id;
+      id = carddb.getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -212,7 +212,7 @@ router.get('/card/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -250,7 +250,7 @@ router.get('/card/:id', async (req, res) => {
         history: history.items.reverse(),
         lastKey: history.lastKey,
         versions: carddb.oracleToId[card.oracle_id]
-          .filter((cid) => cid !== card._id)
+          .filter((cid) => cid !== card.scryfall_id)
           .map((cardid) => carddb.cardFromId(cardid)),
         draftedWith,
         cubedWith,
@@ -279,7 +279,7 @@ router.get('/cardimage/:id', async (req, res) => {
     const possibleName = cardutil.decodeName(id);
     const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName)._id;
+      id = carddb.getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -290,7 +290,7 @@ router.get('/cardimage/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error
@@ -340,7 +340,7 @@ router.get('/cardimageflip/:id', async (req, res) => {
     const possibleName = cardutil.decodeName(id);
     const ids = carddb.getIdsFromName(possibleName);
     if (ids) {
-      id = carddb.getMostReasonable(possibleName)._id;
+      id = carddb.getMostReasonable(possibleName).scryfall_id;
     }
 
     // if id is a foreign id, redirect to english version
@@ -351,7 +351,7 @@ router.get('/cardimageflip/:id', async (req, res) => {
 
     // if id is an oracle id, redirect to most reasonable scryfall
     if (carddb.oracleToId[id]) {
-      id = carddb.getMostReasonableById(carddb.oracleToId[id][0])._id;
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
     }
 
     // if id is not a scryfall ID, error

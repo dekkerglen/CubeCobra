@@ -299,7 +299,13 @@ module.exports = {
   batchGet: async (keys) => {
     const result = await Promise.all(
       keys.map(async (key) => {
-        return hydrateChangelog(await getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`));
+        const data = await getObject(process.env.DATA_BUCKET, `changelog/${key.cube}/${key.id}.json`);
+        try {
+          const hydrated = hydrateChangelog(data);
+          return hydrated;
+        } catch (err) {
+          return data;
+        }
       }),
     );
 

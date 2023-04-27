@@ -46,7 +46,7 @@ const catalog = {};
  *   rarity: String,
  *   oracle_text: String?,
  *   // Scryfall ID
- *   _id: UUID,
+ *   scryfall_id: UUID,
  *   oracle_id: UUID,
  *   cmc: Float
  *   // one of "legal", "not_legal", "restricted", "banned"
@@ -148,13 +148,13 @@ async function downloadDefaultCards() {
 }
 
 function addCardToCatalog(card, isExtra) {
-  catalog.dict[card._id] = card;
+  catalog.dict[card.scryfall_id] = card;
   const normalizedFullName = cardutil.normalizeName(card.full_name);
   const normalizedName = cardutil.normalizeName(card.name);
   catalog.imagedict[normalizedFullName] = {
     uri: card.art_crop,
     artist: card.artist,
-    id: card._id,
+    id: card.scryfall_id,
     imageName: normalizedFullName,
   };
   if (isExtra !== true) {
@@ -172,13 +172,13 @@ function addCardToCatalog(card, isExtra) {
   if (!catalog.nameToId[normalizedName]) {
     catalog.nameToId[normalizedName] = [];
   }
-  if (!catalog.nameToId[normalizedName].includes(card._id)) {
-    catalog.nameToId[normalizedName].push(card._id);
+  if (!catalog.nameToId[normalizedName].includes(card.scryfall_id)) {
+    catalog.nameToId[normalizedName].push(card.scryfall_id);
   }
   if (!catalog.oracleToId[card.oracle_id]) {
     catalog.oracleToId[card.oracle_id] = [];
   }
-  catalog.oracleToId[card.oracle_id].push(card._id);
+  catalog.oracleToId[card.oracle_id].push(card.scryfall_id);
   util.binaryInsert(normalizedName, catalog.names);
   util.binaryInsert(normalizedFullName, catalog.full_names);
 }
@@ -452,7 +452,7 @@ function getTokens(card, catalogCard) {
               areTypesValid &&
               areAbilitiesValid
             ) {
-              mentionedTokens.push(candidate._id);
+              mentionedTokens.push(candidate.scryfall_id);
               break;
             }
           }
@@ -608,7 +608,7 @@ function convertType(card, isExtra, faceAttributeSource) {
   }
 
   if (!type) {
-    console.error(`Error converting type: (isExtra:${isExtra}) ${card.name} (id: ${card._id})`);
+    console.error(`Error converting type: (isExtra:${isExtra}) ${card.name} (id: ${card.scryfall_id})`);
     return '';
   }
   return type.trim();
@@ -659,28 +659,12 @@ function convertCard(card, metadata, isExtra) {
     card.card_faces = [faceAttributeSource];
   }
 
-  newcard.cubedWith = {
-    top: [],
-    creatures: [],
-    spells: [],
-    other: [],
-  };
-  newcard.draftedWith = {
-    top: [],
-    creatures: [],
-    spells: [],
-    other: [],
-  };
-
   newcard.elo = 1200;
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;
 
   if (metadata) {
-    // this information is only used in card pages and shoudn't bloat this data
-    // newcard.cubedWith = metadata.cubedWith;
-    // newcard.draftedWith = metadata.draftedWith;
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;
     newcard.cubeCount = metadata.cubes;
@@ -729,7 +713,7 @@ function convertCard(card, metadata, isExtra) {
     // concatenate all card face text to allow it to be found in searches
     newcard.oracle_text = card.card_faces.map((face) => face.oracle_text).join('\n');
   }
-  newcard._id = convertId(card, isExtra);
+  newcard.scryfall_id = convertId(card, isExtra);
   // reversible cards have a separate oracle ID on each face
   newcard.oracle_id = faceAttributeSource.oracle_id || card.oracle_id;
   newcard.cmc = convertCmc(card, isExtra, faceAttributeSource);

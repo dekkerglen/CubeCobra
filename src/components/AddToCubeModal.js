@@ -38,7 +38,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
         method: 'POST',
         body: JSON.stringify({
-          cards: [card._id],
+          cards: [card.scryfall_id],
           board: selectedBoard,
         }),
         headers: {
@@ -74,7 +74,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
         </ModalBody>
         <ModalFooter>
           {!hideAnalytics && (
-            <Button color="primary" href={`/tool/card/${card._id}`} target="_blank">
+            <Button color="primary" href={`/tool/card/${card.scryfall_id}`} target="_blank">
               Analytics
             </Button>
           )}
@@ -111,7 +111,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
             onChange={(event) => setSelectedCube(event.target.value)}
           >
             {cubes.map((cube) => (
-              <option key={cube._id} value={cube.id}>
+              <option key={cube.id} value={cube.id}>
                 {cube.name}
               </option>
             ))}
@@ -135,7 +135,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
       </ModalBody>
       <ModalFooter>
         {!hideAnalytics && (
-          <Button color="primary" href={`/tool/card/${card._id}`} target="_blank">
+          <Button color="primary" href={`/tool/card/${card.scryfall_id}`} target="_blank">
             Analytics
           </Button>
         )}
@@ -151,7 +151,7 @@ AddToCubeModal.propTypes = {
   card: PropTypes.shape({
     name: PropTypes.string.isRequired,
     image_normal: PropTypes.string.isRequired,
-    _id: PropTypes.string.isRequired,
+    scryfall_id: PropTypes.string.isRequired,
   }).isRequired,
   isOpen: PropTypes.bool.isRequired,
   hideAnalytics: PropTypes.bool,

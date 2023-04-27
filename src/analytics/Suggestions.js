@@ -54,7 +54,7 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const Suggestions = ({ adds, cuts, cube, filter }) => {
+const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
@@ -66,11 +66,11 @@ const Suggestions = ({ adds, cuts, cube, filter }) => {
     let withIndex = adds?.map((add, index) => [add, index]) ?? [];
     if (maybeOnly) {
       withIndex = withIndex.filter(([card]) =>
-        cube.maybe.some((maybe) => maybe.details.name_lower === card.details.name_lower),
+        maybeboard.some((maybe) => maybe.details.oracle_id === card.details.oracle_id),
       );
     }
     return filter ? withIndex.filter(([card]) => filter(card)) : withIndex;
-  }, [adds, maybeOnly, filter, cube.maybe]);
+  }, [adds, maybeOnly, filter, maybeboard]);
 
   return (
     <>
@@ -142,6 +142,8 @@ Suggestions.propTypes = {
     ),
   }).isRequired,
   filter: PropTypes.func,
+  maybeboard: PropTypes.arrayOf(PropTypes.shape({ details: PropTypes.shape({ oracle_id: PropTypes.string }) }))
+    .isRequired,
 };
 
 Suggestions.defaultProps = {

@@ -92,7 +92,7 @@ function newCard(cardDetails, tags, defaultStatus = 'Owned') {
     status: defaultStatus,
     colors: cardDetails.color_identity,
     cmc: cardDetails.cmc,
-    cardID: cardDetails._id,
+    cardID: cardDetails.scryfall_id,
     type_line: cardDetails.type,
     addedTmsp: new Date(),
     finish: 'Non-foil',
@@ -180,11 +180,11 @@ function getImageData(imagename) {
   const ids = carddb.nameToId[name];
   if (ids) {
     const byName = carddb.cardFromId(ids[0]);
-    if (byName._id) {
+    if (byName.scryfall_id) {
       return {
         uri: byName.art_crop,
         artist: byName.artist,
-        id: byName._id,
+        id: byName.scryfall_id,
         imageName: imagename,
       };
     }
