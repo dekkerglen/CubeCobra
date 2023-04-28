@@ -105,7 +105,18 @@ router.post(
 
     // cube category override
     if (updatedCube.categoryOverride != null) {
-      const categories = ['', 'Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'];
+      const categories = [
+        '',
+        'Vintage',
+        'Legacy+',
+        'Legacy',
+        'Modern',
+        'Premodern',
+        'Pioneer',
+        'Historic',
+        'Standard',
+        'Set',
+      ];
       const prefixes = [
         'Powered',
         'Unpowered',

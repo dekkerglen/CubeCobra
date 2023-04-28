@@ -30,17 +30,11 @@ import CubePropType from 'proptypes/CubePropType';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
-import { calculateBotPickFromOptions } from 'drafting/draftbots';
 import { getDefaultPosition } from 'drafting/draftutil';
-import { getGridDrafterState } from 'drafting/griddraftutils';
+import { getGridDrafterState, calculateGridBotPick } from 'drafting/griddraftutils';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
 import DraftPropType from 'proptypes/DraftPropType';
-
-const GRID_DRAFT_OPTIONS = [0, 1, 2]
-  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
-  .flat(1);
-export const calculateGridBotPick = calculateBotPickFromOptions(GRID_DRAFT_OPTIONS);
 
 const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">
@@ -134,6 +128,7 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
+    console.log(cardIndices);
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {

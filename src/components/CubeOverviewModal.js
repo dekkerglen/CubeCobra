@@ -101,22 +101,31 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
           <Row>
             <Col>
               <FormGroup tag="fieldset">
-                {[null, 'Vintage', 'Legacy+', 'Legacy', 'Modern', 'Pioneer', 'Historic', 'Standard', 'Set'].map(
-                  (label) => (
-                    <FormGroup check key={label}>
-                      <Label check>
-                        <Input
-                          type="radio"
-                          name="categoryOverride"
-                          value={label}
-                          checked={state.categoryOverride === label}
-                          onChange={(event) => setState({ ...state, categoryOverride: event.target.value })}
-                        />{' '}
-                        {label || <i>[None]</i>}
-                      </Label>
-                    </FormGroup>
-                  ),
-                )}
+                {[
+                  null,
+                  'Vintage',
+                  'Legacy+',
+                  'Legacy',
+                  'Modern',
+                  'Premodern',
+                  'Pioneer',
+                  'Historic',
+                  'Standard',
+                  'Set',
+                ].map((label) => (
+                  <FormGroup check key={label}>
+                    <Label check>
+                      <Input
+                        type="radio"
+                        name="categoryOverride"
+                        value={label}
+                        checked={state.categoryOverride === label}
+                        onChange={(event) => setState({ ...state, categoryOverride: event.target.value })}
+                      />{' '}
+                      {label || <i>[None]</i>}
+                    </Label>
+                  </FormGroup>
+                ))}
               </FormGroup>
             </Col>
             <Col>

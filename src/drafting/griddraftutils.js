@@ -72,4 +72,21 @@ export const getGridDrafterState = ({ gridDraft, seatNumber }) => {
   };
 };
 
-export default { getGridDrafterState };
+const GRID_DRAFT_OPTIONS = [0, 1, 2]
+  .map((ind) => [[0, 1, 2].map((offset) => 3 * ind + offset), [0, 1, 2].map((offset) => ind + 3 * offset)])
+  .flat(1);
+
+export const calculateGridBotPick = (drafterState) => {
+  const { cardsInPack, cards } = drafterState;
+
+  const elos = cardsInPack.map((index) => (index ? cards[index].details.elo : 0));
+
+  // get the index with the highest sum elo
+  const optionElos = GRID_DRAFT_OPTIONS.map((option) => option.map((index) => elos[index]).reduce((a, b) => a + b, 0));
+
+  const best = optionElos.map((elo, index) => [elo, index]).sort((a, b) => b[0] - a[0])[0][1];
+
+  console.log(best);
+
+  return GRID_DRAFT_OPTIONS[best].map((x) => [cardsInPack[x], x]).filter(([x]) => x !== null);
+};

@@ -54,6 +54,7 @@ const CardModal = ({
   removeCard,
   tagColors,
   moveCard,
+  allTags,
 }) => {
   const [versions, setVersions] = useState(null);
   const [tagInput, setTagInput] = useState('');
@@ -74,6 +75,8 @@ const CardModal = ({
   );
 
   const disabled = !canEdit || card.markedForDelete;
+
+  console.log(allTags);
 
   return (
     <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
@@ -395,6 +398,7 @@ const CardModal = ({
                     updateField('tags', newTags);
                   }}
                   tagColors={tagColors}
+                  suggestions={allTags}
                 />
               </fieldset>
             </Col>
@@ -419,12 +423,14 @@ CardModal.propTypes = {
   removeCard: PropTypes.func.isRequired,
   tagColors: PropTypes.arrayOf(PropTypes.string),
   moveCard: PropTypes.func.isRequired,
+  allTags: PropTypes.arrayOf(PropTypes.string),
 };
 
 CardModal.defaultProps = {
   canEdit: false,
   versionDict: {},
   tagColors: [],
+  allTags: [],
 };
 
 export default CardModal;

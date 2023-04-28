@@ -8,7 +8,7 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, suggestions, tagColors 
   return (
     <ReactTags
       tags={tags.map((tag) => ({ ...tag, className: getTagColorClass(tagColors, tag.text) }))}
-      suggestions={suggestions}
+      suggestions={suggestions.map((suggestion) => ({ id: suggestion, text: suggestion }))}
       handleAddition={addTag}
       handleDelete={deleteTag}
       handleDrag={reorderTag}

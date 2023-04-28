@@ -506,8 +506,6 @@ router.post('/submitdeck/:id', body('skipDeckbuilder').toBoolean(), async (req, 
   try {
     const draftid = req.body.body;
 
-    // TODO build bot decks
-
     if (req.body.skipDeckbuilder) {
       return res.redirect(`/cube/deck/${draftid}`);
     }
@@ -532,8 +530,6 @@ router.get('/redraft/:id/:seat', ensureAuth, async (req, res) => {
       req.flash('danger', 'Invalid seat index to redraft as.');
       return res.redirect(`/cube/deck/${req.params.id}`);
     }
-
-    // TODO: Handle gridDraft
 
     const cube = await Cube.getById(base.cube);
     if (!isCubeViewable(cube, req.user)) {

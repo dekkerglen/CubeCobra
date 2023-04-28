@@ -923,6 +923,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     unfilteredChangedCards,
     useBlog,
     setUseBlog,
+    allTags,
   };
 
   return (
@@ -944,6 +945,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
               removeCard={removeCard}
               tagColors={tagColors}
               moveCard={moveCard}
+              allTags={allTags}
             />
           )}
         {modalSelection && Array.isArray(modalSelection) && (
@@ -960,6 +962,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             setModalSelection={setModalSelection}
             tagColors={tagColors}
             bulkMoveCard={bulkMoveCard}
+            allTags={allTags}
           />
         )}
       </>

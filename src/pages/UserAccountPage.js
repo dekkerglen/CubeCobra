@@ -379,7 +379,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                               </RemoveFeaturedButton>
                             </Col>
                           </Row>
-                        ) : ['Coiling oracle', 'Lotus Cobra'].includes(patron.level) ? (
+                        ) : [1, 2].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
                             <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>

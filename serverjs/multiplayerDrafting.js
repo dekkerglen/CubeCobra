@@ -44,8 +44,6 @@ const draftRef = (draftId) => `draft:${draftId}`;
 
 const draftCardsRef = (draftId) => `draftcards:${draftId}`;
 
-const draftBasicsRef = (draftId) => `draftbasics:${draftId}`;
-
 // returns a reference to a draft's metadata hash
 const draftBotSeatsRef = (draftId) => `draft:${draftId}:botseats`;
 
@@ -437,10 +435,6 @@ const setup = async (draft) => {
       draft.cards.map((card) => card.cardID),
     );
     await expire(draftCardsRef(draft.id), 60 * 60 * 24 * 2); // expire in 2 days
-
-    // push all the basic indexes to redis
-    await rpush(draftBasicsRef(draft.id), draft.basics);
-    await expire(draftBasicsRef(draft.id), 60 * 60 * 24 * 2); // expire in 2 days
 
     // create a list of steps for each seat
     const stepList = getStepList(draft.InitialState);

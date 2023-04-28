@@ -110,6 +110,10 @@ const pipsPerSource = (cards) => {
 };
 
 const calculateBasics = (mainboard, basics) => {
+  if (basics.length === 0) {
+    return [];
+  }
+
   const result = [];
 
   const basicsNeeded = 40 - mainboard.length;

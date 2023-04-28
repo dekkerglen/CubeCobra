@@ -12,7 +12,7 @@ const STATUSES = {
   INACTIVE: 'i',
 };
 
-const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling oracle', 'Lotus Cobra'];
+const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 
 const client = createClient({
   name: 'PATRON',

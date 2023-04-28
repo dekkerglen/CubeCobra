@@ -632,13 +632,16 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
 });
 
 router.post('/updateemail', ensureAuth, async (req, res) => {
-  if (req.body.email.toLowerCase() !== req.user.email.toLowerCase()) {
-    const emailUser = await User.getByEmail(req.body.email.toLowerCase());
+  const emailUser = await User.getByEmail(req.body.email.toLowerCase());
 
-    if (emailUser) {
-      req.flash('danger', 'email already taken.');
-      return res.redirect('/user/account');
-    }
+  if (emailUser.id === req.user.id) {
+    req.flash('danger', 'This is already your email.');
+    return res.redirect('/user/account');
+  }
+
+  if (emailUser) {
+    req.flash('danger', 'email already taken.');
+    return res.redirect('/user/account');
   }
 
   const user = await User.getById(req.params.id);

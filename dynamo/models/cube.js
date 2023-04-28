@@ -205,6 +205,7 @@ module.exports = {
       }
     }
 
+    newMetadata.date = new Date().valueOf();
     await client.put(newMetadata);
     await putObject(process.env.DATA_BUCKET, `cube/${id}.json`, newCards);
   },
@@ -317,6 +318,7 @@ module.exports = {
 
     delete document.image;
 
+    document.date = new Date().valueOf();
     await client.put(document);
   },
   putNewCube: async (document) => {

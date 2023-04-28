@@ -40,6 +40,7 @@ const GroupModal = ({
   bulkRemoveCard,
   setModalSelection,
   tagColors,
+  allTags,
 }) => {
   const [status, setStatus] = useState('');
   const [finish, setFinish] = useState('');
@@ -370,6 +371,7 @@ const GroupModal = ({
                   setTags(newTags);
                 }}
                 tagColors={tagColors}
+                suggestions={allTags}
               />
             </fieldset>
             <Row>
@@ -399,12 +401,14 @@ GroupModal.propTypes = {
   bulkRevertEdit: PropTypes.func.isRequired,
   bulkRevertRemove: PropTypes.func.isRequired,
   bulkMoveCard: PropTypes.func.isRequired,
+  allTags: PropTypes.arrayOf(PropTypes.string),
 };
 
 GroupModal.defaultProps = {
   canEdit: false,
   versionDict: {},
   tagColors: [],
+  allTags: [],
 };
 
 export default GroupModal;

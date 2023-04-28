@@ -1,12 +1,7 @@
-I have a cube with multiples of cards, and I can now only change out one at a time. When I try and swap them all at the same time, only one gets updated
-remigrate patron levels, as a lot are -1 for some reason	
-cubes with no basics crash deckbuilder
-tags not autocompleting
-I am unable to update my email address for my Cube Cobra account from the account information page.
-After entering the new email and confirming password, the page hangs for a minute and then times out with a 504 Gateway Time-out.
-add premodern as cube type overrid=9+-+0 
-remove comment from notice broken
+remove comment from notice brokene
 accepting content creator application times out
+approving a package causes it to error
+empty searches for packages have infinite spinning wheel
 
 
 after multiplayer draft, non-host seats error

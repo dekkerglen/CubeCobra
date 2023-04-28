@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types';
 
 import CardPropType from 'proptypes/CardPropType';
-import { COLORS } from 'drafting/draftbots';
 
 export const StepPropType = PropTypes.shape({
   action: PropTypes.oneOf(['pass', 'pick', 'pickrandom', 'trash', 'trashrandom']).isRequired,
   amount: PropTypes.number,
 });
+
+const COLORS = [...'WUBRG'];
 
 const drafterStateSchema = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
