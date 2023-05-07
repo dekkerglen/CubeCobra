@@ -48,10 +48,16 @@ const numFields = [
 const colorFields = ['color', 'identity'];
 
 const FilterCollapse = ({ isOpen, hideDescription }) => {
+  const { filterInput, setFilterInput, filterValid, filterResult } = useContext(CubeContext);
+
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [values, setValues] = useState({});
+  const [searchFilterInput, setSearchFilterInput] = useState(filterInput);
 
-  const { filterInput, setFilterInput, filterValid, filterResult } = useContext(CubeContext);
+  const applySearchFilter = useCallback(
+    () => {
+      setFilterInput(searchFilterInput)
+    }, [setFilterInput]);
 
   const applyAdvanced = useCallback(async () => {
     // Advanced Filter change. Render to filter input.
@@ -72,9 +78,11 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
         tokens.push(`${name}${op}${values[name].join('')}`);
       }
     }
-    setFilterInput(tokens.join(' '));
+    const filterString = tokens.join(' ');
+    setSearchFilterInput(filterString);
+    setFilterInput(filterString);
     setAdvancedOpen(false);
-  }, [setFilterInput, values]);
+  }, [setFilterInput, setSearchFilterInput, values]);
 
   const applyQuick = useCallback(async () => {
     const tokens = [];
@@ -97,9 +105,11 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
       tokens.push(`o:${values.oracle}`);
     }
 
-    setFilterInput(tokens.join(' '));
+    const filterString = tokens.join(' ');
+    setSearchFilterInput(filterString);
+    setFilterInput(filterString);
     setAdvancedOpen(false);
-  }, [setFilterInput, values]);
+  }, [setFilterInput, setSearchFilterInput, values]);
 
   const reset = useCallback(() => {
     setFilterInput('');
@@ -126,9 +136,12 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
               placeholder={'name:"Ambush Viper"'}
               valid={filterInput.length > 0 && filterValid}
               invalid={filterInput.length > 0 && !filterValid}
-              value={filterInput}
-              onChange={(event) => setFilterInput(event.target.value)}
+              value={searchFilterInput}
+              onChange={(event) => setSearchFilterInput(event.target.value)}
             />
+            <Button color="success" onClick={applySearchFilter}>
+              Apply Filter
+            </Button>
           </InputGroup>
           <small>
             Having trouble using filter syntax? Check out our <a href="/filters">syntax guide</a>.
