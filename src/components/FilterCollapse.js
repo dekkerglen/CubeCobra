@@ -54,10 +54,9 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
   const [values, setValues] = useState({});
   const [searchFilterInput, setSearchFilterInput] = useState(filterInput);
 
-  const applySearchFilter = useCallback(
-    () => {
-      setFilterInput(searchFilterInput)
-    }, [setFilterInput]);
+  const applySearchFilter = () => {
+    setFilterInput(searchFilterInput);
+  };
 
   const applyAdvanced = useCallback(async () => {
     // Advanced Filter change. Render to filter input.
@@ -140,7 +139,7 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
               onChange={(event) => setSearchFilterInput(event.target.value)}
             />
             <Button color="success" onClick={applySearchFilter}>
-              Apply Filter
+              Apply
             </Button>
           </InputGroup>
           <small>
