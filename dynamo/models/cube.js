@@ -97,12 +97,19 @@ const client = createClient({
 });
 
 const addDetails = (cards) => {
-  cards.forEach((card, index) => {
-    card.details = {
-      ...carddb.cardFromId(card.cardID),
-    };
-    card.index = index;
-  });
+  for (let i = 0; i < cards.length; i++) {
+    if (cards[i]) {
+      cards[i].details = {
+        ...carddb.cardFromId(cards[i].cardID),
+      };
+      cards[i].index = i;
+    } else {
+      cards[i] = {
+        details: carddb.getPlaceholderCard(null),
+        index: i,
+      };
+    }
+  }
 };
 
 const stripDetails = (cards) => {

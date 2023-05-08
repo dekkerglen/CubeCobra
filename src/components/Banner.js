@@ -6,66 +6,60 @@ import Advertisment from 'components/Advertisment';
 
 const BANNER_RATE = 3; // an alternate message appears with probability of 1/BANNER_RATE
 
-// const options = [
-//   <>
-//     Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
-//     <strong>
-//       <a href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
-//         inked gaming page
-//       </a>
-//       !
-//     </strong>
-//   </>,
-//   <>
-//     Want to showcase your cube? You can feature it as a reward for{' '}
-//     <strong>
-//       <a href="https://www.patreon.com/cubecobra">donating</a>
-//     </strong>{' '}
-//     to Cube Cobra.{' '}
-//     <strong>
-//       <a href="/donate">Find out more.</a>
-//     </strong>
-//   </>,
-//   <>
-//     Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
-//     <strong>
-//       <a href="/donate">Find out more.</a>
-//     </strong>
-//   </>,
-//   <>
-//     Interested in advertising on Cube Cobra?{' '}
-//     <strong>
-//       <a href="/contact">Contact us!</a>
-//     </strong>
-//   </>,
-// ];
+const options = [
+  <>
+    Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
+    <strong>
+      <a href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
+        inked gaming page
+      </a>
+      !
+    </strong>
+  </>,
+  <>
+    Want to showcase your cube? You can feature it as a reward for{' '}
+    <strong>
+      <a href="https://www.patreon.com/cubecobra">donating</a>
+    </strong>{' '}
+    to Cube Cobra.{' '}
+    <strong>
+      <a href="/donate">Find out more.</a>
+    </strong>
+  </>,
+  <>
+    Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
+    <strong>
+      <a href="/donate">Find out more.</a>
+    </strong>
+  </>,
+];
 
-const options = ['cubeconbanner1.png', 'cubeconbanner2.png', 'cubeconbanner3.png'];
+// const options = ['cubeconbanner1.png', 'cubeconbanner2.png', 'cubeconbanner3.png'];
 
 const Banner = () => {
   const user = useContext(UserContext);
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
 
-  if (option < options.length) {
-    return (
-      <a href="https://mtgcubecon.com" target="_blank" rel="noopener noreferrer">
-        <img src={`/content/${options[option]}`} alt="CubeCon Banner" className="w-100" />
-      </a>
-    );
-  }
+  // if (option < options.length) {
+  //   return (
+  //     <a href="https://mtgcubecon.com" target="_blank" rel="noopener noreferrer">
+  //       <img src={`/content/${options[option]}`} alt="CubeCon Banner" className="w-100" />
+  //     </a>
+  //   );
+  // }
 
   if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
 
-  // if (option < options.length) {
-  //   return (
-  //     <Col xs="12" className="py-2">
-  //       <Card>
-  //         <CardBody className="bg-advert">{options[option]}</CardBody>
-  //       </Card>
-  //     </Col>
-  //   );
-  // }
+  if (option < options.length) {
+    return (
+      <Col xs="12" className="py-2">
+        <Card>
+          <CardBody className="bg-advert">{options[option]}</CardBody>
+        </Card>
+      </Col>
+    );
+  }
 
   return (
     <div className="py-2">

@@ -1,3 +1,5 @@
+can't load: https://cubecobra.com/cube/list/MTGclassic
+
 remove comment from notice brokene
 accepting content creator application times out
 approving a package causes it to error

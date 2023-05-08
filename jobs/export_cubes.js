@@ -7,19 +7,25 @@ const carddb = require('../serverjs/carddb');
 const Cube = require('../dynamo/models/cube');
 
 const processCube = async (cube, oracleToIndex) => {
-  const cards = await Cube.getCards(cube.id);
+  try {
+    const cards = await Cube.getCards(cube.id);
 
-  return {
-    cards: cards.mainboard.map((card) => oracleToIndex[card.details.oracle_id] || -1),
-    id: cube.id,
-    name: cube.name,
-    owner: cube.owner.username,
-    owner_id: cube.owner.id,
-    image_uri: cube.image.uri,
-    iamge_artist: cube.image.artist,
-    card_count: cards.mainboard.length,
-    following: cube.following,
-  };
+    return {
+      cards: cards.mainboard.map((card) => oracleToIndex[card.details.oracle_id] || -1),
+      id: cube.id,
+      name: cube.name,
+      owner: cube.owner.username,
+      owner_id: cube.owner.id,
+      image_uri: cube.image.uri,
+      iamge_artist: cube.image.artist,
+      card_count: cards.mainboard.length,
+      following: cube.following,
+    };
+  } catch (err) {
+    console.error(err);
+    console.log(`Error processing cube ${cube.id}`);
+    return null;
+  }
 };
 
 (async () => {
@@ -40,7 +46,7 @@ const processCube = async (cube, oracleToIndex) => {
 
     const processedCubes = await Promise.all(result.items.map((item) => processCube(item, oracleToIndex)));
 
-    cubes.push(...processedCubes);
+    cubes.push(...processedCubes.filter((cube) => cube !== null));
 
     console.log(`Processed ${processed} cubes`);
   } while (lastKey);
