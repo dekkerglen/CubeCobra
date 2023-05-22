@@ -57,6 +57,7 @@ const processPicks = (draft, oracleToIndex) => {
       draft.type === Draft.TYPES.DRAFT &&
       seat.owner
     ) {
+      const seatPicks = [];
       for (let j = 0; j < draft.seats[0].pickorder.length; j++) {
         const drafterState = getDrafterState(draft, 0, j);
 
@@ -66,18 +67,30 @@ const processPicks = (draft, oracleToIndex) => {
         );
         const pool = drafterState.picked.map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex));
 
-        picks.push({
-          cube: draft.cube,
+        seatPicks.push({
           owner: seat.owner.id,
           pack,
           picked,
           pool,
         });
       }
+      if (seatPicks.length > 0) {
+        picks.push(seatPicks);
+      }
     }
   });
 
-  return picks;
+  if (seats.length === 0) {
+    return [];
+  }
+
+  return [
+    {
+      seats,
+      cube: draft.cube,
+      basics: (draft.basics || []).map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
+    },
+  ];
 };
 
 (async () => {
