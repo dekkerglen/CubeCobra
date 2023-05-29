@@ -99,6 +99,9 @@ function initializeCatalog() {
 initializeCatalog();
 
 function downloadFile(url, filePath) {
+  const folder = filePath.substring(0, filePath.lastIndexOf('/'));
+  const folderExists = fs.existsSync(folder);
+  if (!folderExists) fs.mkdirSync(path.join(__dirname, `../${folder}`));
   const file = fs.createWriteStream(filePath);
   return new Promise((resolve, reject) => {
     https
