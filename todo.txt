@@ -1,4 +1,13 @@
+<<<<<<< Updated upstream
 can't load: https://cubecobra.com/cube/list/MTGclassic
+=======
+Just saw you updated the Featured Cubes. Mine went from 2 in the queue to 74 😦 https://cubecobra.com/cube/overview/ar
+This one was swapped out for it: https://cubecobra.com/cube/overview/60520b18b187bd105a2323a3
+
+snakefoot on discord needs their spot in queue 6/1/2023
+
+getting a 504 when trying to change which of my cubes is in the feature queue
+>>>>>>> Stashed changes
 
 remove comment from notice brokene
 accepting content creator application times out

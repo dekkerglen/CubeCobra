@@ -76,10 +76,11 @@ const encode = (oracles) => {
   }
 
   const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
-  const tensor = tf.tensor(vector);
 
-  const encoded = encoder.predict(tensor);
-  return encoded.dataSync();
+  return tf.tidy(() => {
+    const tensor = tf.tensor(vector);
+    return encoder.predict(tensor).dataSync();
+  });
 };
 
 const recommend = (oracles) => {
@@ -91,12 +92,13 @@ const recommend = (oracles) => {
   }
 
   const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
-  const tensor = tf.tensor(vector);
 
-  const encoded = encoder.predict(tensor);
-  const recommendations = recommendDecoder.predict([encoded]);
+  const array = tf.tidy(() => {
+    const tensor = tf.tensor(vector);
+    const encoded = encoder.predict(tensor);
 
-  const array = recommendations.dataSync();
+    return recommendDecoder.predict([encoded]).dataSync();
+  });
 
   const res = [];
 
@@ -130,13 +132,13 @@ const build = (oracles) => {
     };
   }
 
-  const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
-  const tensor = tf.tensor(vector);
+  const array = tf.tidy(() => {
+    const vector = [encodeIndeces(oracles.map((oracle) => oracleToIndex[oracle]))];
+    const tensor = tf.tensor(vector);
 
-  const encoded = encoder.predict(tensor);
-  const recommendations = deckbuilderDecoder.predict([encoded]);
-
-  const array = recommendations.dataSync();
+    const encoded = encoder.predict(tensor);
+    return deckbuilderDecoder.predict([encoded]).dataSync();
+  });
 
   const res = [];
 
@@ -155,13 +157,12 @@ const build = (oracles) => {
 };
 
 const draft = (pack, pool) => {
-  const vector = [encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]))];
-  const tensor = tf.tensor(vector);
-
-  const encoded = encoder.predict(tensor);
-  const recommendations = draftDecoder.predict([encoded]);
-
-  const array = recommendations.dataSync();
+  const array = tf.tidy(() => {
+    const vector = [encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]))];
+    const tensor = tf.tensor(vector);
+    const encoded = encoder.predict(tensor);
+    return draftDecoder.predict([encoded]).dataSync();
+  });
 
   const packVector = encodeIndeces(pack.map((oracle) => oracleToIndex[oracle]));
   const mask = packVector.map((x) => 1e9 * (1 - x));

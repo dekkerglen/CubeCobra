@@ -30,10 +30,11 @@
     "cards": "node --max-old-space-size=6000 force_update.js",
     "start": "npm install && npm run cards && node server.js",
     "sass": "sass scss:public/css/bootstrap --no-source-map",
-    "run-daily-jobs": "sh jobs/definition/daily.sh",
-    "run-weekly-jobs": "sh jobs/definition/weekly.sh",
-    "run-monthly-jobs": "sh jobs/definition/monthly.sh",
-    "run-constantly-jobs": "sh jobs/definition/constantly.sh"
+    "update-draft-history": "node --max-old-space-size=4096 jobs/update_draft_history.js",
+    "update-cube-history": "node --max-old-space-size=4096 jobs/update_cube_history.js",
+    "update-metadata-dict": "node --max-old-space-size=4096 jobs/update_metadata_dict.js",
+    "update-cards": "node --max-old-space-size=4096 jobs/update_cards.js",
+    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
