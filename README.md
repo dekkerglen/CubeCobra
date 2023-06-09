@@ -73,6 +73,7 @@ For the first setup, you will need to run:
 
 ```sh
 npm install
+node one_shot_scripts/create_local_files.js
 node --max-old-space-size=4096 one_shot_scripts/createTables.js
 node --max-old-space-size=4096 jobs/update_cards.js
 ```
