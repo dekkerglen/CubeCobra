@@ -7,7 +7,7 @@ const carddb = require('../serverjs/carddb');
 const { getDrafterState } = require('../dist/drafting/draftutil');
 const Draft = require('../dynamo/models/draft');
 
-const draftCardIndexToOracle = (cardIndex, draftCards, oracleToIndex) => {
+const draftCardIndexToOracle = (cardIndex, draftCards) => {
   const card = draftCards[cardIndex];
   if (!card) {
     return -1;
@@ -17,7 +17,7 @@ const draftCardIndexToOracle = (cardIndex, draftCards, oracleToIndex) => {
 };
 
 const draftCardIndexToOracleIndex = (cardIndex, draftCards, oracleToIndex) => {
-  return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards, oracleToIndex)] || -1;
+  return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] || -1;
 };
 
 const processDeck = (draft, oracleToIndex) => {
@@ -120,10 +120,10 @@ const processPicks = (draft, oracleToIndex) => {
     const drafts = await Draft.batchGet(batch.filter((item) => item.complete).map((row) => row.id));
 
     const processedDrafts = drafts.map((draft) => processDeck(draft, oracleToIndex));
-    // const processedPicks = drafts.map((draft) => processPicks(draft, oracleToIndex));
+    const processedPicks = drafts.map((draft) => processPicks(draft, oracleToIndex));
 
     fs.writeFileSync(`./temp/export/decks/${i}.json`, JSON.stringify(processedDrafts.flat()));
-    // fs.writeFileSync(`./temp/export/picks/${i}.json`, JSON.stringify(processedPicks.flat()));
+    fs.writeFileSync(`./temp/export/picks/${i}.json`, JSON.stringify(processedPicks.flat()));
 
     console.log(`Processed ${i + 1} / ${batches.length} batches`);
   }

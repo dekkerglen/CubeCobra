@@ -456,46 +456,40 @@ module.exports = {
     return id;
   },
   batchPut: async (documents) => {
-    try {
-      const filtered = [];
-      const keys = new Set();
+    const filtered = [];
+    const keys = new Set();
 
-      for (const document of documents) {
-        if (!keys.has(document.id)) {
-          filtered.push(document);
-          keys.add(document.id);
-        }
+    for (const document of documents) {
+      if (!keys.has(document.id)) {
+        filtered.push(document);
+        keys.add(document.id);
       }
-
-      documents = documents.map((document) => dehydrate(document));
-
-      const items = filtered.map((document) => ({
-        [FIELDS.ID]: document[FIELDS.ID],
-        [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
-        [FIELDS.OWNER]: document[FIELDS.OWNER],
-        [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
-        [FIELDS.DATE]: document[FIELDS.DATE],
-        [FIELDS.TYPE]: document[FIELDS.TYPE],
-        [FIELDS.COMPLETE]: document[FIELDS.COMPLETE],
-        [FIELDS.NAME]: document[FIELDS.NAME] ? document[FIELDS.NAME].slice(0, 300) : 'Untitled',
-        [FIELDS.SEAT_NAMES]: document[FIELDS.SEAT_NAMES],
-      }));
-
-      await client.batchPut(items);
-
-      await Promise.all(
-        filtered.map(async (document) => {
-          await putObject(process.env.DATA_BUCKET, `cardlist/${document.id}.json`, stripDetails(document.cards));
-          await putObject(process.env.DATA_BUCKET, `seats/${document.id}.json`, {
-            seats: document.seats,
-            basics: document.basics,
-            InitialState: document.InitialState,
-          });
-        }),
-      );
-    } catch (e) {
-      console.log(e);
     }
+
+    const items = filtered.map((document) => ({
+      [FIELDS.ID]: document[FIELDS.ID],
+      [FIELDS.CUBE_ID]: document[FIELDS.CUBE_ID],
+      [FIELDS.OWNER]: document[FIELDS.OWNER],
+      [FIELDS.CUBE_OWNER]: document[FIELDS.CUBE_OWNER],
+      [FIELDS.DATE]: document[FIELDS.DATE],
+      [FIELDS.TYPE]: document[FIELDS.TYPE],
+      [FIELDS.COMPLETE]: document[FIELDS.COMPLETE],
+      [FIELDS.NAME]: document[FIELDS.NAME] ? document[FIELDS.NAME].slice(0, 300) : 'Untitled',
+      [FIELDS.SEAT_NAMES]: document[FIELDS.SEAT_NAMES],
+    }));
+
+    await client.batchPut(items);
+
+    await Promise.all(
+      filtered.map(async (document) => {
+        await putObject(process.env.DATA_BUCKET, `cardlist/${document.id}.json`, stripDetails(document.cards));
+        await putObject(process.env.DATA_BUCKET, `seats/${document.id}.json`, {
+          seats: document.seats,
+          basics: document.basics,
+          InitialState: document.InitialState,
+        });
+      }),
+    );
   },
   createTable: async () => client.createTable(),
   convertDeck: (deck, draft, type) => {
@@ -522,6 +516,10 @@ module.exports = {
         seat.pickorder.map((pick) => {
           // if it's a number, we need to convert from draft cards index to deck cards index
           if (typeof pick === 'number') {
+            // if it's out of bounds, we have to return -1
+            if (pick >= draft.cards.length) {
+              return -1;
+            }
             return cards.findIndex((card) => draft.cards[pick].cardID === card.cardID);
           }
 

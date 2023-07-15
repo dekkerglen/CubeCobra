@@ -34,7 +34,10 @@
     "update-cube-history": "node --max-old-space-size=4096 jobs/update_cube_history.js",
     "update-metadata-dict": "node --max-old-space-size=4096 jobs/update_metadata_dict.js",
     "update-cards": "node --max-old-space-size=4096 jobs/update_cards.js",
-    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards"
+    "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards",
+    "update-hashes": "node --max-old-space-size=4096 jobs/repair_hashes.js",
+    "upload-exports": "aws s3 sync temp/export s3://cubecobra",
+    "exports": "node --max-old-space-size=4096 jobs/export_cubes.js && node --max-old-space-size=4096 jobs/export_decks.js && node --max-old-space-size=4096 jobs/export_simple_card_dict.js"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
