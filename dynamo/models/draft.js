@@ -42,6 +42,7 @@ const client = createClient({
     [FIELDS.CUBE_OWNER]: 'S',
     [FIELDS.OWNER]: 'S',
     [FIELDS.DATE]: 'N',
+    [FIELDS.TYPE]: 'S',
   },
   indexes: [
     {
