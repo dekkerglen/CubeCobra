@@ -75,6 +75,7 @@ condition -> (
   | setCondition
   | powerCondition
   | toughnessCondition
+  | ptSumCondition
   | tagCondition
   | finishCondition
   | priceCondition
@@ -124,9 +125,11 @@ oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePr
 
 setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
-powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c), 10), valuePred) %}
+powerCondition -> ("pow"i | "power"i) halfIntOpValue {% ([, valuePred]) => genericCondition('power', (c) => parseFloat(cardPower(c)), valuePred) %}
 
-toughnessCondition -> ("tou"i | "tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c), 10), valuePred) %}
+toughnessCondition -> ("tou"i | "tough"i | "toughness"i) halfIntOpValue {% ([, valuePred]) => genericCondition('toughness', (c) => parseFloat(cardToughness(c)), valuePred) %}
+
+ptSumCondition -> ("pt"i | "wildpair"i) halfIntOpValue {% ([, valuePred]) => genericCondition('pt', (c) => parseFloat(cardToughness(c)) + parseFloat(cardPower(c)), valuePred) %}
 
 tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
