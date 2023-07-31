@@ -30,6 +30,7 @@ const processDeck = (draft, oracleToIndex) => {
   draft.seats.forEach((seat) => {
     if (seat.owner) {
       seats.push({
+        id: draft.id,
         cube: draft.cube,
         owner: seat.owner.id,
         mainboard: seat.mainboard.flat(2).map((pick) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex)),
