@@ -9,6 +9,9 @@ import { getLabels, sortIntoGroups } from 'utils/Sort';
 import AutocardListItem from 'components/AutocardListItem';
 import CardPropType from 'proptypes/CardPropType';
 import CubeContext from 'contexts/CubeContext';
+import withCardModal from './WithCardModal';
+
+const CardModalLink = withCardModal(AutocardListItem);
 
 const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   const bothCmc = sortIntoGroups(both, 'Mana Value');
@@ -36,7 +39,17 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
             ].map(([cards, key]) => (
               <Col xs="4" key={key}>
                 {(cards[cmc] || []).map((card, index) => (
-                  <AutocardListItem key={index} card={card} />
+                  <CardModalLink 
+                  key={card.index}
+                  card={card}
+                  altClick={() => {
+                    window.open(`/tool/card/${card.cardID}`);
+                  }}
+                  className={index === 0 ? 'cmc-group' : undefined}
+                  modalProps={{
+                    card,
+                  }}  
+                />
                 ))}
               </Col>
             ))}
