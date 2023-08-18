@@ -4,24 +4,26 @@ import { fromMarkdown } from 'markdown/cardlink/mdast-cardlink';
 import { add } from 'markdown/utils';
 
 function oncard(node, index, parent) {
-  node.children = [];
   if (node.value[0] === '!') {
+    // Begins with an exclamation point -> it's a card image
     node.value = node.value.substring(1);
     node.type = 'cardimage';
-    node.data.hName = 'cardimage';
   }
 
   if (node.value[0] === '/') {
+    // Begins with a slash -> include back side in autocard
     node.value = node.value.substring(1);
     node.dfc = true;
   }
 
   if (node.value[0] === '!' && node.type !== 'cardimage') {
+    // Check for exclamation point again in case we began with "/!"
     node.value = node.value.substring(1);
     node.type = 'cardimage';
   }
 
   if (node.type === 'cardimage' && (parent.type === 'paragraph' || parent.inParagraph)) {
+    // Needed to determine whether the image is rendered in a div or in a span
     node.inParagraph = true;
   }
 

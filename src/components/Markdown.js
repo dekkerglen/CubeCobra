@@ -7,7 +7,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
-import { ALL_PLUGINS, BASE_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS, rehypeOptions } from 'markdown/parser';
+import { ALL_PLUGINS, LIMITED_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS } from 'markdown/parser';
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -148,8 +148,7 @@ const Markdown = ({ markdown, limited }) => {
     <ReactMarkdown
       className="markdown"
       remarkPlugins={ALL_PLUGINS}
-      rehypePlugins={limited ? BASE_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
-      remarkRehypeOptions={rehypeOptions}
+      rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       components={RENDERERS}
     >
       {markdownStr}

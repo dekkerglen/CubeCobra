@@ -12,18 +12,19 @@ import breaks from 'remark-breaks';
 import symbols from 'markdown/symbols';
 import userlink from 'markdown/userlink';
 
+// remark plugins that are necessary in all use-cases
 const BASE_PLUGINS = [cardrow, centering, math, cardlink, [gfm, { singleTilde: false }], symbols];
 
+// all remark plugins used in the parser
 export const ALL_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
-export const BASE_REHYPE_PLUGINS = [rehypeKatex];
+// rehype plugins used in all use-cases, including limited Markdown versions (i.e. comments)
+export const LIMITED_REHYPE_PLUGINS = [rehypeKatex];
 
-export const ALL_REHYPE_PLUGINS = [...BASE_REHYPE_PLUGINS, slug, autoHeadings];
+// rehype plugins used in fully-featured displays
+export const ALL_REHYPE_PLUGINS = [...LIMITED_REHYPE_PLUGINS, slug, autoHeadings];
 
-export const rehypeOptions = {
-  passThrough: [],
-};
-
+// runs parser to detect users that are mentioned in some Markdown content
 export function findUserLinks(text) {
   const mentions = [];
   const processor = unified()
@@ -36,7 +37,6 @@ export function findUserLinks(text) {
 
 export default {
   findUserLinks,
-  rehypeOptions,
   BASE_PLUGINS,
   ALL_PLUGINS,
 };
