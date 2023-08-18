@@ -7,7 +7,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
-import { LIMITED_PLUGINS, ALL_PLUGINS, REHYPE_PLUGINS, rehypeOptions } from 'markdown/parser';
+import { ALL_PLUGINS, BASE_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS, rehypeOptions } from 'markdown/parser';
 
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
@@ -50,15 +50,11 @@ const renderLink = (node) => {
   }
 
   return (
-    /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
     <Link href={`/leave?url=${encodeURIComponent(ref)}`} modalProps={{ link: ref }}>
       {node.children}
     </Link>
   );
 };
-
-const renderHeading = (node) =>
-  React.createElement(`h${node.level}`, node.node?.data?.hProperties ?? {}, node.children);
 
 const renderCode = (node) => {
   const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
@@ -81,8 +77,7 @@ const renderMath = (node) => <Latex trusted={false} displayMode>{`$$ ${node.valu
 
 const renderInlineMath = (node) => <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
 
-const renderUserlink = (node) => {
-  const name = node.node.value;
+const renderUserlink = ({ name }) => {
   return (
     <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
       @{name}
@@ -90,12 +85,12 @@ const renderUserlink = (node) => {
   );
 };
 
-const renderSymbol = (node) => {
-  const symbol = node.node.value.replace('/', '-').toLowerCase();
+const renderSymbol = ({ value }) => {
+  const symbol = value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };
 
-const renderCardlink = ({ node: { name, id, dfc } }) => {
+const renderCardlink = ({ name, id, dfc }) => {
   const idURL = encodeURIComponent(id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -108,7 +103,7 @@ const renderCardlink = ({ node: { name, id, dfc } }) => {
 };
 
 const renderCardImage = (node) => {
-  const idURL = encodeURIComponent(node.node.id);
+  const idURL = encodeURIComponent(node.id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
@@ -134,12 +129,6 @@ const RENDERERS = {
   a: renderLink,
   img: renderImage,
   blockquote: renderBlockQuote,
-  h1: renderHeading,
-  h2: renderHeading,
-  h3: renderHeading,
-  h4: renderHeading,
-  h5: renderHeading,
-  h6: renderHeading,
   pre: renderCode,
   table: renderTable,
   // plugins
@@ -158,8 +147,8 @@ const Markdown = ({ markdown, limited }) => {
   return (
     <ReactMarkdown
       className="markdown"
-      remarkPlugins={limited ? LIMITED_PLUGINS : ALL_PLUGINS}
-      rehypePlugins={REHYPE_PLUGINS}
+      remarkPlugins={ALL_PLUGINS}
+      rehypePlugins={limited ? BASE_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       remarkRehypeOptions={rehypeOptions}
       components={RENDERERS}
     >

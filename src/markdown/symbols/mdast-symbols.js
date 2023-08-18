@@ -1,5 +1,5 @@
 function enterSymbol(token) {
-  this.enter({ type: 'element', tagName: 'symbol', value: '', children: [] }, token);
+  this.enter({ type: 'symbol', value: '', data: { hName: 'symbol' } }, token);
   this.buffer();
 }
 
@@ -15,6 +15,7 @@ function exitSymbol(token) {
   const data = this.resume();
   const node = this.exit(token);
   node.value = data;
+  node.data.hProperties = { value: data };
 }
 
 export const fromMarkdown = {

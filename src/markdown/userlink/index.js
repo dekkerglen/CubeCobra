@@ -9,9 +9,6 @@ function userlink(options = {}) {
   add(data, 'fromMarkdownExtensions', fromMarkdown);
 
   function visitor(node) {
-	node.type = 'element';
-	node.tagName = 'userlink';
-	node.children = [];
     if (typeof options.callback === 'function') {
       options.callback(node.value);
     }
