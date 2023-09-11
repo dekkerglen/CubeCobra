@@ -1,5 +1,5 @@
 function enterCardlink(token) {
-  this.enter({ type: 'cardlink', children: [], value: '' }, token);
+  this.enter({ type: 'cardlink', value: '', data: { hName: 'cardlink' } }, token);
   this.buffer();
 }
 

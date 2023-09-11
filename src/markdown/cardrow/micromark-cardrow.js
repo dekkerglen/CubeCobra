@@ -1,12 +1,12 @@
 import assert from 'assert';
-import {  markdownLineEnding } from 'micromark-util-character';
+import { markdownLineEnding } from 'micromark-util-character';
 import { splice } from 'micromark-util-chunked';
 
 function resolveCardrow(events, context) {
+  // function run on the events once a card row is successfully fully tokenized
   const contentEnd = 4;
   const contentStart = 3;
 
-  assert(contentEnd > contentStart, 'content cannot end before it starts');
   const text = {
     type: 'chunkText',
     start: events[contentStart][1].start,
@@ -14,6 +14,7 @@ function resolveCardrow(events, context) {
     contentType: 'text',
   };
 
+  // insert 'chunkText' events into the stream
   splice(events, contentEnd, 0, [['exit', text, context]]);
   splice(events, contentStart + 1, 0, [['enter', text, context]]);
   return events;

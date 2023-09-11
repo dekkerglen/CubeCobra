@@ -1,5 +1,5 @@
 function enterCardrow(token) {
-  this.enter({ type: 'cardrow', children: [] }, token);
+  this.enter({ type: 'cardrow', children: [], data: { hName: 'cardrow' } }, token);
 }
 
 function exitCardrow(token) {

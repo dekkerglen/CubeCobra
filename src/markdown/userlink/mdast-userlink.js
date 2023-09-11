@@ -1,5 +1,5 @@
 function enterUserlink(token) {
-  this.enter({ type: 'userlink', value: '' }, token);
+  this.enter({ type: 'userlink', value: '', data: { hName: 'userlink' } }, token);
   this.buffer();
 }
 
@@ -15,6 +15,7 @@ function exitUserlink(token) {
   const data = this.resume();
   const node = this.exit(token);
   node.value = data;
+  node.data.hProperties = { name: data };
 }
 
 export const fromMarkdown = {

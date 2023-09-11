@@ -1,8 +1,8 @@
 import assert from 'assert';
 import { markdownSpace, markdownLineEnding } from 'micromark-util-character';
 import { factorySpace } from 'micromark-factory-space';
-import { types } from 'micromark-util-symbol/types'
-import { codes } from 'micromark-util-symbol/codes'
+import { types } from 'micromark-util-symbol';
+import { codes } from 'micromark-util-symbol';
 import { shallowEqual } from 'markdown/utils';
 
 function centering() {
@@ -52,8 +52,7 @@ function centering() {
     return start;
 
     function start(code) {
-      if (code !== 60)
-        return nok(code); // expected <
+      if (code !== 60) return nok(code); // expected <
       effects.enter('centeringSuffix');
       return sequence(code);
     }
