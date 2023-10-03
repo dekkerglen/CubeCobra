@@ -37,7 +37,7 @@
     "update-all": "npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards",
     "update-hashes": "node --max-old-space-size=4096 jobs/repair_hashes.js",
     "upload-exports": "aws s3 sync temp/export s3://cubecobra",
-    "exports": "node --max-old-space-size=4096 jobs/export_cubes.js && node --max-old-space-size=4096 jobs/export_decks.js && node --max-old-space-size=4096 jobs/export_simple_card_dict.js"
+    "exports": "node --max-old-space-size=4096 jobs/export_cubes.js && node --max-old-space-size=4096 jobs/export_decks.js && node --max-old-space-size=4096 jobs/export_simple_card_dict.js && npm run upload-exports"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
@@ -58,7 +58,7 @@
     "aws-sdk": "^2.1253.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
-    "bad-words": "^3.0.3",
+    "bad-words": "^3.0.4",
     "bcryptjs": "^2.4.3",
     "big-json": "^3.2.0",
     "body-parser": "^1.19.0",
