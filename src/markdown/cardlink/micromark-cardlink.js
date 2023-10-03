@@ -23,7 +23,7 @@ function tokenizeCardlink(effects, ok, nok) {
 
   function valueStart(code) {
     if (code === 93) {
-      return nok(code);
+      return nok(code); // ']' immediately after '[['
     }
 
     effects.enter('cardlinkValue');
@@ -32,10 +32,12 @@ function tokenizeCardlink(effects, ok, nok) {
 
   function value(code) {
     if (!code || code < 0) {
+      // card link cannot span multiple lines
       return nok(code);
     }
 
     if (code === 93) {
+      // ']'
       effects.exit('cardlinkValue');
       return close(code);
     }

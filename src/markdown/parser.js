@@ -3,8 +3,8 @@ import remark from 'remark-parse';
 import gfm from 'remark-gfm';
 import math from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import slug from 'remark-slug';
-import headings from 'remark-autolink-headings';
+import slug from 'rehype-slug';
+import autoHeadings from 'rehype-autolink-headings';
 import cardlink from 'markdown/cardlink';
 import cardrow from 'markdown/cardrow';
 import centering from 'markdown/centering';
@@ -12,27 +12,19 @@ import breaks from 'remark-breaks';
 import symbols from 'markdown/symbols';
 import userlink from 'markdown/userlink';
 
-const VALID_SYMBOLS = 'wubrgcmtsqepxyz/-0123456789';
+// remark plugins that are necessary in all use-cases
+const BASE_PLUGINS = [cardrow, centering, math, cardlink, [gfm, { singleTilde: false }], symbols];
 
-const BASE_PLUGINS = [
-  cardrow,
-  centering,
-  math,
-  cardlink,
-  [gfm, { singleTilde: false }],
-  [symbols, { allowed: VALID_SYMBOLS }],
-];
+// all remark plugins used in the parser
+export const ALL_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
-export const LIMITED_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
+// rehype plugins used in all use-cases, including limited Markdown versions (i.e. comments)
+export const LIMITED_REHYPE_PLUGINS = [rehypeKatex];
 
-export const ALL_PLUGINS = [...LIMITED_PLUGINS, slug, headings];
+// rehype plugins used in fully-featured displays
+export const ALL_REHYPE_PLUGINS = [...LIMITED_REHYPE_PLUGINS, slug, autoHeadings];
 
-export const REHYPE_PLUGINS = [rehypeKatex];
-
-export const rehypeOptions = {
-  passThrough: ['element'],
-};
-
+// runs parser to detect users that are mentioned in some Markdown content
 export function findUserLinks(text) {
   const mentions = [];
   const processor = unified()
@@ -45,9 +37,6 @@ export function findUserLinks(text) {
 
 export default {
   findUserLinks,
-  rehypeOptions,
-  VALID_SYMBOLS,
   BASE_PLUGINS,
-  LIMITED_PLUGINS,
   ALL_PLUGINS,
 };
