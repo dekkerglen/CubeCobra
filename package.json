@@ -142,7 +142,7 @@
     "request": "^2.88.0",
     "rss": "^1.2.2",
     "rss-parser": "^3.9.0",
-    "sanitize-html": "^2.3.2",
+    "sanitize-html": "^2.11.0",
     "sass": "^1.44.0",
     "seedrandom": "^3.0.5",
     "serialize-javascript": "^3.1.0",
