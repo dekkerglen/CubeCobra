@@ -55,7 +55,7 @@
     "@tensorflow/tfjs-node": "^4.4.0",
     "@testing-library/react": "^10.0.4",
     "assert": "^2.0.0",
-    "aws-sdk": "^2.1253.0",
+    "aws-sdk": "^2.1478.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
     "bad-words": "^3.0.4",
