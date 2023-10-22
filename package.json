@@ -70,7 +70,7 @@
     "connect-flash": "^0.1.1",
     "core-js": "^3.33.1",
     "core-js-pure": "^3.33.1",
-    "css-loader": "^3.4.2",
+    "css-loader": "^6.8.1",
     "csurf": "^1.11.0",
     "dotenv": "^8.2.0",
     "dynamodb-store": "^1.2.0",
