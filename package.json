@@ -94,7 +94,7 @@
     "micromark-util-character": "^2.0.1",
     "micromark-util-chunked": "^2.0.0",
     "micromark-util-symbol": "^2.0.0",
-    "mongoose": "^5.12.10",
+    "mongoose": "^5.13.21",
     "mongoose-seed": "^0.6.0",
     "nearley": "^2.19.3",
     "node-cache": "^5.1.2",
