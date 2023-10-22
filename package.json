@@ -44,7 +44,7 @@
   "sideEffects": "false",
   "browserslist": "> 0.5%, Firefox ESR, not dead, not IE > 0, not IE_Mob > 0, not safari < 7, not kaios > 0",
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "^3.301.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.433.0",
     "@babel/core": "^7.23.2",
     "@babel/eslint-parser": "^7.22.15",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
