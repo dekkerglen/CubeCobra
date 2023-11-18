@@ -114,7 +114,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
           value={cardStatus(card)}
           onChange={(event) => updateField('status', event.target.value)}
         >
-          {getLabels(null, 'status').map((status) => (
+          {getLabels(null, 'Status').map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
@@ -288,7 +288,7 @@ const ListView = ({ cards }) => {
             <th>Name</th>
             <th>Version</th>
             <th>Type</th>
-            <th>status</th>
+            <th>Status</th>
             <th>Finish</th>
             <th>MV</th>
             <th>Color</th>
