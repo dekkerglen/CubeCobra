@@ -36,7 +36,7 @@ module.exports = {
   put: async (document) => {
     await client.put({
       [FIELDS.CUBE]: document[FIELDS.CUBE],
-      [FIELDS.DATE]: new Date().valueOf(),
+      [FIELDS.DATE]: document[FIELDS.DATE],
       [FIELDS.OWNER]: document[FIELDS.OWNER],
       [FIELDS.FEATURED_ON]: document[FIELDS.FEATURED_ON],
       [FIELDS.STATUS]: STATUS.ACTIVE,
