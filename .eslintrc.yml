@@ -4,7 +4,7 @@ env:
 extends:
   - airbnb
   - prettier
-parser: 'babel-eslint'
+parser: '@babel/eslint-parser'
 plugins:
   - prettier
   - react-hooks
