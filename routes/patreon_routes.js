@@ -123,11 +123,13 @@ router.post('/hook', async (req, res) => {
   }
 });
 
-router.get('/redirect', ensureAuth, (req, res) => {
+router.get('/redirect', ensureAuth, async (req, res) => {
   const oauthGrantCode = req.query.code;
 
+  const patron = await Patron.getById(req.user.id);
+
   // if this user is already a patron, error
-  if (req.user.patron) {
+  if (patron && patron.status === Patron.STATUSES.ACTIVE) {
     req.flash('danger', `A Patreon account has already been linked.`);
     return res.redirect('/user/account?nav=patreon');
   }

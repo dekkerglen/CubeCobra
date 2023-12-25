@@ -292,15 +292,20 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
   const featured = await FeaturedQueue.querySortedByDate();
   const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
+  const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube));
 
   return render(req, res, 'FeaturedCubesQueuePage', {
-    cubes,
+    cubes: sortedCubes,
+    featured,
     lastRotation: featured.items[0].featuredOn,
   });
 });
 
 router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
-  const rotate = await fq.rotateFeatured();
+  const queue = await FeaturedQueue.querySortedByDate();
+  const { items } = queue;
+  
+  const rotate = await fq.rotateFeatured(items);
   for (const message of rotate.messages) {
     req.flash('danger', message);
   }

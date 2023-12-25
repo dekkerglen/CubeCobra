@@ -350,7 +350,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     )}
                     <Card className="my-3">
                       <CardHeader>
-                        <h5>featured Cube</h5>
+                        <h5>Featured Cube</h5>
                       </CardHeader>
                       <CardBody>
                         {' '}

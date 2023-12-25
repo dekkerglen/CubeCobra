@@ -55,12 +55,91 @@ async function rotateFeatured(queue) {
 }
 
 async function isInFeaturedQueue(cube) {
-  if (!cube) return false;
+  if (!cube) {
+    return false;
+  }
   return FeaturedQueue.getById(cube.id);
+}
+
+async function getFeaturedQueueForUser(userid) {
+  const cubes = [];
+  let lastKey = null;
+
+  do {
+    const result = await FeaturedQueue.queryWithOwnerFilter(userid, lastKey);
+    cubes.push(...result.items);
+    lastKey = result.lastKey;
+  } while (lastKey);
+
+  return cubes;
+}
+
+async function doesUserHaveFeaturedCube(userid) {
+  const cubes = await getFeaturedQueueForUser(userid);
+  return cubes.length > 0;
+}
+
+async function replaceForUser(userid, cubeid) {
+  const cubes = [];
+  let lastKey = null;
+
+  do {
+    const result = await FeaturedQueue.querySortedByDate(lastKey);
+    cubes.push(...result.items);
+    lastKey = result.lastKey;
+  } while (lastKey);
+
+  // get index of cube with matching userid
+  const index = cubes.findIndex((cube) => cube.owner === userid);
+  const item = cubes[index];
+
+  if (index < 2) {
+    throw new Error('Cannot replace cube that is currenlty featured');
+  }
+
+  if (index === -1) {
+    throw new Error('Cannot replace cube that is not in queue');
+  }
+
+  // remove cube from queue
+  await FeaturedQueue.delete(item.cube);
+
+  // add new cube to queue
+  await FeaturedQueue.put({
+    cube: cubeid,
+    date: item.date,
+    owner: userid,
+    featuredOn: null,
+  });  
+}
+
+async function addNewCubeToQueue(userid, cubeid) {
+  await FeaturedQueue.put({
+    cube: cubeid,
+    date: Date.now().valueOf(),
+    owner: userid,
+    featuredOn: null,
+  });
+}
+
+async function removeCubeFromQueue(ownerid) {
+  const cubes = await getFeaturedQueueForUser(ownerid);
+
+  if (cubes.length === 0) {
+    throw new Error('Cannot remove cube that is not in queue');
+  }
+
+  const cubeid = cubes[0].cube;
+
+  await FeaturedQueue.delete(cubeid);
 }
 
 module.exports = {
   rotateFeatured,
   canBeFeatured,
   isInFeaturedQueue,
+  doesUserHaveFeaturedCube,
+  replaceForUser,
+  addNewCubeToQueue,
+  removeCubeFromQueue
 };

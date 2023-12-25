@@ -185,8 +185,7 @@ module.exports = {
     [FIELDS.IMAGE_NAME]: user.image_name,
     [FIELDS.ROLES]: user.roles,
     [FIELDS.THEME]: user.theme,
-    [FIELDS.HIDE_FEATURED]: user.hide_featured,
-    [FIELDS.PATRON_ID]: `${user.patron}`,
+    [FIELDS.HIDE_FEATURED]: user.hide_featured
   }),
   ROLES,
   FIELDS,

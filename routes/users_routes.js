@@ -722,44 +722,34 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
     return res.redirect(redirect);
   }
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const currentIndex = featured.queue.findIndex((f) => f.ownerID.equals(req.user.id));
-    if (currentIndex === 0 || currentIndex === 1) {
-      throw new Error('Cannot change currently featured cube');
-    }
-    let message;
-    if (currentIndex === -1) {
-      featured.queue.push({ cubeID: cube.id, ownerID: req.user.id });
-      message = 'Successfully added cube to queue';
-    } else {
-      featured.queue[currentIndex].cubeID = cube.id;
-      message = 'Successfully replaced cube in queue';
-    }
-    return message;
-  });
+  const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
+  let message;
 
-  if (!update.ok) req.flash('danger', update.message);
-  else req.flash('success', update.return);
+  try {  
+    if (shouldUpdate) {
+      fq.replaceForUser(req.user.id, cube.id);
+      req.flash('success', 'Successfully replaced cube in queue');
+    } else {
+      fq.addNewCubeToQueue(req.user.id, cube.id);
+      req.flash('success',  'Successfully added cube to queue');
+    }
+  } catch (err) {
+    req.flash('danger', err.message);
+  }
+
   return res.redirect(redirect);
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
-  const redirect = '/user/account?nav=patreon';
 
-  const update = await fq.updateFeatured(async (featured) => {
-    const index = featured.queue.findIndex((f) => f.ownerID.equals(req.user.id));
-    if (index === -1) {
-      throw new Error('Nothing to remove');
-    }
-    if (index === 0 || index === 1) {
-      throw new Error('Cannot remove currently featured cube');
-    }
-    featured.queue.splice(index, 1);
-  });
+  try {
+    fq.removeCubeFromQueue(req.user.id);
 
-  if (!update.ok) req.flash('danger', update.message);
-  else req.flash('success', 'Successfully removed cube from queue');
-  return res.redirect(redirect);
+    req.flash('success', 'Successfully removed cube from queue');
+  } catch (err) {
+    req.flash('danger', err.message);
+  }
+  return res.redirect('/user/account?nav=patreon');
 });
 
 module.exports = router;

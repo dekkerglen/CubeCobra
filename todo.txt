@@ -1,13 +1,10 @@
-<<<<<<< Updated upstream
 can't load: https://cubecobra.com/cube/list/MTGclassic
-=======
 Just saw you updated the Featured Cubes. Mine went from 2 in the queue to 74 😦 https://cubecobra.com/cube/overview/ar
 This one was swapped out for it: https://cubecobra.com/cube/overview/60520b18b187bd105a2323a3
 
 snakefoot on discord needs their spot in queue 6/1/2023
 
 getting a 504 when trying to change which of my cubes is in the feature queue
->>>>>>> Stashed changes
 
 remove comment from notice brokene
 accepting content creator application times out
@@ -43,3 +40,11 @@ multiplayer drafting
 fbd0f99f-7e82-4145-b8bc-82115f1c6224
 	Got stuck, picks were piling up on seat 7 and bot picks were not being made
 	after refresh, things were working normally and draft finished
+
+# december
+[x] fix patreon integration
+[x] fix featured queue
+[ ] add lambda for auto podcast integration, featured queue rotation
+[ ] add checksum to cube changes to prevent duplicate changes from being added
+[ ] fix packages
+[ ] investigate why drafts are getting stuck

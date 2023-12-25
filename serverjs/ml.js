@@ -6,7 +6,6 @@ const indexToOracle = JSON.parse(fs.readFileSync('./model/indexToOracleMap.json'
 const oracleToIndex = Object.fromEntries(Object.entries(indexToOracle).map(([key, value]) => [value, key]));
 
 const numOracles = Object.keys(oracleToIndex).length;
-const elos = JSON.parse(fs.readFileSync('./model/elos.json'));
 
 let encoder;
 let recommendDecoder;
@@ -167,7 +166,7 @@ const draft = (pack, pool) => {
   const packVector = encodeIndeces(pack.map((oracle) => oracleToIndex[oracle]));
   const mask = packVector.map((x) => 1e9 * (1 - x));
 
-  const softmaxed = softmax(array.map((x, i) => x * elos[i] * packVector[i] - mask[i]));
+  const softmaxed = softmax(array.map((x, i) => x * packVector[i] - mask[i]));
 
   const res = [];
 

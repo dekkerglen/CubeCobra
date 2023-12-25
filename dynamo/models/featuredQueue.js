@@ -63,6 +63,30 @@ module.exports = {
       lastKey: result.LastEvaluatedKey,
     };
   },
+  queryWithOwnerFilter: async (ownerID, lastKey) => {
+    const query = {
+      IndexName: 'ByDate',
+      KeyConditionExpression: '#status = :status',
+      FilterExpression: '#owner = :owner',
+      ExpressionAttributeNames: {
+        '#status': FIELDS.STATUS,
+        '#owner': FIELDS.OWNER,
+      },
+      ExpressionAttributeValues: {
+        ':status': STATUS.ACTIVE,
+        ':owner': ownerID,
+      },
+    };
+    if (lastKey) {
+      query.ExclusiveStartKey = lastKey;
+    }
+    const result = await client.query(query);
+
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   batchPut: async (documents) => client.batchPut(documents),
   createTable: async () => client.createTable(),
   convertQueue: (queue) => {
