@@ -11,6 +11,7 @@ const tryUpdate = async (podcast) => {
     console.error(`Failed to update podcast: ${podcast.title}`, { error: err });
   }
 };
+
 const run = async () => {
   const podcasts = await Content.getByTypeAndStatus(Content.TYPES.PODCAST, Content.STATUS.PUBLISHED);
 

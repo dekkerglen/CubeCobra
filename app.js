@@ -202,6 +202,7 @@ app.use('/content', require('./routes/content_routes'));
 app.use('/multiplayer', require('./routes/multiplayer'));
 app.use('/packages', require('./routes/packages'));
 app.use('/api/private', require('./routes/api/private'));
+app.use('/job', require('./routes/job_routes'));
 
 app.use('', require('./routes/root'));
 

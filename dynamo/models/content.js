@@ -204,7 +204,10 @@ module.exports = {
   put: async (document, type) => {
     await putBody(document);
 
-    delete document.image;
+    // if document.image is an object
+    if (document.image && typeof document.image === 'object') {
+      delete document.image;
+    }
     delete document.body;
 
     if (document.owner.id) {
@@ -230,6 +233,9 @@ module.exports = {
       }),
     );
     client.batchPut(documents);
+  },
+  batchDelete: async (keys) => {
+    client.batchDelete(keys);
   },
   createTable: async () => client.createTable(),
   convertVideo: (video) => ({

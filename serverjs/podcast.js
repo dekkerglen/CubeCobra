@@ -27,6 +27,7 @@ const updatePodcast = async (podcast) => {
 
   // if image is different
   if (podcast.image !== feedData.image) {
+    console.log(`Updating image for ${podcast.title} from ${podcast.image} to ${feedData.image}`);
     // we need to fix this and all episodes
     podcast.image = feedData.image;
 
@@ -45,21 +46,23 @@ const updatePodcast = async (podcast) => {
       const podcastEpisode = {
         title: episode.title,
         body: removeSpan(episode.description),
-        url: episode.url,
         date: new Date(episode.date).valueOf(),
         owner: podcast.owner.id,
         image: podcast.image,
         username: podcast.username,
         podcast: podcast.id,
         podcastName: podcast.title,
-        podcastGuid: episode.podcastGuid,
-        podcastLink: episode.url,
+        podcastGuid: episode.guid,
+        podcastLink: podcast.link,
+        status: Content.STATUS.PUBLISHED,
         short: htmlToText
           .fromString(removeSpan(episode.description), {
             wordwrap: 130,
           })
           .substring(0, 200),
       };
+
+      console.log(podcastEpisode);
 
       return Content.put(podcastEpisode, Content.TYPES.EPISODE);
     }),
