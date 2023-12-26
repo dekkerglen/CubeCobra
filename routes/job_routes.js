@@ -56,7 +56,6 @@ const tryUpdate = async (podcast) => {
 
   try {
     console.log(`Updating podcast: ${podcast.title}`);
-    console.log(podcast);
     await updatePodcast(podcast);
   } catch (err) {
     console.error(`Failed to update podcast: ${podcast.title}`, { error: err });

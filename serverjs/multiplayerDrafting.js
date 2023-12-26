@@ -361,7 +361,7 @@ const finishDraft = async (draftId) => {
     }
   }
 
-  draft.completed = true;
+  draft.complete = true;
   await Draft.put(draft);
   await hset(draftRef(draftId), 'finished', true);
   await cleanUp(draftId);

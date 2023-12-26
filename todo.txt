@@ -45,7 +45,10 @@ fbd0f99f-7e82-4145-b8bc-82115f1c6224
 [x] fix patreon integration
 [x] fix featured queue
 [x] add lambda for auto podcast integration, featured queue rotation
-[ ] add checksum to cube changes to prevent duplicate changes from being added
-[ ] fix packages
+[x] fix podcast fetching
+[ ] podcast fetch doesn't include body
 [ ] fix content creator dashboard
+[ ] fix packages
+[ ] add checksum to cube changes to prevent duplicate changes from being added
 [ ] investigate why drafts are getting stuck
+[ ] investigate why drafts end early

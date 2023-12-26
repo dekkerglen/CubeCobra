@@ -450,7 +450,7 @@ router.post(
   },
 );
 
-router.get('/dumpdraft/:id', ensureAdmin, async (req, res) => {
+router.get('/dumpdraft/:id', async (req, res) => {
   const dump = await dumpDraft(req.params.id);
 
   return res.status(200).send(dump);
