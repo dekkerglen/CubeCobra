@@ -32,11 +32,11 @@ function cloneIfNecessary(value, optionsArgument) {
 function mergeObject(target, source, optionsArgument) {
   const destination = {};
   if (isMergeableObject(target)) {
-    Object.keys(target).forEach(function (key) {
+    Object.keys(target).forEach((key) => {
       destination[key] = cloneIfNecessary(target[key], optionsArgument);
     });
   }
-  Object.keys(source).forEach(function (key) {
+  Object.keys(source).forEach((key) => {
     if (!isMergeableObject(source[key]) || !target[key]) {
       destination[key] = cloneIfNecessary(source[key], optionsArgument);
     } else {
@@ -63,7 +63,7 @@ function deepmerge(target, source, optionsArgument) {
 
 function defaultArrayMerge(target, source, optionsArgument) {
   const destination = target.slice();
-  source.forEach(function (e, i) {
+  source.forEach((e, i) => {
     if (typeof destination[i] === 'undefined') {
       destination[i] = cloneIfNecessary(e, optionsArgument);
     } else if (isMergeableObject(e)) {
@@ -165,9 +165,7 @@ deepmerge.all = function deepmergeAll(array, optionsArgument) {
   }
 
   // we are sure there are at least 2 values, so it is safe to have no initial value
-  return array.reduce(function (prev, next) {
-    return deepmerge(prev, next, optionsArgument);
-  });
+  return array.reduce((prev, next) => deepmerge(prev, next, optionsArgument));
 };
 
 // Map URL => Promise returning tree
@@ -240,9 +238,13 @@ const AutocompleteInput = forwardRef(
     );
 
     // Replace curly quotes with straight quotes. Needed for iOS.
-    const normalizedValue = (value || '').replace(/[\u2018\u2019\u201C\u201D]/g, (c) =>
-      '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1),
-    );
+    const normalizedValue = (value || '')
+      .replace(/[\u2018\u2019\u201C\u201D]/g, (c) => '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1))
+      .trim()
+      .normalize('NFD') // convert to consistent unicode format
+      .replace(/[\u0300-\u036f]/g, '') // remove unicode
+      .toLowerCase();
+
     const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
     const showMatches = visible && value && matches.length > 0 && !(matches.length === 1 && matches[0] === value);
 
