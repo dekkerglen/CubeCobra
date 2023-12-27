@@ -169,9 +169,7 @@ function getIdsFromName(name) {
 
 // Printing = 'recent' or 'first'
 function getMostReasonable(cardName, printing = 'recent', filter = null) {
-  console.log(`Getting most reasonable ${cardName} ${printing}`);
   let ids = getIdsFromName(cardName);
-  console.log(`Found ${ids.length} ids for ${cardName}`);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
     // eslint-disable-next-line no-use-before-define
