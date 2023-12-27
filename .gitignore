@@ -6,6 +6,7 @@ jobs/export/
 public/css/bootstrap
 /temp/
 /model/
+.DS_Store
 
 .python-version
 
