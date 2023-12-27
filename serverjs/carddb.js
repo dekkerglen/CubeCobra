@@ -145,6 +145,14 @@ function reasonableId(id) {
   return reasonableCard(cardFromId(id));
 }
 
+function normalizeName(name) {
+  return name
+    .trim()
+    .normalize('NFD') // convert to consistent unicode format
+    .replace(/[\u0300-\u036f]/g, '') // remove unicode
+    .toLowerCase();
+}
+
 function getIdsFromName(name) {
   // this is a fully-spcecified card name
   if (name.includes('[') && name.includes(']')) {
@@ -152,22 +160,18 @@ function getIdsFromName(name) {
     const split = name.split('[');
     return getIdsFromName(split[0])
       .map((id) => cardFromId(id))
-      .filter((card) => card.full_name.toLowerCase() === name)
+      .filter((card) => normalizeName(card.full_name) === name)
       .map((card) => card.scryfall_id);
   }
 
-  return data.nameToId[
-    name
-      .trim()
-      .normalize('NFD') // convert to consistent unicode format
-      .replace(/[\u0300-\u036f]/g, '') // remove unicode
-      .toLowerCase()
-  ];
+  return data.nameToId[normalizeName(name)];
 }
 
 // Printing = 'recent' or 'first'
 function getMostReasonable(cardName, printing = 'recent', filter = null) {
+  console.log(`Getting most reasonable ${cardName} ${printing}`);
   let ids = getIdsFromName(cardName);
+  console.log(`Found ${ids.length} ids for ${cardName}`);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
     // eslint-disable-next-line no-use-before-define
@@ -230,9 +234,7 @@ function getVersionsByOracleId(oracleId) {
   return data.oracleToId[oracleId];
 }
 
-const getReasonableCardByOracle = (oracleId) => {
-  return cardFromId(data.oracleToId[oracleId][0]);
-};
+const getReasonableCardByOracle = (oracleId) => cardFromId(data.oracleToId[oracleId][0]);
 
 function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');
@@ -265,16 +267,12 @@ function getRelatedCards(oracleId) {
   }
 
   return Object.fromEntries(
-    Object.entries(related).map(([label, category]) => {
-      return [
-        label,
-        Object.fromEntries(
-          Object.entries(category).map(([type, indexes]) => {
-            return [type, indexes.map((id) => data.indexToOracle[id])];
-          }),
-        ),
-      ];
-    }),
+    Object.entries(related).map(([label, category]) => [
+      label,
+      Object.fromEntries(
+        Object.entries(category).map(([type, indexes]) => [type, indexes.map((id) => data.indexToOracle[id])]),
+      ),
+    ]),
   );
 }
 
