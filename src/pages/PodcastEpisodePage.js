@@ -18,7 +18,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
       <DynamicFlash />
       <Card className="mb-3">
         <CardHeader>
-          <h1>{episode.Ttitle}</h1>
+          <h1>{episode.title}</h1>
           <h6>
             from <a href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</a>
             {' - '}

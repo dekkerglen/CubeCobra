@@ -5,10 +5,10 @@ const Content = require('../dynamo/models/content');
   let lastKey = null;
 
   do {
-    const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, 'TEMP', lastKey);
+    const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
     lastKey = result.lastKey;
 
-    const items = result.items;//.filter((item) => !item.image);
+    const items = result.items.filter((item) => !item.url);
 
     if (items.length > 0) {
       console.log(`Found ${items.length} bad episodes.`);

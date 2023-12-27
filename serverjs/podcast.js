@@ -36,6 +36,7 @@ const updatePodcast = async (podcast) => {
     }));
 
     await Content.batchPut(items);
+    await Content.update(podcast);
   }
 
   const filtered = episodes.filter((episode) => !guids.includes(episode.podcastGuid));
@@ -52,7 +53,8 @@ const updatePodcast = async (podcast) => {
         podcast: podcast.id,
         podcastName: podcast.title,
         podcastGuid: episode.guid,
-        podcastLink: podcast.link,
+        podcastLink: episode.link,
+        url: episode.source,
         status: Content.STATUS.PUBLISHED,
         short: htmlToText
           .fromString(removeSpan(episode.description), {
