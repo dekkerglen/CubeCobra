@@ -93,6 +93,25 @@ const CubeDraft = ({ draft, socket }) => {
     }
   };
 
+  const delayedTryBotPicksLoop = async () => {
+    // the trybotpicks response will eventually flip this status to 'done'
+    let status = 'inProgress';
+    while (status === 'inProgress') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const res = await callApi('/multiplayer/trybotpicks', {
+          draft: draft.id,
+        });
+        if (res) {
+          let json = await res.json();
+          status = json.result;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   useMount(() => {
     const run = async () => {
       const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.id });
@@ -124,20 +143,7 @@ const CubeDraft = ({ draft, socket }) => {
       setLoading(false);
 
       if (seat === '0') {
-        let status = 'in_progress';
-        setInterval(async () => {
-          try {
-            if (status === 'in_progress') {
-              const res = await callApi('/multiplayer/trybotpicks', {
-                draft: draft.id,
-              });
-              const json = await res.json();
-              status = json.result;
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }, 1000);
+        delayedTryBotPicksLoop();
       }
     };
     run();
