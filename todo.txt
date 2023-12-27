@@ -47,7 +47,7 @@ fbd0f99f-7e82-4145-b8bc-82115f1c6224
 [x] add lambda for auto podcast integration, featured queue rotation
 [x] fix podcast fetching
 [x] podcast fetch doesn't include body
-[ ] can't change email for account
+[x] can't change email for account
 [ ] fix content creator dashboard
 [ ] fix packages
 [ ] add checksum to cube changes to prevent duplicate changes from being added

@@ -634,7 +634,7 @@ router.post('/updateuserinfo', ensureAuth, [...usernameValid], flashValidationEr
 router.post('/updateemail', ensureAuth, async (req, res) => {
   const emailUser = await User.getByEmail(req.body.email.toLowerCase());
 
-  if (emailUser.id === req.user.id) {
+  if (emailUser && emailUser.id === req.user.id) {
     req.flash('danger', 'This is already your email.');
     return res.redirect('/user/account');
   }
@@ -644,7 +644,7 @@ router.post('/updateemail', ensureAuth, async (req, res) => {
     return res.redirect('/user/account');
   }
 
-  const user = await User.getById(req.params.id);
+  const user = await User.getById(req.user.id);
 
   user.email = req.body.email;
   await User.update(user);
