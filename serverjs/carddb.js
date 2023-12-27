@@ -145,6 +145,14 @@ function reasonableId(id) {
   return reasonableCard(cardFromId(id));
 }
 
+function getNameForComparison(name) {
+  return name
+    .trim()
+    .normalize('NFD') // convert to consistent unicode format
+    .replace(/[\u0300-\u036f]/g, '') // remove unicode
+    .toLowerCase();
+}
+
 function getIdsFromName(name) {
   // this is a fully-spcecified card name
   if (name.includes('[') && name.includes(']')) {
@@ -152,17 +160,11 @@ function getIdsFromName(name) {
     const split = name.split('[');
     return getIdsFromName(split[0])
       .map((id) => cardFromId(id))
-      .filter((card) => card.full_name.toLowerCase() === name)
+      .filter((card) => getNameForComparison(card.full_name) === getNameForComparison(name))
       .map((card) => card.scryfall_id);
   }
 
-  return data.nameToId[
-    name
-      .trim()
-      .normalize('NFD') // convert to consistent unicode format
-      .replace(/[\u0300-\u036f]/g, '') // remove unicode
-      .toLowerCase()
-  ];
+  return data.nameToId[getNameForComparison(name)];
 }
 
 // Printing = 'recent' or 'first'
@@ -230,9 +232,7 @@ function getVersionsByOracleId(oracleId) {
   return data.oracleToId[oracleId];
 }
 
-const getReasonableCardByOracle = (oracleId) => {
-  return cardFromId(data.oracleToId[oracleId][0]);
-};
+const getReasonableCardByOracle = (oracleId) => cardFromId(data.oracleToId[oracleId][0]);
 
 function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');
@@ -265,16 +265,12 @@ function getRelatedCards(oracleId) {
   }
 
   return Object.fromEntries(
-    Object.entries(related).map(([label, category]) => {
-      return [
-        label,
-        Object.fromEntries(
-          Object.entries(category).map(([type, indexes]) => {
-            return [type, indexes.map((id) => data.indexToOracle[id])];
-          }),
-        ),
-      ];
-    }),
+    Object.entries(related).map(([label, category]) => [
+      label,
+      Object.fromEntries(
+        Object.entries(category).map(([type, indexes]) => [type, indexes.map((id) => data.indexToOracle[id])]),
+      ),
+    ]),
   );
 }
 
