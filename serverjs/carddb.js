@@ -145,7 +145,7 @@ function reasonableId(id) {
   return reasonableCard(cardFromId(id));
 }
 
-function normalizeName(name) {
+function getNameForComparison(name) {
   return name
     .trim()
     .normalize('NFD') // convert to consistent unicode format
@@ -160,11 +160,11 @@ function getIdsFromName(name) {
     const split = name.split('[');
     return getIdsFromName(split[0])
       .map((id) => cardFromId(id))
-      .filter((card) => normalizeName(card.full_name) === name)
+      .filter((card) => getNameForComparison(card.full_name) === getNameForComparison(name))
       .map((card) => card.scryfall_id);
   }
 
-  return data.nameToId[normalizeName(name)];
+  return data.nameToId[getNameForComparison(name)];
 }
 
 // Printing = 'recent' or 'first'
