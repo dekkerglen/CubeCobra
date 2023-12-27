@@ -549,7 +549,6 @@ const getDraftPick = async (draftId, seat) => {
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
   const finished = await hget(draftRef(draftId), 'finished');
-
   if (finished === 'true') {
     return 'done';
   }
@@ -578,13 +577,13 @@ const tryBotPicks = async (draftId) => {
     if (await isPackDone(draftId)) {
       if (currentPack < totalPacks) {
         await openPack(draftId);
-        return 'in_progress';
+        return 'inProgress';
       }
       // draft is done
       await finishDraft(draftId);
       return 'done';
     }
-    return 'in_progress';
+    return 'inProgress';
   });
 
   return res || 'done'; // could be null if we fail to obtain a lock
