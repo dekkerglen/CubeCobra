@@ -94,19 +94,6 @@ const releaseLock = async (draftId, random) => {
   }
 };
 
-const runWithLock = async (draftId, fn) => {
-  const random = uuid();
-  const lock = await obtainLock(draftId, random);
-  if (lock) {
-    try {
-      return await fn();
-    } finally {
-      await releaseLock(draftId, random);
-    }
-  }
-  return null;
-};
-
 const getDraftMetaData = async (draftId) => {
   const [seats, currentPack, totalPacks, initialized] = await hmget(
     draftRef(draftId),
@@ -549,44 +536,42 @@ const getDraftPick = async (draftId, seat) => {
 const tryBotPicks = async (draftId) => {
   const { currentPack, seats, totalPacks } = await getDraftMetaData(draftId);
   const finished = await hget(draftRef(draftId), 'finished');
+  let picks = 0;
   if (finished === 'true') {
-    return 'done';
+    return {result:'done', picks};
   }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
 
-  const res = await runWithLock(draftId, async () => {
-    if (await packNeedsBotPicks(draftId)) {
-      // make bot picks
-      const botSeats = await getDraftBotsSeats(draftId);
-      if (passDirection === 1) {
-        botSeats.reverse();
-      }
-      for (const seat of botSeats) {
-        const packReference = await getPlayerPackReference(draftId, seat);
+  if (await packNeedsBotPicks(draftId)) {
+    // make bot picks
+    const botSeats = await getDraftBotsSeats(draftId);
+    if (passDirection === 1) {
+      botSeats.reverse();
+    }
+    for (const seat of botSeats) {
+      const packReference = await getPlayerPackReference(draftId, seat);
 
-        if (packReference != null) {
-          const passAmount = await getPassAmount(draftId, seat);
-          const next = (seat + seats + passDirection * passAmount) % seats;
+      if (packReference != null) {
+        const passAmount = await getPassAmount(draftId, seat);
+        const next = (seat + seats + passDirection * passAmount) % seats;
 
-          await makePick(draftId, seat, await getDraftPick(draftId, seat), next);
-        }
+        await makePick(draftId, seat, await getDraftPick(draftId, seat), next);
+        picks += 1;
       }
     }
+  }
 
-    if (await isPackDone(draftId)) {
-      if (currentPack < totalPacks) {
-        await openPack(draftId);
-        return 'inProgress';
-      }
-      // draft is done
-      await finishDraft(draftId);
-      return 'done';
+  if (await isPackDone(draftId)) {
+    if (currentPack < totalPacks) {
+      await openPack(draftId);
+      return {result: 'inProgress', picks};
     }
-    return 'inProgress';
-  });
-
-  return res || 'done'; // could be null if we fail to obtain a lock
+    // draft is done
+    await finishDraft(draftId);
+    return {result: 'done', picks};
+  }
+  return {result: 'inProgress', picks};
 };
 
 const dumpDraft = async (draftId) => {

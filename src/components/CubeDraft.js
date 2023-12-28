@@ -97,7 +97,9 @@ const CubeDraft = ({ draft, socket }) => {
     // the trybotpicks response will eventually flip this status to 'done'
     let status = 'inProgress';
     while (status === 'inProgress') {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // we want to do this first as we don't want to spam the server
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       try {
         const res = await callApi('/multiplayer/trybotpicks', {
           draft: draft.id,
@@ -105,10 +107,17 @@ const CubeDraft = ({ draft, socket }) => {
         if (res) {
           let json = await res.json();
           status = json.result;
+
+          console.log(json);
+
+          if (json.picks == 0) {
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            continue;
+          }
         }
       } catch (e) {
         console.error(e);
-      }
+      }      
     }
   };
 

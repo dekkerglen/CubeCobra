@@ -57,7 +57,7 @@ const hydrate = async (content) => {
     return content;
   }
 
-  if (content.body) {
+  if (content.owner) {
     content.owner = await User.getById(content.owner);
   }
 
@@ -191,12 +191,12 @@ module.exports = {
       throw new Error('Invalid document: No partition key provided');
     }
 
-    document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
-    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
-
     if (document.owner.id) {
       document.owner = document.owner.id;
     }
+
+    document[FIELDS.TYPE_STATUS_COMP] = `${document.type}:${document.status}`;
+    document[FIELDS.TYPE_OWNER_COMP] = `${document.type}:${document.owner}`;
 
     await putBody(document);
     delete document.body;

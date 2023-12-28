@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
@@ -57,7 +57,7 @@ const CreatorArticles = ({ articles, lastKey }) => {
         <Row className="mx-0">
           {items.map((article) => (
             <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
-              <ArticlePreview article={article} />
+              <ArticlePreview article={article} showStatus />
             </Col>
           ))}
         </Row>

@@ -142,11 +142,23 @@ router.get('/v/:id', (req, res) => {
 });
 
 router.get('/article/:id', async (req, res) => {
+
   const article = await Content.getById(req.params.id);
 
   if (!article) {
     req.flash('danger', 'Article not found');
     return res.redirect('/content/browse');
+  }
+
+  if (article.status !== Content.STATUS.PUBLISHED) {
+    if (!req.user || req.user.id !== article.owner.id) {
+      req.flash('danger', 'Article not found');
+      return res.redirect('/content/browse');
+    }
+
+    if (req.user.id === article.owner.id) {
+      return res.redirect(`/content/article/edit/${article.id}`);
+    }
   }
 
   return render(

@@ -53,5 +53,5 @@ fbd0f99f-7e82-4145-b8bc-82115f1c6224
 [ ] fix notice dismissal
 [ ] fix packages
 [ ] add checksum to cube changes to prevent duplicate changes from being added
-[ ] investigate why drafts are getting stuck
-[ ] investigate why drafts end early
+[x] investigate why drafts are getting stuck
+[x] investigate why drafts end early
