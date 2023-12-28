@@ -262,6 +262,22 @@ export async function wait(ms) {
   });
 }
 
+function xor(a, b) {
+  let result = '';
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    result += String.fromCharCode(a.charCodeAt(i) ^ b.charCodeAt(i));
+  }
+  return result;
+}
+
+export function xorStrings(strings) {
+  let result = strings[0];
+  for (let i = 1; i < strings.length; i++) {
+    result = xor(result, strings[i]);
+  }
+  return result;
+}
+
 export default {
   arraysEqual,
   arrayRotate,
@@ -285,4 +301,5 @@ export default {
   getCardTagColorClass,
   getTagColorClass,
   wait,
+  xorStrings
 };

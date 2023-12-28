@@ -54,4 +54,4 @@ fbd0f99f-7e82-4145-b8bc-82115f1c6224
 [x] fix packages
 [x] investigate why drafts are getting stuck
 [x] investigate why drafts end early
-[ ] add checksum to cube changes to prevent duplicate changes from being added
+[x] add checksum to cube changes to prevent duplicate changes from being added

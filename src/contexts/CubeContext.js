@@ -13,6 +13,8 @@ import GroupModal from 'components/GroupModal';
 import useQueryParam from 'hooks/useQueryParam';
 import useMount from 'hooks/UseMount';
 
+import { xorStrings } from 'utils/Util';
+
 import { makeFilter } from 'filtering/FilterCards';
 
 const CubeContext = React.createContext({
@@ -584,6 +586,20 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     setChanges({});
   }, [setChanges]);
 
+  const checksum = useMemo(() => {
+    // we want to checksum the cube we are applying to, to make sure it hasn't changed since we started editing
+    // we want to xorStrings each card's cardID
+    const cardIds = [];
+    for (const [board] of Object.entries(cube.cards)) {
+      if (board !== 'id') {
+        for (const card of cube.cards[board]) {
+          cardIds.push(card.cardID);
+        }
+      }
+    }
+    return xorStrings(cardIds);
+  }, [cube.cards]);
+
   const commitChanges = useCallback(
     async (title, blog) => {
       setLoading(true);
@@ -600,13 +616,15 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             changes,
             id: cube.id,
             useBlog,
+            checksum
           }),
         });
 
         const json = await result.json();
+        console.log(json);
 
-        if (result.status === 500) {
-          setAlerts([{ type: 'error', message: json.message }]);
+        if (json.success !== 'true') {
+          setAlerts([{ color: 'danger', message: json.message }]);
         } else {
           const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
 
@@ -650,8 +668,6 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             }
           }
 
-          setChanges({});
-          setModalSelection([]);
           setCube({
             ...cube,
             cards: newCards,
@@ -661,6 +677,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         setAlerts([{ type: 'error', message: 'Operation timed out' }]);
       }
 
+      setModalSelection([]);
+      setChanges({});
       setLoading(false);
     },
     [cube, changedCards, setCube, setChanges],

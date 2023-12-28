@@ -8,6 +8,7 @@ const carddb = require('../../serverjs/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
 const util = require('../../serverjs/util');
 const { deckbuild, calculateBasics } = require('../../serverjs/draftbots');
+const { xorStrings } = require('../../dist/utils/Util');
 
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../serverjs/cubefn');
 
@@ -788,7 +789,7 @@ router.get(
 
 router.post('/commit', async (req, res) => {
   try {
-    const { id, changes, title, blog, useBlog } = req.body;
+    const { id, changes, title, blog, useBlog, checksum } = req.body;
 
     let changeCount = 0;
 
@@ -824,6 +825,25 @@ router.post('/commit', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id, true);
+
+    // we want to checksum the cube we are applying to, to make sure it hasn't changed since we started editing
+    // we want to xorStrings each card's cardID
+    const cardIds = [];
+    for (const [board] of Object.entries(cards)) {
+      if (board !== 'id') {
+        for (const card of cards[board]) {
+          cardIds.push(card.cardID);
+        }
+      }
+    }
+
+    const currentChecksum = xorStrings(cardIds);
+    if (currentChecksum !== checksum) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Cube has been modified since changes were made. Please refresh and try again.',
+      });
+    }
 
     for (const [board] of Object.entries(changes)) {
       // swaps
