@@ -18,7 +18,6 @@ const Cube = require('../dynamo/models/cube');
 const { render } = require('../serverjs/render');
 const util = require('../serverjs/util');
 const fq = require('../serverjs/featuredQueue');
-const notice = require('../dynamo/models/notice');
 
 const { dumpDraft } = require('../serverjs/multiplayerDrafting');
 
@@ -188,12 +187,17 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
   const comment = await Comment.getById(report.subject);
 
+  console.log(report);
+
+  report.status = Notice.STATUS.PROCESSED;
+  await Notice.put(report);
+
   comment.owner = null;
   comment.body = '[removed by moderator]';
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
-
   await Comment.put(comment);
+  
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect('/admin/notices');
@@ -251,8 +255,8 @@ router.get('/application/approve/:id', ensureAdmin, async (req, res) => {
 router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
   const application = await Notice.getById(req.params.id);
 
-  notice.status = Notice.STATUS.PROCESSED;
-  Notice.put(notice);
+  application.status = Notice.STATUS.PROCESSED;
+  Notice.put(application);
 
   const smtpTransport = mailer.createTransport({
     name: 'CubeCobra.com',

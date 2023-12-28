@@ -111,7 +111,7 @@ module.exports = {
   put: async (document) => {
     const id = document[FIELDS.ID] || uuid();
 
-    if (document.owner.id) {
+    if (document.owner && document.owner.id) {
       document.owner = document.owner.id;
     }
 
