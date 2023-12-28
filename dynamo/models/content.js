@@ -242,6 +242,15 @@ module.exports = {
   batchDelete: async (keys) => {
     client.batchDelete(keys);
   },
+  scan: async (lastKey) => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+    return {
+      items: result.Items,
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
   createTable: async () => client.createTable(),
   convertVideo: (video) => ({
     [FIELDS.ID]: `${video._id}`,

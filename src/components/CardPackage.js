@@ -48,9 +48,9 @@ const CardPackage = ({ cardPackage }) => {
   const remove = async () => csrfFetch(`/packages/remove/${cardPackage.id}`);
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="ps-4 pe-0 pt-2 pb-0">
-        <Row>
+    <Card className="mb-4 px-0">
+      <CardHeader className="pt-2 pb-0">
+        <Row noGutters>
           <Col xs="12" sm="6">
             <h5 className="card-title">
               <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
@@ -61,7 +61,6 @@ const CardPackage = ({ cardPackage }) => {
               <TimeAgo date={cardPackage.date} />
             </h6>
           </Col>
-
           {user ? (
             <Col xs="12" sm="6" className="pb-2">
               <div className="flex-container flex-row-reverse">

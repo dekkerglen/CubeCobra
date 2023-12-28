@@ -56,7 +56,15 @@ const hydrate = async (pack) => {
   }
 
   pack.owner = await User.getById(pack.owner);
-  pack.cards = pack.cards.map((id) => carddb.cardFromId(id));
+  pack.cards = pack.cards.map((c) => {
+    if (c.id) {
+      return c;
+    }
+    if (c.oracle_id) {
+      return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
+    }
+    return carddb.cardFromId(c)
+  });
 
   return pack;
 };
@@ -66,7 +74,15 @@ const batchHydrate = async (packs) => {
 
   packs.forEach((pack) => {
     pack.owner = owners.find((owner) => owner.id === pack.owner);
-    pack.cards = pack.cards.map((id) => carddb.cardFromId(id));
+    pack.cards = pack.cards.map((c) => {
+      if (c.id) {
+        return c;
+      }
+      if (c.oracle_id) {
+        return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
+      }
+      return carddb.cardFromId(c)
+    });
   });
 
   return packs;
@@ -79,6 +95,20 @@ module.exports = {
 
     if (document.owner.id) {
       document.owner = document.owner.id;
+    }
+
+    if (document.cards) {
+      document.cards = document.cards.map((card) => {
+        if (card.id) {
+          return card.id;
+        }
+
+        if (carddb.oracle_id) {
+          return carddb.oracleToId[carddb.oracle_id][0];
+        }
+
+        return card;
+      });
     }
 
     await client.put({
@@ -169,6 +199,19 @@ module.exports = {
   },
   batchPut: async (documents) => client.batchPut(documents),
   createTable: async () => client.createTable(),
+  scan: async (lastKey) => {
+    const result = await client.scan({
+      ExclusiveStartKey: lastKey,
+    });
+
+    return {
+      items: await batchHydrate(result.Items),
+      lastKey: result.LastEvaluatedKey,
+    };
+  },
+  batchDelete: async (keys) => {
+    client.batchDelete(keys);
+  },
   convertPackage: (pack) => {
     return {
       [FIELDS.ID]: `${pack._id}`,
