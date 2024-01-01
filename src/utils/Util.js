@@ -271,9 +271,15 @@ function xor(a, b) {
 }
 
 export function xorStrings(strings) {
-  let result = strings[0];
-  for (let i = 1; i < strings.length; i++) {
-    result = xor(result, strings[i]);
+  const nonNullStrings = strings.filter((str) => str != null);
+
+  if (nonNullStrings.length === 0) {
+    return '';
+  }
+  
+  let result = nonNullStrings[0];
+  for (let i = 1; i < nonNullStrings.length; i++) {
+    result = xor(result, nonNullStrings[i]);
   }
   return result;
 }
