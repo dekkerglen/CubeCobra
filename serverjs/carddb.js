@@ -128,6 +128,7 @@ async function initializeCardDb() {
 
 function reasonableCard(card) {
   return (
+    !card.isExtra &&
     !card.promo &&
     !card.digital &&
     !card.isToken &&
@@ -208,7 +209,6 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
     ids = [...ids];
     ids.reverse();
   }
-
   return cardFromId(ids.find(reasonableId) || ids[0]);
 }
 
@@ -232,7 +232,10 @@ function getVersionsByOracleId(oracleId) {
   return data.oracleToId[oracleId];
 }
 
-const getReasonableCardByOracle = (oracleId) => cardFromId(data.oracleToId[oracleId][0]);
+const getReasonableCardByOracle = (oracleId) => {
+  const ids = data.oracleToId[oracleId];
+  return getFirstReasonable(ids);
+}
 
 function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');

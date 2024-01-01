@@ -661,12 +661,11 @@ function convertCard(card, metadata, isExtra) {
     card = { ...card };
     card.card_faces = [faceAttributeSource];
   }
-
   newcard.elo = 1200;
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;
-
+  newcard.isExtra = !!isExtra;
   if (metadata) {
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;
