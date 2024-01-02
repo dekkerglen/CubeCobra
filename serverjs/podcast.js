@@ -12,25 +12,26 @@ const removeSpan = (text) =>
 const updatePodcast = async (podcast) => {
   const feedData = await getFeedData(podcast.url);
 
-  const episodes = await getFeedEpisodes(podcast.url);
-  const existingGuids = episodes.map((episode) => episode.podcastGuid);
+  const feedEpisodes = await getFeedEpisodes(podcast.url);
+  
+  let items = [];
+  const existingEpisodes = [];
+  let lastKey = null;
 
-  let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
-  let items = result.items.filter((item) => existingGuids.includes(item.podcastGuid));
-  while (result.lastKey) {
-    // eslint-disable-next-line no-await-in-loop
-    result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
-    items = [...items, ...result.items.filter((item) => existingGuids.includes(item.podcastGuid))];
-  }
+  do {
+    const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
+    lastKey = result.lastKey;
+    existingEpisodes.push(...result.items);
+  } while (lastKey);
 
-  const guids = items.map((episode) => episode.podcastGuid);
+  const existingGuids = existingEpisodes.map((episode) => episode.podcastGuid);
 
   // if image is different
   if (podcast.image !== feedData.image) {
     // we need to fix this and all episodes
     podcast.image = feedData.image;
 
-    items = items.map((episode) => ({
+    items = existingEpisodes.map((episode) => ({
       ...episode,
       image: feedData.image,
     }));
@@ -39,7 +40,7 @@ const updatePodcast = async (podcast) => {
     await Content.update(podcast);
   }
 
-  const filtered = episodes.filter((episode) => !guids.includes(episode.podcastGuid));
+  const filtered = feedEpisodes.filter((episode) => !existingGuids.includes(episode.guid));
 
   await Promise.all(
     filtered.map((episode) => {
