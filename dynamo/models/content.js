@@ -240,7 +240,7 @@ module.exports = {
     client.batchPut(documents);
   },
   batchDelete: async (keys) => {
-    client.batchDelete(keys);
+    return client.batchDelete(keys);
   },
   scan: async (lastKey) => {
     const result = await client.scan({

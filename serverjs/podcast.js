@@ -13,7 +13,7 @@ const updatePodcast = async (podcast) => {
   const feedData = await getFeedData(podcast.url);
 
   const episodes = await getFeedEpisodes(podcast.url);
-  const existingGuids = episodes.map((episode) => episode.guid);
+  const existingGuids = episodes.map((episode) => episode.podcastGuid);
 
   let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
   let items = result.items.filter((item) => existingGuids.includes(item.podcastGuid));

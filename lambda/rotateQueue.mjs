@@ -1,33 +1,31 @@
-import https from 'https';
+/* global fetch */
+// import fetch from 'node-fetch';
 
 export const handler = async (event) => {
-  const data = JSON.stringify({
+  console.log('Sending request to Cube Cobra to rotate queue.');
+
+  const data = {
     token: '7d113984-2aac-428c-ab06-ed91d6c1c726'
-  });
-  
-  const options = {
-    hostname: 'cubecobra.com',
-    port: 443,
-    path: '/job/featuredcubes/rotate',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': data.length
-    }
   };
   
-  const req = https.request(options, (res) => {
-    console.log(`statusCode: ${res.statusCode}`);
-  
-    res.on('data', (d) => {
-      process.stdout.write(d);
+  try {
+    const response = await fetch('https://cubecobra.com/job/featuredcubes/rotate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
     });
-  });
-  
-  req.on('error', (error) => {
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    } else {
+      const responseData = await response.text();
+      console.log("Successfully rotated queue.");
+      console.log(responseData);
+    }
+  } catch (error) {
+    console.log('Error:');
     console.error(error);
-  });
-  
-  req.write(data);
-  req.end();
+  }
 };
