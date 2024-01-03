@@ -41,6 +41,8 @@ import withModal from 'components/WithModal';
 import CubePreview from 'components/CubePreview';
 import CubePropType from 'proptypes/CubePropType';
 
+const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
+
 const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
@@ -343,7 +345,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                   <CardBody>
                     {user.roles.includes('Patron') ? (
                       <p>
-                        Your account is linked at the <b>{patron.level}</b> level.
+                        Your account is linked at the <b>{LEVELS[patron.level]}</b> level.
                       </p>
                     ) : (
                       <p>Your account is linked, but you are not an active patron.</p>
@@ -379,7 +381,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                               </RemoveFeaturedButton>
                             </Col>
                           </Row>
-                        ) : [1, 2].includes(patron.level) ? (
+                        ) : [2, 3].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
                             <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
