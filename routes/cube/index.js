@@ -679,6 +679,14 @@ router.get('/analysis/:id', async (req, res) => {
 
     const { adds, cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
 
+    // keep track of which versions of cards are in the cube
+    const oracleScryfallMap = cards.mainboard.reduce((map, { details }) => {
+      map[details.oracle_id] = details.scryfall_id;
+      return map;
+    }, {});
+    // use that to personalize the suggested cuts
+    const scryfallCuts = cuts.map((cut) => oracleScryfallMap[cut.oracle]);
+
     return render(
       req,
       res,
@@ -695,8 +703,8 @@ router.get('/analysis/:id', async (req, res) => {
             cardID: card.scryfall_id,
           };
         }),
-        cuts: cuts.map((item) => {
-          const card = carddb.getReasonableCardByOracle(item.oracle);
+        cuts: scryfallCuts.map((item) => {
+          const card = carddb.cardFromId(item);
           return {
             details: card,
             cardID: card.scryfall_id,
