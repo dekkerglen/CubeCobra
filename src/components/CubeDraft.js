@@ -98,7 +98,9 @@ function CubeDraft({ draft, socket }) {
     let status = 'inProgress';
     while (status === 'inProgress') {
       // we want to do this first as we don't want to spam the server
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 2000);
+      });
 
       try {
         const res = await callApi('/multiplayer/trybotpicks', {
@@ -111,7 +113,9 @@ function CubeDraft({ draft, socket }) {
           console.log(json);
 
           if (json.picks == 0) {
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await new Promise((resolve) => {
+              setTimeout(resolve, 5000);
+            });
             continue;
           }
         }

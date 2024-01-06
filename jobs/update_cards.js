@@ -823,22 +823,20 @@ function saveEnglishCard(card, metadata) {
 
 async function saveAllCards(metadatadict, indexToOracle) {
   console.info('Processing cards...');
-  await new Promise((resolve) =>
-    fs
-      .createReadStream('./private/cards.json')
+  await new Promise((resolve) => {
+    fs.createReadStream('./private/cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync((item) => saveEnglishCard(item, metadatadict[item.oracle_id])))
-      .on('close', resolve),
-  );
+      .on('close', resolve);
+  });
 
   console.info('Creating language mappings...');
-  await new Promise((resolve) =>
-    fs
-      .createReadStream('./private/all-cards.json')
+  await new Promise((resolve) => {
+    fs.createReadStream('./private/all-cards.json')
       .pipe(JSONStream.parse('*'))
       .pipe(es.mapSync(addLanguageMapping))
-      .on('close', resolve),
-  );
+      .on('close', resolve);
+  });
 
   catalog.indexToOracle = indexToOracle;
   catalog.metadatadict = metadatadict;

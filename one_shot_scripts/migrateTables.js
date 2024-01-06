@@ -135,7 +135,9 @@ const skip = 0;
 
             // if there's more than one batch, wait 1 second between batches
             if (convertedBatches.length > 1) {
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1000);
+              });
             }
           }
         }

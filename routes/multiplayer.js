@@ -173,7 +173,9 @@ router.post('/editdeckbydraft', ensureAuth, async (req, res) => {
     try {
       if (retry > 0) {
         // add jitter
-        await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000));
+        await new Promise((resolve) => {
+          setTimeout(resolve, Math.random() * 1000);
+        });
       }
 
       const deck = await Draft.getById(draftId);
