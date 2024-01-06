@@ -120,6 +120,7 @@ function CubePlaytestPage({ cube, decks, loginCallback }) {
     [formats, defaultDraftFormat],
   );
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   function StandardDraftFormatCard() {
     return (
       <StandardDraftCard

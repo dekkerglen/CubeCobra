@@ -406,6 +406,7 @@ function CardPage({ card, history, versions, draftedWith, cubedWith, synergistic
             {filteredVersions.length > 0 ? (
               <PagedList
                 pageSize={10}
+                // eslint-disable-next-line react/no-unstable-nested-components
                 pageWrap={(element) => (
                   <table className="table table-striped mb-0">
                     <thead>
