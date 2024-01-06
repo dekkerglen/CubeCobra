@@ -529,6 +529,7 @@ router.post(
         cardutil.normalizeName(allDetails[index].name),
         versions.map(({ scryfall_id, full_name, image_normal, image_flip, prices }) => ({
           scryfall_id,
+          // eslint-disable-next-line camelcase
           version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
           image_normal,
           image_flip,
