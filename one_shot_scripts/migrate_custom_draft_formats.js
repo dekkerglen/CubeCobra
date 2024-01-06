@@ -3,6 +3,8 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
+// the below import does not exist and should be updated if we ever wish to run this script again
+// eslint-disable-next-line import/no-unresolved, import/extensions
 const Cube = require('../models/old/cube');
 
 const cubeModel = require('../dynamo/models/cube');
