@@ -20,21 +20,19 @@ function ChartComponent({ cards, characteristics, cube }) {
 
   const groups = sortIntoGroups(cards, sort);
 
-  const colorMap = {
-    White: '#D8CEAB',
-    Blue: '#67A6D3',
-    Black: '#8C7A91',
-    Red: '#D85F69',
-    Green: '#6AB572',
-    Colorless: '#ADADAD',
-    Multicolored: '#DBC467',
-  };
-  const colors = [...Object.values(colorMap), '#000000'];
-
-  const getColor = useMemo(
-    () => (label, index) => colorMap[label] ?? colors[index % colors.length],
-    [colorMap, colors],
-  );
+  const getColor = useMemo(() => {
+    const colorMap = {
+      White: '#D8CEAB',
+      Blue: '#67A6D3',
+      Black: '#8C7A91',
+      Red: '#D85F69',
+      Green: '#6AB572',
+      Colorless: '#ADADAD',
+      Multicolored: '#DBC467',
+    };
+    const colors = [...Object.values(colorMap), '#000000'];
+    return (label, index) => colorMap[label] ?? colors[index % colors.length];
+  }, []);
 
   const options = {
     responsive: true,

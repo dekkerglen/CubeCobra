@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useContext } from 'react';
+import React, { useCallback, useState, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Row, Col } from 'reactstrap';
 
@@ -38,10 +38,13 @@ function CubeDeckbuilderPage({ cube, initialDeck, loginCallback }) {
 
   const { basics } = initialDeck;
 
-  const locationMap = {
-    [DraftLocation.DECK]: [deck, setDeck],
-    [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
-  };
+  const locationMap = useMemo(
+    () => ({
+      [DraftLocation.DECK]: [deck, setDeck],
+      [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
+    }),
+    [deck, sideboard],
+  );
 
   const handleMoveCard = useCallback(
     (source, target) => {
