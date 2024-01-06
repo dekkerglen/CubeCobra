@@ -801,7 +801,7 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
         width: CARD_WIDTH,
       }));
 
-      return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
+      return generateSamplepackImage(CARD_WIDTH * width, CARD_HEIGHT * height, srcArray);
     });
 
     res.writeHead(200, {

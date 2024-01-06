@@ -295,7 +295,7 @@ async function compareCubes(cardsA, cardsB) {
   };
 }
 
-const generateSamplepackImage = async (sources = [], width, height) => {
+const generateSamplepackImage = async (width, height, sources = []) => {
   const images = await Promise.all(
     sources.map(async (source) => {
       const res = await fetch(source.src);
