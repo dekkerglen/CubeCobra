@@ -717,7 +717,6 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   }
 
   const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
-  let message;
 
   try {
     if (shouldUpdate) {

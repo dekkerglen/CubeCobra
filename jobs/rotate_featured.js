@@ -3,9 +3,6 @@ const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../serverjs/util');
 const User = require('../dynamo/models/user');
 
-const MS_PER_DAY = 1000 * 3600 * 24;
-const DAYS_BETWEEN_ROTATIONS = 7;
-
 (async () => {
   try {
     console.log('Checking rotation of featured cubes');

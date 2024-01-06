@@ -87,13 +87,6 @@ const obtainLock = async (draftId, random, timeout = 10000) => {
   return false;
 };
 
-const releaseLock = async (draftId, random) => {
-  const value = await get(`draft:${draftId}:lock`);
-  if (value === random) {
-    await del(`draft:${draftId}:lock`);
-  }
-};
-
 const getDraftMetaData = async (draftId) => {
   const [seats, currentPack, totalPacks, initialized] = await hmget(
     draftRef(draftId),

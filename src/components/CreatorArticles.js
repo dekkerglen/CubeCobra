@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
