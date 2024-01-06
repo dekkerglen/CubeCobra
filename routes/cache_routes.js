@@ -38,10 +38,10 @@ router.post('/batchinvalidate', (req, res) => {
   });
 });
 
-router.get('/health', (req, res) => {
-  return res.status(200).send({
+router.get('/health', (req, res) =>
+  res.status(200).send({
     status: 'ok',
-  });
-});
+  }),
+);
 
 module.exports = router;

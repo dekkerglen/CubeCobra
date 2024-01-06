@@ -33,15 +33,15 @@ const carddb = require('../serverjs/carddb');
 
               // get hashes to delete with deep object equality
               // delete old hash row if no new hash row has this hash
-              const hashesToDelete = oldHashes.filter((oldHashRow) => {
-                return !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash);
-              });
+              const hashesToDelete = oldHashes.filter(
+                (oldHashRow) => !newHashes.some((newHashRow) => oldHashRow.hash === newHashRow.hash),
+              );
 
               // get hashes to put with deep object equality
               // put/update hash row if new hash row doesn't match to an old one
-              const hashesToPut = newHashes.filter((newHashRow) => {
-                return !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow));
-              });
+              const hashesToPut = newHashes.filter(
+                (newHashRow) => !oldHashes.some((oldHashRow) => _.isEqual(newHashRow, oldHashRow)),
+              );
 
               // put hashes to delete
               if (hashesToDelete.length > 0) {

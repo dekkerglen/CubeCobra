@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { getTagColorClass } from 'utils/Util';
 
-const TagInput = ({ tags, addTag, deleteTag, reorderTag, suggestions, tagColors }) => {
+function TagInput({ tags, addTag, deleteTag, reorderTag, suggestions, tagColors }) {
   return (
     <ReactTags
       tags={tags.map((tag) => ({ ...tag, className: getTagColorClass(tagColors, tag.text) }))}
@@ -22,7 +22,7 @@ const TagInput = ({ tags, addTag, deleteTag, reorderTag, suggestions, tagColors 
       }}
     />
   );
-};
+}
 
 TagInput.propTypes = {
   tags: PropTypes.arrayOf(PropTypes.shape({ text: PropTypes.string, id: PropTypes.string })).isRequired,

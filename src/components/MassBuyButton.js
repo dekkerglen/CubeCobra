@@ -33,19 +33,21 @@ const getEntry = ({ details }) => {
   return `1 ${details.name}`;
 };
 
-const MassBuyButton = ({ cards, ...props }) => (
-  <Form method="POST" action={tcgMassEntryUrl}>
-    <Input
-      type="hidden"
-      name="c"
-      value={cards
-        .map(getEntry)
-        .filter((x) => x)
-        .join('||')}
-    />
-    <Button type="submit" color="primary" {...props} />
-  </Form>
-);
+function MassBuyButton({ cards, ...props }) {
+  return (
+    <Form method="POST" action={tcgMassEntryUrl}>
+      <Input
+        type="hidden"
+        name="c"
+        value={cards
+          .map(getEntry)
+          .filter((x) => x)
+          .join('||')}
+      />
+      <Button type="submit" color="primary" {...props} />
+    </Form>
+  );
+}
 
 MassBuyButton.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

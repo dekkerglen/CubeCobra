@@ -25,20 +25,20 @@ const User = require('../../dynamo/models/user');
 const router = express.Router();
 
 // API routes
-router.get('/cardnames', (_, res) => {
-  return res.status(200).send({
+router.get('/cardnames', (_, res) =>
+  res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
-  });
-});
+  }),
+);
 
 // Get the full card images including image_normal and image_flip
-router.get('/cardimages', (_, res) => {
-  return res.status(200).send({
+router.get('/cardimages', (_, res) =>
+  res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
-  });
-});
+  }),
+);
 
 router.post(
   '/editoverview',
@@ -281,12 +281,12 @@ router.get(
 
 router.post(
   '/getdetailsforcards',
-  util.wrapAsyncApi(async (req, res) => {
-    return res.status(200).send({
+  util.wrapAsyncApi(async (req, res) =>
+    res.status(200).send({
       success: 'true',
       details: req.body.cards.map((id) => carddb.cardFromId(id)),
-    });
-  }),
+    }),
+  ),
 );
 
 router.post(

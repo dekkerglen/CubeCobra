@@ -20,7 +20,7 @@ export const ACTION_LABELS = Object.freeze({
   trashrandom: 'Randomly Trashed ',
 });
 
-const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
+function DecksPickBreakdown({ draft, seatNumber, defaultIndex }) {
   const [pickNumber, setPickNumber] = useQueryParam('pick', defaultIndex);
 
   const drafterState = getDrafterState(draft, parseInt(seatNumber, 10), parseInt(pickNumber, 10));
@@ -66,7 +66,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
       </Col>
     </Row>
   );
-};
+}
 
 DecksPickBreakdown.propTypes = {
   draft: DraftPropType.isRequired,

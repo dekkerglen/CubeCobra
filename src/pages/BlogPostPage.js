@@ -8,13 +8,15 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-const BlogPostPage = ({ post, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <Banner />
-    <DynamicFlash />
-    <BlogPost key={post.id} post={post} noScroll />
-  </MainLayout>
-);
+function BlogPostPage({ post, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
+      <DynamicFlash />
+      <BlogPost key={post.id} post={post} noScroll />
+    </MainLayout>
+  );
+}
 
 BlogPostPage.propTypes = {
   post: BlogPostPropType.isRequired,

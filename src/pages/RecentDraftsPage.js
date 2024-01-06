@@ -13,7 +13,7 @@ import { wait } from 'utils/Util';
 
 import { Card, Col, Row, Spinner, CardBody, CardHeader } from 'reactstrap';
 
-const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
+function RecentDraftsPage({ decks, lastKey, loginCallback }) {
   const [items, setItems] = useState(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -81,7 +81,7 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
       </Row>
     </MainLayout>
   );
-};
+}
 
 RecentDraftsPage.propTypes = {
   decks: PropTypes.arrayOf(DeckPropType).isRequired,

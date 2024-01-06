@@ -21,7 +21,7 @@ const styles = {
   children: 'card-list-item_children',
 };
 
-const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...props }) => {
+function AutocardListItem({ card, noCardModal, inModal, className, children, ...props }) {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
   const [cardName, cardId] = useMemo(
@@ -64,7 +64,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
       <span className={styles.name}>{cardName}</span>
     </AutocardDiv>
   );
-};
+}
 AutocardListItem.propTypes = {
   card: CardPropType.isRequired,
   noCardModal: PropTypes.bool,

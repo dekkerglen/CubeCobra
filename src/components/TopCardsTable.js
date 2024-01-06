@@ -10,7 +10,7 @@ import CubeContext from 'contexts/CubeContext';
 
 const AutocardA = withAutocard('a');
 
-const TopCardsTable = () => {
+function TopCardsTable() {
   const { filterInput } = useContext(CubeContext);
 
   const [page, setPage] = useState(parseInt(Query.get('p'), 10) || 0);
@@ -107,6 +107,6 @@ const TopCardsTable = () => {
       <Paginate count={Math.ceil(count / 100)} active={page} onClick={(i) => updatePage(i)} />
     </>
   );
-};
+}
 
 export default TopCardsTable;

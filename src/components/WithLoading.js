@@ -5,7 +5,7 @@ import { Spinner } from 'reactstrap';
 import { fromEntries } from 'utils/Util';
 
 const withLoading = (Tag, handlers) => {
-  const LoadingWrapped = ({ loading, spinnerSize, opacity, ...props }) => {
+  function LoadingWrapped({ loading, spinnerSize, opacity, ...props }) {
     const [stateLoading, setLoading] = useState(false);
 
     const wrappedHandlers = useMemo(
@@ -32,7 +32,7 @@ const withLoading = (Tag, handlers) => {
         <Tag disabled={renderLoading} {...props} {...wrappedHandlers} />
       </div>
     );
-  };
+  }
 
   LoadingWrapped.propTypes = {
     loading: PropTypes.bool,

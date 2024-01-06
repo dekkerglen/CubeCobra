@@ -56,18 +56,20 @@ const CustomizeBasicsModalLink = withModal(NavLink, CustomizeBasicsModal);
 const CubeIdModalLink = withModal('span', CubeIdModal);
 const QRCodeModalLink = withModal('a', QRCodeModal);
 
-const PrivateCubeIcon = () => (
-  <Tooltip
-    text="This cube is set as private."
-    wrapperTag="span"
-    className="text-secondary"
-    style={{ position: 'relative', top: '-3px' }}
-  >
-    <EyeClosedIcon size={24} />
-  </Tooltip>
-);
+function PrivateCubeIcon() {
+  return (
+    <Tooltip
+      text="This cube is set as private."
+      wrapperTag="span"
+      className="text-secondary"
+      style={{ position: 'relative', top: '-3px' }}
+    >
+      <EyeClosedIcon size={24} />
+    </Tooltip>
+  );
+}
 
-const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) => {
+function CubeOverview({ post, cards, priceOwned, pricePurchase, cube, followed, followers, loginCallback }) {
   const user = useContext(UserContext);
 
   const [alerts, setAlerts] = useState([]);
@@ -302,7 +304,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
       </CubeLayout>
     </MainLayout>
   );
-};
+}
 
 CubeOverview.propTypes = {
   post: BlogPostPropType,

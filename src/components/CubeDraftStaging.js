@@ -17,15 +17,11 @@ const BOT_NAME = 'Bot';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
-const SortableList = SortableContainer(({ items }) => {
-  return (
-    <div>
-      {items.map(({ element, key }, index) => <SortableItem key={key} index={index} value={element} />).slice(1)}
-    </div>
-  );
-});
+const SortableList = SortableContainer(({ items }) => (
+  <div>{items.map(({ element, key }, index) => <SortableItem key={key} index={index} value={element} />).slice(1)}</div>
+));
 
-const CubeDraftStaging = ({ draft, socket, start }) => {
+function CubeDraftStaging({ draft, socket, start }) {
   const [loading, setLoading] = React.useState(true);
   const [order, setOrder] = React.useState({});
   const [players, setPlayers] = React.useState([]);
@@ -73,16 +69,14 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     run();
   });
 
-  const editableRows = seats.map((seat, i) => {
-    return {
-      element: (
-        <div className="tag-color-row clickable pb-3" key={i}>
-          {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
-        </div>
-      ),
-      key: i,
-    };
-  });
+  const editableRows = seats.map((seat, i) => ({
+    element: (
+      <div className="tag-color-row clickable pb-3" key={i}>
+        {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
+      </div>
+    ),
+    key: i,
+  }));
 
   const onSortEnd = async ({ oldIndex, newIndex }) => {
     const newSeats = { ...order };
@@ -178,7 +172,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
       </CardFooter>
     </Card>
   );
-};
+}
 
 CubeDraftStaging.propTypes = {
   draft: DraftPropType.isRequired,

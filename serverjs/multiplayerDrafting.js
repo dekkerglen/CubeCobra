@@ -538,7 +538,7 @@ const tryBotPicks = async (draftId) => {
   const finished = await hget(draftRef(draftId), 'finished');
   let picks = 0;
   if (finished === 'true') {
-    return {result:'done', picks};
+    return { result: 'done', picks };
   }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
@@ -565,13 +565,13 @@ const tryBotPicks = async (draftId) => {
   if (await isPackDone(draftId)) {
     if (currentPack < totalPacks) {
       await openPack(draftId);
-      return {result: 'inProgress', picks};
+      return { result: 'inProgress', picks };
     }
     // draft is done
     await finishDraft(draftId);
-    return {result: 'done', picks};
+    return { result: 'done', picks };
   }
-  return {result: 'inProgress', picks};
+  return { result: 'inProgress', picks };
 };
 
 const dumpDraft = async (draftId) => {

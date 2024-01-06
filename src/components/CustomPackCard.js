@@ -34,16 +34,16 @@ const ACTION_LABELS = Object.freeze({
   trashrandom: 'Randomly Trash',
 });
 
-const CollapsibleCardTitle = ({ children, isOpen, ...props }) => {
+function CollapsibleCardTitle({ children, isOpen, ...props }) {
   return (
     <CardTitle {...props}>
       {children}
       <span style={{ float: 'right' }}>{isOpen ? <ChevronUpIcon size={24} /> : <ChevronDownIcon size={24} />}</span>
     </CardTitle>
   );
-};
+}
 
-const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
+function CustomPackCard({ packIndex, pack, canRemove, mutations }) {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
   const steps = useMemo(
@@ -171,7 +171,7 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
       </CardFooter>
     </Card>
   );
-};
+}
 
 CollapsibleCardTitle.propTypes = {
   children: PropTypes.string.isRequired,

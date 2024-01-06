@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 
-const FoilOverlay =
-  (Tag) =>
-  ({ wrapperTag, ...props }) => {
+const FoilOverlay = (Tag) =>
+  function ({ wrapperTag, ...props }) {
     let finish = 'Non-foil';
     if (Object.hasOwnProperty.call(props, 'finish')) {
       finish = props.finish;

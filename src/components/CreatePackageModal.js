@@ -19,7 +19,7 @@ import { csrfFetch } from 'utils/CSRF';
 import LoadingButton from 'components/LoadingButton';
 import AutocompleteInput from 'components/AutocompleteInput';
 
-const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
+function CreatePackageModal({ isOpen, toggle, onError, onSuccess }) {
   const [cards, setCards] = useState([]);
   const [cardName, setCardName] = useState('');
   const [packageName, setPackageName] = useState('');
@@ -142,7 +142,7 @@ const CreatePackageModal = ({ isOpen, toggle, onError, onSuccess }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 CreatePackageModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

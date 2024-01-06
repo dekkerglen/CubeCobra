@@ -8,7 +8,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import ButtonLink from 'components/ButtonLink';
 
-const ReviewContentPage = ({ loginCallback, content }) => {
+function ReviewContentPage({ loginCallback, content }) {
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
@@ -39,7 +39,7 @@ const ReviewContentPage = ({ loginCallback, content }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 ReviewContentPage.propTypes = {
   loginCallback: PropTypes.string,

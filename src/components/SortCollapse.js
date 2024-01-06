@@ -7,7 +7,7 @@ import { SORTS, ORDERED_SORTS } from 'utils/Sort';
 import CubeContext from 'contexts/CubeContext';
 import Tooltip from 'components/Tooltip';
 
-const SortCollapse = ({ isOpen }) => {
+function SortCollapse({ isOpen }) {
   const {
     canEdit,
     cube,
@@ -24,14 +24,14 @@ const SortCollapse = ({ isOpen }) => {
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const sortsModified = useMemo(() => {
-    return (
+  const sortsModified = useMemo(
+    () =>
       sortPrimary !== (cube.defaultSorts[0] || 'Color Category') ||
       sortSecondary !== (cube.defaultSorts[1] || 'Types-Multicolor') ||
       sortTertiary !== (cube.defaultSorts[2] || 'Mana Value') ||
-      sortQuaternary !== (cube.defaultSorts[3] || 'Alphabetical')
-    );
-  }, [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary]);
+      sortQuaternary !== (cube.defaultSorts[3] || 'Alphabetical'),
+    [sortPrimary, cube.defaultSorts, sortSecondary, sortTertiary, sortQuaternary],
+  );
 
   return (
     <Collapse isOpen={isOpen}>
@@ -138,7 +138,7 @@ const SortCollapse = ({ isOpen }) => {
       </Container>
     </Collapse>
   );
-};
+}
 
 SortCollapse.propTypes = {
   isOpen: PropTypes.bool,

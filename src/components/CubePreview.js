@@ -10,7 +10,7 @@ import AspectRatioBox from 'components/AspectRatioBox';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 import MtgImage from 'components/MtgImage';
 
-const CubePreview = ({ cube }) => {
+function CubePreview({ cube }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -39,7 +39,7 @@ const CubePreview = ({ cube }) => {
       </div>
     </Card>
   );
-};
+}
 
 CubePreview.propTypes = {
   cube: CubePropType.isRequired,

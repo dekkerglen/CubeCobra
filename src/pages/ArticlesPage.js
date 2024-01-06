@@ -18,7 +18,7 @@ const loader = (
   </div>
 );
 
-const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
+function ArticlesPage({ loginCallback, articles, lastKey }) {
   const [items, setItems] = useState(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -61,7 +61,7 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
       </InfiniteScroll>
     </MainLayout>
   );
-};
+}
 
 ArticlesPage.propTypes = {
   loginCallback: PropTypes.string,

@@ -7,11 +7,9 @@ import DraftLocation from 'drafting/DraftLocation';
 import CardPropType from 'proptypes/CardPropType';
 import FoilCardImage from 'components/FoilCardImage';
 
-const canDrop = (_, target) => {
-  return target.type === DraftLocation.PICKS;
-};
+const canDrop = (_, target) => target.type === DraftLocation.PICKS;
 
-const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {
+function Pack({ pack, onMoveCard, onClickCard, loading, title, disabled }) {
   return (
     <Card className="mt-3">
       <CardHeader>
@@ -51,7 +49,7 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {
       </CardBody>
     </Card>
   );
-};
+}
 
 Pack.propTypes = {
   pack: PropTypes.arrayOf(CardPropType).isRequired,

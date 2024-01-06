@@ -22,7 +22,7 @@ const canDrop = () => true;
 const getMatchingSeat = (seats, userid) =>
   seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].owner.id === userid)[1];
 
-const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
+function CubeDeckbuilderPage({ cube, initialDeck, loginCallback }) {
   const user = useContext(UserContext);
   const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
@@ -127,7 +127,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 CubeDeckbuilderPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,

@@ -42,7 +42,7 @@ import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import CardPropType from 'proptypes/CardPropType';
 
-const CardModal = ({
+function CardModal({
   isOpen,
   toggle,
   card,
@@ -55,7 +55,7 @@ const CardModal = ({
   tagColors,
   moveCard,
   allTags,
-}) => {
+}) {
   const [versions, setVersions] = useState(null);
   const [tagInput, setTagInput] = useState('');
 
@@ -248,13 +248,11 @@ const CardModal = ({
                     value={card.cardID}
                     onChange={(e) => updateField('cardID', e.target.value)}
                   >
-                    {Object.entries(versions).map(([key, value]) => {
-                      return (
-                        <option key={key} value={key}>
-                          {value.version}
-                        </option>
-                      );
-                    })}
+                    {Object.entries(versions).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.version}
+                      </option>
+                    ))}
                   </Input>
                 </InputGroup>
                 <InputGroup className="mb-3">
@@ -409,7 +407,7 @@ const CardModal = ({
       </ModalBody>
     </Modal>
   );
-};
+}
 
 CardModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

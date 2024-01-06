@@ -34,7 +34,7 @@ import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
 import DraftPropType from 'proptypes/DraftPropType';
 
-const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
+function CubeDeckPage({ cube, deck, draft, loginCallback }) {
   const user = useContext(UserContext);
 
   const [seatIndex, setSeatIndex] = useQueryParam('seat', 0);
@@ -146,7 +146,7 @@ const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 
 CubeDeckPage.propTypes = {
   cube: CubePropType.isRequired,

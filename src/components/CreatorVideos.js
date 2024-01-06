@@ -8,7 +8,7 @@ import VideoPreview from 'components/VideoPreview';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const CreatorVideos = ({ videos, lastKey }) => {
+function CreatorVideos({ videos, lastKey }) {
   const [items, setItems] = useState(videos);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -64,7 +64,7 @@ const CreatorVideos = ({ videos, lastKey }) => {
       </InfiniteScroll>
     </>
   );
-};
+}
 
 CreatorVideos.propTypes = {
   videos: PropTypes.arrayOf({}).isRequired,

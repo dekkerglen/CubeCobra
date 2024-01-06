@@ -9,7 +9,7 @@ import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import TimeAgo from 'react-timeago';
 
-const NoticePage = ({ loginCallback, notices }) => {
+function NoticePage({ loginCallback, notices }) {
   const applications = notices.filter((notice) => notice.type === 'a');
   const reports = notices.filter((notice) => notice.type === 'cr');
 
@@ -96,7 +96,7 @@ const NoticePage = ({ loginCallback, notices }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 NoticePage.propTypes = {
   loginCallback: PropTypes.string,

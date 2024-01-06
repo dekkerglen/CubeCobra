@@ -8,7 +8,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import { Card, CardHeader, CardTitle, CardBody, CardFooter } from 'reactstrap';
 
-const PlaytestDecksCard = ({ decks, ...props }) => {
+function PlaytestDecksCard({ decks, ...props }) {
   const { cube } = useContext(CubeContext);
   return (
     <Card {...props}>
@@ -27,7 +27,7 @@ const PlaytestDecksCard = ({ decks, ...props }) => {
       </CardFooter>
     </Card>
   );
-};
+}
 
 PlaytestDecksCard.propTypes = {
   decks: PropTypes.arrayOf(DeckPropType).isRequired,

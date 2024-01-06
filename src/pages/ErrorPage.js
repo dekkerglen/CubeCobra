@@ -7,7 +7,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ErrorPage = ({ title, error, requestId, loginCallback, details }) => {
+function ErrorPage({ title, error, requestId, loginCallback, details }) {
   console.log(details);
 
   return (
@@ -37,7 +37,7 @@ const ErrorPage = ({ title, error, requestId, loginCallback, details }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 ErrorPage.propTypes = {
   title: PropTypes.string.isRequired,

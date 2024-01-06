@@ -34,7 +34,7 @@ const CONVERT_STATUS = {
   d: 'Draft',
 };
 
-const EditVideoPage = ({ loginCallback, video }) => {
+function EditVideoPage({ loginCallback, video }) {
   const user = useContext(UserContext);
 
   const [tab, setTab] = useQueryParam('tab', '0');
@@ -268,7 +268,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 EditVideoPage.propTypes = {
   loginCallback: PropTypes.string,

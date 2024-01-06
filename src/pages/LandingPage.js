@@ -10,7 +10,7 @@ import CardSearchBar from 'components/CardSearchBar';
 
 const LoginModalButton = withModal(Button, LoginModal);
 
-const LandingPage = () => {
+function LandingPage() {
   return (
     <div className="flex-container flex-vertical viewport">
       <Row className="m-0 p-0 flex-grow">
@@ -36,6 +36,6 @@ const LandingPage = () => {
       </Row>
     </div>
   );
-};
+}
 
 export default RenderToRoot(LandingPage);

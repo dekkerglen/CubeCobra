@@ -15,7 +15,7 @@ import CubeContext from 'contexts/CubeContext';
 const CardModalLink = withCardModal(AutocardListItem);
 const GroupModalLink = withGroupModal(ListGroupItem);
 
-const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => {
+function AutocardListGroup({ cards, heading, sort, orderedSort, showOther }) {
   const { canEdit } = useContext(CubeContext);
   const sorted = useMemo(() => sortDeep(cards, showOther, orderedSort, sort), [cards, showOther, orderedSort, sort]);
 
@@ -48,7 +48,7 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => 
       )}
     </ListGroup>
   );
-};
+}
 
 AutocardListGroup.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

@@ -4,7 +4,7 @@ import CubePropType from 'proptypes/CubePropType';
 import CubePreview from 'components/CubePreview';
 import { Col, Row, Card, CardHeader, CardBody, Button, Collapse } from 'reactstrap';
 
-const CubesCard = ({ cubes, title, header, lean, ...props }) => {
+function CubesCard({ cubes, title, header, lean, ...props }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
@@ -41,7 +41,7 @@ const CubesCard = ({ cubes, title, header, lean, ...props }) => {
       )}
     </Card>
   );
-};
+}
 
 CubesCard.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,

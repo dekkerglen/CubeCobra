@@ -16,7 +16,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';
 import CubePropType from 'proptypes/CubePropType';
 
-const CubeListPageRaw = () => {
+function CubeListPageRaw() {
   const { changedCards, filter } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
 
@@ -61,17 +61,19 @@ const CubeListPageRaw = () => {
         .reverse()}
     </>
   );
-};
+}
 
-const CubeListPage = ({ cube, cards, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards>
-        <CubeListPageRaw />
-      </CubeLayout>
-    </DisplayContextProvider>
-  </MainLayout>
-);
+function CubeListPage({ cube, cards, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards>
+          <CubeListPageRaw />
+        </CubeLayout>
+      </DisplayContextProvider>
+    </MainLayout>
+  );
+}
 
 CubeListPage.propTypes = {
   cube: CubePropType.isRequired,

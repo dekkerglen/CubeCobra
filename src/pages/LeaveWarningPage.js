@@ -9,30 +9,32 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const back = () => (window.history.length > 1 ? window.history.back() : window.close());
 
-const LeaveWarningPage = ({ url, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DynamicFlash />
-    <Card className="my-3">
-      <CardHeader>
-        <h4>You are about to leave CubeCobra</h4>
-      </CardHeader>
-      <CardBody>
-        <p>
-          This link leads to: <code>{url}</code>
-        </p>
-        <p>Are you sure you want to proceed?</p>
-      </CardBody>
-      <CardFooter>
-        <ButtonLink href={url} color="unsafe">
-          Yes, continue
-        </ButtonLink>
-        <Button className="ms-2" color="secondary" onClick={back}>
-          Go back
-        </Button>
-      </CardFooter>
-    </Card>
-  </MainLayout>
-);
+function LeaveWarningPage({ url, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DynamicFlash />
+      <Card className="my-3">
+        <CardHeader>
+          <h4>You are about to leave CubeCobra</h4>
+        </CardHeader>
+        <CardBody>
+          <p>
+            This link leads to: <code>{url}</code>
+          </p>
+          <p>Are you sure you want to proceed?</p>
+        </CardBody>
+        <CardFooter>
+          <ButtonLink href={url} color="unsafe">
+            Yes, continue
+          </ButtonLink>
+          <Button className="ms-2" color="secondary" onClick={back}>
+            Go back
+          </Button>
+        </CardFooter>
+      </Card>
+    </MainLayout>
+  );
+}
 
 LeaveWarningPage.propTypes = {
   url: PropTypes.string.isRequired,

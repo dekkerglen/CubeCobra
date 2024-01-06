@@ -71,7 +71,7 @@ const convertLegality = {
   restricted: ['warning', 'Restricted'],
 };
 
-const LegalityBadge = ({ legality, status }) => {
+function LegalityBadge({ legality, status }) {
   return (
     <h6>
       <Badge className="legality-badge" color={convertLegality[status][0]}>
@@ -80,14 +80,14 @@ const LegalityBadge = ({ legality, status }) => {
       {legality}
     </h6>
   );
-};
+}
 
 LegalityBadge.propTypes = {
   legality: PropTypes.string.isRequired,
   status: PropTypes.string.isRequired,
 };
 
-const CardIdBadge = ({ id }) => {
+function CardIdBadge({ id }) {
   const [copied, setCopied] = useState(false);
 
   const onCopyClick = async () => {
@@ -104,13 +104,13 @@ const CardIdBadge = ({ id }) => {
       </Button>
     </InputGroup>
   );
-};
+}
 
 CardIdBadge.propTypes = {
   id: PropTypes.string.isRequired,
 };
 
-const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic, loginCallback }) => {
+function CardPage({ card, history, versions, draftedWith, cubedWith, synergistic, loginCallback }) {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
   const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
   const [imageUsed, setImageUsed] = useState(card.image_normal);
@@ -128,9 +128,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
     return 0;
   });
 
-  const filteredVersions = sortedVersions.filter((version) => {
-    return version.scryfall_id !== card.scryfall_id;
-  });
+  const filteredVersions = sortedVersions.filter((version) => version.scryfall_id !== card.scryfall_id);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -262,8 +260,8 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                     </Col>
                     <Col xs="6">
                       <div className="text-end">
-                        <>{card.loyalty && <p>{card.loyalty}</p>}</>
-                        <>{card.power && <p>{`${card.power} / ${card.toughness}`}</p>}</>
+                        {card.loyalty && <p>{card.loyalty}</p>}
+                        {card.power && <p>{`${card.power} / ${card.toughness}`}</p>}
                       </div>
                     </Col>
                   </Row>
@@ -646,7 +644,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
       )}
     </MainLayout>
   );
-};
+}
 
 CardPage.propTypes = {
   card: CardPropType.isRequired,

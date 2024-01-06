@@ -4,7 +4,7 @@ import { Collapse } from 'reactstrap';
 
 import LinkButton from 'components/LinkButton';
 
-const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
+function CommentEntry({ submit, expanded, toggle, defaultValue }) {
   const [text, setText] = useState(defaultValue);
 
   return (
@@ -31,7 +31,7 @@ const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
       </LinkButton>
     </Collapse>
   );
-};
+}
 
 CommentEntry.propTypes = {
   submit: PropTypes.func.isRequired,

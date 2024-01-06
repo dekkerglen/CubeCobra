@@ -11,7 +11,7 @@ import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const VideoPage = ({ loginCallback, video }) => {
+function VideoPage({ loginCallback, video }) {
   const user = useContext(UserContext);
 
   return (
@@ -32,7 +32,7 @@ const VideoPage = ({ loginCallback, video }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 VideoPage.propTypes = {
   loginCallback: PropTypes.string,

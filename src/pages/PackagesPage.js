@@ -48,7 +48,7 @@ const defaultSortDirection = {
   user: '-1',
 };
 
-const PackagesPage = ({ loginCallback, items, lastKey, activePage }) => {
+function PackagesPage({ loginCallback, items, lastKey, activePage }) {
   const user = useContext(UserContext);
   const [alerts, setAlerts] = useState([]);
   const [filter, setFilter] = useState('');
@@ -266,7 +266,7 @@ const PackagesPage = ({ loginCallback, items, lastKey, activePage }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 PackagesPage.propTypes = {
   loginCallback: PropTypes.string,

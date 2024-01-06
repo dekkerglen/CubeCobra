@@ -46,25 +46,19 @@ const query = {};
       if (matchingItem) {
         dynamoItem.formats = [
           ...(dynamoItem.formats || []),
-          ...matchingItem.draft_formats.map((item) => {
-            return {
-              title: item.title,
-              multiples: item.multiples,
-              markdown: item.markdown,
-              defaultStatus: item.defaultStatus,
-              packs: (item.packs || []).map((pack) => {
-                return {
-                  slots: pack.slots,
-                  steps: (pack.steps || []).map((step) => {
-                    return {
-                      action: step.action,
-                      amount: step.amount,
-                    };
-                  }),
-                };
-              }),
-            };
-          }),
+          ...matchingItem.draft_formats.map((item) => ({
+            title: item.title,
+            multiples: item.multiples,
+            markdown: item.markdown,
+            defaultStatus: item.defaultStatus,
+            packs: (item.packs || []).map((pack) => ({
+              slots: pack.slots,
+              steps: (pack.steps || []).map((step) => ({
+                action: step.action,
+                amount: step.amount,
+              })),
+            })),
+          })),
         ];
       }
     }

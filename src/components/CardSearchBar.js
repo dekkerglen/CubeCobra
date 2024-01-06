@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Input, InputGroup, Button } from 'reactstrap';
 
-const CardSearchBar = () => {
+function CardSearchBar() {
   return (
     <form method="GET" action="/tool/searchcards" autoComplete="off" className="w-100">
       <div className="search-bar flex-container flex-align-stretch flex-grow">
@@ -15,6 +15,6 @@ const CardSearchBar = () => {
       </div>
     </form>
   );
-};
+}
 
 export default CardSearchBar;

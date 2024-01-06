@@ -3,7 +3,7 @@ import CubeContext from 'contexts/CubeContext';
 
 import { getCubeDescription } from 'utils/Util';
 
-const CubeSubtitle = () => {
+function CubeSubtitle() {
   const { cube, unfilteredChangedCards } = useContext(CubeContext);
 
   const subtitle = useMemo(() => getCubeDescription(cube, unfilteredChangedCards), [cube, unfilteredChangedCards]);
@@ -13,6 +13,6 @@ const CubeSubtitle = () => {
       <span className="d-sm-inline"> ({subtitle})</span>
     </div>
   );
-};
+}
 
 export default CubeSubtitle;

@@ -22,7 +22,7 @@ const sizeTypes = {
 
 // const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
 
-const Advertisment = ({
+function Advertisment({
   placementId,
   refreshLimit,
   refreshTime,
@@ -39,7 +39,7 @@ const Advertisment = ({
   railOffsetTop,
   railOffsetBottom,
   railCollisionWhitelist,
-}) => {
+}) {
   const adsEnabled = useContext(AdsContext);
 
   useMount(() => {
@@ -113,7 +113,7 @@ const Advertisment = ({
   });
 
   return <div className="advertisement-div" id={placementId} />;
-};
+}
 
 Advertisment.propTypes = {
   placementId: PropTypes.string.isRequired,

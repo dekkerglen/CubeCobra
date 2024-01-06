@@ -7,7 +7,7 @@ import { csrfFetch } from 'utils/CSRF';
 import LinkButton from 'components/LinkButton';
 import UserContext from 'contexts/UserContext';
 
-const NotificationsNav = () => {
+function NotificationsNav() {
   const { notifications } = useContext(UserContext);
 
   const [items, setItems] = useState(notifications);
@@ -63,6 +63,6 @@ const NotificationsNav = () => {
       </DropdownMenu>
     </UncontrolledDropdown>
   );
-};
+}
 
 export default NotificationsNav;

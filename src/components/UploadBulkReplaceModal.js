@@ -6,7 +6,7 @@ import { Input, Modal, ModalBody, ModalFooter, ModalHeader, Button, Label } from
 import CubeContext from 'contexts/CubeContext';
 import CSRFForm from 'components/CSRFForm';
 
-const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
+function UploadBulkReplaceModal({ isOpen, toggle }) {
   const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadReplacementModalTitle">
@@ -35,7 +35,7 @@ const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 UploadBulkReplaceModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

@@ -5,7 +5,7 @@ import { Button, Navbar, Input, CardBody } from 'reactstrap';
 
 import Banner from 'components/Banner';
 
-const CubeSearchNavBar = ({ query, order, title, ascending }) => {
+function CubeSearchNavBar({ query, order, title, ascending }) {
   const [queryText, setQuery] = useState(query || '');
   const [searchOrder, setSearchIndex] = useState(order || 'pop');
   const [searchAscending, setSearchAscending] = useState(ascending || false);
@@ -69,7 +69,7 @@ const CubeSearchNavBar = ({ query, order, title, ascending }) => {
       </form>
     </div>
   );
-};
+}
 
 CubeSearchNavBar.propTypes = {
   query: PropTypes.string,

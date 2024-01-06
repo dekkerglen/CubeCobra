@@ -34,7 +34,7 @@ const CONVERT_STATUS = {
   d: 'Draft',
 };
 
-const EditArticlePage = ({ loginCallback, article }) => {
+function EditArticlePage({ loginCallback, article }) {
   const user = useContext(UserContext);
 
   const [tab, setTab] = useQueryParam('tab', '0');
@@ -262,7 +262,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 EditArticlePage.propTypes = {
   loginCallback: PropTypes.string,

@@ -7,7 +7,7 @@ import Tab from 'components/Tab';
 import Markdown from 'components/Markdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 
-const TextEntry = ({ name, value, onChange, maxLength }) => {
+function TextEntry({ name, value, onChange, maxLength }) {
   const [tab, setTab] = useState('0');
 
   return (
@@ -53,7 +53,7 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
       </FormText>
     </>
   );
-};
+}
 
 TextEntry.propTypes = {
   name: PropTypes.string,

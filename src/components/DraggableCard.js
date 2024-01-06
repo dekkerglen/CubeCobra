@@ -6,7 +6,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import CardPropType from 'proptypes/CardPropType';
 import AutocardContext from 'contexts/AutocardContext';
 
-const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick, ...props }) => {
+function DraggableCard({ card, location, canDrop, onMoveCard, className, onClick, ...props }) {
   const { hideCard, setStopAutocard } = useContext(AutocardContext);
 
   const [{ isDragging }, drag, preview] = useDrag({
@@ -69,7 +69,7 @@ const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick
       </div>
     </>
   );
-};
+}
 
 DraggableCard.propTypes = {
   card: CardPropType.isRequired,

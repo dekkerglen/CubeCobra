@@ -2,9 +2,8 @@
 import CubeContext from 'contexts/CubeContext';
 import React, { useCallback, useContext } from 'react';
 
-const withGroupModal =
-  (Tag) =>
-  ({ children, className, altClick, modalProps, ...props }) => {
+const withGroupModal = (Tag) =>
+  function ({ children, className, altClick, modalProps, ...props }) {
     const { setModalSelection, setModalOpen } = useContext(CubeContext);
     const handleClick = useCallback(
       (event) => {
@@ -20,11 +19,9 @@ const withGroupModal =
     );
 
     return (
-      <>
-        <Tag {...props} className={className ? `${className} clickable` : 'clickable'} onClick={handleClick}>
-          {children}
-        </Tag>
-      </>
+      <Tag {...props} className={className ? `${className} clickable` : 'clickable'} onClick={handleClick}>
+        {children}
+      </Tag>
     );
   };
 

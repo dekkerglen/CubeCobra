@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Paginate from 'components/Paginate';
 import useQueryParam from 'hooks/useQueryParam';
 
-const PagedList = ({ pageSize, rows, showBottom, pageWrap }) => {
+function PagedList({ pageSize, rows, showBottom, pageWrap }) {
   const [page, setPage] = useQueryParam('page', 0);
 
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
@@ -20,7 +20,7 @@ const PagedList = ({ pageSize, rows, showBottom, pageWrap }) => {
       )}
     </>
   );
-};
+}
 
 PagedList.propTypes = {
   pageSize: PropTypes.number,

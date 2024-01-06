@@ -12,7 +12,7 @@ import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CreatorsPage = ({ loginCallback, articles, videos, podcasts }) => {
+function CreatorsPage({ loginCallback, articles, videos, podcasts }) {
   const [tab, setTab] = useQueryParam('tab', '0');
 
   return (
@@ -47,7 +47,7 @@ const CreatorsPage = ({ loginCallback, articles, videos, podcasts }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 CreatorsPage.propTypes = {
   loginCallback: PropTypes.string,

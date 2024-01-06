@@ -9,7 +9,7 @@ import ReactPlayer from 'react-player';
 
 import { CardBody, CardHeader } from 'reactstrap';
 
-const Video = ({ video }) => {
+function Video({ video }) {
   return (
     <>
       <CardHeader>
@@ -33,7 +33,7 @@ const Video = ({ video }) => {
       </div>
     </>
   );
-};
+}
 Video.propTypes = {
   video: ContentPropType.isRequired,
 };

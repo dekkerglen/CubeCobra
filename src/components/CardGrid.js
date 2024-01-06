@@ -10,7 +10,7 @@ function cardImage(Tag, card, cardProps, linkDetails) {
   return cardTag;
 }
 
-const CardGrid = ({ cardList, Tag, colProps, cardProps, linkDetails, ...props }) => {
+function CardGrid({ cardList, Tag, colProps, cardProps, linkDetails, ...props }) {
   return (
     <Row className="justify-content-center g-0" {...props}>
       {cardList.map((card, cardIndex) => (
@@ -20,7 +20,7 @@ const CardGrid = ({ cardList, Tag, colProps, cardProps, linkDetails, ...props })
       ))}
     </Row>
   );
-};
+}
 
 CardGrid.propTypes = {
   cardList: PropTypes.arrayOf(CardPropType).isRequired,

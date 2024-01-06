@@ -1,10 +1,9 @@
-
 const Content = require('../dynamo/models/content');
 
 (async () => {
   let lastKey = null;
 
-  let items = [];
+  const items = [];
 
   do {
     const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
@@ -39,8 +38,8 @@ const Content = require('../dynamo/models/content');
   }
 
   console.log(`Found ${episodesToDelete.length} bad episodes.`);
-  
+
   await Content.batchDelete(episodesToDelete.map((item) => ({ id: item.id })));
-    
+
   process.exit();
 })();

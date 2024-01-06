@@ -23,7 +23,7 @@ import useToggle from 'hooks/UseToggle';
 const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
 
-const Suggestion = ({ card, index, cube }) => {
+function Suggestion({ card, index, cube }) {
   return (
     <ListGroupItem>
       <h6>
@@ -39,7 +39,7 @@ const Suggestion = ({ card, index, cube }) => {
       </h6>
     </ListGroupItem>
   );
-};
+}
 
 Suggestion.propTypes = {
   card: PropTypes.shape({
@@ -54,7 +54,7 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
+function Suggestions({ adds, cuts, cube, maybeboard, filter }) {
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
 
   const filteredCuts = useMemo(() => {
@@ -131,7 +131,7 @@ const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
       </Row>
     </>
   );
-};
+}
 
 Suggestions.propTypes = {
   adds: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

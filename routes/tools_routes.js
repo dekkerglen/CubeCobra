@@ -367,8 +367,8 @@ router.get('/cardimageflip/:id', async (req, res) => {
   }
 });
 
-router.get('/searchcards', async (req, res) => {
-  return render(
+router.get('/searchcards', async (req, res) =>
+  render(
     req,
     res,
     'CardSearchPage',
@@ -376,7 +376,7 @@ router.get('/searchcards', async (req, res) => {
     {
       title: 'Search cards',
     },
-  );
-});
+  ),
+);
 
 module.exports = router;

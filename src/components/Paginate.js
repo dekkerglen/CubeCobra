@@ -3,18 +3,20 @@ import PropTypes from 'prop-types';
 
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
-const RealPage = ({ index, active, urlF, onClick }) => (
-  <PaginationItem active={active === index}>
-    <PaginationLink
-      data-index={onClick ? index : undefined}
-      onClick={() => onClick(index)}
-      // the button tag needs to have a set type to not accidentally submit forms
-      {...(urlF ? { tag: 'a', href: urlF(index) } : { tag: 'button', type: 'button' })}
-    >
-      {index + 1}
-    </PaginationLink>
-  </PaginationItem>
-);
+function RealPage({ index, active, urlF, onClick }) {
+  return (
+    <PaginationItem active={active === index}>
+      <PaginationLink
+        data-index={onClick ? index : undefined}
+        onClick={() => onClick(index)}
+        // the button tag needs to have a set type to not accidentally submit forms
+        {...(urlF ? { tag: 'a', href: urlF(index) } : { tag: 'button', type: 'button' })}
+      >
+        {index + 1}
+      </PaginationLink>
+    </PaginationItem>
+  );
+}
 
 RealPage.propTypes = {
   index: PropTypes.number.isRequired,
@@ -28,11 +30,13 @@ RealPage.defaultProps = {
   onClick: () => {},
 };
 
-const FakePage = ({ text }) => (
-  <PaginationItem disabled>
-    <PaginationLink>{text}</PaginationLink>
-  </PaginationItem>
-);
+function FakePage({ text }) {
+  return (
+    <PaginationItem disabled>
+      <PaginationLink>{text}</PaginationLink>
+    </PaginationItem>
+  );
+}
 
 FakePage.propTypes = {
   text: PropTypes.string.isRequired,
@@ -43,7 +47,7 @@ const range = (start, end) => {
   return [start, ...range(start + 1, end)];
 };
 
-const Paginate = ({ count, active, urlF, onClick }) => {
+function Paginate({ count, active, urlF, onClick }) {
   const smallPagination = new Array(count).fill(null).map((page, index) => (
     // eslint-disable-next-line react/no-array-index-key
     <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
@@ -105,7 +109,7 @@ const Paginate = ({ count, active, urlF, onClick }) => {
       </PaginationItem>
     </Pagination>
   );
-};
+}
 
 Paginate.propTypes = {
   count: PropTypes.number.isRequired,

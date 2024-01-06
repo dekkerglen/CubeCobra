@@ -6,7 +6,7 @@ import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
+function DeckDeleteModal({ deckID, cubeID, nextURL, isOpen, toggle }) {
   const confirm = async () => {
     const response = await csrfFetch(`/cube/deck/deletedeck/${deckID}`, {
       method: 'DELETE',
@@ -30,7 +30,7 @@ const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
       text="Are you sure you wish to delete this deck? This action cannot be undone."
     />
   );
-};
+}
 
 DeckDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,

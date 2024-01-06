@@ -64,7 +64,7 @@ export const getCard = async (defaultprinting, name, setAlerts) => {
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
-const EditCollapse = ({ isOpen }) => {
+function EditCollapse({ isOpen }) {
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
   const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
@@ -339,7 +339,7 @@ const EditCollapse = ({ isOpen }) => {
       </Collapse>
     </Collapse>
   );
-};
+}
 
 EditCollapse.propTypes = {
   isOpen: PropTypes.bool,

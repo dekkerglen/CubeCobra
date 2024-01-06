@@ -10,7 +10,7 @@ import Username from 'components/Username';
 
 import { CardBody, CardHeader, Row, Col } from 'reactstrap';
 
-const Podcast = ({ podcast, episodes }) => {
+function Podcast({ podcast, episodes }) {
   return (
     <>
       <CardHeader>
@@ -47,7 +47,7 @@ const Podcast = ({ podcast, episodes }) => {
       </div>
     </>
   );
-};
+}
 Podcast.propTypes = {
   podcast: ContentPropType.isRequired,
   episodes: PropTypes.arrayOf(PropTypes.shape({})),

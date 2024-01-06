@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Alert, UncontrolledAlert } from 'reactstrap';
 import Markdown from 'components/Markdown';
 
-const DynamicFlash = (props) => {
+function DynamicFlash(props) {
   const messages = useMemo(() => {
     if (typeof document !== 'undefined') {
       const flashInput = document.getElementById('flash');
@@ -31,6 +31,6 @@ const DynamicFlash = (props) => {
       )}
     </div>
   );
-};
+}
 
 export default DynamicFlash;

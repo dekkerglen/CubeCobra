@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 
-const ButtonLink = ({ children, outline, color = 'primary', block, ...props }) => {
+function ButtonLink({ children, outline, color = 'primary', block, ...props }) {
   const type = outline ? `btn-outline-${color}` : `btn-${color}`;
 
   const link = (
@@ -11,6 +11,6 @@ const ButtonLink = ({ children, outline, color = 'primary', block, ...props }) =
   );
   if (block) return <div className="d-grid">{link}</div>;
   return link;
-};
+}
 
 export default ButtonLink;

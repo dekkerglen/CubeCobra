@@ -8,7 +8,7 @@ import { formatDate } from 'utils/Date';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
 
-const EloGraph = ({ defaultHistories, cardId }) => {
+function EloGraph({ defaultHistories, cardId }) {
   const [history, setHistory] = useState(defaultHistories);
   const [zoom, setZoom] = useState('year');
   const [period, setPeriod] = useState('week');
@@ -155,7 +155,7 @@ const EloGraph = ({ defaultHistories, cardId }) => {
       )}
     </>
   );
-};
+}
 
 EloGraph.propTypes = {
   defaultHistories: PropTypes.arrayOf(PropTypes.shape({})),

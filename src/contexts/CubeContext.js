@@ -54,7 +54,7 @@ const getDetails = async (cardId) => {
   return json.card;
 };
 
-export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict, useChangedCards }) => {
+export function CubeContextProvider({ initialCube, cards, children, loadVersionDict, useChangedCards }) {
   const user = useContext(UserContext);
 
   const { setOpenCollapse } = useContext(DisplayContext);
@@ -120,8 +120,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   );
 
   const updateShowTagColors = useCallback(
-    (showColors) => {
-      return csrfFetch('/cube/api/saveshowtagcolors', {
+    (showColors) =>
+      csrfFetch('/cube/api/saveshowtagcolors', {
         method: 'POST',
         body: JSON.stringify({
           show_tag_colors: showColors,
@@ -136,8 +136,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         } else {
           console.error('Request failed.');
         }
-      });
-    },
+      }),
     [showTagColors],
   );
 
@@ -616,7 +615,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             changes,
             id: cube.id,
             useBlog,
-            checksum
+            checksum,
           }),
         });
 
@@ -986,7 +985,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       </>
     </CubeContext.Provider>
   );
-};
+}
 
 CubeContextProvider.propTypes = {
   initialCube: PropTypes.shape({

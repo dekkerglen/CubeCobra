@@ -11,7 +11,7 @@ import { cardType } from 'utils/Card';
 import { weightedAverage, weightedMedian, weightedStdDev, calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const Averages = ({ cards, characteristics, cube }) => {
+function Averages({ cards, characteristics, cube }) {
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
@@ -45,13 +45,12 @@ const Averages = ({ cards, characteristics, cube }) => {
               }
               return true;
             })
-            .map((card) => {
-              return [asfans[card.cardID] || 1, parseFloat(characteristics[characteristic].get(card), 10)];
-            })
-            .filter(([weight, x]) => {
-              // Don't include null, undefined, or NaN values, but we still want to include 0 values.
-              return weight && weight > 0 && (x || x === 0);
-            });
+            .map((card) => [asfans[card.cardID] || 1, parseFloat(characteristics[characteristic].get(card), 10)])
+            .filter(
+              ([weight, x]) =>
+                // Don't include null, undefined, or NaN values, but we still want to include 0 values.
+                weight && weight > 0 && (x || x === 0),
+            );
           const avg = weightedAverage(vals);
           return {
             label: tuple[0],
@@ -117,7 +116,7 @@ const Averages = ({ cards, characteristics, cube }) => {
       </ErrorBoundary>
     </>
   );
-};
+}
 Averages.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   characteristics: PropTypes.shape({}).isRequired,

@@ -19,7 +19,7 @@ import {
   UncontrolledAlert,
 } from 'reactstrap';
 
-const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) => {
+function AddToCubeModal({ card, isOpen, toggle, hideAnalytics, cubeContext }) {
   const user = useContext(UserContext);
   const cubes = user ? user.cubes : [];
 
@@ -145,7 +145,7 @@ const AddToCubeModal = ({ card, isOpen, toggle, hideAnalytics, cubeContext }) =>
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 AddToCubeModal.propTypes = {
   card: PropTypes.shape({

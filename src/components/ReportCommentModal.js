@@ -6,7 +6,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, InputGroup, InputGroupText,
 
 import CSRFForm from 'components/CSRFForm';
 
-const ReportCommentModal = ({ comment, isOpen, toggle }) => {
+function ReportCommentModal({ comment, isOpen, toggle }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="lg">
       <CSRFForm method="POST" action="/comment/report" autoComplete="off">
@@ -38,7 +38,7 @@ const ReportCommentModal = ({ comment, isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 ReportCommentModal.propTypes = {
   toggle: PropTypes.func.isRequired,

@@ -10,7 +10,7 @@ import AutocardListGroup from 'components/AutocardListGroup';
 import DisplayContext from 'contexts/DisplayContext';
 import CubeContext from 'contexts/CubeContext';
 
-const TableView = ({ cards, noGroupModal, className, ...props }) => {
+function TableView({ cards, noGroupModal, className, ...props }) {
   const { compressedView } = useContext(DisplayContext);
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
@@ -52,7 +52,7 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
       </Row>
     </div>
   );
-};
+}
 
 TableView.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

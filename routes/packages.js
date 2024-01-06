@@ -11,9 +11,7 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get('/browse', async (req, res) => {
-  return res.redirect('/packages/approved');
-});
+router.get('/browse', async (req, res) => res.redirect('/packages/approved'));
 
 router.get('/approved', async (req, res) => {
   const packages = await Package.querySortedByVoteCount(Package.STATUSES.APPROVED, '', false);
@@ -165,7 +163,6 @@ router.post('/submit', ensureAuth, async (req, res) => {
 router.get('/upvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-
   pack.voters = [...new Set([...pack.voters, req.user.id])];
   await Package.put(pack);
 
@@ -217,11 +214,11 @@ router.get('/remove/:id', ensureRole('Admin'), async (req, res) => {
   });
 });
 
-router.get('/:id', async (req, res) => {
-  return render(req, res, 'PackagePage', {
+router.get('/:id', async (req, res) =>
+  render(req, res, 'PackagePage', {
     pack: await Package.getById(req.params.id),
-  });
-});
+  }),
+);
 
 router.get('/', (req, res) => {
   res.redirect('/packages/browse');

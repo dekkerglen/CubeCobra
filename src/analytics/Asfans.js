@@ -11,7 +11,7 @@ import AsfanDropdown from 'components/AsfanDropdown';
 import { calculateAsfans } from 'drafting/createdraft';
 import CubePropType from 'proptypes/CubePropType';
 
-const Asfans = ({ cards, cube }) => {
+function Asfans({ cards, cube }) {
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
 
@@ -76,7 +76,7 @@ const Asfans = ({ cards, cube }) => {
       </ErrorBoundary>
     </>
   );
-};
+}
 
 Asfans.propTypes = {
   cube: CubePropType.isRequired,

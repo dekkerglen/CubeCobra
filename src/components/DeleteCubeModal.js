@@ -5,7 +5,7 @@ import { Modal, ModalBody, ModalHeader, Input, Button, ModalFooter } from 'react
 
 import CSRFForm from 'components/CSRFForm';
 
-const DeleteCubeModal = ({ isOpen, toggle, cubeId, cubeName }) => {
+function DeleteCubeModal({ isOpen, toggle, cubeId, cubeName }) {
   const [deleteText, setDeleteText] = useState('');
   return (
     <Modal size="lg" isOpen={isOpen} toggle={toggle}>
@@ -27,7 +27,7 @@ const DeleteCubeModal = ({ isOpen, toggle, cubeId, cubeName }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 DeleteCubeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

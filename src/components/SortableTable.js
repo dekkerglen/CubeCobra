@@ -16,7 +16,7 @@ export const valueRenderer = (value) => {
 
 export const compareStrings = (a, b) => a?.toString?.()?.localeCompare?.(b?.toString?.());
 
-export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, totalRow, totalCol, ...props }) => {
+export function SortableTable({ data, defaultSortConfig, sortFns, columnProps, totalRow, totalCol, ...props }) {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
   const exportData = data.map((row) =>
@@ -81,7 +81,7 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
       </Table>
     </>
   );
-};
+}
 
 SortableTable.propTypes = {
   data: PropTypes.arrayOf(PropTypes.shape({}).isRequired).isRequired,

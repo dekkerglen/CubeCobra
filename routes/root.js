@@ -102,23 +102,21 @@ router.post('/getmoredecks', ensureAuth, async (req, res) => {
   });
 });
 
-router.get('/landing', async (req, res) => {
-  return render(req, res, 'LandingPage');
-});
+router.get('/landing', async (req, res) => render(req, res, 'LandingPage'));
 
-router.get('/version', async (req, res) => {
-  return render(req, res, 'VersionPage', {
+router.get('/version', async (req, res) =>
+  render(req, res, 'VersionPage', {
     version: process.env.CUBECOBRA_VERSION,
     host: process.env.DOMAIN,
-  });
-});
+  }),
+);
 
-router.get('/search', async (req, res) => {
-  return render(req, res, 'SearchPage', {
+router.get('/search', async (req, res) =>
+  render(req, res, 'SearchPage', {
     query: '',
     cubes: [],
-  });
-});
+  }),
+);
 
 const searchCubes = async (query, order, lastKey, ascending, user) => {
   let updatedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
@@ -184,12 +182,10 @@ router.post('/getmoresearchitems', ensureAuth, async (req, res) => {
   });
 });
 
-router.get('/contact', (req, res) => {
-  return render(req, res, 'ContactPage');
-});
+router.get('/contact', (req, res) => render(req, res, 'ContactPage'));
 
-router.get('/tos', (req, res) => {
-  return render(req, res, 'InfoPage', {
+router.get('/tos', (req, res) =>
+  render(req, res, 'InfoPage', {
     title: 'Terms and Conditions',
     content: [
       {
@@ -279,18 +275,14 @@ router.get('/tos', (req, res) => {
         text: `These Terms constitute the entire agreement between Cube Cobra and you in relation to your use of this Website, and supersede all prior agreements and understandings.`,
       },
     ],
-  });
-});
+  }),
+);
 
-router.get('/filters', (req, res) => {
-  return render(req, res, 'FiltersPage');
-});
-router.get('/markdown', (req, res) => {
-  return render(req, res, 'MarkdownPage');
-});
+router.get('/filters', (req, res) => render(req, res, 'FiltersPage'));
+router.get('/markdown', (req, res) => render(req, res, 'MarkdownPage'));
 
-router.get('/privacy', (req, res) => {
-  return render(req, res, 'InfoPage', {
+router.get('/privacy', (req, res) =>
+  render(req, res, 'InfoPage', {
     title: 'Privacy Policy',
     content: [
       {
@@ -648,11 +640,11 @@ router.get('/privacy', (req, res) => {
         text: `The company and our advertising partners collect the personal information identified above (such as the cookies stored on your browser, the advertising identifier on your mobile device, or the IP address of your device) when you visit our websites, apps, and other products, services and platforms, or open our emails. We, and our partners, use this information to tailor and deliver ads to you on our websites, apps, emails, and other products, services and platforms, or to help tailor ads to you when you visit others’ sites (or use others’ apps). To tailor ads that may be more relevant to you, we and/or our partners may share the information we collect with third parties.`,
       },
     ],
-  });
-});
+  }),
+);
 
-router.get('/cookies', (req, res) => {
-  return render(req, res, 'InfoPage', {
+router.get('/cookies', (req, res) =>
+  render(req, res, 'InfoPage', {
     title: 'Cookies Policy',
     content: [
       {
@@ -680,12 +672,10 @@ router.get('/cookies', (req, res) => {
           ' not function properly, including but not limited to Persistent Login.',
       },
     ],
-  });
-});
+  }),
+);
 
-router.get('/donate', (req, res) => {
-  return render(req, res, 'DonatePage');
-});
+router.get('/donate', (req, res) => render(req, res, 'DonatePage'));
 
 router.get('/c/:id', (req, res) => {
   res.redirect(`/cube/list/${req.params.id}`);
@@ -695,11 +685,11 @@ router.get('/d/:id', (req, res) => {
   res.redirect(`/cube/draft/${req.params.id}`);
 });
 
-router.get('/leave', (req, res) => {
-  return render(req, res, 'LeaveWarningPage', {
+router.get('/leave', (req, res) =>
+  render(req, res, 'LeaveWarningPage', {
     url: req.query.url,
-  });
-});
+  }),
+);
 
 router.get('/ads.txt', (req, res) => {
   res.redirect(301, 'https://api.nitropay.com/v1/ads-860.txt');

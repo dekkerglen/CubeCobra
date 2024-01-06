@@ -47,7 +47,7 @@ const numFields = [
 ];
 const colorFields = ['color', 'identity'];
 
-const FilterCollapse = ({ isOpen, hideDescription }) => {
+function FilterCollapse({ isOpen, hideDescription }) {
   const { filterInput, setFilterInput, filterValid, filterResult } = useContext(CubeContext);
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -243,7 +243,7 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
       />
     </Collapse>
   );
-};
+}
 
 FilterCollapse.propTypes = {
   isOpen: PropTypes.bool,

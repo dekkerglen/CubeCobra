@@ -17,17 +17,7 @@ import withModal from 'components/WithModal';
 const DeleteDeckModalLink = withModal(NavLink, DeckDeleteModal);
 const BasicsModalLink = withModal(NavLink, BasicsModal);
 
-const DeckbuilderNavbar = ({
-  deck,
-  addBasics,
-  name,
-  description,
-  className,
-  setSideboard,
-  setDeck,
-  seat,
-  ...props
-}) => {
+function DeckbuilderNavbar({ deck, addBasics, name, description, className, setSideboard, setDeck, seat, ...props }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNavbar = useCallback(
@@ -186,7 +176,7 @@ const DeckbuilderNavbar = ({
       </Collapse>
     </Navbar>
   );
-};
+}
 
 DeckbuilderNavbar.propTypes = {
   deck: DeckPropType.isRequired,

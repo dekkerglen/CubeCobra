@@ -139,7 +139,7 @@ const getErrorsInFormat = (format) => {
   return errors.length === 0 ? null : errors;
 };
 
-const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat }) => {
+function CustomDraftFormatModal({ isOpen, toggle, formatIndex, format, setFormat }) {
   const useMutateFormat = (mutation) =>
     useCallback(
       (event) => {
@@ -283,7 +283,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 CustomDraftFormatModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

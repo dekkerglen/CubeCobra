@@ -12,34 +12,34 @@ import LoadingButton from 'components/LoadingButton';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 
-const SortableList = SortableContainer(({ items }) => {
+const SortableList = SortableContainer(({ items }) => (
+  <div>
+    {items.map(({ element, key }, index) => (
+      <SortableItem key={key} index={index} value={element} />
+    ))}
+  </div>
+));
+
+function TagColorRow({ tag, tagClass, value, onChange }) {
   return (
-    <div>
-      {items.map(({ element, key }, index) => (
-        <SortableItem key={key} index={index} value={element} />
-      ))}
-    </div>
+    <Row className="tag-color-row">
+      <Col>
+        <span className={tagClass}>{tag}</span>
+      </Col>
+      <Col className="d-flex flex-column justify-content-center">
+        <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
+          {TAG_COLORS.map(([name, v]) => (
+            <option key={v || 'none'} value={v || 'none'}>
+              {name}
+            </option>
+          ))}
+        </Input>
+      </Col>
+    </Row>
   );
-});
+}
 
-const TagColorRow = ({ tag, tagClass, value, onChange }) => (
-  <Row className="tag-color-row">
-    <Col>
-      <span className={tagClass}>{tag}</span>
-    </Col>
-    <Col className="d-flex flex-column justify-content-center">
-      <Input type="select" bsSize="sm" name={`tagcolor-${tag}`} value={value || 'none'} onChange={onChange}>
-        {TAG_COLORS.map(([name, v]) => (
-          <option key={v || 'none'} value={v || 'none'}>
-            {name}
-          </option>
-        ))}
-      </Input>
-    </Col>
-  </Row>
-);
-
-const TagColorsModal = ({ isOpen, toggle }) => {
+function TagColorsModal({ isOpen, toggle }) {
   const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
   const [loading, setLoading] = React.useState(false);
   const [modalColors, setModalColors] = React.useState([...tagColors]);
@@ -153,7 +153,7 @@ const TagColorsModal = ({ isOpen, toggle }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 TagColorsModal.defaultProps = {
   canEdit: false,

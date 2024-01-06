@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const Notifications = ({ notifications, lastKey, loginCallback }) => {
+function Notifications({ notifications, lastKey, loginCallback }) {
   const [items, setItems] = useState(notifications);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -67,7 +67,7 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 Notifications.propTypes = {
   notifications: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

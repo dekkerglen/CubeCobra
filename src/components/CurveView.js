@@ -11,7 +11,7 @@ import CubeContext from 'contexts/CubeContext';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 
-const TypeRow = ({ cardType, group }) => {
+function TypeRow({ cardType, group }) {
   const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
   return (
     <>
@@ -31,34 +31,36 @@ const TypeRow = ({ cardType, group }) => {
       </Row>
     </>
   );
-};
+}
 
 TypeRow.propTypes = {
   cardType: PropTypes.string.isRequired,
   group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
-const ColorCard = ({ color, group }) => (
-  <Card className="mb-3">
-    <CardHeader>
-      <h5 className="mb-0">
-        {color} {group.length}
-      </h5>
-    </CardHeader>
-    <CardBody>
-      {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
-        <TypeRow key={label} cardType={label} group={cncGroup} />
-      ))}
-    </CardBody>
-  </Card>
-);
+function ColorCard({ color, group }) {
+  return (
+    <Card className="mb-3">
+      <CardHeader>
+        <h5 className="mb-0">
+          {color} {group.length}
+        </h5>
+      </CardHeader>
+      <CardBody>
+        {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
+          <TypeRow key={label} cardType={label} group={cncGroup} />
+        ))}
+      </CardBody>
+    </Card>
+  );
+}
 
 ColorCard.propTypes = {
   color: PropTypes.string.isRequired,
   group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
-const CurveView = ({ cards, ...props }) => {
+function CurveView({ cards, ...props }) {
   const { sortPrimary, cube } = useContext(CubeContext);
 
   // We call the groups color and type even though they might be other sorts.
@@ -71,7 +73,7 @@ const CurveView = ({ cards, ...props }) => {
       </Col>
     </Row>
   );
-};
+}
 
 CurveView.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

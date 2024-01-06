@@ -23,7 +23,7 @@ const loader = (
   </div>
 );
 
-const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
+function CubeBlogPage({ cube, lastKey, posts, loginCallback }) {
   const [items, setItems] = useState(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -74,7 +74,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
       </CubeLayout>
     </MainLayout>
   );
-};
+}
 
 CubeBlogPage.propTypes = {
   cube: CubePropType.isRequired,

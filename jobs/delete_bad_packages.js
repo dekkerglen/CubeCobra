@@ -1,4 +1,3 @@
-
 const Package = require('../dynamo/models/package');
 const carddb = require('../serverjs/carddb');
 
@@ -8,12 +7,12 @@ const carddb = require('../serverjs/carddb');
   let lastKey = null;
 
   do {
-    console.log("Scanning..." , lastKey);
+    console.log('Scanning...', lastKey);
     const result = await Package.scan(lastKey);
     lastKey = result.lastKey;
 
-    const items = result.items.filter((item) => {
-      return item.cards.some((card) => {
+    const items = result.items.filter((item) =>
+      item.cards.some((card) => {
         // if they are string its ok
         if (typeof card === 'string') {
           return false;
@@ -26,9 +25,8 @@ const carddb = require('../serverjs/carddb');
 
         // if they are not string or object, they are bad
         return true;
-      });
-    });
-
+      }),
+    );
 
     if (items.length > 0) {
       console.log(`Found ${items.length} bad packages.`);
@@ -36,6 +34,6 @@ const carddb = require('../serverjs/carddb');
       await Package.batchDelete(items.map((item) => ({ id: item.id })));
     }
   } while (lastKey);
-    
+
   process.exit();
 })();

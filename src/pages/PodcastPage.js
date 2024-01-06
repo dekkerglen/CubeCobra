@@ -11,7 +11,7 @@ import ButtonLink from 'components/ButtonLink';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const PodcastPage = ({ loginCallback, podcast, episodes }) => {
+function PodcastPage({ loginCallback, podcast, episodes }) {
   const user = useContext(UserContext);
 
   return (
@@ -39,7 +39,7 @@ const PodcastPage = ({ loginCallback, podcast, episodes }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 PodcastPage.propTypes = {
   loginCallback: PropTypes.string,

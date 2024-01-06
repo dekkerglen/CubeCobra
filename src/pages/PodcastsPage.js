@@ -13,7 +13,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
+function PodcastsPage({ loginCallback, episodes, podcasts, lastKey }) {
   const [items, setItems] = useState(episodes);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -74,7 +74,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
       </InfiniteScroll>
     </MainLayout>
   );
-};
+}
 
 PodcastsPage.propTypes = {
   loginCallback: PropTypes.string,

@@ -77,20 +77,18 @@ const renderMath = (node) => <Latex trusted={false} displayMode>{`$$ ${node.valu
 
 const renderInlineMath = (node) => <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
 
-const renderUserlink = ({ name }) => {
-  return (
-    <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
-      @{name}
-    </a>
-  );
-};
+const renderUserlink = ({ name }) => (
+  <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
+    @{name}
+  </a>
+);
 
 const renderSymbol = ({ value }) => {
   const symbol = value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };
 
-const renderCardlink = ({ name, id, dfc }) => {
+function renderCardlink({ name, id, dfc }) {
   const idURL = encodeURIComponent(id);
   const details = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -100,7 +98,7 @@ const renderCardlink = ({ name, id, dfc }) => {
       {name}
     </AutocardLink>
   );
-};
+}
 
 const renderCardImage = (node) => {
   const idURL = encodeURIComponent(node.id);
@@ -142,7 +140,7 @@ const RENDERERS = {
   cardrow: renderCardrow,
 };
 
-const Markdown = ({ markdown, limited }) => {
+function Markdown({ markdown, limited }) {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
@@ -154,7 +152,7 @@ const Markdown = ({ markdown, limited }) => {
       {markdownStr}
     </ReactMarkdown>
   );
-};
+}
 
 renderCardlink.propTypes = {
   name: PropTypes.string.isRequired,

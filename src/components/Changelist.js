@@ -1,4 +1,4 @@
-﻿/* eslint-disable react/no-array-index-key */
+/* eslint-disable react/no-array-index-key */
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
@@ -15,21 +15,21 @@ import CardPropType from 'proptypes/CardPropType';
 const TextAutocard = withAutocard('span');
 const CardModalLink = withCardModal(TextAutocard);
 
-const capitalizeFirstLetter = (string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-};
+const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-const RemoveButton = ({ onClick }) => (
-  <a href="#" className="clickx" onClick={onClick}>
-    ×
-  </a>
-);
+function RemoveButton({ onClick }) {
+  return (
+    <a href="#" className="clickx" onClick={onClick}>
+      ×
+    </a>
+  );
+}
 
 RemoveButton.propTypes = {
   onClick: PropTypes.func.isRequired,
 };
 
-const Add = ({ card, revert }) => {
+function Add({ card, revert }) {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState({});
 
@@ -55,32 +55,34 @@ const Add = ({ card, revert }) => {
       {!loading ? <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
     </li>
   );
-};
+}
 
 Add.propTypes = {
   revert: PropTypes.func.isRequired,
   card: CardPropType.isRequired,
 };
 
-const Remove = ({ card, revert }) => (
-  <li>
-    <RemoveButton onClick={revert} />
-    <span className="mx-1" style={{ color: 'red' }}>
-      <NoEntryIcon />
-    </span>
-    <CardModalLink
-      card={card}
-      altClick={() => {
-        window.open(`/tool/card/${card.cardID}`);
-      }}
-      modalProps={{
-        card,
-      }}
-    >
-      {card.details.name}
-    </CardModalLink>
-  </li>
-);
+function Remove({ card, revert }) {
+  return (
+    <li>
+      <RemoveButton onClick={revert} />
+      <span className="mx-1" style={{ color: 'red' }}>
+        <NoEntryIcon />
+      </span>
+      <CardModalLink
+        card={card}
+        altClick={() => {
+          window.open(`/tool/card/${card.cardID}`);
+        }}
+        modalProps={{
+          card,
+        }}
+      >
+        {card.details.name}
+      </CardModalLink>
+    </li>
+  );
+}
 
 Remove.propTypes = {
   revert: PropTypes.func.isRequired,
@@ -92,25 +94,27 @@ Remove.propTypes = {
   }).isRequired,
 };
 
-const Edit = ({ card, revert }) => (
-  <li>
-    <RemoveButton onClick={revert} />
-    <span className="mx-1" style={{ color: 'orange' }}>
-      <ToolsIcon />
-    </span>
-    <CardModalLink
-      card={card}
-      altClick={() => {
-        window.open(`/tool/card/${card.cardID}`);
-      }}
-      modalProps={{
-        card,
-      }}
-    >
-      {card.details.name}
-    </CardModalLink>
-  </li>
-);
+function Edit({ card, revert }) {
+  return (
+    <li>
+      <RemoveButton onClick={revert} />
+      <span className="mx-1" style={{ color: 'orange' }}>
+        <ToolsIcon />
+      </span>
+      <CardModalLink
+        card={card}
+        altClick={() => {
+          window.open(`/tool/card/${card.cardID}`);
+        }}
+        modalProps={{
+          card,
+        }}
+      >
+        {card.details.name}
+      </CardModalLink>
+    </li>
+  );
+}
 
 Edit.propTypes = {
   revert: PropTypes.func.isRequired,
@@ -122,7 +126,7 @@ Edit.propTypes = {
   }).isRequired,
 };
 
-const Swap = ({ card, oldCard, revert }) => {
+function Swap({ card, oldCard, revert }) {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState({});
 
@@ -150,7 +154,7 @@ const Swap = ({ card, oldCard, revert }) => {
       {!loading ? <TextAutocard card={{ details }}>{details.name}</TextAutocard> : <Spinner size="sm" />}
     </li>
   );
-};
+}
 
 Swap.propTypes = {
   revert: PropTypes.func.isRequired,
@@ -158,7 +162,7 @@ Swap.propTypes = {
   oldCard: CardPropType.isRequired,
 };
 
-const Changelist = () => {
+function Changelist() {
   const { cube, unfilteredChangedCards, changes, revertAdd, revertRemove, revertSwap, revertEdit } =
     useContext(CubeContext);
 
@@ -212,6 +216,6 @@ const Changelist = () => {
       ))}
     </div>
   );
-};
+}
 
 export default Changelist;

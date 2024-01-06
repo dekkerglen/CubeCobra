@@ -5,7 +5,7 @@ import { ClippyIcon } from '@primer/octicons-react';
 
 import { Modal, ModalHeader, ModalBody, InputGroup, Input, Button } from 'reactstrap';
 
-const ShareCommentModal = ({ domain, comment, isOpen, toggle }) => {
+function ShareCommentModal({ domain, comment, isOpen, toggle }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="md">
       <ModalHeader toggle={toggle}>Share this Comment</ModalHeader>
@@ -23,7 +23,7 @@ const ShareCommentModal = ({ domain, comment, isOpen, toggle }) => {
       </ModalBody>
     </Modal>
   );
-};
+}
 
 ShareCommentModal.propTypes = {
   toggle: PropTypes.func.isRequired,

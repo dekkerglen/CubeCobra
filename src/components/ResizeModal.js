@@ -6,7 +6,7 @@ import FilterCollapse from 'components/FilterCollapse';
 import TextField from 'components/TextField';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Card, Input } from 'reactstrap';
 
-const ResizeModal = ({ cubeID }) => {
+function ResizeModal({ cubeID }) {
   const [open, toggleOpen] = useToggle(false);
   const [size, setSize] = useState('720');
   const [filter, setFilter] = useState('');
@@ -70,7 +70,7 @@ const ResizeModal = ({ cubeID }) => {
       </Modal>
     </>
   );
-};
+}
 
 ResizeModal.propTypes = {
   cubeID: PropTypes.string.isRequired,

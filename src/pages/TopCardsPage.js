@@ -11,7 +11,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import { CubeContextProvider } from 'contexts/CubeContext';
 
-const TopCardsPage = ({ loginCallback }) => {
+function TopCardsPage({ loginCallback }) {
   return (
     <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
@@ -38,7 +38,7 @@ const TopCardsPage = ({ loginCallback }) => {
       </MainLayout>
     </CubeContextProvider>
   );
-};
+}
 
 TopCardsPage.propTypes = {
   loginCallback: PropTypes.string,

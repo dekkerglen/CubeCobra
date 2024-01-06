@@ -38,16 +38,18 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { getLabels, cardIsLabel } from 'utils/Sort';
 import CardPropType from 'proptypes/CardPropType';
 
-const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cuts }) => {
+function CubeAnalysisPage({ cube, loginCallback, cubeAnalytics, cards, adds, cuts }) {
   const [filter, setFilter] = useState(null);
   const [activeTab, setActiveTab] = useQueryParam('tab', 0);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
 
-  const filteredCards = useMemo(() => {
-    return (filter ? cards.mainboard.filter(filter) : cards.mainboard).map((card) => ({
-      ...card,
-    }));
-  }, [cards, filter]);
+  const filteredCards = useMemo(
+    () =>
+      (filter ? cards.mainboard.filter(filter) : cards.mainboard).map((card) => ({
+        ...card,
+      })),
+    [cards, filter],
+  );
 
   const convertToCharacteristic = (name, func) => ({
     get: func,
@@ -238,7 +240,7 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
       </CubeLayout>
     </MainLayout>
   );
-};
+}
 
 CubeAnalysisPage.propTypes = {
   cube: CubePropType.isRequired,

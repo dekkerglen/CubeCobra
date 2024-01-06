@@ -276,7 +276,7 @@ export function xorStrings(strings) {
   if (nonNullStrings.length === 0) {
     return '';
   }
-  
+
   let result = nonNullStrings[0];
   for (let i = 1; i < nonNullStrings.length; i++) {
     result = xor(result, nonNullStrings[i]);
@@ -307,5 +307,5 @@ export default {
   getCardTagColorClass,
   getTagColorClass,
   wait,
-  xorStrings
+  xorStrings,
 };

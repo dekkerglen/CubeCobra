@@ -43,7 +43,7 @@ let staticPicks;
 
 let seat = 0;
 
-const CubeDraft = ({ draft, socket }) => {
+function CubeDraft({ draft, socket }) {
   const [packQueue, setPackQueue] = React.useState([]);
   const [pack, setPack] = React.useState([]);
   const [picks, setPicks] = React.useState(setupPicks(2, 8));
@@ -105,7 +105,7 @@ const CubeDraft = ({ draft, socket }) => {
           draft: draft.id,
         });
         if (res) {
-          let json = await res.json();
+          const json = await res.json();
           status = json.result;
 
           console.log(json);
@@ -117,7 +117,7 @@ const CubeDraft = ({ draft, socket }) => {
         }
       } catch (e) {
         console.error(e);
-      }      
+      }
     }
   };
 
@@ -229,7 +229,7 @@ const CubeDraft = ({ draft, socket }) => {
       </Card>
     </DndProvider>
   );
-};
+}
 
 CubeDraft.propTypes = {
   draft: DraftPropType.isRequired,

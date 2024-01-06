@@ -17,7 +17,7 @@ import {
 
 import CSRFForm from 'components/CSRFForm';
 
-const CreateCubeModal = ({ isOpen, toggle }) => {
+function CreateCubeModal({ isOpen, toggle }) {
   const [loading, setLoading] = useState(false);
   const formRef = useRef();
 
@@ -51,7 +51,7 @@ const CreateCubeModal = ({ isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 CreateCubeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

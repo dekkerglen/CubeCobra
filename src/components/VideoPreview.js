@@ -7,7 +7,7 @@ import Username from 'components/Username';
 import TimeAgo from 'react-timeago';
 import MtgImage from 'components/MtgImage';
 
-const VideoPreview = ({ video }) => {
+function VideoPreview({ video }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -43,7 +43,7 @@ const VideoPreview = ({ video }) => {
       </div>
     </Card>
   );
-};
+}
 
 VideoPreview.propTypes = {
   video: ContentPropType.isRequired,

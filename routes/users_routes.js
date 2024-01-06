@@ -93,9 +93,7 @@ router.post('/clearnotifications', ensureAuth, async (req, res) => {
 });
 
 // Lost password form
-router.get('/lostpassword', (req, res) => {
-  return render(req, res, 'LostPasswordPage');
-});
+router.get('/lostpassword', (req, res) => render(req, res, 'LostPasswordPage'));
 
 router.get('/follow/:id', ensureAuth, async (req, res) => {
   try {
@@ -283,9 +281,7 @@ router.post(
 );
 
 // Register form
-router.get('/register', (req, res) => {
-  return render(req, res, 'RegisterPage');
-});
+router.get('/register', (req, res) => render(req, res, 'RegisterPage'));
 
 // Register process
 router.post(
@@ -360,9 +356,7 @@ router.post(
 );
 
 // Login route
-router.get('/login', (req, res) => {
-  return render(req, res, 'LoginPage');
-});
+router.get('/login', (req, res) => render(req, res, 'LoginPage'));
 
 // Login post
 router.post('/login', async (req, res) => {
@@ -725,13 +719,13 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
   let message;
 
-  try {  
+  try {
     if (shouldUpdate) {
       fq.replaceForUser(req.user.id, cube.id);
       req.flash('success', 'Successfully replaced cube in queue');
     } else {
       fq.addNewCubeToQueue(req.user.id, cube.id);
-      req.flash('success',  'Successfully added cube to queue');
+      req.flash('success', 'Successfully added cube to queue');
     }
   } catch (err) {
     req.flash('danger', err.message);
@@ -741,7 +735,6 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
-
   try {
     fq.removeCubeFromQueue(req.user.id);
 

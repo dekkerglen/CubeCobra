@@ -28,22 +28,20 @@ export const csrfFetch = (resource, init = { method: 'GET' }) => {
   return fetchWithTimeout(resource, init);
 };
 
-export const postJson = (resource, body) => {
-  return csrfFetch(resource, {
+export const postJson = (resource, body) =>
+  csrfFetch(resource, {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json',
     },
   });
-};
 
-export const callApi = async (route, body) => {
-  return csrfFetch(route, {
+export const callApi = async (route, body) =>
+  csrfFetch(route, {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json',
     },
   });
-};

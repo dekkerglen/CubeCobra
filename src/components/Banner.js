@@ -34,8 +34,7 @@ const options = [
   </>,
 ];
 
-
-const Banner = () => {
+function Banner() {
   const user = useContext(UserContext);
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
@@ -58,6 +57,6 @@ const Banner = () => {
       <Advertisment placementId="banner" size="mobile" media="mobile" demo />
     </div>
   );
-};
+}
 
 export default Banner;

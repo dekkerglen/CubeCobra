@@ -4,7 +4,7 @@ import { useDrop } from 'react-dnd';
 
 import { Col } from 'reactstrap';
 
-const CardStack = ({ location, children, ...props }) => {
+function CardStack({ location, children, ...props }) {
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
     drop: (item, monitor) => (monitor.didDrop() ? undefined : location),
@@ -33,6 +33,6 @@ const CardStack = ({ location, children, ...props }) => {
       </div>
     </Col>
   );
-};
+}
 
 export default CardStack;

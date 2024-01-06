@@ -61,7 +61,7 @@ const defaultVersions = (card) => {
   ];
 };
 
-const ListViewRow = ({ card, versions, checked, onCheck }) => {
+function ListViewRow({ card, versions, checked, onCheck }) {
   const [tagInput, setTagInput] = useState('');
   const { editCard, tagColors } = useContext(CubeContext);
 
@@ -89,13 +89,11 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
           style={{ maxWidth: '6rem' }}
           className="w-100"
         >
-          {Object.entries(versions).map(([key, value]) => {
-            return (
-              <option key={key} value={key}>
-                {value.version}
-              </option>
-            );
-          })}
+          {Object.entries(versions).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value.version}
+            </option>
+          ))}
         </Input>
       </td>
       <td>
@@ -183,7 +181,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
       </td>
     </tr>
   );
-};
+}
 
 ListViewRow.propTypes = {
   card: CardPropType.isRequired,
@@ -192,7 +190,7 @@ ListViewRow.propTypes = {
   onCheck: PropTypes.func.isRequired,
 };
 
-const ListView = ({ cards }) => {
+function ListView({ cards }) {
   const [checked, setChecked] = useState([]);
 
   const {
@@ -298,7 +296,7 @@ const ListView = ({ cards }) => {
       </PagedTable>
     </>
   );
-};
+}
 
 ListView.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,

@@ -8,7 +8,7 @@ import withAutocard from 'components/WithAutocard';
 
 const ImageAutocard = withAutocard(ImageFallback);
 
-const CardImage = ({ card, autocard, className, width, height, ...props }) => {
+function CardImage({ card, autocard, className, width, height, ...props }) {
   const { showCustomImages } = useContext(DisplayContext);
   const imageSrc = (showCustomImages && card.imgUrl) || card.details.image_normal;
   const Tag = autocard ? ImageAutocard : ImageFallback;
@@ -25,7 +25,7 @@ const CardImage = ({ card, autocard, className, width, height, ...props }) => {
       {...props}
     />
   );
-};
+}
 
 CardImage.propTypes = {
   card: CardPropType.isRequired,

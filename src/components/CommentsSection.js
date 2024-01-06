@@ -10,7 +10,7 @@ import CommentEntry from 'components/CommentEntry';
 import useToggle from 'hooks/UseToggle';
 import useComments from 'hooks/UseComments';
 
-const CommentsSection = ({ parent, collapse, parentType }) => {
+function CommentsSection({ parent, collapse, parentType }) {
   const user = useContext(UserContext);
 
   const [expanded, toggle] = useToggle(!collapse);
@@ -61,7 +61,7 @@ const CommentsSection = ({ parent, collapse, parentType }) => {
       )}
     </>
   );
-};
+}
 
 CommentsSection.propTypes = {
   parent: PropTypes.string.isRequired,

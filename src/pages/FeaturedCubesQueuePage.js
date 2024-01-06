@@ -29,7 +29,7 @@ import { GearIcon } from '@primer/octicons-react';
 import withModal from 'components/WithModal';
 import CSRFForm from 'components/CSRFForm';
 
-const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
+function SetRotationModal({ isOpen, toggle, period, onSubmit }) {
   const [input, setInput] = useState(period);
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xs">
@@ -56,7 +56,7 @@ const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 SetRotationModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
@@ -65,84 +65,90 @@ SetRotationModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
 };
 
-const AddCubeModal = ({ isOpen, toggle }) => (
-  <Modal isOpen={isOpen} toggle={toggle} size="xs">
-    <CSRFForm method="POST" action="/admin/featuredcubes/queue">
-      <ModalHeader>Add Cube to Queue</ModalHeader>
-      <ModalBody>
-        <InputGroup>
-          <InputGroupText>Cube ID</InputGroupText>
-          <Input type="text" name="cubeId" placeholder="short or long ID of the cube." />
-        </InputGroup>
-      </ModalBody>
-      <ModalFooter>
-        <Button type="submit" color="accent">
-          Submit
-        </Button>
-        <Button type="button" color="secondary" onClick={toggle}>
-          Close
-        </Button>
-      </ModalFooter>
-    </CSRFForm>
-  </Modal>
-);
+function AddCubeModal({ isOpen, toggle }) {
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} size="xs">
+      <CSRFForm method="POST" action="/admin/featuredcubes/queue">
+        <ModalHeader>Add Cube to Queue</ModalHeader>
+        <ModalBody>
+          <InputGroup>
+            <InputGroupText>Cube ID</InputGroupText>
+            <Input type="text" name="cubeId" placeholder="short or long ID of the cube." />
+          </InputGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="submit" color="accent">
+            Submit
+          </Button>
+          <Button type="button" color="secondary" onClick={toggle}>
+            Close
+          </Button>
+        </ModalFooter>
+      </CSRFForm>
+    </Modal>
+  );
+}
 
 AddCubeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
 };
 
-const RotateModal = ({ isOpen, toggle }) => (
-  <Modal isOpen={isOpen} toggle={toggle} size="xs">
-    <ModalHeader>Rotate featured cubes</ModalHeader>
-    <ModalBody>
-      <p>You are about to rotate the featured cubes. Are you sure?</p>
-      <CSRFForm method="POST" action="/admin/featuredcubes/rotate">
-        <Button type="submit" outline block color="unsafe">
-          Yes, I'm sure
+function RotateModal({ isOpen, toggle }) {
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} size="xs">
+      <ModalHeader>Rotate featured cubes</ModalHeader>
+      <ModalBody>
+        <p>You are about to rotate the featured cubes. Are you sure?</p>
+        <CSRFForm method="POST" action="/admin/featuredcubes/rotate">
+          <Button type="submit" outline block color="unsafe">
+            Yes, I'm sure
+          </Button>
+        </CSRFForm>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="secondary" onClick={toggle}>
+          Close
         </Button>
-      </CSRFForm>
-    </ModalBody>
-    <ModalFooter>
-      <Button color="secondary" onClick={toggle}>
-        Close
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
+      </ModalFooter>
+    </Modal>
+  );
+}
 
 RotateModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
 };
 
-const MoveModal = ({ isOpen, toggle, cube, index }) => (
-  <Modal isOpen={isOpen} toggle={toggle} size="xs">
-    <ModalHeader toggle={toggle}>Move Cube</ModalHeader>
-    <ModalBody>
-      <FormGroup>
-        <Label for="move-cube-name">Cube name</Label>
-        <Input id="move-cube-name" value={cube?.name} readOnly />
-      </FormGroup>
-      <CSRFForm method="POST" action="/admin/featuredcubes/move" id="move-cube-form">
-        <Input id="move-cube-from" type="hidden" name="from" value={index + 1} />
-        <Input type="hidden" name="cubeId" value={cube?.id} />
+function MoveModal({ isOpen, toggle, cube, index }) {
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} size="xs">
+      <ModalHeader toggle={toggle}>Move Cube</ModalHeader>
+      <ModalBody>
         <FormGroup>
-          <Label for="move-cube-to">New position in queue</Label>
-          <Input id="move-cube-to" type="number" name="to" placeholder={index + 1} />
+          <Label for="move-cube-name">Cube name</Label>
+          <Input id="move-cube-name" value={cube?.name} readOnly />
         </FormGroup>
-      </CSRFForm>
-    </ModalBody>
-    <ModalFooter>
-      <Button color="accent" form="move-cube-form" type="submit">
-        Submit
-      </Button>
-      <Button color="secondary" onClick={toggle}>
-        Close
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
+        <CSRFForm method="POST" action="/admin/featuredcubes/move" id="move-cube-form">
+          <Input id="move-cube-from" type="hidden" name="from" value={index + 1} />
+          <Input type="hidden" name="cubeId" value={cube?.id} />
+          <FormGroup>
+            <Label for="move-cube-to">New position in queue</Label>
+            <Input id="move-cube-to" type="number" name="to" placeholder={index + 1} />
+          </FormGroup>
+        </CSRFForm>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="accent" form="move-cube-form" type="submit">
+          Submit
+        </Button>
+        <Button color="secondary" onClick={toggle}>
+          Close
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
 
 MoveModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
@@ -159,39 +165,41 @@ const SetRotationButton = withModal(Button, SetRotationModal);
 const AddCubeButton = withModal(Button, AddCubeModal);
 const RotateButton = withModal(Button, RotateModal);
 
-const QueueItem = ({ cube, index, onMove }) => (
-  <Col xs={12} md={6} className="mb-3">
-    <Card className={index < 2 ? 'border-primary' : ''}>
-      <CardBody>
-        <Row className="align-items-center">
-          <Col xs={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <h5>{index + 1}</h5>
-          </Col>
-          <Col xs={9} md={6}>
-            <CubePreview cube={cube} />
-          </Col>
-          <Col>
-            <Row className="justify-content-end pt-3">
-              <Col xs={4} md={12}>
-                <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
-                  <input type="hidden" name="cubeId" value={cube.id} />
-                  <Button type="submit" color="unsafe" outline disabled={index < 2}>
-                    Remove
+function QueueItem({ cube, index, onMove }) {
+  return (
+    <Col xs={12} md={6} className="mb-3">
+      <Card className={index < 2 ? 'border-primary' : ''}>
+        <CardBody>
+          <Row className="align-items-center">
+            <Col xs={2} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <h5>{index + 1}</h5>
+            </Col>
+            <Col xs={9} md={6}>
+              <CubePreview cube={cube} />
+            </Col>
+            <Col>
+              <Row className="justify-content-end pt-3">
+                <Col xs={4} md={12}>
+                  <CSRFForm method="POST" action="/admin/featuredcubes/unqueue">
+                    <input type="hidden" name="cubeId" value={cube.id} />
+                    <Button type="submit" color="unsafe" outline disabled={index < 2}>
+                      Remove
+                    </Button>
+                  </CSRFForm>
+                </Col>
+                <Col xs={4} md={12}>
+                  <Button className="mt-md-2" onClick={() => onMove(cube, index)} disabled={index < 2}>
+                    Move
                   </Button>
-                </CSRFForm>
-              </Col>
-              <Col xs={4} md={12}>
-                <Button className="mt-md-2" onClick={() => onMove(cube, index)} disabled={index < 2}>
-                  Move
-                </Button>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      </CardBody>
-    </Card>
-  </Col>
-);
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+        </CardBody>
+      </Card>
+    </Col>
+  );
+}
 
 QueueItem.propTypes = {
   cube: CubePropType.isRequired,
@@ -199,7 +207,7 @@ QueueItem.propTypes = {
   onMove: PropTypes.func.isRequired,
 };
 
-const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, loginCallback }) => {
+function FeaturedCubesQueuePage({ cubes, daysBetweenRotations, lastRotation, loginCallback }) {
   const [alerts, setAlerts] = useState([]);
   const [rotationPeriod, setRotationPeriod] = useState(daysBetweenRotations);
   const [isMoveModalOpen, setMoveModalOpen] = useState(false);
@@ -282,7 +290,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
       <MoveModal isOpen={isMoveModalOpen} toggle={toggleMoveModal} cube={moveModalCube} index={moveModalIndex} />
     </MainLayout>
   );
-};
+}
 
 FeaturedCubesQueuePage.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,

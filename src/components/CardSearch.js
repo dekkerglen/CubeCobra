@@ -23,7 +23,7 @@ import FilterCollapse from 'components/FilterCollapse';
 import { ORDERED_SORTS } from 'utils/Sort';
 import CubeContext from 'contexts/CubeContext';
 
-const CardSearch = () => {
+function CardSearch() {
   const { filterInput } = useContext(CubeContext);
   const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
   const [cards, setCards] = useState([]);
@@ -186,6 +186,6 @@ const CardSearch = () => {
       )}
     </>
   );
-};
+}
 
 export default CardSearch;

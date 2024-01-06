@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';
 
-const Notification = ({ notification }) => {
+function Notification({ notification }) {
   const texts = notification.body.split(notification.fromUsername);
   return (
     <a className="no-underline-hover" href={`/user/notification/${notification.id}`}>
@@ -17,7 +17,7 @@ const Notification = ({ notification }) => {
       </div>
     </a>
   );
-};
+}
 
 Notification.propTypes = {
   notification: PropTypes.shape({

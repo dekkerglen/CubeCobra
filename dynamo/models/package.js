@@ -63,7 +63,7 @@ const hydrate = async (pack) => {
     if (c.oracle_id) {
       return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
     }
-    return carddb.cardFromId(c)
+    return carddb.cardFromId(c);
   });
 
   return pack;
@@ -81,7 +81,7 @@ const batchHydrate = async (packs) => {
       if (c.oracle_id) {
         return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
       }
-      return carddb.cardFromId(c)
+      return carddb.cardFromId(c);
     });
   });
 

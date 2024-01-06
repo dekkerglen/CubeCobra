@@ -8,11 +8,9 @@ import CardPropType from 'proptypes/CardPropType';
 
 const TextAutocard = withAutocard('a');
 
-const capitalizeFirstLetter = (string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-};
+const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-const Add = ({ card }) => {
+function Add({ card }) {
   return (
     <li>
       <span className="mx-1" style={{ color: 'green' }}>
@@ -23,43 +21,47 @@ const Add = ({ card }) => {
       </TextAutocard>
     </li>
   );
-};
+}
 
 Add.propTypes = {
   card: CardPropType.isRequired,
 };
 
-const Remove = ({ oldCard }) => (
-  <li>
-    <span className="mx-1" style={{ color: 'red' }}>
-      <NoEntryIcon />
-    </span>
-    <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
-      {oldCard.details.name}
-    </TextAutocard>
-  </li>
-);
+function Remove({ oldCard }) {
+  return (
+    <li>
+      <span className="mx-1" style={{ color: 'red' }}>
+        <NoEntryIcon />
+      </span>
+      <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
+        {oldCard.details.name}
+      </TextAutocard>
+    </li>
+  );
+}
 
 Remove.propTypes = {
   oldCard: CardPropType.isRequired,
 };
 
-const Edit = ({ card }) => (
-  <li>
-    <span className="mx-1" style={{ color: 'orange' }}>
-      <ToolsIcon />
-    </span>
-    <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-      {card.details.name}
-    </TextAutocard>
-  </li>
-);
+function Edit({ card }) {
+  return (
+    <li>
+      <span className="mx-1" style={{ color: 'orange' }}>
+        <ToolsIcon />
+      </span>
+      <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
+        {card.details.name}
+      </TextAutocard>
+    </li>
+  );
+}
 
 Edit.propTypes = {
   card: CardPropType.isRequired,
 };
 
-const Swap = ({ oldCard, card }) => {
+function Swap({ oldCard, card }) {
   return (
     <li>
       <span className="mx-1" style={{ color: 'blue' }}>
@@ -74,14 +76,14 @@ const Swap = ({ oldCard, card }) => {
       </TextAutocard>
     </li>
   );
-};
+}
 
 Swap.propTypes = {
   oldCard: CardPropType.isRequired,
   card: CardPropType.isRequired,
 };
 
-const BlogPostChangelog = ({ changelog }) => {
+function BlogPostChangelog({ changelog }) {
   return (
     <div>
       {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => (
@@ -109,7 +111,7 @@ const BlogPostChangelog = ({ changelog }) => {
       ))}
     </div>
   );
-};
+}
 
 BlogPostChangelog.propTypes = {
   changelog: PropTypes.shape({}).isRequired,

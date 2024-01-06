@@ -21,7 +21,7 @@ const loader = (
 );
 
 // eslint-disable-next-line react/prop-types
-const DevBlogEntry = ({ items, setItems }) => {
+function DevBlogEntry({ items, setItems }) {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
@@ -69,9 +69,9 @@ const DevBlogEntry = ({ items, setItems }) => {
       </CardBody>
     </Card>
   );
-};
+}
 
-const DevBlog = ({ blogs, lastKey, loginCallback }) => {
+function DevBlog({ blogs, lastKey, loginCallback }) {
   const [items, setItems] = useState(blogs);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const user = useContext(UserContext);
@@ -114,7 +114,7 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
       </div>
     </MainLayout>
   );
-};
+}
 
 DevBlog.propTypes = {
   blogs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

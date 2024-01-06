@@ -11,14 +11,7 @@ import { Card, CardHeader, CardTitle, CardBody, Input, CardFooter, Button, Uncon
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
-const CustomDraftCard = ({
-  format,
-  onEditFormat,
-  onDeleteFormat,
-  onSetDefaultFormat,
-  defaultDraftFormat,
-  ...props
-}) => {
+function CustomDraftCard({ format, onEditFormat, onDeleteFormat, onSetDefaultFormat, defaultDraftFormat, ...props }) {
   const { cube, canEdit } = useContext(CubeContext);
   const { index } = format;
 
@@ -81,7 +74,7 @@ const CustomDraftCard = ({
       </CSRFForm>
     </Card>
   );
-};
+}
 
 CustomDraftCard.propTypes = {
   format: PropTypes.shape({

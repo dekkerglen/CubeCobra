@@ -12,7 +12,7 @@ import CubePropType from 'proptypes/CubePropType';
 import { calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
-const ChartComponent = ({ cards, characteristics, cube }) => {
+function ChartComponent({ cards, characteristics, cube }) {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setcharacteristic] = useQueryParam('field', 'Mana Value');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', false);
@@ -32,9 +32,7 @@ const ChartComponent = ({ cards, characteristics, cube }) => {
   const colors = [...Object.values(colorMap), '#000000'];
 
   const getColor = useMemo(
-    () => (label, index) => {
-      return colorMap[label] ?? colors[index % colors.length];
-    },
+    () => (label, index) => colorMap[label] ?? colors[index % colors.length],
     [colorMap, colors],
   );
 
@@ -142,7 +140,7 @@ const ChartComponent = ({ cards, characteristics, cube }) => {
       <Chart options={options} data={data} type="bar" />
     </>
   );
-};
+}
 ChartComponent.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,
   characteristics: PropTypes.shape({}).isRequired,

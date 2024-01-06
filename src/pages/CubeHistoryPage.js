@@ -8,15 +8,17 @@ import RenderToRoot from 'utils/RenderToRoot';
 import CubePropType from 'proptypes/CubePropType';
 import CubeHistory from 'components/CubeHistory';
 
-const CubeHistoryPage = ({ cube, changes, lastKey, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} activeLink="history">
-        <CubeHistory changes={changes} lastKey={lastKey} />
-      </CubeLayout>
-    </DisplayContextProvider>
-  </MainLayout>
-);
+function CubeHistoryPage({ cube, changes, lastKey, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DisplayContextProvider cubeID={cube.id}>
+        <CubeLayout cube={cube} activeLink="history">
+          <CubeHistory changes={changes} lastKey={lastKey} />
+        </CubeLayout>
+      </DisplayContextProvider>
+    </MainLayout>
+  );
+}
 
 CubeHistoryPage.propTypes = {
   cube: CubePropType.isRequired,
