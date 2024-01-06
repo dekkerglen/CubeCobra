@@ -185,6 +185,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
   const comment = await Comment.getById(report.subject);
 
+  // eslint-disable-next-line no-console
   console.log(report);
 
   report.status = Notice.STATUS.PROCESSED;

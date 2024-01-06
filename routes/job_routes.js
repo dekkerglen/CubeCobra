@@ -49,14 +49,17 @@ router.post('/featuredcubes/rotate', async (req, res) => {
 
 const tryUpdate = async (podcast) => {
   if (podcast.inactive) {
+    // eslint-disable-next-line no-console
     console.log(`Skipping inactive podcast: ${podcast.title}`);
     return;
   }
 
   try {
+    // eslint-disable-next-line no-console
     console.log(`Updating podcast: ${podcast.title}`);
     await updatePodcast(podcast);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(`Failed to update podcast: ${podcast.title}`, { error: err });
   }
 };
