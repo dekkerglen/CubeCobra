@@ -8,6 +8,7 @@ const carddb = require('../serverjs/carddb');
 
   do {
     console.log('Scanning...', lastKey);
+    // eslint-disable-next-line no-await-in-loop
     const result = await Package.scan(lastKey);
     lastKey = result.lastKey;
 
@@ -31,6 +32,7 @@ const carddb = require('../serverjs/carddb');
     if (items.length > 0) {
       console.log(`Found ${items.length} bad packages.`);
 
+      // eslint-disable-next-line no-await-in-loop
       await Package.batchDelete(items.map((item) => ({ id: item.id })));
     }
   } while (lastKey);

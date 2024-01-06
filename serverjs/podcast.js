@@ -19,6 +19,7 @@ const updatePodcast = async (podcast) => {
   let lastKey = null;
 
   do {
+    // eslint-disable-next-line no-await-in-loop
     const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
     lastKey = result.lastKey;
     existingEpisodes.push(...result.items);
