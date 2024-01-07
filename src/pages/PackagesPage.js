@@ -238,30 +238,29 @@ function PackagesPage({ loginCallback, items, lastKey, activePage }) {
           </NavItem>
         </Nav>
         <CardBody>
-          {items.length === 0 ? (
-            <p>No packages found</p>
-          ) : (
-            <>
-              {loading ? (
-                <div className="centered py-3">
-                  <Spinner className="position-absolute" />
-                </div>
-              ) : (
-                <InfiniteScroll
-                  dataLength={packages.length}
-                  next={fetchMoreData}
-                  hasMore={currentLastKey != null}
-                  loader={loader}
-                >
-                  {packages.map((pack) => (
-                    <Row className="mx-0" key={pack.id}>
-                      <CardPackage key={pack.id} cardPackage={pack} />
-                    </Row>
-                  ))}
-                </InfiniteScroll>
-              )}
-            </>
-          )}
+          {
+            // eslint-disable-next-line no-nested-ternary
+            items.length === 0 ? (
+              <p>No packages found</p>
+            ) : loading ? (
+              <div className="centered py-3">
+                <Spinner className="position-absolute" />
+              </div>
+            ) : (
+              <InfiniteScroll
+                dataLength={packages.length}
+                next={fetchMoreData}
+                hasMore={currentLastKey != null}
+                loader={loader}
+              >
+                {packages.map((pack) => (
+                  <Row className="mx-0" key={pack.id}>
+                    <CardPackage key={pack.id} cardPackage={pack} />
+                  </Row>
+                ))}
+              </InfiniteScroll>
+            )
+          }
         </CardBody>
       </Card>
     </MainLayout>

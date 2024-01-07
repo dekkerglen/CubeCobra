@@ -146,13 +146,18 @@ function EloGraph({ defaultHistories, cardId }) {
           </InputGroup>
         </Col>
       </Row>
-      {loading ? (
-        <div className="d-flex justify-content-center">
-          <Spinner />
-        </div>
-      ) : (
-        <>{history.length > 1 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
-      )}
+      {
+        // eslint-disable-next-line no-nested-ternary
+        loading ? (
+          <div className="d-flex justify-content-center">
+            <Spinner />
+          </div>
+        ) : history.length > 1 ? (
+          <Chart options={options} data={data} type="line" />
+        ) : (
+          <p>No data available.</p>
+        )
+      }
     </>
   );
 }

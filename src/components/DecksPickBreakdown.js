@@ -45,7 +45,7 @@ function DecksPickBreakdown({ draft, seatNumber, defaultIndex }) {
                 {drafterState.pickNumber === pickNumber ? (
                   <strong>{`${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`}</strong>
                 ) : (
-                  <>{`${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`}</>
+                  `${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`
                 )}
               </AutocardItem>
             ))}

@@ -116,17 +116,18 @@ function DeckCard({ seat, deck, seatIndex, view }) {
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          {deck.type === 'd' ? (
-            <>
-              {deck.seats[0].pickorder ? (
+          {
+            // eslint-disable-next-line no-nested-ternary
+            deck.type === 'd' ? (
+              deck.seats[0].pickorder ? (
                 <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
               ) : (
                 <p>There is no draft log associated with this deck.</p>
-              )}
-            </>
-          ) : (
-            <p>This type of deck does not have a pick breakdown yet.</p>
-          )}
+              )
+            ) : (
+              <p>This type of deck does not have a pick breakdown yet.</p>
+            )
+          }
         </CardBody>
       )}
       {view === 'deck' && (

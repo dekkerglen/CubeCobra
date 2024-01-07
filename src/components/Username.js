@@ -5,11 +5,11 @@ import UserPropType from 'proptypes/UserPropType';
 
 function Username({ user, nolink }) {
   if (nolink) {
-    return <>{user.username || 'User'}</>;
+    return user.username || 'User';
   }
 
   if (!user) {
-    return <>Anonymous</>;
+    return 'Anonymous';
   }
 
   return (

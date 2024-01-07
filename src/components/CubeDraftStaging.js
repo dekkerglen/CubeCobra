@@ -72,7 +72,7 @@ function CubeDraftStaging({ draft, socket, start }) {
   const editableRows = seats.map((seat, i) => ({
     element: (
       <div className="tag-color-row clickable pb-3" key={i}>
-        {seats[i] === BOT_NAME ? <>{BOT_NAME}</> : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
+        {seats[i] === BOT_NAME ? BOT_NAME : <Username user={playerNameMap[seats[i]] || seats[i]} nolink />}
       </div>
     ),
     key: i,

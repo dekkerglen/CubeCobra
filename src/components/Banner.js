@@ -39,7 +39,7 @@ function Banner() {
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
 
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return null;
 
   if (option < options.length) {
     return (

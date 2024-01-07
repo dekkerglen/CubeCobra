@@ -125,7 +125,7 @@ export function AutocardContextProvider({ children }) {
 
   return (
     <AutocardContext.Provider value={value}>
-      <>{children}</>
+      {children}
       <CardDiv hidden={hidden} front={front} back={back} tags={tags} zIndex={zIndex} foilOverlay={foilOverlay} />
     </AutocardContext.Provider>
   );
