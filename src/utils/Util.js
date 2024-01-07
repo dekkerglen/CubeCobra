@@ -265,6 +265,7 @@ export async function wait(ms) {
 function xor(a, b) {
   let result = '';
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    // eslint-disable-next-line no-bitwise
     result += String.fromCharCode(a.charCodeAt(i) ^ b.charCodeAt(i));
   }
   return result;
