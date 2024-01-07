@@ -116,6 +116,7 @@ function CubeDraft({ draft, socket }) {
             await new Promise((resolve) => {
               setTimeout(resolve, 5000);
             });
+            // eslint-disable-next-line no-continue
             continue;
           }
         }
