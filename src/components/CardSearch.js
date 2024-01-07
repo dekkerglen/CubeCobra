@@ -25,7 +25,7 @@ import CubeContext from 'contexts/CubeContext';
 
 function CardSearch() {
   const { filterInput } = useContext(CubeContext);
-  const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
+  const [page, setPage] = useState(parseInt(Query.get('p'), 10) || 0);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [count, setCount] = useState(Query.get('m') || '');
