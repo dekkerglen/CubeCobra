@@ -112,7 +112,7 @@ function CubeDraft({ draft, socket }) {
 
           console.log(json);
 
-          if (json.picks == 0) {
+          if (json.picks === 0) {
             await new Promise((resolve) => {
               setTimeout(resolve, 5000);
             });
