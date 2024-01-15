@@ -341,6 +341,26 @@ function cachePromise(key, callback) {
   return newPromise;
 }
 
+async function isBlogEditable(blog, user) {
+  if (!user || !blog || !blog.owner) {
+    return false;
+  }
+
+  // handle hydrated blogs, can just check the id directly, no need to fetch.
+  const owner = typeof blog.owner === "string" ? blog.owner : blog.owner.id;
+  if (user.id === owner) {
+    return true;
+  }
+
+  if (!blog.cube) {
+    return false;
+  }
+
+  const cube = typeof blog.cube === "string" ? await Cube.getById(blog.cube) : blog.cube;
+
+  return cube.owner && user.id === cube.owner.id;
+}
+
 function isCubeCollaborator(cube, user) {
   if (!user || !cube || !cube.collaborators) {
     return false;
@@ -428,6 +448,7 @@ const methods = {
   compareCubes,
   generateSamplepackImage,
   cachePromise,
+  isBlogEditable,
   isCubeCollaborator,
   isCubeViewable,
   isCubeListed,
