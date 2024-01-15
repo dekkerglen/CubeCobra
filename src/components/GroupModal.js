@@ -32,7 +32,7 @@ const GroupModal = ({
   isOpen,
   toggle,
   cards,
-  canEdit,
+  canCollaborate,
   bulkEditCard,
   bulkMoveCard,
   bulkRevertEdit,
@@ -272,7 +272,7 @@ const GroupModal = ({
             </Row>
           </Col>
           <Col xs="8">
-            <fieldset disabled={!canEdit}>
+            <fieldset disabled={!canCollaborate}>
               <Label for="groupStatus">
                 <h5>Set status of all</h5>
               </Label>
@@ -392,7 +392,7 @@ GroupModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  canEdit: PropTypes.bool,
+  canCollaborate: PropTypes.bool,
   versionDict: PropTypes.shape({}),
   setModalSelection: PropTypes.func.isRequired,
   tagColors: PropTypes.arrayOf(PropTypes.string),
@@ -405,7 +405,7 @@ GroupModal.propTypes = {
 };
 
 GroupModal.defaultProps = {
-  canEdit: false,
+  canCollaborate: false,
   versionDict: {},
   tagColors: [],
   allTags: [],

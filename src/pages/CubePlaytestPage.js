@@ -12,6 +12,7 @@ import withModal from 'components/WithModal';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import { csrfFetch } from 'utils/CSRF';
+import { userIsDocumentOwner } from 'utils/Util';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
@@ -131,7 +132,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
-        {user && cube.owner.id === user.id ? (
+        {userIsDocumentOwner(user, cube) ? (
           <Navbar light expand className="usercontrols mb-3">
             <Nav navbar>
               <NavItem>

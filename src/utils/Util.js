@@ -184,6 +184,23 @@ export function getCubeDescription(cube, changedCards) {
   return `${cardCount} Card ${overridePrefixes}Cube`;
 }
 
+export function userIsDocumentOwner(user, cube) {
+  if (user && cube && cube.owner) {
+    return cube.owner.id === user.id;
+  }
+  
+  return false;
+};
+  
+export function userIsDocumentCollaborator(user, cube) {
+  if (user && cube && cube.collaborators) {
+    return cube.collaborators.some((c) => c.id === user.id);
+  }
+
+  return false;
+};
+
+
 export function isInternalURL(to) {
   try {
     const url = new URL(to, window.location.origin);

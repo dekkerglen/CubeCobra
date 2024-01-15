@@ -40,7 +40,7 @@ const TagColorRow = ({ tag, tagClass, value, onChange }) => (
 );
 
 const TagColorsModal = ({ isOpen, toggle }) => {
-  const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
+  const { tagColors, setTagColors, showTagColors, updateShowTagColors, canCollaborate, cube } = useContext(CubeContext);
   const [loading, setLoading] = React.useState(false);
   const [modalColors, setModalColors] = React.useState([...tagColors]);
 
@@ -120,7 +120,7 @@ const TagColorsModal = ({ isOpen, toggle }) => {
 
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
-      <ModalHeader toggle={toggle}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
+      <ModalHeader toggle={toggle}>{canCollaborate ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
       <ModalBody>
         <Label>
           <Input
@@ -131,12 +131,12 @@ const TagColorsModal = ({ isOpen, toggle }) => {
           />
           Show Tag Colors in Card List
         </Label>
-        {!canEdit ? (
+        {!canCollaborate ? (
           ''
         ) : (
           <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
         )}
-        {!canEdit ? (
+        {!canCollaborate ? (
           staticRows
         ) : (
           <Row className="tag-color-container">
@@ -156,7 +156,7 @@ const TagColorsModal = ({ isOpen, toggle }) => {
 };
 
 TagColorsModal.defaultProps = {
-  canEdit: false,
+  canCollaborate: false,
 };
 
 export default TagColorsModal;

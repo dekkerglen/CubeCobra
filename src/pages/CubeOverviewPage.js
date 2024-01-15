@@ -22,7 +22,7 @@ import {
 import { LinkExternalIcon, QuestionIcon, EyeClosedIcon } from '@primer/octicons-react';
 
 import { csrfFetch } from 'utils/CSRF';
-import { getCubeId, getCubeDescription } from 'utils/Util';
+import { getCubeId, getCubeDescription, userIsDocumentOwner } from 'utils/Util';
 
 import UserContext from 'contexts/UserContext';
 import BlogPost from 'components/BlogPost';
@@ -112,7 +112,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cards={cards} cube={cubeState} activeLink="overview">
-        {user && cubeState.owner.id === user.id ? (
+        {userIsDocumentOwner(user, cubeState) ? (
           <Navbar expand="md" light className="usercontrols mb-3">
             <NavbarToggler
               className="ms-auto"

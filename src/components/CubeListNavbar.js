@@ -75,7 +75,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
   const {
-    canEdit,
+    canCollaborate,
     hasCustomImages,
     cube,
     sortPrimary,
@@ -137,7 +137,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
             <Input type="select" id="viewSelect" value={cubeView} onChange={handleChangeCubeView}>
               <option value="table">Table View</option>
               <option value="spoiler">Visual Spoiler</option>
-              {!canEdit ? '' : <option value="list">List View</option>}
+              {!canCollaborate ? '' : <option value="list">List View</option>}
               <option value="curve">Curve View</option>
             </Input>
           </div>
@@ -145,7 +145,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
         </div>
         <Collapse isOpen={isOpen} navbar>
           <Nav className="ms-auto" navbar>
-            {canEdit && (
+            {canCollaborate && (
               <NavItem>
                 <NavLink href="#" data-target="edit" onClick={handleOpenCollapse}>
                   Edit
@@ -173,7 +173,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
               </DropdownToggle>
               <DropdownMenu end>
                 <DropdownItem onClick={handleOpenTagColorsModal}>
-                  {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
+                  {canCollaborate ? 'Set Tag Colors' : 'View Tag Colors'}
                 </DropdownItem>
                 {hasCustomImages && (
                   <DropdownItem onClick={toggleShowCustomImages}>
@@ -193,10 +193,10 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
             </UncontrolledDropdown>
             <UncontrolledDropdown nav inNavbar>
               <DropdownToggle nav caret>
-                {canEdit ? 'Import/Export' : 'Export'}
+                {canCollaborate ? 'Import/Export' : 'Export'}
               </DropdownToggle>
               <DropdownMenu end>
-                {canEdit && (
+                {canCollaborate && (
                   <>
                     <DropdownItem disabled>Import</DropdownItem>
                     <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
@@ -240,11 +240,11 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
           </Nav>
         </Collapse>
       </Navbar>
-      {canEdit && <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
+      {canCollaborate && <EditCollapse isOpen={openCollapse === 'edit'} cubeView={cubeView} />}
       <SortCollapse isOpen={openCollapse === 'sort'} />
       <FilterCollapse isOpen={openCollapse === 'filter'} />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
-      <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
+      <TagColorsModal canCollaborate={canCollaborate} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
     </div>
   );
 };

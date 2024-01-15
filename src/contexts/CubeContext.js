@@ -13,13 +13,14 @@ import GroupModal from 'components/GroupModal';
 import useQueryParam from 'hooks/useQueryParam';
 import useMount from 'hooks/UseMount';
 
-import { xorStrings } from 'utils/Util';
+import { userIsDocumentOwner, userIsDocumentCollaborator, xorStrings } from 'utils/Util';
 
 import { makeFilter } from 'filtering/FilterCards';
 
 const CubeContext = React.createContext({
   cube: {},
   canEdit: false,
+  canCollaborate: false,
   cubeID: null,
   hasCustomImages: false,
   updateCubeCard: () => {},
@@ -805,7 +806,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [cube, changes, setChanges],
   );
 
-  const canEdit = user && cube.owner && cube.owner.id === user.id;
+  const canEdit = userIsDocumentOwner(user, cube);
+  const canCollaborate = userIsDocumentOwner(user, cube) || userIsDocumentCollaborator(user, cube);
 
   const hasCustomImages = useMemo(
     () =>
@@ -894,6 +896,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     cube,
     changedCards,
     canEdit,
+    canCollaborate,
     hasCustomImages,
     setCube,
     addCard,
@@ -955,7 +958,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
               isOpen={modalOpen}
               toggle={toggle}
-              canEdit={canEdit}
+              canCollaborate={canCollaborate}
               versionDict={versionDict}
               editCard={editCard}
               revertEdit={revertEdit}
@@ -971,7 +974,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             cards={modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])}
             isOpen={modalOpen}
             toggle={toggle}
-            canEdit={canEdit}
+            canCollaborate={canCollaborate}
             bulkEditCard={bulkEditCard}
             bulkRevertEdit={bulkRevertEdit}
             bulkRemoveCard={bulkRemoveCard}

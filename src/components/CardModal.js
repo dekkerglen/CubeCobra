@@ -46,7 +46,7 @@ const CardModal = ({
   isOpen,
   toggle,
   card,
-  canEdit,
+  canCollaborate,
   versionDict,
   editCard,
   revertEdit,
@@ -74,7 +74,7 @@ const CardModal = ({
     [card, editCard],
   );
 
-  const disabled = !canEdit || card.markedForDelete;
+  const disabled = !canCollaborate || card.markedForDelete;
 
   console.log(allTags);
 
@@ -122,7 +122,7 @@ const CardModal = ({
                 )}
               </Row>
               <Row>
-                {canEdit && (
+                {canCollaborate && (
                   <>
                     {card.markedForDelete ? (
                       <Col xs="12">
@@ -375,7 +375,7 @@ const CardModal = ({
                 <h5>Tags</h5>
                 <TagInput
                   tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
-                  readOnly={!canEdit}
+                  readOnly={!canCollaborate}
                   inputValue={tagInput}
                   handleInputChange={setTagInput}
                   handleInputBlur={(tag) => {
@@ -415,7 +415,7 @@ CardModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   card: CardPropType.isRequired,
-  canEdit: PropTypes.bool,
+  canCollaborate: PropTypes.bool,
   versionDict: PropTypes.shape({}),
   editCard: PropTypes.func.isRequired,
   revertEdit: PropTypes.func.isRequired,
@@ -427,7 +427,7 @@ CardModal.propTypes = {
 };
 
 CardModal.defaultProps = {
-  canEdit: false,
+  canCollaborate: false,
   versionDict: {},
   tagColors: [],
   allTags: [],
