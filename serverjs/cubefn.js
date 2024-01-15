@@ -341,6 +341,14 @@ function cachePromise(key, callback) {
   return newPromise;
 }
 
+function isCubeCollaborator(cube, user) {
+  if (!user || !cube || !cube.collaborators) {
+    return false;
+  }
+
+  return cube.collaborators.some((c) => c && c.id === user.id);
+}
+
 function isCubeViewable(cube, user) {
   if (!cube) {
     return false;
@@ -350,7 +358,7 @@ function isCubeViewable(cube, user) {
     return true;
   }
 
-  return user && (cube.owner.id === user.id || util.isAdmin(user));
+  return user && (cube.owner.id === user.id || isCubeCollaborator(cube, user) || util.isAdmin(user));
 }
 
 function isCubeListed(cube, user) {
@@ -362,7 +370,7 @@ function isCubeListed(cube, user) {
     return true;
   }
 
-  return user && (cube.owner.id === user.id || util.isAdmin(user));
+  return user && (cube.owner.id === user.id || isCubeCollaborator(cube, user) || util.isAdmin(user));
 }
 
 const methods = {
@@ -420,6 +428,7 @@ const methods = {
   compareCubes,
   generateSamplepackImage,
   cachePromise,
+  isCubeCollaborator,
   isCubeViewable,
   isCubeListed,
   getCubeTypes,

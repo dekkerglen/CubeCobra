@@ -22,6 +22,7 @@ const {
   generateSamplepackImage,
   cachePromise,
   isCubeViewable,
+  isCubeCollaborator,
 } = require('../../serverjs/cubefn');
 
 const { CARD_HEIGHT, CARD_WIDTH, addBasics, bulkUpload, createPool, shuffle, updateCubeAndBlog } = require('./helper');
@@ -61,6 +62,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       shortId: null,
       name: req.body.name,
       owner: req.user.id,
+      collaborators: [],
       imageName: 'doubling cube [10e-321]',
       description: 'This is a brand new cube!',
       date: Date.now().valueOf(),
@@ -123,6 +125,7 @@ router.get('/clone/:id', async (req, res) => {
       shortId: null,
       name: `Clone of ${source.name}`,
       owner: req.user.id,
+      collaborators: [],
       imageName: source.imageName,
       description: `Cloned from [${source.name}](/c/${source.id})\n\n${source.description}`,
       date: Date.now().valueOf(),
@@ -169,6 +172,29 @@ router.get('/clone/:id', async (req, res) => {
 
 router.get('/view/:id', (req, res) => {
   return res.redirect(`/cube/overview/${req.params.id}`);
+});
+
+router.post('/collaborator/:id', ensureAuth, async (req, res) => {
+  try {
+    const cube = await Cube.getById(req.params.id);
+
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found.');
+      return res.redirect('/cube/list/404');
+    }
+    if (cube.owner.id !== req.user.id) {
+      req.flash('danger', 'Collaborators can only be changed by cube owner.');
+      return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+    }
+
+    cube.collaborators = await User.batchGet(req.body.collaborators).filter((c) => c && c.id !== cube.owner.id);
+
+    await Cube.update(cube);
+    req.flash('success', message);
+    return res.redirect(`/cube/overview/${encodeURIComponent(req.params.id)}`);
+  } catch (err) {
+    return util.handleRouteError(req, res, err, `/cube/overview/${encodeURIComponent(req.params.id)}`);
+  }
 });
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
@@ -826,7 +852,7 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner.id !== req.user.id) {
+    if (cube.owner.id !== req.user.id || isCubeCollaborator(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -854,7 +880,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner.id !== req.user.id) {
+    if (cube.owner.id !== req.user.id || isCubeCollaborator(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }
@@ -883,7 +909,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (cube.owner.id !== req.user.id) {
+    if (cube.owner.id !== req.user.id || isCubeCollaborator(cube, req.user)) {
       req.flash('danger', 'Not Authorized');
       return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
     }

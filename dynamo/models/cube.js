@@ -26,6 +26,7 @@ const FIELDS = {
   ID: 'id',
   SHORT_ID: 'shortId',
   OWNER: 'owner',
+  COLLABORATORS: 'collaborators',
   NAME: 'name',
   VISIBILITY: 'visibility',
   PRICE_VISIBLITY: 'priceVisibility',
@@ -162,16 +163,31 @@ const hydrate = async (cube) => {
   }
 
   cube.owner = await User.getById(cube.owner);
+  cube.collaborators = await User.batchGet((cube.collaborators || []).filter((id) => id));
   cube.image = getImageData(cube.imageName);
-
+  
   return cube;
 };
 
 const batchHydrate = async (cubes) => {
   const owners = await User.batchGet(cubes.map((cube) => cube.owner).filter((owner) => owner));
 
+  const collaboratorIds = cubes.reduce((set, cube) => {
+    return new Set([...(set || []), ...(cube.collaborators | []).filter((id) => id)]);
+  });
+
+  const collaborators = await User.batchGet([...collaboratorIds]);
+
+  let collaboratorsById = new Map();
+  for (let collaborator of collaborators) {
+    if (collaborator && collaborator.id) {
+      collaboratorsById.set(collaborator.id, collaborator);
+    }
+  }
+
   return cubes.map((cube) => {
     cube.owner = owners.find((owner) => owner.id === cube.owner);
+    cube.collaborators = cube.collaborators.map((id) => collaboratorIds.get(id)).filter((c) => c);
     cube.image = getImageData(cube.imageName);
     return cube;
   });
@@ -322,6 +338,9 @@ module.exports = {
     if (document.owner.id) {
       document.owner = document.owner.id;
     }
+    if (document.collaborators) {
+      document.collaborators = [...new Set(document.collaborators.filter(c => c).map(({id}) => id))];
+    }
 
     delete document.image;
 
@@ -340,6 +359,10 @@ module.exports = {
 
     if (document.owner.id) {
       document.owner = document.owner.id;
+    }
+
+    if (document.collaborators) {
+      document.collaborators = [...new Set(document.collaborators.filter(c => c).map(({id}) => id))];
     }
 
     return client.put({
@@ -376,6 +399,7 @@ module.exports = {
     [FIELDS.ID]: `${cube._id}`,
     [FIELDS.SHORT_ID]: cube.shortID,
     [FIELDS.OWNER]: `${cube.owner}`,
+    [FIELDS.COLLABORATORS]: cube.collaborators.map((id) => `${id}`),
     [FIELDS.VISIBILITY]: getVisibility(cube.isListed, cube.isPrivate),
     [FIELDS.PRICE_VISIBLITY]: cube.privatePrices ? PRICE_VISIBLITY.PRIVATE : PRICE_VISIBLITY.PUBLIC,
     [FIELDS.FEATURED]: cube.isFeatured,
