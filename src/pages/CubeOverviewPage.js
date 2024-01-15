@@ -298,7 +298,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
             </CardFooter>
           )}
         </Card>
-        <div className="my-3">{post && <BlogPost key={post.id} post={post} />}</div>
+        <div className="my-3">{post && <BlogPost cube={cube} key={post.id} post={post} />}</div>
       </CubeLayout>
     </MainLayout>
   );

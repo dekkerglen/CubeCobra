@@ -14,12 +14,14 @@ import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import BlogPostChangelog from 'components/BlogPostChangelog';
+import { userIsDocumentOwner, userIsDocumentCollaborator } from 'utils/Util';
+import CubePropType from 'proptypes/CubePropType';
 
-const BlogPost = ({ post, noScroll }) => {
+const BlogPost = ({ post, cube, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.id === post.owner.id;
+  const canEdit = user && (userIsDocumentOwner(user, post) || (cube && userIsDocumentOwner(cube, user)));
 
   const hasChangelist = post.Changelog;
   const hasBody = post.body && post.body.length > 0;
@@ -103,10 +105,12 @@ const BlogPost = ({ post, noScroll }) => {
 
 BlogPost.propTypes = {
   post: BlogPostPropType.isRequired,
+  cube: CubePropType,
   noScroll: PropTypes.bool,
 };
 
 BlogPost.defaultProps = {
+  cube: null,
   noScroll: false,
 };
 

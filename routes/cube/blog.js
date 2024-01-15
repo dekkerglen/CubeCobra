@@ -106,17 +106,16 @@ router.get('/blogpost/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (post.cube !== 'DEVBLOG') {
-      const cube = await Cube.getById(post.cube);
+    const cube = post.cube === 'DEVBLOG' ? null : await Cube.getById(post.cube);
 
-      if (!isCubeViewable(cube, req.user)) {
-        req.flash('danger', 'Blog post not found');
-        return res.redirect('/404');
-      }
+    if (cube !== null && !isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Blog post not found');
+      return res.redirect('/404');
     }
 
     return render(req, res, 'BlogPostPage', {
       post,
+      cube,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
