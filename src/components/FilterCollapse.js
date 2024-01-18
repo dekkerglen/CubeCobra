@@ -122,26 +122,33 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
     [values],
   );
 
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
+    applySearchFilter();
+  };
+
   return (
     <Collapse className="px-3" isOpen={isOpen}>
       <Row>
         <Col>
-          <InputGroup>
-            <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
-            <Input
-              type="text"
-              id="filterInput"
-              name="filterInput"
-              placeholder={'name:"Ambush Viper"'}
-              valid={filterInput.length > 0 && filterValid}
-              invalid={filterInput.length > 0 && !filterValid}
-              value={searchFilterInput}
-              onChange={(event) => setSearchFilterInput(event.target.value)}
-            />
-            <Button color="success" onClick={applySearchFilter}>
-              Apply
-            </Button>
-          </InputGroup>
+          <Form onSubmit={handleOnSubmit} className="input">
+            <InputGroup>
+              <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
+              <Input
+                type="text"
+                id="filterInput"
+                name="filterInput"
+                placeholder={'name:"Ambush Viper"'}
+                valid={filterInput.length > 0 && filterValid}
+                invalid={filterInput.length > 0 && !filterValid}
+                value={searchFilterInput}
+                onChange={(event) => setSearchFilterInput(event.target.value)}
+              />
+              <Button color="success" onSubmit={applySearchFilter}>
+                Apply
+              </Button>
+            </InputGroup>
+          </Form>
           <small>
             Having trouble using filter syntax? Check out our <a href="/filters">syntax guide</a>.
           </small>
