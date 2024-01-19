@@ -144,7 +144,7 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
                 value={searchFilterInput}
                 onChange={(event) => setSearchFilterInput(event.target.value)}
               />
-              <Button color="success" onSubmit={applySearchFilter}>
+              <Button color="success" type="submit">
                 Apply
               </Button>
             </InputGroup>
