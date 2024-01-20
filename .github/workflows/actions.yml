@@ -16,8 +16,8 @@ jobs:
         node-version: 16
     - name: Setup
       run: npm ci
-    - name: Build
-      run: npm run ci-build
     - name: Check Code Style
       run: npm run lint
+    - name: Build
+      run: npm run ci-build
   
