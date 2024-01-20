@@ -174,7 +174,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
                     </Col>
                   </Row>
                 </div>
-                {getLabels(column, sortSecondary, cube.showUnsorted)
+                {getLabels(Object.values(column).flat(), sortSecondary, cube.showUnsorted)
                   .filter((label) => column[label])
                   .map((label) => {
                     const group = column[label];
