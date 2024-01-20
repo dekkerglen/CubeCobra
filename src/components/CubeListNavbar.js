@@ -184,7 +184,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                   {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
                 </DropdownItem>
                 <DropdownItem onClick={toggleShowMaybeboard}>
-                  {showMaybeboard ? 'Hide maybeboard' : 'Show maybeboard'}
+                  {showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}
                 </DropdownItem>
                 <DropdownItem onClick={() => setShowUnsorted(!cube.showUnsorted)}>
                   {cube.showUnsorted ? 'Hide Unsorted cards' : 'Show Unsorted cards'}

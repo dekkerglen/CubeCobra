@@ -53,7 +53,7 @@ const CubeListPageRaw = () => {
                     list: <ListView cards={boardcards} />,
                   }[cubeView]
                 }
-                {boardname === 'maybeboard' && <hr />}
+                {boardname !== 'mainboard' && <hr />}
               </>
             )}
           </ErrorBoundary>
