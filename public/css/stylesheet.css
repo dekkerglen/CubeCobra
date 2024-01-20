@@ -1370,3 +1370,7 @@ div.advertisement-div > div:not(.report-link) {
 .noBreak {
 	white-space: nowrap;
 }
+
+.boardTitle {
+	text-transform: capitalize;
+}
