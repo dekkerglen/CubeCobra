@@ -9,7 +9,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => {
+function ExplorePage({ recents, featured, drafted, popular, loginCallback }) {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />
@@ -26,7 +26,7 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
       </Row>
     </MainLayout>
   );
-};
+}
 
 const cubesListProp = PropTypes.arrayOf(CubePropType);
 

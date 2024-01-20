@@ -4,7 +4,7 @@ import InfiniteCarousel from 'react-leaf-carousel';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-const CubeCarousel = ({ cubes }) => {
+function CubeCarousel({ cubes }) {
   return (
     <InfiniteCarousel
       breakpoints={[
@@ -35,7 +35,7 @@ const CubeCarousel = ({ cubes }) => {
       ))}
     </InfiniteCarousel>
   );
-};
+}
 
 CubeCarousel.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,

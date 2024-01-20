@@ -4,7 +4,7 @@ import CubePropType from 'proptypes/CubePropType';
 import React from 'react';
 import { InputGroup, InputGroupText, Input } from 'reactstrap';
 
-const AsfanDropdown = ({ cube, alwaysOn, useAsfans, setUseAsfans, draftFormat, setDraftFormat }) => {
+function AsfanDropdown({ cube, alwaysOn, useAsfans, setUseAsfans, draftFormat, setDraftFormat }) {
   return (
     <InputGroup className="mb-3">
       {alwaysOn ? (
@@ -28,7 +28,7 @@ const AsfanDropdown = ({ cube, alwaysOn, useAsfans, setUseAsfans, draftFormat, s
       </Input>
     </InputGroup>
   );
-};
+}
 
 AsfanDropdown.propTypes = {
   cube: CubePropType.isRequired,

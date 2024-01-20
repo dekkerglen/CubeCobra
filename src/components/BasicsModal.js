@@ -7,7 +7,7 @@ import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Ca
 
 const MAX_BASICS = 21;
 
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
+function BasicsModal({ isOpen, toggle, addBasics, deck, basics, cards }) {
   const [counts, setCounts] = useState(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
@@ -99,7 +99,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 BasicsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

@@ -5,7 +5,7 @@ import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
 
-const PodcastPreview = ({ podcast }) => {
+function PodcastPreview({ podcast }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -32,7 +32,7 @@ const PodcastPreview = ({ podcast }) => {
       </div>
     </Card>
   );
-};
+}
 
 PodcastPreview.propTypes = {
   podcast: ContentPropType.isRequired,

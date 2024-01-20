@@ -4,7 +4,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 
 import ButtonLink from 'components/ButtonLink';
 
-const AddToCubeModal = ({ link, isOpen, toggle }) => {
+function AddToCubeModal({ link, isOpen, toggle }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xs">
       <ModalHeader toggle={toggle}>This link could be dangerous</ModalHeader>
@@ -24,7 +24,7 @@ const AddToCubeModal = ({ link, isOpen, toggle }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 AddToCubeModal.propTypes = {
   link: PropTypes.string.isRequired,

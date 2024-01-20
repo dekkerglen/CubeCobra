@@ -14,7 +14,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
+function BrowseContentPage({ loginCallback, content, lastKey }) {
   const [items, setItems] = useState(content);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -71,7 +71,7 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
       </InfiniteScroll>
     </MainLayout>
   );
-};
+}
 
 BrowseContentPage.propTypes = {
   loginCallback: PropTypes.string,

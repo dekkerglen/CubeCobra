@@ -6,7 +6,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { CubeContextProvider } from 'contexts/CubeContext';
 import CardSearch from 'components/CardSearch';
 
-const CardSearchPage = ({ loginCallback }) => {
+function CardSearchPage({ loginCallback }) {
   return (
     <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
@@ -14,7 +14,7 @@ const CardSearchPage = ({ loginCallback }) => {
       </MainLayout>
     </CubeContextProvider>
   );
-};
+}
 
 CardSearchPage.propTypes = {
   loginCallback: PropTypes.string,

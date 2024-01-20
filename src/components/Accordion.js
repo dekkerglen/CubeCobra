@@ -5,7 +5,7 @@ import { Card, CardHeader, Collapse, CardBody } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';
 
-const Accordion = ({ defaultExpand, children, title }) => {
+function Accordion({ defaultExpand, children, title }) {
   const [expanded, toggle] = useToggle(defaultExpand);
 
   return (
@@ -22,7 +22,7 @@ const Accordion = ({ defaultExpand, children, title }) => {
       </Card>
     </div>
   );
-};
+}
 
 Accordion.propTypes = {
   defaultExpand: PropTypes.bool,

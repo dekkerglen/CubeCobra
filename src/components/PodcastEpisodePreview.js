@@ -6,7 +6,7 @@ import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
 
-const PodcastEpisodePreview = ({ episode }) => {
+function PodcastEpisodePreview({ episode }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -42,7 +42,7 @@ const PodcastEpisodePreview = ({ episode }) => {
       </div>
     </Card>
   );
-};
+}
 
 PodcastEpisodePreview.propTypes = {
   episode: ContentPropType.isRequired,

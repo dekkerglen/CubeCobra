@@ -31,7 +31,7 @@ const DEFAULT_FORMAT = {
   packs: [{ slots: ['rarity:Mythic', 'tag:new', 'identity>1'], steps: null }],
 };
 
-const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
+function CubePlaytestPage({ cube, decks, loginCallback }) {
   const user = useContext(UserContext);
 
   const { alerts, addAlert } = useAlerts();
@@ -120,13 +120,16 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
     [formats, defaultDraftFormat],
   );
 
-  const StandardDraftFormatCard = () => (
-    <StandardDraftCard
-      className="mb-3"
-      onSetDefaultFormat={handleSetDefaultFormat}
-      defaultDraftFormat={defaultDraftFormat}
-    />
-  );
+  // eslint-disable-next-line react/no-unstable-nested-components
+  function StandardDraftFormatCard() {
+    return (
+      <StandardDraftCard
+        className="mb-3"
+        onSetDefaultFormat={handleSetDefaultFormat}
+        defaultDraftFormat={defaultDraftFormat}
+      />
+    );
+  }
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -182,7 +185,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
       </CubeLayout>
     </MainLayout>
   );
-};
+}
 
 CubePlaytestPage.propTypes = {
   cube: CubePropType.isRequired,

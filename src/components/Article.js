@@ -8,7 +8,7 @@ import Username from 'components/Username';
 
 import { CardBody, CardHeader } from 'reactstrap';
 
-const Article = ({ article }) => {
+function Article({ article }) {
   return (
     <>
       <CardHeader>
@@ -27,7 +27,7 @@ const Article = ({ article }) => {
       </div>
     </>
   );
-};
+}
 Article.propTypes = {
   article: ContentPropType.isRequired,
 };

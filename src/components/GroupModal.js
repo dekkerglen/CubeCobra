@@ -28,7 +28,7 @@ import Tooltip from 'components/Tooltip';
 import CardPropType from 'proptypes/CardPropType';
 import AutocardContext from 'contexts/AutocardContext';
 
-const GroupModal = ({
+function GroupModal({
   isOpen,
   toggle,
   cards,
@@ -41,7 +41,7 @@ const GroupModal = ({
   setModalSelection,
   tagColors,
   allTags,
-}) => {
+}) {
   const [status, setStatus] = useState('');
   const [finish, setFinish] = useState('');
   const [cmc, setCmc] = useState('');
@@ -144,17 +144,14 @@ const GroupModal = ({
     toggle();
   }, [addTags, bulkEditCard, cards, cmc, color, finish, setModalSelection, status, tags, toggle, typeLine]);
 
-  const anyCardChanged = useMemo(() => {
-    return cards.some((card) => card.editIndex !== undefined);
-  }, [cards]);
+  const anyCardChanged = useMemo(() => cards.some((card) => card.editIndex !== undefined), [cards]);
 
-  const anyCardRemoved = useMemo(() => {
-    return cards.some((card) => card.markedForDelete);
-  }, [cards]);
+  const anyCardRemoved = useMemo(() => cards.some((card) => card.markedForDelete), [cards]);
 
-  const fieldsChanged = useMemo(() => {
-    return status !== '' || finish !== '' || cmc !== '' || typeLine !== '' || color.length > 0 || tags.length > 0;
-  }, [status, finish, cmc, typeLine, color, tags]);
+  const fieldsChanged = useMemo(
+    () => status !== '' || finish !== '' || cmc !== '' || typeLine !== '' || color.length > 0 || tags.length > 0,
+    [status, finish, cmc, typeLine, color, tags],
+  );
 
   const totalPriceUsd = cards.length ? cards.reduce((total, card) => total + (cardPrice(card) ?? 0), 0) : 0;
   const totalPriceUsdFoil = cards.length ? cards.reduce((total, card) => total + (cardFoilPrice(card) ?? 0), 0) : 0;
@@ -386,7 +383,7 @@ const GroupModal = ({
       </ModalBody>
     </Modal>
   );
-};
+}
 
 GroupModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

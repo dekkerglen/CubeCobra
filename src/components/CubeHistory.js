@@ -14,19 +14,15 @@ const loader = (
   </div>
 );
 
-const CubeHistory = ({ changes, lastKey }) => {
+function CubeHistory({ changes, lastKey }) {
   const { cube } = useContext(CubeContext);
 
   const [items, setItems] = useState(changes);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
-  const evens = useMemo(() => {
-    return items.filter((item, index) => index % 2 === 0);
-  }, [items]);
+  const evens = useMemo(() => items.filter((item, index) => index % 2 === 0), [items]);
 
-  const odds = useMemo(() => {
-    return items.filter((item, index) => index % 2 !== 0);
-  }, [items]);
+  const odds = useMemo(() => items.filter((item, index) => index % 2 !== 0), [items]);
 
   const fetchMoreData = useCallback(async () => {
     // intentionally wait to avoid too many DB queries
@@ -122,7 +118,7 @@ const CubeHistory = ({ changes, lastKey }) => {
       </div>
     </InfiniteScroll>
   );
-};
+}
 
 CubeHistory.propTypes = {
   changes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,

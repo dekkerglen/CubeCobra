@@ -1,3 +1,6 @@
+/* eslint-disable import/extensions */
+/* eslint-disable import/no-unresolved */
+
 // Load Environment Variables
 require('dotenv').config();
 
@@ -6,6 +9,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const carddb = require('../serverjs/carddb');
 
+// the below imports do not exist and should be updated if we ever wish to run this script again
 const Draft = require('../models/old/draft');
 const GridDraft = require('../models/old/gridDraft');
 const Deck = require('../models/old/deck');

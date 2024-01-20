@@ -8,13 +8,15 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const PackagePage = ({ pack, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <Banner />
-    <DynamicFlash />
-    <CardPackage cardPackage={pack} refresh={() => window.location.reload()} />
-  </MainLayout>
-);
+function PackagePage({ pack, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
+      <DynamicFlash />
+      <CardPackage cardPackage={pack} refresh={() => window.location.reload()} />
+    </MainLayout>
+  );
+}
 
 PackagePage.propTypes = {
   pack: CardPackagePropType.isRequired,

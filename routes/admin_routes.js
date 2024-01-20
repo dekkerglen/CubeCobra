@@ -37,9 +37,7 @@ router.get('/dashboard', ensureAdmin, async (req, res) => {
   });
 });
 
-router.get('/comments', async (req, res) => {
-  return res.redirect('/admin/notices');
-});
+router.get('/comments', async (req, res) => res.redirect('/admin/notices'));
 
 router.get('/reviewcontent', ensureAdmin, async (req, res) => {
   const content = await Content.getByStatus(Content.STATUS.IN_REVIEW);
@@ -187,6 +185,7 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
   const comment = await Comment.getById(report.subject);
 
+  // eslint-disable-next-line no-console
   console.log(report);
 
   report.status = Notice.STATUS.PROCESSED;
@@ -197,7 +196,6 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
   await Comment.put(comment);
-  
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect('/admin/notices');
@@ -308,7 +306,7 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const queue = await FeaturedQueue.querySortedByDate();
   const { items } = queue;
-  
+
   const rotate = await fq.rotateFeatured(items);
   for (const message of rotate.messages) {
     req.flash('danger', message);

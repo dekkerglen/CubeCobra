@@ -12,27 +12,29 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const CubeDecksPage = ({ cube, decks, pages, activePage, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DynamicFlash />
-    <CubeLayout cube={cube} activeLink="playtest">
-      <div className="my-3">
-        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/deck/decks/${cube.id}/${i}`} />}
-        <Card>
-          <CardHeader>
-            <h5 className="mb-0">All Decks</h5>
-          </CardHeader>
-          <CardBody className="p-0">
-            {decks.map((deck) => (
-              <DeckPreview key={deck.id} deck={deck} nextURL={`/cube/deck/decks/${cube.id}/${activePage}`} />
-            ))}
-          </CardBody>
-        </Card>
-        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/deck/decks/${cube.id}/${i}`} />}
-      </div>
-    </CubeLayout>
-  </MainLayout>
-);
+function CubeDecksPage({ cube, decks, pages, activePage, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DynamicFlash />
+      <CubeLayout cube={cube} activeLink="playtest">
+        <div className="my-3">
+          {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/deck/decks/${cube.id}/${i}`} />}
+          <Card>
+            <CardHeader>
+              <h5 className="mb-0">All Decks</h5>
+            </CardHeader>
+            <CardBody className="p-0">
+              {decks.map((deck) => (
+                <DeckPreview key={deck.id} deck={deck} nextURL={`/cube/deck/decks/${cube.id}/${activePage}`} />
+              ))}
+            </CardBody>
+          </Card>
+          {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/deck/decks/${cube.id}/${i}`} />}
+        </div>
+      </CubeLayout>
+    </MainLayout>
+  );
+}
 
 CubeDecksPage.propTypes = {
   cube: CubePropType.isRequired,

@@ -5,9 +5,9 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import PackagesPage from 'pages/PackagesPage';
 
-const ApprovedPackagesPage = ({ loginCallback, items, lastKey }) => {
+function ApprovedPackagesPage({ loginCallback, items, lastKey }) {
   return <PackagesPage loginCallback={loginCallback} items={items} lastKey={lastKey} activePage="approved" />;
-};
+}
 
 ApprovedPackagesPage.propTypes = {
   loginCallback: PropTypes.string,

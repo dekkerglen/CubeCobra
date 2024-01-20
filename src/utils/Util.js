@@ -265,6 +265,7 @@ export async function wait(ms) {
 function xor(a, b) {
   let result = '';
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    // eslint-disable-next-line no-bitwise
     result += String.fromCharCode(a.charCodeAt(i) ^ b.charCodeAt(i));
   }
   return result;
@@ -276,7 +277,7 @@ export function xorStrings(strings) {
   if (nonNullStrings.length === 0) {
     return '';
   }
-  
+
   let result = nonNullStrings[0];
   for (let i = 1; i < nonNullStrings.length; i++) {
     result = xor(result, nonNullStrings[i]);
@@ -307,5 +308,5 @@ export default {
   getCardTagColorClass,
   getTagColorClass,
   wait,
-  xorStrings
+  xorStrings,
 };

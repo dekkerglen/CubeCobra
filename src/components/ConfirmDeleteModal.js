@@ -4,7 +4,7 @@ import React from 'react';
 
 import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
 
-const ConfirmDeleteModal = ({ isOpen, toggle, text, submitDelete }) => {
+function ConfirmDeleteModal({ isOpen, toggle, text, submitDelete }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader toggle={toggle}>Confirm Delete</ModalHeader>
@@ -27,7 +27,7 @@ const ConfirmDeleteModal = ({ isOpen, toggle, text, submitDelete }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 ConfirmDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,

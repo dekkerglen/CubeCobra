@@ -5,7 +5,7 @@ import { Button, ButtonGroup } from 'reactstrap';
 
 import { COLORS } from 'utils/Util';
 
-export const ColorCheckButton = ({ size, color, short, checked, onClick }) => {
+export function ColorCheckButton({ size, color, short, checked, onClick }) {
   const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
@@ -18,7 +18,7 @@ export const ColorCheckButton = ({ size, color, short, checked, onClick }) => {
       <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className={symbolClassName} />
     </Button>
   );
-};
+}
 
 ColorCheckButton.propTypes = {
   size: PropTypes.string,
@@ -32,7 +32,7 @@ ColorCheckButton.defaultProps = {
   size: 'sm',
 };
 
-export const ColorChecksControl = ({ colorless, prefix, size, values, setValues, style }) => {
+export function ColorChecksControl({ colorless, prefix, size, values, setValues, style }) {
   const smallStyle = {
     height: 'calc(1.5em + .5rem + 2px)',
     fontSize: '0.875rem',
@@ -75,7 +75,7 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
       )}
     </ButtonGroup>
   );
-};
+}
 
 ColorChecksControl.propTypes = {
   colorless: PropTypes.bool,
@@ -94,7 +94,7 @@ ColorChecksControl.defaultProps = {
   style: {},
 };
 
-export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues }) => {
+export function ColorChecksAddon({ colorless, prefix, size, values, setValues }) {
   const colors = useMemo(() => {
     const c = [...COLORS];
     if (colorless) {
@@ -124,7 +124,7 @@ export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues })
       ))}
     </>
   );
-};
+}
 
 ColorChecksAddon.propTypes = {
   colorless: PropTypes.bool,

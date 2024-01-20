@@ -12,7 +12,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
+function SamplePackPage({ seed, pack, cube, loginCallback }) {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -52,7 +52,7 @@ const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
       </CubeLayout>
     </MainLayout>
   );
-};
+}
 
 SamplePackPage.propTypes = {
   seed: PropTypes.string.isRequired,

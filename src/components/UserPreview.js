@@ -7,7 +7,7 @@ import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
 import MtgImage from 'components/MtgImage';
 
-const UserPreview = ({ user }) => {
+function UserPreview({ user }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -37,7 +37,7 @@ const UserPreview = ({ user }) => {
       </div>
     </Card>
   );
-};
+}
 
 UserPreview.propTypes = {
   user: PropTypes.shape({

@@ -14,7 +14,7 @@ import { csrfFetch } from 'utils/CSRF';
 
 import { wait } from 'utils/Util';
 
-const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) => {
+function SearchPage({ cubes, query, order, loginCallback, lastKey, ascending }) {
   const [items, setItems] = React.useState(cubes);
   const [currentLastKey, setCurrentLastKey] = React.useState(lastKey);
 
@@ -76,7 +76,7 @@ const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) 
       )}
     </MainLayout>
   );
-};
+}
 
 SearchPage.propTypes = {
   cubes: PropTypes.arrayOf(CubePropType).isRequired,

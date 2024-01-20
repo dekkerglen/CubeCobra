@@ -19,7 +19,7 @@ const CONVERT_STATUS = {
   d: 'Draft',
 };
 
-const EditPodcastPage = ({ loginCallback, podcast }) => {
+function EditPodcastPage({ loginCallback, podcast }) {
   const [tab, setTab] = useQueryParam('tab', '0');
   const [rss, setRss] = useState(podcast.url);
 
@@ -108,7 +108,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 EditPodcastPage.propTypes = {
   loginCallback: PropTypes.string,

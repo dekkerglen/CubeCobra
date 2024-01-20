@@ -8,7 +8,7 @@ import PodcastPreview from 'components/PodcastPreview';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const CreatorPodcasts = ({ podcasts, lastKey }) => {
+function CreatorPodcasts({ podcasts, lastKey }) {
   const [items, setItems] = useState(podcasts);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -64,7 +64,7 @@ const CreatorPodcasts = ({ podcasts, lastKey }) => {
       </InfiniteScroll>
     </>
   );
-};
+}
 
 CreatorPodcasts.propTypes = {
   podcasts: PropTypes.arrayOf({}).isRequired,

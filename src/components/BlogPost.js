@@ -15,7 +15,7 @@ import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import BlogPostChangelog from 'components/BlogPostChangelog';
 
-const BlogPost = ({ post, noScroll }) => {
+function BlogPost({ post, noScroll }) {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
@@ -99,7 +99,7 @@ const BlogPost = ({ post, noScroll }) => {
       </div>
     </Card>
   );
-};
+}
 
 BlogPost.propTypes = {
   post: BlogPostPropType.isRequired,

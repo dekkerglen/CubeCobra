@@ -12,7 +12,7 @@ import CommentsSection from 'components/CommentsSection';
 import ReactAudioPlayer from 'react-audio-player';
 import TimeAgo from 'react-timeago';
 
-const PodcastEpisodePage = ({ loginCallback, episode }) => {
+function PodcastEpisodePage({ loginCallback, episode }) {
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
@@ -44,7 +44,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 PodcastEpisodePage.propTypes = {
   loginCallback: PropTypes.string,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
@@ -8,7 +8,7 @@ import ArticlePreview from 'components/ArticlePreview';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const CreatorArticles = ({ articles, lastKey }) => {
+function CreatorArticles({ articles, lastKey }) {
   const [items, setItems] = useState(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -64,7 +64,7 @@ const CreatorArticles = ({ articles, lastKey }) => {
       </InfiniteScroll>
     </>
   );
-};
+}
 
 CreatorArticles.propTypes = {
   articles: PropTypes.arrayOf({}).isRequired,

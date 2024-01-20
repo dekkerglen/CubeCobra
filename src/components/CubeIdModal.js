@@ -3,7 +3,7 @@ import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, Input
 import PropTypes from 'prop-types';
 import { ClippyIcon } from '@primer/octicons-react';
 
-const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
+function CubeIdModal({ toggle, isOpen, shortId, fullID, alert }) {
   const onCopyClick = async (id, label) => {
     await navigator.clipboard.writeText(id);
     alert('success', `${label} copied to clipboard`);
@@ -48,7 +48,7 @@ const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 CubeIdModal.propTypes = {
   toggle: PropTypes.func.isRequired,

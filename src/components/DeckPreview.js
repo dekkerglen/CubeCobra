@@ -28,7 +28,7 @@ const truncateToLength = (len, s) => {
   return s.length > len ? `${s.slice(0, len - 3)}...` : s;
 };
 
-const DeckPreview = ({ deck, nextURL }) => {
+function DeckPreview({ deck, nextURL }) {
   const user = useContext(UserContext);
   const canEdit = user && (user.id === deck.id || user.id === deck.cubeOwner.id);
 
@@ -98,7 +98,7 @@ const DeckPreview = ({ deck, nextURL }) => {
       )}
     </Row>
   );
-};
+}
 
 DeckPreview.propTypes = {
   deck: DeckPropType.isRequired,

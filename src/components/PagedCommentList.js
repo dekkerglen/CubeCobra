@@ -5,14 +5,16 @@ import CommentPropType from 'proptypes/CommentPropType';
 import Comment from 'components/Comment';
 import PagedList from 'components/PagedList';
 
-const CommentList = ({ comments, editComment }) => (
-  <PagedList
-    pageSize={10}
-    rows={comments.map((comment, index) => (
-      <Comment key={`comment-${comment.id}`} comment={comment} index={index} editComment={editComment} />
-    ))}
-  />
-);
+function CommentList({ comments, editComment }) {
+  return (
+    <PagedList
+      pageSize={10}
+      rows={comments.map((comment, index) => (
+        <Comment key={`comment-${comment.id}`} comment={comment} index={index} editComment={editComment} />
+      ))}
+    />
+  );
+}
 
 CommentList.propTypes = {
   comments: PropTypes.arrayOf(CommentPropType).isRequired,

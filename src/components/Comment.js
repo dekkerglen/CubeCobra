@@ -22,7 +22,7 @@ const ReportCommentModalButton = withModal('a', ReportCommentModal);
 
 const maxDepth = 4;
 
-const Comment = ({ comment, index, depth, noReplies, editComment }) => {
+function Comment({ comment, index, depth, noReplies, editComment }) {
   const user = useContext(UserContext);
   const domain = useContext(DomainContext);
 
@@ -162,7 +162,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       </div>
     </div>
   );
-};
+}
 
 Comment.propTypes = {
   comment: CommentPropType.isRequired,

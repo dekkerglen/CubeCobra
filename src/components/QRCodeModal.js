@@ -16,26 +16,28 @@ const saveQRImage = (cubeName) => {
   a.click();
 };
 
-const QRCodeModal = ({ isOpen, toggle, link, cubeName }) => (
-  <Modal size="md" isOpen={isOpen} toggle={toggle}>
-    <ModalHeader toggle={toggle}>Link to {cubeName}</ModalHeader>
-    <ModalBody>
-      <div className="centered">
-        <div className="p-3 qr-code-area">
-          <QRCode id="qr-code" value={link} />
+function QRCodeModal({ isOpen, toggle, link, cubeName }) {
+  return (
+    <Modal size="md" isOpen={isOpen} toggle={toggle}>
+      <ModalHeader toggle={toggle}>Link to {cubeName}</ModalHeader>
+      <ModalBody>
+        <div className="centered">
+          <div className="p-3 qr-code-area">
+            <QRCode id="qr-code" value={link} />
+          </div>
         </div>
-      </div>
-    </ModalBody>
-    <ModalFooter>
-      <Button color="accent" onClick={() => saveQRImage(cubeName)}>
-        Download
-      </Button>
-      <Button color="secondary" onClick={toggle}>
-        Close
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
+      </ModalBody>
+      <ModalFooter>
+        <Button color="accent" onClick={() => saveQRImage(cubeName)}>
+          Download
+        </Button>
+        <Button color="secondary" onClick={toggle}>
+          Close
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
 
 QRCodeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

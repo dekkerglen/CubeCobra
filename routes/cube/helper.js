@@ -113,11 +113,7 @@ async function bulkUpload(req, res, list, cube) {
       let newCards;
       let newMaybe;
       ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
-      changelog.push(
-        ...newCards.map((card) => {
-          return { addedID: card.cardID, removedID: null };
-        }),
-      );
+      changelog.push(...newCards.map((card) => ({ addedID: card.cardID, removedID: null })));
 
       mainboard.push(...newCards);
       maybeboard.push(...newMaybe);

@@ -35,7 +35,7 @@ const translateLink = {
   package: (id) => `/packages/${id}`,
 };
 
-const CommentPage = ({ comment, loginCallback }) => {
+function CommentPage({ comment, loginCallback }) {
   const [content, setContent] = useState(comment);
 
   return (
@@ -55,7 +55,7 @@ const CommentPage = ({ comment, loginCallback }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 CommentPage.propTypes = {
   comment: CommentPropType.isRequired,

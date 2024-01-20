@@ -9,7 +9,7 @@ const MaybeboardContext = React.createContext({
   updateCard: () => {},
 });
 
-export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
+export function MaybeboardContextProvider({ initialCards, ...props }) {
   const [maybeboard, setMaybeboard] = useState([...initialCards]);
 
   const addMaybeboardCard = useCallback((card) => {
@@ -32,7 +32,7 @@ export const MaybeboardContextProvider = ({ initialCards, ...props }) => {
   const value = { maybeboard, addMaybeboardCard, removeMaybeboardCard, updateMaybeboardCard };
 
   return <MaybeboardContext.Provider value={value} {...props} />;
-};
+}
 
 MaybeboardContextProvider.propTypes = {
   initialCards: PropTypes.arrayOf(CardPropType).isRequired,

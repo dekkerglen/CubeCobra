@@ -142,7 +142,6 @@ router.get('/v/:id', (req, res) => {
 });
 
 router.get('/article/:id', async (req, res) => {
-
   const article = await Content.getById(req.params.id);
 
   if (!article) {

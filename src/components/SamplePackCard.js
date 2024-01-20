@@ -5,7 +5,7 @@ import LabelRow from 'components/LabelRow';
 
 import { Card, CardBody, CardHeader, CardTitle, Input, CardFooter, Button } from 'reactstrap';
 
-const SamplePackCard = (props) => {
+function SamplePackCard(props) {
   const { cube } = useContext(CubeContext);
   const [seed, setSeed] = useState('');
   const handleChange = useCallback((event) => setSeed(event.target.value), []);
@@ -32,6 +32,6 @@ const SamplePackCard = (props) => {
       </CardFooter>
     </Card>
   );
-};
+}
 
 export default SamplePackCard;

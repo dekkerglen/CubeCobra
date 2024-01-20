@@ -3,12 +3,14 @@ import PropTypes from 'prop-types';
 
 import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
-const TextField = ({ name, humanName, placeholder, value, onChange }) => (
-  <InputGroup className="mb-3">
-    <InputGroupText>{humanName}</InputGroupText>
-    <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
-  </InputGroup>
-);
+function TextField({ name, humanName, placeholder, value, onChange }) {
+  return (
+    <InputGroup className="mb-3">
+      <InputGroupText>{humanName}</InputGroupText>
+      <Input type="text" name={name} placeholder={placeholder} value={value} onChange={onChange} />
+    </InputGroup>
+  );
+}
 
 TextField.propTypes = {
   name: PropTypes.string.isRequired,

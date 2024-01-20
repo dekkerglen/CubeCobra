@@ -16,9 +16,8 @@ const draftCardIndexToOracle = (cardIndex, draftCards) => {
   return card.details.oracle_id;
 };
 
-const draftCardIndexToOracleIndex = (cardIndex, draftCards, oracleToIndex) => {
-  return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] || -1;
-};
+const draftCardIndexToOracleIndex = (cardIndex, draftCards, oracleToIndex) =>
+  oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] || -1;
 
 const processDeck = (draft, oracleToIndex) => {
   const seats = [];

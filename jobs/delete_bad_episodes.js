@@ -1,12 +1,12 @@
-
 const Content = require('../dynamo/models/content');
 
 (async () => {
   let lastKey = null;
 
-  let items = [];
+  const items = [];
 
   do {
+    // eslint-disable-next-line no-await-in-loop
     const result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, lastKey);
     lastKey = result.lastKey;
 
@@ -39,8 +39,8 @@ const Content = require('../dynamo/models/content');
   }
 
   console.log(`Found ${episodesToDelete.length} bad episodes.`);
-  
+
   await Content.batchDelete(episodesToDelete.map((item) => ({ id: item.id })));
-    
+
   process.exit();
 })();

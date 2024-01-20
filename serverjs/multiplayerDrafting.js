@@ -87,13 +87,6 @@ const obtainLock = async (draftId, random, timeout = 10000) => {
   return false;
 };
 
-const releaseLock = async (draftId, random) => {
-  const value = await get(`draft:${draftId}:lock`);
-  if (value === random) {
-    await del(`draft:${draftId}:lock`);
-  }
-};
-
 const getDraftMetaData = async (draftId) => {
   const [seats, currentPack, totalPacks, initialized] = await hmget(
     draftRef(draftId),
@@ -538,7 +531,7 @@ const tryBotPicks = async (draftId) => {
   const finished = await hget(draftRef(draftId), 'finished');
   let picks = 0;
   if (finished === 'true') {
-    return {result:'done', picks};
+    return { result: 'done', picks };
   }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
@@ -565,13 +558,13 @@ const tryBotPicks = async (draftId) => {
   if (await isPackDone(draftId)) {
     if (currentPack < totalPacks) {
       await openPack(draftId);
-      return {result: 'inProgress', picks};
+      return { result: 'inProgress', picks };
     }
     // draft is done
     await finishDraft(draftId);
-    return {result: 'done', picks};
+    return { result: 'done', picks };
   }
-  return {result: 'inProgress', picks};
+  return { result: 'inProgress', picks };
 };
 
 const dumpDraft = async (draftId) => {

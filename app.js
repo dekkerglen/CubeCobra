@@ -182,11 +182,11 @@ app.use((req, res, next) => {
 // check for downtime
 
 if (process.env.DOWNTIME_ACTIVE === 'true') {
-  app.use((req, res) => {
-    return render(req, res, 'DownTimePage', {
+  app.use((req, res) =>
+    render(req, res, 'DownTimePage', {
       title: 'Down for Maintenance',
-    });
-  });
+    }),
+  );
 }
 
 // Route files; they manage their own CSRF protection
@@ -206,12 +206,12 @@ app.use('/job', require('./routes/job_routes'));
 
 app.use('', require('./routes/root'));
 
-app.use((req, res) => {
-  return render(req, res, 'ErrorPage', {
+app.use((req, res) =>
+  render(req, res, 'ErrorPage', {
     requestId: req.uuid,
     title: '404: Page not found',
-  });
-});
+  }),
+);
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {

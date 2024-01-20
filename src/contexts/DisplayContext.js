@@ -10,7 +10,7 @@ const DisplayContext = React.createContext({
   showMaybeboard: false,
 });
 
-export const DisplayContextProvider = ({ cubeID, ...props }) => {
+export function DisplayContextProvider({ cubeID, ...props }) {
   const [showCustomImages, setShowCustomImages] = useLocalStorage('showcustomimages', true);
   const [openCollapse, setOpenCollapse] = useState(null);
 
@@ -18,17 +18,17 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     setShowCustomImages(!showCustomImages);
   }, [setShowCustomImages, showCustomImages]);
 
-  const [compressedView, setCompressedView] = useState(() => {
-    return typeof localStorage !== 'undefined' && localStorage.getItem('compressed') === 'true';
-  });
+  const [compressedView, setCompressedView] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem('compressed') === 'true',
+  );
   const toggleCompressedView = useCallback(() => {
     localStorage.setItem('compressed', !compressedView);
     setCompressedView(!compressedView);
   }, [compressedView]);
 
-  const [showMaybeboard, setShowMaybeboard] = useState(() => {
-    return typeof localStorage !== 'undefined' && cubeID && localStorage.getItem(`maybeboard-${cubeID}`) === 'true';
-  });
+  const [showMaybeboard, setShowMaybeboard] = useState(
+    () => typeof localStorage !== 'undefined' && cubeID && localStorage.getItem(`maybeboard-${cubeID}`) === 'true',
+  );
   const toggleShowMaybeboard = useCallback(() => {
     if (cubeID) localStorage.setItem(`maybeboard-${cubeID}`, !showMaybeboard);
     setShowMaybeboard(!showMaybeboard);
@@ -45,7 +45,7 @@ export const DisplayContextProvider = ({ cubeID, ...props }) => {
     setOpenCollapse,
   };
   return <DisplayContext.Provider value={value} {...props} />;
-};
+}
 
 DisplayContextProvider.propTypes = {
   cubeID: PropTypes.string.isRequired,

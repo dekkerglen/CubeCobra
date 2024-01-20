@@ -36,82 +36,84 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
 import DraftPropType from 'proptypes/DraftPropType';
 
-const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
-  <Card className="mt-3">
-    <CardHeader>
-      <CardTitle className="mb-0">
-        <h4>
-          Pack {packNumber + 1}, Pick {pickNumber + 1}
-        </h4>
-        <h4 className="mb-0">
-          {turn && (
-            <Badge color={turn === 1 ? 'primary' : 'danger'}>{`Player ${turn === 1 ? 'one' : 'two'}'s pick`}</Badge>
-          )}
-        </h4>
-      </CardTitle>
-    </CardHeader>
-    <CardBody>
-      <Row className="mb-2 justify-content-center">
-        <Col xs="1" />
-        {[0, 1, 2].map((col) => (
-          <Col key={`col-btn-${col}`} xs="3" md="2">
-            <Button
-              block
-              outline
-              color="accent"
-              onClick={() => {
-                makePick({
-                  seatIndex,
-                  cardIndices: [0, 1, 2]
-                    .map((row) => [pack[3 * row + col]?.index, 3 * row + col])
-                    .filter(([x]) => x || x === 0),
-                });
-              }}
-            >
-              🡇
-            </Button>
-          </Col>
-        ))}
-      </Row>
-      {[0, 1, 2].map((row) => (
-        <Row key={`row-${row}`} className="justify-content-center">
-          <Col className="my-2" xs="1">
-            <Button
-              className="float-end h-100"
-              outline
-              color="accent"
-              onClick={() => {
-                makePick({
-                  seatIndex,
-                  cardIndices: [0, 1, 2]
-                    .map((col) => [pack[3 * row + col]?.index, 3 * row + col])
-                    .filter(([x]) => x || x === 0),
-                });
-              }}
-            >
-              🡆
-            </Button>
-          </Col>
+function Pack({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) {
+  return (
+    <Card className="mt-3">
+      <CardHeader>
+        <CardTitle className="mb-0">
+          <h4>
+            Pack {packNumber + 1}, Pick {pickNumber + 1}
+          </h4>
+          <h4 className="mb-0">
+            {turn && (
+              <Badge color={turn === 1 ? 'primary' : 'danger'}>{`Player ${turn === 1 ? 'one' : 'two'}'s pick`}</Badge>
+            )}
+          </h4>
+        </CardTitle>
+      </CardHeader>
+      <CardBody>
+        <Row className="mb-2 justify-content-center">
+          <Col xs="1" />
           {[0, 1, 2].map((col) => (
-            <Col key={`cell-${col}-${row}`} className="px-0" xs="3" md="2">
-              {pack[row * 3 + col] ? (
-                <FoilCardImage card={pack[row * 3 + col]} tags={[]} autocard />
-              ) : (
-                <img
-                  src="/content/default_card.png"
-                  alt="Empty card slot"
-                  width="100%"
-                  height="auto"
-                  className="card-border"
-                />
-              )}
+            <Col key={`col-btn-${col}`} xs="3" md="2">
+              <Button
+                block
+                outline
+                color="accent"
+                onClick={() => {
+                  makePick({
+                    seatIndex,
+                    cardIndices: [0, 1, 2]
+                      .map((row) => [pack[3 * row + col]?.index, 3 * row + col])
+                      .filter(([x]) => x || x === 0),
+                  });
+                }}
+              >
+                🡇
+              </Button>
             </Col>
           ))}
         </Row>
-      ))}
-    </CardBody>
-  </Card>
-);
+        {[0, 1, 2].map((row) => (
+          <Row key={`row-${row}`} className="justify-content-center">
+            <Col className="my-2" xs="1">
+              <Button
+                className="float-end h-100"
+                outline
+                color="accent"
+                onClick={() => {
+                  makePick({
+                    seatIndex,
+                    cardIndices: [0, 1, 2]
+                      .map((col) => [pack[3 * row + col]?.index, 3 * row + col])
+                      .filter(([x]) => x || x === 0),
+                  });
+                }}
+              >
+                🡆
+              </Button>
+            </Col>
+            {[0, 1, 2].map((col) => (
+              <Col key={`cell-${col}-${row}`} className="px-0" xs="3" md="2">
+                {pack[row * 3 + col] ? (
+                  <FoilCardImage card={pack[row * 3 + col]} tags={[]} autocard />
+                ) : (
+                  <img
+                    src="/content/default_card.png"
+                    alt="Empty card slot"
+                    width="100%"
+                    height="auto"
+                    className="card-border"
+                  />
+                )}
+              </Col>
+            ))}
+          </Row>
+        ))}
+      </CardBody>
+    </Card>
+  );
+}
 
 Pack.propTypes = {
   pack: PropTypes.arrayOf(CardPropType).isRequired,
@@ -162,15 +164,16 @@ const useMutatableGridDraft = (initialGridDraft) => {
   return { gridDraft, mutations };
 };
 
-export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback }) => {
+export function GridDraftPage({ cube, initialDraft, seatNumber, loginCallback }) {
   const { cards } = initialDraft;
   const draftType = initialDraft.seats[1].bot ? 'bot' : '2playerlocal';
   const seatNum = toNullableInt(seatNumber) ?? 0;
   const { gridDraft, mutations } = useMutatableGridDraft(initialDraft);
   const submitDeckForm = useRef();
-  const drafterStates = useMemo(() => {
-    return [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx }));
-  }, [gridDraft]);
+  const drafterStates = useMemo(
+    () => [0, 1].map((idx) => getGridDrafterState({ gridDraft, seatNumber: idx })),
+    [gridDraft],
+  );
   const { turn, numPacks, packNum, pickNum } = drafterStates[seatNum];
   const { cardsInPack } = drafterStates[turn ? 0 : 1];
   const doneDrafting = packNum >= numPacks;
@@ -269,7 +272,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 
 GridDraftPage.propTypes = {
   cube: CubePropType.isRequired,

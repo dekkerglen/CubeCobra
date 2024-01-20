@@ -11,7 +11,7 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const ArticlePage = ({ loginCallback, article }) => {
+function ArticlePage({ loginCallback, article }) {
   const user = useContext(UserContext);
 
   return (
@@ -31,7 +31,7 @@ const ArticlePage = ({ loginCallback, article }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 ArticlePage.propTypes = {
   loginCallback: PropTypes.string,

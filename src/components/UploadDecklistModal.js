@@ -6,7 +6,7 @@ import CSRFForm from 'components/CSRFForm';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter, Input, Button } from 'reactstrap';
 
-const UploadDecklistModal = ({ isOpen, toggle }) => {
+function UploadDecklistModal({ isOpen, toggle }) {
   const { cube } = useContext(CubeContext);
   return (
     <Modal isOpen={isOpen} toggle={toggle} labelledBy="uploadDecklistModalTitle">
@@ -38,7 +38,7 @@ const UploadDecklistModal = ({ isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 UploadDecklistModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

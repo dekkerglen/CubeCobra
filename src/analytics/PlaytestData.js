@@ -22,11 +22,9 @@ const renderCardLink = (card) => (
   </AutocardItem>
 );
 
-const renderPercent = (val) => {
-  return <>{parseInt(val * 1000, 10) / 10}%</>;
-};
+const renderPercent = (val) => <>{parseInt(val * 1000, 10) / 10}%</>;
 
-const PlaytestData = ({ cards, cubeAnalytics }) => {
+function PlaytestData({ cards, cubeAnalytics }) {
   const cardDict = useMemo(() => fromEntries(cards.map((card) => [card.details.oracle_id, card])), [cards]);
 
   const data = useMemo(
@@ -48,30 +46,28 @@ const PlaytestData = ({ cards, cubeAnalytics }) => {
   );
 
   return (
-    <>
-      <ErrorBoundary>
-        <SortableTable
-          columnProps={[
-            {
-              key: 'card',
-              title: 'Card name',
-              heading: true,
-              sortable: true,
-              renderFn: renderCardLink,
-            },
-            { key: 'elo', title: 'Cube Elo', sortable: true, heading: false },
-            { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
-            { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
-          ]}
-          data={data}
-          sortFns={{ label: compareStrings }}
-        />
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary>
+      <SortableTable
+        columnProps={[
+          {
+            key: 'card',
+            title: 'Card name',
+            heading: true,
+            sortable: true,
+            renderFn: renderCardLink,
+          },
+          { key: 'elo', title: 'Cube Elo', sortable: true, heading: false },
+          { key: 'pickrate', title: 'Pick Rate', sortable: true, heading: false, renderFn: renderPercent },
+          { key: 'picks', title: 'Pick Count', sortable: true, heading: false },
+          { key: 'mainboard', title: 'Mainboard Rate', sortable: true, heading: false, renderFn: renderPercent },
+          { key: 'mainboards', title: 'Mainboard Count', sortable: true, heading: false },
+        ]}
+        data={data}
+        sortFns={{ label: compareStrings }}
+      />
+    </ErrorBoundary>
   );
-};
+}
 
 PlaytestData.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,

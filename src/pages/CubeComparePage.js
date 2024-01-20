@@ -15,7 +15,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import { CubeContextProvider } from 'contexts/CubeContext';
 
-const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) => {
+function CubeComparePage({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
   const [filter, setFilter] = useState(null);
 
@@ -43,7 +43,7 @@ const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 
 CubeComparePage.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

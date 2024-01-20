@@ -12,7 +12,7 @@ import UserContext from 'contexts/UserContext';
 
 import { wait } from 'utils/Util';
 
-const Feed = ({ items, lastKey }) => {
+function Feed({ items, lastKey }) {
   const user = useContext(UserContext);
   const [feedItems, setFeedItems] = useState(items);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
@@ -60,7 +60,7 @@ const Feed = ({ items, lastKey }) => {
       ))}
     </InfiniteScroll>
   );
-};
+}
 
 Feed.propTypes = {
   items: PropTypes.arrayOf(BlogPostPropType).isRequired,

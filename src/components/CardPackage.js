@@ -18,7 +18,7 @@ import { csrfFetch } from 'utils/CSRF';
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 const AutocardA = withAutocard('a');
 
-const CardPackage = ({ cardPackage }) => {
+function CardPackage({ cardPackage }) {
   const user = useContext(UserContext);
   const [voters, setVoters] = useState(cardPackage.voters);
   const [loading, setLoading] = useState(false);
@@ -134,7 +134,7 @@ const CardPackage = ({ cardPackage }) => {
       </CardBody>
     </Card>
   );
-};
+}
 
 CardPackage.propTypes = {
   cardPackage: CardPackagePropType.isRequired,

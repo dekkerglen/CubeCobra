@@ -12,30 +12,32 @@ import Banner from 'components/Banner';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, loginCallback }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
-      <Banner />
-      <DynamicFlash />
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
-      <Card>
-        <CardHeader>
-          <h5 className="mb-0">All Decks</h5>
-        </CardHeader>
-        {decks.length > 0 ? (
-          <CardBody className="p-0">
-            {decks.map((deck) => (
-              <DeckPreview key={deck.id} deck={deck} nextURL={`/user/decks/${owner.id}/${activePage}`} />
-            ))}
-          </CardBody>
-        ) : (
-          <CardBody>No decks to show.</CardBody>
-        )}
-      </Card>
-      {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
-    </UserLayout>
-  </MainLayout>
-);
+function UserDecksPage({ owner, followers, following, decks, pages, activePage, loginCallback }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
+        <Banner />
+        <DynamicFlash />
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
+        <Card>
+          <CardHeader>
+            <h5 className="mb-0">All Decks</h5>
+          </CardHeader>
+          {decks.length > 0 ? (
+            <CardBody className="p-0">
+              {decks.map((deck) => (
+                <DeckPreview key={deck.id} deck={deck} nextURL={`/user/decks/${owner.id}/${activePage}`} />
+              ))}
+            </CardBody>
+          ) : (
+            <CardBody>No decks to show.</CardBody>
+          )}
+        </Card>
+        {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
+      </UserLayout>
+    </MainLayout>
+  );
+}
 
 UserDecksPage.propTypes = {
   owner: PropTypes.shape({

@@ -5,7 +5,7 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap
 
 import useToggle from 'hooks/UseToggle';
 
-const CommentContextMenu = ({ edit, remove, children }) => {
+function CommentContextMenu({ edit, remove, children }) {
   const [open, toggle] = useToggle(false);
 
   return (
@@ -19,7 +19,7 @@ const CommentContextMenu = ({ edit, remove, children }) => {
       </DropdownMenu>
     </Dropdown>
   );
-};
+}
 
 CommentContextMenu.propTypes = {
   edit: PropTypes.func.isRequired,

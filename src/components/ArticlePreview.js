@@ -9,12 +9,12 @@ import Username from 'components/Username';
 import MtgImage from 'components/MtgImage';
 
 const statusMap = {
-  'p': 'Published',
-  'd': 'Draft',
-  'r': 'In Review',
-}
+  p: 'Published',
+  d: 'Draft',
+  r: 'In Review',
+};
 
-const ArticlePreview = ({ article, showStatus }) => {
+function ArticlePreview({ article, showStatus }) {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
@@ -48,16 +48,14 @@ const ArticlePreview = ({ article, showStatus }) => {
           <TimeAgo date={article.date} />
         </small>
       </div>
-      {showStatus && (        
+      {showStatus && (
         <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-          <small className="float-start">
-            Status: {statusMap[article.status]}
-          </small>
+          <small className="float-start">Status: {statusMap[article.status]}</small>
         </div>
       )}
     </Card>
   );
-};
+}
 
 ArticlePreview.propTypes = {
   article: ContentPropType.isRequired,

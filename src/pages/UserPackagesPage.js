@@ -5,9 +5,9 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 import PackagesPage from 'pages/PackagesPage';
 
-const UserPackagesPage = ({ loginCallback, items, lastKey }) => {
+function UserPackagesPage({ loginCallback, items, lastKey }) {
   return <PackagesPage loginCallback={loginCallback} items={items} lastKey={lastKey} activePage="user" />;
-};
+}
 
 UserPackagesPage.propTypes = {
   loginCallback: PropTypes.string,

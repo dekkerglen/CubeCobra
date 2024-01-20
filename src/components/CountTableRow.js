@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const CountTableRow = ({ label, value }) => {
+function CountTableRow({ label, value }) {
   if (value[1] === 0) {
     return (
       <tr>
@@ -21,7 +21,7 @@ const CountTableRow = ({ label, value }) => {
       </td>
     </tr>
   );
-};
+}
 
 CountTableRow.propTypes = {
   label: PropTypes.string.isRequired,

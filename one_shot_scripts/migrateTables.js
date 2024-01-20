@@ -1,3 +1,6 @@
+/* eslint-disable import/extensions */
+/* eslint-disable import/no-unresolved */
+
 // Load Environment Variables
 require('dotenv').config();
 
@@ -16,6 +19,7 @@ const pack = require('../dynamo/models/package');
 const patron = require('../dynamo/models/patron');
 const featuredQueue = require('../dynamo/models/featuredQueue');
 
+// the below imports do not exist and should be updated if we ever wish to run this script again
 const Video = require('../models/old/video');
 const Episode = require('../models/old/podcastEpisode');
 const Podcast = require('../models/old/podcast');
@@ -135,7 +139,9 @@ const skip = 0;
 
             // if there's more than one batch, wait 1 second between batches
             if (convertedBatches.length > 1) {
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1000);
+              });
             }
           }
         }

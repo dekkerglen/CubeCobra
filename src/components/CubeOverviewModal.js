@@ -27,7 +27,7 @@ import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
 import MtgImage from 'components/MtgImage';
 
-const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
+function CubeOverviewModal({ isOpen, toggle, cube, onError, onCubeUpdate }) {
   const [state, setState] = useState(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
   const [imageDict, setImageDict] = useState({});
@@ -240,7 +240,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
       </form>
     </Modal>
   );
-};
+}
 
 CubeOverviewModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

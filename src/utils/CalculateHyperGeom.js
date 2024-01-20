@@ -29,13 +29,9 @@ const combination = (n, r) => {
   return sum;
 };
 
-const hyp = (N, S, n, s) => {
-  return (combination(S, s) * combination(N - S, n - s)) / combination(N, n);
-};
+const hyp = (N, S, n, s) => (combination(S, s) * combination(N - S, n - s)) / combination(N, n);
 
-const clamp = (val, min, max) => {
-  return Math.min(Math.max(val, min), max);
-};
+const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
 const calculate = (populationSize, sampleSize, popSuccesses, sampleSuccesses) => {
   const keys = [...Array(parseInt(sampleSuccesses, 10) + 1).keys()];

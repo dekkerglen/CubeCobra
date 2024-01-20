@@ -16,44 +16,46 @@ import CardImage from 'components/CardImage';
 
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
-const DeckStacksStatic = ({ piles, cards }) => (
-  <CardBody className="pt-0 border-bottom">
-    {piles.map((row, index) => (
-      <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
-        {row.map((column, index2) => (
-          <Col
-            key={/* eslint-disable-line react/no-array-index-key */ index2}
-            className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding"
-            xs={3}
-          >
-            <div className="w-100 text-center mb-1">
-              <b>{column.length > 0 ? column.length : ''}</b>
-            </div>
-            <div className="stack">
-              {column.map((cardIndex, index3) => {
-                const card = cards[cardIndex];
-                return (
-                  <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
-                    <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
-                      <FoilCardImage card={card} tags={[]} autocard />
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          </Col>
-        ))}
-      </Row>
-    ))}
-  </CardBody>
-);
+function DeckStacksStatic({ piles, cards }) {
+  return (
+    <CardBody className="pt-0 border-bottom">
+      {piles.map((row, index) => (
+        <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
+          {row.map((column, index2) => (
+            <Col
+              key={/* eslint-disable-line react/no-array-index-key */ index2}
+              className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding"
+              xs={3}
+            >
+              <div className="w-100 text-center mb-1">
+                <b>{column.length > 0 ? column.length : ''}</b>
+              </div>
+              <div className="stack">
+                {column.map((cardIndex, index3) => {
+                  const card = cards[cardIndex];
+                  return (
+                    <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
+                      <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
+                        <FoilCardImage card={card} tags={[]} autocard />
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </Col>
+          ))}
+        </Row>
+      ))}
+    </CardBody>
+  );
+}
 
 DeckStacksStatic.propTypes = {
   cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
   piles: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
 };
 
-const DeckCard = ({ seat, deck, seatIndex, view }) => {
+function DeckCard({ seat, deck, seatIndex, view }) {
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -114,17 +116,18 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          {deck.type === 'd' ? (
-            <>
-              {deck.seats[0].pickorder ? (
+          {
+            // eslint-disable-next-line no-nested-ternary
+            deck.type === 'd' ? (
+              deck.seats[0].pickorder ? (
                 <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
               ) : (
                 <p>There is no draft log associated with this deck.</p>
-              )}
-            </>
-          ) : (
-            <p>This type of deck does not have a pick breakdown yet.</p>
-          )}
+              )
+            ) : (
+              <p>This type of deck does not have a pick breakdown yet.</p>
+            )
+          }
         </CardBody>
       )}
       {view === 'deck' && (
@@ -189,7 +192,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       </div>
     </Card>
   );
-};
+}
 
 DeckCard.propTypes = {
   seat: DeckSeatPropType.isRequired,

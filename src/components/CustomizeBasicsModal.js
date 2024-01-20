@@ -8,7 +8,7 @@ import { csrfFetch } from 'utils/CSRF';
 import LoadingButton from 'components/LoadingButton';
 import AutocompleteInput from 'components/AutocompleteInput';
 
-const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) => {
+function CustomizeBasicsModal({ isOpen, toggle, cube, updateBasics, onError }) {
   const [basics, setBasics] = useState(cube.basics.slice());
   const [cardName, setCardName] = useState('');
   const [imageDict, setImageDict] = useState({});
@@ -115,7 +115,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 CustomizeBasicsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

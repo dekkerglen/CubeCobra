@@ -6,7 +6,7 @@ import { Table } from 'reactstrap';
 import Paginate from 'components/Paginate';
 import useQueryParam from 'hooks/useQueryParam';
 
-const PagedTable = ({ pageSize, rows, children, ...props }) => {
+function PagedTable({ pageSize, rows, children, ...props }) {
   const [page, setPage] = useQueryParam('page', '0');
 
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
@@ -25,7 +25,7 @@ const PagedTable = ({ pageSize, rows, children, ...props }) => {
       {validPages.length > 1 && <Paginate count={validPages.length} active={current} onClick={(i) => setPage(i)} />}
     </>
   );
-};
+}
 
 PagedTable.propTypes = {
   children: PropTypes.element.isRequired,

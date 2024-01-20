@@ -6,7 +6,7 @@ import { Input, Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'react
 import CubeContext from 'contexts/CubeContext';
 import CSRFForm from 'components/CSRFForm';
 
-const PasteBulkModal = ({ isOpen, toggle }) => {
+function PasteBulkModal({ isOpen, toggle }) {
   const { cube } = useContext(CubeContext);
   const [text, setText] = useState('');
 
@@ -43,7 +43,7 @@ const PasteBulkModal = ({ isOpen, toggle }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 PasteBulkModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

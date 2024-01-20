@@ -235,7 +235,7 @@ function getVersionsByOracleId(oracleId) {
 const getReasonableCardByOracle = (oracleId) => {
   const ids = data.oracleToId[oracleId];
   return getFirstReasonable(ids);
-}
+};
 
 function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');

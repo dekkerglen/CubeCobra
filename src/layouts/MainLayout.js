@@ -31,7 +31,7 @@ import Footer from 'layouts/Footer';
 const LoginModalLink = withModal(NavLink, LoginModal);
 const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 
-const MainLayout = ({ children, loginCallback }) => {
+function MainLayout({ children, loginCallback }) {
   const user = useContext(UserContext);
   const [expanded, toggle] = useToggle(false);
   return (
@@ -161,7 +161,7 @@ const MainLayout = ({ children, loginCallback }) => {
       <Footer />
     </div>
   );
-};
+}
 
 MainLayout.propTypes = {
   children: PropTypes.node.isRequired,

@@ -5,7 +5,7 @@ import { cardFinish, cardTags } from 'utils/Card';
 
 const AutocardContext = React.createContext({});
 
-const CardDiv = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
+function CardDiv({ hidden, front, back, tags, zIndex, foilOverlay }) {
   const [position, setPosition] = useState({ left: 0, right: 0 });
   const autocardPopup = useRef(null);
 
@@ -78,9 +78,9 @@ const CardDiv = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
       </div>
     </div>
   );
-};
+}
 
-export const AutocardContextProvider = ({ children }) => {
+export function AutocardContextProvider({ children }) {
   const [hidden, setHidden] = useState(true);
   const [foilOverlay, setFoilOverlay] = useState(false);
   const [front, setFront] = useState(null);
@@ -125,11 +125,11 @@ export const AutocardContextProvider = ({ children }) => {
 
   return (
     <AutocardContext.Provider value={value}>
-      <>{children}</>
+      {children}
       <CardDiv hidden={hidden} front={front} back={back} tags={tags} zIndex={zIndex} foilOverlay={foilOverlay} />
     </AutocardContext.Provider>
   );
-};
+}
 
 AutocardContextProvider.propTypes = {
   children: PropTypes.node.isRequired,

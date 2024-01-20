@@ -19,7 +19,7 @@ const sortWithTotal = (pool, sort) =>
     cards.reduce((acc, card) => acc + card.asfan, 0),
   ]);
 
-const AnalyticTable = ({ cards, cube }) => {
+function AnalyticTable({ cards, cube }) {
   const [column, setColumn] = useQueryParam('column', 'Color Identity');
   const [row, setRow] = useQueryParam('row', 'Type');
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
@@ -149,7 +149,7 @@ const AnalyticTable = ({ cards, cube }) => {
       </ErrorBoundary>
     </>
   );
-};
+}
 
 AnalyticTable.propTypes = {
   cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,

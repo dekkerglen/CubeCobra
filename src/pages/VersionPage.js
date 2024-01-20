@@ -6,7 +6,7 @@ import { Card, CardHeader, CardBody } from 'reactstrap';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
 
-const VersionPage = ({ version, host, loginCallback }) => {
+function VersionPage({ version, host, loginCallback }) {
   return (
     <MainLayout loginCallback={loginCallback}>
       <Card className="my-3">
@@ -30,7 +30,7 @@ const VersionPage = ({ version, host, loginCallback }) => {
       </Card>
     </MainLayout>
   );
-};
+}
 
 VersionPage.propTypes = {
   version: PropTypes.string.isRequired,

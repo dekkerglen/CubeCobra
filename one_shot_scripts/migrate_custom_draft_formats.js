@@ -3,6 +3,8 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 
+// the below import does not exist and should be updated if we ever wish to run this script again
+// eslint-disable-next-line import/no-unresolved, import/extensions
 const Cube = require('../models/old/cube');
 
 const cubeModel = require('../dynamo/models/cube');
@@ -46,25 +48,19 @@ const query = {};
       if (matchingItem) {
         dynamoItem.formats = [
           ...(dynamoItem.formats || []),
-          ...matchingItem.draft_formats.map((item) => {
-            return {
-              title: item.title,
-              multiples: item.multiples,
-              markdown: item.markdown,
-              defaultStatus: item.defaultStatus,
-              packs: (item.packs || []).map((pack) => {
-                return {
-                  slots: pack.slots,
-                  steps: (pack.steps || []).map((step) => {
-                    return {
-                      action: step.action,
-                      amount: step.amount,
-                    };
-                  }),
-                };
-              }),
-            };
-          }),
+          ...matchingItem.draft_formats.map((item) => ({
+            title: item.title,
+            multiples: item.multiples,
+            markdown: item.markdown,
+            defaultStatus: item.defaultStatus,
+            packs: (item.packs || []).map((pack) => ({
+              slots: pack.slots,
+              steps: (pack.steps || []).map((step) => ({
+                action: step.action,
+                amount: step.amount,
+              })),
+            })),
+          })),
         ];
       }
     }

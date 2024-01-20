@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const MtgImage = ({ image, showArtist }) => {
+function MtgImage({ image, showArtist }) {
   if (showArtist) {
     return (
       <div className="position-relative">
@@ -12,7 +12,7 @@ const MtgImage = ({ image, showArtist }) => {
   }
 
   return <img className="content-preview-img" alt={`Art by ${image.artist}`} src={image.uri} />;
-};
+}
 
 MtgImage.propTypes = {
   image: PropTypes.shape({

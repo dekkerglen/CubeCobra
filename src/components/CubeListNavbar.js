@@ -37,7 +37,7 @@ const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
 
-const CompareCollapse = (props) => {
+function CompareCollapse(props) {
   const { cube } = useContext(CubeContext);
   const [compareID, setCompareID] = useState('');
   const handleChange = useCallback((event) => setCompareID(event.target.value), []);
@@ -66,9 +66,9 @@ const CompareCollapse = (props) => {
       </Container>
     </Collapse>
   );
-};
+}
 
-const CubeListNavbar = ({ cubeView, setCubeView }) => {
+function CubeListNavbar({ cubeView, setCubeView }) {
   const [isOpen, setIsOpen] = useState(false);
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
@@ -247,7 +247,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
       <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
     </div>
   );
-};
+}
 
 CubeListNavbar.propTypes = {
   cubeView: PropTypes.string.isRequired,

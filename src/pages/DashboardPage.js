@@ -23,7 +23,7 @@ import CubesCard from 'components/CubesCard';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 
-const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured }) => {
+function DashboardPage({ posts, lastKey, decks, loginCallback, content, featured }) {
   const user = useContext(UserContext);
   // where featured cubes are positioned on the screen
   let featuredPosition;
@@ -140,7 +140,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
       </Row>
     </MainLayout>
   );
-};
+}
 
 DashboardPage.propTypes = {
   posts: PropTypes.arrayOf(BlogPostPropType).isRequired,

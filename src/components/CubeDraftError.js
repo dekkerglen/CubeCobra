@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Card, CardHeader, CardBody } from 'reactstrap';
 
-const CubeDraftError = ({ message }) => {
+function CubeDraftError({ message }) {
   return (
     <Card className="mt-4">
       <CardHeader>
@@ -13,7 +13,7 @@ const CubeDraftError = ({ message }) => {
       </CardBody>
     </Card>
   );
-};
+}
 
 CubeDraftError.propTypes = {
   message: PropTypes.string.isRequired,

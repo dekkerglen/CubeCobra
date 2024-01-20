@@ -26,7 +26,7 @@ const distinct = (list) => {
   return res;
 };
 
-const Graph = ({ data, yFunc, unit, yRange }) => {
+function Graph({ data, yFunc, unit, yRange }) {
   const plot = {
     labels: [unit],
     datasets: [
@@ -98,7 +98,7 @@ const Graph = ({ data, yFunc, unit, yRange }) => {
     return <Chart options={options} data={plot} type="line" />;
   }
   return <p>No data to show.</p>;
-};
+}
 
 Graph.propTypes = {
   data: CardHistoryPropType.isRequired,

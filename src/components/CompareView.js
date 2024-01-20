@@ -13,7 +13,7 @@ import withCardModal from 'components/WithCardModal';
 
 const CardModalLink = withCardModal(AutocardListItem);
 
-const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
+function CompareGroup({ heading, both, onlyA, onlyB }) {
   const bothCmc = sortIntoGroups(both, 'Mana Value');
   const onlyACmc = sortIntoGroups(onlyA, 'Mana Value');
   const onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
@@ -57,7 +57,7 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
         ))}
     </ListGroup>
   );
-};
+}
 
 CompareGroup.propTypes = {
   heading: PropTypes.string.isRequired,
@@ -66,7 +66,7 @@ CompareGroup.propTypes = {
   onlyB: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
-const CompareView = ({ cards, both, onlyA, onlyB }) => {
+function CompareView({ cards, both, onlyA, onlyB }) {
   const { sortPrimary, sortSecondary, cube } = useContext(CubeContext);
 
   const columns = sortIntoGroups(cards, sortPrimary, cube.showUnsorted);
@@ -111,35 +111,33 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
 
   return (
     <>
-      {
-        <div className="compare-header pt-2">
-          <Row>
-            <Col>
-              <h6 className="text-center">Total</h6>
-            </Col>
-          </Row>
-          <Row>
-            <Col xs="4">
-              <h6 className="text-center">
-                In Both cubes
-                <br />({bothCounts.total})
-              </h6>
-            </Col>
-            <Col xs="4">
-              <h6 className="text-center">
-                Only in Base Cube
-                <br />({onlyACounts.total})
-              </h6>
-            </Col>
-            <Col xs="4">
-              <h6 className="text-center">
-                Only in Comparison Cube
-                <br />({onlyBCounts.total})
-              </h6>
-            </Col>
-          </Row>
-        </div>
-      }
+      <div className="compare-header pt-2">
+        <Row>
+          <Col>
+            <h6 className="text-center">Total</h6>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs="4">
+            <h6 className="text-center">
+              In Both cubes
+              <br />({bothCounts.total})
+            </h6>
+          </Col>
+          <Col xs="4">
+            <h6 className="text-center">
+              Only in Base Cube
+              <br />({onlyACounts.total})
+            </h6>
+          </Col>
+          <Col xs="4">
+            <h6 className="text-center">
+              Only in Comparison Cube
+              <br />({onlyBCounts.total})
+            </h6>
+          </Col>
+        </Row>
+      </div>
       {getLabels(cards, sortPrimary, cube.showUnsorted)
         .filter((columnLabel) => columns[columnLabel])
         .map((columnLabel) => {
@@ -211,7 +209,7 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
         })}
     </>
   );
-};
+}
 
 CompareView.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useContext } from 'react';
+import React, { useCallback, useState, useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Row, Col } from 'reactstrap';
 
@@ -22,7 +22,7 @@ const canDrop = () => true;
 const getMatchingSeat = (seats, userid) =>
   seats.map((seat, index) => [seat, index]).find((tuple) => tuple[0].owner.id === userid)[1];
 
-const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
+function CubeDeckbuilderPage({ cube, initialDeck, loginCallback }) {
   const user = useContext(UserContext);
   const [seat] = useState(getMatchingSeat(initialDeck.seats, user.id));
   const [deck, setDeck] = useState(
@@ -38,10 +38,13 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const { basics } = initialDeck;
 
-  const locationMap = {
-    [DraftLocation.DECK]: [deck, setDeck],
-    [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
-  };
+  const locationMap = useMemo(
+    () => ({
+      [DraftLocation.DECK]: [deck, setDeck],
+      [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
+    }),
+    [deck, sideboard],
+  );
 
   const handleMoveCard = useCallback(
     (source, target) => {
@@ -127,7 +130,7 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 CubeDeckbuilderPage.propTypes = {
   cube: CubePropType.isRequired,
   initialDeck: DeckPropType.isRequired,

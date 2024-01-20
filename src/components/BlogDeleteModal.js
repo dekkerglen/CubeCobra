@@ -6,7 +6,7 @@ import { csrfFetch } from 'utils/CSRF';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-const BlogDeleteModal = ({ isOpen, toggle, postID }) => {
+function BlogDeleteModal({ isOpen, toggle, postID }) {
   const confirm = async () => {
     const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
       method: 'DELETE',
@@ -28,7 +28,7 @@ const BlogDeleteModal = ({ isOpen, toggle, postID }) => {
       text="Are you sure you wish to delete this post? This action cannot be undone."
     />
   );
-};
+}
 
 BlogDeleteModal.propTypes = {
   toggle: PropTypes.func.isRequired,

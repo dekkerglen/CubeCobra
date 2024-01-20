@@ -13,11 +13,9 @@ import { makeSubtitle } from 'utils/Card';
 import DraftLocation from 'drafting/DraftLocation';
 import AutocardContext from 'contexts/AutocardContext';
 
-const canDrop = (_, target) => {
-  return target.type === DraftLocation.PICKS;
-};
+const canDrop = (_, target) => target.type === DraftLocation.PICKS;
 
-const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
+function CubeDraftNavBar({ drafterState, mainboard, takeCard, moveCard }) {
   const {
     cards,
     cardsInPack,
@@ -93,19 +91,17 @@ const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
       <DynamicFlash />
       <DndProvider>
         {packNum < numPacks && (
-          <>
-            <ErrorBoundary>
-              <Pack
-                pack={pack}
-                packNumber={packNum + 1}
-                pickNumber={pickNum + 1}
-                instructions={instructions}
-                picking={picking}
-                onMoveCard={handleMoveCard}
-                onClickCard={handleClickCard}
-              />
-            </ErrorBoundary>
-          </>
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              packNumber={packNum + 1}
+              pickNumber={pickNum + 1}
+              instructions={instructions}
+              picking={picking}
+              onMoveCard={handleMoveCard}
+              onClickCard={handleClickCard}
+            />
+          </ErrorBoundary>
         )}
         <ErrorBoundary className="mt-3">
           <Card className="my-3">
@@ -122,7 +118,7 @@ const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
       </DndProvider>
     </>
   );
-};
+}
 
 CubeDraftNavBar.propTypes = {
   drafterState: DrafterStatePropType.isRequired,

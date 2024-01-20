@@ -18,7 +18,7 @@ import { Spinner } from 'reactstrap';
 
 const socket = socketIOClient('/', { rejectUnauthorized: false });
 
-const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
+function CubeDraftPage({ cube, initialDraft, loginCallback }) {
   const user = useContext(UserContext);
   const [state, setState] = useState('loading');
   const [message, setMessage] = useState('');
@@ -73,7 +73,7 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
       </DisplayContextProvider>
     </MainLayout>
   );
-};
+}
 
 CubeDraftPage.propTypes = {
   cube: CubePropType.isRequired,

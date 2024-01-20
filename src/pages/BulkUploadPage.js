@@ -18,7 +18,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
-const BulkUploadPageRaw = ({ missing, added }) => {
+function BulkUploadPageRaw({ missing, added }) {
   const [addValue, setAddValue] = useState('');
 
   const { alerts, setAlerts, cube, loading, addCard, bulkAddCard, commitChanges } = useContext(CubeContext);
@@ -121,7 +121,7 @@ const BulkUploadPageRaw = ({ missing, added }) => {
       </CardBody>
     </Card>
   );
-};
+}
 
 BulkUploadPageRaw.propTypes = {
   cards: PropTypes.shape({
@@ -134,14 +134,16 @@ BulkUploadPageRaw.propTypes = {
   }).isRequired,
 };
 
-const BulkUploadPage = ({ cube, cards, added, loginCallback, blogpost, missing }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DynamicFlash />
-    <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
-      <BulkUploadPageRaw added={added} blogpost={blogpost} missing={missing} />
-    </CubeLayout>
-  </MainLayout>
-);
+function BulkUploadPage({ cube, cards, added, loginCallback, blogpost, missing }) {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DynamicFlash />
+      <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
+        <BulkUploadPageRaw added={added} blogpost={blogpost} missing={missing} />
+      </CubeLayout>
+    </MainLayout>
+  );
+}
 
 BulkUploadPage.propTypes = {
   cards: PropTypes.shape({

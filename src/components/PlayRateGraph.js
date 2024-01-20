@@ -9,7 +9,7 @@ import { formatDate } from 'utils/Date';
 
 import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
 
-const PlayRateGraph = ({ defaultHistories, cardId }) => {
+function PlayRateGraph({ defaultHistories, cardId }) {
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');
   const [history, setHistory] = useState(defaultHistories);
   const [zoom, setZoom] = useState('year');
@@ -169,16 +169,21 @@ const PlayRateGraph = ({ defaultHistories, cardId }) => {
           </InputGroup>
         </Col>
       </Row>
-      {loading ? (
-        <div className="d-flex justify-content-center">
-          <Spinner />
-        </div>
-      ) : (
-        <>{history.length > 0 ? <Chart options={options} data={data} type="line" /> : <p>No data available.</p>}</>
-      )}
+      {
+        // eslint-disable-next-line no-nested-ternary
+        loading ? (
+          <div className="d-flex justify-content-center">
+            <Spinner />
+          </div>
+        ) : history.length > 0 ? (
+          <Chart options={options} data={data} type="line" />
+        ) : (
+          <p>No data available.</p>
+        )
+      }
     </>
   );
-};
+}
 
 PlayRateGraph.propTypes = {
   defaultHistories: PropTypes.arrayOf(PropTypes.shape({})),

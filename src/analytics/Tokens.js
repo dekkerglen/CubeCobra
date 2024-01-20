@@ -20,7 +20,7 @@ const dedupeCards = (cards) => {
   return [...map.values()];
 };
 
-const Tokens = ({ cube, cards }) => {
+function Tokens({ cube, cards }) {
   const data = useMemo(() => {
     const positioned = cards.map((card, index) => ({ ...card, position: index }));
     const byOracleId = {};
@@ -77,7 +77,7 @@ const Tokens = ({ cube, cards }) => {
       </Row>
     </>
   );
-};
+}
 
 Tokens.propTypes = {
   cube: CubePropType.isRequired,

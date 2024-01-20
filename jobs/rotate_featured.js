@@ -3,9 +3,6 @@ const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const util = require('../serverjs/util');
 const User = require('../dynamo/models/user');
 
-const MS_PER_DAY = 1000 * 3600 * 24;
-const DAYS_BETWEEN_ROTATIONS = 7;
-
 (async () => {
   try {
     console.log('Checking rotation of featured cubes');
@@ -13,7 +10,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
     const queue = await FeaturedQueue.querySortedByDate();
 
     const { items } = queue;
-    
+
     const rotate = await fq.rotateFeatured(items);
     for (const message of rotate.messages) {
       console.warn(message);
@@ -41,7 +38,7 @@ const DAYS_BETWEEN_ROTATIONS = 7;
     }
     await Promise.all(notifications);
     console.log('All notifications sent');
-      
+
     console.log('featured cube rotation check finished successfully');
   } catch (err) {
     console.error(err);

@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
 import React, { useCallback, useState } from 'react';
 
-const withModal =
-  (Tag, ModalTag) =>
-  ({ children, className, modalProps, altClick, ...props }) => {
+const withModal = (Tag, ModalTag) =>
+  function ({ children, className, modalProps, altClick, ...props }) {
     const [isOpen, setIsOpen] = useState(false);
     const toggle = useCallback(
       (event) => {

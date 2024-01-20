@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardBody, Input, CardFooter, Button } from
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);
 
-const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
+function StandardDraftCard({ onSetDefaultFormat, defaultDraftFormat }) {
   const { cube, canEdit } = useContext(CubeContext);
 
   return (
@@ -54,7 +54,7 @@ const StandardDraftCard = ({ onSetDefaultFormat, defaultDraftFormat }) => {
       </CSRFForm>
     </Card>
   );
-};
+}
 
 StandardDraftCard.propTypes = {
   onSetDefaultFormat: PropTypes.func.isRequired,

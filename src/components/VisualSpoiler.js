@@ -13,7 +13,7 @@ import withCardModal from 'components/WithCardModal';
 
 const CardModalLink = withCardModal(SpoilerImage);
 
-const VisualSpoiler = ({ cards }) => {
+function VisualSpoiler({ cards }) {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
   const sorted = sortDeep(cards, cube.showUnsorted, sortQuaternary, sortPrimary, sortSecondary, sortTertiary);
@@ -46,7 +46,7 @@ const VisualSpoiler = ({ cards }) => {
       <CardGrid cardList={cardList} Tag={CardModalLink} colProps={{ className: sizes }} />
     </>
   );
-};
+}
 
 VisualSpoiler.propTypes = {
   cards: PropTypes.arrayOf(CardPropType).isRequired,

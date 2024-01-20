@@ -12,7 +12,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
-const VideosPage = ({ loginCallback, videos, lastKey }) => {
+function VideosPage({ loginCallback, videos, lastKey }) {
   const [items, setItems] = useState(videos);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -61,7 +61,7 @@ const VideosPage = ({ loginCallback, videos, lastKey }) => {
       </InfiniteScroll>
     </MainLayout>
   );
-};
+}
 
 VideosPage.propTypes = {
   loginCallback: PropTypes.string,

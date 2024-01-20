@@ -6,7 +6,7 @@ import TextEntry from 'components/TextEntry';
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-const CreateBlogModal = ({ isOpen, toggle, post, cubeID }) => {
+function CreateBlogModal({ isOpen, toggle, post, cubeID }) {
   const [mentions, setMentions] = useState('');
   const [markdown, setMarkdown] = useState(post ? post.markdown : '');
   const handleMentions = () => {
@@ -45,7 +45,7 @@ const CreateBlogModal = ({ isOpen, toggle, post, cubeID }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 CreateBlogModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,

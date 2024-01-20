@@ -18,7 +18,7 @@ const loader = (
   </div>
 );
 
-const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastKey }) => {
+function UserBlogPage({ followers, following, posts, owner, loginCallback, lastKey }) {
   const [items, setItems] = useState(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
@@ -61,7 +61,7 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
       </UserLayout>
     </MainLayout>
   );
-};
+}
 
 UserBlogPage.propTypes = {
   owner: PropTypes.shape({

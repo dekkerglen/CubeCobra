@@ -15,7 +15,7 @@ const visibilityHelp = {
   pr: 'Only you can see your cube',
 };
 
-const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
+function CubeSettingsModal({ addAlert, onCubeUpdate, isOpen, toggle }) {
   const { cube } = useContext(CubeContext);
   const [state, setState] = useState(cube);
 
@@ -123,7 +123,7 @@ const CubeSettingsModal = ({ addAlert, onCubeUpdate, isOpen, toggle }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 CubeSettingsModal.propTypes = {
   addAlert: PropTypes.func.isRequired,

@@ -43,7 +43,7 @@ import CubePropType from 'proptypes/CubePropType';
 
 const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 
-const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
+function AddFeaturedModal({ isOpen, toggle, cubes }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle}>
       <CSRFForm method="POST" action="/user/queuefeatured">
@@ -66,7 +66,7 @@ const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
       </CSRFForm>
     </Modal>
   );
-};
+}
 
 AddFeaturedModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
@@ -78,7 +78,7 @@ AddFeaturedModal.propTypes = {
   ).isRequired,
 };
 
-const RemoveFeaturedModal = ({ isOpen, toggle }) => {
+function RemoveFeaturedModal({ isOpen, toggle }) {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xs">
       <ModalHeader toggle={toggle}>Removing featured cube</ModalHeader>
@@ -97,7 +97,7 @@ const RemoveFeaturedModal = ({ isOpen, toggle }) => {
       </ModalFooter>
     </Modal>
   );
-};
+}
 
 RemoveFeaturedModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
@@ -107,7 +107,7 @@ RemoveFeaturedModal.propTypes = {
 const AddFeaturedButton = withModal(Button, AddFeaturedModal);
 const RemoveFeaturedButton = withModal(Button, RemoveFeaturedModal);
 
-const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron, featured }) => {
+function UserAccountPage({ defaultNav, loginCallback, patreonClientId, patreonRedirectUri, patron, featured }) {
   const user = useContext(UserContext);
   const [nav, setNav] = useQueryParam('nav', defaultNav);
   const [imageValue, setImageValue] = useState(user.image.imageName);
@@ -428,7 +428,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
       </Row>
     </MainLayout>
   );
-};
+}
 
 UserAccountPage.propTypes = {
   defaultNav: PropTypes.string.isRequired,

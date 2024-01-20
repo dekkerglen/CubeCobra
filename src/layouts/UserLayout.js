@@ -13,7 +13,7 @@ import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 const FollowersModalLink = withModal('a', FollowersModal);
 const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
-const UserLayout = ({ user, followers, following, activeLink, children }) => {
+function UserLayout({ user, followers, following, activeLink, children }) {
   const activeUser = useContext(UserContext);
   const canEdit = activeUser && activeUser.id === user.id;
 
@@ -77,7 +77,7 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
       <ErrorBoundary>{children}</ErrorBoundary>
     </>
   );
-};
+}
 
 UserLayout.propTypes = {
   user: PropTypes.shape({

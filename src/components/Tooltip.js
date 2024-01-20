@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { UncontrolledTooltip } from 'reactstrap';
 
-const Tooltip = ({ text, children, wrapperTag, tooltipProps, ...props }) => {
+function Tooltip({ text, children, wrapperTag, tooltipProps, ...props }) {
   const divRef = useRef();
   const Tag = wrapperTag || 'div';
   return (
@@ -16,7 +16,7 @@ const Tooltip = ({ text, children, wrapperTag, tooltipProps, ...props }) => {
       </UncontrolledTooltip>
     </>
   );
-};
+}
 
 Tooltip.propTypes = {
   text: PropTypes.string.isRequired,

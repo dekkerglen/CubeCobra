@@ -449,8 +449,6 @@ function getLabelsRaw(cube, sort, showOther) {
     ret = allDevotions(cube, 'R');
   } else if (sort === 'Devotion to Green') {
     ret = allDevotions(cube, 'G');
-  } else if (sort === 'Unsorted') {
-    ret = ['All'];
   } else if (sort === 'Elo') {
     let elos = [];
     for (const card of cube) {

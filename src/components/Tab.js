@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { NavItem, NavLink } from 'reactstrap';
 
-const Tab = ({ tab, setTab, index, children }) => {
+function Tab({ tab, setTab, index, children }) {
   return (
     <NavItem className="ms-2 clickable">
       <NavLink
@@ -16,7 +16,7 @@ const Tab = ({ tab, setTab, index, children }) => {
       </NavLink>
     </NavItem>
   );
-};
+}
 Tab.propTypes = {
   tab: PropTypes.string.isRequired,
   setTab: PropTypes.func.isRequired,

@@ -34,13 +34,12 @@ const options = [
   </>,
 ];
 
-
-const Banner = () => {
+function Banner() {
   const user = useContext(UserContext);
 
   const [option] = useState(Math.floor(Math.random() * options.length * BANNER_RATE));
 
-  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return <></>;
+  if (user && Array.isArray(user.roles) && user.roles.includes('Patron')) return null;
 
   if (option < options.length) {
     return (
@@ -58,6 +57,6 @@ const Banner = () => {
       <Advertisment placementId="banner" size="mobile" media="mobile" demo />
     </div>
   );
-};
+}
 
 export default Banner;

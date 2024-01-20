@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 
 import UserPropType from 'proptypes/UserPropType';
 
-const Username = ({ user, nolink }) => {
+function Username({ user, nolink }) {
   if (nolink) {
-    return <>{user.username || 'User'}</>;
+    return user.username || 'User';
   }
 
   if (!user) {
-    return <>Anonymous</>;
+    return 'Anonymous';
   }
 
   return (
@@ -17,7 +17,7 @@ const Username = ({ user, nolink }) => {
       {user.username || 'User'}
     </a>
   );
-};
+}
 
 Username.propTypes = {
   user: PropTypes.oneOfType([PropTypes.string, UserPropType]).isRequired,

@@ -14,7 +14,7 @@ import RenderToRoot from 'utils/RenderToRoot';
 import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
 
-const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => {
+function UserCubePage({ owner, followers, following, cubes, loginCallback }) {
   const user = useContext(UserContext);
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -53,7 +53,7 @@ const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => 
       </UserLayout>
     </MainLayout>
   );
-};
+}
 
 UserCubePage.propTypes = {
   owner: PropTypes.shape({

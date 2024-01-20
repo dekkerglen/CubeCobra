@@ -22,7 +22,7 @@ import NumericField from 'components/NumericField';
 import AutocompleteInput from 'components/AutocompleteInput';
 import CubeContext from 'contexts/CubeContext';
 
-const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => {
+function AdvancedFilterModal({ isOpen, toggle, values, updateValue, apply }) {
   const { cube } = useContext(CubeContext);
   const cubeId = cube ? cube.id : null;
   return (
@@ -326,7 +326,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
       </Form>
     </Modal>
   );
-};
+}
 
 AdvancedFilterModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
