@@ -274,7 +274,7 @@ const EditCollapse = ({ isOpen }) => {
                 onChange={toggleShowMaybeboard}
               />
             </InputGroupText>
-            <Input disabled value="Use maybeboard" />
+            <Input disabled value="Use Maybeboard" />
           </InputGroup>
         </Col>
         <Col xs={12} md={2}>

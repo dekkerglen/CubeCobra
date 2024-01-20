@@ -38,7 +38,7 @@ const CubeListPageRaw = () => {
           <ErrorBoundary key={boardname}>
             {(showMaybeboard || boardname !== 'maybeboard') && (
               <>
-                {boardname !== 'mainboard' && <h4>{boardname}</h4>}
+                {boardname !== 'mainboard' && <h4 className="boardTitle">{boardname}</h4>}
                 {boardcards.length === 0 &&
                   (filter ? (
                     <h5 className="mt-1 mb-3">No cards match filter.</h5>
@@ -53,7 +53,7 @@ const CubeListPageRaw = () => {
                     list: <ListView cards={boardcards} />,
                   }[cubeView]
                 }
-                {boardname === 'maybeboard' && <hr />}
+                {boardname !== 'mainboard' && <hr />}
               </>
             )}
           </ErrorBoundary>
