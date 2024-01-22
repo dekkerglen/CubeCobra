@@ -66,7 +66,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
         <DynamicFlash />
         <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
           {items.length > 0 ? (
-            items.map((post) => <BlogPost key={post.id} post={post} />)
+            items.map((post) => <BlogPost cube={cube} key={post.id} post={post} />)
           ) : (
             <h5>No blog posts for this cube.</h5>
           )}

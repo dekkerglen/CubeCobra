@@ -6,7 +6,7 @@ const util = require('../../serverjs/util');
 const { render } = require('../../serverjs/render');
 const generateMeta = require('../../serverjs/meta');
 
-const { abbreviate, isCubeViewable } = require('../../serverjs/cubefn');
+const { abbreviate, isBlogEditable, isCubeViewable, isCubeCollaborator } = require('../../serverjs/cubefn');
 
 const Cube = require('../../dynamo/models/cube');
 const Blog = require('../../dynamo/models/blog');
@@ -28,7 +28,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
       // update an existing blog post
       const blog = await Blog.getUnhydrated(req.body.id);
 
-      if (blog.owner !== user.id) {
+      if (isBlogEditable(blog, user)) {
         req.flash('danger', 'Unable to update this blog post: Unauthorized.');
         return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
       }
@@ -50,7 +50,7 @@ router.post('/post/:id', ensureAuth, async (req, res) => {
     }
 
     // post new blog
-    if (cube.owner.id !== user.id) {
+    if (cube.owner.id !== user.id || !isCubeCollaborator(cube, user)) {
       req.flash('danger', 'Unable to post this blog post: Unauthorized.');
       return res.redirect(`/cube/blog/${encodeURIComponent(req.params.id)}`);
     }
@@ -106,17 +106,16 @@ router.get('/blogpost/:id', async (req, res) => {
       return res.redirect('/404');
     }
 
-    if (post.cube !== 'DEVBLOG') {
-      const cube = await Cube.getById(post.cube);
+    const cube = post.cube === 'DEVBLOG' ? null : await Cube.getById(post.cube);
 
-      if (!isCubeViewable(cube, req.user)) {
-        req.flash('danger', 'Blog post not found');
-        return res.redirect('/404');
-      }
+    if (cube !== null && !isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Blog post not found');
+      return res.redirect('/404');
     }
 
     return render(req, res, 'BlogPostPage', {
       post,
+      cube,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
@@ -128,7 +127,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
     const { id } = req.params;
     const blog = await Blog.getById(id);
 
-    if (blog.owner.id !== req.user.id) {
+    if (isBlogEditable(blog, req.user)) {
       req.flash('danger', 'Unauthorized');
       return res.redirect('/404');
     }

@@ -16,12 +16,12 @@ const CardModalLink = withCardModal(AutocardListItem);
 const GroupModalLink = withGroupModal(ListGroupItem);
 
 const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => {
-  const { canEdit } = useContext(CubeContext);
+  const { canCollaborate } = useContext(CubeContext);
   const sorted = useMemo(() => sortDeep(cards, showOther, orderedSort, sort), [cards, showOther, orderedSort, sort]);
 
   return (
     <ListGroup className="list-outline">
-      {canEdit ? (
+      {canCollaborate ? (
         <GroupModalLink tag="div" className="list-group-heading" modalProps={{ cards }}>
           {heading}
         </GroupModalLink>
