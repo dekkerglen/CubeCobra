@@ -184,22 +184,21 @@ export function getCubeDescription(cube, changedCards) {
   return `${cardCount} Card ${overridePrefixes}Cube`;
 }
 
-export function userIsDocumentOwner(user, cube) {
-  if (user && cube && cube.owner) {
-    return cube.owner.id === user.id;
+export function userIsDocumentOwner(user, doc) {
+  if (user && doc?.owner) {
+    return doc.owner.id === user.id;
   }
   
   return false;
 };
   
-export function userIsDocumentCollaborator(user, cube) {
-  if (user && cube && cube.collaborators) {
-    return cube.collaborators.some((c) => c.id === user.id);
+export function userIsDocumentCollaborator(user, doc) {
+  if (user && doc?.collaborators) {
+    return doc.collaborators.some((c) => c.id === user.id);
   }
 
   return false;
 };
-
 
 export function isInternalURL(to) {
   try {

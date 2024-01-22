@@ -358,7 +358,7 @@ async function isBlogEditable(blog, user) {
 
   const cube = typeof blog.cube === "string" ? await Cube.getById(blog.cube) : blog.cube;
 
-  return cube.owner && user.id === cube.owner.id;
+  return user.id === cube.owner?.id;
 }
 
 function isCubeCollaborator(cube, user) {
@@ -366,7 +366,7 @@ function isCubeCollaborator(cube, user) {
     return false;
   }
 
-  return cube.collaborators.some((c) => c && c.id === user.id);
+  return cube.collaborators.some((c) => c?.id === user.id);
 }
 
 function isCubeViewable(cube, user) {

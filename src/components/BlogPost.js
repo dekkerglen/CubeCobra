@@ -21,7 +21,7 @@ const BlogPost = ({ post, cube, noScroll }) => {
   const user = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && (userIsDocumentOwner(user, post) || (cube && userIsDocumentOwner(cube, user)));
+  const canEdit = userIsDocumentOwner(user, post) || userIsDocumentOwner(user, cube);
 
   const hasChangelist = post.Changelog;
   const hasBody = post.body && post.body.length > 0;

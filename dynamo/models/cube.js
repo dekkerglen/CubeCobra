@@ -180,7 +180,7 @@ const batchHydrate = async (cubes) => {
 
   let collaboratorsById = new Map();
   for (let collaborator of collaborators) {
-    if (collaborator && collaborator.id) {
+    if (collaborator?.id) {
       collaboratorsById.set(collaborator.id, collaborator);
     }
   }
