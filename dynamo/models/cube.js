@@ -173,7 +173,7 @@ const batchHydrate = async (cubes) => {
   const owners = await User.batchGet(cubes.map((cube) => cube.owner).filter((owner) => owner));
 
   const collaboratorIds = cubes.reduce((set, cube) => {
-    return new Set([...(set || []), ...(cube.collaborators | []).filter((id) => id)]);
+    return new Set([...(set || []), ...(cube.collaborators || []).filter((id) => id)]);
   });
 
   const collaborators = await User.batchGet([...collaboratorIds]);
