@@ -110,12 +110,10 @@ const recommend = (oracles) => {
 
   const adds = res
     .sort((a, b) => b.rating - a.rating)
-    .filter((card) => !oracles.includes(card.oracle))
-    .slice(0, 100);
+    .filter((card) => !oracles.includes(card.oracle));
   const cuts = res
     .sort((a, b) => a.rating - b.rating)
-    .filter((card) => oracles.includes(card.oracle))
-    .slice(0, 100);
+    .filter((card) => oracles.includes(card.oracle));
 
   return {
     adds,

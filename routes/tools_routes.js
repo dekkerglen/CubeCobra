@@ -24,25 +24,12 @@ const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
 
-const getAllMostReasonable = (filter) => {
-  const cards = filterCardsDetails(carddb.printedCardList, filter);
-
-  const keys = new Set();
-  const filtered = [];
-  for (const card of cards) {
-    if (!keys.has(card.name_lower)) {
-      filtered.push(carddb.getMostReasonableById(card.scryfall_id, 'recent', filter));
-      keys.add(card.name_lower);
-    }
-  }
-  return filtered;
-};
 
 const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', distinct = 'names') => {
   const cards = [];
 
   if (distinct === 'names') {
-    cards.push(...getAllMostReasonable(filter));
+    cards.push(...carddb.getAllMostReasonable(filter));
   } else {
     cards.push(...filterCardsDetails(carddb.printedCardList, filter));
   }

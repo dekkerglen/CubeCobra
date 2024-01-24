@@ -3,6 +3,7 @@ const express = require('express');
 // eslint-disable-next-line import/no-unresolved
 const { body } = require('express-validator');
 
+const { makeFilter } = require('../../dist/filtering/FilterCards');
 const cardutil = require('../../dist/utils/Card');
 const carddb = require('../../serverjs/carddb');
 const { ensureAuth, jsonValidationErrors } = require('../middleware');
@@ -10,6 +11,7 @@ const util = require('../../serverjs/util');
 const { deckbuild, calculateBasics } = require('../../serverjs/draftbots');
 const { xorStrings } = require('../../dist/utils/Util');
 
+const { recommend } = require('../../serverjs/ml');
 const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('../../serverjs/cubefn');
 
 // Bring in models
@@ -960,6 +962,92 @@ router.post('/calculatebasics', async (req, res) => {
       success: 'false',
     });
   }
+});
+
+router.post('/adds', async (req, res) => {
+  let { skip, limit, cubeID, filterText } = req.body;
+
+  limit = parseInt(limit, 10);
+  skip = parseInt(skip, 10);
+
+  const cards = await Cube.getCards(cubeID);
+  
+  const { adds } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
+
+  let slice;
+  let length = adds.length;
+
+  if (filterText && filterText.length > 0) {
+
+    const { err, filter } = makeFilter(`${filterText}`);
+
+    if (err) {
+      return res.status(400).send({
+        success: 'false',
+        adds: [],
+        hasMoreAdds: false,
+      });
+    }
+
+    const eligible = carddb.getAllMostReasonable(filter);
+    length = eligible.length;
+
+    const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
+
+    slice = adds.filter((item) => oracleToEligible[item.oracle]).slice(skip, skip + limit);
+  } else {
+    slice = adds.slice(skip, skip + limit);
+  }
+
+  return res.status(200).send({
+    adds: slice.map((item) => {
+      const card = carddb.getReasonableCardByOracle(item.oracle);
+      return {
+        details: card,
+        cardID: card.scryfall_id,
+      };
+    }),
+    hasMoreAdds: length > skip + limit,
+  });
+});
+
+
+router.post('/cuts', async (req, res) => {
+  let { cubeID, filterText } = req.body;
+
+  const cards = await Cube.getCards(cubeID);
+  
+  const { cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
+
+  let slice = cuts;
+
+  if (filterText && filterText.length > 0) {
+
+    const { err, filter } = makeFilter(`${filterText}`);
+
+    if (err) {
+      return res.status(400).send({
+        success: 'false',
+        cuts: []
+      });
+    }
+
+    const eligible = carddb.getAllMostReasonable(filter);
+
+    const oracleToEligible = Object.fromEntries(eligible.map((card) => [card.oracle_id, true]));
+
+    slice = cuts.filter((item) => oracleToEligible[item.oracle]);
+  }
+
+  return res.status(200).send({
+    cuts: slice.map((item) => {
+      const card = carddb.getReasonableCardByOracle(item.oracle);
+      return {
+        details: card,
+        cardID: card.scryfall_id,
+      };
+    }),
+  });
 });
 
 module.exports = router;

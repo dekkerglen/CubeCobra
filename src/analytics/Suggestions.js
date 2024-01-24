@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback, useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import AddToCubeModal from 'components/AddToCubeModal';
-import PagedList from 'components/PagedList';
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import CubePropType from 'proptypes/CubePropType';
@@ -17,8 +16,11 @@ import {
   ListGroupItem,
   ListGroupItemHeading,
   Row,
+  Button
 } from 'reactstrap';
 import useToggle from 'hooks/UseToggle';
+import { csrfFetch } from 'utils/CSRF';
+import CubeContext from 'contexts/CubeContext';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
@@ -54,23 +56,123 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
+const ImageSuggestion = ({ card, cube }) => {
+  return (
+    <AddModal
+      card={card}
+      href={`/tool/card/${encodeName(card.cardID)}`}
+      modalProps={{ card: card.details, hideAnalytics: false, cubeContext: cube.id }}
+    >
+      <img
+        className="pr-1 w-100"
+        src={card.details.image_normal}
+      />
+    </AddModal>
+  );
+};
+
+ImageSuggestion.propTypes = {
+  card: PropTypes.shape({
+    cardID: PropTypes.string.isRequired,
+    details: PropTypes.shape({
+      image_normal: PropTypes.string.isRequired,
+      image_flip: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+  cube: CubePropType.isRequired,
+  index: PropTypes.number.isRequired,
+};
+
+const PAGE_SIZE = 100;
+
+const Suggestions = () => {
+  const { cube, filterInput } = useContext(CubeContext);
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
+  const [useImages, toggleUseImages] = useToggle(false);
 
-  const filteredCuts = useMemo(() => {
-    const withIndex = cuts?.map((cut, index) => [cut, index]) ?? [];
-    return filter ? withIndex.filter(([card]) => filter(card)) : withIndex;
-  }, [cuts, filter]);
+  const [addCards, setAddCards] = React.useState([]);
+  const [addsLoading, setAddsLoading] = React.useState(true);
+  const [hasMoreAdds, setHasMoreAdds] = React.useState(true);
+  
+  const [cutCards, setCutCards] = React.useState([]);
+  const [cutsLoading, setCutsLoading] = React.useState(true);
 
-  const filteredAdds = useMemo(() => {
-    let withIndex = adds?.map((add, index) => [add, index]) ?? [];
-    if (maybeOnly) {
-      withIndex = withIndex.filter(([card]) =>
-        maybeboard.some((maybe) => maybe.details.oracle_id === card.details.oracle_id),
-      );
+  const addsInMaybe = useMemo(() => {
+    return addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id));
+  });
+
+  useEffect(() => {
+    const run = async () => {
+      setAddsLoading(true);
+      setAddCards([]);
+      const res = await csrfFetch(`/cube/api/adds`, {
+        method: 'POST',
+        body: JSON.stringify({
+          cubeID: cube.id,
+          skip: 0,
+          limit: PAGE_SIZE,
+          filterText: filterInput
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const json = await res.json();
+      setAddCards(json.adds);
+      setHasMoreAdds(json.hasMoreAdds);
+      setAddsLoading(false);
     }
-    return filter ? withIndex.filter(([card]) => filter(card)) : withIndex;
-  }, [adds, maybeOnly, filter, maybeboard]);
+    run();
+  }, [filterInput]);
+
+  useEffect(() => {
+    const run = async () => {
+      setCutsLoading(true);
+      setCutCards([]);
+      const res = await csrfFetch(`/cube/api/cuts`, {
+        method: 'POST',
+        body: JSON.stringify({
+          cubeID: cube.id,
+          skip: 0,
+          limit: PAGE_SIZE,
+          filterText: filterInput
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const json = await res.json();
+      setCutCards(json.cuts);
+      setCutsLoading(false);
+    }
+    run();
+  }, [filterInput]);
+
+  const loadMoreAdds = useCallback(async () => {
+    setAddsLoading(true);
+    const res = await csrfFetch(`/cube/api/adds`, {
+      method: 'POST',
+      body: JSON.stringify({
+        cubeID: cube.id,
+        skip: addCards.length,
+        limit: PAGE_SIZE,
+        filterText: filterInput
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const json = await res.json();
+    setAddCards([...addCards, ...json.adds]);
+    setAddsLoading(false);
+  }, [addCards]);
+
+
+  const cardsToUse = maybeOnly ? addsInMaybe : addCards;
 
   return (
     <>
@@ -79,6 +181,8 @@ const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
         View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all
         cubes on Cube Cobra.
       </p>
+      <input className="me-2" type="checkbox" checked={useImages} onClick={toggleUseImages} />
+      <Label for="toggleImages">Show card images</Label>
       <Row>
         <Col xs="12" lg="6">
           <Card>
@@ -87,22 +191,42 @@ const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
               <input className="me-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
               <Label for="toggleMaybeboard">Show cards from my maybeboard only.</Label>
             </CardHeader>
-            <ListGroup className="pb-3">
-              {filteredAdds.length > 0 ? (
-                <PagedList
-                  pageSize={20}
-                  showBottom
-                  pageWrap={(element) => <CardBody>{element}</CardBody>}
-                  rows={filteredAdds.slice(0).map(([add, index]) => (
-                    <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
+            {useImages ? (
+              <CardBody>
+                <Row>
+                  {cardsToUse.map((add, index) => (
+                    <Col key={add.cardID} xs="12" lg="6" className="p-1">
+                      <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
+                    </Col>
                   ))}
-                />
-              ) : (
+                </Row>
+                {addsLoading && (
+                  <CardBody>Loading...</CardBody>
+                )}
+                {!addsLoading && hasMoreAdds && (
+                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>Load More</Button>
+                )}
+              </CardBody>
+            ) : (
+            <ListGroup className="pb-3">
+              {cardsToUse.length > 0 && (
+                cardsToUse.map((add, index) => (
+                  <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
+                ))
+              )}
+              {!addsLoading && cardsToUse.length == 0 && (
                 <CardBody>
                   <em>No results with the given filter.</em>
                 </CardBody>
               )}
+              {addsLoading && (
+                <CardBody>Loading...</CardBody>
+              )}
+              {!addsLoading && hasMoreAdds && (
+                <Button onClick={loadMoreAdds} className="my-1" color="success" block>Load More</Button>
+              )}
             </ListGroup>
+            )}
           </Card>
         </Col>
         <Col xs="12" lg="6">
@@ -110,40 +234,38 @@ const Suggestions = ({ adds, cuts, cube, maybeboard, filter }) => {
             <CardHeader>
               <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
             </CardHeader>
-            <ListGroup className="pb-3">
-              {filteredCuts.length > 0 ? (
-                <PagedList
-                  pageSize={20}
-                  showBottom
-                  pageWrap={(element) => <CardBody>{element}</CardBody>}
-                  rows={filteredCuts.slice(0).map(([card, index]) => (
-                    <Suggestion key={card.cardID} index={index} card={card} cube={cube} />
+            {useImages ? (
+              <CardBody>
+                <Row>
+                  {cutCards.map((add, index) => (
+                    <Col key={add.cardID} xs="12" lg="6" className="p-1">
+                      <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
+                    </Col>
                   ))}
-                />
-              ) : (
-                <CardBody>
-                  <em>No results with the given filter.</em>
-                </CardBody>
-              )}
-            </ListGroup>
+                </Row>
+              </CardBody>
+            ) : (
+              <ListGroup className="pb-3">
+                {cutCards.length > 0 && (
+                  cutCards.map((add, index) => (
+                    <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
+                  ))
+                )}
+                {!cutsLoading && cutCards.length == 0 && (
+                  <CardBody>
+                    <em>No results with the given filter.</em>
+                  </CardBody>
+                )}
+                {cutsLoading && (
+                  <CardBody>Loading...</CardBody>
+                )}
+              </ListGroup>
+            )}
           </Card>
         </Col>
       </Row>
     </>
   );
-};
-
-Suggestions.propTypes = {
-  adds: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cuts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  cube: PropTypes.shape({
-    maybe: PropTypes.arrayOf(
-      PropTypes.shape({ details: PropTypes.shape({ name_lower: PropTypes.string.isRequired }) }),
-    ),
-  }).isRequired,
-  filter: PropTypes.func,
-  maybeboard: PropTypes.arrayOf(PropTypes.shape({ details: PropTypes.shape({ oracle_id: PropTypes.string }) }))
-    .isRequired,
 };
 
 Suggestions.defaultProps = {

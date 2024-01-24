@@ -3,6 +3,7 @@ const fs = require('fs');
 const json = require('big-json');
 
 const { SortFunctions } = require('../dist/utils/Sort');
+const {  filterCardsDetails } = require('../dist/filtering/FilterCards');
 
 let data = {
   cardtree: {},
@@ -277,6 +278,20 @@ function getRelatedCards(oracleId) {
   );
 }
 
+const getAllMostReasonable = (filter) => {
+  const cards = filterCardsDetails(data.printedCardList, filter);
+
+  const keys = new Set();
+  const filtered = [];
+  for (const card of cards) {
+    if (!keys.has(card.name_lower)) {
+      filtered.push(getMostReasonableById(card.scryfall_id, 'recent', filter));
+      keys.add(card.name_lower);
+    }
+  }
+  return filtered;
+};
+
 data = {
   ...data,
   cardFromId,
@@ -301,6 +316,7 @@ data = {
   isOracleBasic,
   getReasonableCardByOracle,
   getRelatedCards,
+  getAllMostReasonable
 };
 
 module.exports = data;
