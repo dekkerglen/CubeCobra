@@ -173,13 +173,16 @@ const Suggestions = () => {
 
 
   const cardsToUse = maybeOnly ? addsInMaybe : addCards;
+  const reversedCuts = [...cutCards].reverse();
 
   return (
     <>
       <h4 className="d-lg-block d-none">Recommender</h4>
       <p>
-        View recommended additions and cuts. This data is generated using a machine learning algorithm trained over all
-        cubes on Cube Cobra.
+        The Cube Cobra Recommender is a machine learning model that powers draftbots, deckbuilding, and can also be used to suggest cards to add and identifies cards that are core to your cube. Recommended additions are not just cards that are commonly included in similar cubes, but are selected based on what makes your cube unique.
+      </p>
+      <p>
+        The recommended additions can be filtered using scryfall-like syntax, making it a useful tool for searching for cards with a meaningful sort for your cube.
       </p>
       <input className="me-2" type="checkbox" checked={useImages} onClick={toggleUseImages} />
       <Label for="toggleImages">Show card images</Label>
@@ -232,12 +235,13 @@ const Suggestions = () => {
         <Col xs="12" lg="6">
           <Card>
             <CardHeader>
-              <ListGroupItemHeading>Recommended Cuts</ListGroupItemHeading>
+              <ListGroupItemHeading>Core Cards</ListGroupItemHeading>
+              <p>The algorithm believes these cards are core to your cube. It is a sorted order, with the most core cards at the top.</p>
             </CardHeader>
             {useImages ? (
               <CardBody>
                 <Row>
-                  {cutCards.map((add, index) => (
+                  {reversedCuts.map((add, index) => (
                     <Col key={add.cardID} xs="12" lg="6" className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
@@ -247,7 +251,7 @@ const Suggestions = () => {
             ) : (
               <ListGroup className="pb-3">
                 {cutCards.length > 0 && (
-                  cutCards.map((add, index) => (
+                  reversedCuts.map((add, index) => (
                     <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
                   ))
                 )}
