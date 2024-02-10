@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 
 import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
@@ -36,18 +36,12 @@ import {
 
 import RenderToRoot from 'utils/RenderToRoot';
 import { getLabels, cardIsLabel } from 'utils/Sort';
-import CardPropType from 'proptypes/CardPropType';
+import CubeContext from 'contexts/CubeContext';
 
-const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cuts }) => {
-  const [filter, setFilter] = useState(null);
+const CubeAnalysisPage = ({ cubeAnalytics }) => {
+  const { changedCards, cube } = useContext(CubeContext);
   const [activeTab, setActiveTab] = useQueryParam('tab', 0);
   const [filterCollapseOpen, toggleFilterCollapse] = useToggle(false);
-
-  const filteredCards = useMemo(() => {
-    return (filter ? cards.mainboard.filter(filter) : cards.mainboard).map((card) => ({
-      ...card,
-    }));
-  }, [cards, filter]);
 
   const convertToCharacteristic = (name, func) => ({
     get: func,
@@ -175,8 +169,8 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
     },
     {
       name: 'Recommender',
-      component: (collection, cubeObj, addCards, cutCards, maybeboard) => (
-        <Suggestions maybeboard={maybeboard} cube={cubeObj} adds={addCards} cuts={cutCards} filter={filter} />
+      component: () => (
+        <Suggestions />
       ),
     },
     {
@@ -189,11 +183,12 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
     },
   ];
 
+  console.log(cube.cards);
+
   return (
-    <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} canEdit={false} activeLink="analysis">
+    <>
         <DynamicFlash />
-        {cards.mainboard.length === 0 ? (
+        {cube.cards.mainboard.length === 0 ? (
           <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
         ) : (
           <Row className="mt-3">
@@ -218,9 +213,6 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
                     <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
                   </NavLink>
                   <FilterCollapse
-                    filter={filter}
-                    setFilter={setFilter}
-                    numCards={filteredCards.length}
                     isOpen={filterCollapseOpen}
                   />
                 </CardBody>
@@ -228,28 +220,24 @@ const CubeAnalysisPage = ({ cube, loginCallback, cubeAnalytics, cards, adds, cut
               <Card>
                 <CardBody>
                   <ErrorBoundary>
-                    {analytics[activeTab].component(filteredCards, cube, adds, cuts, cards.maybeboard)}
+                    {analytics[activeTab].component(changedCards.mainboard, cube)}
                   </ErrorBoundary>
                 </CardBody>
               </Card>
             </Col>
           </Row>
         )}
-      </CubeLayout>
-    </MainLayout>
+        </>
   );
 };
 
 CubeAnalysisPage.propTypes = {
-  cube: CubePropType.isRequired,
   cards: PropTypes.shape({
     mainboard: PropTypes.arrayOf(PropTypes.object),
     maybeboard: PropTypes.arrayOf(PropTypes.object),
   }).isRequired,
   loginCallback: PropTypes.string,
   cubeAnalytics: CubeAnalyticPropType.isRequired,
-  adds: PropTypes.arrayOf(CardPropType),
-  cuts: PropTypes.arrayOf(CardPropType),
 };
 
 CubeAnalysisPage.defaultProps = {
@@ -258,4 +246,31 @@ CubeAnalysisPage.defaultProps = {
   cuts: [],
 };
 
-export default RenderToRoot(CubeAnalysisPage);
+const CubeAnalysisPageWrapper = ({ cube, cards, loginCallback, cubeAnalytics }) => {
+
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <CubeLayout cube={cube} cards={cards} canEdit={false} activeLink="analysis">
+        <CubeAnalysisPage cubeAnalytics={cubeAnalytics} />
+      </CubeLayout>
+    </MainLayout>
+  );
+}    
+
+CubeAnalysisPageWrapper.propTypes = {
+  cube: CubePropType.isRequired,
+  cards: PropTypes.shape({
+    mainboard: PropTypes.arrayOf(PropTypes.object),
+    maybeboard: PropTypes.arrayOf(PropTypes.object),
+  }).isRequired,
+  loginCallback: PropTypes.string,
+  cubeAnalytics: CubeAnalyticPropType.isRequired,
+};
+
+CubeAnalysisPageWrapper.defaultProps = {
+  loginCallback: '/',
+  adds: [],
+  cuts: [],
+};
+
+export default RenderToRoot(CubeAnalysisPageWrapper);

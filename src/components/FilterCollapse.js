@@ -131,7 +131,7 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
     <Collapse className="px-3" isOpen={isOpen}>
       <Row>
         <Col>
-          <Form onSubmit={handleOnSubmit} className="input">
+          <form onSubmit={handleOnSubmit} className="input">
             <InputGroup>
               <InputGroupText htmlFor="filterInput">Filter</InputGroupText>
               <Input
@@ -148,7 +148,7 @@ const FilterCollapse = ({ isOpen, hideDescription }) => {
                 Apply
               </Button>
             </InputGroup>
-          </Form>
+          </form>
           <small>
             Having trouble using filter syntax? Check out our <a href="/filters">syntax guide</a>.
           </small>
