@@ -40,3 +40,8 @@ multiplayer drafting
 fbd0f99f-7e82-4145-b8bc-82115f1c6224
 	Got stuck, picks were piling up on seat 7 and bot picks were not being made
 	after refresh, things were working normally and draft finished
+
+- [x] new card pages 404
+- [x] move to mainboard causes crash
+- [x] bulk edit with some issues don't save
+- [ ] reasonable cards in recommender

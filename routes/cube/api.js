@@ -966,7 +966,7 @@ router.post('/calculatebasics', async (req, res) => {
 
 router.post('/adds', async (req, res) => {
   let { skip, limit } = req.body;
-  const { cubeID, filterText } = req.query;
+  const { cubeID, filterText } = req.body;
 
   limit = parseInt(limit, 10);
   skip = parseInt(skip, 10);
