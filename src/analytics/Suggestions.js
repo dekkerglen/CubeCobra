@@ -16,7 +16,7 @@ import {
   ListGroupItem,
   ListGroupItemHeading,
   Row,
-  Button
+  Button,
 } from 'reactstrap';
 import useToggle from 'hooks/UseToggle';
 import { csrfFetch } from 'utils/CSRF';
@@ -25,7 +25,7 @@ import CubeContext from 'contexts/CubeContext';
 const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
 
-const Suggestion = ({ card, index, cube }) => {
+function Suggestion({ card, index, cube }) {
   return (
     <ListGroupItem>
       <h6>
@@ -41,7 +41,7 @@ const Suggestion = ({ card, index, cube }) => {
       </h6>
     </ListGroupItem>
   );
-};
+}
 
 Suggestion.propTypes = {
   card: PropTypes.shape({
@@ -56,20 +56,17 @@ Suggestion.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-const ImageSuggestion = ({ card, cube }) => {
+function ImageSuggestion({ card, cube }) {
   return (
     <AddModal
       card={card}
       href={`/tool/card/${encodeName(card.cardID)}`}
       modalProps={{ card: card.details, hideAnalytics: false, cubeContext: cube.id }}
     >
-      <img
-        className="pr-1 w-100"
-        src={card.details.image_normal}
-      />
+      <img className="pr-1 w-100" src={card.details.image_normal} />
     </AddModal>
   );
-};
+}
 
 ImageSuggestion.propTypes = {
   card: PropTypes.shape({
@@ -86,7 +83,7 @@ ImageSuggestion.propTypes = {
 
 const PAGE_SIZE = 100;
 
-const Suggestions = () => {
+function Suggestions() {
   const { cube, filterInput } = useContext(CubeContext);
   const [maybeOnly, toggleMaybeOnly] = useToggle(false);
   const [useImages, toggleUseImages] = useToggle(false);
@@ -94,13 +91,13 @@ const Suggestions = () => {
   const [addCards, setAddCards] = React.useState([]);
   const [addsLoading, setAddsLoading] = React.useState(true);
   const [hasMoreAdds, setHasMoreAdds] = React.useState(true);
-  
+
   const [cutCards, setCutCards] = React.useState([]);
   const [cutsLoading, setCutsLoading] = React.useState(true);
 
-  const addsInMaybe = useMemo(() => {
-    return addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id));
-  });
+  const addsInMaybe = useMemo(() =>
+    addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id)),
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -112,7 +109,7 @@ const Suggestions = () => {
           cubeID: cube.id,
           skip: 0,
           limit: PAGE_SIZE,
-          filterText: filterInput
+          filterText: filterInput,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +120,7 @@ const Suggestions = () => {
       setAddCards(json.adds);
       setHasMoreAdds(json.hasMoreAdds);
       setAddsLoading(false);
-    }
+    };
     run();
   }, [filterInput]);
 
@@ -137,7 +134,7 @@ const Suggestions = () => {
           cubeID: cube.id,
           skip: 0,
           limit: PAGE_SIZE,
-          filterText: filterInput
+          filterText: filterInput,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +144,7 @@ const Suggestions = () => {
       const json = await res.json();
       setCutCards(json.cuts);
       setCutsLoading(false);
-    }
+    };
     run();
   }, [filterInput]);
 
@@ -159,7 +156,7 @@ const Suggestions = () => {
         cubeID: cube.id,
         skip: addCards.length,
         limit: PAGE_SIZE,
-        filterText: filterInput
+        filterText: filterInput,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -171,7 +168,6 @@ const Suggestions = () => {
     setAddsLoading(false);
   }, [addCards]);
 
-
   const cardsToUse = maybeOnly ? addsInMaybe : addCards;
   const reversedCuts = [...cutCards].reverse();
 
@@ -179,10 +175,13 @@ const Suggestions = () => {
     <>
       <h4 className="d-lg-block d-none">Recommender</h4>
       <p>
-        The Cube Cobra Recommender is a machine learning model that powers draftbots, deckbuilding, and can also be used to suggest cards to add and identifies cards that are core to your cube. Recommended additions are not just cards that are commonly included in similar cubes, but are selected based on what makes your cube unique.
+        The Cube Cobra Recommender is a machine learning model that powers draftbots, deckbuilding, and can also be used
+        to suggest cards to add and identifies cards that are core to your cube. Recommended additions are not just
+        cards that are commonly included in similar cubes, but are selected based on what makes your cube unique.
       </p>
       <p>
-        The recommended additions can be filtered using scryfall-like syntax, making it a useful tool for searching for cards with a meaningful sort for your cube.
+        The recommended additions can be filtered using scryfall-like syntax, making it a useful tool for searching for
+        cards with a meaningful sort for your cube.
       </p>
       <input className="me-2" type="checkbox" checked={useImages} onClick={toggleUseImages} />
       <Label for="toggleImages">Show card images</Label>
@@ -203,32 +202,29 @@ const Suggestions = () => {
                     </Col>
                   ))}
                 </Row>
-                {addsLoading && (
-                  <CardBody>Loading...</CardBody>
-                )}
+                {addsLoading && <CardBody>Loading...</CardBody>}
                 {!addsLoading && hasMoreAdds && (
-                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>Load More</Button>
+                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>
+                    Load More
+                  </Button>
                 )}
               </CardBody>
             ) : (
-            <ListGroup className="pb-3">
-              {cardsToUse.length > 0 && (
-                cardsToUse.map((add, index) => (
-                  <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
-                ))
-              )}
-              {!addsLoading && cardsToUse.length == 0 && (
-                <CardBody>
-                  <em>No results with the given filter.</em>
-                </CardBody>
-              )}
-              {addsLoading && (
-                <CardBody>Loading...</CardBody>
-              )}
-              {!addsLoading && hasMoreAdds && (
-                <Button onClick={loadMoreAdds} className="my-1" color="success" block>Load More</Button>
-              )}
-            </ListGroup>
+              <ListGroup className="pb-3">
+                {cardsToUse.length > 0 &&
+                  cardsToUse.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} cube={cube} />)}
+                {!addsLoading && cardsToUse.length == 0 && (
+                  <CardBody>
+                    <em>No results with the given filter.</em>
+                  </CardBody>
+                )}
+                {addsLoading && <CardBody>Loading...</CardBody>}
+                {!addsLoading && hasMoreAdds && (
+                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>
+                    Load More
+                  </Button>
+                )}
+              </ListGroup>
             )}
           </Card>
         </Col>
@@ -236,7 +232,10 @@ const Suggestions = () => {
           <Card>
             <CardHeader>
               <ListGroupItemHeading>Core Cards</ListGroupItemHeading>
-              <p>The algorithm believes these cards are core to your cube. It is a sorted order, with the most core cards at the top.</p>
+              <p>
+                The algorithm believes these cards are core to your cube. It is a sorted order, with the most core cards
+                at the top.
+              </p>
             </CardHeader>
             {useImages ? (
               <CardBody>
@@ -250,19 +249,16 @@ const Suggestions = () => {
               </CardBody>
             ) : (
               <ListGroup className="pb-3">
-                {cutCards.length > 0 && (
+                {cutCards.length > 0 &&
                   reversedCuts.map((add, index) => (
                     <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
-                  ))
-                )}
+                  ))}
                 {!cutsLoading && cutCards.length == 0 && (
                   <CardBody>
                     <em>No results with the given filter.</em>
                   </CardBody>
                 )}
-                {cutsLoading && (
-                  <CardBody>Loading...</CardBody>
-                )}
+                {cutsLoading && <CardBody>Loading...</CardBody>}
               </ListGroup>
             )}
           </Card>
@@ -270,7 +266,7 @@ const Suggestions = () => {
       </Row>
     </>
   );
-};
+}
 
 Suggestions.defaultProps = {
   filter: null,

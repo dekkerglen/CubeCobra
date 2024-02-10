@@ -54,7 +54,7 @@ const getDetails = async (cardId) => {
   return json.card;
 };
 
-export const CubeContextProvider = ({ initialCube, cards, children, loadVersionDict, useChangedCards }) => {
+export function CubeContextProvider({ initialCube, cards, children, loadVersionDict, useChangedCards }) {
   const user = useContext(UserContext);
 
   const { setOpenCollapse } = useContext(DisplayContext);
@@ -120,8 +120,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
   );
 
   const updateShowTagColors = useCallback(
-    (showColors) => {
-      return csrfFetch('/cube/api/saveshowtagcolors', {
+    (showColors) =>
+      csrfFetch('/cube/api/saveshowtagcolors', {
         method: 'POST',
         body: JSON.stringify({
           show_tag_colors: showColors,
@@ -136,8 +136,7 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
         } else {
           console.error('Request failed.');
         }
-      });
-    },
+      }),
     [showTagColors],
   );
 
@@ -600,6 +599,9 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     return xorStrings(cardIds);
   }, [cube.cards]);
 
+  console.log(cube.cards);
+  console.log(checksum);
+
   const commitChanges = useCallback(
     async (title, blog) => {
       setLoading(true);
@@ -616,12 +618,11 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             changes,
             id: cube.id,
             useBlog,
-            checksum
+            checksum,
           }),
         });
 
         const json = await result.json();
-        console.log(json);
 
         if (json.success !== 'true') {
           setAlerts([{ color: 'danger', message: json.message }]);
@@ -668,6 +669,8 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
             }
           }
 
+          setModalSelection([]);
+          setChanges({});
           setCube({
             ...cube,
             cards: newCards,
@@ -890,59 +893,114 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
     [filterInput, setCardFilter],
   );
 
-  const value = {
-    cube,
-    changedCards,
-    canEdit,
-    hasCustomImages,
-    setCube,
-    addCard,
-    bulkAddCard,
-    removeCard,
-    swapCard,
-    editCard,
-    discardAllChanges,
-    changes,
-    revertAdd,
-    revertRemove,
-    revertSwap,
-    revertEdit,
-    versionDict,
-    commitChanges,
-    toggle,
-    setModalSelection,
-    setModalOpen,
-    tagColors,
-    showTagColors,
-    setTagColors,
-    updateShowTagColors,
-    bulkEditCard,
-    bulkRevertEdit,
-    bulkRemoveCard,
-    bulkRevertRemove,
-    alerts,
-    setAlerts,
-    loading,
-    setShowUnsorted,
-    saveSorts,
-    resetSorts,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    setSortPrimary,
-    setSortSecondary,
-    setSortTertiary,
-    setSortQuaternary,
-    filterInput,
-    setFilterInput,
-    filterValid,
-    filterResult,
-    unfilteredChangedCards,
-    useBlog,
-    setUseBlog,
-    allTags,
-  };
+  const value = useMemo(
+    () => ({
+      cube,
+      changedCards,
+      canEdit,
+      hasCustomImages,
+      setCube,
+      addCard,
+      bulkAddCard,
+      removeCard,
+      swapCard,
+      editCard,
+      discardAllChanges,
+      changes,
+      revertAdd,
+      revertRemove,
+      revertSwap,
+      revertEdit,
+      versionDict,
+      commitChanges,
+      toggle,
+      setModalSelection,
+      setModalOpen,
+      tagColors,
+      showTagColors,
+      setTagColors,
+      updateShowTagColors,
+      bulkEditCard,
+      bulkRevertEdit,
+      bulkRemoveCard,
+      bulkRevertRemove,
+      alerts,
+      setAlerts,
+      loading,
+      setShowUnsorted,
+      saveSorts,
+      resetSorts,
+      sortPrimary,
+      sortSecondary,
+      sortTertiary,
+      sortQuaternary,
+      setSortPrimary,
+      setSortSecondary,
+      setSortTertiary,
+      setSortQuaternary,
+      filterInput,
+      setFilterInput,
+      filterValid,
+      filterResult,
+      unfilteredChangedCards,
+      useBlog,
+      setUseBlog,
+      allTags,
+    }),
+    [
+      cube,
+      changedCards,
+      canEdit,
+      hasCustomImages,
+      setCube,
+      addCard,
+      bulkAddCard,
+      removeCard,
+      swapCard,
+      editCard,
+      discardAllChanges,
+      changes,
+      revertAdd,
+      revertRemove,
+      revertSwap,
+      revertEdit,
+      versionDict,
+      commitChanges,
+      toggle,
+      setModalSelection,
+      setModalOpen,
+      tagColors,
+      showTagColors,
+      setTagColors,
+      updateShowTagColors,
+      bulkEditCard,
+      bulkRevertEdit,
+      bulkRemoveCard,
+      bulkRevertRemove,
+      alerts,
+      setAlerts,
+      loading,
+      setShowUnsorted,
+      saveSorts,
+      resetSorts,
+      sortPrimary,
+      sortSecondary,
+      sortTertiary,
+      sortQuaternary,
+      setSortPrimary,
+      setSortSecondary,
+      setSortTertiary,
+      setSortQuaternary,
+      filterInput,
+      setFilterInput,
+      filterValid,
+      filterResult,
+      unfilteredChangedCards,
+      useBlog,
+      setUseBlog,
+      allTags,
+    ],
+  );
 
   return (
     <CubeContext.Provider value={value}>
@@ -986,11 +1044,11 @@ export const CubeContextProvider = ({ initialCube, cards, children, loadVersionD
       </>
     </CubeContext.Provider>
   );
-};
+}
 
 CubeContextProvider.propTypes = {
   initialCube: PropTypes.shape({
-    cards: PropTypes.arrayOf(PropTypes.object),
+    cards: PropTypes.arrayOf(PropTypes.shape({})),
   }),
   cards: PropTypes.shape({}).isRequired,
   children: PropTypes.node.isRequired,

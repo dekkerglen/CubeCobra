@@ -100,8 +100,9 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
 async function bulkUpload(req, res, list, cube) {
   const cards = await Cube.getCards(cube.id, true);
-  const { mainboard } = cards;
-  const { maybeboard } = cards;
+  const clonedCards = JSON.parse(JSON.stringify(cards));
+  const { mainboard } = clonedCards;
+  const { maybeboard } = clonedCards;
 
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
@@ -113,11 +114,7 @@ async function bulkUpload(req, res, list, cube) {
       let newCards;
       let newMaybe;
       ({ newCards, newMaybe, missing } = CSVtoCards(list, carddb));
-      changelog.push(
-        ...newCards.map((card) => {
-          return { addedID: card.cardID, removedID: null };
-        }),
-      );
+      changelog.push(...newCards.map((card) => ({ addedID: card.cardID, removedID: null })));
 
       mainboard.push(...newCards);
       maybeboard.push(...newMaybe);

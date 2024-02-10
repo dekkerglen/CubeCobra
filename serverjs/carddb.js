@@ -3,7 +3,7 @@ const fs = require('fs');
 const json = require('big-json');
 
 const { SortFunctions } = require('../dist/utils/Sort');
-const {  filterCardsDetails } = require('../dist/filtering/FilterCards');
+const { filterCardsDetails } = require('../dist/filtering/FilterCards');
 
 let data = {
   cardtree: {},
@@ -236,7 +236,7 @@ function getVersionsByOracleId(oracleId) {
 const getReasonableCardByOracle = (oracleId) => {
   const ids = data.oracleToId[oracleId];
   return getFirstReasonable(ids);
-}
+};
 
 function isOracleBasic(oracleId) {
   return cardFromId(data.oracleToId[oracleId][0]).type.includes('Basic');
@@ -259,7 +259,7 @@ function getRelatedCards(oracleId) {
         spells: [],
         other: [],
       },
-      synegistic: {
+      synergistic: {
         top: [],
         creatures: [],
         spells: [],
@@ -316,7 +316,7 @@ data = {
   isOracleBasic,
   getReasonableCardByOracle,
   getRelatedCards,
-  getAllMostReasonable
+  getAllMostReasonable,
 };
 
 module.exports = data;

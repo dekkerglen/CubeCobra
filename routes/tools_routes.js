@@ -24,7 +24,6 @@ const MIN_PICKS = 100;
 /* Page size for results */
 const PAGE_SIZE = 96;
 
-
 const searchCards = (filter, sort = 'Elo', page = 0, direction = 'descending', distinct = 'names') => {
   const cards = [];
 
@@ -354,8 +353,8 @@ router.get('/cardimageflip/:id', async (req, res) => {
   }
 });
 
-router.get('/searchcards', async (req, res) => {
-  return render(
+router.get('/searchcards', async (req, res) =>
+  render(
     req,
     res,
     'CardSearchPage',
@@ -363,7 +362,7 @@ router.get('/searchcards', async (req, res) => {
     {
       title: 'Search cards',
     },
-  );
-});
+  ),
+);
 
 module.exports = router;

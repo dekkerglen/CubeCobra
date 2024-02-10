@@ -165,9 +165,7 @@ router.get('/clone/:id', async (req, res) => {
   }
 });
 
-router.get('/view/:id', (req, res) => {
-  return res.redirect(`/cube/overview/${req.params.id}`);
-});
+router.get('/view/:id', (req, res) => res.redirect(`/cube/overview/${req.params.id}`));
 
 router.post('/format/add/:id', ensureAuth, async (req, res) => {
   try {
@@ -675,8 +673,6 @@ router.get('/analysis/:id', async (req, res) => {
 
     const cubeAnalytics = await CubeAnalytic.getByCube(cube.id);
 
-
-
     return render(
       req,
       res,
@@ -779,15 +775,13 @@ router.get('/samplepackimage/:id/:seed', async (req, res) => {
       const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
       const height = Math.ceil(pack.pack.length / width);
 
-      const srcArray = pack.pack.map((card, index) => {
-        return {
-          src: card.imgUrl || card.details.image_normal,
-          x: CARD_WIDTH * (index % width),
-          y: CARD_HEIGHT * Math.floor(index / width),
-          height: CARD_HEIGHT,
-          width: CARD_WIDTH,
-        };
-      });
+      const srcArray = pack.pack.map((card, index) => ({
+        src: card.imgUrl || card.details.image_normal,
+        x: CARD_WIDTH * (index % width),
+        y: CARD_HEIGHT * Math.floor(index / width),
+        height: CARD_HEIGHT,
+        width: CARD_WIDTH,
+      }));
 
       return generateSamplepackImage(srcArray, CARD_WIDTH * width, CARD_HEIGHT * height);
     });
@@ -891,20 +885,12 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 
       const changelog = {
         mainboard: {
-          adds: newList.mainboard.map(({ cardID }) => {
-            return { cardID };
-          }),
-          removes: cards.mainboard.map(({ cardID }) => {
-            return { oldCard: { cardID } };
-          }),
+          adds: newList.mainboard.map(({ cardID }) => ({ cardID })),
+          removes: cards.mainboard.map(({ cardID }) => ({ oldCard: { cardID } })),
         },
         maybeboard: {
-          adds: newList.maybeboard.map(({ cardID }) => {
-            return { cardID };
-          }),
-          removes: cards.maybeboard.map(({ cardID }) => {
-            return { oldCard: { cardID } };
-          }),
+          adds: newList.maybeboard.map(({ cardID }) => ({ cardID })),
+          removes: cards.maybeboard.map(({ cardID }) => ({ oldCard: { cardID } })),
         },
       };
 

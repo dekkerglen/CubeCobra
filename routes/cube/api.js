@@ -27,20 +27,20 @@ const User = require('../../dynamo/models/user');
 const router = express.Router();
 
 // API routes
-router.get('/cardnames', (_, res) => {
-  return res.status(200).send({
+router.get('/cardnames', (_, res) =>
+  res.status(200).send({
     success: 'true',
     cardnames: carddb.cardtree,
-  });
-});
+  }),
+);
 
 // Get the full card images including image_normal and image_flip
-router.get('/cardimages', (_, res) => {
-  return res.status(200).send({
+router.get('/cardimages', (_, res) =>
+  res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
-  });
-});
+  }),
+);
 
 router.post(
   '/editoverview',
@@ -283,12 +283,12 @@ router.get(
 
 router.post(
   '/getdetailsforcards',
-  util.wrapAsyncApi(async (req, res) => {
-    return res.status(200).send({
+  util.wrapAsyncApi(async (req, res) =>
+    res.status(200).send({
       success: 'true',
       details: req.body.cards.map((id) => carddb.cardFromId(id)),
-    });
-  }),
+    }),
+  ),
 );
 
 router.post(
@@ -965,20 +965,20 @@ router.post('/calculatebasics', async (req, res) => {
 });
 
 router.post('/adds', async (req, res) => {
-  let { skip, limit, cubeID, filterText } = req.body;
+  let { skip, limit } = req.body;
+  const { cubeID, filterText } = req.query;
 
   limit = parseInt(limit, 10);
   skip = parseInt(skip, 10);
 
   const cards = await Cube.getCards(cubeID);
-  
+
   const { adds } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
 
   let slice;
-  let length = adds.length;
+  let { length } = adds;
 
   if (filterText && filterText.length > 0) {
-
     const { err, filter } = makeFilter(`${filterText}`);
 
     if (err) {
@@ -1011,24 +1011,22 @@ router.post('/adds', async (req, res) => {
   });
 });
 
-
 router.post('/cuts', async (req, res) => {
-  let { cubeID, filterText } = req.body;
+  const { cubeID, filterText } = req.body;
 
   const cards = await Cube.getCards(cubeID);
-  
+
   const { cuts } = recommend(cards.mainboard.map((card) => card.details.oracle_id));
 
   let slice = cuts;
 
   if (filterText && filterText.length > 0) {
-
     const { err, filter } = makeFilter(`${filterText}`);
 
     if (err) {
       return res.status(400).send({
         success: 'false',
-        cuts: []
+        cuts: [],
       });
     }
 
