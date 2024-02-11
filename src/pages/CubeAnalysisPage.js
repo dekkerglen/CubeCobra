@@ -12,6 +12,7 @@ import Playtest from 'analytics/PlaytestData';
 import AnalyticTable from 'analytics/AnalyticTable';
 import Suggestions from 'analytics/Suggestions';
 import Asfans from 'analytics/Asfans';
+import Prices from 'analytics/Prices';
 import FilterCollapse from 'components/FilterCollapse';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
@@ -180,6 +181,10 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
     {
       name: 'Tokens',
       component: (collection, cubeObj) => <Tokens cards={collection} cube={cubeObj} />,
+    },
+    {
+      name: 'Prices',
+      component: (collection) => <Prices cards={collection} />,
     },
   ];
 
