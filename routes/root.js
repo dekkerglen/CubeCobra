@@ -121,28 +121,28 @@ router.get('/search', async (req, res) => {
 });
 
 const searchCubes = async (query, order, lastKey, ascending, user) => {
-  let updatedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
-  const split = updatedQuery.split(':');
+  let sanitizedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
+  const split = sanitizedQuery.split(':');
 
   if (split.length === 1 && split[0].length > 0) {
-    updatedQuery = `keywords:${updatedQuery}`;
+    sanitizedQuery = `keywords:${sanitizedQuery}`;
   } else if (split.length === 2 && split[0].length > 0 && split[1].length > 0) {
     // removed surrounding quotes from split[1]
     if (split[1].startsWith('"') && split[1].endsWith('"')) {
       split[1] = split[1].substring(1, split[1].length - 1);
     }
-    updatedQuery = `${split[0].trim()}:${split[1].trim()}`;
+    sanitizedQuery = `${split[0].trim()}:${split[1].trim()}`;
   }
 
-  const [key, value] = updatedQuery.split(':');
-  if (key === 'card') {
+  const [unsafeKey, unsafeValue] = query.split(':');
+  if (unsafeKey === 'card') {
     // get oracle id from card name
-    const card = carddb.getMostReasonable(value);
+    const card = carddb.getMostReasonable(unsafeValue);
 
-    updatedQuery = `oracle:${card ? card.oracle_id : ''}`;
+    sanitizedQuery = `oracle:${card ? card.oracle_id : ''}`;
   }
 
-  const result = await CubeHash.query(updatedQuery, ascending, lastKey, order);
+  const result = await CubeHash.query(sanitizedQuery, ascending, lastKey, order);
 
   const items = (result.items.length > 0 ? await Cube.batchGet(result.items.map((hash) => hash.cube)) : []).filter(
     (cube) => isCubeListed(cube, user),
