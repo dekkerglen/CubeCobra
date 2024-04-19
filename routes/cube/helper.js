@@ -14,7 +14,7 @@ const CARD_WIDTH = 488;
 const CSV_HEADER =
   'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID';
 
-async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missing) {
+async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog, added, missing) {
   try {
     if (missing.length > 0) {
       return render(req, res, 'BulkUploadPage', {
@@ -64,7 +64,7 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
     }
 
     if (Object.keys(changelog).length > 0) {
-      await Cube.updateCards(cube.id, cards);
+      await Cube.updateCards(cube.id, cardsToWrite);
 
       const changelist = await Changelog.put(changelog, cube.id);
 
@@ -100,9 +100,9 @@ async function updateCubeAndBlog(req, res, cube, cards, changelog, added, missin
 
 async function bulkUpload(req, res, list, cube) {
   const cards = await Cube.getCards(cube.id, true);
-  const clonedCards = JSON.parse(JSON.stringify(cards));
-  const { mainboard } = clonedCards;
-  const { maybeboard } = clonedCards;
+  const cardsToWrite = JSON.parse(JSON.stringify(cards));
+  const { mainboard } = cardsToWrite;
+  const { maybeboard } = cardsToWrite;
 
   const lines = list.match(/[^\r\n]+/g);
   let missing = [];
@@ -176,7 +176,7 @@ async function bulkUpload(req, res, list, cube) {
     },
   };
 
-  await updateCubeAndBlog(req, res, cube, cards, changelist, added, missing);
+  await updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelist, added, missing);
 }
 
 function writeCard(res, card, maybe) {

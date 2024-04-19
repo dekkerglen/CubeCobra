@@ -10,14 +10,11 @@ const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCard
 const generateMeta = require('../serverjs/meta');
 const util = require('../serverjs/util');
 const { render } = require('../serverjs/render');
-const { csrfProtection } = require('./middleware');
 
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
 
 const router = express.Router();
-
-router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;
@@ -257,6 +254,70 @@ router.get('/card/:id', async (req, res) => {
   }
 });
 
+router.get('/cardjson/:id', async (req, res) => {
+  try {
+    let { id } = req.params;
+
+    // if id is a cardname, redirect to the default version for that card
+    const possibleName = cardutil.decodeName(id);
+    const ids = carddb.getIdsFromName(possibleName);
+    if (ids) {
+      id = carddb.getMostReasonable(possibleName).scryfall_id;
+    }
+
+    // if id is a foreign id, redirect to english version
+    const english = carddb.getEnglishVersion(id);
+    if (english) {
+      id = english;
+    }
+
+    // if id is an oracle id, redirect to most reasonable scryfall
+    if (carddb.oracleToId[id]) {
+      id = carddb.getMostReasonableById(carddb.oracleToId[id][0]).scryfall_id;
+    }
+
+    // if id is not a scryfall ID, error
+    const card = carddb.cardFromId(id);
+    if (card.error) {
+      req.flash('danger', `Card with id ${id} not found.`);
+      return res.redirect('/404');
+    }
+
+    // otherwise just go to this ID.
+    const history = await CardHistory.getByOracleAndType(card.oracle_id, CardHistory.TYPES.WEEK, 52);
+
+    if (history.items.length === 0) {
+      history.items.push({});
+    }
+
+    const related = carddb.getRelatedCards(card.oracle_id);
+
+    const draftedWith = {};
+    const cubedWith = {};
+    const synergistic = {};
+
+    for (const category of ['top', 'spells', 'creatures', 'other']) {
+      draftedWith[category] = related.draftedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      cubedWith[category] = related.cubedWith[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+      synergistic[category] = related.synergistic[category].map((oracle) => carddb.getReasonableCardByOracle(oracle));
+    }
+
+    return res.json({
+      card,
+      history: history.items.reverse(),
+      lastKey: history.lastKey,
+      versions: carddb.oracleToId[card.oracle_id]
+        .filter((cid) => cid !== card.scryfall_id)
+        .map((cardid) => carddb.cardFromId(cardid)),
+      draftedWith,
+      cubedWith,
+      synergistic,
+    });
+  } catch (err) {
+    return res.json({ error: err.message });
+  }
+});
+
 router.get('/cardimage/:id', async (req, res) => {
   try {
     let { id } = req.params;
@@ -364,5 +425,35 @@ router.get('/searchcards', async (req, res) =>
     },
   ),
 );
+
+router.post('/mtgconnect', async (req, res) => {
+  const { oracles } = req.body;
+
+  const cards = oracles.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+
+  const result = [];
+
+  for (const card of cards) {
+    const related = carddb.getRelatedCards(card.oracle_id);
+    const synergistic = related.synergistic.top.map((oracle) => carddb.getReasonableCardByOracle(oracle));
+
+    result.push({
+      name: card.name,
+      image_normal: card.image_normal,
+      oracle: card.oracle_id,
+      popularity: card.cubeCount,
+      synergistic: synergistic.slice(0, 5).map((c) => ({
+        name: c.name,
+        image_normal: c.image_normal,
+        oracle: c.oracle_id,
+      })),
+    });
+  }
+
+  return res.status(200).send({
+    success: 'true',
+    cards: result,
+  });
+});
 
 module.exports = router;

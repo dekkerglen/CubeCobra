@@ -896,7 +896,7 @@ router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
 
       added.push(...newList.mainboard);
 
-      return updateCubeAndBlog(req, res, cube, newList, changelog, added, missing);
+      return updateCubeAndBlog(req, res, cube, cards, newList, changelog, added, missing);
     }
 
     throw new Error('Received empty file');
