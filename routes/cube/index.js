@@ -444,6 +444,7 @@ router.get('/rss/:id', async (req, res) => {
       if (blog.body && blog.Changelog) {
         feed.item({
           title: blog.title,
+          url: `${feed.site_url}/cube/blog/blogpost/${blog.id}`,
           description: `${blog.body}\n\n${Blog.changelogToText(blog.Changelog)}`,
           guid: blog.id,
           date: blog.date,
@@ -451,6 +452,7 @@ router.get('/rss/:id', async (req, res) => {
       } else if (blog.body) {
         feed.item({
           title: blog.title,
+          url: `${feed.site_url}/cube/blog/blogpost/${blog.id}`,
           description: blog.body,
           guid: blog.id,
           date: blog.date,
@@ -458,6 +460,7 @@ router.get('/rss/:id', async (req, res) => {
       } else if (blog.Changelog) {
         feed.item({
           title: blog.title,
+          url: `${feed.site_url}/cube/blog/blogpost/${blog.id}`,
           description: Blog.changelogToText(blog.Changelog),
           guid: blog.id,
           date: blog.date,
