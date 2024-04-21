@@ -553,27 +553,20 @@ export function CubeContextProvider({ initialCube, cards, children, loadVersionD
       }
     }
 
-    let changedLength = 0;
-    for (const [board] of Object.entries(changed)) {
-      if (board !== 'id') {
-        changedLength += changed[board].length;
-      }
-    }
-
     const result = Object.fromEntries(
       Object.entries(changed)
         .filter(([boardname]) => boardname !== 'id')
         .map(([boardname, list]) => [boardname, list.filter(cardFilter.fn)]),
     );
-    let newLength = 0;
-    for (const [board] of Object.entries(result)) {
-      if (board !== 'id') {
-        newLength += result[board].length;
-      }
-    }
 
     if (filterInput !== '') {
-      setFilterResult(`Filtered ${changedLength} cards to ${newLength}`);
+      if (changed.maybeboard && changed.maybeboard.length > 0) {
+        setFilterResult(
+          `Showing ${result.mainboard.length}/${changed.mainboard.length} in Mainboard, ${result.maybeboard.length}/${changed.maybeboard.length} in Maybeboard`,
+        );
+      } else {
+        setFilterResult(`Showing ${result.mainboard.length}/${changed.mainboard.length}`);
+      }
     } else {
       setFilterResult('');
     }

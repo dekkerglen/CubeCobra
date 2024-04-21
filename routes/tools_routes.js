@@ -9,12 +9,15 @@ const { SortFunctionsOnDetails, ORDERED_SORTS } = require('../dist/utils/Sort');
 const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCards');
 const generateMeta = require('../serverjs/meta');
 const util = require('../serverjs/util');
+const { csrfProtection } = require('./middleware');
 const { render } = require('../serverjs/render');
 
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
 
 const router = express.Router();
+
+router.use(csrfProtection);
 
 /* Minimum number of picks for data to show up in Top cards list. */
 const MIN_PICKS = 100;

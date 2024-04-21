@@ -11,7 +11,7 @@ import CubeSubtitle from 'components/CubeSubtitle';
 
 import { NavItem, NavLink } from 'reactstrap';
 
-const CubeNavItem = ({ link, activeLink, children }) => {
+function CubeNavItem({ link, activeLink, children }) {
   const { cube } = useContext(CubeContext);
   return (
     <NavItem>
@@ -20,7 +20,7 @@ const CubeNavItem = ({ link, activeLink, children }) => {
       </NavLink>
     </NavItem>
   );
-};
+}
 
 CubeNavItem.propTypes = {
   link: PropTypes.string.isRequired,
@@ -32,7 +32,7 @@ CubeNavItem.defaultProps = {
   children: false,
 };
 
-const CubeLayoutInner = ({ children }) => {
+function CubeLayoutInner({ children }) {
   const { tagColors } = useContext(CubeContext);
 
   return (
@@ -40,13 +40,13 @@ const CubeLayoutInner = ({ children }) => {
       <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
     </TagColorContext.Provider>
   );
-};
+}
 
 CubeLayoutInner.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useChangedCards }) => {
+function CubeLayout({ cube, cards, activeLink, children, loadVersionDict, useChangedCards }) {
   return (
     <CubeContextProvider
       initialCube={cube}
@@ -82,14 +82,14 @@ const CubeLayout = ({ cube, cards, activeLink, children, loadVersionDict, useCha
       </div>
     </CubeContextProvider>
   );
-};
+}
 
 CubeLayout.propTypes = {
   cube: CubePropType.isRequired,
   activeLink: PropTypes.string.isRequired,
   children: PropTypes.node,
   cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
+    boards: PropTypes.arrayOf(PropTypes.shape({})),
   }),
   loadVersionDict: PropTypes.bool,
   useChangedCards: PropTypes.bool,
