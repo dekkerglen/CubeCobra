@@ -20,6 +20,8 @@ const Draft = require('../../dynamo/models/draft');
 
 const router = express.Router();
 
+const DECK_CSV_HEADER = 'Quantity,"Name",Scryfall,Zone';
+
 router.get('/download/xmage/:id/:seat', async (req, res) => {
   try {
     const deck = await Draft.getById(req.params.id);
@@ -277,6 +279,71 @@ router.get('/download/cockatrice/:id/:seat', async (req, res) => {
     }
     for (const [key, value] of Object.entries(side)) {
       res.write(`${value}x ${key}\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return util.handleRouteError(req, res, err, '/404');
+  }
+});
+
+router.get('/download/topdecked/:id/:seat', async (req, res) => {
+  try {
+    const deck = await Draft.getById(req.params.id);
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return res.redirect('/404');
+    }
+    const seat = deck.seats[req.params.seat];
+
+    res.setHeader('Content-disposition', `attachment; filename=${seat.title.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+
+    res.write(`${DECK_CSV_HEADER}\r\n`);
+
+    const main = {};
+    const mainCardID = {};
+    const mainCardName = {};
+    for (const row of seat.mainboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          const oracle_id = `${card.details.oracle_id}`;
+          if (main[oracle_id]) {
+            main[oracle_id] += 1;
+          } else {
+            main[oracle_id] = 1;
+            mainCardID[oracle_id] = `${card.cardID}`;
+            mainCardName[oracle_id] = `${card.details.name}`;
+          }
+        }
+      }
+    }
+    for (const [oracle_id, value] of Object.entries(main)) {
+      res.write(`${value},"${mainCardName[oracle_id]}",${mainCardID[oracle_id]},main\r\n`);
+    }
+
+    const side = {};
+    const sideCardID = {};
+    const sideCardName = {};
+    for (const row of seat.sideboard) {
+      for (const col of row) {
+        for (const cardIndex of col) {
+          const card = deck.cards[cardIndex];
+          const oracle_id = `${card.details.oracle_id}`;
+          if (side[oracle_id]) {
+            side[oracle_id] += 1;
+          } else {
+            side[oracle_id] = 1;
+            sideCardID[oracle_id] = `${card.cardID}`;
+            sideCardName[oracle_id] = `${card.details.name}`;
+          }
+        }
+      }
+    }
+    for (const [oracle_id, value] of Object.entries(side)) {
+      res.write(`${value},"${sideCardName[oracle_id]}",${sideCardID[oracle_id]},side\r\n`);
     }
 
     return res.end();
