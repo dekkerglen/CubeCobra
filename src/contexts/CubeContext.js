@@ -618,7 +618,7 @@ export function CubeContextProvider({ initialCube, cards, children, loadVersionD
         const json = await result.json();
 
         if (json.success !== 'true') {
-          setAlerts([{ color: 'danger', message: json.message }]);
+          setAlerts([...alerts, { color: 'danger', message: json.message }]);
         } else {
           const newCards = JSON.parse(JSON.stringify(unfilteredChangedCards));
 
@@ -672,9 +672,6 @@ export function CubeContextProvider({ initialCube, cards, children, loadVersionD
       } catch (e) {
         setAlerts([{ type: 'error', message: 'Operation timed out' }]);
       }
-
-      setModalSelection([]);
-      setChanges({});
       setLoading(false);
     },
     [cube, changedCards, setCube, setChanges],
