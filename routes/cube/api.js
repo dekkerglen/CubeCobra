@@ -442,9 +442,16 @@ router.get(
 
     let key;
     if (req.query.last_key) {
+      const date = parseInt(req.query.last_key, 10);
+      if (Number.isNaN(date)) {
+        return res.status(400).send({
+          success: 'false',
+          error: `Invalid changelog key ${req.query.last_key}. Key should be a timestamp received from a previous call.`,
+        });
+      }
       key = {
         cube: cube.id,
-        date: parseInt(req.query.last_key, 10),
+        date,
       };
     }
 
