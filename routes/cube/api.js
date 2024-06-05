@@ -431,7 +431,7 @@ router.get(
   }),
 );
 
-router.get(
+router.post(
   '/history/:id',
   util.wrapAsyncApi(async (req, res) => {
     const cube = await Cube.getById(req.params.id);
@@ -440,22 +440,7 @@ router.get(
       return res.status(404).send('Cube not found.');
     }
 
-    let key;
-    if (req.query.last_key) {
-      const date = parseInt(req.query.last_key, 10);
-      if (Number.isNaN(date)) {
-        return res.status(400).send({
-          success: 'false',
-          error: `Invalid changelog key ${req.query.last_key}. Key should be a timestamp received from a previous call.`,
-        });
-      }
-      key = {
-        cube: cube.id,
-        date,
-      };
-    }
-
-    const query = await Changelog.getByCube(cube.id, 50, key);
+    const query = await Changelog.getByCube(cube.id, 50, req.body.lastKey);
     return res.status(200).send({
       success: 'true',
       posts: query.items,
