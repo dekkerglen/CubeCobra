@@ -431,6 +431,32 @@ router.get(
   }),
 );
 
+router.get(
+  '/history/:id',
+  util.wrapAsyncApi(async (req, res) => {
+    const cube = await Cube.getById(req.params.id);
+
+    if (!isCubeViewable(cube, req.user)) {
+      return res.status(404).send('Cube not found.');
+    }
+
+    let key;
+    if (req.query.last_key) {
+      key = {
+        cube: cube.id,
+        date: parseInt(req.query.last_key, 10),
+      };
+    }
+
+    const query = await Changelog.getByCube(cube.id, 50, key);
+    return res.status(200).send({
+      success: 'true',
+      posts: query.items,
+      lastKey: query.lastKey,
+    });
+  }),
+);
+
 router.post(
   '/updatebasics/:id',
   util.wrapAsyncApi(async (req, res) => {
