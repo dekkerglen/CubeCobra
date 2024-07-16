@@ -198,6 +198,7 @@ app.use('/patreon', require('./routes/patreon_routes'));
 app.use('/cache', require('./routes/cache_routes'));
 app.use('/dev', require('./routes/dev_routes'));
 app.use('/cube', require('./routes/cube/index'));
+app.use('/public', require('./routes/cube/api_public'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
