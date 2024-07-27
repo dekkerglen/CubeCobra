@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import Query from 'utils/Query';
 
-interface QueryParamHook<T> {
-  0: T | null;
-  1: (value: T | null) => void;
-}
-
-const useQueryParam = <T>(name: string, defaultValue: T | null): QueryParamHook<T> => {
+const useQueryParam = <T>(
+  name: string,
+  defaultValue: T | null,
+): [T | null, React.Dispatch<React.SetStateAction<T | null>>] => {
   const didMountRef = useRef(false);
   const [value, setValue] = useState<T | null>(defaultValue ?? null);
 

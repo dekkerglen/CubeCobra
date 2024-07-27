@@ -1,7 +1,10 @@
+import Cube from "datatypes/Cube";
+
 export default interface User {
   id: string;
   username: string;
-  usernameLower: string;
+  usernameLower?: string;
+  cubes?: Cube[];
   about?: string;
   hideTagColors?: boolean;
   followedCubes?: string[];

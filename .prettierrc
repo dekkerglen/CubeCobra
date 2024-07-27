@@ -1,7 +1,5 @@
 {
   "singleQuote": true,
-  "trailingComma": "all",
-  "parser": "flow",
   "tabWidth": 2,
   "semi": true,
   "arrowParens": "always",

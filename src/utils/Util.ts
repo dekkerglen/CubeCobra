@@ -86,6 +86,10 @@ export function fromEntries<T>(entries: [string, T][]): { [key: string]: T } {
   return obj;
 }
 
+export function deepCopy<T>(x: T): T {
+  return JSON.parse(JSON.stringify(x));
+}
+
 export function alphaCompare(a: { details: { name: string } }, b: { details: { name: string } }): number {
   const textA = a.details.name.toUpperCase();
   const textB = b.details.name.toUpperCase();
@@ -209,13 +213,9 @@ export function isSamePageURL(to: string): boolean {
     return false;
   }
 }
-export function getCardColorClass(card: Card): string {
-  if (!card) {
-    return 'colorless';
-  }
 
-  const colors = cardColors(card);
-  if (cardType(card).toLowerCase().includes('land')) {
+export function getColorClass(type: string, colors: string[]) {
+  if (type.toLowerCase().includes('land')) {
     return 'lands';
   }
   if (colors.length === 0) {
@@ -235,6 +235,14 @@ export function getCardColorClass(card: Card): string {
     }[colors[0]] as string;
   }
   return 'colorless';
+}
+
+export function getCardColorClass(card: Card): string {
+  // if (!card) {
+  //   return 'colorless';
+  // }
+
+  return getColorClass(cardType(card), cardColors(card));
 }
 
 export function getCardTagColorClass(
