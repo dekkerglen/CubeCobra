@@ -1,4 +1,7 @@
-export function arraysEqual(a: any[], b: any[]): boolean {
+import Card from "datatypes/Card";
+import { cardCmc, cardColors, cardType } from "utils/Card";
+
+export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (!Array.isArray(a) || !Array.isArray(b)) return false;
   if (a.length !== b.length) return false;
@@ -89,15 +92,8 @@ export function alphaCompare(a: { details: { name: string } }, b: { details: { n
   return textA.localeCompare(textB);
 }
 
-export function cmcColumn(card: { cmc?: number; details: { cmc?: number } }): number {
-  let cmc = Object.prototype.hasOwnProperty.call(card, 'cmc') ? card.cmc : card.details.cmc;
-  // double equals also handles undefined
-  if (cmc == null) {
-    cmc = 0;
-  }
-  if (!Number.isFinite(cmc)) {
-    cmc = cmc.indexOf('.') > -1 ? parseFloat(cmc) : parseInt(cmc, 10);
-  }
+export function cmcColumn(card: Card): number {
+  const cmc = cardCmc(card);
   // Round to half-integer then take ceiling to support Little Girl
   const cmcDoubleInt = Math.round(cmc * 2);
   let cmcInt = Math.round((cmcDoubleInt + (cmcDoubleInt % 2)) / 2);
@@ -110,8 +106,8 @@ export function cmcColumn(card: { cmc?: number; details: { cmc?: number } }): nu
   return cmcInt;
 }
 
-function sortInto(card: { type_line?: string; details: { type: string } }, result: any[][]) {
-  const typeLine = (card.type_line || card.details.type).toLowerCase();
+function sortInto(card: Card, result: Card[][][]) {
+  const typeLine = cardType(card).toLowerCase();
   const row = typeLine.includes('creature') ? 0 : 1;
   const column = cmcColumn(card);
   if (result[row][column].length === 0) {
@@ -156,6 +152,7 @@ export function isTouchDevice(): boolean {
   if (
     Object.prototype.hasOwnProperty.call(window, 'ontouchstart') ||
     // eslint-disable-next-line no-undef
+    // @ts-ignore
     (window.DocumentTouch && document instanceof DocumentTouch)
   ) {
     return true;
@@ -212,14 +209,13 @@ export function isSamePageURL(to: string): boolean {
     return false;
   }
 }
-export function getCardColorClass(card: { type_line?: string; details: { type: string; color_identity: string[] } }): string {
+export function getCardColorClass(card: Card): string {
   if (!card) {
     return 'colorless';
   }
 
-  const type = card.type_line || card.details.type;
-  const colors = card.colors || card.details.color_identity;
-  if (type.toLowerCase().includes('land')) {
+  const colors = cardColors(card);
+  if (cardType(card).toLowerCase().includes('land')) {
     return 'lands';
   }
   if (colors.length === 0) {
@@ -236,14 +232,14 @@ export function getCardColorClass(card: { type_line?: string; details: { type: s
       R: 'red',
       G: 'green',
       C: 'colorless',
-    }[colors[0]];
+    }[colors[0]] as string;
   }
   return 'colorless';
 }
 
 export function getCardTagColorClass(
   tagColors: { tag: string; color: string }[],
-  card: { tags?: string[]; type_line?: string; details: { type: string; color_identity: string[] } }
+  card: Card
 ): string {
   if (tagColors) {
     const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));

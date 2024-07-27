@@ -1,8 +1,8 @@
-import { arraysEqual } from 'utils/Util';
-import LandCategories from 'res/LandCategories.json';
-import CategoryOverrides from 'res/CategoryOverrides.json';
-import CardDetails from 'datatypes/CardDetails';
 import Card from 'datatypes/Card';
+import CardDetails from 'datatypes/CardDetails';
+import CategoryOverrides from 'res/CategoryOverrides.json';
+import LandCategories from 'res/LandCategories.json';
+import { arraysEqual } from 'utils/Util';
 
 export const COLOR_COMBINATIONS: string[][] = [
   [],
@@ -65,7 +65,7 @@ export function decodeName(name: string): string {
   return decodeURIComponent(name.toLowerCase());
 }
 
-export function cardsAreEquivalent(a: any, b: any): boolean {
+export function cardsAreEquivalent(a: Card, b: Card): boolean {
   return (
     a.cardID === b.cardID &&
     a.type_line === b.type_line &&
@@ -82,49 +82,56 @@ export function cardsAreEquivalent(a: any, b: any): boolean {
   );
 }
 
-export const mainboardRate = ({ mainboards, sideboards }: { mainboards: number; sideboards: number }): number => {
+export const mainboardRate = ({ mainboards, sideboards }: { mainboards: number, sideboards: number }): number => {
   return mainboards + sideboards > 0 ? mainboards / (mainboards + sideboards) : 0;
 };
 
-export const pickRate = ({ picks, passes }: { picks: number; passes: number }): number => {
+export const pickRate = ({ picks, passes }: { picks: number, passes: number }): number => {
   return picks + passes > 0 ? picks / (picks + passes) : 0;
 };
 
-export const cardTags = (card: any): string[] => card.tags || [];
+export const cardTags = (card: Card): string[] => card.tags || [];
 
-export const cardFinish = (card: any): string => card.finish || 'Non-foil';
+export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
-export const cardStatus = (card: any): any => card.status;
+export const cardStatus = (card: Card): any => card.status;
 
-export const cardColorIdentity = (card: any): string[] => card.colors ?? card.details.color_identity;
+export const cardColorIdentity = (card: Card): string[] => card.colors ?? card.details?.color_identity ?? [];
 
-export const cardCmc = (card: any): number => parseInt(card.cmc ?? card.details.cmc, 10);
+export const cardCmc = (card: Card): number =>
+  card.cmc !== undefined
+    ? card.cmc.includes('.')
+      ? parseFloat(card.cmc)
+      : parseInt(card.cmc)
+    : (card.details?.cmc ?? 0);
 
-export const cardId = (card: any): string => card.cardID ?? card.details.scryfall_id;
+export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
 
-export const cardType = (card: any): string => card.type_line ?? card.details.type;
+export const cardType = (card: Card): string => card.type_line ?? card.details?.type ?? '';
 
-export const cardRarity = (card: any): string => card.rarity ?? card.details.rarity;
+export const cardRarity = (card: Card): string => card.rarity ?? card.details?.rarity ?? '';
 
-export const cardAddedTime = (card: any): any => card.addedTmsp;
+export const cardAddedTime = (card: Card): Date | null => (card.addedTmsp ? new Date(card.addedTmsp) : null);
 
-export const cardImageUrl = (card: any): string => card.imgUrl ?? card.details.image_normal ?? card.details.image_small;
+export const cardImageUrl = (card: Card): string =>
+  card.imgUrl ?? card.details?.image_normal ?? card.details?.image_small ?? '';
 
-export const cardImageBackUrl = (card: any): string => card.imgBackUrl ?? card.details.image_flip;
+export const cardImageBackUrl = (card: Card): string => card.imgBackUrl ?? card.details?.image_flip ?? '';
 
-export const cardNotes = (card: any): any => card.notes;
+export const cardNotes = (card: Card): string | null => card.notes ?? null;
 
-export const cardColorCategory = (card: any): any => card.colorCategory ?? card.details.color_category;
+export const cardColorCategory = (card: Card): 'w' | 'u' | 'b' | 'r' | 'g' | 'h' | 'l' | 'c' | 'm' =>
+  card.colorCategory ?? card.details?.colorcategory ?? 'l';
 
 // prices being null causes unwanted coercing behaviour in price filters,
 // so nullish price values are transformed to undefined instead
-export const cardNormalPrice = (card: any): number | undefined => card.details.prices.usd ?? undefined;
+export const cardNormalPrice = (card: Card): number | undefined => card.details?.prices.usd ?? undefined;
 
-export const cardFoilPrice = (card: any): number | undefined => card.details.prices.usd_foil ?? undefined;
+export const cardFoilPrice = (card: Card): number | undefined => card.details?.prices.usd_foil ?? undefined;
 
-export const cardEtchedPrice = (card: any): number | undefined => card.details.prices.usd_etched ?? undefined;
+export const cardEtchedPrice = (card: Card): number | undefined => card.details?.prices.usd_etched ?? undefined;
 
-export const cardPrice = (card: any): number | undefined => {
+export const cardPrice = (card: Card): number | undefined => {
   let prices: (number | undefined)[];
   switch (cardFinish(card)) {
     case 'Foil':
@@ -143,95 +150,97 @@ export const cardPrice = (card: any): number | undefined => {
   return prices.find((p) => typeof p !== 'undefined');
 };
 
-export const cardPriceEur = (card: any): number | undefined => card.details.prices.eur ?? undefined;
+export const cardPriceEur = (card: Card): number | undefined => card.details?.prices.eur ?? undefined;
 
-export const cardTix = (card: any): number | undefined => card.details.prices.tix ?? undefined;
+export const cardTix = (card: Card): number | undefined => card.details?.prices.tix ?? undefined;
 
-export const cardIsFullArt = (card: any): boolean => card.details.full_art;
+export const cardIsFullArt = (card: Card): boolean => card.details?.full_art ?? false;
 
-export const cardCost = (card: any): string[] => card.details.parsed_cost;
+export const cardCost = (card: Card): string[] => card.details?.parsed_cost ?? [];
 
-export const cardSet = (card: any): string => card.details.set;
+export const cardSet = (card: Card): string => card.details?.set ?? '';
 
-export const cardCollectorNumber = (card: any): string => card.details.collector_number;
+export const cardCollectorNumber = (card: Card): string => card.details?.collector_number ?? '';
 
-export const cardPromo = (card: any): boolean => card.details.promo;
+export const cardPromo = (card: Card): boolean => card.details?.promo ?? false;
 
-export const cardDigital = (card: any): boolean => card.details.digital;
+export const cardDigital = (card: Card): boolean => card.details?.digital ?? false;
 
-export const cardIsToken = (card: any): boolean => card.details.is_token;
+export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? false;
 
-export const cardBorderColor = (card: any): string => card.details.border_color;
+export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
-export const cardName = (card: any): string => card.details.name;
+export const cardName = (card: Card): string => card.details?.name ?? '';
 
-export const cardNameLower = (card: any): string => card.details.name_lower;
+export const cardNameLower = (card: Card): string => card.details?.name_lower ?? '';
 
-export const cardFullName = (card: any): string => card.details.full_name;
+export const cardFullName = (card: Card): string => card.details?.full_name ?? '';
 
-export const cardArtist = (card: any): string => card.details.artist;
+export const cardArtist = (card: Card): string => card.details?.artist ?? '';
 
-export const cardScryfallUri = (card: any): string => card.details.scryfall_uri;
+export const cardScryfallUri = (card: Card): string => card.details?.scryfall_uri ?? '';
 
-export const cardOracleText = (card: any): string => card.details.oracle_text;
+export const cardOracleText = (card: Card): string => card.details?.oracle_text ?? '';
 
-export const cardOracleId = (card: any): string => card.details.oracle_id;
+export const cardOracleId = (card: Card): string => card.details?.oracle_id ?? '';
 
-export const cardLegalities = (card: any): Record<string, string> => card.details.legalities;
+export const cardLegalities = (card: Card): Record<string, string> => card.details?.legalities ?? {};
 
-const cardLegalityFilter = (card: any, legality: string): string[] => {
+const cardLegalityFilter = (card: Card, legality: string): string[] => {
   const legalities = cardLegalities(card);
   return Object.keys(legalities).filter((format) => legalities[format] === legality);
 };
 
-export const cardLegalIn = (card: any): string[] => cardLegalityFilter(card, 'legal');
-export const cardBannedIn = (card: any): string[] => cardLegalityFilter(card, 'banned');
-export const cardRestrictedIn = (card: any): string[] => cardLegalityFilter(card, 'restricted');
+export const cardLegalIn = (card: Card): string[] => cardLegalityFilter(card, 'legal');
+export const cardBannedIn = (card: Card): string[] => cardLegalityFilter(card, 'banned');
+export const cardRestrictedIn = (card: Card): string[] => cardLegalityFilter(card, 'restricted');
 
-export const cardColors = (card: any): string[] => card.details.colors;
+export const cardColors = (card: Card): string[] => card.details?.colors ?? [];
 
-export const cardLanguage = (card: any): string => card.details.language;
+export const cardLanguage = (card: Card): string => card.details?.language ?? '';
 
-export const cardMtgoId = (card: any): number => card.details.mtgo_id;
+export const cardMtgoId = (card: Card): number => card.details?.mtgo_id ?? -1;
 
-export const cardTcgplayerId = (card: any): number => card.details.tcgplayer_id;
+export const cardTcgplayerId = (card: Card): string => card.details?.tcgplayer_id ?? '';
 
-export const cardLoyalty = (card: any): number => card.details.loyalty;
+export const cardLoyalty = (card: Card): number => parseInt(card.details?.loyalty ?? '0');
 
-export const cardPower = (card: any): string => card.details.power;
+export const cardPower = (card: Card): number => parseFloat(card.details?.power ?? '0');
 
-export const cardToughness = (card: any): string => card.details.toughness;
+export const cardToughness = (card: Card): number => parseFloat(card.details?.toughness ?? '0');
 
-export const cardImageSmall = (card: any): string => card.details.image_small;
+export const cardImageSmall = (card: Card): string => card.details?.image_small ?? '';
 
-export const cardImageNormal = (card: any): string => card.details.image_normal;
+export const cardImageNormal = (card: Card): string => card.details?.image_normal ?? '';
 
-export const cardArtCrop = (card: any): string => card.details.art_crop;
+export const cardArtCrop = (card: Card): string => card.details?.art_crop ?? '';
 
-export const cardImageFlip = (card: any): string => card.details.image_flip;
+export const cardImageFlip = (card: Card): string => card.details?.image_flip ?? '';
 
-export const cardTokens = (card: any): any => card.details.tokens;
+export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
-export const cardElo = (card: any): number => (card.details ? card.details.elo || 1200 : 1200);
+export const cardElo = (card: Card): number => (card.details ? card.details?.elo || 1200 : 1200);
 
-export const cardPopularity = (card: any): string => parseFloat(card.details.popularity || 0).toFixed(2);
+export const cardPopularity = (card: Card): string => parseFloat(card.details?.popularity ?? '0').toFixed(2);
 
-export const cardCubeCount = (card: any): number => (card.details ? card.details.cubeCount || 0 : 0);
+export const cardCubeCount = (card: Card): number => (card.details ? (card.details?.cubeCount ?? 0) : 0);
 
-export const cardPickCount = (card: any): number => (card.details ? card.details.pickCount || 0 : 0);
+export const cardPickCount = (card: Card): number => (card.details ? (card.details?.pickCount ?? 0) : 0);
 
-export const cardLayout = (card: any): string => card.details.layout;
+export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
-export const cardReleaseDate = (card: any): string => card.details.released_at;
+export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
 
-export const cardDevotion = (card: any, color: string): number => {
+export const cardDevotion = (card: Card, color: string): number => {
   let cost = cardCost(card);
   if (cost && cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((x) => x === 'split') + 1);
   return cost?.reduce((count, symbol) => count + (symbol.includes(color.toLowerCase()) ? 1 : 0), 0) ?? 0;
 };
 
-export const cardIsSpecialZoneType = (card: any): boolean =>
-  /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(cardType(card));
+const typeIsSpecialZoneType = (type: string): boolean =>
+  /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(type);
+
+export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneType(cardType(card));
 
 const isCreatureLand = (details: any): boolean =>
   details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
@@ -269,19 +278,20 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetails, card
     ((details.type.includes('Legendary') && details.type.includes('Creature')) ||
       details.oracle_text.includes('can be your commander') ||
       CategoryOverrides.commander.includes(details.name)),
-  spell: (details) => !details.type.includes('Land') && !cardIsSpecialZoneType({ details }),
+  spell: (details) => !details.type.includes('Land') && !typeIsSpecialZoneType(details.type),
   permanent: (details) =>
-    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !cardIsSpecialZoneType({ details }),
+    !details.type.includes('Instant') && !details.type.includes('Sorcery') && !typeIsSpecialZoneType(details.type),
   historic: (details) =>
     details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
   vanilla: (details) => !details.oracle_text,
   modal: (details) => details.oracle_text.includes('•'),
   creatureland: isCreatureLand,
   manland: isCreatureLand,
-  foil: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Foil' : details.finishes.includes('foil')),
+  foil: (details, card) => (card && cardFinish(card) ? cardFinish(card) === 'Foil' : details.finishes.includes('foil')),
   nonfoil: (details, card) =>
-    cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
-  etched: (details, card) => (cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched')),
+    card && cardFinish(card) ? cardFinish(card) === 'Non-foil' : details.finishes.includes('nonfoil'),
+  etched: (details, card) =>
+    card && cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched'),
   fullart: (details) => details.full_art,
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),

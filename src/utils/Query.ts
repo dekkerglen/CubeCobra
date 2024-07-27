@@ -1,5 +1,3 @@
-import URLSearchParams from 'core-js-pure/features/url-search-params';
-
 function query(): string {
   return typeof window !== 'undefined' ? window.location.search.slice(1) : '';
 }
