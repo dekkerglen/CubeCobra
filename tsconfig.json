@@ -1,0 +1,22 @@
+{
+    "include": ["src/**/*"],
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "paths": {
+            "analytics/*": ["./src/analytics/*"],
+            "components/*": ["./src/components/*"],
+            "contexts/*": ["./src/contexts/*"],
+            "datatypes/*": ["./src/datatypes/*"],
+            "drafting/*": ["./src/drafting/*"],
+            "filtering/*": ["./src/filtering/*"],
+            "hooks/*": ["./src/hooks/*"],
+            "layouts/*": ["./src/layouts/*"],
+            "markdown/*": ["./src/markdown/*"],
+            "pages/*": ["./src/pages/*"],
+            "res/*": ["./src/res/*"],
+            "utils/*": ["./src/utils/*"]
+        },
+        "target": "ES2020"
+    }
+}
