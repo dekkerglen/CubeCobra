@@ -1,7 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Dispatch, SetStateAction } from 'react';
 
-const useSortableData = (data, config = null, sortFns = {}) => {
-  const [sortConfig, setSortConfig] = useState(config);
+interface SortConfig {
+  key: string;
+  direction: 'ascending' | 'descending';
+}
+
+interface SortFns {
+  [key: string]: (a: any, b: any) => number;
+}
+
+const useSortableData = <T>(
+  data: T[],
+  config: SortConfig | null = null,
+  sortFns: SortFns = {}
+): {
+  items: T[];
+  requestSort: (key: string) => void;
+  sortConfig: SortConfig | null;
+} => {
+  const [sortConfig, setSortConfig]: [SortConfig | null, Dispatch<SetStateAction<SortConfig | null>>] = useState(config);
 
   const items = useMemo(() => {
     const sortableItems = [...data];
@@ -22,7 +39,7 @@ const useSortableData = (data, config = null, sortFns = {}) => {
     return sortableItems;
   }, [data, sortConfig, sortFns]);
 
-  const requestSort = (key) =>
+  const requestSort = (key: string) =>
     setSortConfig((current) => {
       if (current && current.key === key) {
         if (current.direction === 'descending') {

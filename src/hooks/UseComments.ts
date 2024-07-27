@@ -3,16 +3,45 @@ import { csrfFetch } from 'utils/CSRF';
 import { findUserLinks } from 'markdown/parser';
 import { wait } from 'utils/Util';
 
-const useComments = (parent, type) => {
-  const [comments, setComments] = useState([]);
+interface Comment {
+  id: string;
+  body: string;
+  user: {
+    id: string;
+    username: string;
+  };
+  image?: {
+    uri: string;
+    artist: string;
+    id: string;
+  };
+  remove?: boolean;
+  content?: string;
+}
+
+interface CommentResponse {
+  comments: Comment[];
+  lastKey: string | null;
+  success: 'true';
+}
+
+const useComments = (parent: string, type: string): [
+  Comment[],
+  (comment: string) => Promise<void>,
+  boolean,
+  (comment: Comment) => Promise<void>,
+  string | null,
+  () => Promise<void>
+] => {
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastKey, setLastKey] = useState(null);
+  const [lastKey, setLastKey] = useState<string | null>(null);
 
   const addComment = useCallback(
-    async (comment) => {
+    async (comment: string) => {
       const mentions = findUserLinks(comment).join(';');
       const response = await csrfFetch(`/comment/addcomment`, {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -23,16 +52,16 @@ const useComments = (parent, type) => {
           type,
         }),
       });
-      const val = await response.json();
+      const val: { comment: Comment } = await response.json();
       setComments([val.comment, ...comments]);
     },
     [comments, parent, type],
   );
 
   const editComment = useCallback(
-    async (comment) => {
+    async (comment: Comment) => {
       await csrfFetch(`/comment/edit`, {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -41,7 +70,7 @@ const useComments = (parent, type) => {
         }),
       });
 
-      const clone = JSON.parse(JSON.stringify(comments));
+      const clone = JSON.parse(JSON.stringify(comments)) as Comment[];
 
       for (let i = 0; i < clone.length; i++) {
         if (clone[i].id === comment.id) {
@@ -57,7 +86,7 @@ const useComments = (parent, type) => {
               id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
             };
           } else {
-            clone[i].body = comment.content;
+            clone[i].body = comment.content!;
           }
         }
       }
@@ -78,7 +107,7 @@ const useComments = (parent, type) => {
           parent,
         }),
       });
-      const result = await response.json();
+      const result: CommentResponse = await response.json();
       setComments(result.comments);
       setLastKey(result.lastKey);
       setLoading(false);
@@ -104,7 +133,7 @@ const useComments = (parent, type) => {
     });
 
     if (response.ok) {
-      const json = await response.json();
+      const json: CommentResponse = await response.json();
       if (json.success === 'true') {
         setComments([...comments, ...json.comments]);
         setLastKey(json.lastKey);

@@ -1,7 +1,8 @@
-import anthropic
 import json
 import os
 import sys
+
+import anthropic
 
 ROOT_DIRECTORY = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), "..", "src"))
 
@@ -20,7 +21,17 @@ def list_files(startpath):
             lines.append('{}{}'.format(subindent, f))
     return "\n".join(lines)
 
-def convert_to_typescript(file_content):
+def ts_file_contents(directory, exclude):
+    results = []
+    for filename in os.listdir(directory):
+        if filename.endswith(".ts") or filename.endswith(".tsx"):
+            path = os.path.join(directory, filename)
+            if path == exclude: continue
+            with open(path, "r") as f:
+                results.append(f"{path}:\n```typescript\n{f.read()}```")
+    return "\n\n".join(results)
+
+def convert_to_typescript(ts_path, file_content):
     human_prompt = f"""
 Convert the following JavaScript file to TypeScript.
 You can convert PropTypes into native TypeScript interfaces. If the original file exports (e.g.) XyzPropType, the output should no longer export XyzPropType and should instead export default an interface called Xyz.
@@ -33,6 +44,10 @@ Every function other than short arrow functions should have type annotations for
 
 For context, here are all the files in the project:
 {list_files(ROOT_DIRECTORY)}
+
+For context, here are some files you have already translated:
+{ts_file_contents(os.path.join(ROOT_DIRECTORY, "datatypes"), ts_path)}
+{ts_file_contents(os.path.join(ROOT_DIRECTORY, "utils"), ts_path)}
 
 Please provide only the TypeScript code without any additional comments or explanations.
 
@@ -99,7 +114,7 @@ def process_file(directory, filename, force=False):
         js_content = file.read()
 
     # Convert to TypeScript
-    ts_content = convert_to_typescript(js_content)
+    ts_content = convert_to_typescript(ts_path, js_content)
 
     # Save as TypeScript file
     with open(ts_path, 'w') as file:
