@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 export default interface Card {
   scryfall_id: string;
   title: string;
