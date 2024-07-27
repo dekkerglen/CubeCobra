@@ -1,22 +1,17 @@
 env:
   browser: true
+  es2020: true
   node: true
 extends:
-  - airbnb
-  - prettier
-parser: '@babel/eslint-parser'
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+  - plugin:react-hooks/recommended
+ignorePatterns: ['dist']
+parser: '@typescript-eslint/parser'
 plugins:
-  - prettier
   - react-hooks
-  - babel
-settings:
-  import/resolver:
-    webpack:
-      config: webpack.dev.js
+  - react-refresh
 rules:
-  prettier/prettier:
-    - error
-    - endOfLine: lf
   no-console: 0
   global-require: 0
   no-param-reassign: 0
@@ -45,6 +40,9 @@ rules:
     - forbid: ['>', '"', '}']
   react-hooks/rules-of-hooks: error
   react-hooks/exhaustive-deps: error
+  react-refresh/only-export-components':
+    - error
+    - allowConstantExport: true
 overrides:
   - files: ['src/**']
     rules:
