@@ -1,0 +1,42 @@
+export function getTCGLink(card: { details: { name: string; isToken: boolean; tcgplayer_id?: number; set_name: string } }): string {
+  const { name, isToken } = card.details;
+  const tcgplayerId = card.details.tcgplayer_id;
+  let tcgplayerLink = 'https://shop.tcgplayer.com/';
+  if (tcgplayerId) {
+    tcgplayerLink += `product/productsearch?id=${tcgplayerId}`;
+  } else {
+    const tcgplayerName = isToken ? `${name} Token` : name;
+    tcgplayerLink += `productcatalog/product/show?ProductName=${tcgplayerName}`;
+  }
+  tcgplayerLink += '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
+
+  return tcgplayerLink;
+}
+
+export const getCardMarketLink = (card: { details: { set_name: string; name: string } }): string =>
+  `https://www.cardmarket.com/en/Magic/Products/Singles/${card.details.set_name
+    .replace(/ /g, '-')
+    .replace(/[:,."']/g, '')}/${card.details.name.replace(/ /g, '-').replace(/:/g, '').replace(/\./g, '')}`;
+
+export const getCardHoarderLink = (card: { details: { name: string } }): string =>
+  `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${card.details.name}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`;
+
+const ck = (str: string): string =>
+  str
+    .replace(' - ', '-')
+    .replace(/ /g, '-')
+    .replace(/[:,."']/g, '')
+    .toLowerCase();
+
+export const nameToDashedUrlComponent = ck;
+
+export const getCardKingdomLink = (card: { details: { set_name: string; name: string } }): string =>
+  `https://www.cardkingdom.com/mtg/${ck(card.details.set_name)}/${ck(
+    card.details.name,
+  )}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`;
+
+export const tcgMassEntryUrl =
+  'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
+  '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
+
+export default { getTCGLink, tcgMassEntryUrl };
