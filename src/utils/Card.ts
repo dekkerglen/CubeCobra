@@ -4,6 +4,8 @@ import CategoryOverrides from 'res/CategoryOverrides.json';
 import LandCategories from 'res/LandCategories.json';
 import { arraysEqual } from 'utils/Util';
 
+export const ELO_DEFAULT = 1200;
+
 export const COLOR_COMBINATIONS: string[][] = [
   [],
   ['W'],
@@ -82,11 +84,11 @@ export function cardsAreEquivalent(a: Card, b: Card): boolean {
   );
 }
 
-export const mainboardRate = ({ mainboards, sideboards }: { mainboards: number, sideboards: number }): number => {
+export const mainboardRate = ({ mainboards, sideboards }: { mainboards: number; sideboards: number }): number => {
   return mainboards + sideboards > 0 ? mainboards / (mainboards + sideboards) : 0;
 };
 
-export const pickRate = ({ picks, passes }: { picks: number, passes: number }): number => {
+export const pickRate = ({ picks, passes }: { picks: number; passes: number }): number => {
   return picks + passes > 0 ? picks / (picks + passes) : 0;
 };
 
@@ -221,7 +223,7 @@ export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
 export const cardElo = (card: Card): number => (card.details ? card.details?.elo || 1200 : 1200);
 
-export const cardPopularity = (card: Card): string => parseFloat(card.details?.popularity ?? '0').toFixed(2);
+export const cardPopularity = (card: Card): number => parseFloat(card.details?.popularity ?? '0');
 
 export const cardCubeCount = (card: Card): number => (card.details ? (card.details?.cubeCount ?? 0) : 0);
 

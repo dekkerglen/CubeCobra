@@ -1,4 +1,8 @@
-export function getTCGLink(card: { details: { name: string; isToken: boolean; tcgplayer_id?: number; set_name: string } }): string {
+import Card from 'datatypes/Card';
+
+export function getTCGLink(card: Card): string | null {
+  if (card.details === undefined) return null;
+
   const { name, isToken } = card.details;
   const tcgplayerId = card.details.tcgplayer_id;
   let tcgplayerLink = 'https://shop.tcgplayer.com/';
