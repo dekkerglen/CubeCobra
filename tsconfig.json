@@ -2,6 +2,7 @@
     "include": ["src/**/*"],
     "compilerOptions": {
         "esModuleInterop": true,
+        "target": "ES2020",
         "jsx": "react-jsx",
         "paths": {
             "analytics/*": ["./src/analytics/*"],
@@ -20,6 +21,7 @@
 
         /* Bundler mode */
         "allowImportingTsExtensions": true,
+        "moduleResolution": "Bundler",
         "resolveJsonModule": true,
         "isolatedModules": true,
         "moduleDetection": "force",
