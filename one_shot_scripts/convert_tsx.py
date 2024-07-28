@@ -40,14 +40,17 @@ Otherwise, don't change any of the code, other than adding type annotations.
 It should pass a standard linter test afterwards.
 Assume all of the imported files are undergoing the same transformation and will export types if needed.
 For React contexts, assume that the module for a context named (e.g.) XContext will export an interface named XContextValue for the context's value.
-Every function other than short arrow functions should have type annotations for its arguments and return value. Try to make an educated guess based on the project structure rather than using "any."
+Every function, including short arrow functions, should have your best guess at type annotations for its arguments and return value. Try to make an educated guess based on the project structure rather than using "any."
+Especially try to figure out the right type for event handler callbacks in JSX code.
+Please print all of the output code; don't omit any of the converted code.
+Absolutely DO NOT put a comment saying that the rest of the code remains the same. It's really important. I need to see all the code.
+Even if the code is repetitive or boring, just write it all down for me. Please.
 
 For context, here are all the files in the project:
 {list_files(ROOT_DIRECTORY)}
 
 For context, here are some files you have already translated:
 {ts_file_contents(os.path.join(ROOT_DIRECTORY, "datatypes"), ts_path)}
-{ts_file_contents(os.path.join(ROOT_DIRECTORY, "utils"), ts_path)}
 
 Please provide only the TypeScript code without any additional comments or explanations.
 

@@ -1,6 +1,4 @@
 import React, { useCallback, useState, useContext, useMemo } from 'react';
-import PropTypes from 'prop-types';
-
 import {
   Button,
   Row,
@@ -18,42 +16,58 @@ import {
 } from 'reactstrap';
 
 import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardEtchedPrice } from 'utils/Card';
-
 import AutocardListItem from 'components/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import CardPropType from 'proptypes/CardPropType';
+import Card, { BoardType } from 'datatypes/Card';
 import AutocardContext from 'contexts/AutocardContext';
+import { TagColor } from 'datatypes/Cube';
+import TagData from 'datatypes/TagData';
 
-const GroupModal = ({
+interface GroupModalProps {
+  isOpen: boolean;
+  toggle: () => void;
+  cards: Card[];
+  canEdit?: boolean;
+  bulkEditCard: (cards: Card[]) => void;
+  bulkMoveCard: (cards: Card[], board: 'maybeboard' | 'mainboard') => void;
+  bulkRevertEdit: (cards: { board: string; index: number }[]) => void;
+  bulkRevertRemove: (cards: { board: string; index: number }[]) => void;
+  bulkRemoveCard: (cards: { board: string; index: number }[]) => void;
+  setModalSelection: (cards: Card[]) => void;
+  allTags: string[];
+  tagColors: TagColor[];
+}
+
+const GroupModal: React.FC<GroupModalProps> = ({
   isOpen,
   toggle,
   cards,
-  canEdit,
+  canEdit = false,
   bulkEditCard,
   bulkMoveCard,
   bulkRevertEdit,
   bulkRevertRemove,
   bulkRemoveCard,
   setModalSelection,
-  tagColors,
   allTags,
+  tagColors,
 }) => {
   const [status, setStatus] = useState('');
   const [finish, setFinish] = useState('');
   const [cmc, setCmc] = useState('');
   const [typeLine, setTypeLine] = useState('');
-  const [color, setColor] = useState([]);
+  const [color, setColor] = useState<('W' | 'U' | 'B' | 'R' | 'G')[]>([]);
   const [addTags, setAddTags] = useState(true);
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState<{ text: string }[]>([]);
   const [tagInput, setTagInput] = useState('');
   const { hideCard } = useContext(AutocardContext);
 
   const filterOut = useCallback(
-    (card) => {
+    (card: Card) => {
       setModalSelection(cards.filter((c) => !(c.index === card.index && c.board === card.board)));
       hideCard();
     },
@@ -62,10 +76,15 @@ const GroupModal = ({
 
   const removeAll = useCallback(() => {
     bulkRemoveCard(
-      cards.map((card) => ({
-        board: card.board,
-        index: card.index,
-      })),
+      cards
+        .map((card) => ({
+          board: card.board,
+          index: card.index,
+        }))
+        .filter(({ board, index }) => board !== undefined && index !== undefined) as {
+        board: BoardType;
+        index: number;
+      }[],
     );
     toggle();
   }, [bulkRemoveCard, cards, toggle]);
@@ -77,16 +96,25 @@ const GroupModal = ({
         .map((card) => ({
           board: card.board,
           index: card.index,
-        })),
+        }))
+        .filter(({ board, index }) => board !== undefined && index !== undefined) as {
+        board: BoardType;
+        index: number;
+      }[],
     );
   }, [bulkRevertRemove, cards]);
 
   const bulkRevertEditAll = useCallback(() => {
     bulkRevertEdit(
-      cards.map((card) => ({
-        board: card.board,
-        index: card.index,
-      })),
+      cards
+        .map((card) => ({
+          board: card.board,
+          index: card.index,
+        }))
+        .filter(({ board, index }) => board !== undefined && index !== undefined) as {
+        board: BoardType;
+        index: number;
+      }[],
     );
   }, [bulkRevertEdit, cards]);
 
@@ -94,32 +122,32 @@ const GroupModal = ({
     const updates = JSON.parse(JSON.stringify(cards));
 
     if (status !== '') {
-      updates.forEach((card) => {
+      updates.forEach((card: Card) => {
         card.status = status;
       });
     }
 
     if (finish !== '') {
-      updates.forEach((card) => {
+      updates.forEach((card: Card) => {
         card.finish = finish;
       });
     }
 
     if (cmc !== '') {
-      updates.forEach((card) => {
+      updates.forEach((card: Card) => {
         card.cmc = cmc;
       });
     }
 
     if (typeLine !== '') {
-      updates.forEach((card) => {
+      updates.forEach((card: Card) => {
         card.type_line = typeLine;
       });
     }
 
     if (color.length > 0) {
-      updates.forEach((card) => {
-        if (color.includes('C')) {
+      updates.forEach((card: Card) => {
+        if ((color as string[]).includes('C')) {
           card.colors = [];
         } else {
           card.colors = color;
@@ -129,11 +157,11 @@ const GroupModal = ({
 
     if (tags.length > 0) {
       if (addTags) {
-        updates.forEach((card) => {
+        updates.forEach((card: Card) => {
           card.tags = [...new Set([...(card.tags || []), ...tags.map((tag) => tag.text)])];
         });
       } else {
-        updates.forEach((card) => {
+        updates.forEach((card: Card) => {
           card.tags = (card.tags || []).filter((tag) => !tags.map((t) => t.text).includes(tag));
         });
       }
@@ -358,13 +386,13 @@ const GroupModal = ({
                 inputValue={tagInput}
                 handleInputChange={setTagInput}
                 handleInputBlur={setTagInput}
-                addTag={(tag) => setTags([...tags, tag])}
-                deleteTag={(index) => {
+                addTag={(tag: TagData) => setTags([...tags, tag])}
+                deleteTag={(index: number) => {
                   const newTags = [...tags];
                   newTags.splice(index, 1);
                   setTags(newTags);
                 }}
-                reorderTag={(index, newIndex) => {
+                reorderTag={(index: number, newIndex: number) => {
                   const newTags = [...tags];
                   const tag = newTags.splice(index, 1)[0];
                   newTags.splice(newIndex, 0, tag);
@@ -386,29 +414,6 @@ const GroupModal = ({
       </ModalBody>
     </Modal>
   );
-};
-
-GroupModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  canEdit: PropTypes.bool,
-  versionDict: PropTypes.shape({}),
-  setModalSelection: PropTypes.func.isRequired,
-  tagColors: PropTypes.arrayOf(PropTypes.string),
-  bulkEditCard: PropTypes.func.isRequired,
-  bulkRemoveCard: PropTypes.func.isRequired,
-  bulkRevertEdit: PropTypes.func.isRequired,
-  bulkRevertRemove: PropTypes.func.isRequired,
-  bulkMoveCard: PropTypes.func.isRequired,
-  allTags: PropTypes.arrayOf(PropTypes.string),
-};
-
-GroupModal.defaultProps = {
-  canEdit: false,
-  versionDict: {},
-  tagColors: [],
-  allTags: [],
 };
 
 export default GroupModal;

@@ -1,16 +1,45 @@
 import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-
-import AdsContext from 'contexts/AdsContext';
+import AdsContext, { AdsContextValue } from 'contexts/AdsContext';
 import useMount from 'hooks/UseMount';
 
-const mediaTypes = {
+interface MediaTypes {
+  desktop: string;
+  mobile: string;
+  tablet: string;
+}
+
+interface SizeTypes {
+  banner: [string, string][];
+  side: [string, string][];
+  mobile: [string, string][];
+}
+
+interface AdvertismentProps {
+  placementId: string;
+  refreshLimit?: number;
+  refreshTime?: number;
+  position?: string;
+  wording?: string;
+  enabled?: boolean;
+  media: keyof MediaTypes;
+  size: keyof SizeTypes;
+  format?: 'display' | 'sticky-stack' | 'rail' | 'anchor';
+  stickyStackLimit?: number;
+  stickyStackSpace?: number;
+  stickyStackOffset?: number;
+  rail?: string;
+  railOffsetTop?: number;
+  railOffsetBottom?: number;
+  railCollisionWhitelist?: string[];
+}
+
+const mediaTypes: MediaTypes = {
   desktop: '(min-width: 1025px)',
   mobile: '(min-width: 320px) and (max-width: 767px)',
   tablet: '(min-width: 768px) and (max-width: 1024px)',
 };
 
-const sizeTypes = {
+const sizeTypes: SizeTypes = {
   banner: [
     ['970', '250'],
     ['970', '90'],
@@ -20,27 +49,25 @@ const sizeTypes = {
   mobile: [['320', '50']],
 };
 
-// const formats = ['display', 'sticky-stack', 'rail', 'anchor'];
-
-const Advertisment = ({
+const Advertisment: React.FC<AdvertismentProps> = ({
   placementId,
-  refreshLimit,
-  refreshTime,
-  position,
-  wording,
-  enabled,
+  refreshLimit = 10,
+  refreshTime = 90,
+  position = 'fixed-bottom-right',
+  wording = 'Report Ad',
+  enabled = true,
   media,
   size,
-  format,
-  stickyStackLimit,
-  stickyStackSpace,
-  stickyStackOffset,
-  rail,
-  railOffsetTop,
-  railOffsetBottom,
-  railCollisionWhitelist,
+  format = 'display',
+  stickyStackLimit = 1,
+  stickyStackSpace = 2.5,
+  stickyStackOffset = 25,
+  rail = 'left',
+  railOffsetTop = 200,
+  railOffsetBottom = 0,
+  railCollisionWhitelist = ['*'],
 }) => {
-  const adsEnabled = useContext(AdsContext);
+  const adsEnabled = useContext<AdsContextValue>(AdsContext);
 
   useMount(() => {
     if (window.nitroAds) {
@@ -113,41 +140,6 @@ const Advertisment = ({
   });
 
   return <div className="advertisement-div" id={placementId} />;
-};
-
-Advertisment.propTypes = {
-  placementId: PropTypes.string.isRequired,
-  media: PropTypes.string.isRequired,
-  size: PropTypes.string.isRequired,
-  format: PropTypes.string,
-  refreshLimit: PropTypes.number,
-  refreshTime: PropTypes.number,
-  position: PropTypes.string,
-  wording: PropTypes.string,
-  enabled: PropTypes.bool,
-  stickyStackLimit: PropTypes.number,
-  stickyStackSpace: PropTypes.number,
-  stickyStackOffset: PropTypes.number,
-  rail: PropTypes.string,
-  railOffsetTop: PropTypes.number,
-  railOffsetBottom: PropTypes.number,
-  railCollisionWhitelist: PropTypes.arrayOf(PropTypes.string),
-};
-
-Advertisment.defaultProps = {
-  refreshLimit: 10,
-  refreshTime: 90,
-  position: 'fixed-bottom-right',
-  wording: 'Report Ad',
-  enabled: true,
-  format: 'display',
-  stickyStackLimit: 1,
-  stickyStackSpace: 2.5,
-  stickyStackOffset: 25,
-  rail: 'left',
-  railOffsetTop: 200,
-  railOffsetBottom: 0,
-  railCollisionWhitelist: ['*'],
 };
 
 export default Advertisment;

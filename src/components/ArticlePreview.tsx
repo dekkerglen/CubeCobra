@@ -1,22 +1,29 @@
 import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import ContentPropType from 'proptypes/ContentPropType';
-
+import Content from 'datatypes/Content';
 import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 import TimeAgo from 'react-timeago';
 import Username from 'components/Username';
 import MtgImage from 'components/MtgImage';
 
-const statusMap = {
-  'p': 'Published',
-  'd': 'Draft',
-  'r': 'In Review',
+const statusMap: Record<string, string> = {
+  p: 'Published',
+  d: 'Draft',
+  r: 'In Review',
+};
+
+interface ArticlePreviewProps {
+  article: Content;
+  showStatus?: boolean;
 }
 
-const ArticlePreview = ({ article, showStatus }) => {
+const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = false }) => {
   const [hover, setHover] = useState(false);
-  const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
+  const handleMouseOver = useCallback(
+    (event: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) =>
+      setHover(!event.currentTarget.getAttribute('data-sublink')),
+    [],
+  );
   const handleMouseOut = useCallback(() => setHover(false), []);
   return (
     <Card
@@ -48,24 +55,13 @@ const ArticlePreview = ({ article, showStatus }) => {
           <TimeAgo date={article.date} />
         </small>
       </div>
-      {showStatus && (        
+      {showStatus && (
         <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-          <small className="float-start">
-            Status: {statusMap[article.status]}
-          </small>
+          <small className="float-start">Status: {statusMap[article.status]}</small>
         </div>
       )}
     </Card>
   );
-};
-
-ArticlePreview.propTypes = {
-  article: ContentPropType.isRequired,
-  showStatus: PropTypes.bool,
-};
-
-ArticlePreview.defaultProps = {
-  showStatus: false,
 };
 
 export default ArticlePreview;

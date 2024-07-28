@@ -15,17 +15,10 @@ interface CardDivProps {
   foilOverlay: boolean;
 }
 
-type Position = { left?: string ; right?: string ; top?: string ; bottom?: string ;}
+type Position = { left?: string; right?: string; top?: string; bottom?: string };
 
-const CardDiv: React.FC<CardDivProps> = ({
-  hidden,
-  front,
-  back,
-  tags,
-  zIndex,
-  foilOverlay,
-}) => {
-  const [position, setPosition] = useState<Position>({ left: "0px", right:"0px" });
+const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
+  const [position, setPosition] = useState<Position>({ left: '0px', right: '0px' });
   const autocardPopup = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,7 +31,7 @@ const CardDiv: React.FC<CardDivProps> = ({
       const xOffset = e.clientX + window.pageXOffset;
       const yOffset = e.clientY + window.pageYOffset;
 
-      const newPosition: Position= {};
+      const newPosition: Position = {};
 
       if (rightPixelSpace > leftPixelSpace) {
         // display on right
@@ -163,3 +156,5 @@ export const AutocardContextProvider: React.FC<{ children: JSX.Element }> = ({ c
     </AutocardContext.Provider>
   );
 };
+
+export default AutocardContext;

@@ -1,12 +1,9 @@
-import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
-
+import { useState, useContext } from 'react';
 import UserContext from 'contexts/UserContext';
 import ImageFallback from 'components/ImageFallback';
 import { csrfFetch } from 'utils/CSRF';
 import useLocalStorage from 'hooks/useLocalStorage';
 import LoadingButton from 'components/LoadingButton';
-
 import {
   Modal,
   ModalHeader,
@@ -18,21 +15,47 @@ import {
   Input,
   UncontrolledAlert,
 } from 'reactstrap';
+import User from 'datatypes/User';
 
-function AddToCubeModal({ card, isOpen, toggle, hideAnalytics, cubeContext }) {
-  const user = useContext(UserContext);
-  const cubes = user ? user.cubes : [];
+interface Card {
+  name: string;
+  image_normal: string;
+  scryfall_id: string;
+}
+
+interface AddToCubeModalProps {
+  card: Card;
+  isOpen: boolean;
+  toggle: () => void;
+  hideAnalytics?: boolean;
+  cubeContext?: string;
+}
+
+interface Alert {
+  color: string;
+  message: string;
+}
+
+function AddToCubeModal({
+  card,
+  isOpen,
+  toggle,
+  hideAnalytics = false,
+  cubeContext,
+}: AddToCubeModalProps): JSX.Element {
+  const user: User | null = useContext(UserContext);
+  const cubes: { id: string; name: string }[] = user?.cubes ?? [];
 
   let def = cubeContext;
   if (cubes.length > 0) {
-    def = cubes.map((cube) => cube.id).includes(cubeContext) ? cubeContext : cubes[0].id;
+    def = cubes.map((cube) => cube.id).includes(cubeContext ?? '') ? (cubeContext ?? '') : cubes[0].id;
   }
-  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? def : '');
-  const [selectedBoard, setSelectedBoard] = useLocalStorage('selectedBoardForATCModal', 'mainboard');
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedCube, setSelectedCube] = useState<string>(cubes && cubes.length > 0 ? (def ?? '') : '');
+  const [selectedBoard, setSelectedBoard] = useLocalStorage<string>('selectedBoardForATCModal', 'mainboard');
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const add = async () => {
+  const add = async (): Promise<void> => {
     setLoading(true);
     try {
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
@@ -146,22 +169,5 @@ function AddToCubeModal({ card, isOpen, toggle, hideAnalytics, cubeContext }) {
     </Modal>
   );
 }
-
-AddToCubeModal.propTypes = {
-  card: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    image_normal: PropTypes.string.isRequired,
-    scryfall_id: PropTypes.string.isRequired,
-  }).isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  hideAnalytics: PropTypes.bool,
-  toggle: PropTypes.func.isRequired,
-  cubeContext: PropTypes.string,
-};
-
-AddToCubeModal.defaultProps = {
-  hideAnalytics: false,
-  cubeContext: null,
-};
 
 export default AddToCubeModal;

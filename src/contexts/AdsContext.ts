@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-interface AdsContextValue {
+export interface AdsContextValue {
   value: boolean;
 }
 

@@ -1,11 +1,16 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { ReactNode } from 'react';
 
-import { Card, CardHeader, Collapse, CardBody } from 'reactstrap';
+import { Card, CardBody, CardHeader, Collapse } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';
 
-const Accordion = ({ defaultExpand, children, title }) => {
+interface AccordionProps {
+  defaultExpand?: boolean;
+  children: ReactNode;
+  title: string;
+}
+
+const Accordion: React.FC<AccordionProps> = ({ defaultExpand = false, children, title }) => {
   const [expanded, toggle] = useToggle(defaultExpand);
 
   return (
@@ -22,16 +27,6 @@ const Accordion = ({ defaultExpand, children, title }) => {
       </Card>
     </div>
   );
-};
-
-Accordion.propTypes = {
-  defaultExpand: PropTypes.bool,
-  children: PropTypes.node.isRequired,
-  title: PropTypes.string.isRequired,
-};
-
-Accordion.defaultProps = {
-  defaultExpand: false,
 };
 
 export default Accordion;

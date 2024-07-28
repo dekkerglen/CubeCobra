@@ -1,32 +1,41 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import { csrfFetch } from 'utils/CSRF';
-import withAutocard from 'components/WithAutocard';
 import LoadingButton from 'components/LoadingButton';
+import withAutocard from 'components/WithAutocard';
+import CardDetails from 'datatypes/CardDetails';
+import CubePropType from 'datatypes/Cube';
+import React, { useState } from 'react';
 import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  AlertProps,
   Button,
+  Input,
   InputGroup,
   InputGroupText,
-  UncontrolledAlert,
   ListGroup,
   ListGroupItem,
-  Input,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  UncontrolledAlert,
 } from 'reactstrap';
-import { getCardColorClass } from 'utils/Util';
+import { csrfFetch } from 'utils/CSRF';
+import { getColorClass } from 'utils/Util';
+
+interface AddGroupToCubeModalProps {
+  cards: CardDetails[];
+  isOpen: boolean;
+  toggle: () => void;
+  cubes: CubePropType[];
+  packid?: string;
+}
 
 const AutocardItem = withAutocard(ListGroupItem);
 
-const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
-  const [selectedCube, setSelectedCube] = useState(cubes && cubes.length > 0 ? cubes[0].id : null);
-  const [alerts, setAlerts] = useState([]);
+const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen, toggle, cubes, packid = null }) => {
+  const [selectedCube, setSelectedCube] = useState<string | null>(cubes && cubes.length > 0 ? cubes[0].id : null);
+  const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  const add = async (board) => {
+  const add = async (board: 'mainboard' | 'maybeboard') => {
     setLoadingSubmit(true);
     try {
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
@@ -62,13 +71,12 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
           <ListGroup className="list-outline">
             {cards.map((card) => (
               <AutocardItem
-                key={card.index}
+                key={card.scryfall_id}
                 card={{ details: card }}
-                className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+                className={`card-list-item d-flex flex-row ${getColorClass(card.type, card.colors)}`}
                 data-in-modal
-                index={card.index}
               >
-                <>{card.name}</>
+                {card.name}
               </AutocardItem>
             ))}
           </ListGroup>
@@ -96,21 +104,22 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
         <ListGroup className="list-outline">
           {cards.map((card) => (
             <AutocardItem
-              key={card.index}
+              key={card.scryfall_id}
               card={{ details: card }}
-              className={`card-list-item d-flex flex-row ${getCardColorClass({ details: card })}`}
+              className={`card-list-item d-flex flex-row ${getColorClass(card.type, card.colors)}`}
               data-in-modal
-              index={card.index}
             >
-              <>{card.name}</>
+              {card.name}
             </AutocardItem>
           ))}
         </ListGroup>
         <InputGroup className="my-3">
           <InputGroupText>Cube: </InputGroupText>
-          <Input type="select" value={selectedCube} onChange={(event) => setSelectedCube(event.target.value)}>
+          <Input type="select" value={selectedCube ?? ''} onChange={(event) => setSelectedCube(event.target.value)}>
             {cubes.map((cube) => (
-              <option value={cube.id}>{cube.name}</option>
+              <option key={cube.id} value={cube.id}>
+                {cube.name}
+              </option>
             ))}
           </Input>
         </InputGroup>
@@ -128,18 +137,6 @@ const AddGroupToCubeModal = ({ cards, isOpen, toggle, cubes, packid }) => {
       </ModalFooter>
     </Modal>
   );
-};
-
-AddGroupToCubeModal.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.string).isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  cubes: PropTypes.arrayOf(CubePropType).isRequired,
-  packid: PropTypes.string,
-};
-
-AddGroupToCubeModal.defaultProps = {
-  packid: null,
 };
 
 export default AddGroupToCubeModal;

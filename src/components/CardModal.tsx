@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
-
 import {
   Button,
   Col,
@@ -33,6 +31,7 @@ import {
   cardColorCategory,
   cardTags,
   cardStatus,
+  cardName,
 } from 'utils/Card';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
@@ -40,13 +39,34 @@ import FoilCardImage from 'components/FoilCardImage';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import CardPropType from 'proptypes/CardPropType';
+import Card, { BoardType } from 'datatypes/Card';
+import TagData from 'datatypes/TagData';
 
-const CardModal = ({
+interface CardModalProps {
+  isOpen: boolean;
+  toggle: () => void;
+  card: Card;
+  canEdit?: boolean;
+  versionDict: Record<string, CardDetails[]>;
+  editCard: (index: number, card: Card, board: BoardType) => void;
+  revertEdit: (index: number, board: BoardType) => void;
+  revertRemove: (index: number, board: BoardType) => void;
+  removeCard: (index: number, board: BoardType) => void;
+  tagColors: string[];
+  moveCard: (index: number, board: BoardType, newBoard: BoardType) => void;
+  allTags: string[];
+}
+
+interface CardDetails {
+  scryfall_id: string;
+  version: string;
+}
+
+const CardModal: React.FC<CardModalProps> = ({
   isOpen,
   toggle,
   card,
-  canEdit,
+  canEdit = false,
   versionDict,
   editCard,
   revertEdit,
@@ -56,20 +76,20 @@ const CardModal = ({
   moveCard,
   allTags,
 }) => {
-  const [versions, setVersions] = useState(null);
+  const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
-    if (!versionDict[normalizeName(card.details.name)]) {
+    if (!versionDict[normalizeName(cardName(card))]) {
       setVersions({});
     } else {
-      setVersions(Object.fromEntries(versionDict[normalizeName(card.details.name)].map((v) => [v.scryfall_id, v])));
+      setVersions(Object.fromEntries(versionDict[normalizeName(cardName(card))].map((v) => [v.scryfall_id, v])));
     }
   }, [card, versionDict]);
 
   const updateField = useCallback(
-    (field, value) => {
-      editCard(card.index, { ...card, [field]: value }, card.board);
+    (field: keyof Card, value: any) => {
+      editCard(card.index!, { ...card, [field]: value }, card.board!);
     },
     [card, editCard],
   );
@@ -81,7 +101,7 @@ const CardModal = ({
   return (
     <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
       <ModalHeader id="cardModalHeader" toggle={toggle}>
-        {card.details.name} {card.markedForDelete && <Badge color="danger">Marked for Removal</Badge>}
+        {cardName(card)} {card.markedForDelete && <Badge color="danger">Marked for Removal</Badge>}
         {card.editIndex !== undefined && <Badge color="warning">*Pending Edit*</Badge>}
       </ModalHeader>
       <ModalBody>
@@ -90,29 +110,29 @@ const CardModal = ({
             <Col xs="12" sm="4">
               <FoilCardImage card={card} finish={card.finish} />
               <Row className="mb-2 g-0">
-                {card.details.prices && Number.isFinite(cardPrice(card)) && (
+                {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                   <TextBadge name="Price" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardPrice(card).toFixed(2)}</Tooltip>
+                    <Tooltip text="TCGPlayer Market Price">${cardPrice(card)?.toFixed(2)}</Tooltip>
                   </TextBadge>
                 )}
-                {card.details.prices && Number.isFinite(cardFoilPrice(card)) && (
+                {card.details?.prices && Number.isFinite(cardFoilPrice(card)) && (
                   <TextBadge name="Foil" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card).toFixed(2)}</Tooltip>
+                    <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card)?.toFixed(2)}</Tooltip>
                   </TextBadge>
                 )}
-                {card.details.prices && Number.isFinite(cardEtchedPrice(card)) && (
+                {card.details?.prices && Number.isFinite(cardEtchedPrice(card)) && (
                   <TextBadge name="Etched" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card).toFixed(2)}</Tooltip>
+                    <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card)?.toFixed(2)}</Tooltip>
                   </TextBadge>
                 )}
-                {card.details.prices && Number.isFinite(cardPriceEur(card)) && (
+                {card.details?.prices && Number.isFinite(cardPriceEur(card)) && (
                   <TextBadge name="EUR" className="mt-2 me-2">
-                    <Tooltip text="Cardmarket Price">€{cardPriceEur(card).toFixed(2)}</Tooltip>
+                    <Tooltip text="Cardmarket Price">€{cardPriceEur(card)?.toFixed(2)}</Tooltip>
                   </TextBadge>
                 )}
-                {card.details.prices && Number.isFinite(cardTix(card)) && (
+                {card.details?.prices && Number.isFinite(cardTix(card)) && (
                   <TextBadge name="TIX" className="mt-2 me-2">
-                    <Tooltip text="MTGO TIX">{cardTix(card).toFixed(2)}</Tooltip>
+                    <Tooltip text="MTGO TIX">{cardTix(card)?.toFixed(2)}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(cardElo(card)) && (
@@ -131,7 +151,7 @@ const CardModal = ({
                           color="success"
                           block
                           outline
-                          onClick={() => revertRemove(card.removeIndex, card.board)}
+                          onClick={() => revertRemove(card.removeIndex!, card.board!)}
                         >
                           Revert Removal
                         </Button>
@@ -145,7 +165,7 @@ const CardModal = ({
                             block
                             outline
                             onClick={() => {
-                              removeCard(card.index, card.board);
+                              removeCard(card.index!, card.board!);
                               toggle();
                             }}
                           >
@@ -161,7 +181,7 @@ const CardModal = ({
                               block
                               outline
                               onClick={() => {
-                                moveCard(card.index, card.board, 'maybeboard');
+                                moveCard(card.index!, card.board!, 'maybeboard');
                                 toggle();
                               }}
                             >
@@ -177,7 +197,7 @@ const CardModal = ({
                               block
                               outline
                               onClick={() => {
-                                moveCard(card.index, card.board, 'mainboard');
+                                moveCard(card.index!, card.board!, 'mainboard');
                                 toggle();
                               }}
                             >
@@ -195,7 +215,11 @@ const CardModal = ({
                           color="success"
                           block
                           outline
-                          onClick={() => revertEdit(card.editIndex, card.board)}
+                          onClick={() => {
+                            if (card.editIndex !== undefined && card.board !== undefined) {
+                              revertEdit(card.editIndex, card.board);
+                            }
+                          }}
                         >
                           Revert Edit
                         </Button>
@@ -209,7 +233,7 @@ const CardModal = ({
                     block
                     outline
                     color="primary"
-                    href={card.details.scryfall_uri}
+                    href={card.details?.scryfall_uri}
                     target="_blank"
                   >
                     <span className="d-none d-sm-inline">View on Scryfall</span>
@@ -229,11 +253,13 @@ const CardModal = ({
                     <span className="d-sm-none">Analytics</span>
                   </Button>
                 </Col>
-                <Col xs="12">
-                  <Button className="my-1" block outline color="primary" href={getTCGLink(card)} target="_blank">
-                    Buy
-                  </Button>
-                </Col>
+                {card.details && (
+                  <Col xs="12">
+                    <Button className="my-1" block outline color="primary" href={getTCGLink(card)} target="_blank">
+                      Buy
+                    </Button>
+                  </Col>
+                )}
               </Row>
             </Col>
             <Col xs="12" sm="8">
@@ -248,7 +274,7 @@ const CardModal = ({
                     value={card.cardID}
                     onChange={(e) => updateField('cardID', e.target.value)}
                   >
-                    {Object.entries(versions).map(([key, value]) => {
+                    {Object.entries(versions!).map(([key, value]) => {
                       return (
                         <option key={key} value={key}>
                           {value.version}
@@ -266,7 +292,7 @@ const CardModal = ({
                     value={cardStatus(card)}
                     onChange={(event) => updateField('status', event.target.value)}
                   >
-                    {getLabels(null, 'Status').map((status) => (
+                    {getLabels(null, 'Status', false).map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>
@@ -282,7 +308,7 @@ const CardModal = ({
                     value={cardFinish(card)}
                     onChange={(event) => updateField('finish', event.target.value)}
                   >
-                    {getLabels(null, 'Finish').map((finish) => (
+                    {getLabels(null, 'Finish', false).map((finish) => (
                       <option key={finish}>{finish}</option>
                     ))}
                   </Input>
@@ -314,7 +340,7 @@ const CardModal = ({
                     value={cardRarity(card)}
                     onChange={(event) => updateField('rarity', event.target.value)}
                   >
-                    {getLabels(null, 'Rarity').map((rarity) => (
+                    {getLabels(null, 'Rarity', false).map((rarity) => (
                       <option key={rarity} value={rarity.toLowerCase()}>
                         {rarity}
                       </option>
@@ -344,7 +370,7 @@ const CardModal = ({
                   <ColorChecksAddon
                     prefix="color"
                     values={cardColorIdentity(card)}
-                    setValues={(colors) => updateField('colors', colors)}
+                    setValues={(colors: string[]) => updateField('colors', colors)}
                   />
                 </InputGroup>
                 <InputGroup className="mb-3">
@@ -374,24 +400,24 @@ const CardModal = ({
 
                 <h5>Tags</h5>
                 <TagInput
-                  tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
+                  tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}
                   inputValue={tagInput}
                   handleInputChange={setTagInput}
-                  handleInputBlur={(tag) => {
+                  handleInputBlur={(tag: TagData) => {
                     updateField('tags', [...cardTags(card), tag.text]);
                     setTagInput('');
                   }}
-                  addTag={(tag) => {
+                  addTag={(tag: TagData) => {
                     updateField('tags', [...cardTags(card), tag.text]);
                     setTagInput('');
                   }}
-                  deleteTag={(index) => {
+                  deleteTag={(index: number) => {
                     const newTags = [...cardTags(card)];
                     newTags.splice(index, 1);
                     updateField('tags', newTags);
                   }}
-                  reorderTag={(oldIndex, newIndex) => {
+                  reorderTag={(oldIndex: number, newIndex: number) => {
                     const newTags = [...cardTags(card)];
                     const tag = newTags.splice(oldIndex, 1)[0];
                     newTags.splice(newIndex, 0, tag);
@@ -409,28 +435,6 @@ const CardModal = ({
       </ModalBody>
     </Modal>
   );
-};
-
-CardModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  card: CardPropType.isRequired,
-  canEdit: PropTypes.bool,
-  versionDict: PropTypes.shape({}),
-  editCard: PropTypes.func.isRequired,
-  revertEdit: PropTypes.func.isRequired,
-  revertRemove: PropTypes.func.isRequired,
-  removeCard: PropTypes.func.isRequired,
-  tagColors: PropTypes.arrayOf(PropTypes.string),
-  moveCard: PropTypes.func.isRequired,
-  allTags: PropTypes.arrayOf(PropTypes.string),
-};
-
-CardModal.defaultProps = {
-  canEdit: false,
-  versionDict: {},
-  tagColors: [],
-  allTags: [],
 };
 
 export default CardModal;

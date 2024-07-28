@@ -1,14 +1,16 @@
 import React from 'react';
-import ContentPropType from 'proptypes/ContentPropType';
-
+import Content from 'datatypes/Content';
 import Markdown from 'components/Markdown';
 import CommentsSection from 'components/CommentsSection';
 import TimeAgo from 'react-timeago';
 import Username from 'components/Username';
-
 import { CardBody, CardHeader } from 'reactstrap';
 
-const Article = ({ article }) => {
+interface ArticleProps {
+  article: Content;
+}
+
+const Article: React.FC<ArticleProps> = ({ article }) => {
   return (
     <>
       <CardHeader>
@@ -27,9 +29,6 @@ const Article = ({ article }) => {
       </div>
     </>
   );
-};
-Article.propTypes = {
-  article: ContentPropType.isRequired,
 };
 
 export default Article;

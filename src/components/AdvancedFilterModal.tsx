@@ -1,6 +1,9 @@
-import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { ChangeEvent, useContext } from 'react';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import TextField from 'components/TextField';
+import NumericField from 'components/NumericField';
+import AutocompleteInput from 'components/AutocompleteInput';
+import CubeContext from 'contexts/CubeContext';
 import {
   Button,
   Col,
@@ -15,16 +18,56 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-import { ColorChecksAddon } from 'components/ColorCheck';
+interface AdvancedFilterModalProps {
+  isOpen: boolean;
+  toggle: () => void;
+  values: {
+    name: string;
+    tag: string;
+    status: string;
+    finish: string;
+    price: number;
+    oracle: string;
+    cmc: number;
+    cmcOp: string;
+    colorOp: string;
+    color: string[];
+    type: string;
+    colorIdentity: string;
+    colorIdentityOp: string;
+    mana: string;
+    manaOp: string;
+    is: string;
+    set: string;
+    priceOp: string;
+    priceFoil: number;
+    priceFoilOp: string;
+    priceEur: number;
+    priceEurOp: string;
+    priceTix: number;
+    priceTixOp: string;
+    elo: number;
+    eloOp: string;
+    power: number;
+    powerOp: string;
+    toughness: number;
+    toughnessOp: string;
+    loyalty: number;
+    loyaltyOp: string;
+    rarity: string;
+    rarityOp: string;
+    legality: string;
+    legalityOp: string;
+    artist: string;
+  };
+  updateValue: <T>(value: T, key: string) => void;
+  apply: () => void;
+}
 
-import TextField from 'components/TextField';
-import NumericField from 'components/NumericField';
-import AutocompleteInput from 'components/AutocompleteInput';
-import CubeContext from 'contexts/CubeContext';
-
-const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => {
-  const { cube } = useContext(CubeContext);
+const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggle, values, updateValue, apply }) => {
+  const { cube } = useContext(CubeContext) ?? {};
   const cubeId = cube ? cube.id : null;
+
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="lg">
       <Form
@@ -40,14 +83,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             humanName="Card name"
             placeholder={'Any words in the name, e.g. "Fire"'}
             value={values.name}
-            onChange={(event) => updateValue(event.target.value, 'name')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'name')}
           />
           <TextField
             name="oracle"
             humanName="oracle Text"
             placeholder={'Any text, e.g. "Draw a card"'}
             value={values.oracle}
-            onChange={(event) => updateValue(event.target.value, 'oracle')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'oracle')}
           />
           <NumericField
             name="mv"
@@ -55,8 +98,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any value, e.g. "2"'}
             value={values.cmc}
             operator={values.cmcOp}
-            setValue={(value) => updateValue(value, 'cmc')}
-            setOperator={(operator) => updateValue(operator, 'cmcOp')}
+            setValue={(value: number) => updateValue(value, 'cmc')}
+            setOperator={(operator: string) => updateValue(operator, 'cmcOp')}
           />
           <InputGroup className="mb-3">
             <InputGroupText>Color</InputGroupText>
@@ -64,14 +107,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
               colorless
               prefix="color"
               values={values.color}
-              setValues={(v) => updateValue(v, 'color')}
+              setValues={(v: string[]) => updateValue(v, 'color')}
             />
             <Input
               type="select"
               id="colorOp"
               name="colorOp"
               value={values.colorOp}
-              onChange={(event) => updateValue(event.target.value, 'colorOp')}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'colorOp')}
             >
               <option value="=">Exactly these colors</option>
               <option value=">=">Including these colors</option>
@@ -84,14 +127,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
               colorless
               prefix="identity"
               values={values.colorIdentity}
-              setValues={(v) => updateValue(v, 'colorIdentity')}
+              setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />
             <Input
               type="select"
               id="identityOp"
               name="identityOp"
               value={values.colorIdentityOp}
-              onChange={(event) => updateValue(event.target.value, 'colorIdentityOp')}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'colorIdentityOp')}
             >
               <option value="=">Exactly these colors</option>
               <option value=">=">Including these colors</option>
@@ -103,7 +146,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             humanName="Mana Cost"
             placeholder={'Any mana cost, e.g. "{1}{W}"'}
             value={values.mana}
-            onChange={(event) => updateValue(event.target.value, 'mana')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'mana')}
           />
           <InputGroup className="mb-3">
             <InputGroupText>Manacost Type</InputGroupText>
@@ -111,7 +154,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
               type="select"
               name="is"
               value={values.is}
-              onChange={(event) => updateValue(event.target.value, 'is')}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'is')}
             >
               {['', 'Gold', 'Hybrid', 'Phyrexian'].map((type) => (
                 <option key={type}>{type}</option>
@@ -123,14 +166,14 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             humanName="Type Line"
             placeholder="Choose any card type, supertype, or subtypes to match"
             value={values.type}
-            onChange={(event) => updateValue(event.target.value, 'type')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'type')}
           />
           <TextField
             name="set"
             humanName="Set"
             placeholder={'Any set code, e.g. "WAR"'}
             value={values.set}
-            onChange={(event) => updateValue(event.target.value, 'set')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'set')}
           />
           {cubeId && (
             <InputGroup className="mb-3">
@@ -141,7 +184,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 type="text"
                 name="tag"
                 value={values.tag}
-                setValue={(tag) => updateValue(tag, 'tag')}
+                setValue={(tag: string) => updateValue(tag, 'tag')}
                 placeholder={'Any text, e.g. "Zombie Testing"'}
                 autoComplete="off"
                 data-lpignore
@@ -158,7 +201,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                   type="select"
                   name="status"
                   value={values.status}
-                  onChange={(event) => updateValue(event.target.value, 'status')}
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'status')}
                 >
                   {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
                     <option key={status}>{status}</option>
@@ -173,7 +216,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                   type="select"
                   name="finish"
                   value={values.finish}
-                  onChange={(event) => updateValue(event.target.value, 'finish')}
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'finish')}
                 >
                   {['', 'Foil', 'Non-foil'].map((finish) => (
                     <option key={finish}>{finish}</option>
@@ -190,8 +233,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 placeholder={'Any decimal number, e.g. "3.50"'}
                 value={values.price}
                 operator={values.priceOp}
-                setValue={(value) => updateValue(value, 'price')}
-                setOperator={(operator) => updateValue(operator, 'priceOp')}
+                setValue={(value: number) => updateValue(value, 'price')}
+                setOperator={(operator: string) => updateValue(operator, 'priceOp')}
               />
             </Col>
             <Col md={6}>
@@ -201,8 +244,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceFoil}
                 operator={values.priceFoilOp}
-                setValue={(value) => updateValue(value, 'priceFoil')}
-                setOperator={(operator) => updateValue(operator, 'priceFoilOp')}
+                setValue={(value: number) => updateValue(value, 'priceFoil')}
+                setOperator={(operator: string) => updateValue(operator, 'priceFoilOp')}
               />
             </Col>
             <Col md={6}>
@@ -212,8 +255,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceEur}
                 operator={values.priceEurOp}
-                setValue={(value) => updateValue(value, 'priceEur')}
-                setOperator={(operator) => updateValue(operator, 'priceEurOp')}
+                setValue={(value: number) => updateValue(value, 'priceEur')}
+                setOperator={(operator: string) => updateValue(operator, 'priceEurOp')}
               />
             </Col>
             <Col md={6}>
@@ -223,8 +266,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceTix}
                 operator={values.priceTixOp}
-                setValue={(value) => updateValue(value, 'priceTix')}
-                setOperator={(operator) => updateValue(operator, 'priceTixOp')}
+                setValue={(value: number) => updateValue(value, 'priceTix')}
+                setOperator={(operator: string) => updateValue(operator, 'priceTixOp')}
               />
             </Col>
           </Row>
@@ -234,8 +277,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any integer number, e.g. "1200"'}
             value={values.elo}
             operator={values.eloOp}
-            setValue={(value) => updateValue(value, 'elo')}
-            setOperator={(operator) => updateValue(operator, 'eloOp')}
+            setValue={(value: number) => updateValue(value, 'elo')}
+            setOperator={(operator: string) => updateValue(operator, 'eloOp')}
           />
           <NumericField
             name="power"
@@ -243,8 +286,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any value, e.g. "2"'}
             value={values.power}
             operator={values.powerOp}
-            setValue={(value) => updateValue(value, 'power')}
-            setOperator={(operator) => updateValue(operator, 'powerOp')}
+            setValue={(value: number) => updateValue(value, 'power')}
+            setOperator={(operator: string) => updateValue(operator, 'powerOp')}
           />
           <NumericField
             name="toughness"
@@ -252,8 +295,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any value, e.g. "2"'}
             value={values.toughness}
             operator={values.toughnessOp}
-            setValue={(value) => updateValue(value, 'toughness')}
-            setOperator={(operator) => updateValue(operator, 'toughnessOp')}
+            setValue={(value: number) => updateValue(value, 'toughness')}
+            setOperator={(operator: string) => updateValue(operator, 'toughnessOp')}
           />
           <NumericField
             name="loyalty"
@@ -261,8 +304,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any value, e.g. "3"'}
             value={values.loyalty}
             operator={values.loyaltyOp}
-            setValue={(value) => updateValue(value, 'loyalty')}
-            setOperator={(operator) => updateValue(operator, 'loyaltyOp')}
+            setValue={(value: number) => updateValue(value, 'loyalty')}
+            setOperator={(operator: string) => updateValue(operator, 'loyaltyOp')}
           />
           <NumericField
             name="rarity"
@@ -270,8 +313,8 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             placeholder={'Any rarity, e.g. "common"'}
             value={values.rarity}
             operator={values.rarityOp}
-            setValue={(value) => updateValue(value, 'rarity')}
-            setOperator={(operator) => updateValue(operator, 'rarityOp')}
+            setValue={(value: string) => updateValue(value, 'rarity')}
+            setOperator={(operator: string) => updateValue(operator, 'rarityOp')}
           />
           <InputGroup className="mb-3">
             <InputGroupText>Legality</InputGroupText>
@@ -279,7 +322,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
               type="select"
               id="legalityOp"
               name="legalityOp"
-              onChange={(event) => updateValue(event.target.value, 'legalityOp')}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'legalityOp')}
             >
               <option value="=">legal</option>
               <option value="!=">not legal</option>
@@ -288,7 +331,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
               type="select"
               name="legality"
               value={values.legality}
-              onChange={(event) => updateValue(event.target.value, 'legality')}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'legality')}
             >
               {[
                 '',
@@ -312,7 +355,7 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
             humanName="Artist"
             placeholder={'Any text, e.g. "seb"'}
             value={values.artist}
-            onChange={(event) => updateValue(event.target.value, 'artist')}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'artist')}
           />
         </ModalBody>
         <ModalFooter>
@@ -326,52 +369,6 @@ const AdvancedFilterModal = ({ isOpen, toggle, values, updateValue, apply }) => 
       </Form>
     </Modal>
   );
-};
-
-AdvancedFilterModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  apply: PropTypes.func.isRequired,
-  values: PropTypes.shape({
-    name: PropTypes.string,
-    tag: PropTypes.string,
-    status: PropTypes.string,
-    finish: PropTypes.string,
-    price: PropTypes.number,
-    oracle: PropTypes.string,
-    cmc: PropTypes.number,
-    cmcOp: PropTypes.string,
-    colorOp: PropTypes.string,
-    color: PropTypes.arrayOf(PropTypes.string),
-    type: PropTypes.string,
-    colorIdentity: PropTypes.string,
-    colorIdentityOp: PropTypes.string,
-    mana: PropTypes.string,
-    manaOp: PropTypes.string,
-    is: PropTypes.string,
-    set: PropTypes.string,
-    priceOp: PropTypes.string,
-    priceFoil: PropTypes.number,
-    priceFoilOp: PropTypes.string,
-    priceEur: PropTypes.number,
-    priceEurOp: PropTypes.string,
-    priceTix: PropTypes.number,
-    priceTixOp: PropTypes.string,
-    elo: PropTypes.number,
-    eloOp: PropTypes.string,
-    power: PropTypes.number,
-    powerOp: PropTypes.string,
-    toughness: PropTypes.number,
-    toughnessOp: PropTypes.string,
-    loyalty: PropTypes.number,
-    loyaltyOp: PropTypes.string,
-    rarity: PropTypes.string,
-    rarityOp: PropTypes.string,
-    legality: PropTypes.string,
-    legalityOp: PropTypes.string,
-    artist: PropTypes.string,
-  }).isRequired,
-  updateValue: PropTypes.func.isRequired,
 };
 
 export default AdvancedFilterModal;
