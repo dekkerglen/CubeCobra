@@ -3,6 +3,15 @@ import CardDetails from 'datatypes/CardDetails';
 export const boardTypes = ['mainboard', 'maybeboard'] as const;
 export type BoardType = (typeof boardTypes)[number];
 
+export type BoardChanges = {
+  adds: Card[];
+  removes: { index: number; oldCard: Card }[];
+  swaps: { index: number; card: Card; oldCard: Card }[];
+  edits: { index: number; newCard: Card; oldCard: Card }[];
+};
+
+export type Changes = Record<BoardType, BoardChanges>;
+
 interface Card {
   index?: number;
   board?: BoardType;

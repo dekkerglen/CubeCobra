@@ -1,14 +1,10 @@
-import React, { createContext } from 'react';
+import { createContext } from 'react';
 
-interface TagColor {
+export interface TagColor {
   tag: string;
   color: string;
 }
 
-interface TagColorContextValue {
-  tagColors: TagColor[];
-}
-
-const TagColorContext = createContext<TagColorContextValue | undefined>(undefined);
+const TagColorContext = createContext<TagColor[]>([]);
 
 export default TagColorContext;

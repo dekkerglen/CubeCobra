@@ -1,9 +1,5 @@
 import { createContext } from 'react';
 
-export interface AdsContextValue {
-  value: boolean;
-}
-
-const AdsContext = createContext<AdsContextValue>({ value: false });
+const AdsContext = createContext<boolean>(false);
 
 export default AdsContext;

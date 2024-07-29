@@ -11,20 +11,11 @@ import useQueryParam from 'hooks/useQueryParam';
 import useMount from 'hooks/UseMount';
 import { deepCopy, xorStrings } from 'utils/Util';
 import { makeFilter, FilterFunction } from 'filtering/FilterCards';
-import Card, { BoardType, boardTypes } from 'datatypes/Card';
+import Card, { BoardType, boardTypes, Changes } from 'datatypes/Card';
 import Cube, { TagColor } from 'datatypes/Cube';
 import CardDetails from 'datatypes/CardDetails';
 import { AlertProps } from 'reactstrap';
 import { Object } from 'core-js';
-
-type BoardChanges = {
-  adds: Card[];
-  removes: { index: number; oldCard: Card }[];
-  swaps: { index: number; card: Card; oldCard: Card }[];
-  edits: { index: number; newCard: Card; oldCard: Card }[];
-};
-
-type Changes = Record<BoardType, BoardChanges>;
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -436,7 +427,7 @@ export function CubeContextProvider({
   );
 
   const bulkMoveCard = useCallback(
-    (cardList: Card[], newBoard: BoardType) => {
+    (cardList: { board: BoardType; index: number }[], newBoard: BoardType) => {
       const newChanges = deepCopy(changes);
 
       for (const card of cardList) {
@@ -454,7 +445,9 @@ export function CubeContextProvider({
         }
       }
 
-      newChanges[newBoard].adds.push(...cardList.filter((card) => card.board !== newBoard));
+      newChanges[newBoard].adds.push(
+        ...cardList.filter((card) => card.board !== newBoard).map(({ index, board }) => cube.cards[board][index]),
+      );
 
       setChanges(newChanges);
       setOpenCollapse('edit');
@@ -966,7 +959,7 @@ export function CubeContextProvider({
           !Array.isArray(modalSelection) &&
           unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index) && (
             <CardModal
-              card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)}
+              card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
               toggle={toggle}
               canEdit={canEdit}

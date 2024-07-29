@@ -5,5 +5,5 @@ export default interface BlogPost {
   date: number;
   title?: string;
   cube: string;
-  changelist?: string;
+  Changelog?: Partial<Changes>;
 }

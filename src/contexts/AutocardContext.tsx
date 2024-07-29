@@ -92,7 +92,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
   );
 };
 
-interface AutocardContextValue {
+export interface AutocardContextValue {
   showCard: (card: any, inModal: boolean, showCustomImages: boolean) => void;
   hideCard: () => void;
   stopAutocard: boolean;
