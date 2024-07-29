@@ -2,7 +2,7 @@ import React, { useContext, useState, useCallback } from 'react';
 import TimeAgo from 'react-timeago';
 
 import UserContext from 'contexts/UserContext';
-import CardPackagePropType from 'proptypes/CardPackagePropType';
+import CardPackageData, { APPROVED } from 'datatypes/CardPackage';
 import withAutocard from 'components/WithAutocard';
 import AddGroupToCubeModal from 'components/AddGroupToCubeModal';
 import withModal from 'components/WithModal';
@@ -18,12 +18,16 @@ import { csrfFetch } from 'utils/CSRF';
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 const AutocardA = withAutocard('a');
 
-const CardPackage = ({ cardPackage }) => {
+interface CardPackageProps {
+  cardPackage: CardPackageData;
+}
+
+const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
   const user = useContext(UserContext);
-  const [voters, setVoters] = useState(cardPackage.voters);
+  const [voters, setVoters] = useState<string[]>(cardPackage.voters);
   const [loading, setLoading] = useState(false);
 
-  const voted = user ? voters.includes(user.id) : false;
+  const voted = user ? voters.includes(user?.id) : false;
 
   const toggleVote = useCallback(async () => {
     if (loading) {
@@ -56,7 +60,7 @@ const CardPackage = ({ cardPackage }) => {
               <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
-              <Username user={cardPackage.owner} />
+              <Username user={{ username: cardPackage.owner }} />
               {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>
@@ -86,13 +90,13 @@ const CardPackage = ({ cardPackage }) => {
                 <AddGroupToCubeModalLink
                   outline
                   color="accent"
-                  modalProps={{ cards: cardPackage.cards, cubes: user ? user.cubes : [], packid: cardPackage.id }}
+                  modalProps={{ cards: cardPackage.cards, cubes: user.cubes || [], packid: cardPackage.id }}
                 >
                   Add To Cube
                 </AddGroupToCubeModalLink>
                 {user && user.roles && user.roles.includes('Admin') && (
                   <>
-                    {cardPackage.approved ? (
+                    {cardPackage.status === APPROVED ? (
                       <Button outline color="unsafe" className="mx-2" onClick={unapprove}>
                         Remove Approval
                       </Button>
@@ -134,10 +138,6 @@ const CardPackage = ({ cardPackage }) => {
       </CardBody>
     </Card>
   );
-};
-
-CardPackage.propTypes = {
-  cardPackage: CardPackagePropType.isRequired,
 };
 
 export default CardPackage;

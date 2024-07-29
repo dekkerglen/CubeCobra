@@ -1,27 +1,27 @@
 import React, { useContext, useState } from 'react';
-
-import PropTypes from 'prop-types';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
-
-import TimeAgo from 'react-timeago';
-
-import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
+import BlogPostData from 'datatypes/BlogPost';
+import User from 'datatypes/User';
 import BlogContextMenu from 'components/BlogContextMenu';
 import EditBlogModal from 'components/EditBlogModal';
 import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import BlogPostChangelog from 'components/BlogPostChangelog';
+import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
+import UserContext from 'contexts/UserContext';
 
-const BlogPost = ({ post, noScroll }) => {
-  const user = useContext(UserContext);
+interface BlogPostProps {
+  post: BlogPostData;
+  noScroll?: boolean;
+}
+
+const BlogPost: React.FC<BlogPostProps> = ({ post, noScroll = false }) => {
+  const user: User | null = useContext(UserContext);
   const [editOpen, setEditOpen] = useState(false);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
-  const canEdit = user && user.id === post.owner.id;
+  const canEdit = user && user.id === post.owner;
 
-  const hasChangelist = post.Changelog;
+  const hasChangelist = post.Changelog !== undefined;
   const hasBody = post.body && post.body.length > 0;
 
   return (
@@ -44,7 +44,7 @@ const BlogPost = ({ post, noScroll }) => {
           </div>
         </h5>
         <h6 className="card-subtitle mb-2 text-muted">
-          <Username user={post.owner} />
+          <Username user={{ username: post.owner }} />
           {' posted to '}
           {post.cube === 'DEVBLOG' ? (
             <a href="/dev/blog">Developer Blog</a>

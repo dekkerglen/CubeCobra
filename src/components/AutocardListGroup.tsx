@@ -1,22 +1,31 @@
 import React, { useMemo, useContext } from 'react';
-import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-
+import Card from 'datatypes/Card';
 import { ListGroup, ListGroupItem } from 'reactstrap';
-
 import { sortDeep } from 'utils/Sort';
-
 import AutocardListItem from 'components/AutocardListItem';
-
 import withCardModal from 'components/WithCardModal';
 import withGroupModal from 'components/WithGroupModal';
 import CubeContext from 'contexts/CubeContext';
 
+interface AutocardListGroupProps {
+  cards: Card[];
+  heading: React.ReactNode;
+  sort?: string;
+  orderedSort?: string;
+  showOther?: boolean;
+}
+
 const CardModalLink = withCardModal(AutocardListItem);
 const GroupModalLink = withGroupModal(ListGroupItem);
 
-const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => {
-  const { canEdit } = useContext(CubeContext);
+const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
+  cards,
+  heading,
+  sort = 'Mana Value Full',
+  orderedSort = 'Alphabetical',
+  showOther = false,
+}) => {
+  const canEdit = useContext(CubeContext)?.canEdit ?? false;
   const sorted = useMemo(() => sortDeep(cards, showOther, orderedSort, sort), [cards, showOther, orderedSort, sort]);
 
   return (
@@ -32,7 +41,7 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => 
       )}
 
       {sorted.map(([, group]) =>
-        group.map((card, index) => (
+        group.map((card: Card, index: number) => (
           <CardModalLink
             key={card.index}
             card={card}
@@ -48,20 +57,6 @@ const AutocardListGroup = ({ cards, heading, sort, orderedSort, showOther }) => 
       )}
     </ListGroup>
   );
-};
-
-AutocardListGroup.propTypes = {
-  cards: PropTypes.arrayOf(CardPropType).isRequired,
-  heading: PropTypes.node.isRequired,
-  sort: PropTypes.string,
-  orderedSort: PropTypes.string,
-  showOther: PropTypes.bool,
-};
-
-AutocardListGroup.defaultProps = {
-  sort: 'Mana Value Full',
-  orderedSort: 'Alphabetical',
-  showOther: false,
 };
 
 export default AutocardListGroup;

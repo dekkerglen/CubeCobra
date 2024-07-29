@@ -39,7 +39,7 @@ Transform any import {{ Xyz }} from 'proptypes/XyzPropType' into import Xyz from
 Otherwise, don't change any of the code, other than adding type annotations.
 It should pass a standard linter test afterwards.
 Assume all of the imported files are undergoing the same transformation and will export types if needed.
-For React contexts, assume that the module for a context named (e.g.) XContext will export an interface named XContextValue for the context's value.
+For React contexts, assume that the module for a context named (e.g.) XContext will export an interface named XContextValue for the context's value. Except CubeContext, whose value has type CubeWithCards.
 Every function, including short arrow functions, should have your best guess at type annotations for its arguments and return value. Try to make an educated guess based on the project structure rather than using "any."
 Especially try to figure out the right type for event handler callbacks in JSX code.
 Please print all of the output code; don't omit any of the converted code.
@@ -126,7 +126,7 @@ def process_file(directory, filename, force=False):
     print(f"Converted {filename} to {ts_filename}")
 
 def process_directory(directory):
-    for filename in os.listdir(directory):
+    for filename in sorted(os.listdir(directory)):
         if filename.endswith('.js'):
             process_file(directory, filename)
 

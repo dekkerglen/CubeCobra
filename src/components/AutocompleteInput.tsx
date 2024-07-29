@@ -1,16 +1,23 @@
-/* eslint-disable react/prop-types */
 /* eslint-disable react/no-array-index-key */
-/* eslint-disable no-use-before-define */
-import React, { forwardRef, useCallback, useEffect, useMemo, useState, useContext } from 'react';
-
-import { Input } from 'reactstrap';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState, useContext, ReactNode } from 'react';
+import { Input, InputProps } from 'reactstrap';
 import withAutocard from 'components/WithAutocard';
 import AutocardContext from 'contexts/AutocardContext';
 
-const AutocardLi = withAutocard('li');
+interface AutocardLiProps {
+  inModal: boolean;
+  image: string;
+  onClick: (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => void;
+  className?: string;
+  children?: ReactNode;
+}
+
+const AutocardLi = withAutocard('li') as React.ForwardRefExoticComponent<
+  AutocardLiProps & React.RefAttributes<HTMLLIElement>
+>;
 
 // Deepmerge utility
-function isMergeableObject(val) {
+function isMergeableObject(val: any): val is Record<string, any> {
   const nonNullObject = val && typeof val === 'object';
 
   return (
@@ -20,33 +27,37 @@ function isMergeableObject(val) {
   );
 }
 
-function emptyTarget(val) {
-  return Array.isArray(val) ? [] : {};
+function emptyTarget<T>(val: T): T {
+  return Array.isArray(val) ? ([] as T) : ({} as T);
 }
 
-function cloneIfNecessary(value, optionsArgument) {
+function cloneIfNecessary<T>(value: T, optionsArgument?: { clone?: boolean }): T {
   const clone = optionsArgument && optionsArgument.clone === true;
   return clone && isMergeableObject(value) ? deepmerge(emptyTarget(value), value, optionsArgument) : value;
 }
 
-function mergeObject(target, source, optionsArgument) {
-  const destination = {};
+function mergeObject<T extends Record<string, any>>(target: T, source: T, optionsArgument?: { clone?: boolean }): T {
+  const destination: T = {} as T;
   if (isMergeableObject(target)) {
     Object.keys(target).forEach((key) => {
-      destination[key] = cloneIfNecessary(target[key], optionsArgument);
+      destination[key as keyof T] = cloneIfNecessary(target[key as keyof T], optionsArgument);
     });
   }
   Object.keys(source).forEach((key) => {
-    if (!isMergeableObject(source[key]) || !target[key]) {
-      destination[key] = cloneIfNecessary(source[key], optionsArgument);
+    if (!isMergeableObject(source[key]) || !target[key as keyof T]) {
+      destination[key as keyof T] = cloneIfNecessary(source[key as keyof T], optionsArgument);
     } else {
-      destination[key] = deepmerge(target[key], source[key], optionsArgument);
+      destination[key as keyof T] = deepmerge(target[key as keyof T], source[key as keyof T], optionsArgument);
     }
   });
   return destination;
 }
 
-function deepmerge(target, source, optionsArgument) {
+function deepmerge<T extends {} | any[]>(
+  target: T,
+  source: T,
+  optionsArgument?: { clone?: boolean; arrayMerge?: <U>(target: U[], source: U[], options?: any) => U[] },
+): T {
   const array = Array.isArray(source);
   const options = optionsArgument || {
     arrayMerge: defaultArrayMerge,
@@ -55,19 +66,19 @@ function deepmerge(target, source, optionsArgument) {
 
   if (array) {
     return Array.isArray(target)
-      ? arrayMerge(target, source, optionsArgument)
+      ? (arrayMerge(target, source, optionsArgument) as T)
       : cloneIfNecessary(source, optionsArgument);
   }
   return mergeObject(target, source, optionsArgument);
 }
 
-function defaultArrayMerge(target, source, optionsArgument) {
+function defaultArrayMerge<T>(target: T[], source: T[], optionsArgument?: { clone?: boolean }): T[] {
   const destination = target.slice();
   source.forEach((e, i) => {
     if (typeof destination[i] === 'undefined') {
       destination[i] = cloneIfNecessary(e, optionsArgument);
     } else if (isMergeableObject(e)) {
-      destination[i] = deepmerge(target[i], e, optionsArgument);
+      destination[i] = deepmerge(target[i] as any, e, optionsArgument);
     } else if (target.indexOf(e) === -1) {
       destination.push(cloneIfNecessary(e, optionsArgument));
     }
@@ -75,7 +86,11 @@ function defaultArrayMerge(target, source, optionsArgument) {
   return destination;
 }
 
-function getPosts(names, current) {
+interface TreeNode {
+  [key: string]: TreeNode;
+}
+
+function getPosts(names: TreeNode, current: string): TreeNode {
   if (current === '') {
     return names;
   }
@@ -114,7 +129,7 @@ function getPosts(names, current) {
   return {};
 }
 
-function getAllMatches(names, current) {
+function getAllMatches(names: TreeNode, current: string): string[] {
   const posts = getPosts(names, current);
   const words = treeToWords(posts, 10).slice(0, 10);
 
@@ -125,11 +140,11 @@ function getAllMatches(names, current) {
   return words;
 }
 
-function treeToWords(tree, max) {
+function treeToWords(tree: TreeNode, max: number): string[] {
   if (isEmpty(tree)) {
     return [];
   }
-  const words = [];
+  const words: string[] = [];
   // eslint-disable-next-line guard-for-in
   for (const prop in tree) {
     // eslint-disable-next-line no-prototype-builtins
@@ -149,7 +164,7 @@ function treeToWords(tree, max) {
   return words;
 }
 
-function isEmpty(obj) {
+function isEmpty(obj: any): boolean {
   for (const prop in obj) {
     // eslint-disable-next-line no-prototype-builtins
     if (obj.hasOwnProperty(prop)) {
@@ -159,22 +174,13 @@ function isEmpty(obj) {
   return true;
 }
 
-deepmerge.all = function deepmergeAll(array, optionsArgument) {
-  if (!Array.isArray(array) || array.length < 2) {
-    throw new Error('first argument should be an array with at least two elements');
-  }
-
-  // we are sure there are at least 2 values, so it is safe to have no initial value
-  return array.reduce((prev, next) => deepmerge(prev, next, optionsArgument));
-};
-
 // Map URL => Promise returning tree
-export const treeCache = {};
+export const treeCache: Record<string, Promise<TreeNode | null>> = {};
 
-const fetchTree = async (treeUrl, treePath) => {
+const fetchTree = async (treeUrl: string, treePath: string): Promise<TreeNode | null> => {
   const response = await fetch(treeUrl);
   if (!response.ok) {
-    console.error(`Failed to fetch autocomplete tree: ${response.statusCode}`);
+    console.error(`Failed to fetch autocomplete tree: ${response.status}`);
     return null;
   }
   const json = await response.json();
@@ -186,12 +192,24 @@ const fetchTree = async (treeUrl, treePath) => {
   return json[treePath];
 };
 
-const AutocompleteInput = forwardRef(
+interface AutocompleteInputProps extends InputProps {
+  treeUrl: string;
+  treePath: string;
+  defaultValue?: string;
+  value: string;
+  setValue: (value: string) => void;
+  onSubmit?: (event: React.FormEvent<HTMLInputElement>, match?: string) => void;
+  wrapperClassName?: string;
+  cubeId?: string;
+  noMargin?: boolean;
+}
+
+const AutocompleteInput = forwardRef<Input, AutocompleteInputProps>(
   (
     { treeUrl, treePath, defaultValue, value, setValue, onSubmit, wrapperClassName, cubeId, noMargin, ...props },
     ref,
   ) => {
-    const [tree, setTree] = useState({});
+    const [tree, setTree] = useState<TreeNode>({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
     const { hideCard } = useContext(AutocardContext);
@@ -202,7 +220,7 @@ const AutocompleteInput = forwardRef(
           if (!treeCache[treeUrl]) {
             treeCache[treeUrl] = fetchTree(treeUrl, treePath);
           }
-          setTree(await treeCache[treeUrl]);
+          setTree((await treeCache[treeUrl]) ?? {});
         } catch (e) {
           console.error('Error getting autocomplete tree.', e);
         }
@@ -211,7 +229,7 @@ const AutocompleteInput = forwardRef(
     }, [treePath, treeUrl]);
 
     const handleChange = useCallback(
-      (event) => {
+      (event: React.ChangeEvent<HTMLInputElement>) => {
         setValue(event.target.value);
         setVisible(true);
         hideCard();
@@ -220,7 +238,7 @@ const AutocompleteInput = forwardRef(
     );
 
     const acceptSuggestion = useCallback(
-      (newValue) => {
+      (newValue: string) => {
         setValue(newValue);
         setVisible(false);
         hideCard();
@@ -230,9 +248,9 @@ const AutocompleteInput = forwardRef(
     );
 
     const handleClickSuggestion = useCallback(
-      (event) => {
+      (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
         event.preventDefault();
-        acceptSuggestion(event.target.textContent);
+        acceptSuggestion(event.currentTarget.textContent!);
       },
       [acceptSuggestion],
     );
@@ -249,7 +267,7 @@ const AutocompleteInput = forwardRef(
     const showMatches = visible && value && matches.length > 0 && !(matches.length === 1 && matches[0] === value);
 
     const handleKeyDown = useCallback(
-      (event) => {
+      (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.keyCode === 40) {
           // DOWN key
           event.preventDefault();

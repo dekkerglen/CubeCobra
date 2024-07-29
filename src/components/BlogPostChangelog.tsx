@@ -1,87 +1,96 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Row, Col } from 'reactstrap';
-
 import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
 import withAutocard from 'components/WithAutocard';
-import CardPropType from 'proptypes/CardPropType';
+import Card from 'datatypes/Card';
+
+interface AddProps {
+  card: Card;
+}
 
 const TextAutocard = withAutocard('a');
 
-const capitalizeFirstLetter = (string) => {
+const capitalizeFirstLetter = (string: string): string => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-const Add = ({ card }) => {
+const Add: React.FC<AddProps> = ({ card }) => {
   return (
     <li>
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
       <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-        {card.details.name}
+        {card.details?.name}
       </TextAutocard>
     </li>
   );
 };
 
-Add.propTypes = {
-  card: CardPropType.isRequired,
-};
+interface RemoveProps {
+  oldCard: Card;
+}
 
-const Remove = ({ oldCard }) => (
+const Remove: React.FC<RemoveProps> = ({ oldCard }) => (
   <li>
     <span className="mx-1" style={{ color: 'red' }}>
       <NoEntryIcon />
     </span>
     <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
-      {oldCard.details.name}
+      {oldCard.details?.name}
     </TextAutocard>
   </li>
 );
 
-Remove.propTypes = {
-  oldCard: CardPropType.isRequired,
-};
+interface EditProps {
+  card: Card;
+}
 
-const Edit = ({ card }) => (
+const Edit: React.FC<EditProps> = ({ card }) => (
   <li>
     <span className="mx-1" style={{ color: 'orange' }}>
       <ToolsIcon />
     </span>
     <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-      {card.details.name}
+      {card.details?.name}
     </TextAutocard>
   </li>
 );
 
-Edit.propTypes = {
-  card: CardPropType.isRequired,
-};
+interface SwapProps {
+  oldCard: Card;
+  card: Card;
+}
 
-const Swap = ({ oldCard, card }) => {
+const Swap: React.FC<SwapProps> = ({ oldCard, card }) => {
   return (
     <li>
       <span className="mx-1" style={{ color: 'blue' }}>
         <ArrowSwitchIcon />
       </span>
       <TextAutocard href={`/tool/card/${oldCard.cardID}`} card={oldCard}>
-        {oldCard.details.name}
+        {oldCard.details?.name}
       </TextAutocard>
       <ArrowRightIcon className="mx-1" />
       <TextAutocard href={`/tool/card/${card.cardID}`} card={card}>
-        {card.details.name}
+        {card.details?.name}
       </TextAutocard>
     </li>
   );
 };
 
-Swap.propTypes = {
-  oldCard: CardPropType.isRequired,
-  card: CardPropType.isRequired,
-};
+interface BlogPostChangelogProps {
+  changelog: {
+    [key: string]: {
+      adds?: Card[];
+      removes?: { oldCard: Card }[];
+      swaps?: { oldCard: Card; card: Card }[];
+      edits?: { oldCard: Card }[];
+    };
+  };
+}
 
-const BlogPostChangelog = ({ changelog }) => {
+const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
   return (
     <div>
       {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => (
@@ -109,10 +118,6 @@ const BlogPostChangelog = ({ changelog }) => {
       ))}
     </div>
   );
-};
-
-BlogPostChangelog.propTypes = {
-  changelog: PropTypes.shape({}).isRequired,
 };
 
 export default BlogPostChangelog;

@@ -1,14 +1,21 @@
 import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-
 import { csrfFetch } from 'utils/CSRF';
-import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card } from 'reactstrap';
+import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card as BootstrapCard } from 'reactstrap';
+import Card from 'datatypes/Card';
 
 const MAX_BASICS = 21;
 
-const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
-  const [counts, setCounts] = useState(basics.map(() => 0));
+interface BasicsModalProps {
+  isOpen: boolean;
+  toggle: () => void;
+  addBasics: (counts: number[]) => void;
+  deck: number[][][];
+  basics: number[];
+  cards: Card[];
+}
+
+const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
+  const [counts, setCounts] = useState<number[]>(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
     addBasics(counts);
@@ -33,8 +40,8 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
     if (json.success === 'true') {
       const newCounts = basics.map(() => 0);
 
-      const toIndex = json.basics.map((card) =>
-        basics.findIndex((index) => cards[index].details.oracle_id === card.oracle_id),
+      const toIndex = json.basics.map((card: { oracle_id: string }) =>
+        basics.findIndex((index) => cards[index].details?.oracle_id === card.oracle_id),
       );
 
       console.log(toIndex);
@@ -57,13 +64,13 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
           {basics.map((cardIndex, index) => (
             <Col
               className="col-6 col-md-2-4 col-lg-2-4 col-xl-2-4"
-              key={`basics-${cards[cardIndex].details.scryfall_id}`}
+              key={`basics-${cards[cardIndex].details?.scryfall_id}`}
             >
-              <Card className="mb-3">
+              <BootstrapCard className="mb-3">
                 <img
                   className="w-100"
-                  src={cards[cardIndex].details.image_normal}
-                  alt={cards[cardIndex].details.name}
+                  src={cards[cardIndex].details?.image_normal}
+                  alt={cards[cardIndex].details?.name}
                 />
                 <Input
                   className="mt-1"
@@ -81,7 +88,7 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
                     </option>
                   ))}
                 </Input>
-              </Card>
+              </BootstrapCard>
             </Col>
           ))}
         </Row>
@@ -99,15 +106,6 @@ const BasicsModal = ({ isOpen, toggle, addBasics, deck, basics, cards }) => {
       </ModalFooter>
     </Modal>
   );
-};
-
-BasicsModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  addBasics: PropTypes.func.isRequired,
-  deck: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))).isRequired,
-  basics: PropTypes.arrayOf(PropTypes.number).isRequired,
-  cards: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
 export default BasicsModal;

@@ -1,12 +1,19 @@
 import React, { useCallback, useMemo, useContext } from 'react';
 import cx from 'classnames';
-import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
 import { getCardTagColorClass } from 'utils/Util';
 
 import withAutocard from 'components/WithAutocard';
 import TagColorContext from 'contexts/TagColorContext';
 import UserContext from 'contexts/UserContext';
+import Card from 'datatypes/Card';
+
+export interface AutocardListItemProps {
+  card: Card;
+  noCardModal?: boolean;
+  inModal?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}
 
 const AutocardDiv = withAutocard('li');
 
@@ -21,7 +28,14 @@ const styles = {
   children: 'card-list-item_children',
 };
 
-const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...props }) => {
+const AutocardListItem: React.FC<AutocardListItemProps> = ({
+  card,
+  noCardModal = false,
+  inModal = false,
+  className = '',
+  children,
+  ...props
+}) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
   const [cardName, cardId] = useMemo(
@@ -35,7 +49,7 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
   }, [cardId]);
 
   const handleAuxClick = useCallback(
-    (event) => {
+    (event: React.MouseEvent<HTMLDivElement>) => {
       if (event.button === 1) {
         event.preventDefault();
         openCardToolWindow();
@@ -64,19 +78,6 @@ const AutocardListItem = ({ card, noCardModal, inModal, className, children, ...
       <span className={styles.name}>{cardName}</span>
     </AutocardDiv>
   );
-};
-AutocardListItem.propTypes = {
-  card: CardPropType.isRequired,
-  noCardModal: PropTypes.bool,
-  inModal: PropTypes.bool,
-  className: PropTypes.string,
-  children: PropTypes.node,
-};
-AutocardListItem.defaultProps = {
-  noCardModal: false,
-  inModal: false,
-  className: '',
-  children: undefined,
 };
 
 export default AutocardListItem;

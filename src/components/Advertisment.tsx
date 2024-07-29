@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import AdsContext, { AdsContextValue } from 'contexts/AdsContext';
+import AdsContext from 'contexts/AdsContext';
 import useMount from 'hooks/UseMount';
 
 interface MediaTypes {
@@ -67,7 +67,7 @@ const Advertisment: React.FC<AdvertismentProps> = ({
   railOffsetBottom = 0,
   railCollisionWhitelist = ['*'],
 }) => {
-  const adsEnabled = useContext<AdsContextValue>(AdsContext);
+  const adsEnabled = useContext(AdsContext);
 
   useMount(() => {
     if (window.nitroAds) {

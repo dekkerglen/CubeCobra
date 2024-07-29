@@ -41,6 +41,7 @@ import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import Card, { BoardType } from 'datatypes/Card';
 import TagData from 'datatypes/TagData';
+import { TagColor } from 'datatypes/Cube';
 
 interface CardModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ interface CardModalProps {
   revertEdit: (index: number, board: BoardType) => void;
   revertRemove: (index: number, board: BoardType) => void;
   removeCard: (index: number, board: BoardType) => void;
-  tagColors: string[];
+  tagColors: TagColor[];
   moveCard: (index: number, board: BoardType, newBoard: BoardType) => void;
   allTags: string[];
 }
