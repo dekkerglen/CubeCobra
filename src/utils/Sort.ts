@@ -746,9 +746,9 @@ export function getLabels(cube: Card[] | null, sort: string, showOther = false):
   return getLabelsRaw(cube, sort, showOther).map(formatLabel);
 }
 
-export function sortGroupsOrdered(cards: any[], sort: string, showOther: boolean): [string, any[]][] {
+export function sortGroupsOrdered(cards: Card[], sort: string, showOther: boolean): [string, Card[]][] {
   const labels = getLabelsRaw(cards, sort, showOther);
-  const allCardLabels = cards.map((card) => [
+  const allCardLabels: [Card, string[]][] = cards.map((card) => [
     card,
     cardGetLabels(card, sort, showOther).map((label) => {
       if (labels.includes(label)) {
@@ -758,7 +758,7 @@ export function sortGroupsOrdered(cards: any[], sort: string, showOther: boolean
     }),
   ]);
   const compare = (x: string, y: string) => labels.indexOf(x) - labels.indexOf(y);
-  const byLabel: Record<string, any[]> = {};
+  const byLabel: Record<string, Card[]> = {};
   for (const [card, cardLabels] of allCardLabels) {
     if (cardLabels && cardLabels.length > 0) {
       cardLabels.sort(compare);
@@ -773,52 +773,66 @@ export function sortGroupsOrdered(cards: any[], sort: string, showOther: boolean
   return labels.filter((label) => byLabel[label]).map((label) => [formatLabel(label), byLabel[label]]);
 }
 
-export function sortIntoGroups(cards: any[], sort: string, showOther: boolean): Record<string, any[]> {
+export function sortIntoGroups(cards: Card[], sort: string, showOther = false): Record<string, Card[]> {
   return fromEntries(sortGroupsOrdered(cards, sort, showOther));
 }
 
-export function sortDeep(cards: any[], showOther: boolean, last: string, ...sorts: string[]): any[][] {
+type DeepSorted = Card[] | [string, DeepSorted][];
+
+export function sortDeep(cards: Card[], showOther: boolean, last: string, ...sorts: string[]): DeepSorted {
   if (sorts.length === 0) {
     return [...cards].sort(SortFunctions[last]);
   }
   const [first, ...rest] = sorts;
-  const result = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
-  for (const labelGroup of result) {
+  const nextSort = sortGroupsOrdered(cards, first ?? 'Unsorted', showOther);
+  const result: [string, DeepSorted][] = [];
+  for (const [label, group] of nextSort) {
     if (rest.length > 0) {
-      labelGroup[1] = sortDeep(labelGroup[1], showOther, last, ...rest);
+      result.push([label, sortDeep(group, showOther, last, ...rest)]);
     } else {
-      labelGroup[1].sort(SortFunctions[last]);
+      result.push([label, group.sort(SortFunctions[last])]);
     }
   }
   return result;
 }
 
-export function countGroup(group: [string, any[]]): number {
-  if (Array.isArray(group[0])) {
+function isSimpleGroup(groups: DeepSorted): groups is Card[] {
+  return groups.length === 0 || !Array.isArray(groups[0]);
+}
+
+export function countGroup(group: DeepSorted): number {
+  if (!isSimpleGroup(group)) {
     const counts = group.map(([, group2]) => countGroup(group2)); // eslint-disable-line no-unused-vars
     return counts.reduce((a, b) => a + b, 0);
   }
   return group.length;
 }
 
+function accumulateCards(groups: DeepSorted, accumulator: Card[]) {
+  if (groups.length === 0) return [];
+  if (isSimpleGroup(groups)) {
+    accumulator.push(...groups);
+  } else {
+    for (const [, group] of groups) {
+      accumulateCards(group, accumulator);
+    }
+  }
+}
+
+function sortedCards(groups: DeepSorted) {
+  const accumulator: Card[] = [];
+  accumulateCards(groups, accumulator);
+  return accumulator;
+}
+
 export function sortForDownload(
-  cards: any[],
+  cards: Card[],
   primary: string = 'Color Category',
   secondary: string = 'Types-Multicolor',
   tertiary: string = 'Mana Value',
   quaternary: string = 'Alphabetical',
   showOther: boolean = false,
-): any[] {
-  const exportCards: any[] = [];
-  cards = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
-  for (const firstGroup of cards) {
-    for (const secondGroup of firstGroup[1]) {
-      for (const thirdGroup of secondGroup[1]) {
-        for (const card of thirdGroup[1]) {
-          exportCards.push(card);
-        }
-      }
-    }
-  }
-  return exportCards;
+): Card[] {
+  const groups = sortDeep(cards, showOther, quaternary, primary, secondary, tertiary);
+  return sortedCards(groups);
 }

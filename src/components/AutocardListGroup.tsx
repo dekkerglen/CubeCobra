@@ -7,7 +7,7 @@ import withCardModal from 'components/WithCardModal';
 import withGroupModal from 'components/WithGroupModal';
 import CubeContext from 'contexts/CubeContext';
 
-interface AutocardListGroupProps {
+export interface AutocardListGroupProps {
   cards: Card[];
   heading: React.ReactNode;
   sort?: string;

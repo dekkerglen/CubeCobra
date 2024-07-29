@@ -2,9 +2,9 @@ import React from 'react';
 import { Row, Col } from 'reactstrap';
 import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
 import withAutocard from 'components/WithAutocard';
-import Card from 'datatypes/Card';
+import Card, { BoardType } from 'datatypes/Card';
 
-interface AddProps {
+export interface AddProps {
   card: Card;
 }
 
@@ -27,7 +27,7 @@ const Add: React.FC<AddProps> = ({ card }) => {
   );
 };
 
-interface RemoveProps {
+export interface RemoveProps {
   oldCard: Card;
 }
 
@@ -42,7 +42,7 @@ const Remove: React.FC<RemoveProps> = ({ oldCard }) => (
   </li>
 );
 
-interface EditProps {
+export interface EditProps {
   card: Card;
 }
 
@@ -57,7 +57,7 @@ const Edit: React.FC<EditProps> = ({ card }) => (
   </li>
 );
 
-interface SwapProps {
+export interface SwapProps {
   oldCard: Card;
   card: Card;
 }
@@ -79,9 +79,9 @@ const Swap: React.FC<SwapProps> = ({ oldCard, card }) => {
   );
 };
 
-interface BlogPostChangelogProps {
+export interface BlogPostChangelogProps {
   changelog: {
-    [key: string]: {
+    [key in BoardType]?: {
       adds?: Card[];
       removes?: { oldCard: Card }[];
       swaps?: { oldCard: Card; card: Card }[];

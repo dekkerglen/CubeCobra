@@ -1,6 +1,4 @@
 import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-
 import { Collapse, Button, Spinner } from 'reactstrap';
 
 import UserContext from 'contexts/UserContext';
@@ -10,7 +8,13 @@ import CommentEntry from 'components/CommentEntry';
 import useToggle from 'hooks/UseToggle';
 import useComments from 'hooks/UseComments';
 
-const CommentsSection = ({ parent, collapse, parentType }) => {
+export interface CommentsProps {
+  parent: string;
+  collapse?: boolean;
+  parentType: string;
+}
+
+const CommentsSection: React.FC<CommentsProps> = ({ parent, collapse = true, parentType }) => {
   const user = useContext(UserContext);
 
   const [expanded, toggle] = useToggle(!collapse);
@@ -61,16 +65,6 @@ const CommentsSection = ({ parent, collapse, parentType }) => {
       )}
     </>
   );
-};
-
-CommentsSection.propTypes = {
-  parent: PropTypes.string.isRequired,
-  collapse: PropTypes.bool,
-  parentType: PropTypes.string.isRequired,
-};
-
-CommentsSection.defaultProps = {
-  collapse: true,
 };
 
 export default CommentsSection;

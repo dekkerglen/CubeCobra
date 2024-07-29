@@ -34,7 +34,7 @@ def ts_file_contents(directory, exclude):
 def convert_to_typescript(ts_path, file_content):
     human_prompt = f"""
 Convert the following JavaScript file to TypeScript.
-You can convert PropTypes into native TypeScript interfaces. If the original file exports (e.g.) XyzPropType, the output should no longer export XyzPropType and should instead export default an interface called Xyz.
+You can convert PropTypes into native TypeScript interfaces. If the original file exports (e.g.) XyzPropType, the output should no longer export XyzPropType and should instead export default an interface called XyzProps. Make sure XyzProps is exported.
 Transform any import {{ Xyz }} from 'proptypes/XyzPropType' into import Xyz from 'datatypes/Xyz'.
 Otherwise, don't change any of the code, other than adding type annotations.
 It should pass a standard linter test afterwards.

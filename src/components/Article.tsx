@@ -6,7 +6,7 @@ import TimeAgo from 'react-timeago';
 import Username from 'components/Username';
 import { CardBody, CardHeader } from 'reactstrap';
 
-interface ArticleProps {
+export interface ArticleProps {
   article: Content;
 }
 

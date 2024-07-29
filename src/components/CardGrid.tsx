@@ -1,36 +1,50 @@
 import React from 'react';
 import { Row, Col, ColProps } from 'reactstrap';
-import Card from 'datatypes/Card';
+import CardDetails from 'datatypes/CardDetails';
 
-interface CardImageProps<T> {
+export interface CardImageProps<T extends { card: { imgUrl?: string; details?: CardDetails } }> {
   Tag: React.ComponentType<T>;
-  card: Card;
   cardProps: T;
   linkDetails: boolean;
 }
 
-function cardImage<T>({ Tag, card, cardProps, linkDetails }: CardImageProps<T>): React.ReactNode {
-  const cardTag = <Tag card={card} {...cardProps} modalProps={{ card }} />;
+function cardImage<T extends { card: { imgUrl?: string; details?: CardDetails } }>({
+  Tag,
+  cardProps,
+  linkDetails,
+}: CardImageProps<T>): React.ReactNode {
+  const { card } = cardProps;
+  const cardTag = <Tag {...cardProps} modalProps={{ card }} />;
   if (linkDetails && card.details?.scryfall_id) {
     return <a href={`/tool/card/${card.details?.scryfall_id}`}>{cardTag}</a>;
   }
   return cardTag;
 }
 
-interface CardGridProps<T> {
-  cardList: Card[];
+export interface CardGridProps<T extends { card: { imgUrl?: string; details?: CardDetails } }> {
+  cardList: { imgUrl?: string; details?: CardDetails }[];
   Tag: React.ComponentType<T>;
   colProps?: ColProps;
-  cardProps: T;
+  cardProps: Omit<T, 'card'>;
   linkDetails: boolean;
 }
 
-function CardGrid<T>({ cardList, Tag, colProps, cardProps, linkDetails = false, ...props }: CardGridProps<T>) {
+function CardGrid<T extends { card: { imgUrl?: string; details?: CardDetails } }>({
+  cardList,
+  Tag,
+  colProps,
+  cardProps,
+  linkDetails = false,
+  ...props
+}: CardGridProps<T>) {
   return (
     <Row className="justify-content-center g-0" {...props}>
       {cardList.map((card, cardIndex) => (
         <Col key={cardIndex} {...colProps}>
-          {cardImage<T>({ Tag, card, cardProps, linkDetails })}
+          {
+            // @ts-ignore (this will always work out in practice)
+            cardImage<T>({ Tag, cardProps: { ...cardProps, card }, linkDetails })
+          }
         </Col>
       ))}
     </Row>

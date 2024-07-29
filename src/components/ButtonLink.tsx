@@ -1,9 +1,10 @@
 import React, { AnchorHTMLAttributes } from 'react';
 
-interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   children: React.ReactNode;
   outline?: boolean;
-  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  // "accent" is our own bootstrap extension
+  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'accent';
   block?: boolean;
 }
 

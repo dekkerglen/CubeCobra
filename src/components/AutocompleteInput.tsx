@@ -4,7 +4,7 @@ import { Input, InputProps } from 'reactstrap';
 import withAutocard from 'components/WithAutocard';
 import AutocardContext from 'contexts/AutocardContext';
 
-interface AutocardLiProps {
+export interface AutocardLiProps {
   inModal: boolean;
   image: string;
   onClick: (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => void;
@@ -192,7 +192,7 @@ const fetchTree = async (treeUrl: string, treePath: string): Promise<TreeNode | 
   return json[treePath];
 };
 
-interface AutocompleteInputProps extends InputProps {
+export interface AutocompleteInputProps extends InputProps {
   treeUrl: string;
   treePath: string;
   defaultValue?: string;

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { Collapse } from 'reactstrap';
 
 import LinkButton from 'components/LinkButton';
 
-const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
-  const [text, setText] = useState(defaultValue);
+export interface CommentEntryProps {
+  submit: (text: string) => void;
+  expanded: boolean;
+  toggle: () => void;
+  defaultValue?: string;
+}
+
+const CommentEntry: React.FC<CommentEntryProps> = ({ submit, expanded, toggle, defaultValue = '' }) => {
+  const [text, setText]: [string, Dispatch<SetStateAction<string>>] = useState(defaultValue);
 
   return (
     <Collapse isOpen={expanded}>
@@ -14,8 +20,8 @@ const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
         onChange={(event) => setText(event.target.value)}
         className="form-control"
         id="exampleFormControlTextarea1"
-        rows="2"
-        maxLength="5000"
+        rows={2}
+        maxLength={5000}
       />
       <LinkButton
         onClick={() => {
@@ -31,17 +37,6 @@ const CommentEntry = ({ submit, expanded, toggle, defaultValue }) => {
       </LinkButton>
     </Collapse>
   );
-};
-
-CommentEntry.propTypes = {
-  submit: PropTypes.func.isRequired,
-  expanded: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  defaultValue: PropTypes.string,
-};
-
-CommentEntry.defaultProps = {
-  defaultValue: '',
 };
 
 export default CommentEntry;

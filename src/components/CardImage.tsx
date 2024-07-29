@@ -4,15 +4,15 @@ import DisplayContext from 'contexts/DisplayContext';
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import withAutocard, { WithAutocardProps } from 'components/WithAutocard';
 
-interface CardImageProps {
+const ImageAutocard = withAutocard<typeof ImageFallback>(ImageFallback);
+
+export interface CardImageProps extends Partial<ImageFallbackProps> {
   card: Card;
   autocard?: boolean;
   className?: string;
   width?: string;
   height?: string;
 }
-
-const ImageAutocard = withAutocard(ImageFallback);
 
 const CardImage: React.FC<CardImageProps> = ({ card, autocard = false, className, width, height, ...props }) => {
   const { showCustomImages } = useContext(DisplayContext);

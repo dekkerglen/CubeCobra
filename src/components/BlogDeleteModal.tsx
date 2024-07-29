@@ -2,7 +2,7 @@ import React from 'react';
 import { csrfFetch } from 'utils/CSRF';
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
 
-interface BlogDeleteModalProps {
+export interface BlogDeleteModalProps {
   isOpen: boolean;
   toggle: () => void;
   postID: string;

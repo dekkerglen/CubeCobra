@@ -2,21 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
 import { findUserLinks } from 'markdown/parser';
 import { wait } from 'utils/Util';
+import Comment from 'datatypes/Comment';
 
-interface Comment {
+export interface EditRequest {
   id: string;
-  body: string;
-  user: {
-    id: string;
-    username: string;
-  };
-  image?: {
-    uri: string;
-    artist: string;
-    id: string;
-  };
-  remove?: boolean;
   content?: string;
+  remove?: boolean;
 }
 
 interface CommentResponse {
@@ -25,13 +16,16 @@ interface CommentResponse {
   success: 'true';
 }
 
-const useComments = (parent: string, type: string): [
+const useComments = (
+  parent: string,
+  type: string,
+): [
   Comment[],
   (comment: string) => Promise<void>,
   boolean,
-  (comment: Comment) => Promise<void>,
+  (editRequest: EditRequest) => Promise<void>,
   string | null,
-  () => Promise<void>
+  () => Promise<void>,
 ] => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,24 +53,24 @@ const useComments = (parent: string, type: string): [
   );
 
   const editComment = useCallback(
-    async (comment: Comment) => {
+    async (editRequest: EditRequest) => {
       await csrfFetch(`/comment/edit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          comment,
+          comment: editRequest,
         }),
       });
 
       const clone = JSON.parse(JSON.stringify(comments)) as Comment[];
 
       for (let i = 0; i < clone.length; i++) {
-        if (clone[i].id === comment.id) {
-          if (comment.remove) {
+        if (clone[i].id === editRequest.id) {
+          if (editRequest.remove) {
             clone[i].body = '[deleted]';
-            clone[i].user = {
+            clone[i].owner = {
               id: '404',
               username: 'Anonymous',
             };
@@ -84,9 +78,10 @@ const useComments = (parent: string, type: string): [
               uri: 'https://c1.scryfall.com/file/scryfall-cards/art_crop/front/0/e/0e386888-57f5-4eb6-88e8-5679bb8eb290.jpg?1608910517',
               artist: 'Allan Pollack',
               id: '0c082aa8-bf7f-47f2-baf8-43ad253fd7d7',
+              imageName: 'Ambush Viper',
             };
-          } else {
-            clone[i].body = comment.content!;
+          } else if (editRequest.content !== undefined) {
+            clone[i].body = editRequest.content;
           }
         }
       }

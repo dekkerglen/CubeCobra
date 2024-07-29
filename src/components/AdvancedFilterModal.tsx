@@ -18,7 +18,7 @@ import {
   ModalHeader,
 } from 'reactstrap';
 
-interface AdvancedFilterModalProps {
+export interface AdvancedFilterModalProps {
   isOpen: boolean;
   toggle: () => void;
   values: {
@@ -103,12 +103,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
           />
           <InputGroup className="mb-3">
             <InputGroupText>Color</InputGroupText>
-            <ColorChecksAddon
-              colorless
-              prefix="color"
-              values={values.color}
-              setValues={(v: string[]) => updateValue(v, 'color')}
-            />
+            <ColorChecksAddon colorless values={values.color} setValues={(v: string[]) => updateValue(v, 'color')} />
             <Input
               type="select"
               id="colorOp"
@@ -125,7 +120,6 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             <InputGroupText>Color Identity</InputGroupText>
             <ColorChecksAddon
               colorless
-              prefix="identity"
               values={values.colorIdentity}
               setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />

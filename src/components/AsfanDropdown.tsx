@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction } from 'react';
 import { InputGroup, InputGroupText, Input } from 'reactstrap';
 import Cube from 'datatypes/Cube';
 
-interface AsfanDropdownProps {
+export interface AsfanDropdownProps {
   cube: Cube;
   alwaysOn?: boolean;
   useAsfans: boolean;

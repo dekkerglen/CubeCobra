@@ -1,15 +1,18 @@
-/* eslint-disable react/prop-types */
-import React from 'react';
-import { useDrop } from 'react-dnd';
+import React, { ReactNode } from 'react';
+import { useDrop, DropTargetMonitor } from 'react-dnd';
+import { Col, ColProps } from 'reactstrap';
 
-import { Col } from 'reactstrap';
+export interface CardStackProps extends ColProps {
+  location: unknown;
+  children: ReactNode;
+}
 
-const CardStack = ({ location, children, ...props }) => {
+const CardStack: React.FC<CardStackProps> = ({ location, children, ...props }) => {
   const [{ isAcceptable }, drop] = useDrop({
     accept: 'card',
-    drop: (item, monitor) => (monitor.didDrop() ? undefined : location),
+    drop: (_, monitor) => (monitor.didDrop() ? undefined : location),
     canDrop: () => true,
-    collect: (monitor) => ({
+    collect: (monitor: DropTargetMonitor) => ({
       isAcceptable: !!monitor.isOver({ shallow: true }) && !!monitor.canDrop(),
     }),
   });

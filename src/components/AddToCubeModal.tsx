@@ -23,7 +23,7 @@ interface Card {
   scryfall_id: string;
 }
 
-interface AddToCubeModalProps {
+export interface AddToCubeModalProps {
   card: Card;
   isOpen: boolean;
   toggle: () => void;

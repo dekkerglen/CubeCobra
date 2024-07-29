@@ -43,7 +43,7 @@ import Card, { BoardType } from 'datatypes/Card';
 import TagData from 'datatypes/TagData';
 import { TagColor } from 'datatypes/Cube';
 
-interface CardModalProps {
+export interface CardModalProps {
   isOpen: boolean;
   toggle: () => void;
   card: Card;

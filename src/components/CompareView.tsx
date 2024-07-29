@@ -1,19 +1,21 @@
-/* eslint-disable react/no-array-index-key */
 import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-
-import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
-
-import { getLabels, sortIntoGroups } from 'utils/Sort';
-
-import AutocardListItem from 'components/AutocardListItem';
-import CardPropType from 'proptypes/CardPropType';
+import Card from 'datatypes/Card';
 import CubeContext from 'contexts/CubeContext';
+import { getLabels, sortIntoGroups } from 'utils/Sort';
+import AutocardListItem from 'components/AutocardListItem';
 import withCardModal from 'components/WithCardModal';
+import { ListGroup, ListGroupItem, Row, Col } from 'reactstrap';
+
+export interface CompareGroupProps {
+  heading: string;
+  both: Card[];
+  onlyA: Card[];
+  onlyB: Card[];
+}
 
 const CardModalLink = withCardModal(AutocardListItem);
 
-const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
+const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB }) => {
   const bothCmc = sortIntoGroups(both, 'Mana Value');
   const onlyACmc = sortIntoGroups(onlyA, 'Mana Value');
   const onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
@@ -32,11 +34,13 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} className="cmc-group g-0">
-            {[
-              [bothCmc, 'both'],
-              [onlyACmc, 'a'],
-              [onlyBCmc, 'b'],
-            ].map(([cards, key]) => (
+            {(
+              [
+                [bothCmc, 'both'],
+                [onlyACmc, 'a'],
+                [onlyBCmc, 'b'],
+              ] as [Record<string, Card[]>, string][]
+            ).map(([cards, key]) => (
               <Col xs="4" key={key}>
                 {(cards[cmc] || []).map((card, index) => (
                   <CardModalLink
@@ -59,51 +63,65 @@ const CompareGroup = ({ heading, both, onlyA, onlyB }) => {
   );
 };
 
-CompareGroup.propTypes = {
-  heading: PropTypes.string.isRequired,
-  both: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyA: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyB: PropTypes.arrayOf(CardPropType).isRequired,
-};
+export interface CompareViewProps {
+  cards: Card[];
+  both: Card[];
+  onlyA: Card[];
+  onlyB: Card[];
+}
 
-const CompareView = ({ cards, both, onlyA, onlyB }) => {
-  const { sortPrimary, sortSecondary, cube } = useContext(CubeContext);
+const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
+  const { sortPrimary, sortSecondary, cube } = useContext(CubeContext) ?? {};
 
-  const columns = sortIntoGroups(cards, sortPrimary, cube.showUnsorted);
-  const columnCounts = {};
-  const bothCounts = { total: 0 };
-  const onlyACounts = { total: 0 };
-  const onlyBCounts = { total: 0 };
+  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted);
+  const columnsSecondary: Record<string, Record<string, Card[]>> = {};
+  const columnCounts: Record<string, number> = {};
+  const bothCounts: Record<string, number> = { total: 0 };
+  const onlyACounts: Record<string, number> = { total: 0 };
+  const onlyBCounts: Record<string, number> = { total: 0 };
 
   const bothCopyTemp = both.slice(0);
   const onlyACopyTemp = onlyA.slice(0);
   const onlyBCopyTemp = onlyB.slice(0);
 
-  for (const columnLabel of Object.keys(columns)) {
+  for (const columnLabel of Object.keys(columnsPrimary)) {
     let onlyACount = 0;
     let onlyBCount = 0;
     let bothCount = 0;
-    for (const card of columns[columnLabel]) {
-      if (bothCopyTemp.includes(card.details.oracle_id)) {
+    for (const card of columnsPrimary[columnLabel]) {
+      if (bothCopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
         bothCount += 1;
-        bothCopyTemp.splice(bothCopyTemp.indexOf(card.details.oracle_id), 1);
-      } else if (onlyACopyTemp.includes(card.details.oracle_id)) {
+        bothCopyTemp.splice(
+          bothCopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+          1,
+        );
+      } else if (onlyACopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
         onlyACount += 1;
-        onlyACopyTemp.splice(onlyACopyTemp.indexOf(card.details.oracle_id), 1);
-      } else if (onlyBCopyTemp.includes(card.details.oracle_id)) {
+        onlyACopyTemp.splice(
+          onlyACopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+          1,
+        );
+      } else if (onlyBCopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
         onlyBCount += 1;
-        onlyBCopyTemp.splice(onlyBCopyTemp.indexOf(card.details.oracle_id), 1);
+        onlyBCopyTemp.splice(
+          onlyBCopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+          1,
+        );
       }
     }
 
-    columnCounts[columnLabel] = columns[columnLabel].length;
+    columnCounts[columnLabel] = columnsPrimary[columnLabel].length;
     bothCounts[columnLabel] = bothCount;
     bothCounts.total += bothCount;
     onlyACounts[columnLabel] = onlyACount;
     onlyACounts.total += onlyACount;
     onlyBCounts[columnLabel] = onlyBCount;
     onlyBCounts.total += onlyBCount;
-    columns[columnLabel] = sortIntoGroups(columns[columnLabel], sortSecondary, cube.showUnsorted);
+    columnsSecondary[columnLabel] = sortIntoGroups(
+      columnsPrimary[columnLabel],
+      sortSecondary ?? 'Unsorted',
+      !!cube?.showUnsorted,
+    );
   }
   const bothCopy = both.slice(0);
   const onlyACopy = onlyA.slice(0);
@@ -140,10 +158,10 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
           </Row>
         </div>
       }
-      {getLabels(cards, sortPrimary, cube.showUnsorted)
-        .filter((columnLabel) => columns[columnLabel])
+      {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted)
+        .filter((columnLabel) => columnsPrimary[columnLabel])
         .map((columnLabel) => {
-          const column = columns[columnLabel];
+          const column = columnsSecondary[columnLabel];
           return (
             <Row key={columnLabel}>
               <Col xs="12" md="10" lg="8" className="mx-auto">
@@ -174,24 +192,33 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
                     </Col>
                   </Row>
                 </div>
-                {getLabels(Object.values(column).flat(), sortSecondary, cube.showUnsorted)
+                {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted)
                   .filter((label) => column[label])
                   .map((label) => {
                     const group = column[label];
-                    const bothGroup = [];
-                    const onlyAGroup = [];
-                    const onlyBGroup = [];
+                    const bothGroup: Card[] = [];
+                    const onlyAGroup: Card[] = [];
+                    const onlyBGroup: Card[] = [];
 
                     for (const card of group) {
-                      if (bothCopy.includes(card.details.oracle_id)) {
+                      if (bothCopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
                         bothGroup.push(card);
-                        bothCopy.splice(bothCopy.indexOf(card.details.oracle_id), 1);
-                      } else if (onlyACopy.includes(card.details.oracle_id)) {
+                        bothCopy.splice(
+                          bothCopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+                          1,
+                        );
+                      } else if (onlyACopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
                         onlyAGroup.push(card);
-                        onlyACopy.splice(onlyACopy.indexOf(card.details.oracle_id), 1);
-                      } else if (onlyBCopy.includes(card.details.oracle_id)) {
+                        onlyACopy.splice(
+                          onlyACopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+                          1,
+                        );
+                      } else if (onlyBCopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
                         onlyBGroup.push(card);
-                        onlyBCopy.splice(onlyBCopy.indexOf(card.details.oracle_id), 1);
+                        onlyBCopy.splice(
+                          onlyBCopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
+                          1,
+                        );
                       }
                     }
 
@@ -211,13 +238,6 @@ const CompareView = ({ cards, both, onlyA, onlyB }) => {
         })}
     </>
   );
-};
-
-CompareView.propTypes = {
-  cards: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyA: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyB: PropTypes.arrayOf(CardPropType).isRequired,
-  both: PropTypes.arrayOf(CardPropType).isRequired,
 };
 
 export default CompareView;

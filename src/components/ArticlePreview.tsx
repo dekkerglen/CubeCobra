@@ -12,7 +12,7 @@ const statusMap: Record<string, string> = {
   r: 'In Review',
 };
 
-interface ArticlePreviewProps {
+export interface ArticlePreviewProps {
   article: Content;
   showStatus?: boolean;
 }

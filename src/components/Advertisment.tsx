@@ -14,7 +14,7 @@ interface SizeTypes {
   mobile: [string, string][];
 }
 
-interface AdvertismentProps {
+export interface AdvertismentProps {
   placementId: string;
   refreshLimit?: number;
   refreshTime?: number;

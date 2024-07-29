@@ -1,3 +1,5 @@
+import { Changes } from './Card';
+
 export default interface BlogPost {
   id: string;
   body: string;
@@ -5,5 +7,6 @@ export default interface BlogPost {
   date: number;
   title?: string;
   cube: string;
+  cubeName: string;
   Changelog?: Partial<Changes>;
 }

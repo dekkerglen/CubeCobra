@@ -18,7 +18,7 @@ import { csrfFetch } from 'utils/CSRF';
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 const AutocardA = withAutocard('a');
 
-interface CardPackageProps {
+export interface CardPackageProps {
   cardPackage: CardPackageData;
 }
 

@@ -8,7 +8,7 @@ import DomainContext, { DomainContextValue } from 'contexts/DomainContext';
 import ErrorBoundary, { ErrorBoundaryProps } from 'components/ErrorBoundary';
 import { AutocardContextProvider } from 'contexts/AutocardContext';
 
-interface ReactProps {
+export interface ReactProps {
   nitroPayEnabled: AdsContextValue;
   domain: DomainContextValue;
   user: UserContextValue;

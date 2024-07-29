@@ -5,7 +5,7 @@ import Card from 'datatypes/Card';
 
 const MAX_BASICS = 21;
 
-interface BasicsModalProps {
+export interface BasicsModalProps {
   isOpen: boolean;
   toggle: () => void;
   addBasics: (counts: number[]) => void;

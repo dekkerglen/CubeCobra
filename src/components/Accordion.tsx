@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, Collapse } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';
 
-interface AccordionProps {
+export interface AccordionProps {
   defaultExpand?: boolean;
   children: ReactNode;
   title: string;

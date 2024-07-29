@@ -3,7 +3,7 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap
 import BlogDeleteModal from 'components/BlogDeleteModal';
 import BlogPost from 'datatypes/BlogPost';
 
-interface BlogContextMenuProps {
+export interface BlogContextMenuProps {
   post: BlogPost;
   value: string;
   onEdit: (id: string) => void;

@@ -20,7 +20,7 @@ import {
 import { csrfFetch } from 'utils/CSRF';
 import { getColorClass } from 'utils/Util';
 
-interface AddGroupToCubeModalProps {
+export interface AddGroupToCubeModalProps {
   cards: CardDetails[];
   isOpen: boolean;
   toggle: () => void;

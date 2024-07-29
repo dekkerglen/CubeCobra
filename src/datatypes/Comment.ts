@@ -1,17 +1,16 @@
+import User from './User';
+
 export default interface Comment {
   id: string;
   parent: string;
   type: string;
-  owner?: string;
+  owner: User;
   body: string;
   date: number;
-  user?: {
-    id: string;
-    username: string;
-  };
   image?: {
+    id: string;
     uri: string;
     artist: string;
-    id: string;
+    imageName: string;
   };
 }

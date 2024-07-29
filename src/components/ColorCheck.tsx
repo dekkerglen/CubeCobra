@@ -1,11 +1,17 @@
 import React, { useMemo } from 'react';
-import PropTypes from 'prop-types';
-
 import { Button, ButtonGroup } from 'reactstrap';
 
 import { COLORS } from 'utils/Util';
 
-export const ColorCheckButton = ({ size, color, short, checked, onClick }) => {
+interface ColorCheckButtonProps {
+  size?: string;
+  color: string;
+  short: string;
+  checked: boolean;
+  onClick: () => void;
+}
+
+export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ size, color, short, checked, onClick }) => {
   const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
@@ -20,20 +26,22 @@ export const ColorCheckButton = ({ size, color, short, checked, onClick }) => {
   );
 };
 
-ColorCheckButton.propTypes = {
-  size: PropTypes.string,
-  color: PropTypes.string.isRequired,
-  short: PropTypes.string.isRequired,
-  checked: PropTypes.bool.isRequired,
-  onClick: PropTypes.func.isRequired,
-};
+interface ColorChecksControlProps {
+  colorless?: boolean;
+  size?: string;
+  values: string[];
+  setValues: (values: string[]) => void;
+  style?: React.CSSProperties;
+}
 
-ColorCheckButton.defaultProps = {
-  size: 'sm',
-};
-
-export const ColorChecksControl = ({ colorless, prefix, size, values, setValues, style }) => {
-  const smallStyle = {
+export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
+  colorless,
+  size,
+  values,
+  setValues,
+  style,
+}) => {
+  const smallStyle: React.CSSProperties = {
     height: 'calc(1.5em + .5rem + 2px)',
     fontSize: '0.875rem',
   };
@@ -43,7 +51,6 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
       {COLORS.map(([color, short]) => (
         <ColorCheckButton
           key={short}
-          prefix={prefix}
           size={size}
           color={color}
           short={short}
@@ -59,7 +66,6 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
       ))}
       {colorless && (
         <ColorCheckButton
-          prefix={prefix}
           size={size}
           color="Colorless"
           short="C"
@@ -77,24 +83,14 @@ export const ColorChecksControl = ({ colorless, prefix, size, values, setValues,
   );
 };
 
-ColorChecksControl.propTypes = {
-  colorless: PropTypes.bool,
-  prefix: PropTypes.string,
-  size: PropTypes.string,
-  values: PropTypes.arrayOf(PropTypes.string),
-  setValues: PropTypes.func.isRequired,
-  style: PropTypes.shape({}),
-};
+export interface ColorChecksAddonProps {
+  colorless?: boolean;
+  size?: string;
+  values: string[];
+  setValues: (values: string[]) => void;
+}
 
-ColorChecksControl.defaultProps = {
-  colorless: false,
-  prefix: 'color',
-  size: 'sm',
-  values: {},
-  style: {},
-};
-
-export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues }) => {
+export const ColorChecksAddon: React.FC<ColorChecksAddonProps> = ({ colorless, size, values, setValues }) => {
   const colors = useMemo(() => {
     const c = [...COLORS];
     if (colorless) {
@@ -108,7 +104,6 @@ export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues })
       {colors.map(([color, short]) => (
         <ColorCheckButton
           key={short}
-          prefix={prefix}
           size={size}
           color={color}
           short={short}
@@ -124,19 +119,4 @@ export const ColorChecksAddon = ({ colorless, prefix, size, values, setValues })
       ))}
     </>
   );
-};
-
-ColorChecksAddon.propTypes = {
-  colorless: PropTypes.bool,
-  prefix: PropTypes.string,
-  size: PropTypes.string,
-  values: PropTypes.arrayOf(PropTypes.string),
-  setValues: PropTypes.func.isRequired,
-};
-
-ColorChecksAddon.defaultProps = {
-  colorless: false,
-  prefix: 'color',
-  size: 'sm',
-  values: [],
 };

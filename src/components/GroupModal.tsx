@@ -27,17 +27,24 @@ import AutocardContext from 'contexts/AutocardContext';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 
-interface GroupModalProps {
+function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
+  return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
+    board: BoardType;
+    index: number;
+  }[];
+}
+
+export interface GroupModalProps {
   isOpen: boolean;
   toggle: () => void;
   cards: Card[];
   canEdit?: boolean;
-  bulkEditCard: (cards: Card[]) => void;
-  bulkMoveCard: (cards: Card[], board: 'maybeboard' | 'mainboard') => void;
-  bulkRevertEdit: (cards: { board: string; index: number }[]) => void;
-  bulkRevertRemove: (cards: { board: string; index: number }[]) => void;
-  bulkRemoveCard: (cards: { board: string; index: number }[]) => void;
-  setModalSelection: (cards: Card[]) => void;
+  bulkEditCard: (cards: { board: BoardType; index: number }[]) => void;
+  bulkMoveCard: (cards: { board: BoardType; index: number }[], board: 'maybeboard' | 'mainboard') => void;
+  bulkRevertEdit: (cards: { board: BoardType; index: number }[]) => void;
+  bulkRevertRemove: (cards: { board: BoardType; index: number }[]) => void;
+  bulkRemoveCard: (cards: { board: BoardType; index: number }[]) => void;
+  setModalSelection: (cards: { board: BoardType; index: number }[]) => void;
   allTags: string[];
   tagColors: TagColor[];
 }
@@ -68,7 +75,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
   const filterOut = useCallback(
     (card: Card) => {
-      setModalSelection(cards.filter((c) => !(c.index === card.index && c.board === card.board)));
+      setModalSelection(
+        cardsWithBoardAndIndex(cards.filter((c) => !(c.index === card.index && c.board === card.board))),
+      );
       hideCard();
     },
     [cards, hideCard, setModalSelection],
@@ -249,7 +258,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   block
                   outline
                   onClick={() => {
-                    bulkMoveCard(cards, 'maybeboard');
+                    bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
                     toggle();
                   }}
                 >
@@ -264,7 +273,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   block
                   outline
                   onClick={() => {
-                    bulkMoveCard(cards, 'mainboard');
+                    bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
                     toggle();
                   }}
                 >

@@ -9,8 +9,9 @@ import Username from 'components/Username';
 import BlogPostChangelog from 'components/BlogPostChangelog';
 import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
+import TimeAgo from 'react-timeago';
 
-interface BlogPostProps {
+export interface BlogPostProps {
   post: BlogPostData;
   noScroll?: boolean;
 }
@@ -32,7 +33,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, noScroll = false }) => {
           <div className="float-sm-end">
             {canEdit && (
               <>
-                <BlogContextMenu className="float-sm-end" post={post} value="..." onEdit={() => setEditOpen(true)} />
+                <BlogContextMenu post={post} value="..." onEdit={() => setEditOpen(true)} />
                 <EditBlogModal
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
@@ -60,7 +61,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, noScroll = false }) => {
           <Col xs={12} md={4} className="border-end">
             <div style={scrollStyle}>
               <CardBody>
-                <BlogPostChangelog changelog={post.Changelog} cubeId={post.cube} />
+                <BlogPostChangelog changelog={post.Changelog ?? {}} />
               </CardBody>
             </div>
           </Col>
@@ -83,7 +84,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, noScroll = false }) => {
       {hasChangelist && !hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <BlogPostChangelog changelog={post.Changelog} cubeId={post.cube} />
+            <BlogPostChangelog changelog={post.Changelog ?? {}} />
           </CardBody>
         </div>
       )}
@@ -99,15 +100,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, noScroll = false }) => {
       </div>
     </Card>
   );
-};
-
-BlogPost.propTypes = {
-  post: BlogPostPropType.isRequired,
-  noScroll: PropTypes.bool,
-};
-
-BlogPost.defaultProps = {
-  noScroll: false,
 };
 
 export default BlogPost;

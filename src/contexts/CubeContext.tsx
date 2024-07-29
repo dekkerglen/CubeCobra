@@ -983,7 +983,6 @@ export function CubeContextProvider({
             bulkRevertEdit={bulkRevertEdit}
             bulkRemoveCard={bulkRemoveCard}
             bulkRevertRemove={bulkRevertRemove}
-            removeCard={removeCard}
             setModalSelection={setModalSelection}
             tagColors={tagColors}
             bulkMoveCard={bulkMoveCard}

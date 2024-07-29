@@ -1,6 +1,4 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
-import CommentPropType from 'proptypes/CommentPropType';
 import TimeAgo from 'react-timeago';
 
 import { Collapse } from 'reactstrap';
@@ -8,7 +6,7 @@ import { Collapse } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
 import LinkButton from 'components/LinkButton';
 import CommentContextMenu from 'components/CommentContextMenu';
-import useComments from 'hooks/UseComments';
+import useComments, { EditRequest } from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import CommentEntry from 'components/CommentEntry';
 import Markdown from 'components/Markdown';
@@ -16,13 +14,35 @@ import DomainContext from 'contexts/DomainContext';
 import withModal from 'components/WithModal';
 import ShareCommentModal from 'components/ShareCommentModal';
 import ReportCommentModal from 'components/ReportCommentModal';
+import CommentData from 'datatypes/Comment';
+
+export interface ShareCommentModalButtonProps {
+  modalProps: {
+    comment: Comment;
+    domain: string;
+  };
+}
+
+export interface ReportCommentModalButtonProps {
+  modalProps: {
+    comment: Comment;
+  };
+}
 
 const ShareCommentModalButton = withModal('a', ShareCommentModal);
 const ReportCommentModalButton = withModal('a', ReportCommentModal);
 
 const maxDepth = 4;
 
-const Comment = ({ comment, index, depth, noReplies, editComment }) => {
+export interface CommentProps {
+  comment: CommentData;
+  index: number;
+  depth?: number;
+  noReplies?: boolean;
+  editComment: (editRequest: EditRequest) => void;
+}
+
+const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies = false, editComment }) => {
   const user = useContext(UserContext);
   const domain = useContext(DomainContext);
 
@@ -40,7 +60,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
     });
   };
 
-  const edit = (content) => {
+  const edit = (content: string) => {
     editComment({
       id: comment.id,
       content,
@@ -49,14 +69,16 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
 
   return (
     <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
-      <a href={`/user/view/${comment.owner.id}`}>
-        <img
-          className="profile-thumbnail"
-          src={comment.image.uri}
-          alt={comment.image.artist}
-          title={comment.image.artist}
-        />
-      </a>
+      {comment.image && (
+        <a href={`/user/view/${comment.owner.id}`}>
+          <img
+            className="profile-thumbnail"
+            src={comment.image.uri}
+            alt={comment.image.artist}
+            title={comment.image.artist}
+          />
+        </a>
+      )}
       <div className="flex-grow ms-2">
         <div className="flex-container flex-direction-col">
           <div className="flex-container flex-space-between">
@@ -77,7 +99,7 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
             </div>
             {user && comment.owner.id === user.id && (
               <div>
-                <CommentContextMenu comment={comment} value="..." edit={() => setIsEdit(true)} remove={remove}>
+                <CommentContextMenu edit={() => setIsEdit(true)} remove={remove}>
                   <small>...</small>
                 </CommentContextMenu>
               </div>
@@ -162,19 +184,6 @@ const Comment = ({ comment, index, depth, noReplies, editComment }) => {
       </div>
     </div>
   );
-};
-
-Comment.propTypes = {
-  comment: CommentPropType.isRequired,
-  index: PropTypes.number.isRequired,
-  depth: PropTypes.number,
-  noReplies: PropTypes.bool,
-  editComment: PropTypes.func.isRequired,
-};
-
-Comment.defaultProps = {
-  depth: 0,
-  noReplies: false,
 };
 
 export default Comment;

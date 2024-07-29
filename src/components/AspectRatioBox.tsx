@@ -1,7 +1,7 @@
 import React, { HTMLAttributes } from 'react';
 import cx from 'classnames';
 
-interface AspectRatioBoxProps extends HTMLAttributes<HTMLDivElement> {
+export interface AspectRatioBoxProps extends HTMLAttributes<HTMLDivElement> {
   ratio: number;
   className?: string;
   style?: React.CSSProperties;

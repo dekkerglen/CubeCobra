@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from 'react';
-
 import {
   Card,
   CardHeader,
@@ -12,31 +11,33 @@ import {
   InputGroupText,
   Input,
 } from 'reactstrap';
-
 import Query from 'utils/Query';
 import Paginate from 'components/Paginate';
 import DynamicFlash from 'components/DynamicFlash';
 import ButtonLink from 'components/ButtonLink';
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
-import FilterCollapse from 'components/FilterCollapse';
+import FilterCollapse, { FilterCollapseProps } from 'components/FilterCollapse';
 import { ORDERED_SORTS } from 'utils/Sort';
 import CubeContext from 'contexts/CubeContext';
+import CardDetails from 'datatypes/CardDetails';
 
-const CardSearch = () => {
-  const { filterInput } = useContext(CubeContext);
-  const [page, setPage] = useState(parseInt(Query.get('p'), 0) || 0);
-  const [cards, setCards] = useState([]);
+export interface CardSearchProps {}
+
+const CardSearch: React.FC<CardSearchProps> = () => {
+  const filterInput = useContext(CubeContext)?.filterInput ?? '';
+  const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
+  const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
-  const [count, setCount] = useState(Query.get('m') || '');
-  const [distinct, setDistinct] = useState(Query.get('di') || 'names');
-  const [sort, setSort] = useState(Query.get('s') || 'Elo');
-  const [direction, setDirection] = useState(Query.get('d') || 'descending');
+  const [count, setCount] = useState(Query.get('m', ''));
+  const [distinct, setDistinct] = useState(Query.get('di', 'names'));
+  const [sort, setSort] = useState(Query.get('s', 'Elo'));
+  const [direction, setDirection] = useState(Query.get('d', 'descending'));
 
   useEffect(() => {
     const fetchData = async () => {
       const params = new URLSearchParams([
-        ['p', page],
+        ['p', page.toString()],
         ['f', filterInput],
         ['s', sort],
         ['d', direction],
@@ -48,7 +49,7 @@ const CardSearch = () => {
       }
 
       Query.set('f', filterInput);
-      Query.set('p', page);
+      Query.set('p', page.toString());
       Query.set('s', sort);
       Query.set('d', direction);
       Query.set('di', distinct);
@@ -56,7 +57,7 @@ const CardSearch = () => {
       const json = await response.json();
 
       setCards(json.data);
-      setCount(json.numResults);
+      setCount(json.numResults.toString());
       setLoading(false);
     };
     if (filterInput && filterInput !== '') {
@@ -67,19 +68,19 @@ const CardSearch = () => {
     }
   }, [page, direction, distinct, sort, filterInput]);
 
-  const updatePage = (index) => {
+  const updatePage = (index: number) => {
     setLoading(true);
     setPage(index);
   };
-  const updateSort = (index) => {
+  const updateSort = (index: string) => {
     setLoading(true);
     setSort(index);
   };
-  const updateDirection = (index) => {
+  const updateDirection = (index: string) => {
     setLoading(true);
     setDirection(index);
   };
-  const updateDistinct = (index) => {
+  const updateDistinct = (index: string) => {
     setLoading(true);
     setDistinct(index);
   };
@@ -102,7 +103,7 @@ const CardSearch = () => {
             </div>
           </Col>
         </Row>
-        <FilterCollapse hideDescription isOpen />
+        <FilterCollapse hideDescription isOpen {...(FilterCollapseProps as any)} />
         <Row className="px-3">
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
@@ -153,9 +154,13 @@ const CardSearch = () => {
       <DynamicFlash />
       {(cards && cards.length) > 0 ? (
         <Card className="mb-3">
-          {count / 96 > 1 && (
+          {parseInt(count, 10) / 96 > 1 && (
             <CardHeader>
-              <Paginate count={Math.ceil(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+              <Paginate
+                count={Math.ceil(parseInt(count, 10) / 96)}
+                active={page}
+                onClick={(i: number) => updatePage(i)}
+              />
             </CardHeader>
           )}
 
@@ -171,13 +176,17 @@ const CardSearch = () => {
               cardList={cards.map((card) => ({ details: card }))}
               Tag={CardImage}
               colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
+              cardProps={{ autocard: true, cardProps: { 'data-in-modal': true }, className: 'clickable' }}
               linkDetails
             />
           )}
-          {count / 100 > 1 && (
+          {parseInt(count, 10) / 100 > 1 && (
             <CardFooter>
-              <Paginate count={Math.ceil(count / 96)} active={page} onClick={(i) => updatePage(i)} />
+              <Paginate
+                count={Math.ceil(parseInt(count, 10) / 96)}
+                active={page}
+                onClick={(i: number) => updatePage(i)}
+              />
             </CardFooter>
           )}
         </Card>
