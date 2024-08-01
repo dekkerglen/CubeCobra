@@ -1,17 +1,17 @@
-import React, { useContext, useState, useCallback } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import { Button, Card, CardBody, FormGroup, Input, Label, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-
-import { Card, CardBody, FormGroup, Label, Input, Button, Spinner } from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
-import BlogPost from 'components/BlogPost';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import Banner from 'components/Banner';
-import TextEntry from 'components/TextEntry';
-import DynamicFlash from 'components/DynamicFlash';
 import InfiniteScroll from 'react-infinite-scroll-component';
+
+import Banner from 'components/Banner';
+import BlogPost from 'components/BlogPost';
+import DynamicFlash from 'components/DynamicFlash';
+import TextEntry from 'components/TextEntry';
+import UserContext from 'contexts/UserContext';
+import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
+import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const loader = (
@@ -106,7 +106,12 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
       <div className="mt-3">
         <h3>Developer Blog</h3>
         {user && user.roles && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
-        <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <InfiniteScroll
+          dataLength={items.length}
+          next={fetchMoreData}
+          hasMore={currentLastKey !== null}
+          loader={loader}
+        >
           {items.map((post) => (
             <BlogPost key={post.id} post={post} />
           ))}

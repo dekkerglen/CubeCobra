@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { Row, Col, Container } from 'reactstrap';
+import { Col, Container,Row } from 'reactstrap';
 
 import Copyright from 'components/Copyright';
 

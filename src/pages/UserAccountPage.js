@@ -1,45 +1,44 @@
-import React, { useCallback, useEffect, useState, useContext } from 'react';
-import PropTypes from 'prop-types';
-import PatronPropType from 'proptypes/PatronPropType';
-
+import React, { useCallback, useContext,useEffect, useState } from 'react';
 import {
   Button,
+  Card,
+  CardBody,
+  CardHeader,
   Col,
   FormGroup,
   Input,
+  InputGroup,
+  InputGroupText,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Nav,
   NavItem,
   NavLink,
   Row,
   TabContent,
   TabPane,
-  Card,
-  CardBody,
-  InputGroup,
-  InputGroupText,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  CardHeader,
 } from 'reactstrap';
 
-import Query from 'utils/Query';
-
-import UserContext from 'contexts/UserContext';
-import AutocompleteInput from 'components/AutocompleteInput';
-import CSRFForm from 'components/CSRFForm';
-import Banner from 'components/Banner';
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import TextEntry from 'components/TextEntry';
-import useQueryParam from 'hooks/useQueryParam';
-import useMount from 'hooks/UseMount';
-import withModal from 'components/WithModal';
-import CubePreview from 'components/CubePreview';
+import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
+import PatronPropType from 'proptypes/PatronPropType';
+
+import AutocompleteInput from 'components/AutocompleteInput';
+import Banner from 'components/Banner';
+import CSRFForm from 'components/CSRFForm';
+import CubePreview from 'components/CubePreview';
+import DynamicFlash from 'components/DynamicFlash';
+import TextEntry from 'components/TextEntry';
+import withModal from 'components/WithModal';
+import UserContext from 'contexts/UserContext';
+import useMount from 'hooks/UseMount';
+import useQueryParam from 'hooks/useQueryParam';
+import MainLayout from 'layouts/MainLayout';
+import Query from 'utils/Query';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 

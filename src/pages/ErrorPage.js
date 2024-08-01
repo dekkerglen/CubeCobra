@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { Card, CardBody,CardHeader } from 'reactstrap';
 
-import { Card, CardHeader, CardBody } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';

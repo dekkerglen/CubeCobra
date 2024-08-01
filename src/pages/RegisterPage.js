@@ -1,10 +1,10 @@
 import React from 'react';
+import { Button, Card, CardBody, CardHeader,Col, FormGroup, Input, Label, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, FormGroup, Label, Input, Button, Col, Row, CardHeader } from 'reactstrap';
-
-import CSRFForm from 'components/CSRFForm';
 import Banner from 'components/Banner';
+import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';

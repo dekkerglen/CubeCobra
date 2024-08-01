@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React from 'react';
 
 const FoilOverlay =
@@ -12,7 +11,7 @@ const FoilOverlay =
     }
 
     const WrapperTag = wrapperTag ?? 'div';
-    return (
+    const result = (
       <WrapperTag className="position-relative">
         {finish === 'Foil' && (
           <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" alt="Foil overlay" />
@@ -20,6 +19,7 @@ const FoilOverlay =
         <Tag {...props} />
       </WrapperTag>
     );
+    result.displayName = Tag.displayName ? `FoilOverlay(${Tag.displayName})` : 'FoilOverlay';
   };
 
 export default FoilOverlay;

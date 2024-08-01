@@ -1,7 +1,5 @@
-/* eslint-disable no-await-in-loop */
 const express = require('express');
 const uuid = require('uuid/v4');
-// eslint-disable-next-line import/no-unresolved
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
@@ -719,7 +717,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     let pack;
     try {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
-    } catch (err) {
+    } catch {
       req.flash('danger', "Failed to generate pack. If trying again doesn't work, please file a bug report.");
       return res.redirect(`/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }

@@ -1,9 +1,8 @@
-import PropTypes from 'prop-types';
-
 import React from 'react';
-import { ClippyIcon } from '@primer/octicons-react';
+import { Button,Input, InputGroup, Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-import { Modal, ModalHeader, ModalBody, InputGroup, Input, Button } from 'reactstrap';
+import { ClippyIcon } from '@primer/octicons-react';
+import PropTypes from 'prop-types';
 
 const ShareCommentModal = ({ domain, comment, isOpen, toggle }) => {
   return (

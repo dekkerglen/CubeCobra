@@ -1,19 +1,19 @@
-import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
+import React, { useCallback, useState } from 'react';
 import { Collapse, Nav, Navbar, NavItem, NavLink, Spinner } from 'reactstrap';
 
-import BlogPost from 'components/BlogPost';
-import DynamicFlash from 'components/DynamicFlash';
-import CubeLayout from 'layouts/CubeLayout';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import { csrfFetch } from 'utils/CSRF';
-import { wait } from 'utils/Util';
+
+import BlogPost from 'components/BlogPost';
 import CreateBlogModal from 'components/CreateBlogModal';
+import DynamicFlash from 'components/DynamicFlash';
 import withModal from 'components/WithModal';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import { csrfFetch } from 'utils/CSRF';
+import RenderToRoot from 'utils/RenderToRoot';
+import { wait } from 'utils/Util';
 
 const CreateBlogModalLink = withModal(NavLink, CreateBlogModal);
 
@@ -64,7 +64,12 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
           </Collapse>
         </Navbar>
         <DynamicFlash />
-        <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <InfiniteScroll
+          dataLength={items.length}
+          next={fetchMoreData}
+          hasMore={currentLastKey !== null}
+          loader={loader}
+        >
           {items.length > 0 ? (
             items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (

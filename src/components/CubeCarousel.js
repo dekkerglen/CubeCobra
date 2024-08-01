@@ -1,8 +1,10 @@
 import React from 'react';
-import CubePreview from 'components/CubePreview';
-import InfiniteCarousel from 'react-leaf-carousel';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
+import InfiniteCarousel from 'react-leaf-carousel';
+
+import CubePreview from 'components/CubePreview';
 
 const CubeCarousel = ({ cubes }) => {
   return (

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-
 import { Alert, UncontrolledAlert } from 'reactstrap';
+
 import Markdown from 'components/Markdown';
 
 const DynamicFlash = (props) => {

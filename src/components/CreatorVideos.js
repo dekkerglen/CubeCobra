@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Col, Nav, Navbar, NavItem, NavLink, Row, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-
-import { Navbar, Nav, NavItem, NavLink, Row, Col, Spinner } from 'reactstrap';
-
 import InfiniteScroll from 'react-infinite-scroll-component';
+
 import VideoPreview from 'components/VideoPreview';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
@@ -53,7 +53,7 @@ const CreatorVideos = ({ videos, lastKey }) => {
           </NavItem>
         </Nav>
       </Navbar>
-      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((video) => (
             <Col xs="12" sm="6" md="4" lg="3" className="mb-3">

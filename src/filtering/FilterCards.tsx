@@ -1,10 +1,9 @@
 import { Grammar, Parser } from 'nearley';
 
-// @ts-ignore
-import filterCardGrammar from 'generated/filtering/cardFilters';
-import Card from 'datatypes/Card';
 import CardDetails, { AllField } from 'datatypes/CardDetails';
+import filterCardGrammar from 'generated/filtering/cardFilters';
 
+// @ts-expect-error(TODO: figure this one out)
 const compiledGrammar: Grammar = Grammar.fromCompiled(filterCardGrammar);
 
 const ALL_OPERATORS: string[] = [':', '=', '!=', '<>', '<', '<=', '>', '>='];

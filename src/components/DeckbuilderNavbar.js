@@ -1,18 +1,16 @@
-import React, { useCallback, useRef, useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Collapse, Input, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 
-import DeckDeleteModal from 'components/DeckDeleteModal';
+import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 
-import { cardsAreEquivalent } from 'utils/Card';
-
-import { csrfFetch } from 'utils/CSRF';
-import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink, Input } from 'reactstrap';
-
+import BasicsModal from 'components/BasicsModal';
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import BasicsModal from 'components/BasicsModal';
+import DeckDeleteModal from 'components/DeckDeleteModal';
 import withModal from 'components/WithModal';
+import { cardsAreEquivalent } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
 
 const DeleteDeckModalLink = withModal(NavLink, DeckDeleteModal);
 const BasicsModalLink = withModal(NavLink, BasicsModal);
@@ -25,6 +23,7 @@ const DeckbuilderNavbar = ({
   className,
   setSideboard,
   setDeck,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   seat,
   ...props
 }) => {

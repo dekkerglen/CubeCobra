@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
+import { NavLink } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { NavLink } from 'reactstrap';
 import Tooltip from 'components/Tooltip';
 
 const HeaderCell = ({ label, fieldName, sortConfig, requestSort, tooltip, ...props }) => {

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, InputGroup } from 'reactstrap';
-import PropTypes from 'prop-types';
+import { Button, Input, InputGroup,Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+
 import { ClippyIcon } from '@primer/octicons-react';
+import PropTypes from 'prop-types';
 
 const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
   const onCopyClick = async (id, label) => {

@@ -1,10 +1,11 @@
 import React from 'react';
+import { Button, Card, CardBody, CardFooter,CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, CardBody, Button, CardFooter } from 'reactstrap';
+import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
-import ButtonLink from 'components/ButtonLink';
 import RenderToRoot from 'utils/RenderToRoot';
 
 const back = () => (window.history.length > 1 ? window.history.back() : window.close());

@@ -1,9 +1,10 @@
 import React from 'react';
+
 import PropTypes from 'prop-types';
 import CardPackagePropType from 'proptypes/CardPackagePropType';
 
-import CardPackage from 'components/CardPackage';
 import Banner from 'components/Banner';
+import CardPackage from 'components/CardPackage';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';

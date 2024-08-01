@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
+
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 
-import Query from 'utils/Query';
-
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-
 import { CubeContextProvider } from 'contexts/CubeContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
+import MainLayout from 'layouts/MainLayout';
+import Query from 'utils/Query';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);

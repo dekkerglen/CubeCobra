@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
+import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Input, UncontrolledCollapse } from 'reactstrap';
 
 import PropTypes from 'prop-types';
-import CubeContext from 'contexts/CubeContext';
-import CSRFForm from 'components/CSRFForm';
-import Markdown from 'components/Markdown';
-import LabelRow from 'components/LabelRow';
 
-import { Card, CardHeader, CardTitle, CardBody, Input, CardFooter, Button, UncontrolledCollapse } from 'reactstrap';
+import CSRFForm from 'components/CSRFForm';
+import LabelRow from 'components/LabelRow';
+import Markdown from 'components/Markdown';
+import CubeContext from 'contexts/CubeContext';
 
 const range = (lo, hi) => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 const rangeOptions = (lo, hi) => range(lo, hi).map((n) => <option key={n}>{n}</option>);

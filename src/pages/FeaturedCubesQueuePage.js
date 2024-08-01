@@ -1,9 +1,4 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-
-import { csrfFetch } from 'utils/CSRF';
-import MainLayout from 'layouts/MainLayout';
-import DynamicFlash from 'components/DynamicFlash';
 import {
   Button,
   Card,
@@ -22,12 +17,18 @@ import {
   Row,
   UncontrolledAlert,
 } from 'reactstrap';
-import CubePropType from 'proptypes/CubePropType';
-import CubePreview from 'components/CubePreview';
-import RenderToRoot from 'utils/RenderToRoot';
+
 import { GearIcon } from '@primer/octicons-react';
-import withModal from 'components/WithModal';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+
 import CSRFForm from 'components/CSRFForm';
+import CubePreview from 'components/CubePreview';
+import DynamicFlash from 'components/DynamicFlash';
+import withModal from 'components/WithModal';
+import MainLayout from 'layouts/MainLayout';
+import { csrfFetch } from 'utils/CSRF';
+import RenderToRoot from 'utils/RenderToRoot';
 
 const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
   const [input, setInput] = useState(period);

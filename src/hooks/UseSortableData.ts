@@ -9,23 +9,24 @@ interface SortFns {
   [key: string]: (a: any, b: any) => number;
 }
 
-const useSortableData = <T>(
+const useSortableData = <T extends Record<string, any>>(
   data: T[],
   config: SortConfig | null = null,
-  sortFns: SortFns = {}
+  sortFns: SortFns = {},
 ): {
   items: T[];
   requestSort: (key: string) => void;
   sortConfig: SortConfig | null;
 } => {
-  const [sortConfig, setSortConfig]: [SortConfig | null, Dispatch<SetStateAction<SortConfig | null>>] = useState(config);
+  const [sortConfig, setSortConfig]: [SortConfig | null, Dispatch<SetStateAction<SortConfig | null>>] =
+    useState(config);
 
   const items = useMemo(() => {
     const sortableItems = [...data];
     if (sortConfig) {
       const { key, direction } = sortConfig;
       const sortFn = sortFns[key] ?? ((a, b) => a - b);
-      sortableItems.sort((a, b) => {
+      sortableItems.sort((a: T, b: T) => {
         const ordering = sortFn(a[key], b[key]);
         if (ordering < 0) {
           return direction === 'ascending' ? -1 : 1;

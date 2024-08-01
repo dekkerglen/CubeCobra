@@ -16,10 +16,11 @@ import {
   Label,
   UncontrolledDropdown,
 } from 'reactstrap';
+
+import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 
 import useToggle from 'hooks/UseToggle';
-import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 
 const DEFAULT_STEP = Object.freeze([
   { action: 'pick', amount: 1 },

@@ -1,19 +1,19 @@
-import React, { useState, useRef } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { useRef,useState } from 'react';
 import {
+  Button,
   Col,
+  FormGroup,
+  Input,
+  Label,
   Modal,
   ModalBody,
+  ModalFooter,
   ModalHeader,
   Row,
-  FormGroup,
-  Label,
-  Input,
-  Button,
   Spinner,
-  ModalFooter,
 } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
 

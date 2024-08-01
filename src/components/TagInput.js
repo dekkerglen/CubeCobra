@@ -1,6 +1,7 @@
 import React from 'react';
-import { WithContext as ReactTags } from 'react-tag-input';
+
 import PropTypes from 'prop-types';
+import { WithContext as ReactTags } from 'react-tag-input';
 
 import { getTagColorClass } from 'utils/Util';
 

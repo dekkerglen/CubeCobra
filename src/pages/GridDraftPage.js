@@ -1,19 +1,23 @@
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import PropTypes from 'prop-types';
+import React, { useCallback, useEffect, useMemo,useRef, useState } from 'react';
 import {
+  Badge,
+  Button,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
+  Col,
   Collapse,
+  Input,
   Nav,
   Navbar,
-  Button,
-  Col,
   Row,
-  Input,
-  Badge,
 } from 'reactstrap';
+
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import DraftPropType from 'proptypes/DraftPropType';
 
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -23,18 +27,15 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FoilCardImage from 'components/FoilCardImage';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
-import CubeLayout from 'layouts/CubeLayout';
-import MainLayout from 'layouts/MainLayout';
-import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
-import { makeSubtitle } from 'utils/Card';
-import { csrfFetch } from 'utils/CSRF';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
 import { getDefaultPosition } from 'drafting/draftutil';
-import { getGridDrafterState, calculateGridBotPick } from 'drafting/griddraftutils';
+import { calculateGridBotPick,getGridDrafterState } from 'drafting/griddraftutils';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import { makeSubtitle } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
-import DraftPropType from 'proptypes/DraftPropType';
 
 const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">

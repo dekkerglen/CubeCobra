@@ -1,30 +1,30 @@
 import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-
 import {
-  Container,
   Collapse,
+  Container,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
   Nav,
   Navbar,
+  NavbarBrand,
+  NavbarToggler,
   NavItem,
   NavLink,
   UncontrolledDropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownMenu,
-  NavbarBrand,
-  NavbarToggler,
 } from 'reactstrap';
 
-import UserContext from 'contexts/UserContext';
+import PropTypes from 'prop-types';
+
+import CreateCubeModal from 'components/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import LoginModal from 'components/LoginModal';
-import CreateCubeModal from 'components/CreateCubeModal';
-import withModal from 'components/WithModal';
+import MobileBanner from 'components/MobileBanner';
 import NotificationsNav from 'components/NotificationsNav';
 import SideBanner from 'components/SideBanner';
-import MobileBanner from 'components/MobileBanner';
+import withModal from 'components/WithModal';
 import ThemeContext from 'contexts/ThemeContext';
+import UserContext from 'contexts/UserContext';
 import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
 

@@ -1,15 +1,15 @@
 import React from 'react';
+import { Col,Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
+import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
 import TopCardsTable from 'components/TopCardsTable';
-import { Row, Col } from 'reactstrap';
-import ButtonLink from 'components/ButtonLink';
+import { CubeContextProvider } from 'contexts/CubeContext';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-
-import { CubeContextProvider } from 'contexts/CubeContext';
 
 const TopCardsPage = ({ loginCallback }) => {
   return (

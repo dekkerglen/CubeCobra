@@ -42,7 +42,7 @@ function CardGrid<T extends { card: { imgUrl?: string; details?: CardDetails } }
       {cardList.map((card, cardIndex) => (
         <Col key={cardIndex} {...colProps}>
           {
-            // @ts-ignore (this will always work out in practice)
+            // @ts-expect-error (this will always work out in practice)
             cardImage<T>({ Tag, cardProps: { ...cardProps, card }, linkDetails })
           }
         </Col>

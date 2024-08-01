@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { Table } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 import Paginate from 'components/Paginate';
 import useQueryParam from 'hooks/useQueryParam';

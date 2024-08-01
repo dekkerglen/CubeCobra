@@ -20,19 +20,19 @@ const withLoading = <T extends React.ComponentType>(Tag: FunctionComponent<T>, h
     const wrappedHandlers = useMemo(
       () =>
         fromEntries(
-          // @ts-ignore
+          // @ts-expect-error
           (handlers ?? []).map((name) => [
             name,
             async (event: Event) => {
               setLoading(true);
-              // @ts-ignore
+              // @ts-expect-error
               await props[name](event);
               setLoading(false);
             },
           ]),
         ),
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      // @ts-ignore
+      // @ts-expect-error
       handlers?.map((name) => props[name]),
     );
 

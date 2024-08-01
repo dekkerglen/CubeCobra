@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import PropTypes from 'prop-types';
-
 import { UncontrolledTooltip } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 const Tooltip = ({ text, children, wrapperTag, tooltipProps, ...props }) => {
   const divRef = useRef();

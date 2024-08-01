@@ -1,17 +1,17 @@
 /* eslint-disable react/no-array-index-key */
 import React, { useContext, useMemo } from 'react';
+import { Button, Card, CardBody, CardFooter, CardHeader, Col, Input, InputGroup,Row, Spinner } from 'reactstrap';
+
+import { ClippyIcon, LockIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
+import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+
+import Username from 'components/Username';
+import DomainContext from 'contexts/DomainContext';
+import UserContext from 'contexts/UserContext';
 import useMount from 'hooks/UseMount';
 import { callApi } from 'utils/CSRF';
-
-import UserContext from 'contexts/UserContext';
-import DomainContext from 'contexts/DomainContext';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { ClippyIcon, LockIcon } from '@primer/octicons-react';
-import Username from 'components/Username';
-
-import { Button, Card, CardHeader, CardBody, CardFooter, Spinner, Row, Col, Input, InputGroup } from 'reactstrap';
 
 const BOT_NAME = 'Bot';
 

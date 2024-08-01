@@ -1,11 +1,10 @@
-import React, { useCallback, useState, useContext } from 'react';
+import React, { useCallback, useContext,useState } from 'react';
+import { Button, Col, Collapse, Input, InputGroup, InputGroupText,Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Button, Col, Row, Collapse, Input, InputGroup, InputGroupText } from 'reactstrap';
-
-import { ColorChecksControl } from 'components/ColorCheck';
-
 import AdvancedFilterModal from 'components/AdvancedFilterModal';
+import { ColorChecksControl } from 'components/ColorCheck';
 import CubeContext from 'contexts/CubeContext';
 
 const allFields = [

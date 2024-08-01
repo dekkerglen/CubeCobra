@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import {
   Alert,
   Button,
@@ -13,12 +13,13 @@ import {
   ModalHeader,
   Row,
 } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'contexts/CubeContext';
 import CustomPackCard from 'components/CustomPackCard';
 import TextEntry from 'components/TextEntry';
+import CubeContext from 'contexts/CubeContext';
 import { fromEntries, toNullableInt } from 'utils/Util';
 
 export const DEFAULT_PACK = Object.freeze({ slots: [''], steps: null });

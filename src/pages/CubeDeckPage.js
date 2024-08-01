@@ -1,22 +1,25 @@
-import React, { useCallback, useState, useContext } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { useCallback, useContext,useState } from 'react';
 import {
   Col,
   Collapse,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Input,
   Nav,
   Navbar,
   NavbarToggler,
   NavItem,
   NavLink,
   Row,
-  Input,
   UncontrolledDropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
   // Spinner,
 } from 'reactstrap';
+
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
+import DraftPropType from 'proptypes/DraftPropType';
 
 // import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
@@ -24,15 +27,11 @@ import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
 import SampleHandModal from 'components/SampleHandModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
+import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import CubePropType from 'proptypes/CubePropType';
-import DeckPropType from 'proptypes/DeckPropType';
-
-import UserContext from 'contexts/UserContext';
 import RenderToRoot from 'utils/RenderToRoot';
-import DraftPropType from 'proptypes/DraftPropType';
 
 const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   const user = useContext(UserContext);

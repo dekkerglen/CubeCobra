@@ -217,8 +217,7 @@ app.use((req, res) =>
   }),
 );
 
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   req.logger.error(err.message, err.stack);
   if (!res.statusCode) {
     res.status(500);

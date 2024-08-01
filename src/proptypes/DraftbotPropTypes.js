@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-
 import CardPropType from 'proptypes/CardPropType';
 
 export const StepPropType = PropTypes.shape({

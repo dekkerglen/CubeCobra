@@ -1,10 +1,11 @@
 import React from 'react';
+
 import PropTypes from 'prop-types';
 
+import CardSearch from 'components/CardSearch';
+import { CubeContextProvider } from 'contexts/CubeContext';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import { CubeContextProvider } from 'contexts/CubeContext';
-import CardSearch from 'components/CardSearch';
 
 const CardSearchPage = ({ loginCallback }) => {
   return (

@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
+import { Button, Modal, ModalBody, ModalFooter, ModalHeader, NavLink } from 'reactstrap';
 
-import FoilCardImage from 'components/FoilCardImage';
-import CardGrid from 'components/CardGrid';
 import PropTypes from 'prop-types';
-import { arrayShuffle } from 'utils/Util';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button, NavLink } from 'reactstrap';
+import CardGrid from 'components/CardGrid';
+import FoilCardImage from 'components/FoilCardImage';
+import { arrayShuffle } from 'utils/Util';
 
 class SampleHandModal extends Component {
   constructor(props) {

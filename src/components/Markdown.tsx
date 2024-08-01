@@ -1,12 +1,12 @@
 import React, { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
-// @ts-ignore
+// @ts-expect-error
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import Latex from 'react-latex';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
-// @ts-ignore
+// @ts-expect-error
 import { ALL_PLUGINS, LIMITED_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS } from 'markdown/parser';
 
 import withAutocard, { WithAutocardProps } from 'components/WithAutocard';
@@ -198,7 +198,7 @@ const Markdown: FC<MarkdownProps> = ({ markdown, limited }) => {
   return (
     <ReactMarkdown
       className="markdown"
-      remarkPlugins={ALL_PLUGINS}
+      remarkPlugins={ALL_PLUGINS as any}
       rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       components={RENDERERS as any}
     >

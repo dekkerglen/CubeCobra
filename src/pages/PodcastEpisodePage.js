@@ -1,16 +1,16 @@
 import React from 'react';
+import { Card, CardBody,CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
+import ReactAudioPlayer from 'react-audio-player';
+import TimeAgo from 'react-timeago';
 
-import { CardHeader, Card, Row, Col, CardBody } from 'reactstrap';
-
+import AspectRatioBox from 'components/AspectRatioBox';
+import CommentsSection from 'components/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import AspectRatioBox from 'components/AspectRatioBox';
-import CommentsSection from 'components/CommentsSection';
-import ReactAudioPlayer from 'react-audio-player';
-import TimeAgo from 'react-timeago';
 
 const PodcastEpisodePage = ({ loginCallback, episode }) => {
   return (

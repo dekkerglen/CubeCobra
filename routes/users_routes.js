@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 const express = require('express');
 
 const bcrypt = require('bcryptjs');
@@ -723,15 +722,14 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
   }
 
   const shouldUpdate = await fq.doesUserHaveFeaturedCube(req.user.id);
-  let message;
 
-  try {  
+  try {
     if (shouldUpdate) {
       fq.replaceForUser(req.user.id, cube.id);
       req.flash('success', 'Successfully replaced cube in queue');
     } else {
       fq.addNewCubeToQueue(req.user.id, cube.id);
-      req.flash('success',  'Successfully added cube to queue');
+      req.flash('success', 'Successfully added cube to queue');
     }
   } catch (err) {
     req.flash('danger', err.message);
@@ -741,7 +739,6 @@ router.post('/queuefeatured', ensureAuth, async (req, res) => {
 });
 
 router.post('/unqueuefeatured', ensureAuth, async (req, res) => {
-
   try {
     fq.removeCubeFromQueue(req.user.id);
 

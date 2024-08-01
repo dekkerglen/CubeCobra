@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 const uuid = require('uuid/v4');
 const { cardType } = require('../dist/utils/Card');
 const carddb = require('./carddb');
@@ -87,6 +86,7 @@ const obtainLock = async (draftId, random, timeout = 10000) => {
   return false;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const releaseLock = async (draftId, random) => {
   const value = await get(`draft:${draftId}:lock`);
   if (value === random) {
@@ -526,7 +526,6 @@ const getDraftPick = async (draftId, seat) => {
   try {
     choice = await draftbotPick(drafterState);
   } catch (e) {
-    // eslint-disable-next-line no-console
     cloudwatch.error(e.message, e.stack);
   }
 
@@ -538,7 +537,7 @@ const tryBotPicks = async (draftId) => {
   const finished = await hget(draftRef(draftId), 'finished');
   let picks = 0;
   if (finished === 'true') {
-    return {result:'done', picks};
+    return { result: 'done', picks };
   }
 
   const passDirection = currentPack % 2 === 0 ? 1 : -1;
@@ -552,7 +551,7 @@ const tryBotPicks = async (draftId) => {
     for (const seat of botSeats) {
       const packReference = await getPlayerPackReference(draftId, seat);
 
-      if (packReference != null) {
+      if (packReference !== null) {
         const passAmount = await getPassAmount(draftId, seat);
         const next = (seat + seats + passDirection * passAmount) % seats;
 
@@ -565,13 +564,13 @@ const tryBotPicks = async (draftId) => {
   if (await isPackDone(draftId)) {
     if (currentPack < totalPacks) {
       await openPack(draftId);
-      return {result: 'inProgress', picks};
+      return { result: 'inProgress', picks };
     }
     // draft is done
     await finishDraft(draftId);
-    return {result: 'done', picks};
+    return { result: 'done', picks };
   }
-  return {result: 'inProgress', picks};
+  return { result: 'inProgress', picks };
 };
 
 const dumpDraft = async (draftId) => {

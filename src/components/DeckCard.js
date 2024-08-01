@@ -1,20 +1,19 @@
 import React, { useMemo } from 'react';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
-import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 import DeckPropType from 'proptypes/DeckPropType';
+import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
-import CommentsSection from 'components/CommentsSection';
 import CardGrid from 'components/CardGrid';
+import CardImage from 'components/CardImage';
+import CommentsSection from 'components/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
+import Username from 'components/Username';
 import { makeSubtitle } from 'utils/Card';
 import { sortDeep } from 'utils/Sort';
-import Username from 'components/Username';
-import CardImage from 'components/CardImage';
-
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">

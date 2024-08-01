@@ -1,5 +1,5 @@
-import Card from "datatypes/Card";
-import { cardCmc, cardColors, cardType } from "utils/Card";
+import Card from 'datatypes/Card';
+import { cardCmc, cardColors, cardType } from 'utils/Card';
 
 export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -156,7 +156,7 @@ export function isTouchDevice(): boolean {
   if (
     Object.prototype.hasOwnProperty.call(window, 'ontouchstart') ||
     // eslint-disable-next-line no-undef
-    // @ts-ignore
+    // @ts-expect-error
     (window.DocumentTouch && document instanceof DocumentTouch)
   ) {
     return true;
@@ -174,7 +174,7 @@ export function getCubeId(cube: { shortId?: string; id: string }): string {
 
 export function getCubeDescription(
   cube: { categoryPrefixes?: string[]; categoryOverride?: string; cardCount?: number },
-  changedCards?: { mainboard?: any[] }
+  changedCards?: { mainboard?: any[] },
 ): string {
   const overridePrefixes =
     cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
@@ -245,10 +245,7 @@ export function getCardColorClass(card: Card): string {
   return getColorClass(cardType(card), cardColors(card));
 }
 
-export function getCardTagColorClass(
-  tagColors: { tag: string; color: string }[],
-  card: Card
-): string {
+export function getCardTagColorClass(tagColors: { tag: string; color: string }[], card: Card): string {
   if (tagColors) {
     const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
     if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
@@ -286,7 +283,7 @@ export function xorStrings(strings: (string | null | undefined)[]): string {
   if (nonNullStrings.length === 0) {
     return '';
   }
-  
+
   let result = nonNullStrings[0];
   for (let i = 1; i < nonNullStrings.length; i++) {
     result = xor(result, nonNullStrings[i]!);
@@ -317,5 +314,5 @@ export default {
   getCardTagColorClass,
   getTagColorClass,
   wait,
-  xorStrings
+  xorStrings,
 };

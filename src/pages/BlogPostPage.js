@@ -1,12 +1,13 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import BlogPost from 'components/BlogPost';
+import PropTypes from 'prop-types';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
+
 import Banner from 'components/Banner';
+import BlogPost from 'components/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
 import RenderToRoot from 'utils/RenderToRoot';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
 
 const BlogPostPage = ({ post, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

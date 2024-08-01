@@ -1,29 +1,28 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useContext, useState, useRef } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { useCallback, useContext, useRef,useState } from 'react';
 import {
   Button,
   Col,
   Collapse,
+  FormGroup,
+  Input,
   InputGroup,
+  InputGroupText,
+  Label,
   Row,
   UncontrolledAlert,
-  FormGroup,
-  Label,
-  Input,
-  InputGroupText,
 } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
+import PropTypes from 'prop-types';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
-import DisplayContext from 'contexts/DisplayContext';
-import CubeContext from 'contexts/CubeContext';
-import TextEntry from 'components/TextEntry';
-import useLocalStorage from 'hooks/useLocalStorage';
 import LoadingButton from 'components/LoadingButton';
+import TextEntry from 'components/TextEntry';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
+import useLocalStorage from 'hooks/useLocalStorage';
+import { csrfFetch } from 'utils/CSRF';
 
 export const getCard = async (defaultprinting, name, setAlerts) => {
   if (name && name.length > 0) {

@@ -23,7 +23,7 @@ class ErrorBoundary extends Component {
     const { className, children } = this.props;
     if (hasError) {
       return (
-        <div className={'mt-3' || className}>
+        <div className={className || 'mt-3'}>
           <h1 className="text-center">Something went wrong.</h1>
           <p className="text-center">You may want to try reloading the page.</p>
           <br />

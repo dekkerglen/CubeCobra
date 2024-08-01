@@ -110,7 +110,7 @@ async function replaceForUser(userid, cubeid) {
     date: item.date,
     owner: userid,
     featuredOn: null,
-  });  
+  });
 }
 
 async function addNewCubeToQueue(userid, cubeid) {
@@ -141,5 +141,5 @@ module.exports = {
   doesUserHaveFeaturedCube,
   replaceForUser,
   addNewCubeToQueue,
-  removeCubeFromQueue
+  removeCubeFromQueue,
 };

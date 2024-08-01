@@ -1,17 +1,16 @@
 import React, { useCallback } from 'react';
+import { Col, Row, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
-import { Row, Col, Spinner } from 'reactstrap';
-
-import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import CubePreview from 'components/CubePreview';
+import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import { csrfFetch } from 'utils/CSRF';
-
+import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) => {

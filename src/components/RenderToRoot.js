@@ -1,12 +1,12 @@
 import React from 'react';
+
 import ReactDOM from 'react-dom';
 
-import UserContext from 'contexts/UserContext';
-import AdsContext from 'contexts/AdsContext';
-import DomainContext from 'contexts/DomainContext';
-
 import ErrorBoundary from 'components/ErrorBoundary';
+import AdsContext from 'contexts/AdsContext';
 import { AutocardContextProvider } from 'contexts/AutocardContext';
+import DomainContext from 'contexts/DomainContext';
+import UserContext from 'contexts/UserContext';
 
 const RenderToRoot = (Element) => {
   const reactProps = typeof window !== 'undefined' ? window.reactProps : {};
@@ -27,8 +27,11 @@ const RenderToRoot = (Element) => {
     const wrapper = document.getElementById('react-root');
     if (wrapper) {
       if (wrapper.children.length === 0) {
+        // FIXME: deal with the below
+        // eslint-disable-next-line react/no-deprecated
         ReactDOM.render(element, wrapper);
       } else {
+        // eslint-disable-next-line react/no-deprecated
         ReactDOM.hydrate(element, wrapper);
       }
     }
