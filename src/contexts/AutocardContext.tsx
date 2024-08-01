@@ -1,3 +1,4 @@
+import Card from 'datatypes/Card';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { cardFinish, cardTags } from 'utils/Card';
 
@@ -116,12 +117,12 @@ export const AutocardContextProvider: React.FC<{ children: JSX.Element }> = ({ c
   const [zIndex, setZIndex] = useState(500);
 
   const showCard = useCallback(
-    (card: any, inModal: boolean, showCustomImages: boolean) => {
+    (card: Card, inModal: boolean, showCustomImages: boolean) => {
       if (!stopAutocard) {
         setHidden(false);
         setFoilOverlay(cardFinish(card) === 'Foil');
-        setFront((showCustomImages && card.imgUrl) || card.details.image_normal);
-        setBack((showCustomImages && card.imgBackUrl) || card.details.image_flip);
+        setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
+        setBack(((showCustomImages && card.imgBackUrl) || card.details?.image_flip) ?? null);
         setTags(
           cardTags(card).map((tag) => ({
             value: tag,

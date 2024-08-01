@@ -1,36 +1,38 @@
 {
-    "include": ["src/**/*"],
-    "compilerOptions": {
-        "esModuleInterop": true,
-        "target": "ES2020",
-        "jsx": "react-jsx",
-        "paths": {
-            "analytics/*": ["./src/analytics/*"],
-            "components/*": ["./src/components/*"],
-            "contexts/*": ["./src/contexts/*"],
-            "datatypes/*": ["./src/datatypes/*"],
-            "drafting/*": ["./src/drafting/*"],
-            "filtering/*": ["./src/filtering/*"],
-            "hooks/*": ["./src/hooks/*"],
-            "layouts/*": ["./src/layouts/*"],
-            "markdown/*": ["./src/markdown/*"],
-            "pages/*": ["./src/pages/*"],
-            "res/*": ["./src/res/*"],
-            "utils/*": ["./src/utils/*"]
-        },
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "target": "ES2020",
+    "jsx": "react-jsx",
+    "paths": {
+      "analytics/*": ["./src/analytics/*"],
+      "components/*": ["./src/components/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "datatypes/*": ["./src/datatypes/*"],
+      "drafting/*": ["./src/drafting/*"],
+      "filtering/*": ["./src/filtering/*"],
+      "generated/*": ["./src/generated/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "layouts/*": ["./src/layouts/*"],
+      "markdown/*": ["./src/markdown/*"],
+      "pages/*": ["./src/pages/*"],
+      "res/*": ["./src/res/*"],
+      "utils/*": ["./src/utils/*"]
+    },
 
-        /* Bundler mode */
-        "allowImportingTsExtensions": true,
-        "moduleResolution": "Bundler",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "moduleDetection": "force",
-        "noEmit": true,
+    /* Bundler mode */
+    "allowImportingTsExtensions": true,
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
 
-        /* Linting */
-        "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true
-    }
+    /* Linting */
+    "strict": true,
+    "allowJs": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  }
 }

@@ -4,7 +4,7 @@ export interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>
   children: React.ReactNode;
   outline?: boolean;
   // "accent" is our own bootstrap extension
-  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'accent';
+  color?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'accent' | 'unsafe';
   block?: boolean;
 }
 

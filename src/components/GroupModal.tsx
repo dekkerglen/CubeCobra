@@ -358,7 +358,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
               <InputGroup>
                 <InputGroupText className="square-right">Color Identity</InputGroupText>
-                <ColorChecksAddon addonType="append" colorless prefix="color" values={color} setValues={setColor} />
+                <ColorChecksAddon colorless values={color} setValues={setColor as (values: string[]) => void} />
               </InputGroup>
               <FormText>
                 Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting

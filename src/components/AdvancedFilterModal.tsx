@@ -17,50 +17,13 @@ import {
   ModalFooter,
   ModalHeader,
 } from 'reactstrap';
+import { FilterValues } from 'datatypes/CardDetails';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
   toggle: () => void;
-  values: {
-    name: string;
-    tag: string;
-    status: string;
-    finish: string;
-    price: number;
-    oracle: string;
-    cmc: number;
-    cmcOp: string;
-    colorOp: string;
-    color: string[];
-    type: string;
-    colorIdentity: string;
-    colorIdentityOp: string;
-    mana: string;
-    manaOp: string;
-    is: string;
-    set: string;
-    priceOp: string;
-    priceFoil: number;
-    priceFoilOp: string;
-    priceEur: number;
-    priceEurOp: string;
-    priceTix: number;
-    priceTixOp: string;
-    elo: number;
-    eloOp: string;
-    power: number;
-    powerOp: string;
-    toughness: number;
-    toughnessOp: string;
-    loyalty: number;
-    loyaltyOp: string;
-    rarity: string;
-    rarityOp: string;
-    legality: string;
-    legalityOp: string;
-    artist: string;
-  };
-  updateValue: <T>(value: T, key: string) => void;
+  values: Partial<FilterValues>;
+  updateValue: (value: string | string[], key: keyof FilterValues) => void;
   apply: () => void;
 }
 
@@ -87,7 +50,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
           />
           <TextField
             name="oracle"
-            humanName="oracle Text"
+            humanName="Oracle Text"
             placeholder={'Any text, e.g. "Draw a card"'}
             value={values.oracle}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'oracle')}
@@ -96,14 +59,18 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             name="mv"
             humanName="Mana Value"
             placeholder={'Any value, e.g. "2"'}
-            value={values.cmc}
-            operator={values.cmcOp}
-            setValue={(value: number) => updateValue(value, 'cmc')}
-            setOperator={(operator: string) => updateValue(operator, 'cmcOp')}
+            value={values.mv}
+            operator={values.mvOp}
+            setValue={(value: string) => updateValue(value, 'mv')}
+            setOperator={(operator: string) => updateValue(operator, 'mvOp')}
           />
           <InputGroup className="mb-3">
             <InputGroupText>Color</InputGroupText>
-            <ColorChecksAddon colorless values={values.color} setValues={(v: string[]) => updateValue(v, 'color')} />
+            <ColorChecksAddon
+              colorless
+              values={values.color ?? []}
+              setValues={(v: string[]) => updateValue(v, 'color')}
+            />
             <Input
               type="select"
               id="colorOp"
@@ -120,7 +87,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             <InputGroupText>Color Identity</InputGroupText>
             <ColorChecksAddon
               colorless
-              values={values.colorIdentity}
+              values={values.colorIdentity ?? []}
               setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />
             <Input
@@ -227,7 +194,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 placeholder={'Any decimal number, e.g. "3.50"'}
                 value={values.price}
                 operator={values.priceOp}
-                setValue={(value: number) => updateValue(value, 'price')}
+                setValue={(value: string) => updateValue(value, 'price')}
                 setOperator={(operator: string) => updateValue(operator, 'priceOp')}
               />
             </Col>
@@ -238,7 +205,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceFoil}
                 operator={values.priceFoilOp}
-                setValue={(value: number) => updateValue(value, 'priceFoil')}
+                setValue={(value: string) => updateValue(value, 'priceFoil')}
                 setOperator={(operator: string) => updateValue(operator, 'priceFoilOp')}
               />
             </Col>
@@ -249,7 +216,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceEur}
                 operator={values.priceEurOp}
-                setValue={(value: number) => updateValue(value, 'priceEur')}
+                setValue={(value: string) => updateValue(value, 'priceEur')}
                 setOperator={(operator: string) => updateValue(operator, 'priceEurOp')}
               />
             </Col>
@@ -260,7 +227,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 placeholder={'Any decimal number, e.g. "14.00"'}
                 value={values.priceTix}
                 operator={values.priceTixOp}
-                setValue={(value: number) => updateValue(value, 'priceTix')}
+                setValue={(value: string) => updateValue(value, 'priceTix')}
                 setOperator={(operator: string) => updateValue(operator, 'priceTixOp')}
               />
             </Col>
@@ -271,7 +238,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             placeholder={'Any integer number, e.g. "1200"'}
             value={values.elo}
             operator={values.eloOp}
-            setValue={(value: number) => updateValue(value, 'elo')}
+            setValue={(value: string) => updateValue(value, 'elo')}
             setOperator={(operator: string) => updateValue(operator, 'eloOp')}
           />
           <NumericField
@@ -280,7 +247,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             placeholder={'Any value, e.g. "2"'}
             value={values.power}
             operator={values.powerOp}
-            setValue={(value: number) => updateValue(value, 'power')}
+            setValue={(value: string) => updateValue(value, 'power')}
             setOperator={(operator: string) => updateValue(operator, 'powerOp')}
           />
           <NumericField
@@ -289,7 +256,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             placeholder={'Any value, e.g. "2"'}
             value={values.toughness}
             operator={values.toughnessOp}
-            setValue={(value: number) => updateValue(value, 'toughness')}
+            setValue={(value: string) => updateValue(value, 'toughness')}
             setOperator={(operator: string) => updateValue(operator, 'toughnessOp')}
           />
           <NumericField
@@ -298,7 +265,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             placeholder={'Any value, e.g. "3"'}
             value={values.loyalty}
             operator={values.loyaltyOp}
-            setValue={(value: number) => updateValue(value, 'loyalty')}
+            setValue={(value: string) => updateValue(value, 'loyalty')}
             setOperator={(operator: string) => updateValue(operator, 'loyaltyOp')}
           />
           <NumericField

@@ -1,36 +1,39 @@
-import React, { forwardRef, ComponentType, ElementType } from 'react';
+import React, { ComponentType, FC, PropsWithChildren } from 'react';
 
-type PropsOf<T extends ElementType> =
-  T extends ComponentType<infer P>
-    ? P & React.ComponentProps<T>
-    : T extends keyof JSX.IntrinsicElements
-      ? JSX.IntrinsicElements[T]
-      : never;
+type DivWrapperProps = {
+  wrapperClassName?: string;
+};
 
-type RefOf<T extends ElementType> =
-  T extends ComponentType<any>
-    ? React.ComponentPropsWithRef<T>['ref']
-    : T extends keyof JSX.IntrinsicElements
-      ? JSX.IntrinsicElements[T] extends { ref?: infer R }
-        ? R
-        : never
-      : never;
-
-export function makeWrapper<T extends ElementType>(
-  render: (props: PropsOf<T>, ref: React.ForwardedRef<RefOf<T>>) => JSX.Element,
-) {
-  type Props = PropsOf<T>;
-  type Ref = RefOf<T>;
-
-  const withWrapper = forwardRef<Ref, Props>((props, ref) => render(props as any, ref));
-
-  // withWrapper.displayName = `withWrapper(${
-  //   typeof WrappedComponent === 'string'
-  //     ? WrappedComponent
-  //     : WrappedComponent.displayName || WrappedComponent.name || 'Component'
-  // })`;
-
-  return withWrapper;
+function withDivWrapper<C extends ComponentType<any>>(WrappedComponent: C): FC<PropsWithChildren<DivWrapperProps & React.ComponentProps<C>>> {
+  return function WithDivWrapper({ wrapperClassName, children, ...props }) {
+    return (
+      <div className={wrapperClassName}>
+        <WrappedComponent {...props}>
+          {children}
+        </WrappedComponent>
+      </div>
+    );
+  };
 }
 
-export default makeWrapper;
+function withDivWrapperHTML<T extends keyof JSX.IntrinsicElements>(tagName: T): FC<PropsWithChildren<DivWrapperProps & JSX.IntrinsicElements[T]>> {
+  return function WithDivWrapper({ wrapperClassName, children, ...props }) {
+    return (
+      <div className={wrapperClassName}>
+        {React.createElement(tagName, props, children)}
+      </div>
+    );
+  };
+}
+
+// Example usage:
+const MyComponent: FC<{ name: string, children: string }> = ({ name, children }) => (
+  <span>{name}: {children}</span>
+);
+
+const EnhancedComponent = withDivWrapper(MyComponent);
+const EnhancedDiv = withDivWrapperHTML('div');
+
+// These will typecheck correctly:
+<EnhancedComponent name="John" wrapperClassName="wrapper">Hello</EnhancedComponent>
+<EnhancedDiv id="my-div" wrapperClassName="wrapper">World</EnhancedDiv>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, RefObject } from 'react';
 
 export interface ImageFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src?: string;
+  src: string;
   fallbackSrc: string;
   innerRef?: RefObject<HTMLImageElement>;
   [key: string]: any;

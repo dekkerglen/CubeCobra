@@ -35,6 +35,7 @@ def convert_to_typescript(ts_path, file_content):
     human_prompt = f"""
 Convert the following JavaScript file to TypeScript.
 You can convert PropTypes into native TypeScript interfaces. If the original file exports (e.g.) XyzPropType, the output should no longer export XyzPropType and should instead export default an interface called XyzProps. Make sure XyzProps is exported.
+Please make sure to include any defaultProps as default arguments to the function creating the TypeScript component.
 Transform any import {{ Xyz }} from 'proptypes/XyzPropType' into import Xyz from 'datatypes/Xyz'.
 Otherwise, don't change any of the code, other than adding type annotations.
 It should pass a standard linter test afterwards.
@@ -60,7 +61,7 @@ Please provide only the TypeScript code without any additional comments or expla
     keep_going_prompt = "Can you please keep going, starting at the exact location where you left off? Don't reprint any code you printed in your previous response, includig not reprinting any of the last line of the previous response. You should be able to concatenate your previous response and this one and get the correct, valid TypeScript code."
 
     assistant_prompt = """
-Certainly! I'll convert the JavaScript code to TypeScript by adding type annotations without changing the existing code.
+Certainly! I'll convert the JavaScript code to TypeScript by adding type annotations without changing the existing code, and while being careful to observe all the above instructions.
 Here's the TypeScript version:
 ```typescript"""
 

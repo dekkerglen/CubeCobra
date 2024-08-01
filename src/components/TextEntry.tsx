@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { useState, ChangeEventHandler } from 'react';
 import { Card, CardHeader, Input, Nav, TabPane, TabContent, CardBody, FormText } from 'reactstrap';
 
 import Tab from 'components/Tab';
 import Markdown from 'components/Markdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 
-const TextEntry = ({ name, value, onChange, maxLength }) => {
+interface TextEntryProps {
+  name?: string;
+  value: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  maxLength?: number;
+}
+
+const TextEntry: React.FC<TextEntryProps> = ({ name = 'hiddentextarea', value = '', onChange, maxLength = 1000 }) => {
   const [tab, setTab] = useState('0');
 
   return (
@@ -53,19 +58,6 @@ const TextEntry = ({ name, value, onChange, maxLength }) => {
       </FormText>
     </>
   );
-};
-
-TextEntry.propTypes = {
-  name: PropTypes.string,
-  value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
-  maxLength: PropTypes.number,
-};
-
-TextEntry.defaultProps = {
-  name: 'hiddentextarea',
-  maxLength: 1000,
-  value: '',
 };
 
 export default TextEntry;

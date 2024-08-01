@@ -1,9 +1,14 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-
+import React, { ReactNode } from 'react';
 import { NavItem, NavLink } from 'reactstrap';
 
-const Tab = ({ tab, setTab, index, children }) => {
+interface TabProps {
+  tab: string;
+  setTab: (index: string) => void;
+  index: string;
+  children: ReactNode;
+}
+
+const Tab: React.FC<TabProps> = ({ tab, setTab, index, children }) => {
   return (
     <NavItem className="ms-2 clickable">
       <NavLink
@@ -17,10 +22,5 @@ const Tab = ({ tab, setTab, index, children }) => {
     </NavItem>
   );
 };
-Tab.propTypes = {
-  tab: PropTypes.string.isRequired,
-  setTab: PropTypes.func.isRequired,
-  index: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-};
+
 export default Tab;

@@ -15,8 +15,8 @@ export interface WithCardModalProps {
 }
 
 const withCardModal =
-  <T extends React.ComponentType<any>>(Tag: T) =>
-  (props: WithCardModalProps & React.ComponentProps<T>) => {
+  <P,>(Tag: React.ComponentType<P>) =>
+  (props: WithCardModalProps & P) => {
     const { setModalSelection, setModalOpen } = useContext(CubeContext)!;
 
     const handleClick = useCallback(
@@ -25,7 +25,8 @@ const withCardModal =
           props.altClick();
         } else {
           event.preventDefault();
-          setModalSelection({ board: props.modalProps.card.board, index: props.modalProps.card.index });
+          const { board, index } = props.modalProps.card;
+          if (board !== undefined && index !== undefined) setModalSelection({ board, index });
           setModalOpen(true);
         }
       },
@@ -35,7 +36,7 @@ const withCardModal =
     return (
       <>
         <Tag
-          {...(props as any)}
+          {...props}
           className={props.className ? `${props.className} clickable` : 'clickable'}
           onClick={handleClick}
         >

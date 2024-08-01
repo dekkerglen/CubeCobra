@@ -1,34 +1,47 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-
-import ReactMarkdown from 'react-markdown';
+import React, { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
+// @ts-ignore
+import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import Latex from 'react-latex';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { LinkIcon } from '@primer/octicons-react';
 
+// @ts-ignore
 import { ALL_PLUGINS, LIMITED_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS } from 'markdown/parser';
 
-import withAutocard from 'components/WithAutocard';
-import withModal from 'components/WithModal';
-import LinkModal from 'components/LinkModal';
+import withAutocard, { WithAutocardProps } from 'components/WithAutocard';
+import withModal, { WithModalProps } from 'components/WithModal';
+import LinkModal, { LinkModalProps } from 'components/LinkModal';
 import FoilCardImage from 'components/FoilCardImage';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 
 import { Col, Row, Card, CardBody } from 'reactstrap';
+import CardDetails from 'datatypes/CardDetails';
 
-const AutocardLink = withAutocard('a');
-const Link = withModal('a', LinkModal);
+type AutocardLinkProps = WithAutocardProps & ComponentPropsWithoutRef<'a'>;
+const AutocardLink: FC<AutocardLinkProps> = withAutocard('a');
 
-const renderBlockQuote = (node) => (
+const Link: React.FC<WithModalProps<LinkModalProps> & ComponentPropsWithoutRef<'a'>> = withModal<'a', LinkModalProps>(
+  'a',
+  LinkModal,
+);
+
+interface RenderBlockQuoteProps {
+  children: ReactNode;
+}
+const renderBlockQuote: FC<RenderBlockQuoteProps> = (node) => (
   <Card className="quote">
     <CardBody>{node.children}</CardBody>
   </Card>
 );
 
-const renderImage = (node) => <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />;
+interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
+const renderImage: FC<RenderImageProps> = (node) => (
+  <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />
+);
 
-const renderLink = (node) => {
+interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {}
+const renderLink: FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
   if (isInternalURL(ref)) {
@@ -56,7 +69,8 @@ const renderLink = (node) => {
   );
 };
 
-const renderCode = (node) => {
+interface RenderCodeProps {}
+const renderCode: FC<RenderCodeProps> = (node: any) => {
   const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
   const style = mode === 'dark' ? a11yDark : a11yLight;
 
@@ -67,17 +81,29 @@ const renderCode = (node) => {
   );
 };
 
-const renderTable = (node) => (
+interface RenderTableProps {
+  children: ReactNode;
+}
+const renderTable: FC<RenderTableProps> = (node) => (
   <div className="table-responsive">
     <table className="table table-bordered">{node.children}</table>
   </div>
 );
 
-const renderMath = (node) => <Latex trusted={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
+interface RenderMathProps {
+  value: string;
+}
+const renderMath: FC<RenderMathProps> = (node) => <Latex trust={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
 
-const renderInlineMath = (node) => <Latex trusted={false}>{`$ ${node.value} $`}</Latex>;
+interface RenderInlineMathProps {
+  value: string;
+}
+const renderInlineMath: FC<RenderInlineMathProps> = (node) => <Latex trust={false}>{`$ ${node.value} $`}</Latex>;
 
-const renderUserlink = ({ name }) => {
+interface RenderUserlinkProps {
+  name: string;
+}
+const renderUserlink: FC<RenderUserlinkProps> = ({ name }) => {
   return (
     <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
       @{name}
@@ -85,40 +111,60 @@ const renderUserlink = ({ name }) => {
   );
 };
 
-const renderSymbol = ({ value }) => {
+interface RenderSymbolProps {
+  value: string;
+}
+const renderSymbol: FC<RenderSymbolProps> = ({ value }) => {
   const symbol = value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };
 
-const renderCardlink = ({ name, id, dfc }) => {
+interface RenderCardlinkProps {
+  name: string;
+  id: string;
+  dfc?: boolean;
+}
+const renderCardlink: FC<RenderCardlinkProps> = ({ name, id, dfc }) => {
   const idURL = encodeURIComponent(id);
-  const details = { image_normal: `/tool/cardimage/${idURL}` };
+  const details: Partial<CardDetails> = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
 
   return (
-    <AutocardLink href={`/tool/card/${idURL}`} card={{ details }} target="_blank" rel="noopener noreferrer">
+    <AutocardLink href={`/tool/card/${idURL}`} card={{ details } as any} target="_blank" rel="noopener noreferrer">
       {name}
     </AutocardLink>
   );
 };
 
-const renderCardImage = (node) => {
+interface RenderCardImageProps {
+  id: string;
+  dfc?: boolean;
+  inParagraph?: boolean;
+}
+const renderCardImage: FC<RenderCardImageProps> = (node) => {
   const idURL = encodeURIComponent(node.id);
-  const details = { image_normal: `/tool/cardimage/${idURL}` };
+  const details: Partial<CardDetails> = { image_normal: `/tool/cardimage/${idURL}` };
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
   const tag = node.inParagraph ? 'span' : 'div';
   return (
     <Col className="card-image d-block" xs="6" md="4" lg="3" tag={tag}>
       <a href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
-        <FoilCardImage autocard card={{ details }} className="clickable" wrapperTag={tag} />
+        <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
       </a>
     </Col>
   );
 };
 
-const renderCentering = (node) => <div className="centered-markdown">{node.children}</div>;
+interface RenderCenteringProps {
+  children: ReactNode;
+}
+const renderCentering: FC<RenderCenteringProps> = (node) => <div className="centered-markdown">{node.children}</div>;
 
-const renderCardrow = (node) => (
+interface RenderCardrowProps {
+  inParagraph?: boolean;
+  children: ReactNode;
+}
+const renderCardrow: FC<RenderCardrowProps> = (node) => (
   <Row className="cardRow" tag={node.inParagraph ? 'span' : 'div'}>
     {node.children}
   </Row>
@@ -142,33 +188,23 @@ const RENDERERS = {
   cardrow: renderCardrow,
 };
 
-const Markdown = ({ markdown, limited }) => {
+interface MarkdownProps {
+  markdown: string;
+  limited?: boolean;
+}
+
+const Markdown: FC<MarkdownProps> = ({ markdown, limited }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
       className="markdown"
       remarkPlugins={ALL_PLUGINS}
       rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
-      components={RENDERERS}
+      components={RENDERERS as any}
     >
       {markdownStr}
     </ReactMarkdown>
   );
-};
-
-renderCardlink.propTypes = {
-  name: PropTypes.string.isRequired,
-  id: PropTypes.string.isRequired,
-  dfc: PropTypes.bool,
-};
-
-renderCardlink.defaultProps = {
-  dfc: false,
-};
-
-Markdown.propTypes = {
-  markdown: PropTypes.string.isRequired,
-  limited: PropTypes.bool,
 };
 
 Markdown.defaultProps = {

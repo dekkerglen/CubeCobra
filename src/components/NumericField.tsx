@@ -1,9 +1,25 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
-const NumericField = ({ name, humanName, placeholder, operator, value, setValue, setOperator }) => (
+interface NumericFieldProps {
+  name: string;
+  humanName: string;
+  placeholder: string;
+  operator?: string;
+  value?: string;
+  setValue: (value: string) => void;
+  setOperator: (value: string) => void;
+}
+
+const NumericField: React.FC<NumericFieldProps> = ({
+  name,
+  humanName,
+  placeholder,
+  operator = '=',
+  value = '',
+  setValue,
+  setOperator,
+}) => (
   <InputGroup className="mb-3">
     <InputGroupText>{humanName}</InputGroupText>
     <Input
@@ -29,20 +45,5 @@ const NumericField = ({ name, humanName, placeholder, operator, value, setValue,
     />
   </InputGroup>
 );
-
-NumericField.propTypes = {
-  name: PropTypes.string.isRequired,
-  humanName: PropTypes.string.isRequired,
-  placeholder: PropTypes.string.isRequired,
-  operator: PropTypes.string,
-  value: PropTypes.string,
-  setValue: PropTypes.func.isRequired,
-  setOperator: PropTypes.func.isRequired,
-};
-
-NumericField.defaultProps = {
-  operator: '=',
-  value: '',
-};
 
 export default NumericField;

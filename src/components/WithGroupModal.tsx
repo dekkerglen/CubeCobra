@@ -1,6 +1,6 @@
 import React, { useCallback, useContext } from 'react';
-import CubeContext, { CubeContextValue } from 'contexts/CubeContext';
-import { Card, BoardType } from 'datatypes/Card';
+import CubeContext from 'contexts/CubeContext';
+import { BoardType } from 'datatypes/Card';
 
 export interface WithGroupModalProps {
   children: React.ReactNode;
@@ -12,9 +12,9 @@ export interface WithGroupModalProps {
 }
 
 const withGroupModal =
-  <T extends React.ComponentType<any>>(Tag: T) =>
-  (props: WithGroupModalProps & React.ComponentProps<T>) => {
-    const { setModalSelection, setModalOpen } = useContext<CubeContextValue>(CubeContext);
+  <P,>(Tag: React.ComponentType<P>) =>
+  (props: WithGroupModalProps & P) => {
+    const { setModalSelection, setModalOpen } = useContext(CubeContext)!;
     const handleClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
         if (props.altClick && event.ctrlKey) {

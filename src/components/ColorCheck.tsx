@@ -11,7 +11,7 @@ interface ColorCheckButtonProps {
   onClick: () => void;
 }
 
-export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ size, color, short, checked, onClick }) => {
+export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ size = 'sm', color, short, checked, onClick }) => {
   const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
   return (
     <Button
@@ -31,15 +31,17 @@ interface ColorChecksControlProps {
   size?: string;
   values: string[];
   setValues: (values: string[]) => void;
+  className?: string;
   style?: React.CSSProperties;
 }
 
 export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
-  colorless,
-  size,
+  colorless = false,
+  size = 'sm',
   values,
   setValues,
-  style,
+  className,
+  style = {},
 }) => {
   const smallStyle: React.CSSProperties = {
     height: 'calc(1.5em + .5rem + 2px)',
@@ -47,7 +49,7 @@ export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
   };
 
   return (
-    <ButtonGroup size={size} style={size === 'sm' ? smallStyle : style}>
+    <ButtonGroup size={size} style={size === 'sm' ? smallStyle : style} className={className}>
       {COLORS.map(([color, short]) => (
         <ColorCheckButton
           key={short}
@@ -90,7 +92,12 @@ export interface ColorChecksAddonProps {
   setValues: (values: string[]) => void;
 }
 
-export const ColorChecksAddon: React.FC<ColorChecksAddonProps> = ({ colorless, size, values, setValues }) => {
+export const ColorChecksAddon: React.FC<ColorChecksAddonProps> = ({
+  colorless = false,
+  size = 'sm',
+  values = [],
+  setValues,
+}) => {
   const colors = useMemo(() => {
     const c = [...COLORS];
     if (colorless) {

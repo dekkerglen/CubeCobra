@@ -1,10 +1,15 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import { FC } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 
 import ButtonLink from 'components/ButtonLink';
 
-const AddToCubeModal = ({ link, isOpen, toggle }) => {
+export interface LinkModalProps {
+  link: string;
+  isOpen: boolean;
+  toggle: () => void;
+}
+
+const LinkModal: FC<LinkModalProps> = ({ link, isOpen, toggle }) => {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xs">
       <ModalHeader toggle={toggle}>This link could be dangerous</ModalHeader>
@@ -26,10 +31,4 @@ const AddToCubeModal = ({ link, isOpen, toggle }) => {
   );
 };
 
-AddToCubeModal.propTypes = {
-  link: PropTypes.string.isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-};
-
-export default AddToCubeModal;
+export default LinkModal;

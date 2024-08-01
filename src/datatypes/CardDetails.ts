@@ -14,7 +14,7 @@ export default interface CardDetails {
   artist: string;
   scryfall_uri: string;
   rarity: string;
-  legalities: Record<string, "legal" | "not_legal" | "banned" | "restricted">;  // An empty object, could be more specific if needed
+  legalities: Record<string, 'legal' | 'not_legal' | 'banned' | 'restricted'>; // An empty object, could be more specific if needed
   oracle_text: string;
   image_small?: string;
   image_normal?: string;
@@ -28,9 +28,9 @@ export default interface CardDetails {
   loyalty?: string;
   power?: string;
   toughness?: string;
-  parsed_cost: string[]; 
+  parsed_cost: string[];
   finishes: string[];
-  border_color: "black" | "white" | "silver" | "gold";
+  border_color: 'black' | 'white' | 'silver' | 'gold';
   language: string;
   tcgplayer_id?: string;
   mtgo_id: number;
@@ -52,3 +52,65 @@ export default interface CardDetails {
   cubeCount?: number;
   pickCount?: number;
 }
+
+export const allFields = [
+  'name',
+  'oracle',
+  'mv',
+  'mana',
+  'type',
+  'set',
+  'tag',
+  'status',
+  'finish',
+  'price',
+  'priceFoil',
+  'priceEur',
+  'priceTix',
+  'elo',
+  'power',
+  'toughness',
+  'loyalty',
+  'rarity',
+  'legality',
+  'artist',
+  'is',
+  'color',
+  'colorIdentity',
+] as const;
+
+export type AllField = (typeof allFields)[number];
+
+export const numFields = [
+  'mv',
+  'price',
+  'priceFoil',
+  'priceEur',
+  'priceTix',
+  'elo',
+  'power',
+  'toughness',
+  'loyalty',
+  'rarity',
+  'legality',
+] as const;
+
+export type NumField = (typeof numFields)[number];
+
+export function isNumField(field: string): field is NumField {
+  return numFields.includes(field as NumField);
+}
+
+export const colorFields = ['color', 'colorIdentity'] as const;
+
+export type ColorField = (typeof colorFields)[number];
+
+export function isColorField(field: string): field is ColorField {
+  return colorFields.includes(field as ColorField);
+}
+
+export type FilterValues = {
+  [K in AllField]: K extends ColorField ? string[] : string;
+} & {
+  [K in `${AllField}Op`]: ':' | '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=';
+};

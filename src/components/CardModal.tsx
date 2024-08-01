@@ -369,7 +369,6 @@ const CardModal: React.FC<CardModalProps> = ({
                 <InputGroup className="mb-3">
                   <InputGroupText className="square-right">Color</InputGroupText>
                   <ColorChecksAddon
-                    prefix="color"
                     values={cardColorIdentity(card)}
                     setValues={(colors: string[]) => updateField('colors', colors)}
                   />
