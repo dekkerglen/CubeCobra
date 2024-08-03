@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Card,CardHeader } from 'reactstrap';
+import { Card, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';

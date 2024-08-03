@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, CardBody, CardFooter,CardHeader } from 'reactstrap';
+import { Button, Card, CardBody, CardFooter, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 

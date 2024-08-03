@@ -20,7 +20,10 @@ export const Alerts: React.FC<AlertsProps> = ({ alerts, ...props }) =>
 const useAlerts = (): { addAlert: (color: string, message: string) => void; alerts: Alert[] } => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
-  const addAlert = useCallback((color: string, message: string) => setAlerts((oldAlerts) => [...oldAlerts, { color, message }]), []);
+  const addAlert = useCallback(
+    (color: string, message: string) => setAlerts((oldAlerts) => [...oldAlerts, { color, message }]),
+    [],
+  );
 
   return { addAlert, alerts };
 };

@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { Input,InputGroup, InputGroupText } from 'reactstrap';
+import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
 import Cube from 'datatypes/Cube';
 

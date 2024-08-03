@@ -1,5 +1,5 @@
-import React, { useEffect,useState } from 'react';
-import { Button, Card,Col, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';

@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Card, CardBody, CardFooter,CardHeader, CardTitle } from 'reactstrap';
+import { Card, CardBody, CardFooter, CardHeader, CardTitle } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';

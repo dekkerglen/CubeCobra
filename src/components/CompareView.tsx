@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Col,ListGroup, ListGroupItem, Row } from 'reactstrap';
+import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import AutocardListItem from 'components/AutocardListItem';
 import withCardModal from 'components/WithCardModal';

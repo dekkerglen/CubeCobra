@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Card, CardBody,Col, Nav, NavLink, Row } from 'reactstrap';
+import { Card, CardBody, Col, Nav, NavLink, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
@@ -35,7 +35,7 @@ import {
   pickRate,
 } from 'utils/Card';
 import RenderToRoot from 'utils/RenderToRoot';
-import { cardIsLabel,getLabels } from 'utils/Sort';
+import { cardIsLabel, getLabels } from 'utils/Sort';
 
 const CubeAnalysisPage = ({ cubeAnalytics }) => {
   const { changedCards, cube } = useContext(CubeContext);

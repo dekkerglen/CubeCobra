@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Card, CardBody,CardHeader, Col, Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import TimeAgo from 'react-timeago';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col,Row } from 'reactstrap';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';

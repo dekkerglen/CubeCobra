@@ -1,4 +1,4 @@
-import React, { useCallback,useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card } from 'reactstrap';
 
 import ContentPropType from 'proptypes/ContentPropType';

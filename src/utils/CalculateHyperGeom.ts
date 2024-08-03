@@ -41,7 +41,7 @@ const calculate = (
   populationSize: string,
   sampleSize: string,
   popSuccesses: string,
-  sampleSuccesses: string
+  sampleSuccesses: string,
 ): {
   equalTo: number;
   lessThan: number;
@@ -51,7 +51,7 @@ const calculate = (
 } => {
   const keys: number[] = Array.from(new Array(parseInt(sampleSuccesses, 10) + 1).keys());
   const values: number[] = keys.map((x) =>
-    hyp(parseInt(populationSize, 10), parseInt(sampleSize, 10), parseInt(popSuccesses, 10), x)
+    hyp(parseInt(populationSize, 10), parseInt(sampleSize, 10), parseInt(popSuccesses, 10), x),
   );
   const equalTo: number = clamp(values[values.length - 1], 0, 1);
   const lessThan: number = clamp(values.reduce((a, b) => a + b, 0) - equalTo, 0, 1);

@@ -1,4 +1,4 @@
-import React, { useContext,useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Card,
@@ -16,7 +16,7 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { EyeClosedIcon,LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
+import { EyeClosedIcon, LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
 import CardPropType from 'proptypes/CardPropType';
@@ -44,7 +44,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import RenderToRoot from 'utils/RenderToRoot';
-import { getCubeDescription,getCubeId } from 'utils/Util';
+import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeOverviewModalLink = withModal(NavLink, CubeOverviewModal);

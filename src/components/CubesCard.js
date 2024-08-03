@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, CardBody, CardHeader, Col, Collapse,Row } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, Col, Collapse, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';

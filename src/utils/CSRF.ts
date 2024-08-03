@@ -6,7 +6,10 @@ export const getCsrfToken = (): string | null => {
   return meta ? meta.getAttribute('content') : null;
 };
 
-async function fetchWithTimeout(resource: RequestInfo, options: RequestInit & { timeout?: number } = {}): Promise<Response> {
+async function fetchWithTimeout(
+  resource: RequestInfo,
+  options: RequestInit & { timeout?: number } = {},
+): Promise<Response> {
   const { timeout = 10000 } = options;
 
   const controller = new AbortController();

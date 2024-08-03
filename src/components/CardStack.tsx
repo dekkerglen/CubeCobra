@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Col, ColProps } from 'reactstrap';
 
-import { DropTargetMonitor,useDrop } from 'react-dnd';
+import { DropTargetMonitor, useDrop } from 'react-dnd';
 
 export interface CardStackProps extends ColProps {
   location: unknown;

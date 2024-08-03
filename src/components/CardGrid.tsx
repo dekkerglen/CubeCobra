@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, ColProps,Row } from 'reactstrap';
+import { Col, ColProps, Row } from 'reactstrap';
 
 import CardDetails from 'datatypes/CardDetails';
 

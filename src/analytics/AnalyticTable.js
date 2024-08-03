@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Col, Input,InputGroup, InputGroupText, Row } from 'reactstrap';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
@@ -10,7 +10,7 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable, valueRenderer } from 'components/SortableTable';
 import { calculateAsfans } from 'drafting/createdraft';
 import useQueryParam from 'hooks/useQueryParam';
-import { cardCanBeSorted, sortGroupsOrdered,SORTS } from 'utils/Sort';
+import { cardCanBeSorted, sortGroupsOrdered, SORTS } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
 
 const sortWithTotal = (pool, sort) =>

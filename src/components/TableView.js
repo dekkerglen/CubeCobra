@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { Col,Row } from 'reactstrap';
+import { Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';

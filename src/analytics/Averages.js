@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { Col, Input,InputGroup, InputGroupText, Row } from 'reactstrap';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
-import { calculateAsfans,weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
+import { calculateAsfans, weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardType } from 'utils/Card';
 import { sortIntoGroups, SORTS } from 'utils/Sort';

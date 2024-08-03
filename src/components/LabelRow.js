@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col,FormGroup, Label } from 'reactstrap';
+import { Col, FormGroup, Label } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 

@@ -6,7 +6,9 @@ interface KeyHandlerProps {
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
-const useKeyHandlers = (handler: (event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => void): KeyHandlerProps =>
+const useKeyHandlers = (
+  handler: (event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => void,
+): KeyHandlerProps =>
   useMemo(
     () => ({
       role: 'button',

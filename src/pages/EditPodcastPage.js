@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button,Card, CardBody, Col, FormGroup, Input, Label, Nav, Row, TabContent, TabPane } from 'reactstrap';
+import { Button, Card, CardBody, Col, FormGroup, Input, Label, Nav, Row, TabContent, TabPane } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';

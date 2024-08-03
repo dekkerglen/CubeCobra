@@ -8,7 +8,7 @@ import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
-import { encodeName,mainboardRate, pickRate } from 'utils/Card';
+import { encodeName, mainboardRate, pickRate } from 'utils/Card';
 import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);

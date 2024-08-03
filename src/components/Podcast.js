@@ -1,5 +1,5 @@
 import React from 'react';
-import { CardBody, CardHeader, Col,Row } from 'reactstrap';
+import { CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';

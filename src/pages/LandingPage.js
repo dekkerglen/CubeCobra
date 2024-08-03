@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button,Col, Row } from 'reactstrap';
+import { Button, Col, Row } from 'reactstrap';
 
 import CardSearchBar from 'components/CardSearchBar';
 import LoginModal from 'components/LoginModal';

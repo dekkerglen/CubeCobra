@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Button, Card, CardBody, CardFooter,CardHeader, Col, Row } from 'reactstrap';
+import { Button, Card, CardBody, CardFooter, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';

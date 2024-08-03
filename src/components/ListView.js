@@ -9,7 +9,7 @@ import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
-import { cardCmc, cardColorIdentity, cardFinish, cardStatus,cardTags, cardType, normalizeName } from 'utils/Card';
+import { cardCmc, cardColorIdentity, cardFinish, cardStatus, cardTags, cardType, normalizeName } from 'utils/Card';
 import { getLabels, sortDeep } from 'utils/Sort';
 import { getCardColorClass } from 'utils/Util';
 

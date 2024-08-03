@@ -1,4 +1,4 @@
-import Cube from "datatypes/Cube";
+import Cube from 'datatypes/Cube';
 
 export default interface User {
   id: string;

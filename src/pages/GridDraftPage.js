@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo,useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -29,7 +29,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
 import { getDefaultPosition } from 'drafting/draftutil';
-import { calculateGridBotPick,getGridDrafterState } from 'drafting/griddraftutils';
+import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { makeSubtitle } from 'utils/Card';

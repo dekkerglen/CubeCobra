@@ -1,6 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { Col, ListGroup, ListGroupItem,Row } from 'reactstrap';
+import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';

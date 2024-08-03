@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card, CardBody, CardHeader,Col, FormGroup, Input, Label, Row } from 'reactstrap';
+import { Button, Card, CardBody, CardHeader, Col, FormGroup, Input, Label, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 

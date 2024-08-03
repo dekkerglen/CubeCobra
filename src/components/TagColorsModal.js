@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useCallback, useContext, useMemo } from 'react';
-import { Col, Input, Label, Modal, ModalBody, ModalFooter,ModalHeader, Row } from 'reactstrap';
+import { Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 

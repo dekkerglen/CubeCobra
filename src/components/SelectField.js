@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input,InputGroup, InputGroupText } from 'reactstrap';
+import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 

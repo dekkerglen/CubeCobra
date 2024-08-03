@@ -1,6 +1,6 @@
 /* eslint-disable no-loop-func */
 
-import { cardCmc,cardType } from 'utils/Card';
+import { cardCmc, cardType } from 'utils/Card';
 import { cmcColumn } from 'utils/Util';
 
 export const setupPicks = (rows, cols) => {

@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 import Tooltip from 'components/Tooltip';
 import CubeContext from 'contexts/CubeContext';
-import { ORDERED_SORTS,SORTS } from 'utils/Sort';
+import { ORDERED_SORTS, SORTS } from 'utils/Sort';
 
 const SortCollapse = ({ isOpen }) => {
   const {

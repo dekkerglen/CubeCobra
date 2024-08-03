@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button,Input, InputGroup, InputGroupText, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, Input, InputGroup, InputGroupText, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 

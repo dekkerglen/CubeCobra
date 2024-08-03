@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Col, Input,InputGroup, InputGroupText, Row } from 'reactstrap';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
@@ -9,7 +9,7 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import { calculateAsfans } from 'drafting/createdraft';
 import useQueryParam from 'hooks/useQueryParam';
-import { sortIntoGroups,SORTS } from 'utils/Sort';
+import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Asfans = ({ cards, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');
