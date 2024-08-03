@@ -1,9 +1,6 @@
 import { createContext } from 'react';
 
-export interface TagColor {
-  tag: string;
-  color: string;
-}
+import { TagColor } from 'datatypes/Cube';
 
 const TagColorContext = createContext<TagColor[]>([]);
 

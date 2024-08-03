@@ -1,9 +1,5 @@
 import { createContext } from 'react';
 
-interface ThemeContextValue {
-  theme: string;
-}
-
-const ThemeContext = createContext<ThemeContextValue>({ theme: 'default' });
+const ThemeContext = createContext<string>('default');
 
 export default ThemeContext;

@@ -1,51 +1,62 @@
-import React, { useContext } from 'react';
+import React, { ReactNode, useContext } from 'react';
 import { NavItem, NavLink } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
 
 import CubeSubtitle from 'components/CubeSubtitle';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import TagColorContext from 'contexts/TagColorContext';
+import Card, { BoardType } from 'datatypes/Card';
+import Cube from 'datatypes/Cube';
 import { getCubeId } from 'utils/Util';
 
-function CubeNavItem({ link, activeLink, children }) {
-  const { cube } = useContext(CubeContext);
+interface CubeNavItemProps {
+  link: string;
+  activeLink: string;
+  children?: React.ReactNode;
+}
+
+const CubeNavItem: React.FC<CubeNavItemProps> = ({ link, activeLink, children }) => {
+  const { cube } = useContext(CubeContext)!;
   return (
     <NavItem>
-      <NavLink href={`/cube/${link}/${encodeURIComponent(getCubeId(cube))}`} active={link === activeLink}>
+      <NavLink href={`/cube/${link}/${encodeURIComponent(getCubeId(cube!))}`} active={link === activeLink}>
         {children}
       </NavLink>
     </NavItem>
   );
+};
+
+interface CubeLayoutInnerProps {
+  children: ReactNode;
 }
 
-CubeNavItem.propTypes = {
-  link: PropTypes.string.isRequired,
-  activeLink: PropTypes.string.isRequired,
-  children: PropTypes.node,
-};
-
-CubeNavItem.defaultProps = {
-  children: false,
-};
-
-function CubeLayoutInner({ children }) {
-  const { tagColors } = useContext(CubeContext);
+const CubeLayoutInner: React.FC<CubeLayoutInnerProps> = ({ children }) => {
+  const { tagColors } = useContext(CubeContext)!;
 
   return (
     <TagColorContext.Provider value={tagColors}>
       <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
     </TagColorContext.Provider>
   );
-}
-
-CubeLayoutInner.propTypes = {
-  children: PropTypes.node.isRequired,
 };
 
-function CubeLayout({ cube, cards, activeLink, children, loadVersionDict, useChangedCards }) {
+interface CubeLayoutProps {
+  cube: Cube;
+  cards: Record<BoardType, Card[]>;
+  activeLink: string;
+  children?: React.ReactNode;
+  loadVersionDict?: boolean;
+  useChangedCards?: boolean;
+}
+
+const CubeLayout: React.FC<CubeLayoutProps> = ({
+  cube,
+  cards = { mainboard: [], maybeboard: [] },
+  activeLink,
+  children,
+  loadVersionDict = false,
+  useChangedCards = false,
+}) => {
   return (
     <CubeContextProvider
       initialCube={cube}
@@ -81,26 +92,6 @@ function CubeLayout({ cube, cards, activeLink, children, loadVersionDict, useCha
       </div>
     </CubeContextProvider>
   );
-}
-
-CubeLayout.propTypes = {
-  cube: CubePropType.isRequired,
-  activeLink: PropTypes.string.isRequired,
-  children: PropTypes.node,
-  cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.shape({})),
-  }),
-  loadVersionDict: PropTypes.bool,
-  useChangedCards: PropTypes.bool,
-};
-
-CubeLayout.defaultProps = {
-  children: false,
-  cards: {
-    boards: [],
-  },
-  loadVersionDict: false,
-  useChangedCards: false,
 };
 
 export default CubeLayout;

@@ -14,8 +14,6 @@ import {
   UncontrolledDropdown,
 } from 'reactstrap';
 
-import PropTypes from 'prop-types';
-
 import CreateCubeModal from 'components/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import LoginModal from 'components/LoginModal';
@@ -29,9 +27,15 @@ import useToggle from 'hooks/UseToggle';
 import Footer from 'layouts/Footer';
 
 const LoginModalLink = withModal(NavLink, LoginModal);
+
 const CreateCubeModalLink = withModal(DropdownItem, CreateCubeModal);
 
-function MainLayout({ children, loginCallback }) {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  loginCallback?: string;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }) => {
   const user = useContext(UserContext);
   const [expanded, toggle] = useToggle(false);
   return (
@@ -152,24 +156,15 @@ function MainLayout({ children, loginCallback }) {
           <MobileBanner placementId="mobile-banner" />
         </div>
         <div className="ad-left d-none d-lg-block">
-          <SideBanner placementId="left-rail" side="left" />
+          <SideBanner placementId="left-rail" />
         </div>
         <div className="ad-right d-none d-lg-block">
-          <SideBanner placementId="right-rail" side="right" />
+          <SideBanner placementId="right-rail" />
         </div>
       </Container>
       <Footer />
     </div>
   );
-}
-
-MainLayout.propTypes = {
-  children: PropTypes.node.isRequired,
-  loginCallback: PropTypes.string,
-};
-
-MainLayout.defaultProps = {
-  loginCallback: '/',
 };
 
 export default MainLayout;

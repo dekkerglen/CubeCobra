@@ -1,19 +1,26 @@
 import React, { useContext } from 'react';
 import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
-import PropTypes from 'prop-types';
-
 import CreateCubeModal from 'components/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
+import User from 'datatypes/User';
+
+interface UserLayoutProps {
+  user: User;
+  followers: User[];
+  following: boolean;
+  activeLink: string;
+  children?: React.ReactNode;
+}
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CreateCubeModalLink = withModal(NavLink, CreateCubeModal);
 
-const UserLayout = ({ user, followers, following, activeLink, children }) => {
-  const activeUser = useContext(UserContext);
+const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, activeLink, children }) => {
+  const activeUser = useContext(UserContext)!;
   const canEdit = activeUser && activeUser.id === user.id;
 
   const numFollowers = followers.length;
@@ -26,9 +33,7 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
     <>
       <Nav tabs fill className="cubenav pt-2">
         <NavItem>
-          <h5 href="#" style={{ color: '#218937' }}>
-            {user.username}
-          </h5>
+          <h5 style={{ color: '#218937' }}>{user.username}</h5>
           {numFollowers > 0 ? (
             <FollowersModalLink href="#" modalProps={{ followers }}>
               {followersText}
@@ -76,21 +81,6 @@ const UserLayout = ({ user, followers, following, activeLink, children }) => {
       <ErrorBoundary>{children}</ErrorBoundary>
     </>
   );
-};
-
-UserLayout.propTypes = {
-  user: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    username: PropTypes.string.isRequired,
-  }).isRequired,
-  followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  following: PropTypes.bool.isRequired,
-  activeLink: PropTypes.string.isRequired,
-  children: PropTypes.node,
-};
-
-UserLayout.defaultProps = {
-  children: false,
 };
 
 export default UserLayout;
