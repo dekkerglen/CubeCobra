@@ -1,7 +1,8 @@
 import assert from 'assert';
-import { markdownSpace, markdownLineEnding } from 'micromark-util-character';
+import { markdownLineEnding, markdownSpace } from 'micromark-util-character';
 
 function tokenizeUserlink(effects, ok, nok) {
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
   const self = this;
   return start;
 

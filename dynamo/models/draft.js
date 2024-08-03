@@ -103,7 +103,7 @@ const assessColors = (mainboard, cards) => {
 const getCards = async (id) => {
   try {
     return getObject(process.env.DATA_BUCKET, `cardlist/${id}.json`);
-  } catch (e) {
+  } catch {
     return [];
   }
 };
@@ -117,7 +117,7 @@ const addDetails = (cards) => {
   if (typeof cards === 'string') {
     try {
       cards = JSON.parse(cards);
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -140,7 +140,7 @@ const stripDetails = (cards) => {
 const getSeats = async (id) => {
   try {
     return getObject(process.env.DATA_BUCKET, `seats/${id}.json`);
-  } catch (e) {
+  } catch {
     return {};
   }
 };

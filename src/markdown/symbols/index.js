@@ -1,5 +1,5 @@
-import syntax from 'markdown/symbols/micromark-symbols';
 import { fromMarkdown } from 'markdown/symbols/mdast-symbols';
+import syntax from 'markdown/symbols/micromark-symbols';
 import { add } from 'markdown/utils';
 
 // characters allowed inside a symbol definition by default

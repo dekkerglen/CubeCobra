@@ -18,7 +18,7 @@ const run = async () => {
   console.log({ message: 'Updating podcasts...' });
 
   for (const podcast of podcasts.items) {
-    // eslint-disable-next-line no-await-in-loop
+     
     await tryUpdate(podcast);
   }
 

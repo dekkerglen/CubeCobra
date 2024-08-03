@@ -198,7 +198,7 @@ module.exports = function createClient(config) {
               },
             },
           };
-          // eslint-disable-next-line no-await-in-loop
+           
           const result = await documentClient.batchGet(params).promise();
           results.push(...result.Responses[tableName(config.name)]);
         }

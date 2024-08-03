@@ -36,7 +36,7 @@ const getObject = async (bucket, key, skipcache = false) => {
     await put(key, value);
 
     return value;
-  } catch (err) {
+  } catch {
     return null;
   }
 };

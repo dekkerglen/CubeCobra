@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-curly-brace-presence */
 import React from 'react';
 import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 

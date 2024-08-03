@@ -39,7 +39,7 @@ const CustomDraftCard = ({
           ) : (
             <div
               className="description-area"
-              dangerouslySetInnerHTML={/* eslint-disable-line react/no-danger */ { __html: format.html }}
+              dangerouslySetInnerHTML={  { __html: format.html }}
             />
           )}
 

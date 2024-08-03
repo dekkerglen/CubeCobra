@@ -355,8 +355,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                       </CardHeader>
                       <CardBody>
                         {' '}
-                        {/* ternaries are impossible to avoid in jsx */
-                        /* eslint-disable-next-line no-nested-ternary */}
+                        {/* ternaries are impossible to avoid in jsx */}
                         {featured ? (
                           <Row>
                             <Col xs={12} lg={5} className="p-0">

@@ -119,7 +119,7 @@ const addBody = async (content) => {
       ...content,
       body: document,
     };
-  } catch (e) {
+  } catch {
     return content;
   }
 };

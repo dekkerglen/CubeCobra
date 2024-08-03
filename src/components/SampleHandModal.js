@@ -109,7 +109,7 @@ class SampleHandModal extends Component {
 }
 
 SampleHandModal.propTypes = {
-  // eslint-disable-next-line react/forbid-prop-types
+   
   deck: PropTypes.array.isRequired,
 };
 

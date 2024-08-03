@@ -103,7 +103,7 @@ module.exports = {
       console.log(messages.join('\n'));
     }
   },
-  // eslint-disable-next-line no-console
+   
   error: (...messages) => {
     if (cloudwatchEnabled) {
       errorLogs.push({

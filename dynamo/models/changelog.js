@@ -303,7 +303,7 @@ module.exports = {
         try {
           const hydrated = hydrateChangelog(data);
           return hydrated;
-        } catch (err) {
+        } catch {
           return data;
         }
       }),

@@ -1,4 +1,4 @@
-/* eslint-disable no-await-in-loop */
+ 
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');

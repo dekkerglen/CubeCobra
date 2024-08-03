@@ -8,7 +8,7 @@ client.on('ready', () => {
   try {
     client.config('set', 'notify-keyspace-events', 'Elh');
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.log(err);
   }
   // Elh => see https://redis.io/topics/notifications to understand the configuration

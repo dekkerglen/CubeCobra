@@ -1,4 +1,4 @@
-/* eslint-disable no-await-in-loop */
+ 
 // Load Environment Variables
 require('dotenv').config();
 
@@ -248,7 +248,7 @@ const loadAndProcessCubeDraftAnalytics = (cube) => {
                 const pack = drafterState.cardsInPack;
 
                 if (picked < 0 || picked >= draft.cards.length || !draft.cards[picked]) {
-                  // eslint-disable-next-line no-continue
+                   
                   continue;
                 }
 

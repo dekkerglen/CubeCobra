@@ -1,5 +1,5 @@
-import syntax from 'markdown/cardrow/micromark-cardrow';
 import { fromMarkdown } from 'markdown/cardrow/mdast-cardrow';
+import syntax from 'markdown/cardrow/micromark-cardrow';
 import { add } from 'markdown/utils';
 
 function cardrow() {

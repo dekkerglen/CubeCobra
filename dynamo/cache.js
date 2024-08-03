@@ -114,7 +114,7 @@ const updatePeers = async () => {
 
       peers = healthyIps.filter((ip) => ip !== undefined);
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };
@@ -148,7 +148,7 @@ const invalidate = async (key) => {
     } else {
       evict(key);
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };
@@ -182,7 +182,7 @@ const batchInvalidate = async (keys) => {
     } else {
       keys.forEach((key) => evict(key));
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };

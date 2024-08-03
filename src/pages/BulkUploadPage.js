@@ -74,7 +74,7 @@ const BulkUploadPageRaw = ({ missing, added }) => {
         <Row>
           <Col>
             {missing.map((card, index) => (
-              <p key={/* eslint-disable-line react/no-array-index-key */ index}>{card}</p>
+              <p key={  index}>{card}</p>
             ))}
           </Col>
           <Col>
