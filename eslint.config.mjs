@@ -7,6 +7,9 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default [
+  {
+    ignores: ['dist/**/*', '.git/**/*', 'node_modules/**/*', 'src/generated/**/*', 'jobs/archived/*.js'],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   reactPlugin.configs.flat.recommended,
@@ -17,7 +20,6 @@ export default [
     rules: { ...hooksPlugin.configs.recommended.rules },
   },
   {
-    ignores: ['dist/**/*', '.git/**/*', 'node_modules/**/*', 'src/generated/**/*', 'jobs/archived/*.js'],
     // TODO: Use react-refresh to validate React fast refresh.
     plugins: { 'simple-import-sort': simpleImportSort },
     settings: {
@@ -131,7 +133,17 @@ export default [
     },
   },
   {
-    files: ['*.js', 'jobs/**/*', 'one_shot_scripts/**/*', 'routes/**/*', 'serverjs/**/*', 'models/**/*'],
+    files: [
+      '*.js',
+      'jobs/**/*',
+      'one_shot_scripts/**/*',
+      'config/**/*',
+      'dynamo/**/*',
+      'lambda/**/*',
+      'routes/**/*',
+      'serverjs/**/*',
+      'models/**/*',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -142,7 +154,7 @@ export default [
     },
   },
   {
-    files: ['routes/**/*', 'serverjs/**/*', 'models/**/*'],
+    files: ['dynamo/**/*', 'routes/**/*', 'serverjs/**/*', 'models/**/*'],
     rules: {
       'no-console': 'error',
     },
