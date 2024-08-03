@@ -1,4 +1,5 @@
 import Card from 'datatypes/Card';
+import { TagColor } from 'datatypes/Cube';
 import { cardCmc, cardColors, cardType } from 'utils/Card';
 
 export function arraysEqual(a: any, b: any): boolean {
@@ -244,7 +245,7 @@ export function getCardColorClass(card: Card): string {
   return getColorClass(cardType(card), cardColors(card));
 }
 
-export function getCardTagColorClass(tagColors: { tag: string; color: string }[], card: Card): string {
+export function getCardTagColorClass(tagColors: TagColor[], card: Card): string {
   if (tagColors) {
     const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
     if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
