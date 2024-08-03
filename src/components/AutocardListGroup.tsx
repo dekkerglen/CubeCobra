@@ -1,11 +1,12 @@
-import React, { useMemo, useContext } from 'react';
-import Card from 'datatypes/Card';
+import React, { useContext, useMemo } from 'react';
 import { ListGroup, ListGroupItem } from 'reactstrap';
-import { sortDeep } from 'utils/Sort';
+
 import AutocardListItem from 'components/AutocardListItem';
 import withCardModal from 'components/WithCardModal';
 import withGroupModal from 'components/WithGroupModal';
 import CubeContext from 'contexts/CubeContext';
+import Card from 'datatypes/Card';
+import { sortDeep } from 'utils/Sort';
 
 export interface AutocardListGroupProps {
   cards: Card[];
@@ -40,7 +41,7 @@ const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
         </ListGroupItem>
       )}
 
-      {sorted.map(([, group]) =>
+      {(sorted as [string, Card[]][]).map(([, group]) =>
         group.map((card: Card, index: number) => (
           <CardModalLink
             key={card.index}

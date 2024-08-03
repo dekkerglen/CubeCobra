@@ -1,4 +1,4 @@
-import { useCallback, useState, MouseEvent, ReactNode, ElementType, ComponentType, ComponentProps } from 'react';
+import React, { ComponentProps, ComponentType, ElementType, MouseEvent, ReactNode, useCallback, useState } from 'react';
 
 export interface WithModalProps<U> {
   children: ReactNode;
@@ -8,7 +8,7 @@ export interface WithModalProps<U> {
 }
 
 const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>) => {
-  return (allProps: WithModalProps<U> & ComponentProps<T>) => {
+  const Result: React.FC<WithModalProps<U> & ComponentProps<T>> = (allProps: WithModalProps<U> & ComponentProps<T>) => {
     const { children, className, modalProps, altClick } = allProps;
     const [isOpen, setIsOpen] = useState(false);
     const toggle = useCallback(
@@ -47,6 +47,8 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
       </>
     );
   };
+  Result.displayName = `withModal(${typeof Tag === 'function' ? Tag.displayName : Tag.toString()})`;
+  return Result;
 };
 
 export default withModal;

@@ -1,19 +1,19 @@
 import React, { useCallback, useContext } from 'react';
+
 import CubeContext from 'contexts/CubeContext';
-import { BoardType } from 'datatypes/Card';
+import Card, { BoardType } from 'datatypes/Card';
 
 export interface WithGroupModalProps {
   children: React.ReactNode;
   className?: string;
   altClick?: () => void;
   modalProps: {
-    cards: { board: BoardType; index: number }[];
+    cards: Card[];
   };
 }
 
-const withGroupModal =
-  <P,>(Tag: React.ComponentType<P>) =>
-  (props: WithGroupModalProps & P) => {
+const withGroupModal = <P,>(Tag: React.ComponentType<P>) => {
+  const Result = (props: WithGroupModalProps & P) => {
     const { setModalSelection, setModalOpen } = useContext(CubeContext)!;
     const handleClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
@@ -21,11 +21,16 @@ const withGroupModal =
           props.altClick();
         } else {
           event.preventDefault();
-          setModalSelection(props.modalProps.cards);
+          setModalSelection(
+            props.modalProps.cards.filter((c) => c.board !== undefined && c.index !== undefined) as {
+              index: number;
+              board: BoardType;
+            }[],
+          );
           setModalOpen(true);
         }
       },
-      [props.altClick, props.modalProps.cards, setModalOpen, setModalSelection],
+      [props, setModalOpen, setModalSelection],
     );
 
     return (
@@ -40,5 +45,8 @@ const withGroupModal =
       </>
     );
   };
+  Result.displayName = `withGroupModal(${Tag.displayName ?? ''})`;
+  return Result;
+};
 
 export default withGroupModal;

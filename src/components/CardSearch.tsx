@@ -1,30 +1,29 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Card,
-  CardHeader,
-  CardFooter,
   CardBody,
-  Spinner,
-  Row,
+  CardFooter,
+  CardHeader,
   Col,
+  Input,
   InputGroup,
   InputGroupText,
-  Input,
+  Row,
+  Spinner,
 } from 'reactstrap';
-import Query from 'utils/Query';
-import Paginate from 'components/Paginate';
-import DynamicFlash from 'components/DynamicFlash';
+
 import ButtonLink from 'components/ButtonLink';
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
-import FilterCollapse, { FilterCollapseProps } from 'components/FilterCollapse';
-import { ORDERED_SORTS } from 'utils/Sort';
+import DynamicFlash from 'components/DynamicFlash';
+import FilterCollapse from 'components/FilterCollapse';
+import Paginate from 'components/Paginate';
 import CubeContext from 'contexts/CubeContext';
 import CardDetails from 'datatypes/CardDetails';
+import Query from 'utils/Query';
+import { ORDERED_SORTS } from 'utils/Sort';
 
-export interface CardSearchProps {}
-
-const CardSearch: React.FC<CardSearchProps> = () => {
+const CardSearch: React.FC = () => {
   const filterInput = useContext(CubeContext)?.filterInput ?? '';
   const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
   const [cards, setCards] = useState<CardDetails[]>([]);
@@ -103,7 +102,7 @@ const CardSearch: React.FC<CardSearchProps> = () => {
             </div>
           </Col>
         </Row>
-        <FilterCollapse hideDescription isOpen {...(FilterCollapseProps as any)} />
+        <FilterCollapse hideDescription isOpen />
         <Row className="px-3">
           <Col xs={12} sm={4}>
             <InputGroup className="mb-3">
@@ -115,7 +114,9 @@ const CardSearch: React.FC<CardSearchProps> = () => {
                 onChange={(event) => updateSort(event.target.value)}
               >
                 {ORDERED_SORTS.map((s) => (
-                  <option value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </Input>
             </InputGroup>

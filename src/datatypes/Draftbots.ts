@@ -5,6 +5,7 @@ export interface Step {
   amount?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const COLORS = ['W', 'U', 'B', 'R', 'G'] as const;
 
 interface DrafterState {
@@ -24,7 +25,7 @@ interface DrafterState {
   step?: Step;
 }
 
-export type Color = typeof COLORS[number];
+export type Color = (typeof COLORS)[number];
 
 export interface BotState extends DrafterState {
   cardIndex: number;

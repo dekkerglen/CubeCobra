@@ -1,25 +1,23 @@
-import React, { ComponentPropsWithoutRef, FC, ReactNode } from 'react';
-// @ts-expect-error
-import ReactMarkdown, { MarkdownProps } from 'react-markdown';
-import Latex from 'react-latex';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { a11yLight, a11yDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
+import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { Card, CardBody, Col, Row } from 'reactstrap';
+
 import { LinkIcon } from '@primer/octicons-react';
+import Latex from 'react-latex';
+// @ts-expect-error This library has no types.
+import ReactMarkdown, { MarkdownProps } from 'react-markdown';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 
-// @ts-expect-error
-import { ALL_PLUGINS, LIMITED_REHYPE_PLUGINS, ALL_REHYPE_PLUGINS } from 'markdown/parser';
-
+import FoilCardImage from 'components/FoilCardImage';
+import LinkModal, { LinkModalProps } from 'components/LinkModal';
 import withAutocard, { WithAutocardProps } from 'components/WithAutocard';
 import withModal, { WithModalProps } from 'components/WithModal';
-import LinkModal, { LinkModalProps } from 'components/LinkModal';
-import FoilCardImage from 'components/FoilCardImage';
+import CardDetails from 'datatypes/CardDetails';
+import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 
-import { Col, Row, Card, CardBody } from 'reactstrap';
-import CardDetails from 'datatypes/CardDetails';
-
 type AutocardLinkProps = WithAutocardProps & ComponentPropsWithoutRef<'a'>;
-const AutocardLink: FC<AutocardLinkProps> = withAutocard('a');
+const AutocardLink: React.FC<AutocardLinkProps> = withAutocard('a');
 
 const Link: React.FC<WithModalProps<LinkModalProps> & ComponentPropsWithoutRef<'a'>> = withModal<'a', LinkModalProps>(
   'a',
@@ -29,19 +27,19 @@ const Link: React.FC<WithModalProps<LinkModalProps> & ComponentPropsWithoutRef<'
 interface RenderBlockQuoteProps {
   children: ReactNode;
 }
-const renderBlockQuote: FC<RenderBlockQuoteProps> = (node) => (
+const renderBlockQuote: React.FC<RenderBlockQuoteProps> = (node) => (
   <Card className="quote">
     <CardBody>{node.children}</CardBody>
   </Card>
 );
 
 interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
-const renderImage: FC<RenderImageProps> = (node) => (
+const renderImage: React.FC<RenderImageProps> = (node) => (
   <img className="markdown-image" src={node.src} alt={node.alt} title={node.title} />
 );
 
 interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {}
-const renderLink: FC<RenderLinkProps> = (node) => {
+const renderLink: React.FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
   if (isInternalURL(ref)) {
@@ -69,8 +67,7 @@ const renderLink: FC<RenderLinkProps> = (node) => {
   );
 };
 
-interface RenderCodeProps {}
-const renderCode: FC<RenderCodeProps> = (node: any) => {
+const renderCode: React.FC = (node: any) => {
   const mode = getComputedStyle(document.body).getPropertyValue('--mode').trim();
   const style = mode === 'dark' ? a11yDark : a11yLight;
 
@@ -84,7 +81,7 @@ const renderCode: FC<RenderCodeProps> = (node: any) => {
 interface RenderTableProps {
   children: ReactNode;
 }
-const renderTable: FC<RenderTableProps> = (node) => (
+const renderTable: React.FC<RenderTableProps> = (node) => (
   <div className="table-responsive">
     <table className="table table-bordered">{node.children}</table>
   </div>
@@ -93,17 +90,19 @@ const renderTable: FC<RenderTableProps> = (node) => (
 interface RenderMathProps {
   value: string;
 }
-const renderMath: FC<RenderMathProps> = (node) => <Latex trust={false} displayMode>{`$$ ${node.value} $$`}</Latex>;
+const renderMath: React.FC<RenderMathProps> = (node) => (
+  <Latex trust={false} displayMode>{`$$ ${node.value} $$`}</Latex>
+);
 
 interface RenderInlineMathProps {
   value: string;
 }
-const renderInlineMath: FC<RenderInlineMathProps> = (node) => <Latex trust={false}>{`$ ${node.value} $`}</Latex>;
+const renderInlineMath: React.FC<RenderInlineMathProps> = (node) => <Latex trust={false}>{`$ ${node.value} $`}</Latex>;
 
 interface RenderUserlinkProps {
   name: string;
 }
-const renderUserlink: FC<RenderUserlinkProps> = ({ name }) => {
+const renderUserlink: React.FC<RenderUserlinkProps> = ({ name }) => {
   return (
     <a href={`/user/view/${name}`} target="_blank" rel="noopener noreferrer">
       @{name}
@@ -114,7 +113,7 @@ const renderUserlink: FC<RenderUserlinkProps> = ({ name }) => {
 interface RenderSymbolProps {
   value: string;
 }
-const renderSymbol: FC<RenderSymbolProps> = ({ value }) => {
+const renderSymbol: React.FC<RenderSymbolProps> = ({ value }) => {
   const symbol = value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };
@@ -124,7 +123,7 @@ interface RenderCardlinkProps {
   id: string;
   dfc?: boolean;
 }
-const renderCardlink: FC<RenderCardlinkProps> = ({ name, id, dfc }) => {
+const renderCardlink: React.FC<RenderCardlinkProps> = ({ name, id, dfc }) => {
   const idURL = encodeURIComponent(id);
   const details: Partial<CardDetails> = { image_normal: `/tool/cardimage/${idURL}` };
   if (dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -141,7 +140,7 @@ interface RenderCardImageProps {
   dfc?: boolean;
   inParagraph?: boolean;
 }
-const renderCardImage: FC<RenderCardImageProps> = (node) => {
+const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   const idURL = encodeURIComponent(node.id);
   const details: Partial<CardDetails> = { image_normal: `/tool/cardimage/${idURL}` };
   if (node.dfc) details.image_flip = `/tool/cardimageflip/${idURL}`;
@@ -158,13 +157,15 @@ const renderCardImage: FC<RenderCardImageProps> = (node) => {
 interface RenderCenteringProps {
   children: ReactNode;
 }
-const renderCentering: FC<RenderCenteringProps> = (node) => <div className="centered-markdown">{node.children}</div>;
+const renderCentering: React.FC<RenderCenteringProps> = (node) => (
+  <div className="centered-markdown">{node.children}</div>
+);
 
 interface RenderCardrowProps {
   inParagraph?: boolean;
   children: ReactNode;
 }
-const renderCardrow: FC<RenderCardrowProps> = (node) => (
+const renderCardrow: React.FC<RenderCardrowProps> = (node) => (
   <Row className="cardRow" tag={node.inParagraph ? 'span' : 'div'}>
     {node.children}
   </Row>
@@ -188,12 +189,12 @@ const RENDERERS = {
   cardrow: renderCardrow,
 };
 
-interface MarkdownProps {
+export interface MarkdownProps {
   markdown: string;
   limited?: boolean;
 }
 
-const Markdown: FC<MarkdownProps> = ({ markdown, limited }) => {
+const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
@@ -205,10 +206,6 @@ const Markdown: FC<MarkdownProps> = ({ markdown, limited }) => {
       {markdownStr}
     </ReactMarkdown>
   );
-};
-
-Markdown.defaultProps = {
-  limited: false,
 };
 
 export default Markdown;

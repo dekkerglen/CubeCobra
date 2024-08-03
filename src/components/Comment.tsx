@@ -1,20 +1,20 @@
-import React, { useState, useContext } from 'react';
-import TimeAgo from 'react-timeago';
-
+import React, { useContext,useState } from 'react';
 import { Collapse } from 'reactstrap';
 
-import UserContext from 'contexts/UserContext';
-import LinkButton from 'components/LinkButton';
+import TimeAgo from 'react-timeago';
+
 import CommentContextMenu from 'components/CommentContextMenu';
+import CommentEntry from 'components/CommentEntry';
+import LinkButton from 'components/LinkButton';
+import Markdown from 'components/Markdown';
+import ReportCommentModal from 'components/ReportCommentModal';
+import ShareCommentModal from 'components/ShareCommentModal';
+import withModal from 'components/WithModal';
+import DomainContext from 'contexts/DomainContext';
+import UserContext from 'contexts/UserContext';
+import CommentData from 'datatypes/Comment';
 import useComments, { EditRequest } from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
-import CommentEntry from 'components/CommentEntry';
-import Markdown from 'components/Markdown';
-import DomainContext from 'contexts/DomainContext';
-import withModal from 'components/WithModal';
-import ShareCommentModal from 'components/ShareCommentModal';
-import ReportCommentModal from 'components/ReportCommentModal';
-import CommentData from 'datatypes/Comment';
 
 export interface ShareCommentModalButtonProps {
   modalProps: {

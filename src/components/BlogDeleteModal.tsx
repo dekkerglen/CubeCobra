@@ -1,6 +1,7 @@
 import React from 'react';
-import { csrfFetch } from 'utils/CSRF';
+
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
+import { csrfFetch } from 'utils/CSRF';
 
 export interface BlogDeleteModalProps {
   isOpen: boolean;

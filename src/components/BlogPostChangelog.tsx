@@ -1,6 +1,8 @@
 import React from 'react';
-import { Row, Col } from 'reactstrap';
-import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
+import { Col,Row } from 'reactstrap';
+
+import { ArrowRightIcon,ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
+
 import withAutocard from 'components/WithAutocard';
 import Card, { BoardType } from 'datatypes/Card';
 

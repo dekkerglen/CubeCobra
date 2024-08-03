@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { InputGroup, InputGroupText, Input } from 'reactstrap';
+import { Input,InputGroup, InputGroupText } from 'reactstrap';
+
 import Cube from 'datatypes/Cube';
 
 export interface AsfanDropdownProps {

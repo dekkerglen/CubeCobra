@@ -1,5 +1,6 @@
-import React, { useMemo, useState, FunctionComponent } from 'react';
+import React, { FunctionComponent, useMemo, useState } from 'react';
 import { Spinner } from 'reactstrap';
+
 import { fromEntries } from 'utils/Util';
 
 interface WithLoadingProps {
@@ -20,19 +21,19 @@ const withLoading = <T extends React.ComponentType>(Tag: FunctionComponent<T>, h
     const wrappedHandlers = useMemo(
       () =>
         fromEntries(
-          // @ts-expect-error
           (handlers ?? []).map((name) => [
             name,
             async (event: Event) => {
               setLoading(true);
-              // @ts-expect-error
+              // @ts-expect-error figure out later
               await props[name](event);
               setLoading(false);
             },
           ]),
         ),
+
+      // @ts-expect-error figure out later
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      // @ts-expect-error
       handlers?.map((name) => props[name]),
     );
 

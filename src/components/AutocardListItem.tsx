@@ -1,11 +1,12 @@
-import React, { useCallback, useMemo, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+
 import cx from 'classnames';
-import { getCardTagColorClass } from 'utils/Util';
 
 import withAutocard from 'components/WithAutocard';
 import TagColorContext from 'contexts/TagColorContext';
 import UserContext from 'contexts/UserContext';
 import Card from 'datatypes/Card';
+import { getCardTagColorClass } from 'utils/Util';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -49,7 +50,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   }, [cardId]);
 
   const handleAuxClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
+    (event: React.MouseEvent) => {
       if (event.button === 1) {
         event.preventDefault();
         openCardToolWindow();

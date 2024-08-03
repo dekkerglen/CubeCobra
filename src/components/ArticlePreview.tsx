@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import Content from 'datatypes/Content';
+import React, { useCallback, useState } from 'react';
 import { Card } from 'reactstrap';
-import AspectRatioBox from 'components/AspectRatioBox';
+
 import TimeAgo from 'react-timeago';
-import Username from 'components/Username';
+
+import AspectRatioBox from 'components/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
+import Username from 'components/Username';
+import Article from 'datatypes/Article';
 
 const statusMap: Record<string, string> = {
   p: 'Published',
@@ -13,7 +15,7 @@ const statusMap: Record<string, string> = {
 };
 
 export interface ArticlePreviewProps {
-  article: Content;
+  article: Article;
   showStatus?: boolean;
 }
 
@@ -34,7 +36,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
       onBlur={handleMouseOut}
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
-        <MtgImage image={article.image} />
+        {article.image && <MtgImage image={article.image} />}
         <h6 className="content-preview-banner article-preview-bg">
           <strong>Article</strong>
         </h6>

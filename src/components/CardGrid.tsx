@@ -1,5 +1,6 @@
 import React from 'react';
-import { Row, Col, ColProps } from 'reactstrap';
+import { Col, ColProps,Row } from 'reactstrap';
+
 import CardDetails from 'datatypes/CardDetails';
 
 export interface CardImageProps<T extends { card: { imgUrl?: string; details?: CardDetails } }> {

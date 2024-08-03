@@ -1,4 +1,4 @@
-import User from './User';
+import User from 'datatypes/User';
 
 export default interface Comment {
   id: string;

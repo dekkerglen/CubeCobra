@@ -1,10 +1,10 @@
-import React, { useCallback, useState, useContext } from 'react';
-import { Button, Col, Row, Collapse, Input, InputGroup, InputGroupText } from 'reactstrap';
+import React, { useCallback, useContext,useState } from 'react';
+import { Button, Col, Collapse, Input, InputGroup, InputGroupText,Row } from 'reactstrap';
 
-import { ColorChecksControl } from 'components/ColorCheck';
 import AdvancedFilterModal from 'components/AdvancedFilterModal';
+import { ColorChecksControl } from 'components/ColorCheck';
 import CubeContext from 'contexts/CubeContext';
-import { FilterValues, isColorField, isNumField, allFields } from 'datatypes/CardDetails';
+import { allFields,FilterValues, isColorField, isNumField } from 'datatypes/CardDetails';
 
 interface FilterCollapseProps {
   isOpen: boolean;

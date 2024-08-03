@@ -1,7 +1,3 @@
-import LoadingButton from 'components/LoadingButton';
-import withAutocard from 'components/WithAutocard';
-import CardDetails from 'datatypes/CardDetails';
-import CubePropType from 'datatypes/Cube';
 import React, { useState } from 'react';
 import {
   AlertProps,
@@ -17,6 +13,11 @@ import {
   ModalHeader,
   UncontrolledAlert,
 } from 'reactstrap';
+
+import LoadingButton from 'components/LoadingButton';
+import withAutocard from 'components/WithAutocard';
+import CardDetails from 'datatypes/CardDetails';
+import CubePropType from 'datatypes/Cube';
 import { csrfFetch } from 'utils/CSRF';
 import { getColorClass } from 'utils/Util';
 
@@ -57,7 +58,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       } else {
         setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
       }
-    } catch (err) {
+    } catch {
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);

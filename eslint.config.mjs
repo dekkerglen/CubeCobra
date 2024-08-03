@@ -2,7 +2,6 @@ import { fixupPluginRules } from '@eslint/compat';
 import js from '@eslint/js';
 import reactPlugin from 'eslint-plugin-react';
 import hooksPlugin from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -18,8 +17,9 @@ export default [
     rules: { ...hooksPlugin.configs.recommended.rules },
   },
   {
-    ignores: ['dist', '.git', 'node_modules', 'src/generated', 'jobs/archived/*.js'],
-    plugins: { 'react-refresh': reactRefresh, 'simple-import-sort': simpleImportSort },
+    ignores: ['dist/**/*', '.git/**/*', 'node_modules/**/*', 'src/generated/**/*', 'jobs/archived/*.js'],
+    // TODO: Use react-refresh to validate React fast refresh.
+    plugins: { 'simple-import-sort': simpleImportSort },
     settings: {
       react: {
         version: 'detect',
@@ -79,6 +79,7 @@ export default [
       'simple-import-sort/exports': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'with-single-extends' }],
       'react/jsx-filename-extension': 'off',
       'react/jsx-one-expression-per-line': 'off',
       'react/jsx-props-no-spreading': 'off',
@@ -90,12 +91,12 @@ export default [
       ],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
-      'react-refresh/only-export-components': [
-        'error',
-        {
-          allowConstantExport: true,
-        },
-      ],
+      // 'react-refresh/only-export-components': [
+      //   'error',
+      //   {
+      //     allowConstantExport: true,
+      //   },
+      // ],
     },
   },
   {
@@ -121,6 +122,12 @@ export default [
     files: ['src/**/*.js'],
     rules: {
       'react/jsx-key': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.tsx'],
+    rules: {
+      'react/prop-types': 'off',
     },
   },
   {

@@ -1,21 +1,22 @@
-/* eslint-disable no-await-in-loop */
-import React, { useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import UserContext from 'contexts/UserContext';
-import DisplayContext from 'contexts/DisplayContext';
-import useLocalStorage from 'hooks/useLocalStorage';
-import { csrfFetch } from 'utils/CSRF';
-import { cardName, normalizeName } from 'utils/Card';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { AlertProps } from 'reactstrap';
+
+import { Object } from 'core-js';
+
 import CardModal from 'components/CardModal';
 import GroupModal from 'components/GroupModal';
-import useQueryParam from 'hooks/useQueryParam';
-import useMount from 'hooks/UseMount';
-import { deepCopy, xorStrings } from 'utils/Util';
-import { makeFilter, FilterFunction } from 'filtering/FilterCards';
+import DisplayContext from 'contexts/DisplayContext';
+import UserContext from 'contexts/UserContext';
 import Card, { BoardType, boardTypes, Changes } from 'datatypes/Card';
-import Cube, { TagColor } from 'datatypes/Cube';
 import CardDetails from 'datatypes/CardDetails';
-import { AlertProps } from 'reactstrap';
-import { Object } from 'core-js';
+import Cube, { TagColor } from 'datatypes/Cube';
+import { defaultFilter, FilterFunction, makeFilter } from 'filtering/FilterCards';
+import useLocalStorage from 'hooks/useLocalStorage';
+import useMount from 'hooks/UseMount';
+import useQueryParam from 'hooks/useQueryParam';
+import { cardName, normalizeName } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
+import { deepCopy, xorStrings } from 'utils/Util';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -148,12 +149,15 @@ export function CubeContextProvider({
       maybeboard: cards.maybeboard,
     },
   });
-  const defaultSorts = [
-    cube.defaultSorts?.[0] || 'Color Category',
-    cube.defaultSorts?.[1] || 'Types-Multicolor',
-    cube.defaultSorts?.[2] || 'Mana Value',
-    cube.defaultSorts?.[3] || 'Alphabetical',
-  ];
+  const defaultSorts = useMemo(
+    () => [
+      cube.defaultSorts?.[0] || 'Color Category',
+      cube.defaultSorts?.[1] || 'Types-Multicolor',
+      cube.defaultSorts?.[2] || 'Mana Value',
+      cube.defaultSorts?.[3] || 'Alphabetical',
+    ],
+    [cube.defaultSorts],
+  );
   const [versionDict, setVersionDict] = useState<Record<string, CardVersion[]>>({});
   const [changes, setChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {
     mainboard: {
@@ -182,7 +186,7 @@ export function CubeContextProvider({
   const [sortQuaternary, setSortQuaternary] = useQueryParam<string>('s4', defaultSorts[3]);
   const [filterInput, setFilterInput] = useQueryParam<string>('f', '');
   const [filterValid, setFilterValid] = useState(true);
-  const [cardFilter, setCardFilter] = useState<FilterFunction>({ fn: () => true });
+  const [cardFilter, setCardFilter] = useState<FilterFunction>(defaultFilter());
   const [filterResult, setFilterResult] = useState('');
   const [useBlog, setUseBlog] = useLocalStorage<boolean>(`${cube.id}-useBlog`, true);
 
@@ -200,7 +204,7 @@ export function CubeContextProvider({
     }
 
     return [...tags];
-  }, [cube.cards]);
+  }, [cards]);
 
   const [tagColors, setTagColors] = useState<TagColor[]>([
     ...(cube.tagColors || []),
@@ -330,7 +334,7 @@ export function CubeContextProvider({
       newChanges[board].swaps.push({ index, card: { ...card, index }, oldCard });
       setChanges(newChanges);
     },
-    [changes, setChanges],
+    [changes, cube.cards, setChanges],
   );
 
   const revertSwap = useCallback(
@@ -382,7 +386,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [changes, setChanges],
+    [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
   const revertEdit = useCallback(
@@ -423,7 +427,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [changes, setChanges],
+    [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
   const bulkMoveCard = useCallback(
@@ -452,7 +456,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [changes, setChanges],
+    [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
   const removeCard = useCallback(
@@ -479,7 +483,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [changes, setChanges],
+    [changes, cube.cards, setChanges, setOpenCollapse],
   );
 
   const revertRemove = useCallback(
@@ -535,8 +539,8 @@ export function CubeContextProvider({
     }
 
     const result = {
-      mainboard: changed.mainboard.filter(cardFilter.fn),
-      maybeboard: changed.maybeboard.filter(cardFilter.fn),
+      mainboard: changed.mainboard.filter(cardFilter),
+      maybeboard: changed.maybeboard.filter(cardFilter),
     };
 
     if (filterInput !== '') {
@@ -552,7 +556,7 @@ export function CubeContextProvider({
     }
 
     return [result, changed];
-  }, [changes, cube.cards, versionDict, cardFilter]);
+  }, [cube.cards, useChangedCards, cardFilter, filterInput, changes, versionDict]);
 
   const discardAllChanges = useCallback(() => {
     setChanges({
@@ -654,7 +658,7 @@ export function CubeContextProvider({
             cards: newCards,
           });
         }
-      } catch (e) {
+      } catch {
         setAlerts([{ color: 'error', message: 'Operation timed out' }]);
       }
 
@@ -662,7 +666,7 @@ export function CubeContextProvider({
       discardAllChanges();
       setLoading(false);
     },
-    [cube, changedCards, setCube, setChanges, discardAllChanges],
+    [discardAllChanges, changes, cube, useBlog, checksum, unfilteredChangedCards],
   );
 
   const bulkEditCard = useCallback(
@@ -697,7 +701,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [cube, changes, setChanges],
+    [changes, setChanges, setOpenCollapse, cube.cards],
   );
 
   const bulkRevertEdit = useCallback(
@@ -713,7 +717,7 @@ export function CubeContextProvider({
 
       setChanges(newChanges);
     },
-    [cube, changes, setChanges],
+    [changes, setChanges],
   );
 
   const bulkRemoveCard = useCallback(
@@ -735,7 +739,7 @@ export function CubeContextProvider({
       setChanges(newChanges);
       setOpenCollapse('edit');
     },
-    [cube, changes, setChanges],
+    [changes, setChanges, setOpenCollapse, cube.cards],
   );
 
   const bulkRevertRemove = useCallback(
@@ -751,7 +755,7 @@ export function CubeContextProvider({
 
       setChanges(newChanges);
     },
-    [cube, changes, setChanges],
+    [changes, setChanges],
   );
 
   const canEdit = user !== null && cube.owner.id === user.id;
@@ -813,31 +817,31 @@ export function CubeContextProvider({
       },
     });
     setLoading(false);
-  }, [cube, setCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary]);
+  }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube]);
 
   const resetSorts = useCallback(() => {
     setSortPrimary(cube.defaultSorts?.[0] || 'Color Category');
     setSortSecondary(cube.defaultSorts?.[1] || 'Types-Multicolor');
     setSortTertiary(cube.defaultSorts?.[2] || 'Mana Value');
     setSortQuaternary(cube.defaultSorts?.[3] || 'Alphabetical');
-  }, [cube, setCube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
+  }, [cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
   useEffect(
     (overrideFilter?: string) => {
       const input = overrideFilter ?? filterInput ?? '';
       if (input.trim() === '') {
-        setCardFilter({ fn: () => true });
+        setCardFilter(defaultFilter());
         return;
       }
 
       const { filter, err } = makeFilter(input);
-      if (err) {
+      if (err || !filter) {
         setFilterValid(false);
         return;
       }
 
       setFilterValid(true);
-      setCardFilter({ fn: filter });
+      setCardFilter(filter);
     },
     [filterInput, setCardFilter],
   );

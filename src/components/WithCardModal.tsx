@@ -1,4 +1,5 @@
 import React, { useCallback, useContext } from 'react';
+
 import CubeContext from 'contexts/CubeContext';
 import { BoardType } from 'datatypes/Card';
 
@@ -14,9 +15,8 @@ export interface WithCardModalProps {
   };
 }
 
-const withCardModal =
-  <P,>(Tag: React.ComponentType<P>) =>
-  (props: WithCardModalProps & P) => {
+const withCardModal = <P,>(Tag: React.ComponentType<P>) => {
+  const Result = (props: WithCardModalProps & P) => {
     const { setModalSelection, setModalOpen } = useContext(CubeContext)!;
 
     const handleClick = useCallback(
@@ -30,7 +30,7 @@ const withCardModal =
           setModalOpen(true);
         }
       },
-      [props.altClick, props.modalProps.card, setModalOpen, setModalSelection],
+      [props, setModalOpen, setModalSelection],
     );
 
     return (
@@ -45,5 +45,8 @@ const withCardModal =
       </>
     );
   };
+  Result.displayName = `withCardModal(${Tag.displayName ?? ''})`;
+  return Result;
+};
 
 export default withCardModal;

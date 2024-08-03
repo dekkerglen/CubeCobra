@@ -1,6 +1,6 @@
-/* eslint-disable react/no-array-index-key */
-import React, { forwardRef, useCallback, useEffect, useMemo, useState, useContext, ReactNode } from 'react';
+import React, { forwardRef, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Input, InputProps } from 'reactstrap';
+
 import withAutocard from 'components/WithAutocard';
 import AutocardContext from 'contexts/AutocardContext';
 
@@ -53,7 +53,7 @@ function mergeObject<T extends Record<string, any>>(target: T, source: T, option
   return destination;
 }
 
-function deepmerge<T extends {} | any[]>(
+function deepmerge<T extends object | any[]>(
   target: T,
   source: T,
   optionsArgument?: { clone?: boolean; arrayMerge?: <U>(target: U[], source: U[], options?: any) => U[] },
@@ -145,7 +145,7 @@ function treeToWords(tree: TreeNode, max: number): string[] {
     return [];
   }
   const words: string[] = [];
-  // eslint-disable-next-line guard-for-in
+
   for (const prop in tree) {
     // eslint-disable-next-line no-prototype-builtins
     if (tree.hasOwnProperty(prop)) {
@@ -205,10 +205,7 @@ export interface AutocompleteInputProps extends InputProps {
 }
 
 const AutocompleteInput = forwardRef<Input, AutocompleteInputProps>(
-  (
-    { treeUrl, treePath, defaultValue, value, setValue, onSubmit, wrapperClassName, cubeId, noMargin, ...props },
-    ref,
-  ) => {
+  ({ treeUrl, treePath, value, setValue, onSubmit, cubeId, noMargin, ...props }, ref) => {
     const [tree, setTree] = useState<TreeNode>({});
     const [position, setPosition] = useState(-1);
     const [visible, setVisible] = useState(false);
@@ -314,5 +311,7 @@ const AutocompleteInput = forwardRef<Input, AutocompleteInputProps>(
     );
   },
 );
+
+AutocompleteInput.displayName = 'AutocompleteInput';
 
 export default AutocompleteInput;

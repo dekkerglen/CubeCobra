@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
+import React from 'react';
+import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import ButtonLink from 'components/ButtonLink';
 
@@ -9,7 +9,7 @@ export interface LinkModalProps {
   toggle: () => void;
 }
 
-const LinkModal: FC<LinkModalProps> = ({ link, isOpen, toggle }) => {
+const LinkModal: React.FC<LinkModalProps> = ({ link, isOpen, toggle }) => {
   return (
     <Modal isOpen={isOpen} toggle={toggle} size="xs">
       <ModalHeader toggle={toggle}>This link could be dangerous</ModalHeader>

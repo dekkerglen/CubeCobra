@@ -1,4 +1,4 @@
-import { Changes } from './Card';
+import { Changes } from 'datatypes/Card';
 
 export default interface BlogPost {
   id: string;

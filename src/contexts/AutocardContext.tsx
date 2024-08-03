@@ -1,5 +1,6 @@
-import Card from 'datatypes/Card';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import Card from 'datatypes/Card';
 import { cardFinish, cardTags } from 'utils/Card';
 
 interface Tag {
@@ -43,7 +44,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
         newPosition.right = `${Math.max(window.innerWidth + 5 - xOffset, 0)}px`;
         // newPosition.left = null;
       }
-      if (autocardPopup.current?.offsetHeight! > window.innerHeight) {
+      if (autocardPopup.current!.offsetHeight > window.innerHeight) {
         newPosition.top = `${window.pageYOffset}px`;
         // newPosition.bottom = null;
       } else if (bottomPixelSpace > topPixelSpace) {

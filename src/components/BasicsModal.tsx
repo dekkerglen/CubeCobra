@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
-import { Button, Row, Col, Modal, ModalBody, ModalFooter, ModalHeader, Input, Card as BootstrapCard } from 'reactstrap';
+import { Button, Card as BootstrapCard, Col, Input, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+
 import Card from 'datatypes/Card';
+import { csrfFetch } from 'utils/CSRF';
 
 const MAX_BASICS = 21;
 
@@ -9,7 +10,7 @@ export interface BasicsModalProps {
   isOpen: boolean;
   toggle: () => void;
   addBasics: (counts: number[]) => void;
-  deck: number[][][];
+  deck: number[];
   basics: number[];
   cards: Card[];
 }

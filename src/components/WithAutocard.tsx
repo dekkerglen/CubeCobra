@@ -1,7 +1,7 @@
-import React, { useContext, forwardRef, ElementType, ReactNode } from 'react';
+import React, { ElementType, forwardRef, ReactNode, useContext } from 'react';
 
-import DisplayContext from 'contexts/DisplayContext';
 import AutocardContext from 'contexts/AutocardContext';
+import DisplayContext from 'contexts/DisplayContext';
 import Card from 'datatypes/Card';
 
 export interface WithAutocardProps {
@@ -11,19 +11,24 @@ export interface WithAutocardProps {
   children?: ReactNode;
 }
 
-const withAutocard = <T extends ElementType>(Tag: T) =>
-  forwardRef<T, WithAutocardProps & React.ComponentProps<T>>(({ card, image, inModal, ...props }, ref) => {
-    const { showCustomImages } = useContext(DisplayContext);
-    const { showCard, hideCard } = useContext(AutocardContext);
+const withAutocard = <T extends ElementType>(Tag: T) => {
+  const Result = forwardRef<T, WithAutocardProps & React.ComponentProps<T>>(
+    ({ card, image, inModal, ...props }, ref) => {
+      const { showCustomImages } = useContext(DisplayContext);
+      const { showCard, hideCard } = useContext(AutocardContext);
 
-    return (
-      <Tag
-        ref={ref}
-        onMouseEnter={() => showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages)}
-        onMouseLeave={() => hideCard()}
-        {...(props as any)}
-      />
-    );
-  });
+      return (
+        <Tag
+          ref={ref}
+          onMouseEnter={() => showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages)}
+          onMouseLeave={() => hideCard()}
+          {...(props as any)}
+        />
+      );
+    },
+  );
+  Result.displayName = `withAutocard(${typeof Tag === 'function' ? Tag.displayName : Tag.toString()})`;
+  return Result;
+};
 
 export default withAutocard;

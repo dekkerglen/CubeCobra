@@ -1,30 +1,26 @@
-import { useState, useContext } from 'react';
-import UserContext from 'contexts/UserContext';
-import ImageFallback from 'components/ImageFallback';
-import { csrfFetch } from 'utils/CSRF';
-import useLocalStorage from 'hooks/useLocalStorage';
-import LoadingButton from 'components/LoadingButton';
+import React, { useContext, useState } from 'react';
 import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Button,
+  Input,
   InputGroup,
   InputGroupText,
-  Input,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   UncontrolledAlert,
 } from 'reactstrap';
-import User from 'datatypes/User';
 
-interface Card {
-  name: string;
-  image_normal: string;
-  scryfall_id: string;
-}
+import ImageFallback from 'components/ImageFallback';
+import LoadingButton from 'components/LoadingButton';
+import UserContext from 'contexts/UserContext';
+import CardDetails from 'datatypes/CardDetails';
+import User from 'datatypes/User';
+import useLocalStorage from 'hooks/useLocalStorage';
+import { csrfFetch } from 'utils/CSRF';
 
 export interface AddToCubeModalProps {
-  card: Card;
+  card: CardDetails;
   isOpen: boolean;
   toggle: () => void;
   hideAnalytics?: boolean;
@@ -36,13 +32,13 @@ interface Alert {
   message: string;
 }
 
-function AddToCubeModal({
+const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   card,
   isOpen,
   toggle,
   hideAnalytics = false,
   cubeContext,
-}: AddToCubeModalProps): JSX.Element {
+}) => {
   const user: User | null = useContext(UserContext);
   const cubes: { id: string; name: string }[] = user?.cubes ?? [];
 
@@ -76,7 +72,7 @@ function AddToCubeModal({
       } else {
         setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
       }
-    } catch (err) {
+    } catch {
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoading(false);
@@ -168,6 +164,6 @@ function AddToCubeModal({
       </ModalFooter>
     </Modal>
   );
-}
+};
 
 export default AddToCubeModal;

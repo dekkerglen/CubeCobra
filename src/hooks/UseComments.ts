@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { csrfFetch } from 'utils/CSRF';
-import { findUserLinks } from 'markdown/parser';
-import { wait } from 'utils/Util';
+
 import Comment from 'datatypes/Comment';
+import { findUserLinks } from 'markdown/parser';
+import { csrfFetch } from 'utils/CSRF';
+import { wait } from 'utils/Util';
 
 export interface EditRequest {
   id: string;

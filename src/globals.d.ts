@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-interface NitroAd {}
+interface NitroAd extends object {}
 
 interface NitroAdOptions {
   acceptable?: boolean;
@@ -58,11 +58,11 @@ interface NitroAdOptions {
   visibleMargin?: number;
 }
 
-interface AnchorPositionOptions {}
+interface AnchorPositionOptions extends object {}
 
-interface FloatingOptions {}
+interface FloatingOptions extends object {}
 
-interface FormatOptions {}
+interface FormatOptions extends object {}
 
 interface InterstitialOptions {
   triggers?: {
@@ -70,14 +70,14 @@ interface InterstitialOptions {
   };
 }
 
-interface OutstreamOptions {}
+interface OutstreamOptions extends object {}
 
-interface ReportOptions {}
+interface ReportOptions extends object {}
 
-interface RewardedOptions {}
+interface RewardedOptions extends object {}
 
 interface PlacementTargeting {
   [key: string]: string | number | (string | number)[];
 }
 
-interface VideoOptions {}
+interface VideoOptions extends object {}

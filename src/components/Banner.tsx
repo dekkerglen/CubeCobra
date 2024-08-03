@@ -1,7 +1,8 @@
-import React, { useState, useContext } from 'react';
-import { Col, Card, CardBody } from 'reactstrap';
-import UserContext, { UserContextValue } from 'contexts/UserContext';
+import React, { useContext,useState } from 'react';
+import { Card, CardBody,Col } from 'reactstrap';
+
 import Advertisment from 'components/Advertisment';
+import UserContext, { UserContextValue } from 'contexts/UserContext';
 
 const BANNER_RATE: number = 3; // an alternate message appears with probability of 1/BANNER_RATE
 

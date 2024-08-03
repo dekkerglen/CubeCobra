@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  Badge,
   Button,
   Col,
   Input,
@@ -9,30 +10,8 @@ import {
   ModalBody,
   ModalHeader,
   Row,
-  Badge,
   Spinner,
 } from 'reactstrap';
-
-import { getTCGLink } from 'utils/Affiliate';
-import { getLabels, cardGetLabels } from 'utils/Sort';
-import {
-  cardPrice,
-  cardFoilPrice,
-  cardEtchedPrice,
-  cardPriceEur,
-  cardTix,
-  cardElo,
-  normalizeName,
-  cardFinish,
-  cardCmc,
-  cardType,
-  cardRarity,
-  cardColorIdentity,
-  cardColorCategory,
-  cardTags,
-  cardStatus,
-  cardName,
-} from 'utils/Card';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import FoilCardImage from 'components/FoilCardImage';
@@ -40,8 +19,28 @@ import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import Card, { BoardType } from 'datatypes/Card';
-import TagData from 'datatypes/TagData';
 import { TagColor } from 'datatypes/Cube';
+import TagData from 'datatypes/TagData';
+import { getTCGLink } from 'utils/Affiliate';
+import {
+  cardCmc,
+  cardColorCategory,
+  cardColorIdentity,
+  cardElo,
+  cardEtchedPrice,
+  cardFinish,
+  cardFoilPrice,
+  cardName,
+  cardPrice,
+  cardPriceEur,
+  cardRarity,
+  cardStatus,
+  cardTags,
+  cardTix,
+  cardType,
+  normalizeName,
+} from 'utils/Card';
+import { cardGetLabels, getLabels } from 'utils/Sort';
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -78,7 +77,6 @@ const CardModal: React.FC<CardModalProps> = ({
   allTags,
 }) => {
   const [versions, setVersions] = useState<Record<string, CardDetails> | null>(null);
-  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (!versionDict[normalizeName(cardName(card))]) {
@@ -402,25 +400,18 @@ const CardModal: React.FC<CardModalProps> = ({
                 <TagInput
                   tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}
-                  inputValue={tagInput}
-                  handleInputChange={setTagInput}
-                  handleInputBlur={(tag: TagData) => {
-                    updateField('tags', [...cardTags(card), tag.text]);
-                    setTagInput('');
-                  }}
                   addTag={(tag: TagData) => {
                     updateField('tags', [...cardTags(card), tag.text]);
-                    setTagInput('');
                   }}
                   deleteTag={(index: number) => {
                     const newTags = [...cardTags(card)];
                     newTags.splice(index, 1);
                     updateField('tags', newTags);
                   }}
-                  reorderTag={(oldIndex: number, newIndex: number) => {
+                  reorderTag={(_: TagData, oldIndex: number, newIndex: number) => {
                     const newTags = [...cardTags(card)];
-                    const tag = newTags.splice(oldIndex, 1)[0];
-                    newTags.splice(newIndex, 0, tag);
+                    const newTag = newTags.splice(oldIndex, 1)[0];
+                    newTags.splice(newIndex, 0, newTag);
                     updateField('tags', newTags);
                   }}
                   tagColors={tagColors}

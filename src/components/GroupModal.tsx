@@ -1,31 +1,31 @@
-import React, { useCallback, useState, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
   Button,
-  Row,
   Col,
   FormGroup,
   FormText,
   Input,
-  Label,
   InputGroup,
   InputGroupText,
+  Label,
   ListGroup,
   Modal,
   ModalBody,
   ModalHeader,
+  Row,
 } from 'reactstrap';
 
-import { cardPrice, cardFoilPrice, cardPriceEur, cardTix, cardEtchedPrice } from 'utils/Card';
 import AutocardListItem from 'components/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import Card, { BoardType } from 'datatypes/Card';
 import AutocardContext from 'contexts/AutocardContext';
+import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
+import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -69,8 +69,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [typeLine, setTypeLine] = useState('');
   const [color, setColor] = useState<('W' | 'U' | 'B' | 'R' | 'G')[]>([]);
   const [addTags, setAddTags] = useState(true);
-  const [tags, setTags] = useState<{ text: string }[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<{ id: string; text: string }[]>([]);
   const { hideCard } = useContext(AutocardContext);
 
   const filterOut = useCallback(
@@ -392,19 +391,16 @@ const GroupModal: React.FC<GroupModalProps> = ({
               </FormGroup>
               <TagInput
                 tags={tags}
-                inputValue={tagInput}
-                handleInputChange={setTagInput}
-                handleInputBlur={setTagInput}
                 addTag={(tag: TagData) => setTags([...tags, tag])}
                 deleteTag={(index: number) => {
                   const newTags = [...tags];
                   newTags.splice(index, 1);
                   setTags(newTags);
                 }}
-                reorderTag={(index: number, newIndex: number) => {
+                reorderTag={(_: TagData, index: number, newIndex: number) => {
                   const newTags = [...tags];
-                  const tag = newTags.splice(index, 1)[0];
-                  newTags.splice(newIndex, 0, tag);
+                  const newTag = newTags.splice(index, 1)[0];
+                  newTags.splice(newIndex, 0, newTag);
                   setTags(newTags);
                 }}
                 tagColors={tagColors}

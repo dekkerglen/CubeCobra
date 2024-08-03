@@ -1,11 +1,11 @@
-import { MouseEventHandler, useContext, useEffect, useState } from 'react';
-import { Row, Col, Spinner, Card } from 'reactstrap';
+import React, { MouseEventHandler, useContext, useEffect, useState } from 'react';
+import { Card, Col, Row, Spinner } from 'reactstrap';
 
-import CubeContext from 'contexts/CubeContext';
+import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
+
 import withAutocard from 'components/WithAutocard';
 import withCardModal from 'components/WithCardModal';
-
-import { PlusCircleIcon, NoEntryIcon, ArrowSwitchIcon, ToolsIcon, ArrowRightIcon } from '@primer/octicons-react';
+import CubeContext from 'contexts/CubeContext';
 import CardData, { boardTypes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 
@@ -132,9 +132,7 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
   );
 };
 
-export interface ChangelistProps {}
-
-const Changelist: React.FC<ChangelistProps> = () => {
+const Changelist: React.FC = () => {
   const cubeContextValue = useContext(CubeContext);
   if (cubeContextValue === null || cubeContextValue.cube === undefined) {
     return <></>;

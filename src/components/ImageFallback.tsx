@@ -1,7 +1,7 @@
-import React, { useEffect, useState, RefObject } from 'react';
+import React, { RefObject, useEffect, useState } from 'react';
 
 export interface ImageFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
+  src?: string;
   fallbackSrc: string;
   innerRef?: RefObject<HTMLImageElement>;
   [key: string]: any;
@@ -14,8 +14,7 @@ const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRe
 
   useEffect(() => setFallback(false), [src]);
 
-  // eslint-disable-next-line jsx-a11y/alt-text
-  return <img src={fallback ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />;
+  return <img src={fallback || !src ? fallbackSrc : src} onError={handleError} ref={innerRef} {...props} />;
 };
 
 export default ImageFallback;

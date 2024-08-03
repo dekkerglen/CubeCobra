@@ -1,15 +1,17 @@
 import React, { useContext, useState } from 'react';
-import BlogPostData from 'datatypes/BlogPost';
-import User from 'datatypes/User';
+import { Card, CardBody,CardHeader, Col, Row } from 'reactstrap';
+
+import TimeAgo from 'react-timeago';
+
 import BlogContextMenu from 'components/BlogContextMenu';
-import EditBlogModal from 'components/EditBlogModal';
+import BlogPostChangelog from 'components/BlogPostChangelog';
 import CommentsSection from 'components/CommentsSection';
+import EditBlogModal from 'components/EditBlogModal';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
-import BlogPostChangelog from 'components/BlogPostChangelog';
-import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
 import UserContext from 'contexts/UserContext';
-import TimeAgo from 'react-timeago';
+import BlogPostData from 'datatypes/BlogPost';
+import User from 'datatypes/User';
 
 export interface BlogPostProps {
   post: BlogPostData;

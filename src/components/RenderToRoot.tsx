@@ -1,15 +1,21 @@
 import React, { ReactElement } from 'react';
+
 import ReactDOM from 'react-dom';
 
-import UserContext, { UserContextValue } from 'contexts/UserContext';
-import AdsContext, { AdsContextValue } from 'contexts/AdsContext';
-import DomainContext, { DomainContextValue } from 'contexts/DomainContext';
-
-import ErrorBoundary, { ErrorBoundaryProps } from 'components/ErrorBoundary';
+import ErrorBoundary from 'components/ErrorBoundary';
+import AdsContext from 'contexts/AdsContext';
 import { AutocardContextProvider } from 'contexts/AutocardContext';
+import DomainContext, { DomainContextValue } from 'contexts/DomainContext';
+import UserContext, { UserContextValue } from 'contexts/UserContext';
+
+declare global {
+  interface Window {
+    reactProps: any;
+  }
+}
 
 export interface ReactProps {
-  nitroPayEnabled: AdsContextValue;
+  nitroPayEnabled: boolean;
   domain: DomainContextValue;
   user: UserContextValue;
 }
@@ -33,8 +39,11 @@ const RenderToRoot = (Element: React.ComponentType<ReactProps>): React.Component
     const wrapper = document.getElementById('react-root');
     if (wrapper) {
       if (wrapper.children.length === 0) {
+        // FIXME: update API below.
+        // eslint-disable-next-line react/no-deprecated
         ReactDOM.render(element, wrapper);
       } else {
+        // eslint-disable-next-line react/no-deprecated
         ReactDOM.hydrate(element, wrapper);
       }
     }

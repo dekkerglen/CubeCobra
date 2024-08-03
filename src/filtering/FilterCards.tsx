@@ -1,6 +1,7 @@
 import { Grammar, Parser } from 'nearley';
 
-import CardDetails, { AllField } from 'datatypes/CardDetails';
+import Card from 'datatypes/Card';
+import { AllField } from 'datatypes/CardDetails';
 import filterCardGrammar from 'generated/filtering/cardFilters';
 
 // @ts-expect-error(TODO: figure this one out)
@@ -8,20 +9,28 @@ const compiledGrammar: Grammar = Grammar.fromCompiled(filterCardGrammar);
 
 const ALL_OPERATORS: string[] = [':', '=', '!=', '<>', '<', '<=', '>', '>='];
 
-type Filter = ((details: CardDetails) => boolean) & {
+export type FilterFunction = ((card: Card) => boolean) & {
   fieldsUsed: AllField[];
   stringify: string;
 };
 
 export const operatorsRegex: RegExp = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
 
-export const filterUses = (filter: Filter | null, name: AllField): boolean => !!filter?.fieldsUsed.includes(name);
+export const filterUses = (filter: FilterFunction | null, name: AllField): boolean =>
+  !!filter?.fieldsUsed.includes(name);
 
-export const filterUsedFields = (filter: Filter | null): AllField[] => filter?.fieldsUsed ?? [];
+export const filterUsedFields = (filter: FilterFunction | null): AllField[] => filter?.fieldsUsed ?? [];
 
-export const filterToString = (filter: Filter | null): string => filter?.stringify ?? 'empty filter';
+export const filterToString = (filter: FilterFunction | null): string => filter?.stringify ?? 'empty filter';
 
-export function makeFilter(filterText: string): { err: any; filter: Filter | null } {
+export function defaultFilter(): FilterFunction {
+  const result: Partial<FilterFunction> = () => true;
+  result.fieldsUsed = [];
+  result.stringify = '';
+  return result as FilterFunction;
+}
+
+export function makeFilter(filterText: string): { err: any; filter: FilterFunction | null } {
   if (!filterText || filterText.trim() === '') {
     return {
       err: false,
@@ -37,14 +46,14 @@ export function makeFilter(filterText: string): { err: any; filter: Filter | nul
   }
   const results: any[] = filterParser.results;
   if (results.length === 1) {
-    const [filter]: Partial<Filter>[] = results;
+    const [filter]: Partial<FilterFunction>[] = results;
     filter.stringify = filterText;
     if (filter.fieldsUsed === undefined) {
       filter.fieldsUsed = [];
     }
     return {
       err: !filter,
-      filter: filter as Filter,
+      filter: filter as FilterFunction,
     };
   }
 
@@ -54,7 +63,7 @@ export function makeFilter(filterText: string): { err: any; filter: Filter | nul
   };
 }
 
-export const filterCardsDetails = (cards: CardDetails[], filter: Filter): CardDetails[] =>
+export const filterCardsDetails = (cards: Card[], filter: FilterFunction): Card[] =>
   filter ? cards.filter(filter) : cards;
 
 export default {

@@ -1,13 +1,7 @@
 import React, { ChangeEvent, useContext } from 'react';
-import { ColorChecksAddon } from 'components/ColorCheck';
-import TextField from 'components/TextField';
-import NumericField from 'components/NumericField';
-import AutocompleteInput from 'components/AutocompleteInput';
-import CubeContext from 'contexts/CubeContext';
 import {
   Button,
   Col,
-  Row,
   Form,
   Input,
   InputGroup,
@@ -16,7 +10,14 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Row,
 } from 'reactstrap';
+
+import AutocompleteInput from 'components/AutocompleteInput';
+import { ColorChecksAddon } from 'components/ColorCheck';
+import NumericField from 'components/NumericField';
+import TextField from 'components/TextField';
+import CubeContext from 'contexts/CubeContext';
 import { FilterValues } from 'datatypes/CardDetails';
 
 export interface AdvancedFilterModalProps {

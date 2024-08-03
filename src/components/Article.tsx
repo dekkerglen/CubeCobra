@@ -1,13 +1,15 @@
 import React from 'react';
-import Content from 'datatypes/Content';
-import Markdown from 'components/Markdown';
-import CommentsSection from 'components/CommentsSection';
-import TimeAgo from 'react-timeago';
-import Username from 'components/Username';
 import { CardBody, CardHeader } from 'reactstrap';
 
+import TimeAgo from 'react-timeago';
+
+import CommentsSection from 'components/CommentsSection';
+import Markdown from 'components/Markdown';
+import Username from 'components/Username';
+import ArticleData from 'datatypes/Article';
+
 export interface ArticleProps {
-  article: Content;
+  article: ArticleData;
 }
 
 const Article: React.FC<ArticleProps> = ({ article }) => {
@@ -22,7 +24,7 @@ const Article: React.FC<ArticleProps> = ({ article }) => {
         </h6>
       </CardHeader>
       <CardBody>
-        <Markdown markdown={article.body} />
+        <Markdown markdown={article.body ?? ''} />
       </CardBody>
       <div className="border-top">
         <CommentsSection parentType="article" parent={article.id} collapse={false} />

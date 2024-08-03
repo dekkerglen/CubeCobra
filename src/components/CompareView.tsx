@@ -1,10 +1,11 @@
 import React, { useContext } from 'react';
-import Card from 'datatypes/Card';
-import CubeContext from 'contexts/CubeContext';
-import { getLabels, sortIntoGroups } from 'utils/Sort';
+import { Col,ListGroup, ListGroupItem, Row } from 'reactstrap';
+
 import AutocardListItem from 'components/AutocardListItem';
 import withCardModal from 'components/WithCardModal';
-import { ListGroup, ListGroupItem, Row, Col } from 'reactstrap';
+import CubeContext from 'contexts/CubeContext';
+import Card from 'datatypes/Card';
+import { getLabels, sortIntoGroups } from 'utils/Sort';
 
 export interface CompareGroupProps {
   heading: string;

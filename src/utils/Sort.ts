@@ -1,28 +1,28 @@
-import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
+import Card from 'datatypes/Card';
 import {
+  cardAddedTime,
+  cardArtist,
+  cardCmc,
+  cardCollectorNumber,
   cardColorIdentity,
+  cardColors,
+  cardCubeCount,
   cardDevotion,
-  cardPriceEur,
+  cardElo,
+  cardFinish,
+  cardPickCount,
+  cardPopularity,
   cardPrice,
+  cardPriceEur,
+  cardRarity,
+  cardReleaseDate,
+  cardSet,
+  cardStatus,
   cardTix,
   cardType,
-  cardCmc,
-  cardElo,
-  cardPickCount,
-  cardCubeCount,
-  cardReleaseDate,
   COLOR_COMBINATIONS,
-  cardRarity,
-  cardPopularity,
-  cardCollectorNumber,
-  cardAddedTime,
-  cardSet,
-  cardArtist,
-  cardColors,
-  cardFinish,
-  cardStatus,
 } from 'utils/Card';
-import Card from 'datatypes/Card';
+import { alphaCompare, arrayIsSubset, fromEntries } from 'utils/Util';
 
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
@@ -462,8 +462,6 @@ function getLabelsRaw(cube: Card[] | null, sort: string, showOther: boolean): st
     ret = allDevotions(cube || [], 'R');
   } else if (sort === 'Devotion to Green') {
     ret = allDevotions(cube || [], 'G');
-  } else if (sort === 'Unsorted') {
-    ret = ['All'];
   } else if (sort === 'Elo') {
     let elos: number[] = [];
     for (const card of cube || []) {
@@ -637,8 +635,8 @@ export function cardGetLabels(card: Card, sort: string, showOther = false): stri
     ret = [cardArtist(card)];
   } else if (sort === 'Legality') {
     ret = Object.entries(card.details?.legalities ?? {})
-      .filter(([, v]) => ['legal', 'banned'].includes(v)) // eslint-disable-line no-unused-vars
-      .map(([k]) => k); // eslint-disable-line no-unused-vars
+      .filter(([, v]) => ['legal', 'banned'].includes(v))
+      .map(([k]) => k);
   } else if (sort === 'Power') {
     if (card.details?.power) {
       ret = [card.details?.power];
@@ -802,7 +800,7 @@ function isSimpleGroup(groups: DeepSorted): groups is Card[] {
 
 export function countGroup(group: DeepSorted): number {
   if (!isSimpleGroup(group)) {
-    const counts = group.map(([, group2]) => countGroup(group2)); // eslint-disable-line no-unused-vars
+    const counts = group.map(([, group2]) => countGroup(group2));
     return counts.reduce((a, b) => a + b, 0);
   }
   return group.length;

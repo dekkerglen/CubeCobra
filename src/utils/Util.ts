@@ -155,9 +155,8 @@ export function isTouchDevice(): boolean {
 
   if (
     Object.prototype.hasOwnProperty.call(window, 'ontouchstart') ||
-    // eslint-disable-next-line no-undef
-    // @ts-expect-error
-    (window.DocumentTouch && document instanceof DocumentTouch)
+    // @ts-expect-error This will be tricky to typecheck
+    (window.DocumentTouch && document instanceof window.DocumentTouch)
   ) {
     return true;
   }
@@ -255,7 +254,7 @@ export function getCardTagColorClass(tagColors: { tag: string; color: string }[]
   return getCardColorClass(card);
 }
 
-export function getTagColorClass(tagColors: { tag: string; color: string }[], tag: string): string {
+export function getTagColorClass(tagColors: { tag: string; color: string | null }[], tag: string): string {
   const tagColor = tagColors.find((tagColorB) => tag === tagColorB.tag);
   if (tagColor && tagColor.color && tagColor.color !== 'no-color') {
     return `tag-color tag-${tagColor.color}`;
@@ -277,8 +276,8 @@ function xor(a: string, b: string): string {
   return result;
 }
 
-export function xorStrings(strings: (string | null | undefined)[]): string {
-  const nonNullStrings = strings.filter((str): str is string => str != null);
+export function xorStrings(strings: (string | null)[]): string {
+  const nonNullStrings = strings.filter((str): str is string => str !== null);
 
   if (nonNullStrings.length === 0) {
     return '';
