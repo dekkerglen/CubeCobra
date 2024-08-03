@@ -174,7 +174,7 @@ function getMostReasonable(cardName, printing = 'recent', filter = null) {
   let ids = getIdsFromName(cardName);
   if (ids === undefined || ids.length === 0) {
     // Try getting it by ID in case this is an ID.
-     
+
     return getMostReasonableById(cardName, printing);
   }
 

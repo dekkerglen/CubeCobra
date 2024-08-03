@@ -1,4 +1,3 @@
- 
 // Load Environment Variables
 require('dotenv').config();
 

@@ -18,7 +18,6 @@ const run = async () => {
   console.log({ message: 'Updating podcasts...' });
 
   for (const podcast of podcasts.items) {
-     
     await tryUpdate(podcast);
   }
 

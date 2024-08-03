@@ -200,7 +200,7 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
           }),
           headers: { 'Content-Type': 'application/json' },
         });
-         
+
         submitDeckForm.current?.submit?.();
       }
     })();

@@ -1,4 +1,3 @@
- 
 import React from 'react';
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
@@ -57,7 +56,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
         <h4>{`Pack ${pack}: Pick ${pick}`}</h4>
         <Row className="g-0">
           {cardsInPack.map((cardIndex) => (
-            <Col key={  cardIndex} xs={4} sm={2}>
+            <Col key={cardIndex} xs={4} sm={2}>
               <a href={`/tool/card/${encodeName(draft.cards[cardIndex].details.name)}`}>
                 <FoilCardImage autocard data-in-modal card={draft.cards[cardIndex]} className="clickable" />
               </a>

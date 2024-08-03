@@ -37,10 +37,7 @@ const CustomDraftCard = ({
               <Markdown markdown={format.markdown} />
             </div>
           ) : (
-            <div
-              className="description-area"
-              dangerouslySetInnerHTML={  { __html: format.html }}
-            />
+            <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html }} />
           )}
 
           <LabelRow htmlFor={`seats-${index}`} label="Total seats">

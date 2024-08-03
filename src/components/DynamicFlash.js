@@ -18,7 +18,6 @@ const DynamicFlash = (props) => {
     <div className="mt-3">
       {Object.keys(messages.flash).map((type) =>
         messages.flash[type].map((message, index) => (
-           
           <UncontrolledAlert key={type + index} color={type} {...props}>
             {message}
           </UncontrolledAlert>

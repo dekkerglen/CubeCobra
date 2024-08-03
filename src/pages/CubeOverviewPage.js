@@ -164,7 +164,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
         )}
         <DynamicFlash />
         {alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert color={color} key={  index}>
+          <UncontrolledAlert color={color} key={index}>
             {message}
           </UncontrolledAlert>
         ))}

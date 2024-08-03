@@ -109,7 +109,6 @@ class SampleHandModal extends Component {
 }
 
 SampleHandModal.propTypes = {
-   
   deck: PropTypes.array.isRequired,
 };
 

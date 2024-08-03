@@ -252,7 +252,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         </FormText>
         {(format.packs ?? []).map((pack, packIndex) => (
           <CustomPackCard
-            key={  packIndex}
+            key={packIndex}
             packIndex={packIndex}
             mutations={mutations}
             canRemove={format.packs.length > 1}
@@ -266,7 +266,6 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       <ModalFooter>
         {errorsInFormat &&
           errorsInFormat.map((error, errorIndex) => (
-             
             <Alert key={errorIndex} color="danger">
               {error}
             </Alert>
@@ -290,7 +289,7 @@ CustomDraftFormatModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   formatIndex: PropTypes.number.isRequired,
-   
+
   format: PropTypes.object.isRequired,
   setFormat: PropTypes.func.isRequired,
 };

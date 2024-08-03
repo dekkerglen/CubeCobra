@@ -74,7 +74,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
           <Collapse isOpen={slotsOpen}>
             <CardBody>
               {pack.slots.map((filter, slotIndex) => (
-                 
                 <InputGroup key={slotIndex} className={slotIndex !== 0 ? 'mt-3' : undefined}>
                   <InputGroupText>{slotIndex + 1}</InputGroupText>
                   <Input
@@ -114,7 +113,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
           <Collapse isOpen={stepsOpen}>
             <CardBody>
               {steps.map((step, stepIndex) => (
-                 
                 <InputGroup key={stepIndex} className="pb-1">
                   <InputGroupText>{stepIndex + 1}</InputGroupText>
                   <UncontrolledDropdown className="pe-2">

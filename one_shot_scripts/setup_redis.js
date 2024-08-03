@@ -8,7 +8,6 @@ client.on('ready', () => {
   try {
     client.config('set', 'notify-keyspace-events', 'Elh');
   } catch (err) {
-     
     console.log(err);
   }
   // Elh => see https://redis.io/topics/notifications to understand the configuration

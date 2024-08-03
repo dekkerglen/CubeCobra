@@ -18,13 +18,9 @@ import { sortDeep } from 'utils/Sort';
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
     {piles.map((row, index) => (
-      <Row key={  index} className="row-low-padding">
+      <Row key={index} className="row-low-padding">
         {row.map((column, index2) => (
-          <Col
-            key={  index2}
-            className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding"
-            xs={3}
-          >
+          <Col key={index2} className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding" xs={3}>
             <div className="w-100 text-center mb-1">
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
@@ -32,7 +28,7 @@ const DeckStacksStatic = ({ piles, cards }) => (
               {column.map((cardIndex, index3) => {
                 const card = cards[cardIndex];
                 return (
-                  <div className="stacked" key={  index3}>
+                  <div className="stacked" key={index3}>
                     <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
                       <FoilCardImage card={card} tags={[]} autocard />
                     </a>

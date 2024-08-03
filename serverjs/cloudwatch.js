@@ -103,7 +103,7 @@ module.exports = {
       console.log(messages.join('\n'));
     }
   },
-   
+
   error: (...messages) => {
     if (cloudwatchEnabled) {
       errorLogs.push({
