@@ -1,5 +1,5 @@
-import React, { useContext,useState } from 'react';
-import { Card, CardBody,Col } from 'reactstrap';
+import React, { useContext, useState } from 'react';
+import { Card, CardBody, Col } from 'reactstrap';
 
 import Advertisment from 'components/Advertisment';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
@@ -52,8 +52,14 @@ const Banner: React.FC = () => {
 
   return (
     <div className="py-2">
-      <Advertisment placementId="banner" size="desktop" media="banner" demo />
-      <Advertisment placementId="banner" size="mobile" media="mobile" demo />
+      {
+        // @ts-expect-error FIXME: Fix types here.
+        <Advertisment placementId="banner" size="desktop" media="banner" demo />
+      }
+      {
+        // @ts-expect-error FIXME: Fix types here.
+        <Advertisment placementId="banner" size="mobile" media="mobile" demo />
+      }
     </div>
   );
 };
