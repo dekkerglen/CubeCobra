@@ -1,7 +1,10 @@
-const path = require('path');
-const { merge } = require('webpack-merge');
+import path from 'path';
+import url from 'url';
+import { merge } from 'webpack-merge';
+import nodeExternals from 'webpack-node-externals';
 
-const nodeExternals = require('webpack-node-externals');
+// eslint-disable-next-line no-underscore-dangle
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const config = {
   module: {
@@ -14,6 +17,13 @@ const config = {
           options: {
             configFile: path.resolve(__dirname, 'babel.config.js'),
           },
+        },
+      },
+      {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'ts-loader',
         },
       },
       {
@@ -34,11 +44,12 @@ const config = {
   },
   devtool: 'source-map',
   resolve: {
-    modules: ['src', 'node_modules'],
+    extensions: ['.js', '.ts', '.jsx', '.tsx', '.json'],
+    modules: [path.resolve(__dirname, 'src'), 'node_modules'],
   },
 };
 
-const clientConfig = merge(config, {
+export const clientConfig = merge(config, {
   entry: {
     BlogPostPage: './src/pages/BlogPostPage.js',
     BulkUploadPage: './src/pages/BulkUploadPage.js',
@@ -117,7 +128,7 @@ const clientConfig = merge(config, {
   },
 });
 
-const serverConfig = merge(config, {
+export const serverConfig = merge(config, {
   target: 'node',
   entry: {
     'pages/DashboardPage': './src/pages/DashboardPage.js',
@@ -186,12 +197,12 @@ const serverConfig = merge(config, {
     'pages/UserPackagesPage': './src/pages/UserPackagesPage.js',
     'pages/PackagePage': './src/pages/PackagePage.js',
     'pages/FeaturedCubesQueuePage': './src/pages/FeaturedCubesQueuePage.js',
-    'utils/Card': './src/utils/Card.js',
     'drafting/createdraft': './src/drafting/createdraft.js',
     'drafting/draftutil': './src/drafting/draftutil.js',
-    'filtering/FilterCards': './src/filtering/FilterCards.js',
-    'utils/Sort': './src/utils/Sort.js',
-    'utils/Util': './src/utils/Util.js',
+    'filtering/FilterCards': './src/filtering/FilterCards.ts',
+    'utils/Card': './src/utils/Card.ts',
+    'utils/Sort': './src/utils/Sort.ts',
+    'utils/Util': './src/utils/Util.ts',
     'markdown/parser': './src/markdown/parser.js',
   },
   output: {
@@ -206,5 +217,3 @@ const serverConfig = merge(config, {
     }),
   ],
 });
-
-module.exports = { clientConfig, serverConfig };

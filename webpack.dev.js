@@ -1,7 +1,8 @@
-const path = require('path');
-const { merge } = require('webpack-merge');
-const webpack = require('webpack');
-const common = require('./webpack.common');
+import path from 'path';
+import webpack from 'webpack';
+import { merge } from 'webpack-merge';
+
+import { clientConfig as commonClientConfig } from './webpack.common.js';
 
 const config = {
   mode: 'development',
@@ -22,14 +23,14 @@ const config = {
   ],
 };
 
-const clientConfig = merge(common.clientConfig, config, {
+const clientConfig = merge(commonClientConfig, config, {
   devServer: {
     compress: true,
     devMiddleware: {
       publicPath: '/js/',
     },
     static: {
-      directory: path.join(__dirname, 'dist'),
+      directory: path.join(path.dirname(new URL(import.meta.url).pathname), 'dist'),
     },
     proxy: [
       {
@@ -40,4 +41,4 @@ const clientConfig = merge(common.clientConfig, config, {
   },
 });
 
-module.exports = clientConfig;
+export default clientConfig;

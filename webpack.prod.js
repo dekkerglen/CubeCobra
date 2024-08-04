@@ -1,8 +1,8 @@
-const { merge } = require('webpack-merge');
-const TerserPlugin = require('terser-webpack-plugin');
-const webpack = require('webpack');
+import TerserPlugin from 'terser-webpack-plugin';
+import webpack from 'webpack';
+import { merge } from 'webpack-merge';
 
-const common = require('./webpack.common');
+import { clientConfig as commonClientConfig, serverConfig as commonServerConfig } from './webpack.common.js';
 
 const config = {
   mode: 'production',
@@ -34,7 +34,5 @@ const config = {
   },
 };
 
-const clientConfig = merge(common.clientConfig, config, {});
-const serverConfig = merge(common.serverConfig, config, {});
-
-module.exports = [clientConfig, serverConfig];
+export const clientConfig = merge(commonClientConfig, config, {});
+export const serverConfig = merge(commonServerConfig, config, {});

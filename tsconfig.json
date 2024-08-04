@@ -1,7 +1,8 @@
 {
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "outDir": "dist",
     "esModuleInterop": true,
     "target": "ES2020",
     "jsx": "react-jsx",
@@ -22,12 +23,10 @@
     },
 
     /* Bundler mode */
-    "allowImportingTsExtensions": true,
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
 
     /* Linting */
     "strict": true,
