@@ -8,9 +8,9 @@ import DeckPropType from 'proptypes/DeckPropType';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
+import RenderToRoot from 'components/RenderToRoot';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDecksPage = ({ cube, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

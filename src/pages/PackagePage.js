@@ -6,8 +6,8 @@ import CardPackagePropType from 'proptypes/CardPackagePropType';
 import Banner from 'components/Banner';
 import CardPackage from 'components/CardPackage';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const PackagePage = ({ pack, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

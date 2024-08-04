@@ -26,6 +26,7 @@ import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FoilCardImage from 'components/FoilCardImage';
+import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import Location, { moveOrAddCard } from 'drafting/DraftLocation';
 import { getDefaultPosition } from 'drafting/draftutil';
@@ -34,7 +35,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { makeSubtitle } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { fromEntries, toNullableInt } from 'utils/Util';
 
 const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (

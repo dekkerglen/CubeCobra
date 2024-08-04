@@ -8,9 +8,9 @@ import Banner from 'components/Banner';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

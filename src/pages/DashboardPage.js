@@ -15,11 +15,11 @@ import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import RenderToRoot from 'components/RenderToRoot';
 import VideoPreview from 'components/VideoPreview';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 

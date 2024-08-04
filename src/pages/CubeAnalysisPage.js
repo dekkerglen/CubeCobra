@@ -15,6 +15,7 @@ import Tokens from 'analytics/Tokens';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FilterCollapse from 'components/FilterCollapse';
+import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
@@ -34,7 +35,6 @@ import {
   mainboardRate,
   pickRate,
 } from 'utils/Card';
-import RenderToRoot from 'utils/RenderToRoot';
 import { cardIsLabel, getLabels } from 'utils/Sort';
 
 const CubeAnalysisPage = ({ cubeAnalytics }) => {

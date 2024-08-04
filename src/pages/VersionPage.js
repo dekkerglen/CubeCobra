@@ -3,8 +3,8 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const VersionPage = ({ version, host, loginCallback }) => {
   return (

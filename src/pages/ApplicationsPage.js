@@ -7,8 +7,8 @@ import TimeAgo from 'react-timeago';
 import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const PAGE_SIZE = 24;
 

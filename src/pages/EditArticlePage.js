@@ -22,11 +22,11 @@ import ArticlePreview from 'components/ArticlePreview';
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import Tab from 'components/Tab';
 import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CONVERT_STATUS = {
   p: 'Published',

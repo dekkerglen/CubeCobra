@@ -7,9 +7,9 @@ import ContentPropType from 'proptypes/ContentPropType';
 import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import Podcast from 'components/Podcast';
+import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const PodcastPage = ({ loginCallback, podcast, episodes }) => {
   const user = useContext(UserContext);

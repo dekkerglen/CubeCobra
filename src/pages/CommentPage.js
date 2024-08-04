@@ -8,8 +8,8 @@ import Banner from 'components/Banner';
 import Comment from 'components/Comment';
 import CommentsSection from 'components/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const translateType = {
   comment: 'Comment',

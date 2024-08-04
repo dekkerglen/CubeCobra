@@ -7,10 +7,10 @@ import CreatorArticles from 'components/CreatorArticles';
 import CreatorPodcasts from 'components/CreatorPodcasts';
 import CreatorVideos from 'components/CreatorVideos';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import Tab from 'components/Tab';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CreatorsPage = ({ loginCallback, articles, videos, podcasts }) => {
   const [tab, setTab] = useQueryParam('tab', '0');

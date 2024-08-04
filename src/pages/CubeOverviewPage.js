@@ -35,6 +35,7 @@ import FollowersModal from 'components/FollowersModal';
 import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
 import QRCodeModal from 'components/QRCodeModal';
+import RenderToRoot from 'components/RenderToRoot';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
 import Username from 'components/Username';
@@ -43,7 +44,6 @@ import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const FollowersModalLink = withModal('a', FollowersModal);

@@ -9,8 +9,8 @@ import TimeAgo from 'react-timeago';
 import AspectRatioBox from 'components/AspectRatioBox';
 import CommentsSection from 'components/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const PodcastEpisodePage = ({ loginCallback, episode }) => {
   return (

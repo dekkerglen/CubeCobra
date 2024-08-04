@@ -6,8 +6,8 @@ import PropTypes from 'prop-types';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const MarkdownPage = ({ loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

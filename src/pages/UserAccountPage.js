@@ -31,6 +31,7 @@ import Banner from 'components/Banner';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
@@ -38,7 +39,6 @@ import useMount from 'hooks/UseMount';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 

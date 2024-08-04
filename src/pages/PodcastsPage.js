@@ -8,9 +8,9 @@ import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import PodcastPreview from 'components/PodcastPreview';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {

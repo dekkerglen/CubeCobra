@@ -8,9 +8,9 @@ import CubePropType from 'proptypes/CubePropType';
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
   return (

@@ -7,9 +7,9 @@ import CubePropType from 'proptypes/CubePropType';
 import Banner from 'components/Banner';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import UserPreview from 'components/UserPreview';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

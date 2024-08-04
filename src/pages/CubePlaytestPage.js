@@ -10,6 +10,7 @@ import CustomDraftFormatModal from 'components/CustomDraftFormatModal';
 import DynamicFlash from 'components/DynamicFlash';
 import GridDraftCard from 'components/GridDraftCard';
 import PlaytestDecksCard from 'components/PlaytestDecksCard';
+import RenderToRoot from 'components/RenderToRoot';
 import SamplePackCard from 'components/SamplePackCard';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
@@ -20,7 +21,6 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const UploadDecklistModalLink = withModal(NavLink, UploadDecklistModal);
 

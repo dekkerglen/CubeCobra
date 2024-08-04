@@ -4,8 +4,8 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const ContactPage = ({ loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

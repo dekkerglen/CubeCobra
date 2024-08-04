@@ -6,8 +6,8 @@ import PropTypes from 'prop-types';
 import Banner from 'components/Banner';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const LostPassword = ({ loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

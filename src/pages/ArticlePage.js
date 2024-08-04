@@ -7,9 +7,9 @@ import ContentPropType from 'proptypes/ContentPropType';
 import Article from 'components/Article';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const ArticlePage = ({ loginCallback, article }) => {
   const user = useContext(UserContext);

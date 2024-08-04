@@ -8,11 +8,11 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import BlogPost from 'components/BlogPost';
 import CreateBlogModal from 'components/CreateBlogModal';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const CreateBlogModalLink = withModal(NavLink, CreateBlogModal);

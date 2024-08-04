@@ -7,8 +7,8 @@ import CubePropType from 'proptypes/CubePropType';
 import CubesCard from 'components/CubesCard';
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => {
   return (

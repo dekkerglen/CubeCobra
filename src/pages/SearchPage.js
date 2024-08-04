@@ -8,9 +8,9 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import CubePreview from 'components/CubePreview';
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) => {

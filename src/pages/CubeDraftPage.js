@@ -9,13 +9,13 @@ import socketIOClient from 'socket.io-client';
 import CubeDraft from 'components/CubeDraft';
 import CubeDraftError from 'components/CubeDraftError';
 import CubeDraftStaging from 'components/CubeDraftStaging';
+import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { callApi } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const socket = socketIOClient('/', { rejectUnauthorized: false });
 

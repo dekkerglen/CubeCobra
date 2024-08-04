@@ -25,10 +25,10 @@ import CubePropType from 'proptypes/CubePropType';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const SetRotationModal = ({ isOpen, toggle, period, onSubmit }) => {
   const [input, setInput] = useState(period);

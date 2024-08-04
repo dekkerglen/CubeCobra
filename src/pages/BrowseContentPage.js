@@ -8,10 +8,10 @@ import ArticlePreview from 'components/ArticlePreview';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import RenderToRoot from 'components/RenderToRoot';
 import VideoPreview from 'components/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const BrowseContentPage = ({ loginCallback, content, lastKey }) => {

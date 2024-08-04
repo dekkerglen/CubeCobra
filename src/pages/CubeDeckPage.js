@@ -25,13 +25,13 @@ import DraftPropType from 'proptypes/DraftPropType';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import SampleHandModal from 'components/SampleHandModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDeckPage = ({ cube, deck, draft, loginCallback }) => {
   const user = useContext(UserContext);

@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 
 import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const back = () => (window.history.length > 1 ? window.history.back() : window.close());
 

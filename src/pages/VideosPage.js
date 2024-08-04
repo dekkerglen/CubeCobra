@@ -6,10 +6,10 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import VideoPreview from 'components/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const VideosPage = ({ loginCallback, videos, lastKey }) => {

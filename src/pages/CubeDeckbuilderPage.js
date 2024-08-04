@@ -10,13 +10,13 @@ import DeckStacks from 'components/DeckStacks';
 import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { makeSubtitle } from 'utils/Card';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const canDrop = () => true;
 

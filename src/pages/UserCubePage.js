@@ -9,10 +9,10 @@ import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
+import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => {
   const user = useContext(UserContext);

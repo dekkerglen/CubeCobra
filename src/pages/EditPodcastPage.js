@@ -8,10 +8,10 @@ import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import Podcast from 'components/Podcast';
 import PodcastPreview from 'components/PodcastPreview';
+import RenderToRoot from 'components/RenderToRoot';
 import Tab from 'components/Tab';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CONVERT_STATUS = {
   p: 'Published',

@@ -8,6 +8,7 @@ import CurveView from 'components/CurveView';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import ListView from 'components/ListView';
+import RenderToRoot from 'components/RenderToRoot';
 import TableView from 'components/TableView';
 import VisualSpoiler from 'components/VisualSpoiler';
 import CubeContext from 'contexts/CubeContext';
@@ -15,7 +16,6 @@ import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext'
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeListPageRaw = () => {
   const { changedCards, filter } = useContext(CubeContext);

@@ -34,6 +34,7 @@ import ImageFallback from 'components/ImageFallback';
 import Markdown from 'components/Markdown';
 import PagedList from 'components/PagedList';
 import PlayRateGraph from 'components/PlayRateGraph';
+import RenderToRoot from 'components/RenderToRoot';
 import Tab from 'components/Tab';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
@@ -58,7 +59,6 @@ import {
   cardPriceEur,
   cardTix,
 } from 'utils/Card';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(Button, AddToCubeModal);

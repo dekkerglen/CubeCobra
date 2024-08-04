@@ -3,9 +3,9 @@ import { Button, Col, Row } from 'reactstrap';
 
 import CardSearchBar from 'components/CardSearchBar';
 import LoginModal from 'components/LoginModal';
+import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
 import Footer from 'layouts/Footer';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const LoginModalButton = withModal(Button, LoginModal);
 

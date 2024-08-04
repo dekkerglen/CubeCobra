@@ -6,10 +6,10 @@ import ContentPropType from 'proptypes/ContentPropType';
 
 import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import Video from 'components/Video';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const VideoPage = ({ loginCallback, video }) => {
   const user = useContext(UserContext);

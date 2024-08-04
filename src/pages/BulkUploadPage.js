@@ -8,12 +8,12 @@ import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
+import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
 import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 

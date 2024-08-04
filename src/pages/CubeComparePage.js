@@ -8,11 +8,11 @@ import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import RenderToRoot from 'components/RenderToRoot';
 import { CubeContextProvider } from 'contexts/CubeContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) => {
   const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);

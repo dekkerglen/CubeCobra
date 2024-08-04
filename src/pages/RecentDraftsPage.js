@@ -8,9 +8,9 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import Banner from 'components/Banner';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {

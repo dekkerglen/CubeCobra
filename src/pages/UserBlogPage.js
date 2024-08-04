@@ -7,10 +7,10 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import Banner from 'components/Banner';
 import BlogPost from 'components/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 import { csrfFetch } from 'utils/CSRF';
-import RenderToRoot from 'utils/RenderToRoot';
 import { wait } from 'utils/Util';
 
 const loader = (
