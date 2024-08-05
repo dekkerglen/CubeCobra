@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 import { Button, Card, CardBody, CardFooter, CardHeader, Col, Input, InputGroup, Row, Spinner } from 'reactstrap';
 
-import { LockIcon,PasteIcon } from '@primer/octicons-react';
+import { LockIcon, PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
