@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - name: Enable Corepack
+        run: corepack enable
       - name: Setup
         run: yarn install --frozen-lockfile
       - name: Check Code Style
