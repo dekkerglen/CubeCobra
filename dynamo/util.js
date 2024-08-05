@@ -1,7 +1,7 @@
 // Load Environment Variables
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const client = require('./client');
 const documentClient = require('./documentClient');
 
@@ -139,7 +139,7 @@ module.exports = function createClient(config) {
       try {
         if (!Item[config.partitionKey]) {
           Item = {
-            [config.partitionKey]: uuid(),
+            [config.partitionKey]: uuid.v4(),
             ...Item,
           };
         }
@@ -198,7 +198,7 @@ module.exports = function createClient(config) {
               },
             },
           };
-           
+
           const result = await documentClient.batchGet(params).promise();
           results.push(...result.Responses[tableName(config.name)]);
         }

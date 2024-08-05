@@ -3,7 +3,7 @@ const htmlToText = require('html-to-text');
 const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const User = require('./user');
 
 const removeSpan = (text) =>
@@ -203,7 +203,7 @@ module.exports = {
     return client.put(document);
   },
   put: async (document, type) => {
-    document.id = document[FIELDS.ID] || uuid();
+    document.id = document[FIELDS.ID] || uuid.v4();
 
     if (document.body) {
       await putBody(document);

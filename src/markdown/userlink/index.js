@@ -1,4 +1,4 @@
-import visit from 'unist-util-visit';
+import { visit } from 'unist-util-visit';
 
 import { fromMarkdown } from 'markdown/userlink/mdast-userlink';
 import syntax from 'markdown/userlink/micromark-userlink';

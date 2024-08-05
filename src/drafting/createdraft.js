@@ -6,7 +6,7 @@ import { fromEntries } from 'utils/Util';
 
 export const matchingCards = (cards, filter) => {
   if (filter) {
-    return cards.filter(filter);
+    return cards.filter(filter.fn);
   }
   return cards;
 };

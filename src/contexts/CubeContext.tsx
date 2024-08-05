@@ -1,5 +1,16 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AlertProps } from 'reactstrap';
+import React, {
+  createContext,
+  Dispatch,
+  MouseEvent,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { AlertProps, UncontrolledAlertProps } from 'reactstrap';
 
 import { Object } from 'core-js';
 
@@ -39,11 +50,11 @@ export interface CardVersion {
 }
 
 export interface CubeContextValue {
-  cube?: CubeWithCards;
+  cube: CubeWithCards;
   changedCards: Record<string, Card[]>;
   canEdit: boolean;
   hasCustomImages: boolean;
-  setCube: React.Dispatch<React.SetStateAction<CubeWithCards>>;
+  setCube: Dispatch<SetStateAction<CubeWithCards>>;
   addCard: (card: Card, board: BoardType) => void;
   bulkAddCard: (newCards: Card[], board: BoardType) => void;
   removeCard: (index: number, board: BoardType) => void;
@@ -57,21 +68,21 @@ export interface CubeContextValue {
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
   commitChanges: (title: string, blog: boolean) => Promise<void>;
-  toggle: (event?: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  setModalSelection: React.Dispatch<
-    React.SetStateAction<{ index: number; board: BoardType } | { index: number; board: BoardType }[]>
+  toggle: (event?: MouseEvent<HTMLElement, MouseEvent>) => void;
+  setModalSelection: Dispatch<
+    SetStateAction<{ index: number; board: BoardType } | { index: number; board: BoardType }[]>
   >;
-  setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setModalOpen: Dispatch<SetStateAction<boolean>>;
   tagColors: TagColor[];
   showTagColors: boolean;
-  setTagColors: React.Dispatch<React.SetStateAction<TagColor[]>>;
+  setTagColors: Dispatch<SetStateAction<TagColor[]>>;
   updateShowTagColors: (showColors: boolean) => Promise<void>;
   bulkEditCard: (list: { index: number; board: BoardType; [key: string]: unknown }[]) => void;
   bulkRevertEdit: (list: { index: number; board: BoardType }[]) => void;
   bulkRemoveCard: (list: { index: number; board: BoardType }[]) => void;
   bulkRevertRemove: (list: { index: number; board: BoardType }[]) => void;
-  alerts: AlertProps[];
-  setAlerts: React.Dispatch<React.SetStateAction<AlertProps[]>>;
+  alerts: UncontrolledAlertProps[];
+  setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
   setShowUnsorted: (value: boolean) => Promise<void>;
   saveSorts: () => Promise<void>;
@@ -80,21 +91,21 @@ export interface CubeContextValue {
   sortSecondary: string | null;
   sortTertiary: string | null;
   sortQuaternary: string | null;
-  setSortPrimary: React.Dispatch<React.SetStateAction<string | null>>;
-  setSortSecondary: React.Dispatch<React.SetStateAction<string | null>>;
-  setSortTertiary: React.Dispatch<React.SetStateAction<string | null>>;
-  setSortQuaternary: React.Dispatch<React.SetStateAction<string | null>>;
+  setSortPrimary: Dispatch<SetStateAction<string | null>>;
+  setSortSecondary: Dispatch<SetStateAction<string | null>>;
+  setSortTertiary: Dispatch<SetStateAction<string | null>>;
+  setSortQuaternary: Dispatch<SetStateAction<string | null>>;
   filterInput: string | null;
-  setFilterInput: React.Dispatch<React.SetStateAction<string | null>>;
+  setFilterInput: Dispatch<SetStateAction<string | null>>;
   filterValid: boolean;
   filterResult: string;
   unfilteredChangedCards: Record<string, Card[]>;
   useBlog: boolean;
-  setUseBlog: React.Dispatch<React.SetStateAction<boolean>>;
+  setUseBlog: Dispatch<SetStateAction<boolean>>;
   allTags: string[];
 }
 
-const CubeContext = React.createContext<CubeContextValue | null>(null);
+const CubeContext = createContext<CubeContextValue | null>(null);
 
 export const TAG_COLORS: [string, string][] = [
   ['None', 'no-color'],
@@ -136,7 +147,7 @@ export function CubeContextProvider({
     mainboard: Card[];
     maybeboard: Card[];
   };
-  children: React.ReactNode;
+  children: ReactNode;
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
 }) {
@@ -186,7 +197,7 @@ export function CubeContextProvider({
   const [sortQuaternary, setSortQuaternary] = useQueryParam<string>('s4', defaultSorts[3]);
   const [filterInput, setFilterInput] = useQueryParam<string>('f', '');
   const [filterValid, setFilterValid] = useState(true);
-  const [cardFilter, setCardFilter] = useState<FilterFunction>(defaultFilter());
+  const [cardFilter, setCardFilter] = useState<{ filter: FilterFunction }>({ filter: defaultFilter() });
   const [filterResult, setFilterResult] = useState('');
   const [useBlog, setUseBlog] = useLocalStorage<boolean>(`${cube.id}-useBlog`, true);
 
@@ -215,13 +226,16 @@ export function CubeContextProvider({
 
   useMount(() => {
     // if there are changes
-    if (Object.keys(changes).length > 0 && setOpenCollapse) {
+    if (
+      Object.values(changes.mainboard).some((c) => c.length > 0) ||
+      Object.values(changes.maybeboard).some((c) => c.length > 0)
+    ) {
       setOpenCollapse('edit');
     }
   });
 
   const toggle = useCallback(
-    (event?: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    (event?: MouseEvent<HTMLElement, MouseEvent>) => {
       if (event) {
         event.preventDefault();
       }
@@ -539,8 +553,8 @@ export function CubeContextProvider({
     }
 
     const result = {
-      mainboard: changed.mainboard.filter(cardFilter),
-      maybeboard: changed.maybeboard.filter(cardFilter),
+      mainboard: changed.mainboard.filter(cardFilter.filter),
+      maybeboard: changed.maybeboard.filter(cardFilter.filter),
     };
 
     if (filterInput !== '') {
@@ -830,7 +844,7 @@ export function CubeContextProvider({
     (overrideFilter?: string) => {
       const input = overrideFilter ?? filterInput ?? '';
       if (input.trim() === '') {
-        setCardFilter(defaultFilter());
+        setCardFilter({ filter: defaultFilter() });
         return;
       }
 
@@ -841,7 +855,7 @@ export function CubeContextProvider({
       }
 
       setFilterValid(true);
-      setCardFilter(filter);
+      setCardFilter({ filter });
     },
     [filterInput, setCardFilter],
   );

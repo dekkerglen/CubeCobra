@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const { cardType } = require('../dist/utils/Card');
 const carddb = require('./carddb');
 const { draftbotPick, deckbuild } = require('./draftbots');
@@ -308,7 +308,7 @@ const buildBotDeck = (picks, draft) => {
 
 const finishDraft = async (draftId) => {
   // ensure this is only called once
-  const lock = await obtainLock(`finishdraft:${draftId}`, uuid(), 30000);
+  const lock = await obtainLock(`finishdraft:${draftId}`, uuid.v4(), 30000);
 
   if (!lock) {
     return;

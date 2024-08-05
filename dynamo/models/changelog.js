@@ -1,7 +1,7 @@
 // dotenv
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 const { getObject, putObject } = require('../s3client');
 const carddb = require('../../serverjs/carddb');
@@ -204,7 +204,7 @@ module.exports = {
     };
   },
   put: async (changelog, cube) => {
-    const id = uuid();
+    const id = uuid.v4();
     await putObject(process.env.DATA_BUCKET, `changelog/${cube}/${id}.json`, sanitizeChangelog(changelog));
     await client.put({
       [FIELDS.ID]: id,

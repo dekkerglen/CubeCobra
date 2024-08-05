@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 const carddb = require('../../serverjs/carddb');
 const { getObject, putObject } = require('../s3client');
@@ -423,7 +423,7 @@ module.exports = {
     };
   },
   put: async (document) => {
-    const id = document.id || uuid();
+    const id = document.id || uuid.v4();
 
     const names = document.seats.map((seat) => assessColors(seat.mainboard, document.cards).join(''));
 

@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
 import {
   Button,
   Col,
@@ -11,20 +10,30 @@ import {
   Label,
   Row,
   UncontrolledAlert,
+  UncontrolledAlertProps,
 } from 'reactstrap';
-
-import PropTypes from 'prop-types';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
 import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';
 import CubeContext from 'contexts/CubeContext';
-import DisplayContext from 'contexts/DisplayContext';
+import DisplayContext, { DisplayContextValue } from 'contexts/DisplayContext';
+import { BoardType } from 'datatypes/Card';
+import CardDetails from 'datatypes/CardDetails';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
 
-export const getCard = async (defaultprinting, name, setAlerts) => {
+interface GetCardResponse {
+  success: 'true' | 'false';
+  card: CardDetails;
+}
+
+export const getCard = async (
+  defaultprinting: string,
+  name: string,
+  setAlerts?: Dispatch<SetStateAction<UncontrolledAlertProps[]>>,
+): Promise<CardDetails | null> => {
   if (name && name.length > 0) {
     const response = await csrfFetch(`/cube/api/getcardforcube`, {
       method: 'POST',
@@ -39,18 +48,18 @@ export const getCard = async (defaultprinting, name, setAlerts) => {
     if (!response.ok) {
       const message = `Couldn't get card: ${response.status}.`;
       if (setAlerts) {
-        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+        setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
         console.error(message);
       }
       return null;
     }
 
-    const json = await response.json();
+    const json: GetCardResponse = await response.json();
     if (json.success !== 'true' || !json.card) {
       const message = `Couldn't find card [${name}].`;
       if (setAlerts) {
-        setAlerts((alerts) => [...alerts, { color: 'danger', message }]);
+        setAlerts((alerts: UncontrolledAlertProps[]) => [...alerts, { color: 'danger', message }]);
       } else {
         console.error(message);
       }
@@ -63,12 +72,16 @@ export const getCard = async (defaultprinting, name, setAlerts) => {
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
-const EditCollapse = ({ isOpen }) => {
+interface EditCollapseProps {
+  isOpen: boolean;
+}
+
+const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
   const [addValue, setAddValue] = useState('');
   const [removeValue, setRemoveValue] = useState('');
-  const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext);
-  const addRef = useRef();
-  const removeRef = useRef();
+  const { showMaybeboard, toggleShowMaybeboard } = useContext(DisplayContext) as DisplayContextValue;
+  const addRef = useRef<HTMLInputElement>(null);
+  const removeRef = useRef<HTMLInputElement>(null);
 
   const {
     cube,
@@ -84,15 +97,15 @@ const EditCollapse = ({ isOpen }) => {
     loading,
     useBlog,
     setUseBlog,
-  } = useContext(CubeContext);
+  } = useContext(CubeContext)!;
 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
-  const [activeBoard, setActiveBoard] = useLocalStorage(`${cube.id}-useMaybeboard`, 'mainboard');
+  const [activeBoard, setActiveBoard] = useLocalStorage<BoardType>(`${cube.id}-useMaybeboard`, 'mainboard');
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
   const handleAdd = useCallback(
-    async (event, match) => {
+    async (event: React.FormEvent, match: string) => {
       event.preventDefault();
       try {
         const card = await getCard(cube.defaultPrinting, match, setAlerts);
@@ -100,12 +113,14 @@ const EditCollapse = ({ isOpen }) => {
           return;
         }
         addCard(
-          { cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+          { cardID: card.scryfall_id, addedTmsp: new Date().valueOf().toString(), status: cube.defaultStatus },
           showMaybeboard ? activeBoard : 'mainboard',
         );
         setAddValue('');
 
-        addRef.current.focus();
+        if (addRef.current) {
+          addRef.current.focus();
+        }
       } catch (e) {
         console.error(e);
       }
@@ -114,15 +129,20 @@ const EditCollapse = ({ isOpen }) => {
   );
 
   const handleRemoveReplace = useCallback(
-    async (event, match) => {
+    async (event: React.FormEvent, match: string) => {
       event.preventDefault();
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
         const board = changedCards[showMaybeboard ? activeBoard : 'mainboard'];
         for (let i = 0; i < board.length; i++) {
-          if (!board[i].markedForDelete && board[i].details.name.toLowerCase() === match.toLowerCase()) {
-            removeIndex = board[i].index;
+          const card = board[i];
+          if (
+            !card.markedForDelete &&
+            card.index !== undefined &&
+            card.details?.name.toLowerCase() === match.toLowerCase()
+          ) {
+            removeIndex = card.index;
           }
         }
 
@@ -144,7 +164,7 @@ const EditCollapse = ({ isOpen }) => {
           }
           swapCard(
             removeIndex,
-            { cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus },
+            { cardID: card.scryfall_id, addedTmsp: new Date().valueOf().toString(), status: cube.defaultStatus },
             showMaybeboard ? activeBoard : 'mainboard',
           );
         } else {
@@ -167,6 +187,7 @@ const EditCollapse = ({ isOpen }) => {
       changedCards,
       showMaybeboard,
       activeBoard,
+      setAlerts,
       cube.defaultPrinting,
       cube.defaultStatus,
       swapCard,
@@ -175,15 +196,15 @@ const EditCollapse = ({ isOpen }) => {
   );
 
   const submit = useCallback(async () => {
-    commitChanges(postTitle, postContent);
+    commitChanges(postTitle, true);
     setPostTitle(DEFAULT_BLOG_TITLE);
     setPostContent('');
-  }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
+  }, [commitChanges, postTitle, setPostContent, setPostTitle]);
 
   return (
     <Collapse className="px-3" isOpen={isOpen}>
-      {alerts.map(({ color, message }) => (
-        <UncontrolledAlert color={color} className="mt-2">
+      {alerts.map(({ color, message }, index) => (
+        <UncontrolledAlert key={index} color={color} className="mt-2">
           {message}
         </UncontrolledAlert>
       ))}
@@ -192,9 +213,14 @@ const EditCollapse = ({ isOpen }) => {
           <Col xs={12} md={3}>
             <InputGroup className="mb-1">
               <Input disabled value="Board" />
-              <Input value={activeBoard} onChange={(e) => setActiveBoard(e.target.value)} name="select" type="select">
-                <option>mainboard</option>
-                <option>maybeboard</option>
+              <Input
+                value={activeBoard}
+                onChange={(e) => setActiveBoard(e.target.value as BoardType)}
+                name="select"
+                type="select"
+              >
+                <option value="mainboard">Mainboard</option>
+                <option value="maybeboard">Maybeboard</option>
               </Input>
             </InputGroup>
           </Col>
@@ -291,7 +317,13 @@ const EditCollapse = ({ isOpen }) => {
           </InputGroup>
         </Col>
       </Row>
-      <Collapse isOpen={Object.entries(changes).length > 0} className="pt-1">
+      <Collapse
+        isOpen={
+          Object.values(changes.mainboard).some((c) => c.length > 0) ||
+          Object.values(changes.maybeboard).some((c) => c.length > 0)
+        }
+        className="pt-1"
+      >
         <Row>
           <Col xs="12" md="6">
             <Changelist />
@@ -317,7 +349,7 @@ const EditCollapse = ({ isOpen }) => {
         </Row>
         <Row className="mb-2">
           <Col xs="6" md="3">
-            <LoadingButton color="accent" block className="me-2" onClick={submit} loading={loading}>
+            <LoadingButton color="accent" block onClick={submit} loading={loading}>
               Save Changes
             </LoadingButton>
           </Col>
@@ -338,14 +370,6 @@ const EditCollapse = ({ isOpen }) => {
       </Collapse>
     </Collapse>
   );
-};
-
-EditCollapse.propTypes = {
-  isOpen: PropTypes.bool,
-};
-
-EditCollapse.defaultProps = {
-  isOpen: false,
 };
 
 export default EditCollapse;

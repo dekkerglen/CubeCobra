@@ -1,5 +1,5 @@
 const express = require('express');
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const { body, param } = require('express-validator');
 const RSS = require('rss');
 
@@ -53,7 +53,7 @@ router.post('/add', ensureAuth, async (req, res) => {
     }
 
     const cube = {
-      id: uuid(),
+      id: uuid.v4(),
       shortId: null,
       name: req.body.name,
       owner: req.user.id,
@@ -115,7 +115,7 @@ router.get('/clone/:id', async (req, res) => {
     const sourceCards = await Cube.getCards(source.id);
 
     const cube = {
-      id: uuid(),
+      id: uuid.v4(),
       shortId: null,
       name: `Clone of ${source.name}`,
       owner: req.user.id,
@@ -336,7 +336,7 @@ router.get('/overview/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -531,7 +531,7 @@ router.get('/list/:id', async (req, res) => {
     const cube = await Cube.getById(req.params.id);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cards = await Cube.getCards(cube.id);
@@ -564,7 +564,7 @@ router.get('/history/:id', async (req, res) => {
     const cube = await Cube.getById(req.params.id);
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const query = await Changelog.getByCube(cube.id, 36);
@@ -610,7 +610,7 @@ router.get('/playtest/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const decks = await Draft.getByCube(cube.id);
@@ -644,7 +644,7 @@ router.get('/analysis/:id', async (req, res) => {
 
     if (!isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
-      return res.redirect('404');
+      return res.redirect('/404');
     }
 
     const cards = await Cube.getCards(cube.id);

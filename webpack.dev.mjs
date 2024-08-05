@@ -2,7 +2,7 @@ import path from 'path';
 import webpack from 'webpack';
 import { merge } from 'webpack-merge';
 
-import { clientConfig as commonClientConfig } from './webpack.common.js';
+import { clientConfig as commonClientConfig } from './webpack.common.mjs';
 
 const config = {
   mode: 'development',

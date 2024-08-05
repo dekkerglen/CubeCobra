@@ -5,7 +5,7 @@ import breaks from 'remark-breaks';
 import gfm from 'remark-gfm';
 import math from 'remark-math';
 import remark from 'remark-parse';
-import unified from 'unified';
+import { unified } from 'unified';
 
 import cardlink from 'markdown/cardlink';
 import cardrow from 'markdown/cardrow';

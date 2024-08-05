@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 import { Button, Card, CardBody, CardFooter, CardHeader, Col, Input, InputGroup, Row, Spinner } from 'reactstrap';
 
-import { ClippyIcon, LockIcon } from '@primer/octicons-react';
+import { PasteIcon, LockIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
@@ -149,7 +149,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
                 onClick={() => navigator.clipboard.writeText(`https://${domain}/d/${draft.id}`)}
                 aria-label="Copy short ID"
               >
-                <ClippyIcon size={16} />
+                <PasteIcon size={16} />
               </Button>
             </InputGroup>
             <br />

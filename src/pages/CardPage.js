@@ -16,7 +16,7 @@ import {
   TabPane,
 } from 'reactstrap';
 
-import { ArrowSwitchIcon, CheckIcon, ClippyIcon } from '@primer/octicons-react';
+import { ArrowSwitchIcon, CheckIcon, PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import CardPricePropType from 'proptypes/CardPricePropType';
 import CardPropType from 'proptypes/CardPropType';
@@ -99,7 +99,7 @@ const CardIdBadge = ({ id }) => {
       <InputGroupText>Card ID</InputGroupText>
       <Input className="bg-white" value={id} disabled />
       <Button className="btn-sm input-group-button" onClick={onCopyClick} style={{ width: 'auto' }}>
-        {copied ? <CheckIcon size={16} /> : <ClippyIcon size={16} />}
+        {copied ? <CheckIcon size={16} /> : <PasteIcon size={16} />}
       </Button>
     </InputGroup>
   );

@@ -9,7 +9,7 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const schedule = require('node-schedule');
 const rateLimit = require('express-rate-limit');
 const socketio = require('socket.io');
@@ -136,7 +136,7 @@ app.use('/cube/api/history', apiLimiter);
 
 // per-request logging configuration
 app.use((req, res, next) => {
-  req.uuid = uuid();
+  req.uuid = uuid.v4();
 
   cloudwatch.info(
     JSON.stringify(
