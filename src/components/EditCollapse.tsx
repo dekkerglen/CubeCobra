@@ -104,6 +104,8 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
   const [activeBoard, setActiveBoard] = useLocalStorage<BoardType>(`${cube.id}-useMaybeboard`, 'mainboard');
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
 
+  const boardToEdit = showMaybeboard ? activeBoard : 'mainboard';
+
   const handleAdd = useCallback(
     async (event: React.FormEvent, match: string) => {
       event.preventDefault();
@@ -114,7 +116,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         }
         addCard(
           { cardID: card.scryfall_id, addedTmsp: new Date().valueOf().toString(), status: cube.defaultStatus },
-          showMaybeboard ? activeBoard : 'mainboard',
+          boardToEdit,
         );
         setAddValue('');
 
@@ -125,7 +127,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, showMaybeboard, activeBoard],
+    [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard, boardToEdit],
   );
 
   const handleRemoveReplace = useCallback(
@@ -134,7 +136,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
       const replace = addValue.length > 0;
       try {
         let removeIndex = -1;
-        const board = changedCards[showMaybeboard ? activeBoard : 'mainboard'];
+        const board = changedCards[boardToEdit];
         for (let i = 0; i < board.length; i++) {
           const card = board[i];
           if (
@@ -151,7 +153,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
             ...items,
             {
               color: 'danger',
-              message: `Couldn't find a card with name "${match}" in "${showMaybeboard ? activeBoard : 'mainboard'}".`,
+              message: `Couldn't find a card with name "${match}" in "${boardToEdit}".`,
             },
           ]);
           return;
@@ -165,10 +167,10 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           swapCard(
             removeIndex,
             { cardID: card.scryfall_id, addedTmsp: new Date().valueOf().toString(), status: cube.defaultStatus },
-            showMaybeboard ? activeBoard : 'mainboard',
+            boardToEdit,
           );
         } else {
-          removeCard(removeIndex, showMaybeboard ? activeBoard : 'mainboard');
+          removeCard(removeIndex, boardToEdit);
         }
 
         setAddValue('');
@@ -182,24 +184,14 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         console.error(e);
       }
     },
-    [
-      addValue,
-      changedCards,
-      showMaybeboard,
-      activeBoard,
-      setAlerts,
-      cube.defaultPrinting,
-      cube.defaultStatus,
-      swapCard,
-      removeCard,
-    ],
+    [addValue, changedCards, boardToEdit, setAlerts, cube.defaultPrinting, cube.defaultStatus, swapCard, removeCard],
   );
 
   const submit = useCallback(async () => {
-    commitChanges(postTitle, true);
+    commitChanges(postTitle, postContent);
     setPostTitle(DEFAULT_BLOG_TITLE);
     setPostContent('');
-  }, [commitChanges, postTitle, setPostContent, setPostTitle]);
+  }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (
     <Collapse className="px-3" isOpen={isOpen}>
@@ -250,7 +242,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           <InputGroup className="flex-nowrap mb-1">
             <AutocompleteInput
               cubeId={cube.id}
-              treeUrl={`/cube/api/cubecardnames/${cube.id}/${showMaybeboard ? activeBoard : 'mainboard'}`}
+              treeUrl={`/cube/api/cubecardnames/${cube.id}/${boardToEdit}`}
               treePath="cardnames"
               type="text"
               innerRef={removeRef}

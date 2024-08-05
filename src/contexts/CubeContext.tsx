@@ -67,7 +67,7 @@ export interface CubeContextValue {
   revertSwap: (index: number, board: BoardType) => void;
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
-  commitChanges: (title: string, blog: boolean) => Promise<void>;
+  commitChanges: (title: string, blog: string) => Promise<void>;
   toggle: (event?: MouseEvent<HTMLElement, MouseEvent>) => void;
   setModalSelection: Dispatch<
     SetStateAction<{ index: number; board: BoardType } | { index: number; board: BoardType }[]>
@@ -592,7 +592,7 @@ export function CubeContextProvider({
   }, [cube.cards]);
 
   const commitChanges = useCallback(
-    async (title: string, blog: boolean) => {
+    async (title: string, blog: string) => {
       setLoading(true);
 
       try {
