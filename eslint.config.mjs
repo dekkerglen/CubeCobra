@@ -135,6 +135,7 @@ export default [
   {
     files: [
       '*.js',
+      '*.mjs',
       'jobs/**/*',
       'one_shot_scripts/**/*',
       'config/**/*',
