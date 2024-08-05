@@ -3,21 +3,18 @@ name: CI Tests
 on: [push, pull_request]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-    - name: Setup
-      run: npm ci
-    - name: Check Code Style
-      run: npm run lint
-    - name: Build
-      run: npm run ci-build
-  
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Setup
+        run: yarn install --frozen-lockfile
+      - name: Check Code Style
+        run: yarn run lint
+      - name: Build
+        run: yarn run ci-build
