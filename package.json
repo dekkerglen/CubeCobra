@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "yarn run nearley && yarn run sass && tsc -b && yarn run webpack",
-    "lint": "yarn run prettier-base --check && eslint --max-warnings 0",
+    "lint": "yarn run prettier-base --check && yarn run eslint --max-warnings 0",
     "bash": "bash",
     "beautify": "yarn run prettier",
     "list-files": "bash -c 'shopt -s nullglob\n echo {__tests__,fixtures,jobs,models,one_shot_scripts,public/js,routes,serverjs,src}/{**/*,*}.{js,jsx,ts,tsx} app.js webpack.*.mjs *.config.mjs'",
