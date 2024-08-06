@@ -13,7 +13,7 @@ import MainLayout from 'layouts/MainLayout';
 
 const TopCardsPage = ({ loginCallback }) => {
   return (
-    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
+    <CubeContextProvider initialCube={{ defaultSorts: [], owner: {} }} cards={{ mainboard: [], maybeboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
         <div className="usercontrols pt-3 mb-3">
           <Row className="pb-3 me-1">

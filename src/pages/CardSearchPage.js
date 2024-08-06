@@ -9,7 +9,7 @@ import MainLayout from 'layouts/MainLayout';
 
 const CardSearchPage = ({ loginCallback }) => {
   return (
-    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
+    <CubeContextProvider initialCube={{ defaultSorts: [], owner: {} }} cards={{ mainboard: [], maybeboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
         <CardSearch />
       </MainLayout>

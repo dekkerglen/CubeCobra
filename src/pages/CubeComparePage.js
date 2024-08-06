@@ -22,7 +22,7 @@ const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider>
-        <CubeContextProvider initialCube={cube} cards={{ mainboard: cards }}>
+        <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
           <CubeCompareNavbar
             cubeA={cube}
             cubeAID={cube.id}

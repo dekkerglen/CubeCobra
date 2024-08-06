@@ -58,7 +58,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
               <a href={`/packages/${cardPackage.id}`}>{cardPackage.title}</a>
             </h5>
             <h6 className="card-subtitle mb-2 text-muted">
-              <Username user={{ username: cardPackage.owner }} />
+              <Username user={cardPackage.owner} />
               {' submitted '}
               <TimeAgo date={cardPackage.date} />
             </h6>

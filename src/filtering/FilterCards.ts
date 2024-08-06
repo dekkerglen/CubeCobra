@@ -1,7 +1,7 @@
 import { Grammar, Parser } from 'nearley';
 
 import Card from 'datatypes/Card';
-import { AllField } from 'datatypes/CardDetails';
+import CardDetails, { AllField } from 'datatypes/CardDetails';
 import filterCardGrammar from 'generated/filtering/cardFilters';
 
 // @ts-expect-error(TODO: figure this one out)
@@ -63,8 +63,8 @@ export function makeFilter(filterText: string): { err: any; filter: FilterFuncti
   };
 }
 
-export const filterCardsDetails = (cards: Card[], filter: FilterFunction): Card[] =>
-  filter ? cards.filter(filter) : cards;
+export const filterCardsDetails = (cards: CardDetails[], filter: FilterFunction): CardDetails[] =>
+  filter ? cards.filter((details) => filter({ details } as Card)) : cards;
 
 export default {
   operators: ALL_OPERATORS,
