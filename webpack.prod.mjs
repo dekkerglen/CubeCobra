@@ -34,5 +34,7 @@ const config = {
   },
 };
 
-export const clientConfig = merge(commonClientConfig, config, {});
-export const serverConfig = merge(commonServerConfig, config, {});
+const clientConfig = merge(commonClientConfig, config, {});
+const serverConfig = merge(commonServerConfig, config, {});
+
+export default [clientConfig, serverConfig];
