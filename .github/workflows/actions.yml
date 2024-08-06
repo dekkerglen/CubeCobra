@@ -15,7 +15,7 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Setup
-        run: yarn install --immutable --immutable-cache
+        run: yarn install --immutable
       - name: Check Code Style
         run: yarn run lint
       - name: Build
