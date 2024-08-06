@@ -95,29 +95,39 @@ export interface BlogPostChangelogProps {
 const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
   return (
     <div>
-      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => (
-        <div key={board} className="mb-2">
-          <h6>
-            <Row>
-              <Col>{capitalizeFirstLetter(board)} Changelist</Col>
-              <Col className="col-auto">
-                <div className="text-secondary">
-                  +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
-                </div>
-              </Col>
-            </Row>
-          </h6>
-          <ul className="changelist">
-            {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
-            {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}
-            {swaps &&
-              swaps.map((swap) => (
-                <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
-              ))}
-            {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.oldCard} />)}
-          </ul>
-        </div>
-      ))}
+      {Object.entries(changelog).map(([board, { adds, removes, swaps, edits }]) => {
+        if (
+          (!adds || adds.length === 0) &&
+          (!removes || removes.length === 0) &&
+          (!swaps || swaps.length === 0) &&
+          (!edits || edits.length === 0)
+        ) {
+          return false;
+        }
+        return (
+          <div key={board} className="mb-2">
+            <h6>
+              <Row>
+                <Col>{capitalizeFirstLetter(board)} Changelist</Col>
+                <Col className="col-auto">
+                  <div className="text-secondary">
+                    +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
+                  </div>
+                </Col>
+              </Row>
+            </h6>
+            <ul className="changelist">
+              {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
+              {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}
+              {swaps &&
+                swaps.map((swap) => (
+                  <Swap key={`${swap.oldCard.cardID}->${swap.card.cardID}`} oldCard={swap.oldCard} card={swap.card} />
+                ))}
+              {edits && edits.map((edit) => <Edit key={edit.oldCard.cardID} card={edit.oldCard} />)}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 };
