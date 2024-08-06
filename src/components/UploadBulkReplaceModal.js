@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
+import { Button, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Input, Modal, ModalBody, ModalFooter, ModalHeader, Button, Label } from 'reactstrap';
-
-import CubeContext from 'contexts/CubeContext';
 import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'contexts/CubeContext';
 
 const UploadBulkReplaceModal = ({ isOpen, toggle }) => {
   const { cube } = useContext(CubeContext);

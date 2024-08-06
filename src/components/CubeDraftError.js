@@ -1,6 +1,7 @@
 import React from 'react';
+import { Card, CardBody, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-import { Card, CardHeader, CardBody } from 'reactstrap';
 
 const CubeDraftError = ({ message }) => {
   return (

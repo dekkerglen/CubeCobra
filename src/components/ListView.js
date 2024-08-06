@@ -1,18 +1,17 @@
 import React, { useCallback, useContext, useState } from 'react';
+import { Button, Input } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import { Button, Input } from 'reactstrap';
-
-import { normalizeName, cardFinish, cardCmc, cardType, cardColorIdentity, cardTags, cardStatus } from 'utils/Card';
-import { getLabels, sortDeep } from 'utils/Sort';
-
-import CubeContext from 'contexts/CubeContext';
 import PagedTable from 'components/PagedTable';
-import withAutocard from 'components/WithAutocard';
-import useAlerts, { Alerts } from 'hooks/UseAlerts';
-import { getCardColorClass } from 'utils/Util';
 import TagInput from 'components/TagInput';
+import withAutocard from 'components/WithAutocard';
+import CubeContext from 'contexts/CubeContext';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
+import { cardCmc, cardColorIdentity, cardFinish, cardStatus, cardTags, cardType, normalizeName } from 'utils/Card';
+import { getLabels, sortDeep } from 'utils/Sort';
+import { getCardColorClass } from 'utils/Util';
 
 const colorCombos = [
   'C',

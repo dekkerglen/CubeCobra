@@ -1,19 +1,19 @@
 import React from 'react';
+import { Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
+import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
+import RenderToRoot from 'components/RenderToRoot';
 import TopCardsTable from 'components/TopCardsTable';
-import { Row, Col } from 'reactstrap';
-import ButtonLink from 'components/ButtonLink';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-
 import { CubeContextProvider } from 'contexts/CubeContext';
+import MainLayout from 'layouts/MainLayout';
 
 const TopCardsPage = ({ loginCallback }) => {
   return (
-    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
+    <CubeContextProvider initialCube={{ defaultSorts: [], owner: {} }} cards={{ mainboard: [], maybeboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
         <div className="usercontrols pt-3 mb-3">
           <Row className="pb-3 me-1">

@@ -1,15 +1,15 @@
 import React from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import CubePreview from 'components/CubePreview';
-import UserPreview from 'components/UserPreview';
 import Banner from 'components/Banner';
+import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import UserPreview from 'components/UserPreview';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

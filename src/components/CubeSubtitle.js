@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
-import CubeContext from 'contexts/CubeContext';
 
+import CubeContext from 'contexts/CubeContext';
 import { getCubeDescription } from 'utils/Util';
 
 const CubeSubtitle = () => {

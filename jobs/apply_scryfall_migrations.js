@@ -1,15 +1,15 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
 const carddb = require('../serverjs/carddb');
 const Cube = require('../dynamo/models/cube');
 const _ = require('lodash');
 
-const lastRun = new Date("2000-01-01");
+const lastRun = new Date('2000-01-01');
 
 const getMigrations = async () => {
   let page = 1;
   let migrations = [];
   let hasMore = true;
-  let nextPage= `https://api.scryfall.com/migrations?page=1`
+  let nextPage = `https://api.scryfall.com/migrations?page=1`;
 
   while (hasMore) {
     console.log(`Fetching page ${page}, currently at ${migrations.length} migrations`);
@@ -29,7 +29,7 @@ const getMigrations = async () => {
     }
 
     // wait 50ms between requests
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     page += 1;
   }
@@ -45,8 +45,8 @@ const getMigrations = async () => {
   console.log(`Found ${migrations.length} migrations to apply`);
 
   const toDelete = migrations
-    .filter(migration => migration.migration_strategy === 'delete')
-    .map(migration => migration.old_scryfall_id);
+    .filter((migration) => migration.migration_strategy === 'delete')
+    .map((migration) => migration.old_scryfall_id);
 
   const toUpdate = {};
 
@@ -69,13 +69,12 @@ const getMigrations = async () => {
   console.log(toUpdate);
 
   const applyMigration = async (cube) => {
-
     try {
       const cards = await Cube.getCards(cube.id);
       let changed = false;
 
       // for each board in cards
-      for (const [board, list] of Object.entries(cards)) {
+      for (const [, list] of Object.entries(cards)) {
         // if list is an array
         if (Array.isArray(list)) {
           // for each card in list
@@ -105,12 +104,11 @@ const getMigrations = async () => {
 
       // update cube
       await Cube.updateCards(cube.id, cards);
-    }
-    catch (err) {
+    } catch (err) {
       console.log(`Error processing cube ${cube.id}`);
       console.error(err);
     }
-  }
+  };
 
   // scan cubes
   let lastKey = null;
@@ -125,14 +123,12 @@ const getMigrations = async () => {
     const batches = _.chunk(result.items, 25);
 
     for (const batch of batches) {
-      await Promise.all(
-        batch.map(applyMigration)
-      );
+      await Promise.all(batch.map(applyMigration));
 
       i += 1;
       console.log(`Processed batch ${i}: ${batch.length} cubes`);
     }
   } while (lastKey);
-    
+
   process.exit();
 })();

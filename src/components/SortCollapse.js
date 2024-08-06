@@ -1,11 +1,11 @@
 import React, { useContext, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { Button, Col, Collapse, Container, Input, Row } from 'reactstrap';
 
-import { SORTS, ORDERED_SORTS } from 'utils/Sort';
+import PropTypes from 'prop-types';
 
-import CubeContext from 'contexts/CubeContext';
 import Tooltip from 'components/Tooltip';
+import CubeContext from 'contexts/CubeContext';
+import { ORDERED_SORTS, SORTS } from 'utils/Sort';
 
 const SortCollapse = ({ isOpen }) => {
   const {

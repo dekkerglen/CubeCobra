@@ -1,12 +1,12 @@
 import React from 'react';
+import { Card, CardBody, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, CardBody } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
 import ButtonLink from 'components/ButtonLink';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const AdminDashboardPage = ({ loginCallback, noticeCount, contentInReview }) => (
   <MainLayout loginCallback={loginCallback}>

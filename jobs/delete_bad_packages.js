@@ -1,4 +1,3 @@
-
 const Package = require('../dynamo/models/package');
 const carddb = require('../serverjs/carddb');
 
@@ -8,7 +7,7 @@ const carddb = require('../serverjs/carddb');
   let lastKey = null;
 
   do {
-    console.log("Scanning..." , lastKey);
+    console.log('Scanning...', lastKey);
     const result = await Package.scan(lastKey);
     lastKey = result.lastKey;
 
@@ -29,13 +28,12 @@ const carddb = require('../serverjs/carddb');
       });
     });
 
-
     if (items.length > 0) {
       console.log(`Found ${items.length} bad packages.`);
 
       await Package.batchDelete(items.map((item) => ({ id: item.id })));
     }
   } while (lastKey);
-    
+
   process.exit();
 })();

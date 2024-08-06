@@ -1,14 +1,12 @@
 import React, { useCallback, useState } from 'react';
-
-import CubePropType from 'proptypes/CubePropType';
-import Username from 'components/Username';
-
 import { Card } from 'reactstrap';
 
-import AspectRatioBox from 'components/AspectRatioBox';
+import CubePropType from 'proptypes/CubePropType';
 
-import { getCubeDescription, getCubeId } from 'utils/Util';
+import AspectRatioBox from 'components/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
+import Username from 'components/Username';
+import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const CubePreview = ({ cube }) => {
   const [hover, setHover] = useState(false);

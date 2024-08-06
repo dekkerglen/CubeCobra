@@ -1,20 +1,21 @@
 import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
 
-import CubeContext from 'contexts/CubeContext';
-import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+
 import CubeListNavbar from 'components/CubeListNavbar';
 import CurveView from 'components/CurveView';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import ListView from 'components/ListView';
+import RenderToRoot from 'components/RenderToRoot';
 import TableView from 'components/TableView';
 import VisualSpoiler from 'components/VisualSpoiler';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
+import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import useQueryParam from 'hooks/useQueryParam';
-import CubePropType from 'proptypes/CubePropType';
 
 const CubeListPageRaw = () => {
   const { changedCards, filter } = useContext(CubeContext);

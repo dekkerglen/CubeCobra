@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { InputGroup, InputGroupText } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 const TextBadge = ({ name, className, children, fill }) => (
   <InputGroup size="sm" className={className ? `w-auto ${className}` : 'w-auto'}>

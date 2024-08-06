@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
-import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
-
+import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
-import useQueryParam from 'hooks/useQueryParam';
-import { SORTS, sortIntoGroups } from 'utils/Sort';
-import AsfanDropdown from 'components/AsfanDropdown';
 import { calculateAsfans } from 'drafting/createdraft';
-import CubePropType from 'proptypes/CubePropType';
+import useQueryParam from 'hooks/useQueryParam';
+import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Asfans = ({ cards, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color');

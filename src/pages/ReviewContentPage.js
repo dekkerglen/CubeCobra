@@ -1,12 +1,12 @@
 import React from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 import ButtonLink from 'components/ButtonLink';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import MainLayout from 'layouts/MainLayout';
 
 const ReviewContentPage = ({ loginCallback, content }) => {
   return (

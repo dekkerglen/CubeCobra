@@ -6,7 +6,7 @@ import { fromEntries } from 'utils/Util';
 
 export const matchingCards = (cards, filter) => {
   if (filter) {
-    return cards.filter(filter);
+    return cards.filter(filter.fn);
   }
   return cards;
 };
@@ -245,6 +245,7 @@ export const createDraft = (format, cubeCards, seats, user, botsOnly = false, se
   draft.initial_state = draft.initial_state.map((packs) =>
     packs.map(({ cards, ...pack }) => ({
       ...pack,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       cards: cards.map(({ details: _, ...card }) => {
         card.index = draft.cards.length;
         draft.cards.push(card);

@@ -1,7 +1,7 @@
 import React from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
-import { Row, Col, Card, CardHeader, CardBody } from 'reactstrap';
-import RenderToRoot from 'utils/RenderToRoot';
+import RenderToRoot from 'components/RenderToRoot';
 
 const DownTimePage = () => (
   <Col xs="12" md="8" xl="5" style={{ margin: 'auto' }}>

@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { Input, InputGroup, InputGroupText } from 'reactstrap';
 
-import { InputGroup, InputGroupText, Input } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 const SelectField = ({ name, humanName, value, onChange, options, ...props }) => (
   <InputGroup className="mb-3" {...props}>

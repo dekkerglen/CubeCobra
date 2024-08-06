@@ -1,9 +1,8 @@
-import PropTypes from 'prop-types';
-
 import React from 'react';
-import { ClippyIcon } from '@primer/octicons-react';
+import { Button, Input, InputGroup, Modal, ModalBody, ModalHeader } from 'reactstrap';
 
-import { Modal, ModalHeader, ModalBody, InputGroup, Input, Button } from 'reactstrap';
+import { PasteIcon } from '@primer/octicons-react';
+import PropTypes from 'prop-types';
 
 const ShareCommentModal = ({ domain, comment, isOpen, toggle }) => {
   return (
@@ -17,7 +16,7 @@ const ShareCommentModal = ({ domain, comment, isOpen, toggle }) => {
             onClick={() => navigator.clipboard.writeText(`https://${domain}/comment/${comment.id}`)}
             aria-label="Copy short ID"
           >
-            <ClippyIcon size={16} />
+            <PasteIcon size={16} />
           </Button>
         </InputGroup>
       </ModalBody>

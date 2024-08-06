@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { findUserLinks } from 'markdown/parser';
 import { Button, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
-import CSRFForm from 'components/CSRFForm';
-import TextEntry from 'components/TextEntry';
+
 import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
+
+import CSRFForm from 'components/CSRFForm';
+import TextEntry from 'components/TextEntry';
+import { findUserLinks } from 'markdown/parser';
 
 const EditBlogModal = ({ isOpen, toggle, post, cubeID }) => {
   const [mentions, setMentions] = useState('');

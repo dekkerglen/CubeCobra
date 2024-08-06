@@ -309,19 +309,19 @@ router.get('/download/topdecked/:id/:seat', async (req, res) => {
       for (const col of row) {
         for (const cardIndex of col) {
           const card = deck.cards[cardIndex];
-          const oracle_id = `${card.details.oracle_id}`;
-          if (main[oracle_id]) {
-            main[oracle_id] += 1;
+          const oracleId = `${card.details.oracleId}`;
+          if (main[oracleId]) {
+            main[oracleId] += 1;
           } else {
-            main[oracle_id] = 1;
-            mainCardID[oracle_id] = `${card.cardID}`;
-            mainCardName[oracle_id] = `${card.details.name}`;
+            main[oracleId] = 1;
+            mainCardID[oracleId] = `${card.cardID}`;
+            mainCardName[oracleId] = `${card.details.name}`;
           }
         }
       }
     }
-    for (const [oracle_id, value] of Object.entries(main)) {
-      res.write(`${value},"${mainCardName[oracle_id]}",${mainCardID[oracle_id]},main\r\n`);
+    for (const [oracleId, value] of Object.entries(main)) {
+      res.write(`${value},"${mainCardName[oracleId]}",${mainCardID[oracleId]},main\r\n`);
     }
 
     const side = {};
@@ -331,19 +331,19 @@ router.get('/download/topdecked/:id/:seat', async (req, res) => {
       for (const col of row) {
         for (const cardIndex of col) {
           const card = deck.cards[cardIndex];
-          const oracle_id = `${card.details.oracle_id}`;
-          if (side[oracle_id]) {
-            side[oracle_id] += 1;
+          const oracleId = `${card.details.oracleId}`;
+          if (side[oracleId]) {
+            side[oracleId] += 1;
           } else {
-            side[oracle_id] = 1;
-            sideCardID[oracle_id] = `${card.cardID}`;
-            sideCardName[oracle_id] = `${card.details.name}`;
+            side[oracleId] = 1;
+            sideCardID[oracleId] = `${card.cardID}`;
+            sideCardName[oracleId] = `${card.details.name}`;
           }
         }
       }
     }
-    for (const [oracle_id, value] of Object.entries(side)) {
-      res.write(`${value},"${sideCardName[oracle_id]}",${sideCardID[oracle_id]},side\r\n`);
+    for (const [oracleId, value] of Object.entries(side)) {
+      res.write(`${value},"${sideCardName[oracleId]}",${sideCardID[oracleId]},side\r\n`);
     }
 
     return res.end();
@@ -365,7 +365,7 @@ router.delete('/deletedeck/:id', ensureAuth, async (req, res) => {
 
     req.flash('success', 'Deck Deleted');
     return res.send('Success');
-  } catch (err) {
+  } catch {
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting deck.',

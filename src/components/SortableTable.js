@@ -1,6 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 import { CSVLink } from 'react-csv';
 
 import HeaderCell from 'components/HeaderCell';
@@ -16,6 +17,7 @@ export const valueRenderer = (value) => {
 
 export const compareStrings = (a, b) => a?.toString?.()?.localeCompare?.(b?.toString?.());
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, totalRow, totalCol, ...props }) => {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
@@ -65,7 +67,7 @@ export const SortableTable = ({ data, defaultSortConfig, sortFns, columnProps, t
         </thead>
         <tbody className="breakdown">
           {items.map((row, idx) => (
-            <tr key={`row-${idx}` /* eslint-disable-line react/no-array-index-key */}>
+            <tr key={`row-${idx}`}>
               {columnProps.map(({ key, heading, renderFn }) =>
                 heading ? (
                   <th scope="row" key={key}>

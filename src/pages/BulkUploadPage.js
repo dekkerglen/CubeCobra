@@ -1,20 +1,19 @@
-import React, { useCallback, useRef, useState, useContext } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
+import { Card, CardBody, CardHeader, Col, Label, Row, UncontrolledAlert } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import useMount from 'hooks/UseMount';
-
-import { Col, Label, Row, Card, CardBody, CardHeader, UncontrolledAlert } from 'reactstrap';
-
-import useLocalStorage from 'hooks/useLocalStorage';
-import CubeContext from 'contexts/CubeContext';
 import AutocompleteInput from 'components/AutocompleteInput';
 import Changelist from 'components/Changelist';
+import DynamicFlash from 'components/DynamicFlash';
 import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
+import RenderToRoot from 'components/RenderToRoot';
+import CubeContext from 'contexts/CubeContext';
+import useLocalStorage from 'hooks/useLocalStorage';
+import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
-import DynamicFlash from 'components/DynamicFlash';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
@@ -75,7 +74,7 @@ const BulkUploadPageRaw = ({ missing, added }) => {
         <Row>
           <Col>
             {missing.map((card, index) => (
-              <p key={/* eslint-disable-line react/no-array-index-key */ index}>{card}</p>
+              <p key={index}>{card}</p>
             ))}
           </Col>
           <Col>

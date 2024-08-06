@@ -1,9 +1,8 @@
-import React, { useContext, useState, useCallback } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Input } from 'reactstrap';
 
-import CubeContext from 'contexts/CubeContext';
 import LabelRow from 'components/LabelRow';
-
-import { Card, CardBody, CardHeader, CardTitle, Input, CardFooter, Button } from 'reactstrap';
+import CubeContext from 'contexts/CubeContext';
 
 const SamplePackCard = (props) => {
   const { cube } = useContext(CubeContext);

@@ -1,25 +1,25 @@
 import React, { useContext } from 'react';
+import { Button, Card, CardBody, CardFooter, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
 
-import UserContext from 'contexts/UserContext';
-import CubePreview from 'components/CubePreview';
 import ArticlePreview from 'components/ArticlePreview';
-import DeckPreview from 'components/DeckPreview';
-import VideoPreview from 'components/VideoPreview';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import Banner from 'components/Banner';
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import withModal from 'components/WithModal';
 import CreateCubeModal from 'components/CreateCubeModal';
-import Feed from 'components/Feed';
-
-import { Button, Card, Col, Row, CardHeader, CardBody, CardFooter } from 'reactstrap';
+import CubePreview from 'components/CubePreview';
 import CubesCard from 'components/CubesCard';
+import DeckPreview from 'components/DeckPreview';
+import DynamicFlash from 'components/DynamicFlash';
+import Feed from 'components/Feed';
+import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import RenderToRoot from 'components/RenderToRoot';
+import VideoPreview from 'components/VideoPreview';
+import withModal from 'components/WithModal';
+import UserContext from 'contexts/UserContext';
+import MainLayout from 'layouts/MainLayout';
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 

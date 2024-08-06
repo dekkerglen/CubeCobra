@@ -1,15 +1,13 @@
-import React, { useState, useContext, useCallback } from 'react';
-import PropTypes from 'prop-types';
-
-import InfiniteScroll from 'react-infinite-scroll-component';
+import React, { useCallback, useContext, useState } from 'react';
 import { Spinner } from 'reactstrap';
 
-import BlogPost from 'components/BlogPost';
-import { csrfFetch } from 'utils/CSRF';
-
+import PropTypes from 'prop-types';
 import BlogPostPropType from 'proptypes/BlogPostPropType';
-import UserContext from 'contexts/UserContext';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
+import BlogPost from 'components/BlogPost';
+import UserContext from 'contexts/UserContext';
+import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
 const Feed = ({ items, lastKey }) => {

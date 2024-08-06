@@ -1,32 +1,31 @@
-import React, { useState, useContext, useCallback } from 'react';
-import PropTypes from 'prop-types';
-
+import React, { useCallback, useContext, useState } from 'react';
 import {
-  Spinner,
+  Button,
   Card,
   CardBody,
-  Row,
   Col,
-  Nav,
-  UncontrolledAlert,
-  Button,
+  Input,
   InputGroup,
   InputGroupText,
-  Input,
+  Nav,
   NavItem,
   NavLink,
+  Row,
+  Spinner,
+  UncontrolledAlert,
 } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
-
-import UserContext from 'contexts/UserContext';
-import DynamicFlash from 'components/DynamicFlash';
-import MainLayout from 'layouts/MainLayout';
+import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
+
 import Banner from 'components/Banner';
-import CreatePackageModal from 'components/CreatePackageModal';
-import withModal from 'components/WithModal';
 import CardPackage from 'components/CardPackage';
+import CreatePackageModal from 'components/CreatePackageModal';
+import DynamicFlash from 'components/DynamicFlash';
+import withModal from 'components/WithModal';
+import UserContext from 'contexts/UserContext';
+import MainLayout from 'layouts/MainLayout';
+import { csrfFetch } from 'utils/CSRF';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -154,7 +153,7 @@ const PackagesPage = ({ loginCallback, items, lastKey, activePage }) => {
       <Banner />
       <DynamicFlash />
       {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
+        <UncontrolledAlert color={color} key={index}>
           {message}
         </UncontrolledAlert>
       ))}
@@ -250,7 +249,7 @@ const PackagesPage = ({ loginCallback, items, lastKey, activePage }) => {
                 <InfiniteScroll
                   dataLength={packages.length}
                   next={fetchMoreData}
-                  hasMore={currentLastKey != null}
+                  hasMore={currentLastKey !== null}
                   loader={loader}
                 >
                   {packages.map((pack) => (

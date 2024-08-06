@@ -13,7 +13,7 @@ const updatePodcast = async (podcast) => {
   const feedData = await getFeedData(podcast.url);
 
   const feedEpisodes = await getFeedEpisodes(podcast.url);
-  
+
   let items = [];
   const existingEpisodes = [];
   let lastKey = null;

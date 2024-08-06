@@ -1,8 +1,8 @@
 import React from 'react';
+import { Button, Form, Input } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
-
-import { Button, Form, Input } from 'reactstrap';
 
 import { tcgMassEntryUrl } from 'utils/Affiliate';
 

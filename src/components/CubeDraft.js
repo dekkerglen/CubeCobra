@@ -1,19 +1,18 @@
-/* eslint-disable no-await-in-loop */
 import React, { useCallback, useContext, useEffect } from 'react';
+import { Card } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
-import useMount from 'hooks/UseMount';
-import Pack from 'components/Pack';
-import DndProvider from 'components/DndProvider';
+
 import DeckStacks from 'components/DeckStacks';
-import { makeSubtitle } from 'utils/Card';
-import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
-import { setupPicks, getCardCol, draftStateToTitle } from 'drafting/draftutil';
+import DndProvider from 'components/DndProvider';
+import Pack from 'components/Pack';
 import AutocardContext from 'contexts/AutocardContext';
-
+import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
+import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
+import useMount from 'hooks/UseMount';
+import { makeSubtitle } from 'utils/Card';
 import { callApi } from 'utils/CSRF';
-
-import { Card } from 'reactstrap';
 
 const fetchPicks = async (draft, seat) => {
   const res = await callApi('/multiplayer/getpicks', {
@@ -110,14 +109,14 @@ const CubeDraft = ({ draft, socket }) => {
 
           console.log(json);
 
-          if (json.picks == 0) {
+          if (json.picks === 0) {
             await new Promise((resolve) => setTimeout(resolve, 5000));
             continue;
           }
         }
       } catch (e) {
         console.error(e);
-      }      
+      }
     }
   };
 

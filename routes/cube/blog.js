@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 const express = require('express');
 
 const { ensureAuth } = require('../middleware');
@@ -137,7 +136,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
 
     req.flash('success', 'Post Removed');
     return res.send('Success');
-  } catch (err) {
+  } catch {
     return res.status(500).send({
       success: 'false',
       message: 'Error deleting post.',

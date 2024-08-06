@@ -1,8 +1,9 @@
 import React, { useContext } from 'react';
+
 import PropTypes from 'prop-types';
 
-import UserContext from 'contexts/UserContext';
 import Advertisment from 'components/Advertisment';
+import UserContext from 'contexts/UserContext';
 
 const SideBanner = ({ placementId }) => {
   const user = useContext(UserContext);

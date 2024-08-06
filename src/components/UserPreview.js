@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
-
 import { Card } from 'reactstrap';
 
+import PropTypes from 'prop-types';
+
 import AspectRatioBox from 'components/AspectRatioBox';
-import Username from 'components/Username';
 import MtgImage from 'components/MtgImage';
+import Username from 'components/Username';
 
 const UserPreview = ({ user }) => {
   const [hover, setHover] = useState(false);

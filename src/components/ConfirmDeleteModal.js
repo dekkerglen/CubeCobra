@@ -1,8 +1,7 @@
-import PropTypes from 'prop-types';
-
 import React from 'react';
+import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import { Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 const ConfirmDeleteModal = ({ isOpen, toggle, text, submitDelete }) => {
   return (

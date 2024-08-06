@@ -1,17 +1,17 @@
 import React, { useCallback, useMemo } from 'react';
-import PropTypes from 'prop-types';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
-import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { SortableTable, compareStrings, valueRenderer } from 'components/SortableTable';
-import useQueryParam from 'hooks/useQueryParam';
-import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
-import { SORTS, cardCanBeSorted, sortGroupsOrdered } from 'utils/Sort';
-import { fromEntries } from 'utils/Util';
+import { compareStrings, SortableTable, valueRenderer } from 'components/SortableTable';
 import { calculateAsfans } from 'drafting/createdraft';
+import useQueryParam from 'hooks/useQueryParam';
+import { cardCanBeSorted, sortGroupsOrdered, SORTS } from 'utils/Sort';
+import { fromEntries } from 'utils/Util';
 
 const sortWithTotal = (pool, sort) =>
   [...sortGroupsOrdered(pool, sort), ['Total', pool]].map(([label, cards]) => [

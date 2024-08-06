@@ -1,5 +1,5 @@
-import syntax from 'markdown/centering/micromark-centering';
 import { fromMarkdown } from 'markdown/centering/mdast-centering';
+import syntax from 'markdown/centering/micromark-centering';
 import { add } from 'markdown/utils';
 
 function centering() {

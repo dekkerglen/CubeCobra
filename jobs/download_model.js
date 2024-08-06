@@ -14,7 +14,6 @@ const downloadFromS3 = async () => {
 
   // for each file, download it to the local model directory
   for (const file of listResult.Contents) {
-    // eslint-disable-next-line no-await-in-loop
     const res = await s3.getObject({ Bucket: process.env.DATA_BUCKET, Key: file.Key }).promise();
 
     // make sure folders exist

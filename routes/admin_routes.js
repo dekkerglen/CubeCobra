@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
@@ -187,8 +186,6 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   const report = await Notice.getById(req.params.id);
   const comment = await Comment.getById(report.subject);
 
-  console.log(report);
-
   report.status = Notice.STATUS.PROCESSED;
   await Notice.put(report);
 
@@ -197,7 +194,6 @@ router.get('/removecomment/:id', ensureAdmin, async (req, res) => {
   // the -1000 is to prevent weird time display error
   comment.date = Date.now() - 1000;
   await Comment.put(comment);
-  
 
   req.flash('success', 'This comment has been deleted.');
   return res.redirect('/admin/notices');
@@ -308,7 +304,7 @@ router.get('/featuredcubes', ensureAdmin, async (req, res) => {
 router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
   const queue = await FeaturedQueue.querySortedByDate();
   const { items } = queue;
-  
+
   const rotate = await fq.rotateFeatured(items);
   for (const message of rotate.messages) {
     req.flash('danger', message);

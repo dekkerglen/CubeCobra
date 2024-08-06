@@ -40,7 +40,7 @@ router.post('/submitapplication', ensureAuth, async (req, res) => {
 
     req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');
     return render(req, res, 'ApplicationPage');
-  } catch (err) {
+  } catch {
     req.flash('danger', 'Please log in to apply to be a content creator partner.');
     return render(req, res, 'ApplicationPage');
   }
@@ -142,7 +142,6 @@ router.get('/v/:id', (req, res) => {
 });
 
 router.get('/article/:id', async (req, res) => {
-
   const article = await Content.getById(req.params.id);
 
   if (!article) {
@@ -189,7 +188,6 @@ router.get('/podcast/:id', async (req, res) => {
   let episodes = result.items.filter((item) => item.podcast === podcast.id);
 
   while (result.lastKey) {
-    // eslint-disable-next-line no-await-in-loop
     result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED, result.lastKey);
     episodes = [...episodes, ...result.items.filter((item) => item.podcast === podcast.id)];
   }

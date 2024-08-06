@@ -61,7 +61,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         patron: req.user && (req.user.roles || []).includes('Patron'),
         notice: process.env.NOTICE,
       });
-    } catch (err) {
+    } catch {
       res.status(500).send('Error rendering page');
     }
   });

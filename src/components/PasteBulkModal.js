@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
+import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Input, Modal, ModalBody, ModalFooter, ModalHeader, Button } from 'reactstrap';
-
-import CubeContext from 'contexts/CubeContext';
 import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'contexts/CubeContext';
 
 const PasteBulkModal = ({ isOpen, toggle }) => {
   const { cube } = useContext(CubeContext);

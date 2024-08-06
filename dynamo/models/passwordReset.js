@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 
 const FIELDS = {
@@ -19,7 +19,7 @@ const client = createClient({
 module.exports = {
   getById: async (id) => (await client.get(id)).Item,
   put: async (document) => {
-    const id = document[FIELDS.ID] || uuid();
+    const id = document[FIELDS.ID] || uuid.v4();
     await client.put({
       [FIELDS.ID]: id,
       [FIELDS.OWNER]: document[FIELDS.OWNER],

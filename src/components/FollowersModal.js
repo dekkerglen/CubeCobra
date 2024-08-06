@@ -1,10 +1,10 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { Col, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
 
-import UserPreview from 'components/UserPreview';
+import PropTypes from 'prop-types';
 import UserPropType from 'proptypes/UserPropType';
+
+import UserPreview from 'components/UserPreview';
 
 const FollowersModal = ({ followers, isOpen, toggle }) => (
   <Modal size="lg" isOpen={isOpen} toggle={toggle}>

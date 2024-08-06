@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
 import { Button, Spinner } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 const LoadingButton = ({ onClick, loading, block, outline, color, children }) => {
   const [stateLoading, setLoading] = useState(false);

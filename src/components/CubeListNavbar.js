@@ -1,37 +1,37 @@
 import React, { useCallback, useContext, useState } from 'react';
-import PropTypes from 'prop-types';
-
 import {
   Button,
-  Collapse,
   Col,
+  Collapse,
   Container,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
   Form,
+  FormGroup,
   Input,
   Nav,
-  NavItem,
-  NavLink,
   Navbar,
   NavbarToggler,
+  NavItem,
+  NavLink,
   UncontrolledDropdown,
-  FormGroup,
 } from 'reactstrap';
 
-import CubeContext from 'contexts/CubeContext';
-import DisplayContext from 'contexts/DisplayContext';
+import { QuestionIcon } from '@primer/octicons-react';
+import PropTypes from 'prop-types';
+
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
+import PasteBulkModal from 'components/PasteBulkModal';
 import SortCollapse from 'components/SortCollapse';
 import TagColorsModal from 'components/TagColorsModal';
-import withModal from 'components/WithModal';
-import { QuestionIcon } from '@primer/octicons-react';
-import PasteBulkModal from 'components/PasteBulkModal';
+import Tooltip from 'components/Tooltip';
 import UploadBulkModal from 'components/UploadBulkModal';
 import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
-import Tooltip from 'components/Tooltip';
+import withModal from 'components/WithModal';
+import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);

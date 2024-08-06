@@ -1,15 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Card, CardHeader, Col, Row, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-
-import { Row, Col, Spinner, Card, CardHeader } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
-import PodcastPreview from 'components/PodcastPreview';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
 import InfiniteScroll from 'react-infinite-scroll-component';
+
 import Banner from 'components/Banner';
+import DynamicFlash from 'components/DynamicFlash';
+import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import PodcastPreview from 'components/PodcastPreview';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
 
@@ -63,7 +63,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
         </Row>
       </Card>
       <h4>Podcast Episodes</h4>
-      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+      <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((episode) => (
             <Col className="mb-3" xs="12" sm="6" lg="4">

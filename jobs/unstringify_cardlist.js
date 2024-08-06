@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 const fs = require('fs');

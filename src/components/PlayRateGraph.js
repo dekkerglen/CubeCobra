@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import useQueryParam from 'hooks/useQueryParam';
-// eslint-disable-next-line no-unused-vars
+import React, { useCallback, useMemo, useState } from 'react';
+import { Col, Input, InputGroup, InputGroupText, Row, Spinner } from 'reactstrap';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Chart as ChartJS } from 'chart.js/auto';
+import PropTypes from 'prop-types';
 import { Chart } from 'react-chartjs-2';
+
+import useQueryParam from 'hooks/useQueryParam';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDate } from 'utils/Date';
-
-import { InputGroup, InputGroupText, Input, Row, Col, Spinner } from 'reactstrap';
 
 const PlayRateGraph = ({ defaultHistories, cardId }) => {
   const [cubeType, setCubeType] = useQueryParam('cubeType', 'total');

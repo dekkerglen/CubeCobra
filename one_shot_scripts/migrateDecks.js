@@ -67,7 +67,7 @@ const query = {};
     for (const [deck, draft, type] of withDraft) {
       try {
         converted.push(draftModel.convertDeck(deck, draft, type));
-      } catch (err) {
+      } catch {
         failed.push({ deck: deck._id, draft: draft._id, type });
       }
     }

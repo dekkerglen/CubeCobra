@@ -1,14 +1,13 @@
 /* eslint-disable react/prop-types */
-import React, { useContext, useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import { Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { Col, Input, Label, Modal, ModalBody, ModalHeader, Row, ModalFooter } from 'reactstrap';
 
-import { arrayMove, getTagColorClass } from 'utils/Util';
-import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
-
-import { csrfFetch } from 'utils/CSRF';
 import LoadingButton from 'components/LoadingButton';
+import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
+import { csrfFetch } from 'utils/CSRF';
+import { arrayMove, getTagColorClass } from 'utils/Util';
 
 const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
 

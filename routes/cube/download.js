@@ -1,5 +1,4 @@
 const express = require('express');
-// eslint-disable-next-line import/no-unresolved
 
 const sortutil = require('../../dist/utils/Sort');
 const filterutil = require('../../dist/filtering/FilterCards');

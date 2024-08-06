@@ -1,4 +1,3 @@
-
 const Content = require('../dynamo/models/content');
 
 (async () => {
@@ -39,8 +38,8 @@ const Content = require('../dynamo/models/content');
   }
 
   console.log(`Found ${episodesToDelete.length} bad episodes.`);
-  
+
   await Content.batchDelete(episodesToDelete.map((item) => ({ id: item.id })));
-    
+
   process.exit();
 })();

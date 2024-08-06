@@ -1,11 +1,12 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Card, CardBody, CardHeader, CardTitle, Col, Row, Spinner } from 'reactstrap';
 
-import DraggableCard from 'components/DraggableCard';
-import DraftLocation from 'drafting/DraftLocation';
+import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
+
+import DraggableCard from 'components/DraggableCard';
 import FoilCardImage from 'components/FoilCardImage';
+import DraftLocation from 'drafting/DraftLocation';
 
 const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;

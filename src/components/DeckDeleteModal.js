@@ -1,10 +1,9 @@
-import PropTypes from 'prop-types';
-
 import React from 'react';
 
-import { csrfFetch } from 'utils/CSRF';
+import PropTypes from 'prop-types';
 
 import ConfirmDeleteModal from 'components/ConfirmDeleteModal';
+import { csrfFetch } from 'utils/CSRF';
 
 const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
   const confirm = async () => {

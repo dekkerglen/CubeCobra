@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
+import { Card, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
-import { CardHeader, Card } from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
+import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import Podcast from 'components/Podcast';
-import ButtonLink from 'components/ButtonLink';
+import RenderToRoot from 'components/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const PodcastPage = ({ loginCallback, podcast, episodes }) => {
   const user = useContext(UserContext);

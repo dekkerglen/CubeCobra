@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 const carddb = require('../../serverjs/carddb');
 const { getObject, putObject } = require('../s3client');
@@ -103,7 +103,7 @@ const assessColors = (mainboard, cards) => {
 const getCards = async (id) => {
   try {
     return getObject(process.env.DATA_BUCKET, `cardlist/${id}.json`);
-  } catch (e) {
+  } catch {
     return [];
   }
 };
@@ -117,7 +117,7 @@ const addDetails = (cards) => {
   if (typeof cards === 'string') {
     try {
       cards = JSON.parse(cards);
-    } catch (e) {
+    } catch {
       return [];
     }
   }
@@ -140,7 +140,7 @@ const stripDetails = (cards) => {
 const getSeats = async (id) => {
   try {
     return getObject(process.env.DATA_BUCKET, `seats/${id}.json`);
-  } catch (e) {
+  } catch {
     return {};
   }
 };
@@ -423,7 +423,7 @@ module.exports = {
     };
   },
   put: async (document) => {
-    const id = document.id || uuid();
+    const id = document.id || uuid.v4();
 
     const names = document.seats.map((seat) => assessColors(seat.mainboard, document.cards).join(''));
 

@@ -1,14 +1,14 @@
 import React from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
+import TimeAgo from 'react-timeago';
 
-import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
-
+import ButtonLink from 'components/ButtonLink';
 import DynamicFlash from 'components/DynamicFlash';
 import Paginate from 'components/Paginate';
-import ButtonLink from 'components/ButtonLink';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import TimeAgo from 'react-timeago';
 
 const PAGE_SIZE = 24;
 

@@ -350,7 +350,7 @@ router.get('/cardimage/:id', async (req, res) => {
     }
 
     return res.redirect(card.image_normal);
-  } catch (err) {
+  } catch {
     return res.redirect('/content/default_card.png');
   }
 });

@@ -1,12 +1,6 @@
-import React, { useEffect, useMemo, useCallback, useContext } from 'react';
-import PropTypes from 'prop-types';
-
-import AddToCubeModal from 'components/AddToCubeModal';
-import withAutocard from 'components/WithAutocard';
-import withModal from 'components/WithModal';
-import CubePropType from 'proptypes/CubePropType';
-import { encodeName } from 'utils/Card';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -16,11 +10,18 @@ import {
   ListGroupItem,
   ListGroupItemHeading,
   Row,
-  Button,
 } from 'reactstrap';
-import useToggle from 'hooks/UseToggle';
-import { csrfFetch } from 'utils/CSRF';
+
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
+
+import AddToCubeModal from 'components/AddToCubeModal';
+import withAutocard from 'components/WithAutocard';
+import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
+import useToggle from 'hooks/UseToggle';
+import { encodeName } from 'utils/Card';
+import { csrfFetch } from 'utils/CSRF';
 
 const AutocardA = withAutocard('a');
 const AddModal = withModal(AutocardA, AddToCubeModal);
@@ -95,8 +96,9 @@ function Suggestions() {
   const [cutCards, setCutCards] = React.useState([]);
   const [cutsLoading, setCutsLoading] = React.useState(true);
 
-  const addsInMaybe = useMemo(() =>
-    addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id)),
+  const addsInMaybe = useMemo(
+    () => addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id)),
+    [addCards, cube],
   );
 
   useEffect(() => {
@@ -122,7 +124,7 @@ function Suggestions() {
       setAddsLoading(false);
     };
     run();
-  }, [filterInput]);
+  }, [cube.id, filterInput]);
 
   useEffect(() => {
     const run = async () => {
@@ -146,7 +148,7 @@ function Suggestions() {
       setCutsLoading(false);
     };
     run();
-  }, [filterInput]);
+  }, [cube.id, filterInput]);
 
   const loadMoreAdds = useCallback(async () => {
     setAddsLoading(true);
@@ -166,7 +168,7 @@ function Suggestions() {
     const json = await res.json();
     setAddCards([...addCards, ...json.adds]);
     setAddsLoading(false);
-  }, [addCards]);
+  }, [addCards, cube.id, filterInput]);
 
   const cardsToUse = maybeOnly ? addsInMaybe : addCards;
   const reversedCuts = [...cutCards].reverse();
@@ -213,7 +215,7 @@ function Suggestions() {
               <ListGroup className="pb-3">
                 {cardsToUse.length > 0 &&
                   cardsToUse.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} cube={cube} />)}
-                {!addsLoading && cardsToUse.length == 0 && (
+                {!addsLoading && cardsToUse.length === 0 && (
                   <CardBody>
                     <em>No results with the given filter.</em>
                   </CardBody>
@@ -253,7 +255,7 @@ function Suggestions() {
                   reversedCuts.map((add, index) => (
                     <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
                   ))}
-                {!cutsLoading && cutCards.length == 0 && (
+                {!cutsLoading && cutCards.length === 0 && (
                   <CardBody>
                     <em>No results with the given filter.</em>
                   </CardBody>

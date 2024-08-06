@@ -1,16 +1,31 @@
 import React, { useMemo } from 'react';
-import PropTypes from 'prop-types';
-// eslint-disable-next-line no-unused-vars
-import { Chart as ChartJS } from 'chart.js/auto';
-import { Chart } from 'react-chartjs-2';
-import { Col, Row, InputGroup, Input, InputGroupText } from 'reactstrap';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
-import AsfanDropdown from 'components/AsfanDropdown';
-import useQueryParam from 'hooks/useQueryParam';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Chart as ChartJS } from 'chart.js/auto';
+import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
+import { Chart } from 'react-chartjs-2';
+
+import AsfanDropdown from 'components/AsfanDropdown';
 import { calculateAsfans } from 'drafting/createdraft';
+import useQueryParam from 'hooks/useQueryParam';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
+
+const COLOR_MAP = {
+  White: '#D8CEAB',
+  Blue: '#67A6D3',
+  Black: '#8C7A91',
+  Red: '#D85F69',
+  Green: '#6AB572',
+  Colorless: '#ADADAD',
+  Multicolored: '#DBC467',
+};
+const COLORS = [...Object.values(COLOR_MAP), '#000000'];
+const getColor = (label, index) => {
+  return COLOR_MAP[label] ?? COLORS[index % COLORS.length];
+};
 
 const ChartComponent = ({ cards, characteristics, cube }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
@@ -19,24 +34,6 @@ const ChartComponent = ({ cards, characteristics, cube }) => {
   const [draftFormat, setDraftFormat] = useQueryParam('format', -1);
 
   const groups = sortIntoGroups(cards, sort);
-
-  const colorMap = {
-    White: '#D8CEAB',
-    Blue: '#67A6D3',
-    Black: '#8C7A91',
-    Red: '#D85F69',
-    Green: '#6AB572',
-    Colorless: '#ADADAD',
-    Multicolored: '#DBC467',
-  };
-  const colors = [...Object.values(colorMap), '#000000'];
-
-  const getColor = useMemo(
-    () => (label, index) => {
-      return colorMap[label] ?? colors[index % colors.length];
-    },
-    [colorMap, colors],
-  );
 
   const options = {
     responsive: true,
@@ -101,7 +98,7 @@ const ChartComponent = ({ cards, characteristics, cube }) => {
         borderColor: getColor(key, index),
       })),
     }),
-    [labels, groups, getColor, characteristics, characteristic, asfans],
+    [labels, groups, characteristics, characteristic, asfans],
   );
 
   return (

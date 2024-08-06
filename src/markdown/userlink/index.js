@@ -1,7 +1,8 @@
-import syntax from 'markdown/userlink/micromark-userlink';
+import { visit } from 'unist-util-visit';
+
 import { fromMarkdown } from 'markdown/userlink/mdast-userlink';
+import syntax from 'markdown/userlink/micromark-userlink';
 import { add } from 'markdown/utils';
-import visit from 'unist-util-visit';
 
 function userlink(options = {}) {
   const data = this.data();

@@ -1,14 +1,13 @@
 import React from 'react';
+import { CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
+import AspectRatioBox from 'components/AspectRatioBox';
 import CommentsSection from 'components/CommentsSection';
 import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
-import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
-
-import { CardBody, CardHeader, Row, Col } from 'reactstrap';
 
 const Podcast = ({ podcast, episodes }) => {
   return (

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Button, Card, CardBody, CardHeader, Col, Collapse, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
+
 import CubePreview from 'components/CubePreview';
-import { Col, Row, Card, CardHeader, CardBody, Button, Collapse } from 'reactstrap';
 
 const CubesCard = ({ cubes, title, header, lean, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);

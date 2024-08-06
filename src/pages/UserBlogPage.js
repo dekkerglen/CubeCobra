@@ -1,16 +1,17 @@
-import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React, { useCallback, useState } from 'react';
+import { Spinner } from 'reactstrap';
 
-import UserLayout from 'layouts/UserLayout';
-import BlogPost from 'components/BlogPost';
+import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import DynamicFlash from 'components/DynamicFlash';
+
 import Banner from 'components/Banner';
+import BlogPost from 'components/BlogPost';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
+import UserLayout from 'layouts/UserLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
-import { Spinner } from 'reactstrap';
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -51,7 +52,12 @@ const UserBlogPage = ({ followers, following, posts, owner, loginCallback, lastK
       <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
         <Banner />
         <DynamicFlash />
-        <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey != null} loader={loader}>
+        <InfiniteScroll
+          dataLength={items.length}
+          next={fetchMoreData}
+          hasMore={currentLastKey !== null}
+          loader={loader}
+        >
           {items.length > 0 ? (
             items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (

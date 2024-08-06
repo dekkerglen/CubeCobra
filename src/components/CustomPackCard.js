@@ -16,10 +16,11 @@ import {
   Label,
   UncontrolledDropdown,
 } from 'reactstrap';
+
+import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 
 import useToggle from 'hooks/UseToggle';
-import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 
 const DEFAULT_STEP = Object.freeze([
   { action: 'pick', amount: 1 },
@@ -73,7 +74,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
           <Collapse isOpen={slotsOpen}>
             <CardBody>
               {pack.slots.map((filter, slotIndex) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <InputGroup key={slotIndex} className={slotIndex !== 0 ? 'mt-3' : undefined}>
                   <InputGroupText>{slotIndex + 1}</InputGroupText>
                   <Input
@@ -113,7 +113,6 @@ const CustomPackCard = ({ packIndex, pack, canRemove, mutations }) => {
           <Collapse isOpen={stepsOpen}>
             <CardBody>
               {steps.map((step, stepIndex) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <InputGroup key={stepIndex} className="pb-1">
                   <InputGroupText>{stepIndex + 1}</InputGroupText>
                   <UncontrolledDropdown className="pe-2">

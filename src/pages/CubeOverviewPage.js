@@ -1,13 +1,10 @@
-import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
+  CardHeader,
   Col,
   Nav,
   Navbar,
@@ -19,34 +16,35 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 
-import { LinkExternalIcon, QuestionIcon, EyeClosedIcon } from '@primer/octicons-react';
+import { EyeClosedIcon, LinkExternalIcon, QuestionIcon } from '@primer/octicons-react';
+import PropTypes from 'prop-types';
+import BlogPostPropType from 'proptypes/BlogPostPropType';
+import CardPropType from 'proptypes/CardPropType';
+import CubePropType from 'proptypes/CubePropType';
+import UserPropType from 'proptypes/UserPropType';
 
-import { csrfFetch } from 'utils/CSRF';
-import { getCubeId, getCubeDescription } from 'utils/Util';
-
-import UserContext from 'contexts/UserContext';
 import BlogPost from 'components/BlogPost';
 import CSRFForm from 'components/CSRFForm';
+import CubeIdModal from 'components/CubeIdModal';
 import CubeOverviewModal from 'components/CubeOverviewModal';
 import CubeSettingsModal from 'components/CubeSettingsModal';
+import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
+import DeleteCubeModal from 'components/DeleteCubeModal';
 import DynamicFlash from 'components/DynamicFlash';
 import FollowersModal from 'components/FollowersModal';
+import Markdown from 'components/Markdown';
+import MtgImage from 'components/MtgImage';
+import QRCodeModal from 'components/QRCodeModal';
+import RenderToRoot from 'components/RenderToRoot';
 import TextBadge from 'components/TextBadge';
 import Tooltip from 'components/Tooltip';
-import Markdown from 'components/Markdown';
+import Username from 'components/Username';
 import withModal from 'components/WithModal';
+import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import DeleteCubeModal from 'components/DeleteCubeModal';
-import CustomizeBasicsModal from 'components/CustomizeBasicsModal';
-import CubeIdModal from 'components/CubeIdModal';
-import QRCodeModal from 'components/QRCodeModal';
-import Username from 'components/Username';
-import MtgImage from 'components/MtgImage';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
-import UserPropType from 'proptypes/UserPropType';
-import CardPropType from 'proptypes/CardPropType';
+import { csrfFetch } from 'utils/CSRF';
+import { getCubeDescription, getCubeId } from 'utils/Util';
 
 const FollowersModalLink = withModal('a', FollowersModal);
 const CubeOverviewModalLink = withModal(NavLink, CubeOverviewModal);
@@ -166,7 +164,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
         )}
         <DynamicFlash />
         {alerts.map(({ color, message }, index) => (
-          <UncontrolledAlert color={color} key={/* eslint-disable-line react/no-array-index-key */ index}>
+          <UncontrolledAlert color={color} key={index}>
             {message}
           </UncontrolledAlert>
         ))}

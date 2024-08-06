@@ -1,8 +1,7 @@
-import PropTypes from 'prop-types';
-
 import React from 'react';
+import { Button, Input, InputGroup, InputGroupText, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import { Modal, ModalHeader, ModalBody, ModalFooter, InputGroup, InputGroupText, Input, Button } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
 

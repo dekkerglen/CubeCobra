@@ -1,31 +1,26 @@
 import React, { useMemo } from 'react';
+import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
-import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 import DeckPropType from 'proptypes/DeckPropType';
+import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
-import CommentsSection from 'components/CommentsSection';
 import CardGrid from 'components/CardGrid';
+import CardImage from 'components/CardImage';
+import CommentsSection from 'components/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
+import Username from 'components/Username';
 import { makeSubtitle } from 'utils/Card';
 import { sortDeep } from 'utils/Sort';
-import Username from 'components/Username';
-import CardImage from 'components/CardImage';
-
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
 
 const DeckStacksStatic = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
     {piles.map((row, index) => (
-      <Row key={/* eslint-disable-line react/no-array-index-key */ index} className="row-low-padding">
+      <Row key={index} className="row-low-padding">
         {row.map((column, index2) => (
-          <Col
-            key={/* eslint-disable-line react/no-array-index-key */ index2}
-            className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding"
-            xs={3}
-          >
+          <Col key={index2} className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding" xs={3}>
             <div className="w-100 text-center mb-1">
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
@@ -33,7 +28,7 @@ const DeckStacksStatic = ({ piles, cards }) => (
               {column.map((cardIndex, index3) => {
                 const card = cards[cardIndex];
                 return (
-                  <div className="stacked" key={/* eslint-disable-line react/no-array-index-key */ index3}>
+                  <div className="stacked" key={index3}>
                     <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
                       <FoilCardImage card={card} tags={[]} autocard />
                     </a>

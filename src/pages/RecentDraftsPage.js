@@ -1,17 +1,17 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Card, CardBody, CardHeader, Col, Row, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-
 import InfiniteScroll from 'react-infinite-scroll-component';
+
+import Banner from 'components/Banner';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import Banner from 'components/Banner';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
-
-import { Card, Col, Row, Spinner, CardBody, CardHeader } from 'reactstrap';
 
 const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
   const [items, setItems] = useState(decks);
@@ -62,7 +62,7 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
                 <InfiniteScroll
                   dataLength={items.length}
                   next={fetchMoreData}
-                  hasMore={currentLastKey != null}
+                  hasMore={currentLastKey !== null}
                   loader={loader}
                 >
                   {items.map((deck) => (
