@@ -14,10 +14,12 @@ function changeQuery(params: URLSearchParams): void {
   }
 }
 
-function get(key: string, def: string): string {
+function get(key: string): string | null;
+function get(key: string, def: string): string;
+function get(key: string, def?: string): string | null {
   const params = new URLSearchParams(query());
   const result = params.get(key);
-  return result === null ? def : result;
+  return result === null && def !== undefined ? def : result;
 }
 
 function set(key: string, value: string): void {

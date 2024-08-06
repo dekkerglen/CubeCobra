@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { ReactNode, useCallback, useState } from 'react';
 
 import useLocalStorage from 'hooks/useLocalStorage';
 
@@ -26,6 +26,7 @@ const DisplayContext = React.createContext<DisplayContextValue>({
 
 interface DisplayContextProviderProps {
   cubeID: string;
+  children: ReactNode;
 }
 
 export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, ...props }) => {

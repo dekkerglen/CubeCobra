@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React, { ComponentType, ReactElement } from 'react';
 
 import ReactDOM from 'react-dom';
 
@@ -14,14 +14,15 @@ declare global {
   }
 }
 
-export interface ReactProps {
+export interface UniversalReactProps {
   nitroPayEnabled: boolean;
   domain: DomainContextValue;
   user: UserContextValue;
 }
 
-const RenderToRoot = (Element: React.ComponentType<ReactProps>): React.ComponentType<ReactProps> => {
-  const reactProps: ReactProps = typeof window !== 'undefined' ? window.reactProps : {};
+// Returns its input to enable our usual pattern of export default RenderToRoot(XPage).
+const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
+  const reactProps: P & UniversalReactProps = typeof window !== 'undefined' ? window.reactProps : {};
   const element: ReactElement = (
     <ErrorBoundary className="mt-3">
       <AutocardContextProvider>

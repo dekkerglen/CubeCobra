@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 
-import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-import CubePropType from 'proptypes/CubePropType';
-
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/CubeCompareNavbar';
 import DynamicFlash from 'components/DynamicFlash';
@@ -11,17 +7,38 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
 import { CubeContextProvider } from 'contexts/CubeContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
+import Card from 'datatypes/Card';
+import Cube from 'datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
 
-const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both }) => {
-  const [openCollapse, setOpenCollapse] = useState(Query.get('f', false) ? 'filter' : null);
-  const [filter, setFilter] = useState(null);
+interface CubeComparePageProps {
+  cards: Card[];
+  cube: Cube;
+  cubeB: Cube;
+  loginCallback?: string;
+  onlyA: string[];
+  onlyB: string[];
+  both: string[];
+}
+
+const CubeComparePage: React.FC<CubeComparePageProps> = ({
+  cards,
+  cube,
+  cubeB,
+  loginCallback = '/',
+  onlyA,
+  onlyB,
+  both,
+}) => {
+  const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
+  const [filter, setFilter] = useState<((card: Card) => boolean) | null>(null);
 
   const filteredCards = filter ? cards.filter(filter) : cards;
+
   return (
     <MainLayout loginCallback={loginCallback}>
-      <DisplayContextProvider>
+      <DisplayContextProvider cubeID={cube.id}>
         <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
           <CubeCompareNavbar
             cubeA={cube}
@@ -42,20 +59,6 @@ const CubeComparePage = ({ cards, cube, cubeB, loginCallback, onlyA, onlyB, both
       </DisplayContextProvider>
     </MainLayout>
   );
-};
-
-CubeComparePage.propTypes = {
-  cards: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyA: PropTypes.arrayOf(CardPropType).isRequired,
-  onlyB: PropTypes.arrayOf(CardPropType).isRequired,
-  both: PropTypes.arrayOf(CardPropType).isRequired,
-  cube: CubePropType.isRequired,
-  cubeB: CubePropType.isRequired,
-  loginCallback: PropTypes.string,
-};
-
-CubeComparePage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeComparePage);

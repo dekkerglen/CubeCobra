@@ -66,9 +66,10 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
 
 export interface CompareViewProps {
   cards: Card[];
-  both: Card[];
-  onlyA: Card[];
-  onlyB: Card[];
+  // These fields all take oracle_ids.
+  both: string[];
+  onlyA: string[];
+  onlyB: string[];
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
@@ -90,24 +91,17 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
     let onlyBCount = 0;
     let bothCount = 0;
     for (const card of columnsPrimary[columnLabel]) {
-      if (bothCopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+      const oracleId = card.details?.oracle_id ?? '';
+      let index;
+      if ((index = bothCopyTemp.indexOf(oracleId)) >= 0) {
         bothCount += 1;
-        bothCopyTemp.splice(
-          bothCopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-          1,
-        );
-      } else if (onlyACopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+        bothCopyTemp.splice(index, 1);
+      } else if ((index = onlyACopyTemp.indexOf(oracleId)) >= 0) {
         onlyACount += 1;
-        onlyACopyTemp.splice(
-          onlyACopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-          1,
-        );
-      } else if (onlyBCopyTemp.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+        onlyACopyTemp.splice(index, 1);
+      } else if ((index = onlyBCopyTemp.indexOf(oracleId)) >= 0) {
         onlyBCount += 1;
-        onlyBCopyTemp.splice(
-          onlyBCopyTemp.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-          1,
-        );
+        onlyBCopyTemp.splice(index, 1);
       }
     }
 
@@ -202,24 +196,17 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
                     const onlyBGroup: Card[] = [];
 
                     for (const card of group) {
-                      if (bothCopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+                      const oracleId = card.details?.oracle_id ?? '';
+                      let index;
+                      if ((index = bothCopy.indexOf(oracleId)) >= 0) {
                         bothGroup.push(card);
-                        bothCopy.splice(
-                          bothCopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-                          1,
-                        );
-                      } else if (onlyACopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+                        bothCopy.splice(index, 1);
+                      } else if ((index = onlyACopy.indexOf(oracleId)) >= 0) {
                         onlyAGroup.push(card);
-                        onlyACopy.splice(
-                          onlyACopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-                          1,
-                        );
-                      } else if (onlyBCopy.some((c) => c.details?.oracle_id === card.details?.oracle_id)) {
+                        onlyACopy.splice(index, 1);
+                      } else if ((index = onlyBCopy.indexOf(oracleId)) >= 0) {
                         onlyBGroup.push(card);
-                        onlyBCopy.splice(
-                          onlyBCopy.findIndex((c) => c.details?.oracle_id === card.details?.oracle_id),
-                          1,
-                        );
+                        onlyBCopy.splice(index, 1);
                       }
                     }
 
