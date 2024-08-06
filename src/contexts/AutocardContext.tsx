@@ -69,10 +69,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
     >
       <div className="autocard-background">
         <div className="row g-0">
-          <div className="col position-relative card-border">
-            {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
-            <img id="autocardImageFront" src={front!} alt={front!} key={front!} />
-          </div>
+          {front && (
+            <div className="col position-relative card-border">
+              {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
+              <img id="autocardImageFront" src={front} alt={front} key={front} />
+            </div>
+          )}
           {back && (
             <div className="col position-relative card-border">
               {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
