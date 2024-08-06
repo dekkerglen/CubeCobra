@@ -8,6 +8,7 @@ public/css/bootstrap
 /temp/
 /model/
 .DS_Store
+/.yarn/install-state.gz
 /one_shot_scripts/convert_tsx.json
 
 .python-version
