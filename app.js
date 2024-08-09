@@ -117,18 +117,22 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // set CORS header for cube json requests (needs to be here to be included in rate limiter response)
-app.use('/cube/api/cubeJSON', (req, res, next) => {
+const publicCORS = (req, res, next) => {
   res.set('Access-Control-Allow-Origin', '*');
   next();
-});
+};
 
-// apply a rate limiter to the cube json endpoint
+// apply a rate limiter to the public api endpoints
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
   message: '429: Too Many Requests',
 });
+
+app.use('/cube/api/cubeJSON', publicCORS);
 app.use('/cube/api/cubeJSON', apiLimiter);
+app.use('/cube/api/history', publicCORS);
+app.use('/cube/api/history', apiLimiter);
 
 // per-request logging configuration
 app.use((req, res, next) => {
@@ -194,6 +198,7 @@ app.use('/patreon', require('./routes/patreon_routes'));
 app.use('/cache', require('./routes/cache_routes'));
 app.use('/dev', require('./routes/dev_routes'));
 app.use('/cube', require('./routes/cube/index'));
+app.use('/public', require('./routes/cube/api_public'));
 app.use('/user', require('./routes/users_routes'));
 app.use('/tool', require('./routes/tools_routes'));
 app.use('/comment', require('./routes/comment_routes'));
