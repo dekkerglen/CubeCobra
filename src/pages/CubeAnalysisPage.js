@@ -1,42 +1,41 @@
 import React, { useContext } from 'react';
+import { Card, CardBody, Col, Nav, NavLink, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
+import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
+import CubePropType from 'proptypes/CubePropType';
 
-import { Col, Nav, NavLink, Row, Card, CardBody } from 'reactstrap';
-
+import AnalyticTable from 'analytics/AnalyticTable';
+import Asfans from 'analytics/Asfans';
 import Averages from 'analytics/Averages';
 import ChartComponent from 'analytics/Chart';
+import Playtest from 'analytics/PlaytestData';
+import Suggestions from 'analytics/Suggestions';
+import Tokens from 'analytics/Tokens';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import Tokens from 'analytics/Tokens';
-import Playtest from 'analytics/PlaytestData';
-import AnalyticTable from 'analytics/AnalyticTable';
-import Suggestions from 'analytics/Suggestions';
-import Asfans from 'analytics/Asfans';
 import FilterCollapse from 'components/FilterCollapse';
+import RenderToRoot from 'components/RenderToRoot';
+import CubeContext from 'contexts/CubeContext';
 import useQueryParam from 'hooks/useQueryParam';
 import useToggle from 'hooks/UseToggle';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import CubePropType from 'proptypes/CubePropType';
-import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 import {
   cardCmc,
   cardDevotion,
+  cardEtchedPrice,
   cardFoilPrice,
   cardNormalPrice,
-  cardEtchedPrice,
   cardPower,
   cardPrice,
-  cardToughness,
   cardPriceEur,
   cardTix,
+  cardToughness,
   mainboardRate,
   pickRate,
 } from 'utils/Card';
-
-import RenderToRoot from 'utils/RenderToRoot';
-import { getLabels, cardIsLabel } from 'utils/Sort';
-import CubeContext from 'contexts/CubeContext';
+import { cardIsLabel, getLabels } from 'utils/Sort';
 
 const CubeAnalysisPage = ({ cubeAnalytics }) => {
   const { changedCards, cube } = useContext(CubeContext);
@@ -169,9 +168,7 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
     },
     {
       name: 'Recommender',
-      component: () => (
-        <Suggestions />
-      ),
+      component: () => <Suggestions />,
     },
     {
       name: 'Playtest Data',
@@ -187,47 +184,43 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
 
   return (
     <>
-        <DynamicFlash />
-        {cube.cards.mainboard.length === 0 ? (
-          <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
-        ) : (
-          <Row className="mt-3">
-            <Col xs="12" lg="2">
-              <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
-                {analytics.map((analytic, index) => (
-                  <NavLink
-                    key={analytic.name}
-                    active={`${activeTab}` === `${index}`}
-                    onClick={() => setActiveTab(index)}
-                    href="#"
-                  >
-                    {analytic.name}
-                  </NavLink>
-                ))}
-              </Nav>
-            </Col>
-            <Col xs="12" lg="10" className="overflow-x">
-              <Card className="mb-3">
-                <CardBody>
-                  <NavLink href="#" onClick={toggleFilterCollapse}>
-                    <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
-                  </NavLink>
-                  <FilterCollapse
-                    isOpen={filterCollapseOpen}
-                  />
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <ErrorBoundary>
-                    {analytics[activeTab].component(changedCards.mainboard, cube)}
-                  </ErrorBoundary>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        )}
-        </>
+      <DynamicFlash />
+      {cube.cards.mainboard.length === 0 ? (
+        <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
+      ) : (
+        <Row className="mt-3">
+          <Col xs="12" lg="2">
+            <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
+              {analytics.map((analytic, index) => (
+                <NavLink
+                  key={analytic.name}
+                  active={`${activeTab}` === `${index}`}
+                  onClick={() => setActiveTab(index)}
+                  href="#"
+                >
+                  {analytic.name}
+                </NavLink>
+              ))}
+            </Nav>
+          </Col>
+          <Col xs="12" lg="10" className="overflow-x">
+            <Card className="mb-3">
+              <CardBody>
+                <NavLink href="#" onClick={toggleFilterCollapse}>
+                  <h5>{filterCollapseOpen ? 'Hide Filter' : 'Show Filter'}</h5>
+                </NavLink>
+                <FilterCollapse isOpen={filterCollapseOpen} />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody>
+                <ErrorBoundary>{analytics[activeTab].component(changedCards.mainboard, cube)}</ErrorBoundary>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </>
   );
 };
 
@@ -247,7 +240,6 @@ CubeAnalysisPage.defaultProps = {
 };
 
 const CubeAnalysisPageWrapper = ({ cube, cards, loginCallback, cubeAnalytics }) => {
-
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} cards={cards} canEdit={false} activeLink="analysis">
@@ -255,7 +247,7 @@ const CubeAnalysisPageWrapper = ({ cube, cards, loginCallback, cubeAnalytics }) 
       </CubeLayout>
     </MainLayout>
   );
-}    
+};
 
 CubeAnalysisPageWrapper.propTypes = {
   cube: CubePropType.isRequired,

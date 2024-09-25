@@ -1,13 +1,12 @@
 import React, { useContext } from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-
-import { Card, CardHeader, CardBody, Col, Row } from 'reactstrap';
-
-import { getLabels, sortDeep } from 'utils/Sort';
-import { fromEntries } from 'utils/Util';
 
 import AutocardListGroup from 'components/AutocardListGroup';
 import CubeContext from 'contexts/CubeContext';
+import { getLabels, sortDeep } from 'utils/Sort';
+import { fromEntries } from 'utils/Util';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 

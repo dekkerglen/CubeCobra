@@ -1,12 +1,11 @@
 import React, { useContext } from 'react';
-
-import CubeContext from 'contexts/CubeContext';
-import DeckPreview from 'components/DeckPreview';
+import { Card, CardBody, CardFooter, CardHeader, CardTitle } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 
-import { Card, CardHeader, CardTitle, CardBody, CardFooter } from 'reactstrap';
+import DeckPreview from 'components/DeckPreview';
+import CubeContext from 'contexts/CubeContext';
 
 const PlaytestDecksCard = ({ decks, ...props }) => {
   const { cube } = useContext(CubeContext);

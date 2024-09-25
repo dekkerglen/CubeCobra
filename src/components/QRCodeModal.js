@@ -1,8 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
+import PropTypes from 'prop-types';
 import QRCode from 'react-qr-code';
 
 const saveQRImage = (cubeName) => {

@@ -1,16 +1,16 @@
 import React from 'react';
+import { Card, CardBody, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 
-import { Card, CardBody, CardHeader } from 'reactstrap';
-
-import DeckPreview from 'components/DeckPreview';
-import Paginate from 'components/Paginate';
-import UserLayout from 'layouts/UserLayout';
-import DynamicFlash from 'components/DynamicFlash';
 import Banner from 'components/Banner';
+import DeckPreview from 'components/DeckPreview';
+import DynamicFlash from 'components/DynamicFlash';
+import Paginate from 'components/Paginate';
+import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
+import UserLayout from 'layouts/UserLayout';
 
 const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

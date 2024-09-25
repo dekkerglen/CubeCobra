@@ -1,5 +1,3 @@
-/* eslint-disable no-loop-func */
-/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 
@@ -61,7 +59,6 @@ const loadCubesHistory = async (key) => {
   let lastKey = null;
   let changelogs = [];
   do {
-    // eslint-disable-next-line no-await-in-loop
     const result = await ChangeLog.scan(1000000, lastKey);
     changelogs = changelogs.concat(result.items);
     lastKey = result.lastKey;

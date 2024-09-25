@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 // Load Environment Variables
 require('dotenv').config();
 const express = require('express');
@@ -104,12 +103,12 @@ router.post('/draftpick', ensureAuth, async (req, res) => {
 router.post('/trybotpicks', ensureAuth, async (req, res) => {
   const { draft } = req.body;
 
-  const {result, picks} = await tryBotPicks(draft);
+  const { result, picks } = await tryBotPicks(draft);
 
   return res.status(200).send({
     success: 'true',
     result,
-    picks
+    picks,
   });
 });
 

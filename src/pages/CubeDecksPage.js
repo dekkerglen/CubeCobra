@@ -1,16 +1,16 @@
 import React from 'react';
+import { Card, CardBody, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 
-import { Card, CardBody, CardHeader } from 'reactstrap';
-
 import DeckPreview from 'components/DeckPreview';
-import Paginate from 'components/Paginate';
-import CubeLayout from 'layouts/CubeLayout';
 import DynamicFlash from 'components/DynamicFlash';
+import Paginate from 'components/Paginate';
+import RenderToRoot from 'components/RenderToRoot';
+import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CubeDecksPage = ({ cube, decks, pages, activePage, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

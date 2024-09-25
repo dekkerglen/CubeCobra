@@ -1,14 +1,13 @@
 import React, { useContext, useMemo } from 'react';
+import { Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import { Row, Col } from 'reactstrap';
-
-import { countGroup, sortDeep } from 'utils/Sort';
-
 import AutocardListGroup from 'components/AutocardListGroup';
-import DisplayContext from 'contexts/DisplayContext';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
+import { countGroup, sortDeep } from 'utils/Sort';
 
 const TableView = ({ cards, noGroupModal, className, ...props }) => {
   const { compressedView } = useContext(DisplayContext);

@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-// eslint-disable-next-line import/no-unresolved
 const { body } = require('express-validator');
 
 const { makeFilter } = require('../../dist/filtering/FilterCards');
@@ -107,7 +106,7 @@ router.post(
     cube.date = Date.now().valueOf();
 
     // cube category override
-    if (updatedCube.categoryOverride != null) {
+    if (updatedCube.categoryOverride !== null) {
       const categories = [
         '',
         'Vintage',
@@ -503,7 +502,7 @@ router.get(
   '/getversions/:id',
   util.wrapAsyncApi(async (req, res) => {
     const cardIds = carddb.allVersions(carddb.cardFromId(req.params.id));
-    // eslint-disable-next-line prefer-object-spread
+
     const cards = cardIds.map((id) => Object.assign({}, carddb.cardFromId(id)));
     return res.status(200).send({
       success: 'true',
@@ -529,9 +528,9 @@ router.post(
     const result = util.fromEntries(
       allVersions.map((versions, index) => [
         cardutil.normalizeName(allDetails[index].name),
-        versions.map(({ scryfall_id, full_name, image_normal, image_flip, prices }) => ({
+        versions.map(({ scryfall_id, full_name: fullName, image_normal, image_flip, prices }) => ({
           scryfall_id,
-          version: full_name.toUpperCase().substring(full_name.indexOf('[') + 1, full_name.indexOf(']')),
+          version: fullName.toUpperCase().substring(fullName.indexOf('[') + 1, fullName.indexOf(']')),
           image_normal,
           image_flip,
           prices,

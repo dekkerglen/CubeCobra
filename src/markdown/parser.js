@@ -1,14 +1,15 @@
-import unified from 'unified';
-import remark from 'remark-parse';
-import gfm from 'remark-gfm';
-import math from 'remark-math';
+import autoHeadings from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
 import slug from 'rehype-slug';
-import autoHeadings from 'rehype-autolink-headings';
+import breaks from 'remark-breaks';
+import gfm from 'remark-gfm';
+import math from 'remark-math';
+import remark from 'remark-parse';
+import { unified } from 'unified';
+
 import cardlink from 'markdown/cardlink';
 import cardrow from 'markdown/cardrow';
 import centering from 'markdown/centering';
-import breaks from 'remark-breaks';
 import symbols from 'markdown/symbols';
 import userlink from 'markdown/userlink';
 

@@ -1,8 +1,7 @@
 import React from 'react';
+import { Col, FormGroup, Label } from 'reactstrap';
 
 import PropTypes from 'prop-types';
-
-import { FormGroup, Label, Col } from 'reactstrap';
 
 const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>

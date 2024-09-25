@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-
-import { Collapse, Nav, NavItem, NavLink, Navbar, NavbarToggler } from 'reactstrap';
+import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 
 import FilterCollapse from 'components/FilterCollapse';
 import SortCollapse from 'components/SortCollapse';

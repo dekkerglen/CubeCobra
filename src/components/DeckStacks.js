@@ -1,14 +1,14 @@
-/* eslint-disable react/no-array-index-key */
 import React from 'react';
-import PropTypes from 'prop-types';
 import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
+
+import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 
 import CardStack from 'components/CardStack';
 import DraggableCard from 'components/DraggableCard';
-import CardPropType from 'proptypes/CardPropType';
 import Location from 'drafting/DraftLocation';
 
-const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, onClickCard, ...props }) => (
+const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard, ...props }) => (
   <>
     <CardHeader {...props}>
       <CardTitle className="mb-0 d-flex flex-row align-items-end">

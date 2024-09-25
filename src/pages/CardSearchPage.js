@@ -1,14 +1,15 @@
 import React from 'react';
+
 import PropTypes from 'prop-types';
 
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
-import { CubeContextProvider } from 'contexts/CubeContext';
 import CardSearch from 'components/CardSearch';
+import RenderToRoot from 'components/RenderToRoot';
+import { CubeContextProvider } from 'contexts/CubeContext';
+import MainLayout from 'layouts/MainLayout';
 
 const CardSearchPage = ({ loginCallback }) => {
   return (
-    <CubeContextProvider initialCube={{ defaultSorts: [] }} cards={{ mainboard: [] }}>
+    <CubeContextProvider initialCube={{ defaultSorts: [], owner: {} }} cards={{ mainboard: [], maybeboard: [] }}>
       <MainLayout loginCallback={loginCallback}>
         <CardSearch />
       </MainLayout>

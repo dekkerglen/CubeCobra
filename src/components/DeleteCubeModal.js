@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import { Modal, ModalBody, ModalHeader, Input, Button, ModalFooter } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
 

@@ -56,7 +56,7 @@ const AWS = require('aws-sdk');
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: 'us-east-2',
+  region: process.env.AWS_REGION,
 });
 
 const autoscaling = new AWS.AutoScaling();
@@ -114,7 +114,7 @@ const updatePeers = async () => {
 
       peers = healthyIps.filter((ip) => ip !== undefined);
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };
@@ -148,7 +148,7 @@ const invalidate = async (key) => {
     } else {
       evict(key);
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };
@@ -182,7 +182,7 @@ const batchInvalidate = async (keys) => {
     } else {
       keys.forEach((key) => evict(key));
     }
-  } catch (err) {
+  } catch {
     // swallow
   }
 };

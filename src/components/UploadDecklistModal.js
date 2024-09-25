@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
+import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
-import CubeContext from 'contexts/CubeContext';
-import CSRFForm from 'components/CSRFForm';
 
-import { Modal, ModalHeader, ModalBody, ModalFooter, Input, Button } from 'reactstrap';
+import CSRFForm from 'components/CSRFForm';
+import CubeContext from 'contexts/CubeContext';
 
 const UploadDecklistModal = ({ isOpen, toggle }) => {
   const { cube } = useContext(CubeContext);

@@ -1,6 +1,8 @@
-import React, { useCallback, useMemo, useState, useContext } from 'react';
-import PropTypes from 'prop-types';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { Card, Collapse, Nav, Navbar } from 'reactstrap';
+
+import PropTypes from 'prop-types';
+import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
@@ -8,10 +10,9 @@ import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Pack from 'components/Pack';
-import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
-import { makeSubtitle } from 'utils/Card';
-import DraftLocation from 'drafting/DraftLocation';
 import AutocardContext from 'contexts/AutocardContext';
+import DraftLocation from 'drafting/DraftLocation';
+import { makeSubtitle } from 'utils/Card';
 
 const canDrop = (_, target) => {
   return target.type === DraftLocation.PICKS;

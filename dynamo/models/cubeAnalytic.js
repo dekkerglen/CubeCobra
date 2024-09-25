@@ -6,7 +6,7 @@ module.exports = {
   getByCube: async (cubeId) => {
     try {
       return await getObject(process.env.DATA_BUCKET, `cube_analytic/${cubeId}.json`);
-    } catch (e) {
+    } catch {
       return {};
     }
   },

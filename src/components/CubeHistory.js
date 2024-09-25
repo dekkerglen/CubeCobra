@@ -1,12 +1,14 @@
-import React, { useState, useCallback, useMemo, useContext } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { Card, CardBody, CardHeader, Col, Row, Spinner } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-import { csrfFetch } from 'utils/CSRF';
-import { wait } from 'utils/Util';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { Spinner, Card, CardBody, Row, Col, CardHeader } from 'reactstrap';
+
 import BlogPostChangelog from 'components/BlogPostChangelog';
 import CubeContext from 'contexts/CubeContext';
+import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';
+import { wait } from 'utils/Util';
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -62,7 +64,7 @@ const CubeHistory = ({ changes, lastKey }) => {
     <InfiniteScroll
       dataLength={items.length}
       next={fetchMoreData}
-      hasMore={currentLastKey != null}
+      hasMore={currentLastKey !== null}
       loader={loader}
       endMessage={endMessage}
     >

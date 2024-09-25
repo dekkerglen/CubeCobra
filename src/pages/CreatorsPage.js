@@ -1,16 +1,16 @@
 import React from 'react';
+import { Card, CardHeader, Nav, TabContent, TabPane } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Nav, CardHeader, Card, TabContent, TabPane } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
-import Tab from 'components/Tab';
 import CreatorArticles from 'components/CreatorArticles';
-import CreatorVideos from 'components/CreatorVideos';
 import CreatorPodcasts from 'components/CreatorPodcasts';
+import CreatorVideos from 'components/CreatorVideos';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import Tab from 'components/Tab';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const CreatorsPage = ({ loginCallback, articles, videos, podcasts }) => {
   const [tab, setTab] = useQueryParam('tab', '0');

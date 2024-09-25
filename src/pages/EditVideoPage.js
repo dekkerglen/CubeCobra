@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  Button,
+  Card,
+  CardBody,
+  Col,
+  FormGroup,
+  Input,
+  Label,
+  Nav,
+  Row,
+  Spinner,
+  TabContent,
+  TabPane,
+} from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
-import {
-  Spinner,
-  Nav,
-  CardBody,
-  Card,
-  TabContent,
-  TabPane,
-  Input,
-  FormGroup,
-  Row,
-  Col,
-  Label,
-  Button,
-} from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
-import DynamicFlash from 'components/DynamicFlash';
-import VideoPreview from 'components/VideoPreview';
-import Tab from 'components/Tab';
-import Video from 'components/Video';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 import AutocompleteInput from 'components/AutocompleteInput';
 import CSRFForm from 'components/CSRFForm';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import Tab from 'components/Tab';
+import Video from 'components/Video';
+import VideoPreview from 'components/VideoPreview';
+import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
+import MainLayout from 'layouts/MainLayout';
 
 const CONVERT_STATUS = {
   p: 'Published',

@@ -1,7 +1,7 @@
 // dotenv
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const TurndownService = require('turndown');
 const createClient = require('../util');
 const Changelog = require('./changelog');
@@ -148,7 +148,7 @@ module.exports = {
     };
   },
   put: async (document) => {
-    const id = document[FIELDS.ID] || uuid();
+    const id = document[FIELDS.ID] || uuid.v4();
 
     if (document.owner.id) {
       document[FIELDS.OWNER] = document.owner.id;

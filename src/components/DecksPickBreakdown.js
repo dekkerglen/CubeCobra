@@ -1,15 +1,15 @@
-/* eslint-disable react/no-array-index-key */
 import React from 'react';
+import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-import { Row, Col, ListGroup, ListGroupItem } from 'reactstrap';
+import DraftPropType from 'proptypes/DraftPropType';
 
 import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
-import { getCardColorClass } from 'utils/Util';
-import useQueryParam from 'hooks/useQueryParam';
-import DraftPropType from 'proptypes/DraftPropType';
-import { cardName, encodeName } from 'utils/Card';
 import { getDrafterState } from 'drafting/draftutil';
+import useQueryParam from 'hooks/useQueryParam';
+import { cardName, encodeName } from 'utils/Card';
+import { getCardColorClass } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
 
@@ -56,7 +56,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
         <h4>{`Pack ${pack}: Pick ${pick}`}</h4>
         <Row className="g-0">
           {cardsInPack.map((cardIndex) => (
-            <Col key={/* eslint-disable-line react/no-array-index-key */ cardIndex} xs={4} sm={2}>
+            <Col key={cardIndex} xs={4} sm={2}>
               <a href={`/tool/card/${encodeName(draft.cards[cardIndex].details.name)}`}>
                 <FoilCardImage autocard data-in-modal card={draft.cards[cardIndex]} className="clickable" />
               </a>

@@ -1,16 +1,16 @@
 import React from 'react';
+import { Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 
-import { Row, Col } from 'reactstrap';
-
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
-import CubeLayout from 'layouts/CubeLayout';
 import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const SamplePackPage = ({ seed, pack, cube, loginCallback }) => {
   return (

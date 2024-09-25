@@ -6,7 +6,7 @@ const {
   PutLogEventsCommand,
   CreateLogStreamCommand,
 } = require('@aws-sdk/client-cloudwatch-logs');
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 
 const client = new CloudWatchLogsClient({
   region: process.env.AWS_REGION,
@@ -19,7 +19,7 @@ const client = new CloudWatchLogsClient({
 let infoLogs = [];
 let errorLogs = [];
 
-const id = uuid();
+const id = uuid.v4();
 
 const cloudwatchEnabled = process.env.ENV === 'production';
 
@@ -103,7 +103,7 @@ module.exports = {
       console.log(messages.join('\n'));
     }
   },
-  // eslint-disable-next-line no-console
+
   error: (...messages) => {
     if (cloudwatchEnabled) {
       errorLogs.push({

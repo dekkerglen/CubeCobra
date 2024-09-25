@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 require('dotenv').config();
 
 const fs = require('fs');

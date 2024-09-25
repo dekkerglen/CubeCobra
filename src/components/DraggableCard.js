@@ -1,9 +1,10 @@
-import React, { useRef, useContext } from 'react';
+import React, { useContext, useRef } from 'react';
+
 import PropTypes from 'prop-types';
+import CardPropType from 'proptypes/CardPropType';
 import { useDrag, useDrop } from 'react-dnd';
 
 import FoilCardImage from 'components/FoilCardImage';
-import CardPropType from 'proptypes/CardPropType';
 import AutocardContext from 'contexts/AutocardContext';
 
 const DraggableCard = ({ card, location, canDrop, onMoveCard, className, onClick, ...props }) => {

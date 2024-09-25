@@ -1,16 +1,15 @@
 import React, { useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { ListGroupItem } from 'reactstrap';
 
+import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
 
-import { compareStrings, SortableTable } from 'components/SortableTable';
-import { fromEntries } from 'utils/Util';
 import ErrorBoundary from 'components/ErrorBoundary';
-import { mainboardRate, pickRate, encodeName } from 'utils/Card';
-
+import { compareStrings, SortableTable } from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
+import { encodeName, mainboardRate, pickRate } from 'utils/Card';
+import { fromEntries } from 'utils/Util';
 
 const AutocardItem = withAutocard(ListGroupItem);
 

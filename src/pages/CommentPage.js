@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
+import { Card, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CommentPropType from 'proptypes/CommentPropType';
 
-import { Card, CardHeader } from 'reactstrap';
-
-import Comment from 'components/Comment';
-import DynamicFlash from 'components/DynamicFlash';
-import CommentsSection from 'components/CommentsSection';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 import Banner from 'components/Banner';
+import Comment from 'components/Comment';
+import CommentsSection from 'components/CommentsSection';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import MainLayout from 'layouts/MainLayout';
 
 const translateType = {
   comment: 'Comment',

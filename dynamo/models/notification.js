@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 
 const FIELDS = {
@@ -108,7 +108,7 @@ module.exports = {
     ];
 
     return notifications.map((item) => ({
-      [FIELDS.ID]: uuid(),
+      [FIELDS.ID]: uuid.v4(),
       [FIELDS.DATE]: item.date.valueOf(),
       [FIELDS.TO]: `${user._id}`,
       [FIELDS.FROM]: `${item.user_from}`,

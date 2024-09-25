@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import {
   Alert,
   Button,
@@ -13,12 +13,13 @@ import {
   ModalHeader,
   Row,
 } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'contexts/CubeContext';
 import CustomPackCard from 'components/CustomPackCard';
 import TextEntry from 'components/TextEntry';
+import CubeContext from 'contexts/CubeContext';
 import { fromEntries, toNullableInt } from 'utils/Util';
 
 export const DEFAULT_PACK = Object.freeze({ slots: [''], steps: null });
@@ -251,7 +252,7 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
         </FormText>
         {(format.packs ?? []).map((pack, packIndex) => (
           <CustomPackCard
-            key={/* eslint-disable-line react/no-array-index-key */ packIndex}
+            key={packIndex}
             packIndex={packIndex}
             mutations={mutations}
             canRemove={format.packs.length > 1}
@@ -265,7 +266,6 @@ const CustomDraftFormatModal = ({ isOpen, toggle, formatIndex, format, setFormat
       <ModalFooter>
         {errorsInFormat &&
           errorsInFormat.map((error, errorIndex) => (
-            // eslint-disable-next-line react/no-array-index-key
             <Alert key={errorIndex} color="danger">
               {error}
             </Alert>
@@ -289,7 +289,7 @@ CustomDraftFormatModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
   formatIndex: PropTypes.number.isRequired,
-  // eslint-disable-next-line react/forbid-prop-types
+
   format: PropTypes.object.isRequired,
   setFormat: PropTypes.func.isRequired,
 };

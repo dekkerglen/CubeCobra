@@ -1,31 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  Button,
+  Card,
+  CardHeader,
+  Col,
+  FormGroup,
+  FormText,
+  Input,
+  Label,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
-  Card,
-  CardHeader,
   Row,
-  Col,
-  FormGroup,
-  Label,
-  Input,
-  Button,
-  FormText,
 } from 'reactstrap';
 
-import { csrfFetch } from 'utils/CSRF';
-import { getCubeDescription } from 'utils/Util';
+import PropTypes from 'prop-types';
+import CubePropType from 'proptypes/CubePropType';
 
 import AutocompleteInput from 'components/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
+import MtgImage from 'components/MtgImage';
 import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
-import MtgImage from 'components/MtgImage';
+import { csrfFetch } from 'utils/CSRF';
+import { getCubeDescription } from 'utils/Util';
 
 const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   const [state, setState] = useState(JSON.parse(JSON.stringify(cube)));

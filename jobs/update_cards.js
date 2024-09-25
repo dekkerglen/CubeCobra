@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const fs = require('fs');
-const path = require('path'); // eslint-disable-line import/no-extraneous-dependencies
-const https = require('https'); // eslint-disable-line import/no-extraneous-dependencies
+const path = require('path');
+const https = require('https');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 const fetch = require('node-fetch');
@@ -314,7 +314,7 @@ function getTokens(card, catalogCard) {
             '((?:(?:([A-Za-z ,]+), a (legendary))|[Xa-z ]+))(?: ([0-9X]+/[0-9X]+))? ((?:red|colorless|green|white|black|blue| and )+)?(?: ?((?:(?:[A-Z][a-z]+ )+)|[a-z]+))?((?:legendary|artifact|creature|Aura|enchantment| )*)?tokens?( that are copies of)?(?: named ((?:[A-Z][a-z]+ ?|of ?)+(?:\'s \\w+)?)?)?(?:(?: with |\\. It has )?((?:(".*")|[a-z]+| and )+)+)?(?:.*(a copy of))?';
           const re = new RegExp(reString);
           const result = re.exec(ability);
-          // eslint-disable-next-line no-continue
+
           if (!result) continue;
 
           let tokenPowerAndToughness = result[4];
@@ -352,14 +352,14 @@ function getTokens(card, catalogCard) {
 
           if (Object.keys(specialCaseTokens).includes(tokenName)) {
             mentionedTokens.push(specialCaseTokens[tokenName]);
-            continue; // eslint-disable-line no-continue
+            continue;
           }
 
           if (isACopy) {
             // most likely a token that could be a copy of any creature but it could have a specific token
             if (ability.toLowerCase().includes("create a token that's a copy of a creature token you control."))
               // populate
-              continue; // eslint-disable-line no-continue
+              continue;
 
             const cardTokens = getScryfallTokensForCard(card);
 
@@ -369,7 +369,7 @@ function getTokens(card, catalogCard) {
             else {
               mentionedTokens.push('a020dc47-3747-4123-9954-f0e87a858b8c');
             }
-            continue; // eslint-disable-line no-continue
+            continue;
           }
 
           const tokenColor = [];
@@ -412,7 +412,7 @@ function getTokens(card, catalogCard) {
           if (dbHits === undefined) {
             // for all the cards that produce tokens but do not have any in the database
             result.push('');
-            continue; // eslint-disable-line no-continue
+            continue;
           }
           for (const dbHit of dbHits) {
             const candidate = catalog.dict[dbHit];
@@ -908,7 +908,7 @@ const uploadLargeObjectToS3 = async (file, key) => {
 const uploadCardDb = async () => {
   for (const file of Object.keys(carddb.fileToAttribute)) {
     console.log(`Uploading ${file}...`);
-    // eslint-disable-next-line no-await-in-loop
+
     await uploadLargeObjectToS3(`private/${file}`, `cards/${file}`);
 
     console.log(`Finished ${file}`);

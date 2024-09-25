@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-
 import { Alert, UncontrolledAlert } from 'reactstrap';
+
 import Markdown from 'components/Markdown';
 
 const DynamicFlash = (props) => {
@@ -18,7 +18,6 @@ const DynamicFlash = (props) => {
     <div className="mt-3">
       {Object.keys(messages.flash).map((type) =>
         messages.flash[type].map((message, index) => (
-          // eslint-disable-next-line react/no-array-index-key
           <UncontrolledAlert key={type + index} color={type} {...props}>
             {message}
           </UncontrolledAlert>

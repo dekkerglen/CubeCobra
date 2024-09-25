@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
-
-import { UncontrolledDropdown, DropdownToggle, DropdownMenu, Badge, CardHeader, CardFooter } from 'reactstrap';
+import React, { useContext, useState } from 'react';
+import { Badge, CardFooter, CardHeader, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
 
 import { BellFillIcon } from '@primer/octicons-react';
-import { csrfFetch } from 'utils/CSRF';
+
 import LinkButton from 'components/LinkButton';
 import UserContext from 'contexts/UserContext';
+import { csrfFetch } from 'utils/CSRF';
 
 const NotificationsNav = () => {
   const { notifications } = useContext(UserContext);

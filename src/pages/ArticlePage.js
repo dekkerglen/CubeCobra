@@ -1,15 +1,15 @@
 import React, { useContext } from 'react';
+import { Card, CardHeader } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
-import { CardHeader, Card } from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
-import DynamicFlash from 'components/DynamicFlash';
 import Article from 'components/Article';
 import Banner from 'components/Banner';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
 
 const ArticlePage = ({ loginCallback, article }) => {
   const user = useContext(UserContext);

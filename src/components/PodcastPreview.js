@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { Card } from 'reactstrap';
+
 import ContentPropType from 'proptypes/ContentPropType';
 
-import { Card } from 'reactstrap';
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
 

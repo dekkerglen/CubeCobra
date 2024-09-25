@@ -41,7 +41,7 @@ const nameToOracle = (name, carddb) => {
   try {
     // need to ignore art cards as those are not reasonable
     return carddb.getMostReasonable(name).oracle_id;
-  } catch (err) {
+  } catch {
     return { error: `"${name}" is not a valid card name` };
   }
 };

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, ModalHeader, ModalBody, Button, ModalFooter, Input, Label, InputGroup } from 'reactstrap';
+import { Button, Input, InputGroup, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+
+import { PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
-import { ClippyIcon } from '@primer/octicons-react';
 
 const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
   const onCopyClick = async (id, label) => {
@@ -22,7 +23,7 @@ const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
             onClick={() => onCopyClick(shortId, 'short ID')}
             aria-label="Copy short ID"
           >
-            <ClippyIcon size={16} />
+            <PasteIcon size={16} />
           </Button>
         </InputGroup>
         <Label for="short-id-input">A custom, memorable ID that owners are allowed to modify.</Label>
@@ -35,7 +36,7 @@ const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
             onClick={() => onCopyClick(fullID, 'Full ID')}
             aria-label="Copy Full ID"
           >
-            <ClippyIcon size={16} />
+            <PasteIcon size={16} />
           </Button>
         </InputGroup>
         <Label for="full-id-input">The canonical unique ID for this cube, guaranteed not to change.</Label>

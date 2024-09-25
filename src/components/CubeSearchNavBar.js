@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { Button, CardBody, Input, Navbar } from 'reactstrap';
 
-import { Button, Navbar, Input, CardBody } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 import Banner from 'components/Banner';
 

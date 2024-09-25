@@ -1,4 +1,4 @@
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const createClient = require('../util');
 const User = require('./user');
 const carddb = require('../../serverjs/carddb');
@@ -63,7 +63,7 @@ const hydrate = async (pack) => {
     if (c.oracle_id) {
       return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
     }
-    return carddb.cardFromId(c)
+    return carddb.cardFromId(c);
   });
 
   return pack;
@@ -81,7 +81,7 @@ const batchHydrate = async (packs) => {
       if (c.oracle_id) {
         return carddb.cardFromId(carddb.oracleToId[c.oracle_id][0]);
       }
-      return carddb.cardFromId(c)
+      return carddb.cardFromId(c);
     });
   });
 
@@ -91,7 +91,7 @@ const batchHydrate = async (packs) => {
 module.exports = {
   getById: async (id) => hydrate((await client.get(id)).Item),
   put: async (document) => {
-    const id = document[FIELDS.ID] || uuid();
+    const id = document[FIELDS.ID] || uuid.v4();
 
     if (document.owner.id) {
       document.owner = document.owner.id;

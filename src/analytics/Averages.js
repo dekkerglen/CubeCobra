@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
-import PropTypes from 'prop-types';
+import { Col, Input, InputGroup, InputGroupText, Row } from 'reactstrap';
 
-import { Col, Row, InputGroup, InputGroupText, Input } from 'reactstrap';
+import PropTypes from 'prop-types';
 
 import AsfanDropdown from 'components/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
+import { calculateAsfans, weightedAverage, weightedMedian, weightedStdDev } from 'drafting/createdraft';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardType } from 'utils/Card';
-import { weightedAverage, weightedMedian, weightedStdDev, calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';
 
 const Averages = ({ cards, characteristics, cube }) => {

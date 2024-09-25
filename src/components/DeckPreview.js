@@ -1,15 +1,14 @@
-import React, { useCallback, useMemo, useState, useContext } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
-
 import TimeAgo from 'react-timeago';
 
-import UserContext from 'contexts/UserContext';
-import useKeyHandlers from 'hooks/UseKeyHandlers';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 import Username from 'components/Username';
-import { Col, Row } from 'reactstrap';
+import UserContext from 'contexts/UserContext';
+import useKeyHandlers from 'hooks/UseKeyHandlers';
 
 /** 2020-11-17 struesdell:
  *  Pulled constants out of component render so that they are defined only once

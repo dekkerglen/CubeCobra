@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-import { Modal, ModalBody, ModalHeader, Button, ModalFooter, Row, Col, Card } from 'reactstrap';
-
-import { csrfFetch } from 'utils/CSRF';
-import LoadingButton from 'components/LoadingButton';
 import AutocompleteInput from 'components/AutocompleteInput';
+import LoadingButton from 'components/LoadingButton';
+import { csrfFetch } from 'utils/CSRF';
 
 const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) => {
   const [basics, setBasics] = useState(cube.basics.slice());

@@ -1,12 +1,11 @@
 import React from 'react';
+import { Button, Col, Row } from 'reactstrap';
 
-import { Row, Col, Button } from 'reactstrap';
-
-import RenderToRoot from 'utils/RenderToRoot';
-import Footer from 'layouts/Footer';
-import LoginModal from 'components/LoginModal';
-import withModal from 'components/WithModal';
 import CardSearchBar from 'components/CardSearchBar';
+import LoginModal from 'components/LoginModal';
+import RenderToRoot from 'components/RenderToRoot';
+import withModal from 'components/WithModal';
+import Footer from 'layouts/Footer';
 
 const LoginModalButton = withModal(Button, LoginModal);
 

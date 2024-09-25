@@ -1,18 +1,18 @@
 import React, { useContext } from 'react';
+import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
-import { Button, Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import UserContext from 'contexts/UserContext';
-import CubePreview from 'components/CubePreview';
-import UserLayout from 'layouts/UserLayout';
-import DynamicFlash from 'components/DynamicFlash';
 import Banner from 'components/Banner';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
+import CubePreview from 'components/CubePreview';
+import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
 import MtgImage from 'components/MtgImage';
+import RenderToRoot from 'components/RenderToRoot';
+import UserContext from 'contexts/UserContext';
+import MainLayout from 'layouts/MainLayout';
+import UserLayout from 'layouts/UserLayout';
 
 const UserCubePage = ({ owner, followers, following, cubes, loginCallback }) => {
   const user = useContext(UserContext);

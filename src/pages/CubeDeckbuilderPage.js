@@ -1,21 +1,22 @@
-import React, { useCallback, useState, useContext } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { Card, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
-import { Card, Row, Col } from 'reactstrap';
+import CubePropType from 'proptypes/CubePropType';
+import DeckPropType from 'proptypes/DeckPropType';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
+import RenderToRoot from 'components/RenderToRoot';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
+import UserContext from 'contexts/UserContext';
 import DraftLocation, { moveOrAddCard, removeCard } from 'drafting/DraftLocation';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import CubePropType from 'proptypes/CubePropType';
-import DeckPropType from 'proptypes/DeckPropType';
 import { makeSubtitle } from 'utils/Card';
-import RenderToRoot from 'utils/RenderToRoot';
-import UserContext from 'contexts/UserContext';
 
 const canDrop = () => true;
 
@@ -38,10 +39,13 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
 
   const { basics } = initialDeck;
 
-  const locationMap = {
-    [DraftLocation.DECK]: [deck, setDeck],
-    [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
-  };
+  const locationMap = useMemo(
+    () => ({
+      [DraftLocation.DECK]: [deck, setDeck],
+      [DraftLocation.SIDEBOARD]: [sideboard, setSideboard],
+    }),
+    [deck, setDeck, sideboard, setSideboard],
+  );
 
   const handleMoveCard = useCallback(
     (source, target) => {

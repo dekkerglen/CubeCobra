@@ -1,13 +1,12 @@
 import React, { useCallback, useContext, useState } from 'react';
-import PropTypes from 'prop-types';
-
 import { Button, FormGroup, FormText, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import { postJson } from 'utils/CSRF';
+import PropTypes from 'prop-types';
 
 import CSRFForm from 'components/CSRFForm';
-import CubeContext from 'contexts/CubeContext';
 import LoadingButton from 'components/LoadingButton';
+import CubeContext from 'contexts/CubeContext';
+import { postJson } from 'utils/CSRF';
 
 const visibilityHelp = {
   pu: 'Anyone can search for and see your cube',

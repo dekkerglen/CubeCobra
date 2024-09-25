@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 const FeaturedQueue = require('../dynamo/models/featuredQueue');
 const Cube = require('../dynamo/models/cube');
 const Patron = require('../dynamo/models/patron');
@@ -110,7 +109,7 @@ async function replaceForUser(userid, cubeid) {
     date: item.date,
     owner: userid,
     featuredOn: null,
-  });  
+  });
 }
 
 async function addNewCubeToQueue(userid, cubeid) {
@@ -141,5 +140,5 @@ module.exports = {
   doesUserHaveFeaturedCube,
   replaceForUser,
   addNewCubeToQueue,
-  removeCubeFromQueue
+  removeCubeFromQueue,
 };

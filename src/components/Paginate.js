@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
 import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+
+import PropTypes from 'prop-types';
 
 const RealPage = ({ index, active, urlF, onClick }) => (
   <PaginationItem active={active === index}>
@@ -44,10 +44,9 @@ const range = (start, end) => {
 };
 
 const Paginate = ({ count, active, urlF, onClick }) => {
-  const smallPagination = new Array(count).fill(null).map((page, index) => (
-    // eslint-disable-next-line react/no-array-index-key
-    <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
-  ));
+  const smallPagination = new Array(count)
+    .fill(null)
+    .map((page, index) => <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />);
 
   const bigPagination = (
     <>
@@ -55,7 +54,6 @@ const Paginate = ({ count, active, urlF, onClick }) => {
       {active < 4 && (
         <>
           {range(1, 4).map((index) => (
-            // eslint-disable-next-line react/no-array-index-key
             <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
           ))}
           <FakePage text="..." />
@@ -65,7 +63,6 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <>
           <FakePage text="..." />
           {range(count - 5, count - 2).map((index) => (
-            // eslint-disable-next-line react/no-array-index-key
             <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
           ))}
         </>
@@ -74,7 +71,6 @@ const Paginate = ({ count, active, urlF, onClick }) => {
         <>
           <FakePage text="..." />
           {range(active - 1, active + 1).map((index) => (
-            // eslint-disable-next-line react/no-array-index-key
             <RealPage key={index} index={index} active={active} urlF={urlF} onClick={onClick} />
           ))}
           <FakePage text="..." />

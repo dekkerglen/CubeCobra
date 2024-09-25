@@ -47,11 +47,11 @@ html(lang='en')
 		script(src='/js/csrf.js', async)
 		
 		if node_env === 'production'
-			script(src='https://cdn.jsdelivr.net/npm/react@16/umd/react.production.min.js', crossorigin)
-			script(src='https://cdn.jsdelivr.net/npm/react-dom@16/umd/react-dom.production.min.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js', crossorigin)
 		else
-			script(src='https://cdn.jsdelivr.net/npm/react@16/umd/react.development.js', crossorigin)
-			script(src='https://cdn.jsdelivr.net/npm/react-dom@16/umd/react-dom.development.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js', crossorigin)
+			script(src='https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js', crossorigin)
  
 		script(type='text/javascript').
 			window.reactProps = !{reactProps};

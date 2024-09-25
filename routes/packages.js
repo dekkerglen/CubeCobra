@@ -165,7 +165,6 @@ router.post('/submit', ensureAuth, async (req, res) => {
 router.get('/upvote/:id', ensureAuth, async (req, res) => {
   const pack = await Package.getById(req.params.id);
 
-
   pack.voters = [...new Set([...pack.voters, req.user.id])];
   await Package.put(pack);
 

@@ -1,14 +1,13 @@
-/* eslint-disable react/jsx-curly-brace-presence */
 import React from 'react';
+import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
 import PropTypes from 'prop-types';
 
-import { Card, CardHeader, Row, Col, CardBody } from 'reactstrap';
-
-import DynamicFlash from 'components/DynamicFlash';
 import Banner from 'components/Banner';
-import MainLayout from 'layouts/MainLayout';
-import RenderToRoot from 'utils/RenderToRoot';
+import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
+import RenderToRoot from 'components/RenderToRoot';
+import MainLayout from 'layouts/MainLayout';
 
 const MarkdownPage = ({ loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>

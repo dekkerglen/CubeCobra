@@ -199,7 +199,7 @@ module.exports = {
     let lastKey = null;
 
     do {
-      // eslint-disable-next-line no-await-in-loop
+       
       const result = await client.query({
         KeyConditionExpression: `#p1 = :cubeId`,
         ExpressionAttributeValues: {

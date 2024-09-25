@@ -1,7 +1,7 @@
 // dotenv
 require('dotenv').config();
 
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 
 const createClient = require('../util');
 const util = require('../../serverjs/util');
@@ -109,7 +109,7 @@ module.exports = {
     };
   },
   put: async (document) => {
-    const id = document[FIELDS.ID] || uuid();
+    const id = document[FIELDS.ID] || uuid.v4();
 
     if (document.owner && document.owner.id) {
       document.owner = document.owner.id;

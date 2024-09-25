@@ -1,13 +1,13 @@
 import React from 'react';
-import ContentPropType from 'proptypes/ContentPropType';
-
-import Markdown from 'components/Markdown';
-import CommentsSection from 'components/CommentsSection';
-import Username from 'components/Username';
-import TimeAgo from 'react-timeago';
-import ReactPlayer from 'react-player';
-
 import { CardBody, CardHeader } from 'reactstrap';
+
+import ContentPropType from 'proptypes/ContentPropType';
+import ReactPlayer from 'react-player';
+import TimeAgo from 'react-timeago';
+
+import CommentsSection from 'components/CommentsSection';
+import Markdown from 'components/Markdown';
+import Username from 'components/Username';
 
 const Video = ({ video }) => {
   return (
