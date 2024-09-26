@@ -100,12 +100,18 @@ export const cardStatus = (card: Card): any => card.status;
 
 export const cardColorIdentity = (card: Card): string[] => card.colors ?? card.details?.color_identity ?? [];
 
-export const cardCmc = (card: Card): number =>
-  card.cmc !== undefined
-    ? card.cmc.includes('.')
-      ? parseFloat(card.cmc)
-      : parseInt(card.cmc)
-    : (card.details?.cmc ?? 0);
+export const cardCmc = (card: Card): number => {
+  if (card.cmc) {
+    // if it's a string
+    if (typeof card.cmc === 'string') {
+      // if it includes a dot, parse as float, otherwise parse as int
+      return card.cmc.includes('.') ? parseFloat(card.cmc) : parseInt(card.cmc);
+    }
+    return card.cmc;
+  }
+
+  return card.details?.cmc ?? 0;
+};
 
 export const cardId = (card: Card): string => card.cardID ?? card.details?.scryfall_id;
 
@@ -225,9 +231,9 @@ export const cardElo = (card: Card): number => (card.details ? card.details?.elo
 
 export const cardPopularity = (card: Card): number => parseFloat(card.details?.popularity ?? '0');
 
-export const cardCubeCount = (card: Card): number => (card.details ? (card.details?.cubeCount ?? 0) : 0);
+export const cardCubeCount = (card: Card): number => (card.details ? card.details?.cubeCount ?? 0 : 0);
 
-export const cardPickCount = (card: Card): number => (card.details ? (card.details?.pickCount ?? 0) : 0);
+export const cardPickCount = (card: Card): number => (card.details ? card.details?.pickCount ?? 0 : 0);
 
 export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 

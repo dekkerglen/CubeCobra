@@ -26,7 +26,7 @@ interface Card {
   tags?: string[];
   finish?: string;
   status?: string;
-  cmc?: string;
+  cmc?: string | number;
   type_line?: string;
   rarity?: string;
   addedTmsp?: string;

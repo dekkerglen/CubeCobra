@@ -114,6 +114,7 @@ interface RenderSymbolProps {
   value: string;
 }
 const renderSymbol: React.FC<RenderSymbolProps> = ({ value }) => {
+  if (!value) return null;
   const symbol = value.replace('/', '-').toLowerCase();
   return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="mana-symbol-sm" />;
 };

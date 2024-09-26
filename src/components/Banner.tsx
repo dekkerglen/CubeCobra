@@ -42,7 +42,7 @@ const Banner: React.FC = () => {
 
   if (option < options.length) {
     return (
-      <Col xs="12" className="py-2">
+      <Col xs="12" className="p-2">
         <Card>
           <CardBody className="bg-advert">{options[option]}</CardBody>
         </Card>

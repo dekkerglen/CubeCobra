@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { Button, Col, Collapse, Container, Input, Row } from 'reactstrap';
+import { Button, Col, Collapse, Input, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
@@ -35,7 +35,6 @@ const SortCollapse = ({ isOpen }) => {
 
   return (
     <Collapse isOpen={isOpen}>
-      <Container>
         <Row>
           <Col xs="12" sm="6" className="mt-2">
             <h6>Primary Sort</h6>
@@ -135,7 +134,6 @@ const SortCollapse = ({ isOpen }) => {
             </Button>
           </Col>
         </Row>
-      </Container>
     </Collapse>
   );
 };

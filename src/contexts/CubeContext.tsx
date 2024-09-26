@@ -772,7 +772,7 @@ export function CubeContextProvider({
     [changes, setChanges],
   );
 
-  const canEdit = user !== null && cube.owner.id === user.id;
+  const canEdit = !!user && cube.owner.id === user.id;
 
   const hasCustomImages = useMemo(
     () =>

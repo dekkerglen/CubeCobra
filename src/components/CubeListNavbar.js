@@ -3,7 +3,6 @@ import {
   Button,
   Col,
   Collapse,
-  Container,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
@@ -46,7 +45,6 @@ const CompareCollapse = (props) => {
 
   return (
     <Collapse {...props}>
-      <Container>
         <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
           <Col xs={12}>
             <Input
@@ -63,7 +61,6 @@ const CompareCollapse = (props) => {
             </Button>
           </Col>
         </Form>
-      </Container>
     </Collapse>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, Row } from 'reactstrap';
+import { Col, Container,Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
@@ -15,16 +15,24 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />
       <DynamicFlash />
-      <Row>
-        <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} />
-          <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />
-        </Col>
-        <Col lg={6} md={6} sm={12} xs={12}>
-          <CubesCard title="Most Popular Cubes" className="mt-4" cubes={popular} />
-          <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={drafted} />
-        </Col>
-      </Row>
+      <Container>
+        <Row>
+          <Col lg={6} md={6} sm={12} xs={12}>
+            <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} lean/>
+          </Col>
+          <Col lg={6} md={6} sm={12} xs={12}>
+            <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />
+          </Col>
+        </Row>
+        <Row>
+          <Col lg={6} md={6} sm={12} xs={12}>
+            <CubesCard title="Most Popular Cubes" className="mt-4" cubes={popular} />
+          </Col>
+          <Col lg={6} md={6} sm={12} xs={12}>
+            <CubesCard title="Recently Drafted Cubes" className="mt-4" cubes={drafted} />
+          </Col>
+        </Row>
+      </Container>
     </MainLayout>
   );
 };

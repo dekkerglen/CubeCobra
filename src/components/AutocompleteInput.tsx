@@ -254,7 +254,7 @@ const AutocompleteInput = forwardRef<Input, AutocompleteInputProps>(
 
     // Replace curly quotes with straight quotes. Needed for iOS.
     const normalizedValue = (value || '')
-      .replace(/[\u2018\u2019\u201C\u201D]/g, (c) => '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1))
+      .replace(/[\u2018\u2019\u201C\u201D]/g, (c: string) => '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1))
       .trim()
       .normalize('NFD') // convert to consistent unicode format
       .replace(/[\u0300-\u036f]/g, '') // remove unicode

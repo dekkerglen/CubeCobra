@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import {
   Collapse,
-  Container,
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
@@ -14,6 +13,7 @@ import {
   UncontrolledDropdown,
 } from 'reactstrap';
 
+import CardSearchBar from 'components/CardSearchBar';
 import CreateCubeModal from 'components/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import LoginModal from 'components/LoginModal';
@@ -40,7 +40,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
   const [expanded, toggle] = useToggle(false);
   return (
     <div className="flex-container flex-vertical viewport">
-      <Navbar color="dark" expand="md" container="xl" dark className="my-0">
+      <Navbar color="dark" expand="md" dark className="py-0 px-4">
         <NavbarBrand href="/" className="overflow-hidden">
           <img
             className="banner-image"
@@ -48,6 +48,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
             alt="Cube Cobra: a site for Magic: the Gathering Cubing"
           />
         </NavbarBrand>
+        <div className="d-none d-xl-block mx-4">
+          <CardSearchBar />
+        </div>
         <NavbarToggler onClick={toggle} />
         <Collapse isOpen={expanded} navbar>
           <Nav className="ms-auto" navbar>
@@ -148,20 +151,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
         </Collapse>
       </Navbar>
 
-      <Container fluid="xl" className="flex-grow main-content">
-        <ThemeContext.Provider value={user?.theme ?? 'default'}>
-          <ErrorBoundary>{children}</ErrorBoundary>
-        </ThemeContext.Provider>
+      <div className="d-flex flex-row flex-grow flex-grow">
+        <div className="d-none d-lg-block mx-4">
+          <SideBanner placementId="left-rail-1" />
+          <SideBanner placementId="left-rail-2" />
+        </div>
+        <div className="main-content flex-grow max-width  mx-4">
+          <ThemeContext.Provider value={user?.theme ?? 'default'}>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </ThemeContext.Provider>
+        </div>
+        <div className="d-none d-lg-block mx-4">
+          <SideBanner placementId="right-rail-1" />
+          <SideBanner placementId="right-rail-2" />
+        </div>
         <div className="d-lg-none">
           <MobileBanner placementId="mobile-banner" />
         </div>
-        <div className="ad-left d-none d-lg-block">
-          <SideBanner placementId="left-rail" />
-        </div>
-        <div className="ad-right d-none d-lg-block">
-          <SideBanner placementId="right-rail" />
-        </div>
-      </Container>
+      </div>
       <Footer />
     </div>
   );
