@@ -13,7 +13,8 @@ function exitCardlinkValue(token) {
 
 function exitCardlink(token) {
   const data = this.resume();
-  const node = this.exit(token);
+  const node = this.stack[this.stack.length - 1];
+  this.exit(token);
   
   node.value = data;
 }
