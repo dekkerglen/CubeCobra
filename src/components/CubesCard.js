@@ -6,7 +6,7 @@ import CubePropType from 'proptypes/CubePropType';
 
 import CubePreview from 'components/CubePreview';
 
-const CubesCard = ({ cubes, title, header = "", lean = false, ...props }) => {
+const CubesCard = ({ cubes, title, header = '', lean = false, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);

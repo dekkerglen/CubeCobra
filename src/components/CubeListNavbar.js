@@ -45,22 +45,22 @@ const CompareCollapse = (props) => {
 
   return (
     <Collapse {...props}>
-        <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
-          <Col xs={12}>
-            <Input
-              type="text"
-              className="mb-2 me-2"
-              placeholder="Comparison Cube ID"
-              value={compareID}
-              onChange={handleChange}
-            />
-          </Col>
-          <Col>
-            <Button color="accent" className="mb-2" href={targetUrl}>
-              Compare cubes
-            </Button>
-          </Col>
-        </Form>
+      <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
+        <Col xs={12}>
+          <Input
+            type="text"
+            className="mb-2 me-2"
+            placeholder="Comparison Cube ID"
+            value={compareID}
+            onChange={handleChange}
+          />
+        </Col>
+        <Col>
+          <Button color="accent" className="mb-2" href={targetUrl}>
+            Compare cubes
+          </Button>
+        </Col>
+      </Form>
     </Collapse>
   );
 };

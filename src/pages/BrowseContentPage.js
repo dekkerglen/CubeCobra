@@ -60,13 +60,15 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
               </Col>
             </Row>
           </Col>
-          {items.filter((item) => (['a','v','e'].includes(item.type))).map((item) => (
-            <Col className="mb-3" xs="6" md="4" lg="3">
-              {item.type === 'a' && <ArticlePreview article={item} />}
-              {item.type === 'v' && <VideoPreview video={item} />}
-              {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
-            </Col>
-          ))}
+          {items
+            .filter((item) => ['a', 'v', 'e'].includes(item.type))
+            .map((item) => (
+              <Col className="mb-3" xs="6" md="4" lg="3">
+                {item.type === 'a' && <ArticlePreview article={item} />}
+                {item.type === 'v' && <VideoPreview video={item} />}
+                {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
+              </Col>
+            ))}
         </Row>
       </InfiniteScroll>
     </MainLayout>
