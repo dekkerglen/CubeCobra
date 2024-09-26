@@ -231,9 +231,9 @@ export const cardElo = (card: Card): number => (card.details ? card.details?.elo
 
 export const cardPopularity = (card: Card): number => parseFloat(card.details?.popularity ?? '0');
 
-export const cardCubeCount = (card: Card): number => (card.details ? card.details?.cubeCount ?? 0 : 0);
+export const cardCubeCount = (card: Card): number => (card.details ? (card.details?.cubeCount ?? 0) : 0);
 
-export const cardPickCount = (card: Card): number => (card.details ? card.details?.pickCount ?? 0 : 0);
+export const cardPickCount = (card: Card): number => (card.details ? (card.details?.pickCount ?? 0) : 0);
 
 export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 

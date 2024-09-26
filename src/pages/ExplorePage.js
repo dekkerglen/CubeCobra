@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, Container,Row } from 'reactstrap';
+import { Col, Container, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
@@ -18,7 +18,7 @@ const ExplorePage = ({ recents, featured, drafted, popular, loginCallback }) => 
       <Container>
         <Row>
           <Col lg={6} md={6} sm={12} xs={12}>
-            <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} lean/>
+            <CubesCard title="Featured Cubes" className="mt-4" cubes={featured} lean />
           </Col>
           <Col lg={6} md={6} sm={12} xs={12}>
             <CubesCard title="Recently Updated Cubes" className="mt-4" cubes={recents} />

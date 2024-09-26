@@ -35,105 +35,105 @@ const SortCollapse = ({ isOpen }) => {
 
   return (
     <Collapse isOpen={isOpen}>
-        <Row>
-          <Col xs="12" sm="6" className="mt-2">
-            <h6>Primary Sort</h6>
-            <Input
-              type="select"
-              value={sortPrimary}
-              onChange={(e) => {
-                setSortPrimary(e.target.value);
-              }}
-            >
-              {SORTS.map((sort) => (
-                <option key={`primary-${sort}`} value={sort}>
-                  {sort}
-                </option>
-              ))}
-            </Input>
-          </Col>
-          <Col xs="12" sm="6" className="mt-2">
-            <h6>Secondary Sort</h6>
-            <Input
-              type="select"
-              value={sortSecondary}
-              onChange={(e) => {
-                setSortSecondary(e.target.value);
-              }}
-            >
-              {SORTS.map((sort) => (
-                <option key={`secondary-${sort}`} value={sort}>
-                  {sort}
-                </option>
-              ))}
-            </Input>
-          </Col>
-          <Col xs="12" sm="6" className="mt-2">
-            <h6>Tertiary Sort</h6>
-            <Input
-              type="select"
-              value={sortTertiary}
-              onChange={(e) => {
-                setSortTertiary(e.target.value);
-              }}
-            >
-              {SORTS.map((sort) => (
-                <option key={`tertiary-${sort}`} value={sort}>
-                  {sort}
-                </option>
-              ))}
-            </Input>
-          </Col>
-          <Col xs="12" sm="6" className="mt-2">
-            <h6>Ordered Sort</h6>
-            <Input
-              type="select"
-              value={sortQuaternary}
-              onChange={(e) => {
-                setSortQuaternary(e.target.value);
-              }}
-            >
-              {ORDERED_SORTS.map((sort) => (
-                <option key={`quaternary-${sort}`} value={sort}>
-                  {sort}
-                </option>
-              ))}
-            </Input>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <p className="my-2">
-              <em>
-                cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
-                each item once.
-              </em>
-            </p>
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Button color="accent" className="me-sm-2 mb-3" onClick={resetSorts} disabled={!sortsModified}>
-              Reset Sort
+      <Row>
+        <Col xs="12" sm="6" className="mt-2">
+          <h6>Primary Sort</h6>
+          <Input
+            type="select"
+            value={sortPrimary}
+            onChange={(e) => {
+              setSortPrimary(e.target.value);
+            }}
+          >
+            {SORTS.map((sort) => (
+              <option key={`primary-${sort}`} value={sort}>
+                {sort}
+              </option>
+            ))}
+          </Input>
+        </Col>
+        <Col xs="12" sm="6" className="mt-2">
+          <h6>Secondary Sort</h6>
+          <Input
+            type="select"
+            value={sortSecondary}
+            onChange={(e) => {
+              setSortSecondary(e.target.value);
+            }}
+          >
+            {SORTS.map((sort) => (
+              <option key={`secondary-${sort}`} value={sort}>
+                {sort}
+              </option>
+            ))}
+          </Input>
+        </Col>
+        <Col xs="12" sm="6" className="mt-2">
+          <h6>Tertiary Sort</h6>
+          <Input
+            type="select"
+            value={sortTertiary}
+            onChange={(e) => {
+              setSortTertiary(e.target.value);
+            }}
+          >
+            {SORTS.map((sort) => (
+              <option key={`tertiary-${sort}`} value={sort}>
+                {sort}
+              </option>
+            ))}
+          </Input>
+        </Col>
+        <Col xs="12" sm="6" className="mt-2">
+          <h6>Ordered Sort</h6>
+          <Input
+            type="select"
+            value={sortQuaternary}
+            onChange={(e) => {
+              setSortQuaternary(e.target.value);
+            }}
+          >
+            {ORDERED_SORTS.map((sort) => (
+              <option key={`quaternary-${sort}`} value={sort}>
+                {sort}
+              </option>
+            ))}
+          </Input>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <p className="my-2">
+            <em>
+              cards will be appear as duplicates if they fit in multiple categories. The counts will still only count
+              each item once.
+            </em>
+          </p>
+        </Col>
+      </Row>
+      <Row className="mb-3">
+        <Col>
+          <Button color="accent" className="me-sm-2 mb-3" onClick={resetSorts} disabled={!sortsModified}>
+            Reset Sort
+          </Button>
+          {!canEdit ? (
+            false
+          ) : (
+            <Button color="accent" className="me-sm-2 mb-3" onClick={saveSorts} disabled={!sortsModified}>
+              Save as Default Sort
             </Button>
-            {!canEdit ? (
-              false
-            ) : (
-              <Button color="accent" className="me-sm-2 mb-3" onClick={saveSorts} disabled={!sortsModified}>
-                Save as Default Sort
-              </Button>
-            )}
-            <Button
-              color={cube.showUnsorted ? 'unsafe' : 'primary'}
-              className="me-sm-2 mb-3"
-              onClick={() => setShowUnsorted(!cube.showUnsorted)}
-            >
-              <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-                {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
-              </Tooltip>
-            </Button>
-          </Col>
-        </Row>
+          )}
+          <Button
+            color={cube.showUnsorted ? 'unsafe' : 'primary'}
+            className="me-sm-2 mb-3"
+            onClick={() => setShowUnsorted(!cube.showUnsorted)}
+          >
+            <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
+              {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
+            </Tooltip>
+          </Button>
+        </Col>
+      </Row>
     </Collapse>
   );
 };
