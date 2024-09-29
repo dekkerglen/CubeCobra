@@ -213,7 +213,7 @@ export const serverConfig = merge(config, {
   },
   externals: [
     nodeExternals({
-      allowlist: ['react-tag-input', 'react-dnd', 'dnd-core', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+      allowlist: [],
     }),
   ],
 });

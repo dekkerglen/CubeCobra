@@ -4,7 +4,6 @@ import { Button, Card, CardBody, CardFooter, CardHeader, Col, Input, InputGroup,
 import { LockIcon, PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 
 import Username from 'components/Username';
 import DomainContext from 'contexts/DomainContext';
@@ -12,17 +11,10 @@ import UserContext from 'contexts/UserContext';
 import useMount from 'hooks/UseMount';
 import { callApi } from 'utils/CSRF';
 
+import { SortableItem, SortableList } from './DND';
+
 const BOT_NAME = 'Bot';
 
-const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
-
-const SortableList = SortableContainer(({ items }) => {
-  return (
-    <div>
-      {items.map(({ element, key }, index) => <SortableItem key={key} index={index} value={element} />).slice(1)}
-    </div>
-  );
-});
 
 const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);

@@ -95,8 +95,6 @@ const CardModal: React.FC<CardModalProps> = ({
 
   const disabled = !canEdit || card.markedForDelete;
 
-  console.log(allTags);
-
   return (
     <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
       <ModalHeader id="cardModalHeader" toggle={toggle}>
@@ -406,12 +404,6 @@ const CardModal: React.FC<CardModalProps> = ({
                   deleteTag={(index: number) => {
                     const newTags = [...cardTags(card)];
                     newTags.splice(index, 1);
-                    updateField('tags', newTags);
-                  }}
-                  reorderTag={(_: TagData, oldIndex: number, newIndex: number) => {
-                    const newTags = [...cardTags(card)];
-                    const newTag = newTags.splice(oldIndex, 1)[0];
-                    newTags.splice(newIndex, 0, newTag);
                     updateField('tags', newTags);
                   }}
                   tagColors={tagColors}

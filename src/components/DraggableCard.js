@@ -2,7 +2,6 @@ import React, { useContext, useRef } from 'react';
 
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
-import { useDrag, useDrop } from 'react-dnd';
 
 import FoilCardImage from 'components/FoilCardImage';
 import AutocardContext from 'contexts/AutocardContext';

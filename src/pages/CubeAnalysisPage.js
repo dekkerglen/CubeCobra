@@ -180,8 +180,6 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
     },
   ];
 
-  console.log(cube.cards);
-
   return (
     <>
       <DynamicFlash />

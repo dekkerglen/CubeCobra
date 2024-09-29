@@ -6,7 +6,6 @@ import { DrafterStatePropType } from 'proptypes/DraftbotPropTypes';
 
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import Pack from 'components/Pack';
@@ -92,35 +91,33 @@ const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
         </Collapse>
       </Navbar>
       <DynamicFlash />
-      <DndProvider>
-        {packNum < numPacks && (
-          <>
-            <ErrorBoundary>
-              <Pack
-                pack={pack}
-                packNumber={packNum + 1}
-                pickNumber={pickNum + 1}
-                instructions={instructions}
-                picking={picking}
-                onMoveCard={handleMoveCard}
-                onClickCard={handleClickCard}
-              />
-            </ErrorBoundary>
-          </>
-        )}
-        <ErrorBoundary className="mt-3">
-          <Card className="my-3">
-            <DeckStacks
-              cards={picks}
-              title="picks"
-              subtitle={makeSubtitle(picks.flat(3))}
-              locationType={DraftLocation.PICKS}
-              canDrop={canDrop}
+      {packNum < numPacks && (
+        <>
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              packNumber={packNum + 1}
+              pickNumber={pickNum + 1}
+              instructions={instructions}
+              picking={picking}
               onMoveCard={handleMoveCard}
+              onClickCard={handleClickCard}
             />
-          </Card>
-        </ErrorBoundary>
-      </DndProvider>
+          </ErrorBoundary>
+        </>
+      )}
+      <ErrorBoundary className="mt-3">
+        <Card className="my-3">
+          <DeckStacks
+            cards={picks}
+            title="picks"
+            subtitle={makeSubtitle(picks.flat(3))}
+            locationType={DraftLocation.PICKS}
+            canDrop={canDrop}
+            onMoveCard={handleMoveCard}
+          />
+        </Card>
+      </ErrorBoundary>
     </>
   );
 };

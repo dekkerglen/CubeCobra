@@ -1,6 +1,4 @@
-import React from 'react';
-
-import { WithContext as ReactTags } from 'react-tag-input';
+import React, { useState, useRef } from 'react';
 
 import TagData from 'datatypes/TagData';
 import { getTagColorClass } from 'utils/Util';
@@ -9,7 +7,6 @@ interface TagInputProps {
   tags: TagData[];
   addTag: (tag: TagData) => void;
   deleteTag: (i: number) => void;
-  reorderTag: (tag: TagData, currPos: number, newPos: number) => void;
   suggestions?: string[];
   tagColors?: { tag: string; color: string | null }[];
   readOnly?: boolean;
@@ -19,34 +16,82 @@ const TagInput: React.FC<TagInputProps> = ({
   tags,
   addTag,
   deleteTag,
-  reorderTag,
   suggestions = [],
   tagColors = [],
   readOnly = false,
 }) => {
-  // Need type assertions here as the typing for ReactTags is not very good.
+  const [inputValue, setInputValue] = useState('');
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setFilteredSuggestions(suggestions.filter((suggestion) => suggestion.toLowerCase().includes(value.toLowerCase())));
+  };
+
+  const handleAddTag = (tagText: string) => {
+    if (tagText.trim() !== '') {
+      addTag({ text: tagText, id: tagText });
+      setInputValue('');
+      setFilteredSuggestions([]);
+    }
+  };
+
+  const handleDeleteTag = (index: number) => {
+    deleteTag(index);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      handleAddTag(inputValue);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    handleAddTag(suggestion);
+    inputRef.current?.focus();
+  };
+
   return (
-    <ReactTags
-      tags={tags.map((tag) => ({ ...tag, className: getTagColorClass(tagColors, tag.text) }))}
-      suggestions={suggestions.map((suggestion) => ({ id: suggestion, text: suggestion })) as any}
-      handleAddition={((tag: TagData) => addTag({ text: tag.text, id: tag.id })) as any}
-      handleDelete={deleteTag}
-      handleDrag={
-        ((tag: TagData, currPos: number, newPos: number) =>
-          reorderTag({ text: tag.text, id: tag.id }, currPos, newPos)) as any
-      }
-      placeholder="Tag (hit tab)..."
-      maxLength={24}
-      autofocus={false}
-      readOnly={readOnly}
-      classNames={
-        {
-          tags: 'flex-grow-1',
-          tag: 'ReactTags__tag my-0',
-          tagInput: 'ReactTags__tagInput m-0',
-        } as any
-      }
-    />
+    <div className="tag-input">
+      <div className="tags flex-grow-1 flex-wrap">
+        {tags.map((tag, index) => (
+          <div key={tag.id} className={`ReactTags__tag my-0 ${getTagColorClass(tagColors, tag.text)}`}>
+            {tag.text}
+            {!readOnly && (
+              <button type="button" onClick={() => handleDeleteTag(index)}>
+                &times;
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {!readOnly && (
+        <div className="tag-input-field">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Tag (hit enter or tab)..."
+            maxLength={24}
+            autoFocus={false}
+          />
+          {filteredSuggestions.length > 0 && (
+            <ul className="suggestions">
+              {filteredSuggestions.map((suggestion, index) => (
+                <li key={index} onClick={() => handleSuggestionClick(suggestion)}>
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

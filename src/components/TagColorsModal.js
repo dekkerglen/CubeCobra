@@ -2,24 +2,12 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 import { Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import { SortableItem, SortableList } from './DND';
 
 import LoadingButton from 'components/LoadingButton';
 import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
 import { csrfFetch } from 'utils/CSRF';
 import { arrayMove, getTagColorClass } from 'utils/Util';
-
-const SortableItem = SortableElement(({ value }) => <div className="sortable-item">{value}</div>);
-
-const SortableList = SortableContainer(({ items }) => {
-  return (
-    <div>
-      {items.map(({ element, key }, index) => (
-        <SortableItem key={key} index={index} value={element} />
-      ))}
-    </div>
-  );
-});
 
 const TagColorRow = ({ tag, tagClass, value, onChange }) => (
   <Row className="tag-color-row">

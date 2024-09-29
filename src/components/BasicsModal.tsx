@@ -45,8 +45,6 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, toggle, addBasics, de
         basics.findIndex((index) => cards[index].details?.oracle_id === card.oracle_id),
       );
 
-      console.log(toIndex);
-
       for (const index of toIndex) {
         newCounts[index] += 1;
       }

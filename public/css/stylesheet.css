@@ -1284,7 +1284,9 @@ thead th.corner[scope=col] {
 .main-content {
 	position:relative;
 }
-
+.max-width-1600 {
+  max-width: 1600px;
+}
 
 .ad-right {
 	text-align: center;

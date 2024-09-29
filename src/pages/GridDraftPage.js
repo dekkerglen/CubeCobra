@@ -22,7 +22,6 @@ import DraftPropType from 'proptypes/DraftPropType';
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';
-import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FoilCardImage from 'components/FoilCardImage';
@@ -129,7 +128,6 @@ Pack.defaultProps = {
 
 const MUTATIONS = {
   makePick: ({ newGridDraft, seatIndex, cardIndices }) => {
-    console.log(cardIndices);
     newGridDraft.seats[seatIndex].pickorder.push(...cardIndices.map(([x]) => x));
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
@@ -232,40 +230,38 @@ export const GridDraftPage = ({ cube, initialDraft, seatNumber, loginCallback })
           >
             <Input type="hidden" name="body" value={initialDraft.id} />
           </CSRFForm>
-          <DndProvider>
-            <ErrorBoundary>
-              <Pack
-                pack={pack}
-                packNumber={packNum}
-                pickNumber={pickNum}
-                seatIndex={turn ? 0 : 1}
-                makePick={mutations.makePick}
-                turn={turn ? 1 : 2}
+          <ErrorBoundary>
+            <Pack
+              pack={pack}
+              packNumber={packNum}
+              pickNumber={pickNum}
+              seatIndex={turn ? 0 : 1}
+              makePick={mutations.makePick}
+              turn={turn ? 1 : 2}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary className="mt-3">
+            <Card className="mt-3">
+              <DeckStacks
+                cards={picked[0]}
+                title={draftType === 'bot' ? 'picks' : "Player One's picks"}
+                subtitle={makeSubtitle(picked[0].flat(3))}
+                locationType={Location.PICKS}
+                canDrop={() => false}
+                onMoveCard={() => {}}
               />
-            </ErrorBoundary>
-            <ErrorBoundary className="mt-3">
-              <Card className="mt-3">
-                <DeckStacks
-                  cards={picked[0]}
-                  title={draftType === 'bot' ? 'picks' : "Player One's picks"}
-                  subtitle={makeSubtitle(picked[0].flat(3))}
-                  locationType={Location.PICKS}
-                  canDrop={() => false}
-                  onMoveCard={() => {}}
-                />
-              </Card>
-              <Card className="my-3">
-                <DeckStacks
-                  cards={picked[1]}
-                  title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
-                  subtitle={makeSubtitle(picked[1].flat(3))}
-                  locationType={Location.PICKS}
-                  canDrop={() => false}
-                  onMoveCard={() => {}}
-                />
-              </Card>
-            </ErrorBoundary>
-          </DndProvider>
+            </Card>
+            <Card className="my-3">
+              <DeckStacks
+                cards={picked[1]}
+                title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
+                subtitle={makeSubtitle(picked[1].flat(3))}
+                locationType={Location.PICKS}
+                canDrop={() => false}
+                onMoveCard={() => {}}
+              />
+            </Card>
+          </ErrorBoundary>
         </CubeLayout>
       </DisplayContextProvider>
     </MainLayout>

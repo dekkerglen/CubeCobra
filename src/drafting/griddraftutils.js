@@ -86,7 +86,5 @@ export const calculateGridBotPick = (drafterState) => {
 
   const best = optionElos.map((elo, index) => [elo, index]).sort((a, b) => b[0] - a[0])[0][1];
 
-  console.log(best);
-
   return GRID_DRAFT_OPTIONS[best].map((x) => [cardsInPack[x], x]).filter(([x]) => x !== null);
 };

@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 
 import DeckStacks from 'components/DeckStacks';
-import DndProvider from 'components/DndProvider';
 import Pack from 'components/Pack';
 import AutocardContext from 'contexts/AutocardContext';
 import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
@@ -107,8 +106,6 @@ const CubeDraft = ({ draft, socket }) => {
           let json = await res.json();
           status = json.result;
 
-          console.log(json);
-
           if (json.picks === 0) {
             await new Promise((resolve) => setTimeout(resolve, 5000));
             continue;
@@ -207,7 +204,7 @@ const CubeDraft = ({ draft, socket }) => {
   }, [stepQueue, onClickCard, pack, loading]);
 
   return (
-    <DndProvider>
+    <>
       <Pack
         pack={pack.map((index) => draft.cards[index])}
         onMoveCard={onMoveCard}
@@ -226,7 +223,7 @@ const CubeDraft = ({ draft, socket }) => {
           onMoveCard={onMoveCard}
         />
       </Card>
-    </DndProvider>
+    </>
   );
 };
 

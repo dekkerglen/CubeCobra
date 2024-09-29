@@ -86,8 +86,6 @@ const DeckbuilderNavbar = ({
 
     const json = await response.json();
 
-    console.log(json);
-
     if (json.success === 'true') {
       const pool = [
         ...deck.mainboard.flat(3).map(({ index }) => index),

@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Col, ColProps } from 'reactstrap';
-
-import { DropTargetMonitor, useDrop } from 'react-dnd';
+import { useDroppable } from '@dnd-kit/core';
 
 export interface CardStackProps extends ColProps {
   location: unknown;
@@ -9,23 +8,19 @@ export interface CardStackProps extends ColProps {
 }
 
 const CardStack: React.FC<CardStackProps> = ({ location, children, ...props }) => {
-  const [{ isAcceptable }, drop] = useDrop({
-    accept: 'card',
-    drop: (_, monitor) => (monitor.didDrop() ? undefined : location),
-    canDrop: () => true,
-    collect: (monitor: DropTargetMonitor) => ({
-      isAcceptable: !!monitor.isOver({ shallow: true }) && !!monitor.canDrop(),
-    }),
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'card-stack',
+    data: { location },
   });
 
   let className = 'mt-3 col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding';
-  if (isAcceptable) {
+  if (isOver) {
     className += ' outline';
   }
 
   return (
     <Col className={className} xs={3} {...props}>
-      <div ref={drop}>
+      <div ref={setNodeRef}>
         {!Array.isArray(children) ? (
           ''
         ) : (

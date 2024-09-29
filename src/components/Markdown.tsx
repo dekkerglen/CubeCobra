@@ -2,7 +2,6 @@ import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { Card, CardBody, Col, Row } from 'reactstrap';
 
 import { LinkIcon } from '@primer/octicons-react';
-import Latex from 'react-latex';
 // @ts-expect-error This library has no types.
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
@@ -87,18 +86,6 @@ const renderTable: React.FC<RenderTableProps> = (node) => (
   </div>
 );
 
-interface RenderMathProps {
-  value: string;
-}
-const renderMath: React.FC<RenderMathProps> = (node) => (
-  <Latex trust={false} displayMode>{`$$ ${node.value} $$`}</Latex>
-);
-
-interface RenderInlineMathProps {
-  value: string;
-}
-const renderInlineMath: React.FC<RenderInlineMathProps> = (node) => <Latex trust={false}>{`$ ${node.value} $`}</Latex>;
-
 interface RenderUserlinkProps {
   name: string;
 }
@@ -180,8 +167,6 @@ const RENDERERS = {
   pre: renderCode,
   table: renderTable,
   // plugins
-  math: renderMath,
-  inlineMath: renderInlineMath,
   userlink: renderUserlink,
   symbol: renderSymbol,
   cardlink: renderCardlink,

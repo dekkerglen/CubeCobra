@@ -7,7 +7,6 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import DeckbuilderNavbar from 'components/DeckbuilderNavbar';
 import DeckStacks from 'components/DeckStacks';
-import DndProvider from 'components/DndProvider';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
@@ -103,26 +102,24 @@ const CubeDeckbuilderPage = ({ cube, initialDeck, loginCallback }) => {
             <Col>
               <Card>
                 <ErrorBoundary>
-                  <DndProvider>
-                    <DeckStacks
-                      cards={deck}
-                      title="Deck"
-                      subtitle={makeSubtitle(deck.flat().flat())}
-                      locationType={DraftLocation.DECK}
-                      canDrop={canDrop}
-                      onMoveCard={handleMoveCard}
-                      onClickCard={handleMoveCard}
-                    />
-                    <DeckStacks
-                      className="border-top"
-                      cards={sideboard}
-                      title="Sideboard"
-                      locationType={DraftLocation.SIDEBOARD}
-                      canDrop={canDrop}
-                      onMoveCard={handleMoveCard}
-                      onClickCard={handleMoveCard}
-                    />
-                  </DndProvider>
+                  <DeckStacks
+                    cards={deck}
+                    title="Deck"
+                    subtitle={makeSubtitle(deck.flat().flat())}
+                    locationType={DraftLocation.DECK}
+                    canDrop={canDrop}
+                    onMoveCard={handleMoveCard}
+                    onClickCard={handleMoveCard}
+                  />
+                  <DeckStacks
+                    className="border-top"
+                    cards={sideboard}
+                    title="Sideboard"
+                    locationType={DraftLocation.SIDEBOARD}
+                    canDrop={canDrop}
+                    onMoveCard={handleMoveCard}
+                    onClickCard={handleMoveCard}
+                  />
                 </ErrorBoundary>
               </Card>
             </Col>

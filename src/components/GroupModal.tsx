@@ -397,12 +397,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   newTags.splice(index, 1);
                   setTags(newTags);
                 }}
-                reorderTag={(_: TagData, index: number, newIndex: number) => {
-                  const newTags = [...tags];
-                  const newTag = newTags.splice(index, 1)[0];
-                  newTags.splice(newIndex, 0, newTag);
-                  setTags(newTags);
-                }}
                 tagColors={tagColors}
                 suggestions={allTags}
               />
