@@ -40,7 +40,14 @@
     "upload-exports": "aws s3 sync temp/export s3://cubecobra",
     "exports": "node --max-old-space-size=4096 jobs/export_cubes.js && node --max-old-space-size=4096 jobs/export_decks.js && node --max-old-space-size=4096 jobs/export_simple_card_dict.js && yarn run upload-exports",
     "rotate-queue": "node --max-old-space-size=4096 jobs/rotate_featured.js",
-    "sync-podcasts": "node --max-old-space-size=4096 jobs/update_podcasts.js"
+    "sync-podcasts": "node --max-old-space-size=4096 jobs/update_podcasts.js",
+    "start:localstack": "./scripts/local/start_localstack.sh",
+    "setup:local": "yarn start:localstack && yarn setup:local:env && yarn setup:local:localstack && yarn setup:local:files && yarn setup:local:db && yarn update-cards",
+    "setup:local:localstack": "./scripts/init_localstack.sh",
+    "setup:local:env": "cp .env_EXAMPLE .env",
+    "setup:local:files": "node one_shot_scripts/create_local_files.js",
+    "setup:local:db": "node --max-old-space-size=4096 one_shot_scripts/createTables.js",
+    "start:dev": "yarn start:localstack && yarn devstart"
   },
   "author": "Gwen Dekker",
   "license": "ISC",
