@@ -3,6 +3,7 @@ const Papa = require('papaparse');
 const sanitizeHtml = require('sanitize-html');
 
 const fetch = require('node-fetch');
+const _ = require('lodash')
 const sharp = require('sharp');
 const Cube = require('../dynamo/models/cube');
 
@@ -198,9 +199,13 @@ function maybeCards(cube, carddb) {
   return maybe.map((card) => ({ ...card, details: carddb.cardFromId(card.cardID) }));
 }
 
+function camelizeDataRows(data) {
+  return data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [_.camelCase(key), value])));
+}
+
 function CSVtoCards(csvString, carddb) {
-  let { data } = Papa.parse(csvString.trim(), { header: true });
-  data = data.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])));
+  const { data } = Papa.parse(csvString.trim(), { header: true });
+  const camelizedRows = camelizeDataRows(data)
   const missing = [];
   const newCards = [];
   const newMaybe = [];
@@ -210,17 +215,17 @@ function CSVtoCards(csvString, carddb) {
     type,
     color,
     set,
-    'collector number': collectorNumber,
+    collectorNumber,
     status,
     finish,
     maybeboard,
-    'image url': imageUrl,
-    'image back url': imageBackUrl,
+    imageUrl,
+    imageBackUrl,
     tags,
     notes,
-    'Color Category': colorCategory,
+    colorCategory,
     rarity,
-  } of data) {
+  } of camelizedRows) {
     if (name) {
       const upperSet = (set || '').toUpperCase();
       const card = {
