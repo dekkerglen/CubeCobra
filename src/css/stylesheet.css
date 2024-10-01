@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  :root {
+    --bg: 255 255 255;
+		--bg-active: 233 233 233;
+    --bg-secondary: 52 58 64;
+		--text-secondary: 128 128 128;
+		--text-secondary-active: 255 255 255;
+		--border: 212 212 212;
+		--text: 33 37 41;
+		--link: 0 123 255;
+		--link-active: 0 86 179;
+		--button-text: 255 255 255;
+		--button-text-secondary: 33 37 41;
+		--button-success: 8 119 21;
+		--button-success-active : 0 75 13;
+		--button-danger: 188 21 37;
+		--button-danger-active: 139 0 0;
+		--button-primary: 0 123 255;
+		--button-primary-active: 0 86 179;
+		--button-secondary: 108 117 125;
+		--button-secondary-active: 74 80 87;
+		--focus-ring: 3 102 214;
+  }
+
+  :root[class~="dark"] {
+    --bg: 52 58 64;
+		--bg-active: 74 80 87;
+    --bg-secondary: 36 41 46;
+		--text-secondary: 128 128 128;
+		--text-secondary-active: 255 255 255;
+		--border: 37 42 46;
+		--text: 255 255 255;
+		--link: 50 166 255;
+		--link-active: 0 86 179;
+		--button-text: 255 255 255;
+		--button-text-secondary: 33 37 41;
+		--button-success: 8 119 21;
+		--button-success-active: 7 101 18;
+		--button-danger: 220 53 69;
+		--button-danger-active: 139 0 0;
+		--button-primary: 50 166 255;
+		--button-primary-active: 0 86 179;
+		--button-secondary: 108 117 125;
+		--button-secondary-active: 74 80 87;
+		--focus-ring: 3 102 214;
+  }
+}
+
+.dropdown-toggle::after {
+	display: inline-block;
+	margin-left: 0.255em;
+	vertical-align: 0.255em;
+	content: "";
+	border-top: 0.3em solid;
+	border-right: 0.3em solid transparent;
+	border-bottom: 0;
+	border-left: 0.3em solid transparent;
+}

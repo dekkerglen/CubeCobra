@@ -71,14 +71,21 @@ router.get('/notification/:id', ensureAuth, async (req, res) => {
 
 router.post('/clearnotifications', ensureAuth, async (req, res) => {
   try {
-    const notifications = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD);
+    let items, lastKey;
 
-    await Notification.batchPut(
-      notifications.items.map((notification) => ({
-        ...notification,
-        status: Notification.STATUS.READ,
-      })),
-    );
+    do {
+      const result = await Notification.getByToAndStatus(`${req.user.id}`, Notification.STATUS.UNREAD, lastKey);
+
+      items = result.items;
+      lastKey = result.lastKey;
+
+      await Notification.batchPut(
+        items.map((notification) => ({
+          ...notification,
+          status: Notification.STATUS.READ,
+        })),
+      );
+    } while (lastKey);
 
     return res.status(200).send({
       success: 'true',

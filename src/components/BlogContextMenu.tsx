@@ -29,7 +29,7 @@ const BlogContextMenu: React.FC<BlogContextMenuProps> = ({ post, value, onEdit }
   return (
     <>
       <Dropdown isOpen={dropdownOpen} toggle={toggle}>
-        <DropdownToggle tag="a" className="nav-link clickable">
+        <DropdownToggle tag="a" className="text-secondary clickable">
           {value}
         </DropdownToggle>
         <DropdownMenu end>

@@ -76,7 +76,7 @@ class SampleHandModal extends Component {
 
     return (
       <>
-        <NavLink className="nav-link" href="#" onClick={this.open}>
+        <NavLink className="text-secondary" href="#" onClick={this.open}>
           Sample Hand
         </NavLink>
 

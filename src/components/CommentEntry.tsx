@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { Collapse } from 'reactstrap';
 
-import LinkButton from 'components/LinkButton';
+import LinkButton from 'components/base/LinkButton';
 
 export interface CommentEntryProps {
   submit: (text: string) => void;

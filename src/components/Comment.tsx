@@ -5,7 +5,7 @@ import TimeAgo from 'react-timeago';
 
 import CommentContextMenu from 'components/CommentContextMenu';
 import CommentEntry from 'components/CommentEntry';
-import LinkButton from 'components/LinkButton';
+import LinkButton from 'components/base/LinkButton';
 import Markdown from 'components/Markdown';
 import ReportCommentModal from 'components/ReportCommentModal';
 import ShareCommentModal from 'components/ShareCommentModal';

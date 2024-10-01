@@ -14,7 +14,7 @@ const CommentContextMenu: React.FC<CommentContextMenuProps> = ({ edit, remove, c
 
   return (
     <Dropdown isOpen={open} toggle={toggle}>
-      <DropdownToggle tag="a" className="nav-link clickable py-0">
+      <DropdownToggle tag="a" className="text-secondary clickable py-0">
         {children}
       </DropdownToggle>
       <DropdownMenu end>

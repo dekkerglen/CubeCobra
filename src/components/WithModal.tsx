@@ -44,7 +44,7 @@ const withModal = <T extends ElementType, U>(Tag: T, ModalTag: ComponentType<U>)
         >
           {children}
         </Tag>
-        <ModalTag isOpen={isOpen} toggle={toggle} {...modalProps} />
+        <ModalTag isOpen={isOpen} setOpen={setIsOpen} toggle={toggle} {...modalProps} />
       </>
     );
   };

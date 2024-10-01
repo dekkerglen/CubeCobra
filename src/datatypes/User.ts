@@ -1,5 +1,7 @@
 import Cube from 'datatypes/Cube';
 
+import { Notification } from 'datatypes/Notification';
+
 export default interface User {
   id: string;
   username: string;
@@ -15,4 +17,5 @@ export default interface User {
   theme?: string;
   hideFeatured?: boolean;
   patron?: string;
+  notifications?: Notification[];
 }

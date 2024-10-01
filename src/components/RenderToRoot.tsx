@@ -18,6 +18,7 @@ export interface UniversalReactProps {
   nitroPayEnabled: boolean;
   domain: DomainContextValue;
   user: UserContextValue;
+  theme: string;
 }
 
 // Returns its input to enable our usual pattern of export default RenderToRoot(XPage).

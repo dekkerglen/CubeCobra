@@ -1,6 +1,4 @@
 import React, { useEffect } from 'react';
-import { Col, Container, Row } from 'reactstrap';
-
 import Copyright from 'components/Copyright';
 
 interface FooterLinkProps {
@@ -9,7 +7,7 @@ interface FooterLinkProps {
 }
 
 const FooterLink: React.FC<FooterLinkProps> = ({ href, children }) => (
-  <a className="footer-link" href={href}>
+  <a className="text-text-secondary-active hover:text-text-secondary" href={href}>
     {children}
   </a>
 );
@@ -22,88 +20,89 @@ const Footer: React.FC = () => {
       window['__cmp']('addConsentLink');
     }
   });
+
   return (
-    <footer>
-      <Container className="pt-3">
-        <Row>
-          <Col xs="6" sm="3">
+    <footer className="bg-bg-secondary text-text-secondary py-6">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-wrap -mx-4">
+          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
             <small>
-              <h6 className="footer-header">Content</h6>
-              <ul className="footer-ul ps-0">
-                <li>
+              <h6 className="text-lg font-semibold mb-2">Content</h6>
+              <ul className="list-none p-0">
+                <li className="mb-2">
                   <FooterLink href="/content/browse">Browse</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/content/articles">Articles</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/content/podcasts">Podcasts</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/content/videos">Videos</FooterLink>
                 </li>
               </ul>
             </small>
-          </Col>
-          <Col xs="6" sm="3">
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
             <small>
-              <h6 className="footer-header">Cube</h6>
-              <ul className="footer-ul ps-0">
-                <li>
+              <h6 className="text-lg font-semibold mb-2">Cube</h6>
+              <ul className="list-none p-0">
+                <li className="mb-2">
                   <FooterLink href="/explore">Explore Cubes</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/search">Search Cubes</FooterLink>
                 </li>
               </ul>
             </small>
-          </Col>
-          <Col xs="6" sm="3">
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
             <small>
-              <h6 className="footer-header">Cards</h6>
-              <ul className="footer-ul ps-0">
-                <li>
+              <h6 className="text-lg font-semibold mb-2">Cards</h6>
+              <ul className="list-none p-0">
+                <li className="mb-2">
                   <FooterLink href="/tool/topcards">Top Cards</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/tool/searchcards">Search Cards</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/packages/browse">Packages</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/filters">Filter Syntax</FooterLink>
                 </li>
               </ul>
             </small>
-          </Col>
-          <Col xs="6" sm="3">
+          </div>
+          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
             <small>
-              <h6 className="footer-header">Cube Cobra</h6>
-              <ul className="footer-ul ps-0">
-                <li>
+              <h6 className="text-lg font-semibold mb-2">Cube Cobra</h6>
+              <ul className="list-none p-0">
+                <li className="mb-2">
                   <FooterLink href="/dev/blog">Dev Blog</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/contact">Contact</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
                     Merchandise
                   </FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="/donate">Donate</FooterLink>
                 </li>
-                <li>
+                <li className="mb-2">
                   <FooterLink href="https://github.com/dekkerglen/CubeCobra">Github</FooterLink>
                 </li>
               </ul>
             </small>
-          </Col>
-        </Row>
+          </div>
+        </div>
         <div id="ncmp-consent-link"></div>
-        <p className="center footer-text">
+        <p className="text-center text-sm mt-6">
           <FooterLink href="/privacy">Privacy Policy</FooterLink>
           {' | '}
           <FooterLink href="/tos">Terms & Conditions</FooterLink>
@@ -127,7 +126,7 @@ const Footer: React.FC = () => {
           <br />
           <Copyright />
         </p>
-      </Container>
+      </div>
     </footer>
   );
 };

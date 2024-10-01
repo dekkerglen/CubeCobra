@@ -1,17 +1,17 @@
 import React from 'react';
-import { Button, Input, InputGroup } from 'reactstrap';
+import Flexbox from './base/Flexbox';
+import Input from './base/Input';
+import Button from './base/Button';
 
 const CardSearchBar: React.FC = () => {
   return (
     <form method="GET" action="/tool/searchcards" autoComplete="off" className="w-100">
-      <div className="search-bar flex-container flex-align-stretch flex-grow">
-        <InputGroup>
-          <Input name="f" placeholder="Search cards..." />
-          <Button className="search-button" type="submit" color="accent">
-            Go
-          </Button>
-        </InputGroup>
-      </div>
+      <Flexbox direction="row" className="w-100" justify="between" gap="1">
+        <Input name="f" placeholder="Search cards..." className="flex-grow" />
+        <Button type="submit" color="success">
+          <span className="px-4">Go</span>
+        </Button>
+      </Flexbox>
     </form>
   );
 };

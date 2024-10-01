@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Button, Collapse, Spinner } from 'reactstrap';
 
 import CommentEntry from 'components/CommentEntry';
-import LinkButton from 'components/LinkButton';
+import LinkButton from 'components/base/LinkButton';
 import CommentList from 'components/PagedCommentList';
 import UserContext from 'contexts/UserContext';
 import useComments from 'hooks/UseComments';
