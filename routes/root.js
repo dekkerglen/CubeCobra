@@ -106,16 +106,12 @@ router.get('/landing', async (req, res) => {
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
   const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-  const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
-  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
-
   const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
 
   return render(req, res, 'LandingPage', {
     featured,
-    popular,
     content: content.items.filter((item) => item.type !== 'p'),
     recentDecks: recentDecks.items.filter((deck) => deck.complete),
   });

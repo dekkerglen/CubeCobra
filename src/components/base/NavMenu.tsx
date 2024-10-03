@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ResponsiveDiv from './ResponsiveDiv';
-import Flexbox from './Flexbox';
+import { Flexbox } from './Layout';
 import classNames from 'classnames';
 // import Collapse from './Collapse';
 

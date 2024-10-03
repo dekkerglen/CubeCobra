@@ -1,5 +1,4 @@
-import React, { useCallback, useState } from 'react';
-import { Card } from 'reactstrap';
+import React from 'react';
 
 import TimeAgo from 'react-timeago';
 
@@ -7,6 +6,9 @@ import AspectRatioBox from 'components/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 import Article from 'datatypes/Article';
+import Text from './base/Text';
+import { Tile } from './base/Tile';
+import { Flexbox } from './base/Layout';
 
 const statusMap: Record<string, string> = {
   p: 'Published',
@@ -20,49 +22,41 @@ export interface ArticlePreviewProps {
 }
 
 const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = false }) => {
-  const [hover, setHover] = useState(false);
-  const handleMouseOver = useCallback(
-    (event: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) =>
-      setHover(!event.currentTarget.getAttribute('data-sublink')),
-    [],
-  );
-  const handleMouseOut = useCallback(() => setHover(false), []);
   return (
-    <Card
-      className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
-      onMouseOver={handleMouseOver}
-      onFocus={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      onBlur={handleMouseOut}
-    >
-      <AspectRatioBox ratio={2} className="text-ellipsis">
+    <Tile href={`/content/article/${article.id}`}>
+      <AspectRatioBox ratio={1.9}>
         {article.image && <MtgImage image={article.image} />}
-        <h6 className="content-preview-banner article-preview-bg">
-          <strong>Article</strong>
-        </h6>
+        <Text bold className="absolute bottom-0 left-0 text-text bg-article bg-opacity-50 w-full mb-0 p-1">
+          Article
+        </Text>
       </AspectRatioBox>
-      <div className="w-100 pt-1 pb-1 px-2">
-        <a href={`/content/article/${article.id}`} className="stretched-link">
-          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{article.title}</h6>
-        </a>
-        <small>
-          <p className="mb-0">{article.short}</p>
-        </small>
-      </div>
-      <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-start">
-          Written by <Username user={article.owner} />
-        </small>
-        <small className="float-end">
-          <TimeAgo date={article.date} />
-        </small>
-      </div>
-      {showStatus && (
-        <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-          <small className="float-start">Status: {statusMap[article.status]}</small>
+      <Flexbox direction="col" className="p-1 flex-grow">
+        <Text semibold md className="truncate">
+          {article.title}
+        </Text>
+        <Flexbox direction="row" justify="between">
+          <Text xs className="text-text-secondary">
+            Written by <Username user={article.owner} />
+          </Text>
+          <Text xs className="text-text-secondary">
+            <TimeAgo date={article.date} />
+          </Text>
+        </Flexbox>
+        <div className="flex-grow">
+          <Text area xs>
+            {article.short}
+            {article.short}
+            {article.short}
+            {article.short}
+          </Text>
         </div>
-      )}
-    </Card>
+        {showStatus && (
+          <div className={`w-100 pb-1 pt-0 px-2 m-0`}>
+            <small className="float-start">Status: {statusMap[article.status]}</small>
+          </div>
+        )}
+      </Flexbox>
+    </Tile>
   );
 };
 

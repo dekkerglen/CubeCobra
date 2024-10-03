@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import Flexbox from './Flexbox';
+import { Flexbox } from './Layout';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;

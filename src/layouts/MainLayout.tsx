@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Flexbox from 'components/base/Flexbox';
+import { Flexbox } from 'components/base/Layout';
 import ErrorBoundary from 'components/ErrorBoundary';
 import MobileBanner from 'components/MobileBanner';
 import SideBanner from 'components/SideBanner';
@@ -22,15 +22,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
     <Flexbox className="min-h-screen text-text" direction="col">
       <Navbar expanded={expanded} toggle={toggle} loginCallback={loginCallback} />
       <div className="bg-bg flex-grow">
-        <Container xxl className="p-2">
+        <Container xxxl>
           <Flexbox className="flex-grow" direction="row" gap="4">
-            <ResponsiveDiv lg>
+            <ResponsiveDiv xl className="pl-2 py-2">
               <SideBanner placementId="left-rail" />
             </ResponsiveDiv>
-            <div className="flex-grow">
+            <div className="flex-grow px-2">
               <ErrorBoundary>{children}</ErrorBoundary>
             </div>
-            <ResponsiveDiv md>
+            <ResponsiveDiv lg className="pr-2 py-2">
               <SideBanner placementId="right-rail" />
             </ResponsiveDiv>
             <ResponsiveDiv baseVisible md>

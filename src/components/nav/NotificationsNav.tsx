@@ -7,7 +7,7 @@ import { Notification } from 'datatypes/Notification';
 import Badge from 'components/base/Badge';
 import { CardHeader, CardFooter } from 'components/base/Card';
 import NavMenu from 'components/base/NavMenu';
-import Flexbox from 'components/base/Flexbox';
+import { Flexbox } from 'components/base/Layout';
 import { NavLink } from 'reactstrap';
 
 const NotificationsNav: React.FC = () => {

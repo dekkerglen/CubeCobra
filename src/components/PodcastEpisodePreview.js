@@ -1,18 +1,21 @@
 import React, { useCallback, useState } from 'react';
-import { Card } from 'reactstrap';
-
-import ContentPropType from 'proptypes/ContentPropType';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 import Username from 'components/Username';
+import Text from './base/Text';
+import { Tile } from './base/Tile';
+import { Flexbox } from './base/Layout';
+import ContentPropType from 'proptypes/ContentPropType';
 
 const PodcastEpisodePreview = ({ episode }) => {
   const [hover, setHover] = useState(false);
   const handleMouseOver = useCallback((event) => setHover(!event.target.getAttribute('data-sublink')), []);
   const handleMouseOut = useCallback(() => setHover(false), []);
+
   return (
-    <Card
+    <Tile
+      href={`/content/episode/${episode.id}`}
       className={hover ? 'cube-preview-card hover' : 'cube-preview-card'}
       onMouseOver={handleMouseOver}
       onFocus={handleMouseOver}
@@ -21,27 +24,29 @@ const PodcastEpisodePreview = ({ episode }) => {
     >
       <AspectRatioBox ratio={2} className="text-ellipsis">
         <img className="content-preview-img" alt={episode.title} src={episode.image} />
-        <h6 className="content-preview-banner podcast-preview-bg">
-          <strong>Podcast</strong>
-        </h6>
+        <Text bold className="absolute bottom-0 left-0 text-text bg-podcast bg-opacity-50 w-full mb-0 p-1">
+          Podcast
+        </Text>
       </AspectRatioBox>
-      <div className="w-100 pt-1 pb-1 px-2">
-        <a href={`/content/episode/${episode.id}`} className="stretched-link">
-          <h6 className="text-muted text-ellipsis mt-0 mb-0 pb-1">{episode.title}</h6>
-        </a>
-        <small>
-          <p className="mb-0">{episode.short}</p>
-        </small>
-      </div>
-      <div className={`w-100 pb-1 pt-0 px-2 m-0 ${hover ? 'preview-footer-bg-hover' : 'preview-footer-bg'}`}>
-        <small className="float-start">
-          By <Username user={episode.owner} />
-        </small>
-        <small className="float-end">
-          <TimeAgo date={episode.date} />
-        </small>
-      </div>
-    </Card>
+      <Flexbox direction="col" className="p-1 flex-grow">
+        <Text semibold md className="truncate">
+          {episode.title}
+        </Text>
+        <Flexbox direction="row" justify="between">
+          <Text xs className="text-text-secondary">
+            By <Username user={episode.owner} />
+          </Text>
+          <Text xs className="text-text-secondary">
+            <TimeAgo date={episode.date} />
+          </Text>
+        </Flexbox>
+        <div className="flex-grow">
+          <Text area xs>
+            {episode.short}
+          </Text>
+        </div>
+      </Flexbox>
+    </Tile>
   );
 };
 

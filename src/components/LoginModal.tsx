@@ -4,7 +4,7 @@ import Input from 'components/base/Input';
 import Button from 'components/base/Button';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
-import Flexbox from './base/Flexbox';
+import { Flexbox } from './base/Layout';
 
 interface LoginModalProps {
   isOpen: boolean;

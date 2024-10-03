@@ -10,7 +10,7 @@ import UserContext from 'contexts/UserContext';
 import Button from '../base/Button';
 import Collapse from '../base/Collapse';
 import Container from '../base/Container';
-import Flexbox from '../base/Flexbox';
+import { Flexbox } from '../base/Layout';
 import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import ResponsiveDiv from '../base/ResponsiveDiv';
@@ -33,7 +33,7 @@ const navItems = [
   {
     title: 'Cube',
     items: [
-      { label: 'Explore cubes', href: '/cube/explore' },
+      { label: 'Explore cubes', href: '/explore' },
       { label: 'Search cubes', href: '/cube/search' },
     ],
   },
@@ -122,9 +122,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
   );
 
   return (
-    // <div color="dark" expand="md" dark className="py-0 px-4" container="xxl">
     <div className="bg-bg-secondary p-3">
-      <Container lg>
+      <Container xxl>
         <Flexbox direction="col">
           <Flexbox justify="between" alignItems="center" direction="row" gap="4">
             <a href="/">
@@ -134,7 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
                 alt="Cube Cobra: a site for Magic: the Gathering Cubing"
               />
             </a>
-            <ResponsiveDiv baseVisible md>
+            <ResponsiveDiv baseVisible lg>
               <Button color="secondary" onClick={toggle}>
                 {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
               </Button>
@@ -142,13 +141,13 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
             <ResponsiveDiv xl className="flex-grow">
               <CardSearchBar />
             </ResponsiveDiv>
-            <ResponsiveDiv md>
+            <ResponsiveDiv lg>
               <Flexbox alignContent="end" direction="row" gap="2" className="height-auto">
                 {navs}
               </Flexbox>
             </ResponsiveDiv>
           </Flexbox>
-          <ResponsiveDiv baseVisible md>
+          <ResponsiveDiv baseVisible lg>
             <Collapse isOpen={expanded}>
               <Flexbox direction="col" gap="2">
                 {navs}

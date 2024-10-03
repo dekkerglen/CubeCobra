@@ -1,5 +1,7 @@
 import React, { useContext, useState } from 'react';
-import { Card, CardBody, Col } from 'reactstrap';
+import { Card, CardBody } from 'components/base/Card';
+import Text from 'components/base/Text';
+import Link from 'components/base/Link';
 
 import Advertisment from 'components/Advertisment';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
@@ -7,31 +9,22 @@ import UserContext, { UserContextValue } from 'contexts/UserContext';
 const BANNER_RATE: number = 3; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
-  <>
+  <Text lg>
     Enjoying Cube Cobra? You can help support Cube Cobra by purchasing playmats at our{' '}
-    <strong>
-      <a href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
-        inked gaming page
-      </a>
-    </strong>
+    <Link href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372">
+      inked gaming page
+    </Link>
     !
-  </>,
-  <>
+  </Text>,
+  <Text lg>
     Want to showcase your cube? You can feature it as a reward for{' '}
-    <strong>
-      <a href="https://www.patreon.com/cubecobra">donating</a>
-    </strong>{' '}
-    to Cube Cobra.{' '}
-    <strong>
-      <a href="/donate">Find out more.</a>
-    </strong>
-  </>,
-  <>
+    <Link href="https://www.patreon.com/cubecobra">donating</Link> to Cube Cobra.{' '}
+    <Link href="/donate">Find out more.</Link>
+  </Text>,
+  <Text lg>
     Become a supporter of Cube Cobra to remove these messages and gain access to exclusive features!{' '}
-    <strong>
-      <a href="/donate">Find out more.</a>
-    </strong>
-  </>,
+    <Link href="/donate">Find out more.</Link>
+  </Text>,
 ];
 
 const Banner: React.FC = () => {
@@ -42,11 +35,9 @@ const Banner: React.FC = () => {
 
   if (option < options.length) {
     return (
-      <Col xs="12" className="p-2">
-        <Card>
-          <CardBody className="bg-advert">{options[option]}</CardBody>
-        </Card>
-      </Col>
+      <Card className="my-2">
+        <CardBody className="bg-advert">{options[option]}</CardBody>
+      </Card>
     );
   }
 

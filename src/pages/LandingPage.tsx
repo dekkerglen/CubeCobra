@@ -1,5 +1,7 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
+
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 
 import ArticlePreview from 'components/ArticlePreview';
 import CubesCard from 'components/CubesCard';
@@ -13,82 +15,89 @@ import Article from 'datatypes/Article';
 import Cube from 'datatypes/Cube';
 import Deck from 'datatypes/Deck';
 import MainLayout from 'layouts/MainLayout';
+import Text from 'components/base/Text';
+import Link from 'components/base/Link';
 
 interface LandingPageProps {
   featured: Cube[];
-  popular: Cube[];
   content: Article[];
   recentDecks: Deck[];
   loginCallback: string;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ featured, popular, recentDecks, content, loginCallback }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, content, loginCallback }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />
       <DynamicFlash />
       <Row>
-        <Col md={4} sm={6} xs={12} className="mb-4">
-          <CubesCard title="Featured Cubes" cubes={featured} lean />
+        <Col md={6} sm={12} className="mb-4">
+          <Flexbox direction="col" gap="2">
+            <CubesCard title="Featured Cubes" cubes={featured} lean>
+              <Text lg semibold>
+                <CardBody>
+                  <Link href="/explore">Explore more Cubes...</Link>
+                </CardBody>
+              </Text>
+            </CubesCard>
+          </Flexbox>
         </Col>
-        <Col md={4} sm={6} xs={12}>
-          <CubesCard title="Most Popular Cubes" className="mb-4" cubes={popular} />
-        </Col>
-        <Col md={4} sm={6} xs={12} className="mb-4">
+        <Col md={6} sm={12} className="mb-4">
           <Card>
             <CardHeader>
-              <h4>Looking for more cubes?</h4>
+              <Text semibold xl>
+                Looking for more cubes?
+              </Text>
             </CardHeader>
             <a href="https://luckypaper.co/resources/cube-map/" target="_blank" rel="noopener noreferrer">
-              <img className="card-img-top" src="/content/cubemap.png" alt="Cube Map" />
+              <img className="w-full" src="/content/cubemap.png" alt="Cube Map" />
             </a>
             <CardBody>
-              <p>
+              <Text>
                 Discover just how diverse the Cube format can be, themes you never expected, and where your own cube
                 fits.
-              </p>
+              </Text>
             </CardBody>
           </Card>
         </Col>
-        <Col md={4} sm={6} xs={12} className="mb-4">
+        <Col md={3} sm={6} xs={12} className="mb-4">
           <Card>
             <CardHeader>
-              <h5>Recent Playtest Drafts</h5>
+              <Text semibold xl>
+                Recent Drafts
+              </Text>
             </CardHeader>
-            <CardBody className="p-0">
-              {recentDecks.length > 0 ? (
-                recentDecks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" canEdit />)
-              ) : (
-                <p className="m-2">
-                  Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
-                  <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a>
-                </p>
-              )}
-            </CardBody>
+            {recentDecks.length > 0 ? (
+              recentDecks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" />)
+            ) : (
+              <Text md className="m-2">
+                Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
+                <Link href="https://discord.gg/Hn39bCU">Discord draft exchange?</Link>
+              </Text>
+            )}
           </Card>
         </Col>
-        <Col md={8} sm={6} xs={12} className="mb-4">
-          <Row>
-            <Col xs="12">
-              <Row>
-                <Col xs="6">
-                  <h5>Latest Content</h5>
+        <Col md={9} sm={6} xs={12} className="mb-4">
+          <Flexbox direction="col" gap="2">
+            <Flexbox direction="row" justify="between" alignItems="center">
+              <Text lg semibold>
+                Latest Content
+              </Text>
+              <Link href="/content/browse">View more content...</Link>
+            </Flexbox>
+            <Row>
+              {content.map((item: Article) => (
+                <Col key={item.id} xxl={3} lg={4} sm={6} className="mb-4">
+                  {item.type === 'a' && <ArticlePreview article={item} />}
+                  {item.type === 'v' && <VideoPreview video={item} />}
+                  {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
                 </Col>
-                <Col xs="6">
-                  <a className="float-end" href="/content/browse">
-                    View more...
-                  </a>
-                </Col>
-              </Row>
-            </Col>
-            {content.map((item: Article) => (
-              <Col key={item.id} lg={4} md={6} xs={12} className="mb-4">
-                {item.type === 'a' && <ArticlePreview article={item} />}
-                {item.type === 'v' && <VideoPreview video={item} />}
-                {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
+              ))}
+              <Col xxl={3} lg={4} sm={6} className="mb-4">
+                <Link href="/content/browse">View more content...</Link>
               </Col>
-            ))}
-          </Row>
+            </Row>
+          </Flexbox>
         </Col>
       </Row>
     </MainLayout>

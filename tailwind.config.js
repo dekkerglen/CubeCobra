@@ -3,13 +3,24 @@ module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      fontSize: {
+        'xxs': '0.625rem', // Custom size for text-xxs (10px)
+      },
+      textShadow: {
+        'default': '-1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000',
+      },
+      screens: {
+        '3xl': '1920px',
+      },
       colors: {
         bg: "rgb(var(--bg) / <alpha-value>)",
         "bg-active": "rgb(var(--bg-active) / <alpha-value>)",
+        "bg-accent": "rgb(var(--bg-accent) / <alpha-value>)",
         "bg-secondary": "rgb(var(--bg-secondary) / <alpha-value>)",
         "text-secondary": "rgb(var(--text-secondary) / <alpha-value>)",
         "text-secondary-active": "rgb(var(--text-secondary-active) / <alpha-value>)",
         border: "rgb(var(--border) / <alpha-value>)",
+        "border-active": "rgb(var(--border-active) / <alpha-value>)",
         text: "rgb(var(--text) / <alpha-value>)",
         'link': "rgb(var(--link) / <alpha-value>)",
         'link-active': "rgb(var(--link-active) / <alpha-value>)",
@@ -24,11 +35,13 @@ module.exports = {
         "button-secondary": "rgb(var(--button-secondary) / <alpha-value>)",
         "button-secondary-active": "rgb(var(--button-secondary-active) / <alpha-value>)",
         "focus-ring": "rgb(var(--focus-ring) / <alpha-value>)",
+        "advert": "rgb(var(--advert) / <alpha-value>)",
+        "article": "rgb(var(--article) / <alpha-value>)",
+        "podcast": "rgb(var(--podcast) / <alpha-value>)",
+        "video": "rgb(var(--video) / <alpha-value>)",
       },
     },
   },
-  plugins: [],
-
   safelist: [
     // Flex Direction
     'flex-row',
@@ -115,5 +128,14 @@ module.exports = {
     'xl:hidden',
     '2xl:block',
     '2xl:hidden',
+  ],  
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.text-shadow': {
+          textShadow: '-1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000',
+        },
+      });
+    },
   ],
 };

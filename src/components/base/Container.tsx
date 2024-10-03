@@ -9,17 +9,20 @@ interface ContainerProps {
   lg?: boolean;
   xl?: boolean;
   xxl?: boolean;
+  xxxl?: boolean;
 }
 
-const Container: React.FC<ContainerProps> = ({ children, className = '', sm, md, lg, xl, xxl }) => {
+const Container: React.FC<ContainerProps> = ({ children, className = '', sm, md, lg, xl, xxl, xxxl }) => {
   const classes = classNames(
-    'w-full',
     {
-      'sm:container sm:mx-auto': sm,
-      'md:container md:mx-auto': md,
-      'lg:container lg:mx-auto': lg,
-      'xl:container xl:mx-auto': xl,
-      '2xl:container 2xl:mx-auto': xxl,
+      'mx-auto': true,
+      container: !sm && !md && !lg && !xl && !xxl && !xxxl, // Default container class if no size is specified
+      'sm:max-w-screen-sm': sm,
+      'md:max-w-screen-md': md,
+      'lg:max-w-screen-lg': lg,
+      'xl:max-w-screen-xl': xl,
+      '2xl:max-w-screen-2xl': xxl,
+      '3xl:max-w-screen-3xl': xxxl,
     },
     className,
   );

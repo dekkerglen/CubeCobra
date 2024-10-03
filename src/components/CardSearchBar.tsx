@@ -1,5 +1,5 @@
 import React from 'react';
-import Flexbox from './base/Flexbox';
+import { Flexbox } from './base/Layout';
 import Input from './base/Input';
 import Button from './base/Button';
 
