@@ -1,10 +1,9 @@
 import React from 'react';
 import CSRFForm from 'components/CSRFForm';
 import Input from 'components/base/Input';
-import Button from 'components/base/Button';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
-import { Flexbox } from './base/Layout';
+import LoadingButton from './LoadingButton';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,13 +11,28 @@ interface LoginModalProps {
   loginCallback: string;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, setOpen, loginCallback }) => (
-  <Modal lg isOpen={isOpen} setOpen={setOpen}>
-    <ModalHeader setOpen={setOpen}>Login</ModalHeader>
-    <CSRFForm method="POST" action="/user/login">
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, setOpen, loginCallback }) => {
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const [formData, setFormData] = React.useState<Record<string, string>>({
+    username: '',
+    password: '',
+    loginCallback: loginCallback,
+  });
+
+  return (
+    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+      <ModalHeader setOpen={setOpen}>Login</ModalHeader>
       <ModalBody>
-        <Flexbox direction="col" gap="2">
-          <Input label="Username or Email Address" maxLength={1000} name="username" id="email" type="text" />
+        <CSRFForm ref={formRef} method="POST" action="/user/login" formData={formData}>
+          <Input
+            label="Username or Email Address"
+            maxLength={1000}
+            name="username"
+            id="username"
+            type="text"
+            value={formData.username}
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          />
           <Input
             label="Password"
             maxLength={1000}
@@ -26,17 +40,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, setOpen, loginCallback 
             id="password"
             type="password"
             link={{ href: '/user/lostpassword', text: 'Forgot Password?' }}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
-        </Flexbox>
-        <Input type="hidden" name="loginCallback" value={loginCallback} />
+        </CSRFForm>
       </ModalBody>
       <ModalFooter>
-        <Button type="submit" color="success" block outline>
+        <LoadingButton color="primary" outline block onClick={() => formRef.current?.submit()}>
           Login
-        </Button>
+        </LoadingButton>
       </ModalFooter>
-    </CSRFForm>
-  </Modal>
-);
+    </Modal>
+  );
+};
 
 export default LoginModal;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Badge,
-  Button,
   Card,
   CardBody,
   CardHeader,
@@ -23,7 +22,7 @@ import CardPropType from 'proptypes/CardPropType';
 import HistoryPropType from 'proptypes/HistoryPropType';
 
 import AddToCubeModal from 'components/AddToCubeModal';
-import ButtonLink from 'components/ButtonLink';
+import Button from 'components/base/Button';
 import CardGrid from 'components/CardGrid';
 import CardImage from 'components/CardImage';
 import CommentsSection from 'components/CommentsSection';
@@ -328,12 +327,12 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                 <CardBody>
                   <Row>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
+                      <Button outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
                         {`Cubes with ${card.name}`}
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink
+                      <Button
                         outline
                         color="accent"
                         block
@@ -341,20 +340,20 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                         target="_blank"
                       >
                         View all Printings
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="accent" block href={card.scryfall_uri} target="_blank">
+                      <Button outline color="accent" block href={card.scryfall_uri} target="_blank">
                         View on Scryfall
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
+                      <Button outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                         View on TCGPlayer
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink
+                      <Button
                         outline
                         color="accent"
                         block
@@ -362,10 +361,10 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                         target="_blank"
                       >
                         View on Card Kingdom
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink
+                      <Button
                         outline
                         color="accent"
                         block
@@ -373,10 +372,10 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                         target="_blank"
                       >
                         View on EDHRec
-                      </ButtonLink>
+                      </Button>
                     </Col>
                     <Col className="pb-2" xs="12" sm="6">
-                      <ButtonLink
+                      <Button
                         outline
                         color="accent"
                         block
@@ -384,7 +383,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                         target="_blank"
                       >
                         {`MTG Top 8 Decks with ${card.name}`}
-                      </ButtonLink>
+                      </Button>
                     </Col>
                   </Row>
                 </CardBody>
@@ -448,7 +447,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
               <h4>Purchase</h4>
             </CardHeader>
             <CardBody>
-              <ButtonLink outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
+              <Button outline color="accent" block href={getTCGLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -463,8 +462,8 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                     </Col>
                   )}
                 </Row>
-              </ButtonLink>
-              <ButtonLink outline color="accent" block href={getCardKingdomLink({ details: card })} target="_blank">
+              </Button>
+              <Button outline color="accent" block href={getCardKingdomLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -472,8 +471,8 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                     </div>
                   </Col>
                 </Row>
-              </ButtonLink>
-              <ButtonLink outline color="accent" block href={getCardMarketLink({ details: card })} target="_blank">
+              </Button>
+              <Button outline color="accent" block href={getCardMarketLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -488,8 +487,8 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                     </Col>
                   )}
                 </Row>
-              </ButtonLink>
-              <ButtonLink outline color="accent" block href={getCardHoarderLink({ details: card })} target="_blank">
+              </Button>
+              <Button outline color="accent" block href={getCardHoarderLink({ details: card })} target="_blank">
                 <Row>
                   <Col xs="6">
                     <div className="text-start">
@@ -504,7 +503,7 @@ const CardPage = ({ card, history, versions, draftedWith, cubedWith, synergistic
                     </Col>
                   )}
                 </Row>
-              </ButtonLink>
+              </Button>
             </CardBody>
           </Card>
         </Col>

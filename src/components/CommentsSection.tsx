@@ -56,7 +56,7 @@ const CommentsSection: React.FC<CommentsProps> = ({ parent, collapse = true, par
           )}
           {hasMore && (
             <div className="p-1">
-              <Button outline block color="primary" onClick={getMore} disabled={loading}>
+              <Button outline block color="accent" onClick={getMore} disabled={loading}>
                 View More...
               </Button>
             </div>

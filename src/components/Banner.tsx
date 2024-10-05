@@ -5,6 +5,8 @@ import Link from 'components/base/Link';
 
 import Advertisment from 'components/Advertisment';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
+import { Flexbox } from './base/Layout';
+import ResponsiveDiv from './base/ResponsiveDiv';
 
 const BANNER_RATE: number = 3; // an alternate message appears with probability of 1/BANNER_RATE
 
@@ -36,22 +38,29 @@ const Banner: React.FC = () => {
   if (option < options.length) {
     return (
       <Card className="my-2">
-        <CardBody className="bg-advert">{options[option]}</CardBody>
+        <CardBody className="bg-advert overflow-hidden">{options[option]}</CardBody>
       </Card>
     );
   }
 
   return (
-    <div className="py-2">
-      {
-        // @ts-expect-error FIXME: Fix types here.
-        <Advertisment placementId="banner" size="desktop" media="banner" demo />
-      }
-      {
-        // @ts-expect-error FIXME: Fix types here.
-        <Advertisment placementId="banner" size="mobile" media="mobile" demo />
-      }
-    </div>
+    <Flexbox direction="row" justify="between" gap="2">
+      <ResponsiveDiv lg className="flex-grow">
+        <Advertisment placementId="banner" media="desktop" size="banner" />
+      </ResponsiveDiv>
+      <ResponsiveDiv xxxl className="pb-8">
+        <Card className="h-full bg-advert">
+          <CardBody className="bg-advert h-full">
+            <Flexbox direction="col" justify="center" className="h-full">
+              <Text lg>
+                Tired of seeing advertisments? Become a supporter of Cube Cobra to remove all advertisments and gain
+                access to exclusive features! <Link href="/donate">Find out more.</Link>
+              </Text>
+            </Flexbox>
+          </CardBody>
+        </Card>
+      </ResponsiveDiv>
+    </Flexbox>
   );
 };
 

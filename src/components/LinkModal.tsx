@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import ButtonLink from 'components/ButtonLink';
+import Button from 'components/base/Button';
 
 export interface LinkModalProps {
   link: string;
@@ -18,9 +18,9 @@ const LinkModal: React.FC<LinkModalProps> = ({ link, isOpen, toggle }) => {
           This link leads to: <code>{link}</code>
         </p>
         <p>Following unknown links can be dangerous, are you sure you wish to proceed?</p>
-        <ButtonLink href={link} block color="unsafe" outline target="_blank" rel="noopener noreferrer">
+        <Button type="link" href={link} block color="danger" outline target="_blank" rel="noopener noreferrer">
           Yes, I know what I'm doing
-        </ButtonLink>
+        </Button>
       </ModalBody>
       <ModalFooter>
         <Button color="secondary" onClick={toggle}>

@@ -12,9 +12,10 @@ interface ModalProps {
   md?: boolean;
   lg?: boolean;
   xl?: boolean;
+  xxl?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md, lg, xl }) => {
+export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md, lg, xl, xxl }) => {
   return (
     <Transition show={isOpen}>
       <Dialog as="div" className="relative z-30" onClose={() => setOpen(false)}>
@@ -26,16 +27,17 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-bg bg-opacity-75 transition-opacity" />
         </TransitionChild>
-        <div className="fixed inset-0 z-30 overflow-y-auto">
-          <div className="flex min-h-full justify-center text-center items-start">
+        <div className="fixed inset-0 z-30">
+          <div className={classNames('flex min-h-full justify-center text-center items-start ')}>
             <div
               className={classNames(`grow`, {
-                'max-w-sm': sm,
-                'max-w-md': md,
-                'max-w-lg': lg,
-                'max-w-xl': xl,
+                'max-w-screen-sm': sm,
+                'max-w-screen-md': md,
+                'max-w-screen-lg': lg,
+                'max-w-screen-xl': xl,
+                'max-w-screen-2xl': xxl,
               })}
             >
               <TransitionChild
@@ -47,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
                 <div className="max-h-screen p-4">
-                  <DialogPanel className="relative transform overflow-hidden rounded-md bg-white text-left shadow-xl transition-all w-full flex flex-col max-h-modal">
+                  <DialogPanel className="relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col max-h-modal">
                     {children}
                   </DialogPanel>
                 </div>
@@ -68,9 +70,7 @@ interface ModalHeaderProps {
 
 export const ModalHeader: React.FC<ModalHeaderProps> = ({ children, className, setOpen }) => {
   return (
-    <div
-      className={`bg-neutral-100 text-neutral-700 font-semibold text-xl p-2 border-b border-neutral-300 flex ${className}`}
-    >
+    <div className={`bg-bg-accent-accent font-semibold text-xl p-2 flex ${className}`}>
       {children}
       <button type="button" className="ml-auto" onClick={() => setOpen(false)}>
         <XIcon size={24} />
@@ -85,7 +85,7 @@ interface ModalFooterProps {
 }
 
 export const ModalFooter: React.FC<ModalFooterProps> = ({ children, className }) => {
-  return <div className={classNames('p-3 border-t border-neutral-300 flex', className)}>{children}</div>;
+  return <div className={classNames('p-3 flex', className)}>{children}</div>;
 };
 
 interface ModalBodyProps {
@@ -99,7 +99,7 @@ export const ModalBody: React.FC<ModalBodyProps> = ({ children, className = '', 
     <div
       className={classNames({
         'p-3': true,
-        'overflow-auto grow border-y': !fixed,
+        'grow border-y border-border': !fixed,
         [className]: !!className,
       })}
     >

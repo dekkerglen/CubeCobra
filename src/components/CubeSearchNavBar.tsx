@@ -48,14 +48,7 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
       </Text>
       <form onSubmit={handleSubmit}>
         <Flexbox direction="row" justify="center" gap="2">
-          <Input
-            className="form-control me-sm-2"
-            type="search"
-            placeholder="Search cubes..."
-            aria-label="Search"
-            value={queryText}
-            onChange={(event) => setQuery(event.target.value)}
-          />
+          <Input placeholder="Search cubes..." value={queryText} onChange={(event) => setQuery(event.target.value)} />
           <Select
             options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
             defaultValue={searchOrder}
@@ -69,7 +62,7 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
             defaultValue={searchAscending}
             onChange={(value) => setSearchAscending(value)}
           />
-          <Button color="success">
+          <Button color="primary">
             <span className="px-4">Search</span>
           </Button>
         </Flexbox>

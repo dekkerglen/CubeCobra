@@ -18,18 +18,18 @@
 		--link-active: 0 86 179;
 		--button-text: 255 255 255;
 		--button-text-secondary: 33 37 41;
-		--button-success: 8 119 21;
-		--button-success-active : 0 75 13;
+		--button-primary: 8 119 21;
+		--button-primary-active : 0 75 13;
 		--button-danger: 188 21 37;
 		--button-danger-active: 139 0 0;
-		--button-primary: 0 123 255;
-		--button-primary-active: 0 86 179;
+		--button-accent: 0 123 255;
+		--button-accent-active: 0 86 179;
 		--button-secondary: 108 117 125;
 		--button-secondary-active: 74 80 87;
 		--focus-ring: 3 102 214;
 		--advert: 251 241 185;
 		--article : 116 198 135;
-		--podcast: 0 0 0;
+		--podcast: 64 154 191;
 		--video: 254 66 66;
   }
 
@@ -47,18 +47,18 @@
 		--link-active: 0 86 179;
 		--button-text: 255 255 255;
 		--button-text-secondary: 33 37 41;
-		--button-success: 8 119 21;
-		--button-success-active: 7 101 18;
+		--button-primary: 8 119 21;
+		--button-primary-active: 7 101 18;
 		--button-danger: 220 53 69;
 		--button-danger-active: 139 0 0;
-		--button-primary: 13 110 253;
-		--button-primary-active: 11 94 215;
+		--button-accent: 13 110 253;
+		--button-accent-active: 11 94 215;
 		--button-secondary: 108 117 125;
 		--button-secondary-active: 74 80 87;
 		--focus-ring: 3 102 214;
 		--advert: 91 90 64;
 		--article: 116 198 135;
-		--podcast: 0 0 0;
+		--podcast: 64 154 191;
 		--video: 254 66 66;		
   }
 }
@@ -80,4 +80,63 @@ div.advertisement-div > div:not(.report-link) {
 
 .advertisement-div {
 	height: 100%;
+}
+
+.centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#autocardPopup {
+	position: absolute;
+	pointer-events: none;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+#autocardPopup img {
+	width: 15rem;
+}
+
+#autocardPopup {
+	width: 15rem;
+}
+
+#autocardPopup.double-width {
+	width: 30rem;
+}
+
+.autocard-background {
+	background-color: var(--bg-dark);
+	background-clip: content-box;
+}
+
+@media (max-width: 767.98px) {
+	#autocardPopup {
+		display: none !important;
+	}
+}
+
+/* make autocard text more obvious in comments and descriptions */
+.card-text .autocard {
+	font-weight: bolder;
+	opacity: 0.9; /* hack to lighten the color so bold isn't quite so strong */
+}
+
+.foilOverlay {
+	position: absolute;
+	pointer-events: none;
+	width: 100%;
+	height: 100%;
+	mix-blend-mode: multiply;
+}
+
+.card-border {
+	border-radius: 4.72% / 3.37%;
 }

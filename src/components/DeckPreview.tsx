@@ -1,11 +1,11 @@
 import React, { useContext, useState } from 'react';
 import UserContext from 'contexts/UserContext';
-import Username from 'components/Username';
 import TimeAgo from 'react-timeago';
 import DeckDeleteModal from 'components/DeckDeleteModal';
 import Deck from 'datatypes/Deck';
 import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
+import User from 'datatypes/User';
 
 interface DeckPreviewProps {
   deck: Deck;
@@ -28,6 +28,9 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
     setDeleteModalOpen(false);
   };
 
+  // if owner is an object it's a user, otherwise it's a string
+  const owner = typeof deck.owner === 'object' ? (deck.owner as User).username : deck.owner;
+
   return (
     <a className="block py-1 px-2 hover:bg-bg-active hover:cursor-pointer" href={`/cube/deck/${deck.id}`}>
       <Flexbox direction="col">
@@ -37,7 +40,7 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
         <Flexbox direction="row" className="mb-2 text-text-secondary" justify="between">
           <Text sm className="truncate flex-grow">
             {'Drafted by '}
-            <Username user={deck.owner} /> <TimeAgo date={date} />
+            {owner} <TimeAgo date={date} />
           </Text>
           {canEdit && (
             <button

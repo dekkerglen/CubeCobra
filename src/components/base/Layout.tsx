@@ -66,17 +66,73 @@ const Flexbox: React.FC<FlexboxProps> = ({
   return <div className={classes}>{children}</div>;
 };
 
-interface RowProps {
+export type NumCols = 3 | 4 | 5 | 6 | 10 | 12;
+export interface RowProps {
   children: React.ReactNode;
   className?: string;
   noGutters?: boolean;
+  xs?: NumCols;
+  sm?: NumCols;
+  md?: NumCols;
+  lg?: NumCols;
+  xl?: NumCols;
+  xxl?: NumCols;
 }
 
-const Row: React.FC<RowProps> = ({ children, className = '', noGutters = false }) => {
-  return <div className={classNames('grid grid-cols-12', { 'gap-4': !noGutters }, className)}>{children}</div>;
+const Row: React.FC<RowProps> = ({ children, className = '', xs, sm, md, lg, xl, xxl, noGutters = false }) => {
+  const numCols = xs || sm || md || lg || xl || xxl || 12;
+
+  return (
+    <div
+      className={classNames(
+        {
+          'gap-4': !noGutters,
+          'grid grid-cols-12': numCols === 12,
+          'grid grid-cols-10': numCols === 10,
+          'grid grid-cols-6': numCols === 6,
+          'grid grid-cols-5': numCols === 5,
+          'grid grid-cols-4': numCols === 4,
+          'grid grid-cols-3': numCols === 3,
+          'sm:grid-cols-12': sm === 12,
+          'sm:grid-cols-10': sm === 10,
+          'sm:grid-cols-6': sm === 6,
+          'sm:grid-cols-5': sm === 5,
+          'sm:grid-cols-4': sm === 4,
+          'sm:grid-cols-3': sm === 3,
+          'md:grid-cols-12': md === 12,
+          'md:grid-cols-10': md === 10,
+          'md:grid-cols-6': md === 6,
+          'md:grid-cols-5': md === 5,
+          'md:grid-cols-4': md === 4,
+          'md:grid-cols-3': md === 3,
+          'lg:grid-cols-12': lg === 12,
+          'lg:grid-cols-10': lg === 10,
+          'lg:grid-cols-6': lg === 6,
+          'lg:grid-cols-5': lg === 5,
+          'lg:grid-cols-4': lg === 4,
+          'lg:grid-cols-3': lg === 3,
+          'xl:grid-cols-12': xl === 12,
+          'xl:grid-cols-10': xl === 10,
+          'xl:grid-cols-6': xl === 6,
+          'xl:grid-cols-5': xl === 5,
+          'xl:grid-cols-4': xl === 4,
+          'xl:grid-cols-3': xl === 3,
+          '2xl:grid-cols-12': xxl === 12,
+          '2xl:grid-cols-10': xxl === 10,
+          '2xl:grid-cols-6': xxl === 6,
+          '2xl:grid-cols-5': xxl === 5,
+          '2xl:grid-cols-4': xxl === 4,
+          '2xl:grid-cols-3': xxl === 3,
+        },
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 };
 
-interface ColProps {
+export interface ColProps {
   xs?: number;
   sm?: number;
   md?: number;

@@ -93,7 +93,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         </ModalBody>
         <ModalFooter>
           {!hideAnalytics && (
-            <Button color="primary" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+            <Button color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
               Analytics
             </Button>
           )}
@@ -154,7 +154,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
       </ModalBody>
       <ModalFooter>
         {!hideAnalytics && (
-          <Button color="primary" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+          <Button color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
             Analytics
           </Button>
         )}

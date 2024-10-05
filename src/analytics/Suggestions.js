@@ -206,7 +206,7 @@ function Suggestions() {
                 </Row>
                 {addsLoading && <CardBody>Loading...</CardBody>}
                 {!addsLoading && hasMoreAdds && (
-                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>
+                  <Button onClick={loadMoreAdds} className="my-1" color="primary" block>
                     Load More
                   </Button>
                 )}
@@ -222,7 +222,7 @@ function Suggestions() {
                 )}
                 {addsLoading && <CardBody>Loading...</CardBody>}
                 {!addsLoading && hasMoreAdds && (
-                  <Button onClick={loadMoreAdds} className="my-1" color="success" block>
+                  <Button onClick={loadMoreAdds} className="my-1" color="primary" block>
                     Load More
                   </Button>
                 )}

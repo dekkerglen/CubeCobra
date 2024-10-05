@@ -20,7 +20,7 @@ interface Article {
   body?: string;
   short?: string;
   url?: string;
-  image?: Image;
+  image: Image;
   imageName?: string;
 }
 

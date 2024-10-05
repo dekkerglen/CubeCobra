@@ -1,19 +1,24 @@
-import React, { forwardRef, ReactNode } from 'react';
-import { Form, FormProps, Input } from 'reactstrap';
+import React, { ReactNode, forwardRef } from 'react';
 
 import { getCsrfToken } from 'utils/CSRF';
 
-export interface CSRFFormProps extends FormProps {
+interface CSRFFormProps {
   children: ReactNode;
+  method: 'GET' | 'POST';
+  action?: string;
+  formData?: Record<string, string>;
 }
 
-const CSRFForm: React.FC<CSRFFormProps> = forwardRef<Form, CSRFFormProps>(({ children, ...props }, ref) => (
-  <Form ref={ref} {...props}>
-    <Input type="hidden" name="_csrf" value={getCsrfToken() || ''} />
-    {children}
-  </Form>
-));
-
-CSRFForm.displayName = 'CSRFForm';
+const CSRFForm = forwardRef<HTMLFormElement, CSRFFormProps>(({ children, method, action, formData }, ref) => {
+  return (
+    <form method={method} ref={ref} action={action}>
+      <input type="hidden" name="_csrf" value={getCsrfToken() || ''} />
+      {Object.entries(formData || {}).map(([key, value]) => (
+        <input key={key} type="hidden" name={key} value={value} />
+      ))}
+      {children}
+    </form>
+  );
+});
 
 export default CSRFForm;

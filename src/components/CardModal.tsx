@@ -145,7 +145,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       <Col xs="12">
                         <Button
                           className="my-1"
-                          color="success"
+                          color="primary"
                           block
                           outline
                           onClick={() => revertRemove(card.removeIndex!, card.board!)}
@@ -209,7 +209,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       <Col xs="12">
                         <Button
                           className="my-1"
-                          color="success"
+                          color="primary"
                           block
                           outline
                           onClick={() => {
@@ -229,7 +229,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="my-1"
                     block
                     outline
-                    color="primary"
+                    color="accent"
                     href={card.details?.scryfall_uri}
                     target="_blank"
                   >
@@ -242,7 +242,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     className="my-1"
                     block
                     outline
-                    color="primary"
+                    color="accent"
                     href={`/tool/card/${card.cardID}`}
                     target="_blank"
                   >
@@ -252,7 +252,7 @@ const CardModal: React.FC<CardModalProps> = ({
                 </Col>
                 {card.details && (
                   <Col xs="12">
-                    <Button className="my-1" block outline color="primary" href={getTCGLink(card)} target="_blank">
+                    <Button className="my-1" block outline color="accent" href={getTCGLink(card)} target="_blank">
                       Buy
                     </Button>
                   </Col>

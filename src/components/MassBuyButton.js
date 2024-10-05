@@ -4,7 +4,7 @@ import { Button, Form, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import { tcgMassEntryUrl } from 'utils/Affiliate';
+import { tcgMassEntryUrl, tcgplayerAffiliate } from 'utils/Affiliate';
 
 const exclude = ['Copy'];
 
@@ -43,7 +43,8 @@ const MassBuyButton = ({ cards, ...props }) => (
         .filter((x) => x)
         .join('||')}
     />
-    <Button type="submit" color="primary" {...props} />
+    <Input type="hidden" name="affiliateurl" value={tcgplayerAffiliate} />
+    <Button type="submit" color="accent" {...props} />
   </Form>
 );
 

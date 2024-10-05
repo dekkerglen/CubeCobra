@@ -108,7 +108,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({ isOpen = false, hideDes
                 value={searchFilterInput ?? ''}
                 onChange={(event) => setSearchFilterInput(event.target.value)}
               />
-              <Button color="success" type="submit">
+              <Button color="primary" type="submit">
                 Apply
               </Button>
             </InputGroup>
@@ -199,7 +199,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({ isOpen = false, hideDes
           <Button color="unsafe" className="me-2 mb-3" onClick={reset}>
             Reset Filters
           </Button>
-          <Button color="primary" className="me-2 mb-3" onClick={() => setAdvancedOpen(true)}>
+          <Button color="accent" className="me-2 mb-3" onClick={() => setAdvancedOpen(true)}>
             Advanced...
           </Button>
         </Col>

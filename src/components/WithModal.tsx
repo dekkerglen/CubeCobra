@@ -4,7 +4,7 @@ import React, { ComponentProps, ComponentType, ElementType, MouseEvent, ReactNod
 export interface WithModalProps<U> {
   children: ReactNode;
   className?: string;
-  modalProps?: Omit<U, 'isOpen' | 'toggle'>;
+  modalProps?: Omit<U, 'setOpen' | 'isOpen' | 'toggle'>;
   altClick?: () => void;
 }
 

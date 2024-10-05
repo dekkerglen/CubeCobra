@@ -1,15 +1,28 @@
 import React from 'react';
 import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';
 
-import ButtonLink from 'components/ButtonLink';
+import Button from 'components/base/Button';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import User from 'datatypes/User';
 
-const NoticePage = ({ loginCallback, notices }) => {
+interface Notice {
+  id: string;
+  type: string;
+  body: string;
+  date: string;
+  user: User;
+  subject?: string;
+}
+
+interface NoticePageProps {
+  loginCallback?: string;
+  notices: Notice[];
+}
+
+const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices }) => {
   const applications = notices.filter((notice) => notice.type === 'a');
   const reports = notices.filter((notice) => notice.type === 'cr');
 
@@ -21,21 +34,21 @@ const NoticePage = ({ loginCallback, notices }) => {
           <h5>Content Creator Applications</h5>
         </CardHeader>
         {applications.map((application) => (
-          <Card>
+          <Card key={application.id}>
             <CardBody>
               <p>
                 Details:
                 <Card>
-                  {application.body.split('\n').map((item) => (
-                    <>
+                  {application.body.split('\n').map((item, index) => (
+                    <React.Fragment key={index}>
                       {item}
                       <br />
-                    </>
+                    </React.Fragment>
                   ))}
                 </Card>
               </p>
               <p>
-                Submitted by by:{' '}
+                Submitted by:{' '}
                 <a href={`/user/view/${application.user.id}`} target="_blank" rel="noopener noreferrer">
                   {application.user.username}
                 </a>
@@ -43,14 +56,14 @@ const NoticePage = ({ loginCallback, notices }) => {
               </p>
               <Row>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="accent" block outline href={`/admin/application/approve/${application.id}`}>
+                  <Button color="primary" block outline href={`/admin/application/approve/${application.id}`}>
                     Approve
-                  </ButtonLink>
+                  </Button>
                 </Col>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="unsafe" block outline href={`/admin/application/decline/${application.id}`}>
+                  <Button color="danger" block outline href={`/admin/application/decline/${application.id}`}>
                     Decline
-                  </ButtonLink>
+                  </Button>
                 </Col>
               </Row>
             </CardBody>
@@ -62,7 +75,7 @@ const NoticePage = ({ loginCallback, notices }) => {
           <h5>Recent Comment Reports</h5>
         </CardHeader>
         {reports.map((report) => (
-          <Card>
+          <Card key={report.id}>
             <CardBody>
               <p>
                 Comment:{' '}
@@ -80,14 +93,14 @@ const NoticePage = ({ loginCallback, notices }) => {
               </p>
               <Row>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="accent" block outline href={`/admin/ignorereport/${report.id}`}>
+                  <Button color="primary" block outline href={`/admin/ignorereport/${report.id}`}>
                     Ignore
-                  </ButtonLink>
+                  </Button>
                 </Col>
                 <Col xs="12" sm="6">
-                  <ButtonLink color="unsafe" block outline href={`/admin/removecomment/${report.id}`}>
+                  <Button color="danger" block outline href={`/admin/removecomment/${report.id}`}>
                     Remove Comment
-                  </ButtonLink>
+                  </Button>
                 </Col>
               </Row>
             </CardBody>
@@ -96,15 +109,6 @@ const NoticePage = ({ loginCallback, notices }) => {
       </Card>
     </MainLayout>
   );
-};
-
-NoticePage.propTypes = {
-  loginCallback: PropTypes.string,
-  notices: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-};
-
-NoticePage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(NoticePage);

@@ -9,6 +9,7 @@ interface ResponsiveDivProps {
   lg?: boolean;
   xl?: boolean;
   xxl?: boolean;
+  xxxl?: boolean;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const ResponsiveDiv: React.FC<ResponsiveDivProps> = ({
   lg,
   xl,
   xxl,
+  xxxl,
   className = '',
 }) => {
   const classes = classNames(
@@ -35,6 +37,8 @@ const ResponsiveDiv: React.FC<ResponsiveDivProps> = ({
       'xl:hidden': xl && baseVisible,
       '2xl:block': xxl && !baseVisible,
       '2xl:hidden': xxl && baseVisible,
+      '3xl:block': xxxl && !baseVisible,
+      '3xl:hidden': xxxl && baseVisible,
     },
     className,
   );

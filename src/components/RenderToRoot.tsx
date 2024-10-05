@@ -1,6 +1,5 @@
 import React, { ComponentType, ReactElement } from 'react';
-
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import AdsContext from 'contexts/AdsContext';
@@ -37,17 +36,12 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
       </AutocardContextProvider>
     </ErrorBoundary>
   );
+
   if (typeof document !== 'undefined') {
     const wrapper = document.getElementById('react-root');
     if (wrapper) {
-      if (wrapper.children.length === 0) {
-        // FIXME: update API below.
-        // eslint-disable-next-line react/no-deprecated
-        ReactDOM.render(element, wrapper);
-      } else {
-        // eslint-disable-next-line react/no-deprecated
-        ReactDOM.hydrate(element, wrapper);
-      }
+      const root = createRoot(wrapper); // createRoot(wrapper!) if you use TypeScript
+      root.render(element);
     }
   }
 

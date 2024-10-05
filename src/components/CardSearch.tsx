@@ -12,9 +12,8 @@ import {
   Spinner,
 } from 'reactstrap';
 
-import ButtonLink from 'components/ButtonLink';
+import Button from 'components/base/Button';
 import CardGrid from 'components/CardGrid';
-import CardImage from 'components/CardImage';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
 import Paginate from 'components/Paginate';
@@ -93,12 +92,12 @@ const CardSearch: React.FC = () => {
           </Col>
           <Col xs="6">
             <div className="text-end">
-              <ButtonLink outline color="accent" href="/tool/topcards">
+              <Button outline color="primary" href="/tool/topcards">
                 View Top cards
-              </ButtonLink>{' '}
-              <ButtonLink outline color="accent" href="/packages/browse">
+              </Button>{' '}
+              <Button outline color="primary" href="/packages">
                 View Card Packages
-              </ButtonLink>
+              </Button>
             </div>
           </Col>
         </Row>
@@ -173,13 +172,7 @@ const CardSearch: React.FC = () => {
             </CardBody>
           )}
           {!loading && (
-            <CardGrid
-              cardList={cards.map((card) => ({ details: card }))}
-              Tag={CardImage}
-              colProps={{ xs: 4, sm: 3, md: 2 }}
-              cardProps={{ autocard: true, cardProps: { 'data-in-modal': true }, className: 'clickable' }}
-              linkDetails
-            />
+            <CardGrid detailsList={cards} xs={3} md={4} xl={6} cardProps={{ autocard: true, className: 'clickable' }} />
           )}
           {parseInt(count, 10) / 100 > 1 && (
             <CardFooter>

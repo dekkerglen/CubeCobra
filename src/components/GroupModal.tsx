@@ -284,7 +284,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             {anyCardRemoved && (
               <Row>
                 <Col xs="12">
-                  <Button className="my-1" block outline color="success" onClick={revertRemoval}>
+                  <Button className="my-1" block outline color="primary" onClick={revertRemoval}>
                     Revert removal of removed cards
                   </Button>
                 </Col>
@@ -293,7 +293,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             {anyCardChanged && (
               <Row>
                 <Col xs="12">
-                  <Button className="my-1" block outline color="success" onClick={bulkRevertEditAll}>
+                  <Button className="my-1" block outline color="primary" onClick={bulkRevertEditAll}>
                     Revert changes of edited cards
                   </Button>
                 </Col>

@@ -9,6 +9,7 @@ import Footer from 'layouts/Footer';
 import Navbar from 'components/nav/Navbar';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Container from 'components/base/Container';
+import VideoBanner from 'components/VideoBanner';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -24,17 +25,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
       <div className="bg-bg flex-grow">
         <Container xxxl>
           <Flexbox className="flex-grow" direction="row" gap="4">
-            <ResponsiveDiv xl className="pl-2 py-2">
+            <ResponsiveDiv xl className="pl-2 py-2 min-w-fit">
               <SideBanner placementId="left-rail" />
             </ResponsiveDiv>
             <div className="flex-grow px-2">
               <ErrorBoundary>{children}</ErrorBoundary>
             </div>
-            <ResponsiveDiv lg className="pr-2 py-2">
+            <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">
               <SideBanner placementId="right-rail" />
             </ResponsiveDiv>
             <ResponsiveDiv baseVisible md>
               <MobileBanner placementId="mobile-banner" />
+            </ResponsiveDiv>
+            <ResponsiveDiv md>
+              <VideoBanner placementId="video" />
             </ResponsiveDiv>
           </Flexbox>
         </Container>

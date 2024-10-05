@@ -27,7 +27,7 @@ const NotificationsNav: React.FC = () => {
 
   const label = (
     <>
-      {items.length > 0 && <Badge color="danger">{items.length > 30 ? '30+' : items.length}</Badge>}
+      {items.length > 0 && <Badge color="danger">{items.length > 99 ? '99+' : items.length}</Badge>}
       <BellFillIcon size={20} className="ml-1" />
     </>
   );
@@ -49,6 +49,7 @@ const NotificationsNav: React.FC = () => {
               <a
                 className="py-3 px-2 hover:bg-bg-active hover:cursor-pointer"
                 href={`/user/notification/${notification.id}`}
+                key={notification.id}
               >
                 {notification.body}
               </a>

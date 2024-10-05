@@ -17,6 +17,7 @@ import Deck from 'datatypes/Deck';
 import MainLayout from 'layouts/MainLayout';
 import Text from 'components/base/Text';
 import Link from 'components/base/Link';
+import Episode from 'datatypes/Episode';
 
 interface LandingPageProps {
   featured: Cube[];
@@ -30,7 +31,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
     <MainLayout loginCallback={loginCallback}>
       <CubeSearchNavBar />
       <DynamicFlash />
-      <Row>
+      <Row className="mt-2">
         <Col md={6} sm={12} className="mb-4">
           <Flexbox direction="col" gap="2">
             <CubesCard title="Featured Cubes" cubes={featured} lean>
@@ -90,7 +91,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
                 <Col key={item.id} xxl={3} lg={4} sm={6} className="mb-4">
                   {item.type === 'a' && <ArticlePreview article={item} />}
                   {item.type === 'v' && <VideoPreview video={item} />}
-                  {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
+                  {item.type === 'e' && <PodcastEpisodePreview episode={item as any as Episode} />}
                 </Col>
               ))}
               <Col xxl={3} lg={4} sm={6} className="mb-4">

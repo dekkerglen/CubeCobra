@@ -134,7 +134,7 @@ const TagColorsModal = ({ isOpen, toggle }) => {
         )}
       </ModalBody>
       <ModalFooter>
-        <LoadingButton block color="success" onClick={() => updateModalColors(modalColors)} loading={loading}>
+        <LoadingButton block color="primary" onClick={() => updateModalColors(modalColors)} loading={loading}>
           Save Changes
         </LoadingButton>
       </ModalFooter>

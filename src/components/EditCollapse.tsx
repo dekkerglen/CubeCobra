@@ -227,7 +227,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="add"
               value={addValue}
               setValue={setAddValue}
-              onSubmit={handleAdd}
+              onSubmit={(e) => handleAdd(e, removeValue)}
               placeholder="Card to Add"
               autoComplete="off"
               data-lpignore
@@ -249,7 +249,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="remove"
               value={removeValue}
               setValue={setRemoveValue}
-              onSubmit={handleRemoveReplace}
+              onSubmit={(e) => handleRemoveReplace(e, removeValue)}
               placeholder="Card to Remove"
               autoComplete="off"
               data-lpignore

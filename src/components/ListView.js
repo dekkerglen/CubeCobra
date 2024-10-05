@@ -269,7 +269,7 @@ const ListView = ({ cards }) => {
         <Button
           block
           outline
-          color="success"
+          color="primary"
           onClick={() => {
             setModalSelection(cards.filter((c) => checked.includes(`${c.board}:${c.index}`)));
             setModalOpen(true);

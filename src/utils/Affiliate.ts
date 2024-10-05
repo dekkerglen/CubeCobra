@@ -1,5 +1,9 @@
 import Card from 'datatypes/Card';
 
+export const tcgplayerAffiliate = 'https://tcgplayer.pxf.io/c/5760114/1830156/21018';
+
+export const tcgMassEntryUrl = 'https://store.tcgplayer.com/massentry';
+
 export function getTCGLink(card: Card): string | null {
   if (card.details === undefined) return null;
 
@@ -12,9 +16,8 @@ export function getTCGLink(card: Card): string | null {
     const tcgplayerName = isToken ? `${name} Token` : name;
     tcgplayerLink += `productcatalog/product/show?ProductName=${tcgplayerName}`;
   }
-  tcgplayerLink += '&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
 
-  return tcgplayerLink;
+  return `${tcgplayerAffiliate}?u=${encodeURI(tcgplayerLink)}`;
 }
 
 export const getCardMarketLink = (card: { details: { set_name: string; name: string } }): string =>
@@ -39,8 +42,4 @@ export const getCardKingdomLink = (card: { details: { set_name: string; name: st
     card.details.name,
   )}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`;
 
-export const tcgMassEntryUrl =
-  'https://store.tcgplayer.com/massentry?partner=CubeCobra' +
-  '&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra';
-
-export default { getTCGLink, tcgMassEntryUrl };
+export default { getTCGLink, tcgMassEntryUrl, tcgplayerAffiliate };

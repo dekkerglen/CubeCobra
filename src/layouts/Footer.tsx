@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
                   <FooterLink href="/tool/searchcards">Search Cards</FooterLink>
                 </li>
                 <li className="mb-2">
-                  <FooterLink href="/packages/browse">Packages</FooterLink>
+                  <FooterLink href="/packages">Packages</FooterLink>
                 </li>
                 <li className="mb-2">
                   <FooterLink href="/filters">Filter Syntax</FooterLink>

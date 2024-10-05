@@ -42,7 +42,7 @@ const navItems = [
     items: [
       { label: 'Top Cards', href: '/tool/topcards' },
       { label: 'Search Cards', href: '/tool/searchcards' },
-      { label: 'Packages', href: '/packages/approved' },
+      { label: 'Packages', href: '/packages' },
       { label: 'Filter Syntax', href: '/filters' },
     ],
   },
@@ -76,7 +76,9 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
         <NavMenu key={item.title} label={item.title}>
           <Flexbox direction="col" gap="2" className="p-3">
             {item.items.map((subItem) => (
-              <NavLink href={subItem.href}>{subItem.label}</NavLink>
+              <NavLink key={subItem.label} href={subItem.href}>
+                {subItem.label}
+              </NavLink>
             ))}
           </Flexbox>
         </NavMenu>

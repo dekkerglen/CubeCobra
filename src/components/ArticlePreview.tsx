@@ -4,7 +4,6 @@ import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
-import Username from 'components/Username';
 import Article from 'datatypes/Article';
 import Text from './base/Text';
 import { Tile } from './base/Tile';
@@ -26,7 +25,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
     <Tile href={`/content/article/${article.id}`}>
       <AspectRatioBox ratio={1.9}>
         {article.image && <MtgImage image={article.image} />}
-        <Text bold className="absolute bottom-0 left-0 text-text bg-article bg-opacity-50 w-full mb-0 p-1">
+        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-article bg-opacity-50 w-full mb-0 p-1">
           Article
         </Text>
       </AspectRatioBox>
@@ -35,18 +34,15 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
           {article.title}
         </Text>
         <Flexbox direction="row" justify="between">
-          <Text xs className="text-text-secondary">
-            Written by <Username user={article.owner} />
+          <Text sm className="text-text-secondary">
+            Written by {article.owner.username}
           </Text>
-          <Text xs className="text-text-secondary">
+          <Text sm className="text-text-secondary">
             <TimeAgo date={article.date} />
           </Text>
         </Flexbox>
         <div className="flex-grow">
-          <Text area xs>
-            {article.short}
-            {article.short}
-            {article.short}
+          <Text area sm>
             {article.short}
           </Text>
         </div>

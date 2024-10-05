@@ -52,7 +52,7 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, header, s
       </Collapse>
       {(!lean || cubes.length > 2) && (
         <CardBody>
-          <Button color="primary" block onClick={toggle}>
+          <Button color="accent" block onClick={toggle}>
             {isOpen ? 'View Fewer...' : 'View More...'}
           </Button>
         </CardBody>
