@@ -1,8 +1,4 @@
 import React, { useContext } from 'react';
-import { Card, CardHeader } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import ContentPropType from 'proptypes/ContentPropType';
 
 import Article from 'components/Article';
 import Banner from 'components/Banner';
@@ -10,36 +6,35 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
+import ArticleType from 'datatypes/Article';
+import { Card, CardHeader } from 'components/base/Card';
+import Text from 'components/base/Text';
 
-const ArticlePage = ({ loginCallback, article }) => {
+interface ArticlePageProps {
+  loginCallback?: string;
+  article: ArticleType;
+}
+
+const ArticlePage: React.FC<ArticlePageProps> = ({ loginCallback = '/', article }) => {
   const user = useContext(UserContext);
 
   return (
     <MainLayout loginCallback={loginCallback}>
       <Banner />
       <DynamicFlash />
-      <Card className="mb-3">
+      <Card className="my-2">
         {user && user.id === article.owner.id && article.status !== 'p' && (
           <CardHeader>
-            <h5>
+            <Text semibold lg>
               <em className="pe-3">*Draft*</em>
               <a href={`/content/article/edit/${article.id}`}>Edit</a>
-            </h5>
+            </Text>
           </CardHeader>
         )}
         <Article article={article} />
       </Card>
     </MainLayout>
   );
-};
-
-ArticlePage.propTypes = {
-  loginCallback: PropTypes.string,
-  article: ContentPropType.isRequired,
-};
-
-ArticlePage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(ArticlePage);

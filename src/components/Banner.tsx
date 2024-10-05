@@ -29,7 +29,11 @@ const options: React.ReactNode[] = [
   </Text>,
 ];
 
-const Banner: React.FC = () => {
+interface BannerProps {
+  className?: string;
+}
+
+const Banner: React.FC<BannerProps> = ({ className }) => {
   const user: UserContextValue | null = useContext(UserContext);
   const [option] = useState<number>(Math.floor(Math.random() * options.length * BANNER_RATE));
 
@@ -37,14 +41,14 @@ const Banner: React.FC = () => {
 
   if (option < options.length) {
     return (
-      <Card className="my-2">
+      <Card className={`my-2 ${className}`}>
         <CardBody className="bg-advert overflow-hidden">{options[option]}</CardBody>
       </Card>
     );
   }
 
   return (
-    <Flexbox direction="row" justify="between" gap="2">
+    <Flexbox direction="row" justify="between" gap="2" className={`my-2 ${className}`}>
       <ResponsiveDiv lg className="flex-grow">
         <Advertisment placementId="banner" media="desktop" size="banner" />
       </ResponsiveDiv>

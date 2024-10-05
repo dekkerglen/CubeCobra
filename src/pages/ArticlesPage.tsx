@@ -1,16 +1,22 @@
-import React, { useCallback, useState } from 'react';
-import { Col, Row, Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
+import React, { useState, useCallback } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import ArticlePreview from 'components/ArticlePreview';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import RenderToRoot from 'components/RenderToRoot';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
+import ArticleType from 'datatypes/Article';
+import { Row, Col } from 'components/base/Layout';
+import Spinner from 'components/base/Spinner';
+
+interface ArticlesPageProps {
+  loginCallback?: string;
+  articles: ArticleType[];
+  lastKey: any; // Define a more specific type if possible
+}
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -18,8 +24,8 @@ const loader = (
   </div>
 );
 
-const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
-  const [items, setItems] = useState(articles);
+const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articles, lastKey }) => {
+  const [items, setItems] = useState<ArticleType[]>(articles);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   const fetchMoreData = useCallback(async () => {
@@ -43,7 +49,7 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
         setLastKey(json.lastKey);
       }
     }
-  }, [items, setItems, currentLastKey]);
+  }, [items, currentLastKey]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -51,9 +57,9 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
       <DynamicFlash />
       <h4>Articles</h4>
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
-        <Row className="mx-0">
+        <Row>
           {items.map((item) => (
-            <Col className="mb-3" xs="12" sm="6" lg="4">
+            <Col key={item.id} xs={6} sm={6} lg={4} xxl={3}>
               <ArticlePreview article={item} />
             </Col>
           ))}
@@ -61,17 +67,6 @@ const ArticlesPage = ({ loginCallback, articles, lastKey }) => {
       </InfiniteScroll>
     </MainLayout>
   );
-};
-
-ArticlesPage.propTypes = {
-  loginCallback: PropTypes.string,
-  articles: PropTypes.arrayOf({}).isRequired,
-  lastKey: PropTypes.shape({}),
-};
-
-ArticlesPage.defaultProps = {
-  loginCallback: '/',
-  lastKey: null,
 };
 
 export default RenderToRoot(ArticlesPage);

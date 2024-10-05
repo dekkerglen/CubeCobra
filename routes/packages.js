@@ -47,11 +47,11 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
       });
     }
   } else {
-      if (sort === 'votes' || sort === '') {
-        packages = await Package.querySortedByVoteCount(type, keywords, ascending, packages.lastKey);
-      } else {
-        packages = await Package.querySortedByDate(type, keywords, ascending, packages.lastKey);
-      }
+    if (sort === 'votes' || sort === '') {
+      packages = await Package.querySortedByVoteCount(type, keywords, ascending, packages.lastKey);
+    } else {
+      packages = await Package.querySortedByDate(type, keywords, ascending, packages.lastKey);
+    }
   };
 
   return packages;

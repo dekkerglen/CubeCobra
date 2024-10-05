@@ -1,5 +1,4 @@
 import React from 'react';
-import { CardBody, CardHeader } from 'reactstrap';
 
 import TimeAgo from 'react-timeago';
 
@@ -7,6 +6,9 @@ import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import ArticleData from 'datatypes/Article';
+import { CardBody, CardHeader } from './base/Card';
+import Text from './base/Text';
+import { Flexbox } from './base/Layout';
 
 export interface ArticleProps {
   article: ArticleData;
@@ -16,12 +18,16 @@ const Article: React.FC<ArticleProps> = ({ article }) => {
   return (
     <>
       <CardHeader>
-        <h1>{article.title}</h1>
-        <h6>
-          By <Username user={article.owner} />
-          {' | '}
-          <TimeAgo date={article.date} />
-        </h6>
+        <Flexbox direction="col" justify="between">
+          <Text xxl semibold>
+            {article.title}
+          </Text>
+          <Text md>
+            By <Username user={article.owner} />
+            {' | '}
+            <TimeAgo date={article.date} />
+          </Text>
+        </Flexbox>
       </CardHeader>
       <CardBody>
         <Markdown markdown={article.body ?? ''} />

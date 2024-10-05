@@ -8,6 +8,9 @@ interface TextProps {
   md?: boolean;
   lg?: boolean;
   xl?: boolean;
+  xxl?: boolean;
+  xxxl?: boolean;
+  xxxxl?: boolean;
   bold?: boolean;
   semibold?: boolean;
   italic?: boolean;
@@ -16,7 +19,22 @@ interface TextProps {
   clamp?: number; // New prop to specify the number of lines to clamp
 }
 
-const Text: React.FC<TextProps> = ({ area, children, xs, sm, md, lg, xl, bold, semibold, italic, className = '' }) => {
+const Text: React.FC<TextProps> = ({
+  area,
+  children,
+  xs,
+  sm,
+  md,
+  lg,
+  xl,
+  xxl,
+  xxxl,
+  xxxxl,
+  bold,
+  semibold,
+  italic,
+  className = '',
+}) => {
   const classes = classNames(
     {
       'text-xxs': xs,
@@ -24,11 +42,17 @@ const Text: React.FC<TextProps> = ({ area, children, xs, sm, md, lg, xl, bold, s
       'text-sm': md,
       'text-base': lg,
       'text-lg': xl,
+      'text-xl': xxl,
+      'text-2xl': xxxl,
+      'text-3xl': xxxxl,
       'lg:text-xs': xs,
       'lg:text-sm': sm,
       'lg:text-base': md,
       'lg:text-lg': lg,
       'lg:text-xl': xl,
+      'lg:text-2xl': xxl,
+      'lg:text-3xl': xxxl,
+      'lg:text-4xl': xxxxl,
       'font-bold': bold,
       'font-semibold': semibold,
       italic: italic,
