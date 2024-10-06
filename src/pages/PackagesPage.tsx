@@ -32,10 +32,10 @@ interface PackagesPageProps {
 const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items, lastKey, activePage }) => {
   const user = useContext(UserContext);
 
-  const [type, setType] = useQueryParam<string>('t', 'a');
-  const [filter, setFilter] = useQueryParam<string>('kw', '');
-  const [sort, setSort] = useQueryParam<string>('s', 'votes');
-  const [ascending, setAscending] = useQueryParam<string>('a', 'false');
+  const [type, setType] = useQueryParam('t', 'a');
+  const [filter, setFilter] = useQueryParam('kw', '');
+  const [sort, setSort] = useQueryParam('s', 'votes');
+  const [ascending, setAscending] = useQueryParam('a', 'false');
 
   const [alerts, setAlerts] = useState<{ color: string; message: string }[]>([]);
   const [packages, setPackages] = useState<CardPackageData[]>(items);

@@ -14,10 +14,10 @@ import CardDetails from 'datatypes/CardDetails';
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
 import Text from './base/Text';
-import Link from './base/Link';
+import Link, { LinkProps } from './base/Link';
 
-type AutocardLinkProps = WithAutocardProps & ComponentPropsWithoutRef<'a'>;
-const AutocardLink: React.FC<AutocardLinkProps> = withAutocard('a');
+type AutocardLinkProps = WithAutocardProps & LinkProps;
+const AutocardLink: React.FC<AutocardLinkProps> = withAutocard(Link);
 
 const ExternalLink: React.FC<WithModalProps<LinkModalProps> & ComponentPropsWithoutRef<'a'>> = withModal<
   'a',
@@ -261,7 +261,7 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   return (
     <ReactMarkdown
-      className="px-4 flex flex-col gap-2"
+      className="flex flex-col gap-2"
       remarkPlugins={ALL_PLUGINS as any}
       rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
       components={RENDERERS as any}

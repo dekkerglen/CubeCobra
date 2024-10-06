@@ -191,11 +191,11 @@ export function CubeContextProvider({
   const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [loading, setLoading] = useState(false);
-  const [sortPrimary, setSortPrimary] = useQueryParam<string>('s1', defaultSorts[0]);
-  const [sortSecondary, setSortSecondary] = useQueryParam<string>('s2', defaultSorts[1]);
-  const [sortTertiary, setSortTertiary] = useQueryParam<string>('s3', defaultSorts[2]);
-  const [sortQuaternary, setSortQuaternary] = useQueryParam<string>('s4', defaultSorts[3]);
-  const [filterInput, setFilterInput] = useQueryParam<string>('f', '');
+  const [sortPrimary, setSortPrimary] = useQueryParam('s1', defaultSorts[0]);
+  const [sortSecondary, setSortSecondary] = useQueryParam('s2', defaultSorts[1]);
+  const [sortTertiary, setSortTertiary] = useQueryParam('s3', defaultSorts[2]);
+  const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', defaultSorts[3]);
+  const [filterInput, setFilterInput] = useQueryParam('f', '');
   const [filterValid, setFilterValid] = useState(true);
   const [cardFilter, setCardFilter] = useState<{ filter: FilterFunction }>({ filter: defaultFilter() });
   const [filterResult, setFilterResult] = useState('');

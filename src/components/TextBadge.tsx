@@ -1,18 +1,17 @@
 import React, { ReactNode } from 'react';
-import { InputGroup, InputGroupText } from 'reactstrap';
+import { Flexbox } from './base/Layout';
 
 interface TextBadgeProps {
-  name?: string;
+  name: string;
   className?: string;
   children: ReactNode;
-  fill?: boolean;
 }
 
-const TextBadge: React.FC<TextBadgeProps> = ({ name = 'textBadge', className, children, fill = false }) => (
-  <InputGroup size="sm" className={className ? `w-auto ${className}` : 'w-auto'}>
-    <InputGroupText className={fill ? `w-50` : ''}>{name}</InputGroupText>
-    <InputGroupText className={`${fill ? 'w-50 ' : ''}bg-white`}>{children}</InputGroupText>
-  </InputGroup>
+const TextBadge: React.FC<TextBadgeProps> = ({ name, children }) => (
+  <Flexbox direction="row" justify="between" className="border border-border rounded-md">
+    <span className={`px-3 py-1 bg-bg-active border-r border-border text-text rounded-l-md`}>{name}</span>
+    <span className={`flex-grow px-3 py-1 bg-bg text-text rounded-r-md`}>{children}</span>
+  </Flexbox>
 );
 
 export default TextBadge;

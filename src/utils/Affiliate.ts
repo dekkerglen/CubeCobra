@@ -1,11 +1,11 @@
 import Card from 'datatypes/Card';
+import { cardSetName, cardName } from './Card';
 
 export const tcgplayerAffiliate = 'https://tcgplayer.pxf.io/c/5760114/1830156/21018';
-
 export const tcgMassEntryUrl = 'https://store.tcgplayer.com/massentry';
 
-export function getTCGLink(card: Card): string | null {
-  if (card.details === undefined) return null;
+export function getTCGLink(card: Card): string {
+  if (card.details === undefined) return '#';
 
   const { name, isToken } = card.details;
   const tcgplayerId = card.details.tcgplayer_id;
@@ -20,13 +20,13 @@ export function getTCGLink(card: Card): string | null {
   return `${tcgplayerAffiliate}?u=${encodeURI(tcgplayerLink)}`;
 }
 
-export const getCardMarketLink = (card: { details: { set_name: string; name: string } }): string =>
-  `https://www.cardmarket.com/en/Magic/Products/Singles/${card.details.set_name
+export const getCardMarketLink = (card: Card): string =>
+  `https://www.cardmarket.com/en/Magic/Products/Singles/${cardSetName(card)
     .replace(/ /g, '-')
-    .replace(/[:,."']/g, '')}/${card.details.name.replace(/ /g, '-').replace(/:/g, '').replace(/\./g, '')}`;
+    .replace(/[:,."']/g, '')}/${cardName(card).replace(/ /g, '-').replace(/:/g, '').replace(/\./g, '')}`;
 
-export const getCardHoarderLink = (card: { details: { name: string } }): string =>
-  `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${card.details.name}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`;
+export const getCardHoarderLink = (card: Card): string =>
+  `https://www.cardhoarder.com/cards?data%5Bsearch%5D=${cardName(card)}?affiliate_id=cubecobra&utm_source=cubecobra&utm_campaign=affiliate&utm_medium=card`;
 
 const ck = (str: string): string =>
   str
@@ -37,9 +37,9 @@ const ck = (str: string): string =>
 
 export const nameToDashedUrlComponent = ck;
 
-export const getCardKingdomLink = (card: { details: { set_name: string; name: string } }): string =>
-  `https://www.cardkingdom.com/mtg/${ck(card.details.set_name)}/${ck(
-    card.details.name,
+export const getCardKingdomLink = (card: Card): string =>
+  `https://www.cardkingdom.com/mtg/${ck(cardSetName(card))}/${ck(
+    cardName(card),
   )}?partner=CubeCobra&utm_source=CubeCobra&utm_medium=affiliate&utm_campaign=CubeCobra`;
 
 export default { getTCGLink, tcgMassEntryUrl, tcgplayerAffiliate };

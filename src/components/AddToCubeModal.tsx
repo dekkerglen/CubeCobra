@@ -1,16 +1,4 @@
 import React, { useContext, useState } from 'react';
-import {
-  Button,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  UncontrolledAlert,
-} from 'reactstrap';
-
 import ImageFallback from 'components/ImageFallback';
 import LoadingButton from 'components/LoadingButton';
 import UserContext from 'contexts/UserContext';
@@ -18,11 +6,16 @@ import CardDetails from 'datatypes/CardDetails';
 import User from 'datatypes/User';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
+import { Modal, ModalBody, ModalHeader, ModalFooter } from 'components/base/Modal';
+import Button from 'components/base/Button';
+import Select from 'components/base/Select';
+import Alert from 'components/base/Alert';
+import { Flexbox } from './base/Layout';
 
 export interface AddToCubeModalProps {
   card: CardDetails;
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (open: boolean) => void;
   hideAnalytics?: boolean;
   cubeContext?: string;
 }
@@ -35,7 +28,7 @@ interface Alert {
 const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   card,
   isOpen,
-  toggle,
+  setOpen,
   hideAnalytics = false,
   cubeContext,
 }) => {
@@ -67,7 +60,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
-          toggle();
+          setOpen(false);
         }
       } else {
         setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
@@ -80,87 +73,82 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   if (!cubes || cubes.length === 0) {
     return (
-      <Modal isOpen={isOpen} toggle={toggle} size="xs">
-        <ModalHeader toggle={toggle}>{card.name}</ModalHeader>
-        <ModalBody>
-          <ImageFallback
-            className="w-100 mb-3"
-            src={card.image_normal}
-            fallbackSrc="/content/default_card.png"
-            alt={card.name}
-          />
-          <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
+      <Modal isOpen={isOpen} setOpen={setOpen} sm>
+        <ModalHeader setOpen={setOpen}>{card.name}</ModalHeader>
+        <ModalBody className="centered">
+          <Flexbox direction="col" alignItems="center" gap="2">
+            <ImageFallback
+              className="w-100 mb-3"
+              src={card.image_normal}
+              fallbackSrc="/content/default_card.png"
+              alt={card.name}
+            />
+            <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
+          </Flexbox>
         </ModalBody>
         <ModalFooter>
-          {!hideAnalytics && (
-            <Button color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
-              Analytics
+          <Flexbox direction="row" justify="between" gap="2" className="w-full">
+            {!hideAnalytics && (
+              <Button block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+                Analytics
+              </Button>
+            )}
+            <Button block color="danger" onClick={() => setOpen(false)}>
+              Close
             </Button>
-          )}
-          <Button color="unsafe" onClick={toggle}>
-            Close
-          </Button>
+          </Flexbox>
         </ModalFooter>
       </Modal>
     );
   }
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="xs">
-      <ModalHeader toggle={toggle}>{`Add ${card.name} to Cube`}</ModalHeader>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm>
+      <ModalHeader setOpen={setOpen}>{`Add ${card.name} to Cube`}</ModalHeader>
       <ModalBody>
-        {' '}
-        {alerts.map(({ color, message }) => (
-          <UncontrolledAlert key={message} color={color} className="mt-2">
-            {message}
-          </UncontrolledAlert>
-        ))}
-        <ImageFallback
-          className="w-100"
-          src={card.image_normal}
-          fallbackSrc="/content/default_card.png"
-          alt={card.name}
-        />
-        <InputGroup className="my-3">
-          <InputGroupText>Cube: </InputGroupText>
-          <Input
-            id="selected-cube-input"
-            type="select"
+        <Flexbox direction="col" alignItems="center" gap="2">
+          {alerts.map(({ color, message }) => (
+            <Alert key={message} color={color} className="mt-2">
+              {message}
+            </Alert>
+          ))}
+          <ImageFallback
+            className="w-100"
+            src={card.image_normal}
+            fallbackSrc="/content/default_card.png"
+            alt={card.name}
+          />
+          <Select
+            label="Cube"
+            options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
             value={selectedCube}
-            onChange={(event) => setSelectedCube(event.target.value)}
-          >
-            {cubes.map((cube) => (
-              <option key={cube.id} value={cube.id}>
-                {cube.name}
-              </option>
-            ))}
-          </Input>
-        </InputGroup>
-        <InputGroup className="pb-3">
-          <InputGroupText>Board: </InputGroupText>
-          <Input
-            id="selected-board-input"
-            type="select"
+            onChange={(val) => setSelectedCube(val)}
+          />
+          <Select
+            label="Board"
+            options={[
+              { value: 'mainboard', label: 'Mainboard' },
+              { value: 'maybeboard', label: 'Maybeboard' },
+            ]}
             value={selectedBoard}
-            onChange={(event) => setSelectedBoard(event.target.value)}
-          >
-            <option value="mainboard">Mainboard</option>
-            <option value="maybeboard">Maybeboard</option>
-          </Input>
-        </InputGroup>
-        <LoadingButton block outline loading={loading} color="accent" onClick={add}>
-          Add
-        </LoadingButton>
+            onChange={(val) => setSelectedBoard(val)}
+          />
+          <LoadingButton block loading={loading} color="primary" onClick={add}>
+            Add
+          </LoadingButton>
+        </Flexbox>
       </ModalBody>
       <ModalFooter>
-        {!hideAnalytics && (
-          <Button color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
-            Analytics
+        <Flexbox direction="row" justify="between" gap="2" className="w-full">
+          {!hideAnalytics && (
+            <Button block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+              Analytics
+            </Button>
+          )}
+          <Button block color="danger" onClick={() => setOpen(false)}>
+            Close
           </Button>
-        )}
-        <Button color="unsafe" onClick={toggle}>
-          Close
-        </Button>
+        </Flexbox>
       </ModalFooter>
     </Modal>
   );

@@ -16,6 +16,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardGrid from 'components/CardGrid';
 import Voter from 'components/base/Voter';
+import { detailsToCard } from 'utils/Card';
 
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 
@@ -102,7 +103,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
         </Flexbox>
       </CardHeader>
       <CardBody>
-        <CardGrid detailsList={cardPackage.cards} xs={5} xxl={10} />
+        <CardGrid cards={cardPackage.cards.map(detailsToCard)} xs={5} xxl={10} />
       </CardBody>
     </Card>
   );

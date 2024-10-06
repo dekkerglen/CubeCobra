@@ -16,9 +16,18 @@ export interface CardImageProps {
   className?: string;
   width?: string;
   height?: string;
+  onClick?: () => void;
 }
 
-const CardImage: React.FC<CardImageProps> = ({ card, autocard = false, className, details, width, height }) => {
+const CardImage: React.FC<CardImageProps> = ({
+  card,
+  autocard = false,
+  className,
+  details,
+  width,
+  height,
+  onClick,
+}) => {
   const current = useMemo<Card>(() => {
     let result: Card = card || {
       cardID: '',
@@ -45,7 +54,8 @@ const CardImage: React.FC<CardImageProps> = ({ card, autocard = false, className
         alt={current.details?.name}
         width={width ?? '100%'}
         height={height ?? 'auto'}
-        className={className ? `${className} card-border` : 'card-border'}
+        className={className}
+        onClick={onClick}
       />
     );
   }
@@ -57,7 +67,8 @@ const CardImage: React.FC<CardImageProps> = ({ card, autocard = false, className
       alt={card?.details?.name}
       width={width ?? '100%'}
       height={height ?? 'auto'}
-      className={className ? `${className} card-border` : 'card-border'}
+      className={className}
+      onClick={onClick}
     />
   );
 };

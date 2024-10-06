@@ -21,6 +21,7 @@ import CubeContext from 'contexts/CubeContext';
 import CardDetails from 'datatypes/CardDetails';
 import Query from 'utils/Query';
 import { ORDERED_SORTS } from 'utils/Sort';
+import { detailsToCard } from 'utils/Card';
 
 const CardSearch: React.FC = () => {
   const filterInput = useContext(CubeContext)?.filterInput ?? '';
@@ -172,7 +173,13 @@ const CardSearch: React.FC = () => {
             </CardBody>
           )}
           {!loading && (
-            <CardGrid detailsList={cards} xs={3} md={4} xl={6} cardProps={{ autocard: true, className: 'clickable' }} />
+            <CardGrid
+              cards={cards.map(detailsToCard)}
+              xs={3}
+              md={4}
+              xl={6}
+              cardProps={{ autocard: true, className: 'clickable' }}
+            />
           )}
           {parseInt(count, 10) / 100 > 1 && (
             <CardFooter>

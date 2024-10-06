@@ -47,8 +47,8 @@
 		--link-active: 0 86 179;
 		--button-text: 255 255 255;
 		--button-text-secondary: 33 37 41;
-		--button-primary: 8 119 21;
-		--button-primary-active: 7 101 18;
+		--button-primary: 40 167 67;
+		--button-primary-active: 51 127 68;
 		--button-danger: 220 53 69;
 		--button-danger-active: 139 0 0;
 		--button-accent: 13 110 253;
@@ -151,4 +151,12 @@ div.advertisement-div > div:not(.report-link) {
 	min-height: 60px;
 	float: left;
 	box-shadow: -1px 0 var(--text), 0 1px var(--text), 1px 0 var(--text), 0 -1px var(--text);
+}
+
+img.mana-symbol {
+	height: 1.8rem;
+}
+
+img.mana-symbol-sm {
+	height: 1.3rem;
 }
