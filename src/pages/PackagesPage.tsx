@@ -19,6 +19,7 @@ import Controls from 'components/base/Controls';
 import Text from 'components/base/Text';
 import useQueryParam from 'hooks/useQueryParam';
 import RenderToRoot from 'components/RenderToRoot';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -119,23 +120,16 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
               <Text xl semibold>
                 Browse Card Packages
               </Text>
-              {user && (
-                <div className="text-end">
-                  <CreatePackageModalLink
-                    color="primary"
-                    modalProps={{
-                      onError: (message: string) => {
-                        addAlert('danger', message);
-                      },
-                      onSuccess: (message: string) => {
-                        addAlert('success', message);
-                      },
-                    }}
-                  >
-                    <span className="p-2">Create New Package</span>
-                  </CreatePackageModalLink>
-                </div>
-              )}
+              <ResponsiveDiv sm>
+                <Flexbox direction="row" gap="4">
+                  <Button type="link" outline color="accent" href="/tool/topcards">
+                    View Top cards
+                  </Button>
+                  <Button type="link" outline color="accent" href="/tool/searchcards">
+                    Search Cards
+                  </Button>
+                </Flexbox>
+              </ResponsiveDiv>
             </Flexbox>
             <Flexbox direction="row" gap="2">
               <Input
@@ -209,6 +203,23 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
             </Row>
           </Flexbox>
         </Controls>
+        {user && (
+          <Flexbox direction="row" justify="end">
+            <CreatePackageModalLink
+              color="primary"
+              modalProps={{
+                onError: (message: string) => {
+                  addAlert('danger', message);
+                },
+                onSuccess: (message: string) => {
+                  addAlert('success', message);
+                },
+              }}
+            >
+              <span className="p-2">Create New Package</span>
+            </CreatePackageModalLink>
+          </Flexbox>
+        )}
         {items.length === 0 ? (
           <p>No packages found</p>
         ) : (

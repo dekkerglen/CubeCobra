@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
 
-interface UncontrolledAlertProps {
+export interface AlertProps {
   color: string;
   children: React.ReactNode;
   className?: string;
 }
 
-const UncontrolledAlert: React.FC<UncontrolledAlertProps> = ({ color, children, className = '' }) => {
+const Alert: React.FC<AlertProps> = ({ color, children, className = '' }) => {
   const [visible, setVisible] = useState(true);
 
   if (!visible) return null;
@@ -37,4 +37,4 @@ const UncontrolledAlert: React.FC<UncontrolledAlertProps> = ({ color, children, 
   );
 };
 
-export default UncontrolledAlert;
+export default Alert;

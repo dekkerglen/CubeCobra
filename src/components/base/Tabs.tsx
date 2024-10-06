@@ -11,11 +11,12 @@ interface Tab {
 interface TabsProps {
   tabs: Tab[];
   activeTab: number;
+  className?: string;
 }
 
-export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab }) => {
+export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
   return (
-    <Flexbox direction="row">
+    <Flexbox direction="row" className={className}>
       {tabs.map((tab, index) => {
         const isActive = activeTab === index;
         const commonClasses = classNames(
@@ -66,13 +67,12 @@ interface TabPage extends Tab {
 interface TabbedViewProps {
   activeTab: number;
   tabs: TabPage[];
-  className?: string;
 }
 
-export const TabbedView: React.FC<TabbedViewProps> = ({ activeTab, tabs, className }) => {
+export const TabbedView: React.FC<TabbedViewProps> = ({ activeTab, tabs }) => {
   return (
-    <div className={className}>
-      <Tabs tabs={tabs} activeTab={activeTab} />
+    <div>
+      <Tabs tabs={tabs} activeTab={activeTab} className="mt-2 border-b border-border" />
       <TabContent activeTab={activeTab} contents={tabs.map((tab) => tab.content)} />
     </div>
   );

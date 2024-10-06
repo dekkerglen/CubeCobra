@@ -3,8 +3,6 @@ import React, { useCallback, useContext, useState } from 'react';
 import TimeAgo from 'react-timeago';
 
 import AddGroupToCubeModal from 'components/AddGroupToCubeModal';
-import TextBadge from 'components/TextBadge';
-import Tooltip from 'components/Tooltip';
 import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
@@ -16,7 +14,8 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardGrid from 'components/CardGrid';
 import Voter from 'components/base/Voter';
-import { detailsToCard } from 'utils/Card';
+import { cardId, detailsToCard } from 'utils/Card';
+import { StarFillIcon } from '@primer/octicons-react';
 
 const AddGroupToCubeModalLink = withModal(Button, AddGroupToCubeModal);
 
@@ -94,16 +93,22 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
               <Voter votes={voters.length} toggleVote={toggleVote} hasVoted={voted} loading={loading} />
             </Flexbox>
           ) : (
-            <div className="float-end">
-              <TextBadge name="Votes" className="me-2">
-                <Tooltip text="Login to upvote">{voters.length}</Tooltip>
-              </TextBadge>
-            </div>
+            <Flexbox direction="row" gap="2" justify="end" alignItems="center">
+              <Text semibold md>
+                {voters.length}
+              </Text>
+              <StarFillIcon size={22} className="text-yellow-500" />
+            </Flexbox>
           )}
         </Flexbox>
       </CardHeader>
       <CardBody>
-        <CardGrid cards={cardPackage.cards.map(detailsToCard)} xs={5} xxl={10} />
+        <CardGrid
+          cards={cardPackage.cards.map(detailsToCard)}
+          xs={5}
+          xxl={10}
+          hrefFn={(card) => `/tool/card/${cardId(card)}`}
+        />
       </CardBody>
     </Card>
   );

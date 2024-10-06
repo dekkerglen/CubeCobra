@@ -99,7 +99,6 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({ draftedWith, cubedWith,
   return (
     <Card className="my-3">
       <TabbedView
-        className="mt-2 border-b border-border"
         tabs={[
           {
             label: 'Often Drafted With',

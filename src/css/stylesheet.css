@@ -13,6 +13,7 @@
 		--text-secondary-active: 255 255 255;
 		--border: 212 212 212;
 		--border-active : 180 180 180;
+		--border-secondary: 187 187 187;
 		--text: 33 37 41;
 		--link: 0 123 255;
 		--link-active: 0 86 179;
@@ -31,6 +32,14 @@
 		--article : 116 198 135;
 		--podcast: 64 154 191;
 		--video: 254 66 66;
+		--card-white: 255 255 235;
+		--card-blue:  212 237 255;
+		--card-black: 214 204 214;
+		--card-red: 255 200 200;
+		--card-green: 233 255 212;
+		--card-multi: 252 248 169;
+		--card-colorless: 233 231 235;
+		--card-lands: 255 224 192;
   }
 
   :root[class~="dark"] {
@@ -42,6 +51,7 @@
 		--text-secondary-active: 255 255 255;
 		--border: 45 51 56;
 		--border-active: 17 12 16;
+		--border-secondary: 129 140 150;
 		--text: 255 255 255;
 		--link: 50 166 255;
 		--link-active: 0 86 179;
@@ -60,6 +70,14 @@
 		--article: 116 198 135;
 		--podcast: 64 154 191;
 		--video: 254 66 66;		
+		--card-white: 95 95 75;
+		--card-blue: 52 77 95;
+		--card-black: 69 63 82;
+		--card-red: 95 56 68;
+		--card-green: 73 95 52;
+		--card-multi: 92 88 9;
+		--card-colorless: 60 58 64;
+		--card-lands: 95 58 36;
   }
 }
 
