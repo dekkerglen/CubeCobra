@@ -40,7 +40,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
             </Col>
           </Row>
           <Row>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/editpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />
@@ -49,7 +49,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
                 </Button>
               </CSRFForm>
             </Col>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/submitpodcast" autoComplete="off">
                 <Input type="hidden" name="podcastid" value={podcast.id} />
                 <Input type="hidden" name="rss" value={rss} />

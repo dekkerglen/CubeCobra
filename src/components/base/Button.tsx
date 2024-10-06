@@ -13,6 +13,7 @@ export interface ButtonProps {
   type?: 'button' | 'submit' | 'reset' | 'link';
   block?: boolean;
   className?: string;
+  onSubmit?: () => void;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -27,6 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   type,
   block,
   className,
+  onSubmit,
 }) => {
   const classes = classNames(
     className,
@@ -64,7 +66,7 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button className={classes} onClick={onClick} disabled={disabled} type={type}>
+    <button className={classes} onClick={onClick} disabled={disabled} type={type} onSubmit={onSubmit}>
       {children}
     </button>
   );

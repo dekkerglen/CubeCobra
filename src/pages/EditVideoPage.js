@@ -84,7 +84,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
             </Col>
           </Row>
           <Row>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/editvideo" autoComplete="off">
                 <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />
@@ -97,7 +97,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                 </Button>
               </CSRFForm>
             </Col>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/submitvideo" autoComplete="off">
                 <Input type="hidden" name="videoid" value={video.id} />
                 <Input type="hidden" name="title" value={title} />

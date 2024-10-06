@@ -21,13 +21,13 @@ import UserContext from 'contexts/UserContext';
 import Card, { BoardType, boardTypes, Changes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import Cube, { TagColor } from 'datatypes/Cube';
-import { defaultFilter, FilterFunction, makeFilter } from 'filtering/FilterCards';
 import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
 import useQueryParam from 'hooks/useQueryParam';
 import { cardName, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { deepCopy, xorStrings } from 'utils/Util';
+import FilterContext from './FilterContext';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -95,9 +95,6 @@ export interface CubeContextValue {
   setSortSecondary: Dispatch<SetStateAction<string | null>>;
   setSortTertiary: Dispatch<SetStateAction<string | null>>;
   setSortQuaternary: Dispatch<SetStateAction<string | null>>;
-  filterInput: string | null;
-  setFilterInput: Dispatch<SetStateAction<string | null>>;
-  filterValid: boolean;
   filterResult: string;
   unfilteredChangedCards: Record<string, Card[]>;
   useBlog: boolean;
@@ -105,7 +102,60 @@ export interface CubeContextValue {
   allTags: string[];
 }
 
-const CubeContext = createContext<CubeContextValue | null>(null);
+const defaultFn = () => {
+  throw new Error('Error: Attempt to call CubeContext function before initialization.');
+};
+
+const CubeContext = createContext<CubeContextValue>({
+  cube: {} as CubeWithCards,
+  changedCards: {} as Record<string, Card[]>,
+  canEdit: false,
+  hasCustomImages: false,
+  setCube: defaultFn,
+  addCard: defaultFn,
+  bulkAddCard: defaultFn,
+  removeCard: defaultFn,
+  swapCard: defaultFn,
+  editCard: defaultFn,
+  discardAllChanges: defaultFn,
+  changes: {} as Changes,
+  revertAdd: defaultFn,
+  revertRemove: defaultFn,
+  revertSwap: defaultFn,
+  revertEdit: defaultFn,
+  versionDict: {} as Record<string, CardVersion[]>,
+  commitChanges: defaultFn,
+  toggle: defaultFn,
+  setModalSelection: defaultFn,
+  setModalOpen: defaultFn,
+  tagColors: [],
+  showTagColors: false,
+  setTagColors: defaultFn,
+  updateShowTagColors: defaultFn,
+  bulkEditCard: defaultFn,
+  bulkRevertEdit: defaultFn,
+  bulkRemoveCard: defaultFn,
+  bulkRevertRemove: defaultFn,
+  alerts: [],
+  setAlerts: defaultFn,
+  loading: false,
+  setShowUnsorted: defaultFn,
+  saveSorts: defaultFn,
+  resetSorts: defaultFn,
+  sortPrimary: null,
+  sortSecondary: null,
+  sortTertiary: null,
+  sortQuaternary: null,
+  setSortPrimary: defaultFn,
+  setSortSecondary: defaultFn,
+  setSortTertiary: defaultFn,
+  setSortQuaternary: defaultFn,
+  filterResult: '',
+  unfilteredChangedCards: {} as Record<string, Card[]>,
+  useBlog: false,
+  setUseBlog: defaultFn,
+  allTags: [],
+});
 
 export const TAG_COLORS: [string, string][] = [
   ['None', 'no-color'],
@@ -152,6 +202,8 @@ export function CubeContextProvider({
   useChangedCards?: boolean;
 }) {
   const user = useContext(UserContext);
+  const { filterInput, cardFilter } = useContext(FilterContext)!;
+
   const { setOpenCollapse } = useContext(DisplayContext);
   const [cube, setCube] = useState<CubeWithCards>({
     ...initialCube,
@@ -195,9 +247,6 @@ export function CubeContextProvider({
   const [sortSecondary, setSortSecondary] = useQueryParam('s2', defaultSorts[1]);
   const [sortTertiary, setSortTertiary] = useQueryParam('s3', defaultSorts[2]);
   const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', defaultSorts[3]);
-  const [filterInput, setFilterInput] = useQueryParam('f', '');
-  const [filterValid, setFilterValid] = useState(true);
-  const [cardFilter, setCardFilter] = useState<{ filter: FilterFunction }>({ filter: defaultFilter() });
   const [filterResult, setFilterResult] = useState('');
   const [useBlog, setUseBlog] = useLocalStorage<boolean>(`${cube.id}-useBlog`, true);
 
@@ -772,7 +821,7 @@ export function CubeContextProvider({
     [changes, setChanges],
   );
 
-  const canEdit = !!user && cube.owner.id === user.id;
+  const canEdit = !!user && cube.owner?.id === user.id;
 
   const hasCustomImages = useMemo(
     () =>
@@ -840,26 +889,6 @@ export function CubeContextProvider({
     setSortQuaternary(cube.defaultSorts?.[3] || 'Alphabetical');
   }, [cube, setSortPrimary, setSortSecondary, setSortTertiary, setSortQuaternary]);
 
-  useEffect(
-    (overrideFilter?: string) => {
-      const input = overrideFilter ?? filterInput ?? '';
-      if (input.trim() === '') {
-        setCardFilter({ filter: defaultFilter() });
-        return;
-      }
-
-      const { filter, err } = makeFilter(input);
-      if (err || !filter) {
-        setFilterValid(false);
-        return;
-      }
-
-      setFilterValid(true);
-      setCardFilter({ filter });
-    },
-    [filterInput, setCardFilter],
-  );
-
   const value = useMemo(
     () => ({
       cube,
@@ -905,9 +934,6 @@ export function CubeContextProvider({
       setSortSecondary,
       setSortTertiary,
       setSortQuaternary,
-      filterInput,
-      setFilterInput,
-      filterValid,
       filterResult,
       unfilteredChangedCards,
       useBlog,
@@ -958,9 +984,6 @@ export function CubeContextProvider({
       setSortSecondary,
       setSortTertiary,
       setSortQuaternary,
-      filterInput,
-      setFilterInput,
-      filterValid,
       filterResult,
       unfilteredChangedCards,
       useBlog,

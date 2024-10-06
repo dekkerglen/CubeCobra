@@ -5,11 +5,12 @@ interface SpinnerProps {
   sm?: boolean;
   md?: boolean;
   lg?: boolean;
+  xl?: boolean;
   color?: 'primary' | 'secondary' | 'accent';
   className?: string;
 }
 
-const Spinner: React.FC<SpinnerProps> = ({ sm, md, lg, color = 'primary', className = '' }) => {
+const Spinner: React.FC<SpinnerProps> = ({ sm, md, lg, xl, color = 'primary', className = '' }) => {
   const defaultSize = !sm && !md && !lg;
 
   return (
@@ -20,7 +21,8 @@ const Spinner: React.FC<SpinnerProps> = ({ sm, md, lg, color = 'primary', classN
         {
           'h-4 w-4': sm,
           'h-6 w-6': md || defaultSize,
-          'h-8 w-8': lg,
+          'h-12 w-12': lg,
+          'h-16 w-16': xl,
           'text-primary': color === 'primary',
           'text-secondary': color === 'secondary',
           'text-accent': color === 'accent',

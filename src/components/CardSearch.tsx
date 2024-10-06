@@ -1,64 +1,61 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Col,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Row,
-  Spinner,
-} from 'reactstrap';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import Button from 'components/base/Button';
 import CardGrid from 'components/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
 import Paginate from 'components/base/Pagination';
-import CubeContext from 'contexts/CubeContext';
 import CardDetails from 'datatypes/CardDetails';
 import Query from 'utils/Query';
 import { ORDERED_SORTS } from 'utils/Sort';
-import { detailsToCard } from 'utils/Card';
+import { cardId, detailsToCard } from 'utils/Card';
+import FilterContext from 'contexts/FilterContext';
+import { Row, Col, Flexbox } from 'components/base/Layout';
+import Spinner from 'components/base/Spinner';
+import Select from 'components/base/Select';
+import Controls from './base/Controls';
+import Text from './base/Text';
+import ResponsiveDiv from './base/ResponsiveDiv';
+import Banner from './Banner';
 
 const CardSearch: React.FC = () => {
-  const filterInput = useContext(CubeContext)?.filterInput ?? '';
-  const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
+  const { filterInput } = useContext(FilterContext);
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
   const [count, setCount] = useState(Query.get('m', ''));
   const [distinct, setDistinct] = useState(Query.get('di', 'names'));
   const [sort, setSort] = useState(Query.get('s', 'Elo'));
   const [direction, setDirection] = useState(Query.get('d', 'descending'));
 
+  const fetchData = useCallback(async () => {
+    const params = new URLSearchParams([
+      ['p', page.toString()],
+      ['f', filterInput || ''],
+      ['s', sort],
+      ['d', direction],
+      ['di', distinct],
+    ]);
+
+    const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
+    if (!response.ok) {
+      console.error(response);
+    }
+
+    Query.set('f', filterInput || '');
+    Query.set('p', page.toString());
+    Query.set('s', sort);
+    Query.set('d', direction);
+    Query.set('di', distinct);
+
+    const json = await response.json();
+
+    setCards(json.data);
+    setCount(json.numResults.toString());
+    setLoading(false);
+  }, [page, filterInput, sort, direction, distinct]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      const params = new URLSearchParams([
-        ['p', page.toString()],
-        ['f', filterInput],
-        ['s', sort],
-        ['d', direction],
-        ['di', distinct],
-      ]);
-      const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
-      if (!response.ok) {
-        console.error(response);
-      }
-
-      Query.set('f', filterInput);
-      Query.set('p', page.toString());
-      Query.set('s', sort);
-      Query.set('d', direction);
-      Query.set('di', distinct);
-
-      const json = await response.json();
-
-      setCards(json.data);
-      setCount(json.numResults.toString());
-      setLoading(false);
-    };
     if (filterInput && filterInput !== '') {
       fetchData();
     } else {
@@ -84,115 +81,112 @@ const CardSearch: React.FC = () => {
     setDistinct(index);
   };
 
+  useEffect(() => {
+    setLoading(true);
+    setPage(0);
+  }, [filterInput]);
+
   return (
     <>
-      <div className="usercontrols pt-3">
-        <Row className="pb-3 me-1">
-          <Col xs="6">
-            <h3 className="mx-3">Search cards</h3>
-          </Col>
-          <Col xs="6">
-            <div className="text-end">
-              <Button outline color="primary" href="/tool/topcards">
-                View Top cards
-              </Button>{' '}
-              <Button outline color="primary" href="/packages">
-                View Card Packages
-              </Button>
-            </div>
-          </Col>
-        </Row>
-        <FilterCollapse hideDescription isOpen />
-        <Row className="px-3">
-          <Col xs={12} sm={4}>
-            <InputGroup className="mb-3">
-              <InputGroupText>Sort: </InputGroupText>
-              <Input
-                id="card-sort-input"
-                type="select"
+      <Controls className="p-2">
+        <Flexbox direction="col" gap="2">
+          <Banner />
+          <Flexbox direction="row" justify="between">
+            <Text xl semibold>
+              Search cards
+            </Text>
+            <ResponsiveDiv sm>
+              <Flexbox direction="row" gap="4">
+                <Button type="link" outline color="accent" href="/tool/topcards">
+                  View Top cards
+                </Button>
+                <Button type="link" outline color="accent" href="/packages">
+                  View Card Packages
+                </Button>
+              </Flexbox>
+            </ResponsiveDiv>
+          </Flexbox>
+          <FilterCollapse hideDescription isOpen />
+          <Row>
+            <Col xs={12} sm={4}>
+              <Select
+                label="Sort"
                 value={sort}
-                onChange={(event) => updateSort(event.target.value)}
-              >
-                {ORDERED_SORTS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Input>
-            </InputGroup>
-          </Col>
-          <Col xs={12} sm={4}>
-            <InputGroup className="mb-3">
-              <InputGroupText>Direction: </InputGroupText>
-              <Input
-                id="card-direction-input"
-                type="select"
+                onChange={(value) => updateSort(value)}
+                options={ORDERED_SORTS.map((s) => ({ value: s, label: s }))}
+              />
+            </Col>
+            <Col xs={12} sm={4}>
+              <Select
+                label="Direction"
                 value={direction}
-                onChange={(event) => updateDirection(event.target.value)}
-              >
-                <option value="ascending">Ascending</option>
-                <option value="descending">Descending</option>
-              </Input>
-            </InputGroup>
-          </Col>
-          <Col xs={12} sm={4}>
-            <InputGroup className="mb-3">
-              <InputGroupText>Distinct: </InputGroupText>
-              <Input
-                id="card-distinct-input"
-                type="select"
+                onChange={(value) => updateDirection(value)}
+                options={[
+                  { value: 'ascending', label: 'Ascending' },
+                  { value: 'descending', label: 'Descending' },
+                ]}
+              />
+            </Col>
+            <Col xs={12} sm={4}>
+              <Select
+                label="Distinct"
                 value={distinct}
-                onChange={(event) => updateDistinct(event.target.value)}
-              >
-                <option value="names">Names</option>
-                <option value="printings">Printings</option>
-              </Input>
-            </InputGroup>
-          </Col>
-        </Row>
-      </div>
-      <br />
+                onChange={(value) => updateDistinct(value)}
+                options={[
+                  { value: 'names', label: 'Names' },
+                  { value: 'printings', label: 'Printings' },
+                ]}
+              />
+            </Col>
+          </Row>
+        </Flexbox>
+      </Controls>
       <DynamicFlash />
       {(cards && cards.length) > 0 ? (
-        <Card className="mb-3">
-          {parseInt(count, 10) / 96 > 1 && (
-            <CardHeader>
-              <Paginate
-                count={Math.ceil(parseInt(count, 10) / 96)}
-                active={page}
-                onClick={(i: number) => updatePage(i)}
-              />
-            </CardHeader>
-          )}
-
+        <Flexbox direction="col" gap="2" className="my-2">
+          <Flexbox direction="row" justify="between" wrap="wrap" alignItems="center">
+            <Text lg semibold className="whitespace-nowrap">
+              <ResponsiveDiv baseVisible sm>
+                {`${count} results`}
+              </ResponsiveDiv>
+              <ResponsiveDiv md>{`Found ${count} results for the query: ${filterInput}`}</ResponsiveDiv>
+            </Text>
+            <Paginate
+              count={Math.ceil(parseInt(count, 10) / 96)}
+              active={page}
+              onClick={(i: number) => updatePage(i)}
+            />
+          </Flexbox>
           {loading && (
-            <CardBody>
-              <div className="centered py-3">
-                <Spinner className="position-absolute" />
-              </div>
-            </CardBody>
+            <div className="centered m-4">
+              <Spinner xl />
+            </div>
           )}
           {!loading && (
             <CardGrid
               cards={cards.map(detailsToCard)}
-              xs={3}
+              xs={2}
+              sm={3}
               md={4}
+              lg={5}
               xl={6}
+              xxl={8}
               cardProps={{ autocard: true, className: 'clickable' }}
+              hrefFn={(card) => `/tool/card/${cardId(card)}`}
             />
           )}
-          {parseInt(count, 10) / 100 > 1 && (
-            <CardFooter>
-              <Paginate
-                count={Math.ceil(parseInt(count, 10) / 96)}
-                active={page}
-                onClick={(i: number) => updatePage(i)}
-              />
-            </CardFooter>
-          )}
-        </Card>
+          <Flexbox direction="row" justify="end">
+            <Paginate
+              count={Math.ceil(parseInt(count, 10) / 96)}
+              active={page}
+              onClick={(i: number) => updatePage(i)}
+            />
+          </Flexbox>
+        </Flexbox>
       ) : (
-        <h4>No Results</h4>
+        <Text lg semibold className="mt-2">
+          No cards found
+        </Text>
       )}
     </>
   );

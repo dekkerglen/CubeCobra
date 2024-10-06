@@ -25,11 +25,11 @@ const PodcastPreview = ({ podcast }) => {
         <a href={`/content/podcast/${podcast.id}`} className="stretched-link">
           <h5 className="text-muted text-ellipsis my-0">{podcast.title}</h5>
         </a>
-        <small>
+        <Text sm>
           <em className="text-muted text-ellipsis">
             By <Username user={podcast.owner} />
           </em>
-        </small>
+        </Text>
       </div>
     </Card>
   );

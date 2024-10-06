@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import Copyright from 'components/Copyright';
+import Text from 'components/base/Text';
 
 interface FooterLinkProps {
   href: string;
@@ -26,7 +27,7 @@ const Footer: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap -mx-4">
           <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
-            <small>
+            <Text sm>
               <h6 className="text-lg font-semibold mb-2">Content</h6>
               <ul className="list-none p-0">
                 <li className="mb-2">
@@ -42,10 +43,10 @@ const Footer: React.FC = () => {
                   <FooterLink href="/content/videos">Videos</FooterLink>
                 </li>
               </ul>
-            </small>
+            </Text>
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
-            <small>
+            <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cube</h6>
               <ul className="list-none p-0">
                 <li className="mb-2">
@@ -55,10 +56,10 @@ const Footer: React.FC = () => {
                   <FooterLink href="/search">Search Cubes</FooterLink>
                 </li>
               </ul>
-            </small>
+            </Text>
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
-            <small>
+            <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cards</h6>
               <ul className="list-none p-0">
                 <li className="mb-2">
@@ -74,10 +75,10 @@ const Footer: React.FC = () => {
                   <FooterLink href="/filters">Filter Syntax</FooterLink>
                 </li>
               </ul>
-            </small>
+            </Text>
           </div>
           <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
-            <small>
+            <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cube Cobra</h6>
               <ul className="list-none p-0">
                 <li className="mb-2">
@@ -98,7 +99,7 @@ const Footer: React.FC = () => {
                   <FooterLink href="https://github.com/dekkerglen/CubeCobra">Github</FooterLink>
                 </li>
               </ul>
-            </small>
+            </Text>
           </div>
         </div>
         <div id="ncmp-consent-link"></div>

@@ -340,12 +340,12 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           )}
         </Row>
         <Row className="mb-2">
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <LoadingButton color="accent" block onClick={submit} loading={loading}>
               Save Changes
             </LoadingButton>
           </Col>
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <Button
               color="unsafe"
               block

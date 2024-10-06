@@ -46,11 +46,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
             {article.short}
           </Text>
         </div>
-        {showStatus && (
-          <div className={`w-100 pb-1 pt-0 px-2 m-0`}>
-            <small className="float-start">Status: {statusMap[article.status]}</small>
-          </div>
-        )}
+        {showStatus && <Text>Status: {statusMap[article.status]}</Text>}
       </Flexbox>
     </Tile>
   );

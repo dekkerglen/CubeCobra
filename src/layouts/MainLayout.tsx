@@ -34,9 +34,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
             <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">
               <SideBanner placementId="right-rail" />
             </ResponsiveDiv>
-            <ResponsiveDiv baseVisible md>
-              <MobileBanner placementId="mobile-banner" />
-            </ResponsiveDiv>
             <ResponsiveDiv md>
               <VideoBanner placementId="video" />
             </ResponsiveDiv>
@@ -44,6 +41,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
         </Container>
       </div>
       <Footer />
+      <ResponsiveDiv baseVisible md>
+        <MobileBanner placementId="mobile-banner" />
+      </ResponsiveDiv>
     </Flexbox>
   );
 };

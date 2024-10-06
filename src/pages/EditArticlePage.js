@@ -84,7 +84,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
             </Col>
           </Row>
           <Row>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/editarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
@@ -96,7 +96,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 </Button>
               </CSRFForm>
             </Col>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/submitarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
