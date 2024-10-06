@@ -3,6 +3,10 @@ module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      listStyleType: {
+        disc: 'disc',
+        decimal: 'decimal',
+      },
       fontSize: {
         'xxs': '0.625rem', // Custom size for text-xxs (10px)
       },
@@ -40,6 +44,11 @@ module.exports = {
         "podcast": "rgb(var(--podcast) / <alpha-value>)",
         "video": "rgb(var(--video) / <alpha-value>)",
       },
+    },
+  },
+  variants: {
+    extend: {
+      listStyleType: ['responsive'],
     },
   },
   safelist: [

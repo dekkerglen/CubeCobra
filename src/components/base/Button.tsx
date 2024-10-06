@@ -12,6 +12,7 @@ export interface ButtonProps {
   rel?: string;
   type?: 'button' | 'submit' | 'reset' | 'link';
   block?: boolean;
+  className?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -25,8 +26,10 @@ const Button: React.FC<ButtonProps> = ({
   rel,
   type,
   block,
+  className,
 }) => {
   const classes = classNames(
+    className,
     'px-2 py-1 rounded focus:outline-none font-semibold transition-colors duration-300 ease-in-out border focus:border-button-text',
     {
       'text-button-text': ['primary', 'danger', 'accent', 'secondary'].includes(color) && !outline,

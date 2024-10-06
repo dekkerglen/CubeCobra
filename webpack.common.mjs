@@ -51,7 +51,7 @@ const config = {
 
 export const clientConfig = merge(config, {
   entry: {
-    BlogPostPage: './src/pages/BlogPostPage.js',
+    BlogPostPage: './src/pages/BlogPostPage.tsx',
     BulkUploadPage: './src/pages/BulkUploadPage.js',
     CubeSamplePackPage: './src/pages/CubeSamplePackPage.js',
     CubeAnalysisPage: './src/pages/CubeAnalysisPage.js',
@@ -109,7 +109,7 @@ export const clientConfig = merge(config, {
     PodcastPage: './src/pages/PodcastPage.tsx',
     PodcastsPage: './src/pages/PodcastsPage.js',
     PodcastEpisodePage: './src/pages/PodcastEpisodePage.js',
-    BrowseContentPage: './src/pages/BrowseContentPage.js',
+    BrowseContentPage: './src/pages/BrowseContentPage.tsx',
     LeaveWarningPage: './src/pages/LeaveWarningPage.tsx',
     PackagePage: './src/pages/PackagePage.js',
     FeaturedCubesQueuePage: './src/pages/FeaturedCubesQueuePage.js',
@@ -132,7 +132,7 @@ export const serverConfig = merge(config, {
     'pages/DashboardPage': './src/pages/DashboardPage.js',
     'pages/DevBlog': './src/pages/DevBlog.js',
     'pages/Loading': './src/pages/Loading.js',
-    'pages/BlogPostPage': './src/pages/BlogPostPage.js',
+    'pages/BlogPostPage': './src/pages/BlogPostPage.tsx',
     'pages/BulkUploadPage': './src/pages/BulkUploadPage.js',
     'pages/CubeAnalysisPage': './src/pages/CubeAnalysisPage.js',
     'pages/CubeBlogPage': './src/pages/CubeBlogPage.js',
@@ -188,7 +188,7 @@ export const serverConfig = merge(config, {
     'pages/EditPodcastPage': './src/pages/EditPodcastPage.js',
     'pages/PodcastsPage': './src/pages/PodcastsPage.js',
     'pages/PodcastEpisodePage': './src/pages/PodcastEpisodePage.js',
-    'pages/BrowseContentPage': './src/pages/BrowseContentPage.js',
+    'pages/BrowseContentPage': './src/pages/BrowseContentPage.tsx',
     'pages/LeaveWarningPage': './src/pages/LeaveWarningPage.tsx',
     'pages/PackagePage': './src/pages/PackagePage.js',
     'pages/FeaturedCubesQueuePage': './src/pages/FeaturedCubesQueuePage.js',

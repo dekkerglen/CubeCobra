@@ -32,7 +32,7 @@ const Article: React.FC<ArticleProps> = ({ article }) => {
       <CardBody>
         <Markdown markdown={article.body ?? ''} />
       </CardBody>
-      <div className="border-top">
+      <div className="border-t border-border">
         <CommentsSection parentType="article" parent={article.id} collapse={false} />
       </div>
     </>

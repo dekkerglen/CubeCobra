@@ -7,7 +7,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 import Banner from 'components/Banner';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import Paginate from 'components/Paginate';
+import Paginate from 'components/base/Pagination';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';

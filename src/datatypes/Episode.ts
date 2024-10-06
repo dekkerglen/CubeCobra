@@ -1,21 +1,9 @@
-import User from 'datatypes/User';
+import Content from 'datatypes/Content';
 
-interface Episode {
-  id: string;
-  date: number;
-  status: string;
-  username?: string;
-  owner: User;
-  type: string;
-  typeStatusComp: string;
-  typeOwnerComp: string;
-  title?: string;
-  body?: string;
-  short?: string;
-  url?: string;
-  image: string;
-  imageName?: string;
+interface Episode extends Content {
   podcastName: string;
+  image?: string;
+  imageName?: string;
 }
 
 export default Episode;

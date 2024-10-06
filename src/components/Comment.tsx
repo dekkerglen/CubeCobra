@@ -1,25 +1,25 @@
 import React, { useContext, useState } from 'react';
-import { Collapse } from 'reactstrap';
 
 import TimeAgo from 'react-timeago';
 
-import CommentContextMenu from 'components/CommentContextMenu';
 import CommentEntry from 'components/CommentEntry';
-import LinkButton from 'components/base/LinkButton';
+import Link from 'components/base/Link';
 import Markdown from 'components/Markdown';
 import ReportCommentModal from 'components/ReportCommentModal';
 import ShareCommentModal from 'components/ShareCommentModal';
 import withModal from 'components/WithModal';
-import DomainContext from 'contexts/DomainContext';
 import UserContext from 'contexts/UserContext';
 import CommentData from 'datatypes/Comment';
 import useComments, { EditRequest } from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
+import Collapse from './base/Collapse';
+import { Flexbox } from './base/Layout';
+import Text from './base/Text';
+import classNames from 'classnames';
 
 export interface ShareCommentModalButtonProps {
   modalProps: {
     comment: Comment;
-    domain: string;
   };
 }
 
@@ -29,8 +29,8 @@ export interface ReportCommentModalButtonProps {
   };
 }
 
-const ShareCommentModalButton = withModal('a', ShareCommentModal);
-const ReportCommentModalButton = withModal('a', ReportCommentModal);
+const ShareCommentModalButton = withModal(Link, ShareCommentModal);
+const ReportCommentModalButton = withModal(Link, ReportCommentModal);
 
 const maxDepth = 4;
 
@@ -44,7 +44,6 @@ export interface CommentProps {
 
 const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies = false, editComment }) => {
   const user = useContext(UserContext);
-  const domain = useContext(DomainContext);
 
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
@@ -68,7 +67,13 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
   };
 
   return (
-    <div className={`ps-2 pt-2 flex-container${index % 2 === 0 ? ' comment-bg-even' : ' comment-bg-odd'}`}>
+    <Flexbox
+      direction="row"
+      className={classNames(`border border-border ps-2 pt-2`, {
+        'bg-bg': index % 2 === 0,
+        'bg-bg-accent': index % 2 === 1,
+      })}
+    >
       {comment.image && (
         <a href={`/user/view/${comment.owner.id}`}>
           <img
@@ -80,31 +85,22 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
         </a>
       )}
       <div className="flex-grow ms-2">
-        <div className="flex-container flex-direction-col">
-          <div className="flex-container flex-space-between">
-            <div>
+        <Flexbox direction="col">
+          <Flexbox justify="between" direction="row" className="mr-2">
+            <Text sm>
               {comment.owner.username ? (
-                <a href={`/user/view/${comment.owner.id}`}>
-                  <small>{comment.owner.username}</small>
-                </a>
+                <Link href={`/user/view/${comment.owner.id}`}>{comment.owner.username}</Link>
               ) : (
-                <small>Anonymous</small>
+                'Anonymous'
               )}
               {comment.date && (
-                <small>
-                  {' '}
-                  - <TimeAgo date={comment.date} />
-                </small>
+                <>
+                  {' - '}
+                  <TimeAgo date={comment.date} />
+                </>
               )}
-            </div>
-            {user && comment.owner.id === user.id && (
-              <div>
-                <CommentContextMenu edit={() => setIsEdit(true)} remove={remove}>
-                  <small>...</small>
-                </CommentContextMenu>
-              </div>
-            )}
-          </div>
+            </Text>
+          </Flexbox>
           <Collapse isOpen={!isEdit}>
             <div className="mb-0">
               <Markdown markdown={comment.body} limited />
@@ -119,35 +115,44 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
             defaultValue={comment.body}
             toggle={() => setIsEdit(false)}
           />
-          <div>
+          <Flexbox direction="row" gap="2">
             {!noReplies && user && (
-              <LinkButton onClick={toggleReply}>
-                <small>Reply</small>
-              </LinkButton>
+              <Link onClick={toggleReply}>
+                <Text sm>Reply</Text>
+              </Link>
+            )}
+            {user && comment.owner.id === user.id && (
+              <>
+                <Link onClick={() => setIsEdit(true)}>
+                  <Text sm>Edit</Text>
+                </Link>
+                <Link onClick={() => remove()}>
+                  <Text sm>Delete</Text>
+                </Link>
+              </>
             )}
             {!noReplies && comments.length > 0 && depth < maxDepth && (
-              <LinkButton
-                className="ms-2"
+              <Link
                 onClick={() => {
                   toggle();
                   setLoaded(true);
                 }}
               >
-                <small>{`${expanded ? 'Hide' : 'View'} Replies (${comments.length})`}</small>
-              </LinkButton>
+                <Text sm>{`${expanded ? 'Hide' : 'View'} Replies (${comments.length})`}</Text>
+              </Link>
             )}
             {!noReplies && comments.length > 0 && depth >= maxDepth && (
-              <a className="m-2" href={`/comment/${comment.id}`}>
-                <small>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</small>
-              </a>
+              <Link className="m-2" href={`/comment/${comment.id}`}>
+                <Text sm>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</Text>
+              </Link>
             )}
-            <ShareCommentModalButton className="ms-2" modalProps={{ comment, domain }}>
-              <small>Share</small>
+            <ShareCommentModalButton modalProps={{ comment }}>
+              <Text sm>Share</Text>
             </ShareCommentModalButton>
-            <ReportCommentModalButton className="ms-2" modalProps={{ comment }}>
-              <small>Report</small>
+            <ReportCommentModalButton modalProps={{ comment }}>
+              <Text sm>Report</Text>
             </ReportCommentModalButton>
-          </div>
+          </Flexbox>
           <CommentEntry
             submit={(res) => {
               addComment(res);
@@ -180,9 +185,9 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
               )}
             </Collapse>
           )}
-        </div>
+        </Flexbox>
       </div>
-    </div>
+    </Flexbox>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { BellFillIcon } from '@primer/octicons-react';
-import LinkButton from 'components/base/LinkButton';
+import Link from 'components/base/Link';
 import UserContext from 'contexts/UserContext';
 import { csrfFetch } from 'utils/CSRF';
 import { Notification } from 'datatypes/Notification';
@@ -38,9 +38,9 @@ const NotificationsNav: React.FC = () => {
         <CardHeader>
           <Flexbox justify="between" direction="row" className="font-semibold">
             Notifications
-            <LinkButton className="card-subtitle float-end mt-0" onClick={clear}>
+            <Link className="card-subtitle float-end mt-0" onClick={clear}>
               Clear All
-            </LinkButton>
+            </Link>
           </Flexbox>
         </CardHeader>
         <Flexbox direction="col" className="max-h-96 overflow-auto">

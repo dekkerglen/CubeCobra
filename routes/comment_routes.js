@@ -133,9 +133,11 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const { id, content, remove } = req.body.comment;
 
+    console.log(req.body.comment);
     const document = await Comment.getById(id);
 
-    if (document.owner !== req.user.id) {
+    console.log(document);
+    if (document.owner.id !== req.user.id) {
       return res.status(400).send({
         success: 'false',
         message: 'Comments can only be edited by their owner.',
@@ -147,6 +149,7 @@ router.post(
     if (remove) {
       document.owner = null;
     }
+
 
     await Comment.put(document);
 

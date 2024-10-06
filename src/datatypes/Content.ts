@@ -1,8 +1,9 @@
+import User from './User';
 export default interface Content {
   id: string;
   date: number;
   status: string;
-  owner: string;
+  owner: User;
   type: string;
   typeStatusComp: string;
   typeOwnerComp: string;
@@ -10,11 +11,5 @@ export default interface Content {
   body?: string;
   short?: string;
   url?: string;
-  image?: string;
-  imageName?: string;
   username?: string;
-  podcastName?: string;
-  podcast?: string;
-  podcastGuid?: string;
-  podcastLink?: string;
 }

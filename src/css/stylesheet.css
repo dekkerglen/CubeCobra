@@ -140,3 +140,15 @@ div.advertisement-div > div:not(.report-link) {
 .card-border {
 	border-radius: 4.72% / 3.37%;
 }
+
+
+.profile-thumbnail {
+	border-radius: 50%;
+	object-fit: cover;
+	width: 60px;
+	height: 60px;
+	min-width: 60px;
+	min-height: 60px;
+	float: left;
+	box-shadow: -1px 0 var(--text), 0 1px var(--text), 1px 0 var(--text), 0 -1px var(--text);
+}

@@ -791,10 +791,6 @@ video {
   margin: 0px;
 }
 
-.m-1 {
-  margin: 0.25rem;
-}
-
 .m-2 {
   margin: 0.5rem;
 }
@@ -852,6 +848,11 @@ video {
 .my-4 {
   margin-top: 1rem;
   margin-bottom: 1rem;
+}
+
+.mx-2 {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .-ml-6 {
@@ -960,6 +961,10 @@ video {
 
 .mt-auto {
   margin-top: auto;
+}
+
+.mr-4 {
+  margin-right: 1rem;
 }
 
 .block {
@@ -1162,6 +1167,18 @@ video {
 .select-none {
   -webkit-user-select: none;
           user-select: none;
+}
+
+.list-inside {
+  list-style-position: inside;
+}
+
+.list-decimal {
+  list-style-type: decimal;
+}
+
+.list-disc {
+  list-style-type: disc;
 }
 
 .list-none {
@@ -1757,11 +1774,6 @@ video {
   padding-right: 1rem;
 }
 
-.py-0 {
-  padding-top: 0px;
-  padding-bottom: 0px;
-}
-
 .py-0\.5 {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
@@ -1829,6 +1841,14 @@ video {
 
 .pl-2 {
   padding-left: 0.5rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pr-0 {
+  padding-right: 0px;
 }
 
 .pr-1 {
@@ -2264,6 +2284,17 @@ div.advertisement-div > div:not(.report-link) {
 
 .card-border {
   border-radius: 4.72% / 3.37%;
+}
+
+.profile-thumbnail {
+  border-radius: 50%;
+  object-fit: cover;
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  float: left;
+  box-shadow: -1px 0 var(--text), 0 1px var(--text), 1px 0 var(--text), 0 -1px var(--text);
 }
 
 @media (min-width: 640px) {

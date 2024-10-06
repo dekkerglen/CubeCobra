@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { Flexbox } from './Layout';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   className?: string;
   label?: string;
   link?: {
@@ -13,24 +13,24 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   value?: string;
   id?: string;
   placeholder?: string;
-  type?: 'text' | 'password' | 'email' | 'hidden' | 'number';
-  innerRef?: React.Ref<HTMLInputElement>;
-  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  innerRef?: React.Ref<HTMLTextAreaElement>;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  rows?: number;
 }
 
-const Input: React.FC<InputProps> = ({
+const TextArea: React.FC<TextAreaProps> = ({
   className,
   label,
   link,
   valid,
   id,
   placeholder,
-  type,
   innerRef,
   onKeyDown,
   onChange,
   value,
+  rows = 4,
 }) => {
   return (
     <div className="block w-full">
@@ -46,7 +46,7 @@ const Input: React.FC<InputProps> = ({
           </a>
         )}
       </Flexbox>
-      <input
+      <textarea
         className={classNames(
           'block w-full h-full px-3 py-2 border border-border bg-bg rounded-md shadow-sm placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-focus-ring sm:text-sm transition duration-200 ease-in-out',
           {
@@ -57,15 +57,15 @@ const Input: React.FC<InputProps> = ({
           className,
         )}
         id={id}
-        type={type}
         placeholder={placeholder}
         ref={innerRef}
         onKeyDown={onKeyDown}
         onChange={onChange}
         value={value}
+        rows={rows}
       />
     </div>
   );
 };
 
-export default Input;
+export default TextArea;

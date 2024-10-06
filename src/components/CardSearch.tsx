@@ -16,7 +16,7 @@ import Button from 'components/base/Button';
 import CardGrid from 'components/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
-import Paginate from 'components/Paginate';
+import Paginate from 'components/base/Pagination';
 import CubeContext from 'contexts/CubeContext';
 import CardDetails from 'datatypes/CardDetails';
 import Query from 'utils/Query';

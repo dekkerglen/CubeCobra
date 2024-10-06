@@ -5,10 +5,10 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Input from 'components/base/Input';
 import Button from 'components/base/Button';
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
+import TextArea from 'components/base/TextArea';
 
 interface AdminDashboardPageProps {
   loginCallback?: string;
@@ -34,12 +34,12 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ loginCallback =
                 appreciated. If you do not have any existing content, what are your goals, and what sort of content are
                 you looking to create?
               </p>
-              <Input
-                type="textarea"
+              <TextArea
                 className="w-100 mb-3"
                 id="info"
                 name="info"
                 placeholder="Please list as much info as you can here."
+                rows={5}
               />
               <Button color="primary" block outline>
                 Submit

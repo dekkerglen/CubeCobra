@@ -1,7 +1,9 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { Collapse } from 'reactstrap';
 
-import LinkButton from 'components/base/LinkButton';
+import Link from 'components/base/Link';
+import Collapse from './base/Collapse';
+import TextArea from './base/TextArea';
+import Text from './base/Text';
 
 export interface CommentEntryProps {
   submit: (text: string) => void;
@@ -15,26 +17,19 @@ const CommentEntry: React.FC<CommentEntryProps> = ({ submit, expanded, toggle, d
 
   return (
     <Collapse isOpen={expanded}>
-      <textarea
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        className="form-control"
-        id="exampleFormControlTextarea1"
-        rows={2}
-        maxLength={5000}
-      />
-      <LinkButton
+      <TextArea value={text} onChange={(event) => setText(event.target.value)} maxLength={5000} rows={3} />
+      <Link
         onClick={() => {
           submit(text);
           toggle();
           setText('');
         }}
       >
-        <small>Submit</small>
-      </LinkButton>
-      <LinkButton className="ms-2" onClick={toggle}>
-        <small>Cancel</small>
-      </LinkButton>
+        <Text sm>Submit</Text>
+      </Link>
+      <Link className="ms-2" onClick={toggle}>
+        <Text sm>Cancel</Text>
+      </Link>
     </Collapse>
   );
 };

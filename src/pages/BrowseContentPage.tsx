@@ -1,7 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import { Col, Row, Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import ArticlePreview from 'components/ArticlePreview';
@@ -13,9 +10,19 @@ import VideoPreview from 'components/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
+import Spinner from 'components/base/Spinner';
+import { Col, Row } from 'components/base/Layout';
+import Content from 'datatypes/Content';
+import Episode from 'datatypes/Episode';
 
-const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
-  const [items, setItems] = useState(content);
+interface BrowseContentPageProps {
+  loginCallback?: string;
+  content: Content[];
+  lastKey: any; // Define a more specific type if possible
+}
+
+const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ loginCallback = '/', content, lastKey }) => {
+  const [items, setItems] = useState<Content[]>(content);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   const fetchMoreData = useCallback(async () => {
@@ -39,7 +46,7 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
         setLastKey(json.lastKey);
       }
     }
-  }, [items, setItems, currentLastKey]);
+  }, [items, currentLastKey]);
 
   const loader = (
     <div className="centered py-3 my-4">
@@ -53,9 +60,9 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
       <DynamicFlash />
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
-          <Col xs="12">
+          <Col xs={12}>
             <Row>
-              <Col xs="6">
+              <Col xs={6}>
                 <h4>Browse Content</h4>
               </Col>
             </Row>
@@ -63,27 +70,16 @@ const BrowseContentPage = ({ loginCallback, content, lastKey }) => {
           {items
             .filter((item) => ['a', 'v', 'e'].includes(item.type))
             .map((item) => (
-              <Col className="mb-3" xs="6" md="4" lg="3">
+              <Col key={item.id} xs={6} sm={6} lg={4} xxl={3}>
                 {item.type === 'a' && <ArticlePreview article={item} />}
                 {item.type === 'v' && <VideoPreview video={item} />}
-                {item.type === 'e' && <PodcastEpisodePreview episode={item} />}
+                {item.type === 'e' && <PodcastEpisodePreview episode={item as Episode} />}
               </Col>
             ))}
         </Row>
       </InfiniteScroll>
     </MainLayout>
   );
-};
-
-BrowseContentPage.propTypes = {
-  loginCallback: PropTypes.string,
-  content: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  lastKey: PropTypes.shape({}),
-};
-
-BrowseContentPage.defaultProps = {
-  loginCallback: '/',
-  lastKey: null,
 };
 
 export default RenderToRoot(BrowseContentPage);

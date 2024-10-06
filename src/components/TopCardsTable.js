@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Spinner, Table } from 'reactstrap';
 
 import HeaderCell from 'components/HeaderCell';
-import Paginate from 'components/Paginate';
+import Paginate from 'components/base/Pagination';
 import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
 import Query from 'utils/Query';

@@ -1,29 +1,23 @@
 import React from 'react';
 
-import PropTypes from 'prop-types';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
-
 import Banner from 'components/Banner';
 import BlogPost from 'components/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import BlogPostType from 'datatypes/BlogPost';
 
-const BlogPostPage = ({ post, loginCallback }) => (
+interface BlogPostPageProps {
+  post: BlogPostType;
+  loginCallback?: string;
+}
+
+const BlogPostPage: React.FC<BlogPostPageProps> = ({ post, loginCallback = '/' }) => (
   <MainLayout loginCallback={loginCallback}>
     <Banner />
     <DynamicFlash />
-    <BlogPost key={post.id} post={post} noScroll />
+    <BlogPost key={post.id} post={post} noScroll className="my-2" />
   </MainLayout>
 );
-
-BlogPostPage.propTypes = {
-  post: BlogPostPropType.isRequired,
-  loginCallback: PropTypes.string,
-};
-
-BlogPostPage.defaultProps = {
-  loginCallback: '/',
-};
 
 export default RenderToRoot(BlogPostPage);

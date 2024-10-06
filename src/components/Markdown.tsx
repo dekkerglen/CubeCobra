@@ -153,7 +153,9 @@ interface RenderCardrowProps {
   inParagraph?: boolean;
   children: ReactNode;
 }
-const renderCardrow: React.FC<RenderCardrowProps> = (node) => <div className="flex justify-start">{node.children}</div>;
+const renderCardrow: React.FC<RenderCardrowProps> = (node) => (
+  <div className="flex justify-start gap-2">{node.children}</div>
+);
 
 interface RenderH1Props {
   children: ReactNode;
@@ -214,6 +216,18 @@ const renderH6: React.FC<RenderH6Props> = (node) => (
   </Text>
 );
 
+interface renderUlProps {
+  children: ReactNode;
+}
+
+const renderUl: React.FC<renderUlProps> = (node) => <ul className="list-disc list-inside">{node.children}</ul>;
+
+interface renderOlProps {
+  children: ReactNode;
+}
+
+const renderOl: React.FC<renderOlProps> = (node) => <ol className="list-decimal list-inside">{node.children}</ol>;
+
 const RENDERERS = {
   // overridden defaults
   a: renderLink,
@@ -227,6 +241,8 @@ const RENDERERS = {
   h4: renderH4,
   h5: renderH5,
   h6: renderH6,
+  ul: renderUl,
+  ol: renderOl,
   // plugins
   userlink: renderUserlink,
   symbol: renderSymbol,
