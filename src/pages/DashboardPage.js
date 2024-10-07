@@ -45,7 +45,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
       <Banner />
       <DynamicFlash />
       <Row className="mt-3">
-        <Col xs="12" md="6">
+        <Col xs={12} md="6">
           <Card>
             <CardHeader>
               <h5>Your Cubes</h5>
@@ -54,7 +54,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               <Row className="g-0">
                 {user.cubes.length > 0 ? (
                   user.cubes.slice(0, 4).map((cube) => (
-                    <Col key={cube.id} xs="12" sm="12" md="12" lg="6">
+                    <Col key={cube.id} xs={12} sm="12" md="12" lg="6">
                       <CubePreview cube={cube} />
                     </Col>
                   ))
@@ -79,7 +79,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
             />
           )}
         </Col>
-        <Col xs="12" md="6">
+        <Col xs={12} md="6">
           {featuredPosition === 'right' && (
             <CubesCard
               className="mb-4"
@@ -110,13 +110,13 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
         </Col>
       </Row>
       <Row>
-        <Col xs="12" md="8">
+        <Col xs={12} md="8">
           <h5 className="mt-3">Feed</h5>
           <Feed items={posts} lastKey={lastKey} />
         </Col>
         <Col className="d-none d-md-block mt-3" md="4">
           <Row>
-            <Col xs="12">
+            <Col xs={12}>
               <Row>
                 <Col xs={6}>
                   <h5>Latest Content</h5>
@@ -129,7 +129,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               </Row>
             </Col>
             {content.map((item) => (
-              <Col key={item.id} className="mb-3" xs="12">
+              <Col key={item.id} className="mb-3" xs={12}>
                 {item.type === 'a' && <ArticlePreview article={item} />}
                 {item.type === 'v' && <VideoPreview video={item} />}
                 {item.type === 'e' && <PodcastEpisodePreview episode={item} />}

@@ -24,7 +24,7 @@ const ContactPage = ({ loginCallback }) => (
           for example).
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -44,7 +44,7 @@ const ContactPage = ({ loginCallback }) => (
         </table>
         <p>Text without a filtering condition is treated as a name. You can use quotes to require an exact match.</p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -79,7 +79,7 @@ const ContactPage = ({ loginCallback }) => (
         </table>
         <p>You can also use parentheses to combine clauses.</p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -104,7 +104,7 @@ const ContactPage = ({ loginCallback }) => (
           You can put <code>-</code> before anything to negate it.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -157,7 +157,7 @@ const ContactPage = ({ loginCallback }) => (
           Color Identity searches will respect any color identity overrides you have set while filtering in your cube.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -206,7 +206,7 @@ const ContactPage = ({ loginCallback }) => (
         </p>
         <p>Partial types are allowed.</p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -243,7 +243,7 @@ const ContactPage = ({ loginCallback }) => (
           This searches the full oracle text, including reminder text. The set code can be either upper or lower case.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -291,7 +291,7 @@ const ContactPage = ({ loginCallback }) => (
           hybrid symbols with <code>is:hybrid</code> or Phyrexian mana symbols with <code>is:phyrexian</code>.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -337,7 +337,7 @@ const ContactPage = ({ loginCallback }) => (
           <code>{'<='}</code>, <code>{'>='}</code>.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -373,7 +373,7 @@ const ContactPage = ({ loginCallback }) => (
           <code>{'<='}</code>, <code>{'>='}</code>.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -407,7 +407,7 @@ const ContactPage = ({ loginCallback }) => (
           <code>{'<='}</code>, <code>{'>='}</code>.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
         </p>
         <table className="table">
           <tbody>
@@ -438,7 +438,7 @@ const ContactPage = ({ loginCallback }) => (
           specific artist.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>
@@ -467,7 +467,7 @@ const ContactPage = ({ loginCallback }) => (
           <code>devotiontow:</code>.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>
@@ -494,7 +494,7 @@ const ContactPage = ({ loginCallback }) => (
           <code>priceTix:</code> used MTGO TIX prices.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>
@@ -518,7 +518,7 @@ const ContactPage = ({ loginCallback }) => (
           You can use <code>tag:</code> or <code>tags:</code> to filter cards by tag or tag count when in a cube.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>
@@ -548,7 +548,7 @@ const ContactPage = ({ loginCallback }) => (
           You can use <code>leg:</code>, <code>legal:</code>, or <code>legality:</code> to filter cards by legality.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>
@@ -572,7 +572,7 @@ const ContactPage = ({ loginCallback }) => (
           You can use <code>layout:</code> to filter cards by layout.
         </p>
         <p>
-          <strong>Options:</strong>
+          <Text semibold>Options:</Text>
           <table className="table">
             <tbody>
               {[
@@ -616,7 +616,7 @@ const ContactPage = ({ loginCallback }) => (
           You can use <code>elo:</code> to filter cards by their elo rating.
         </p>
         <p>
-          <strong>Filters for individual cubes:</strong>
+          <Text semibold>Filters for individual cubes:</Text>
         </p>
         <p>
           You can use <code>finish:</code> to filter by cards with the given finish. Available options are
@@ -627,7 +627,7 @@ const ContactPage = ({ loginCallback }) => (
           Owned&quot;, &quot;Ordered&quot;, &quot;Owned&quot;, &quot;Premium Owned&quot;, and &quot;Proxied&quot;.
         </p>
         <p>
-          <strong>Examples:</strong>
+          <Text semibold>Examples:</Text>
           <table className="table">
             <tbody>
               <tr>

@@ -188,7 +188,7 @@ function Suggestions() {
       <input className="me-2" type="checkbox" checked={useImages} onClick={toggleUseImages} />
       <Label for="toggleImages">Show card images</Label>
       <Row>
-        <Col xs="12" lg="6">
+        <Col xs={12} lg="6">
           <Card>
             <CardHeader>
               <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
@@ -199,7 +199,7 @@ function Suggestions() {
               <CardBody>
                 <Row>
                   {cardsToUse.map((add, index) => (
-                    <Col key={add.cardID} xs="12" lg="6" className="p-1">
+                    <Col key={add.cardID} xs={12} lg="6" className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}
@@ -230,7 +230,7 @@ function Suggestions() {
             )}
           </Card>
         </Col>
-        <Col xs="12" lg="6">
+        <Col xs={12} lg="6">
           <Card>
             <CardHeader>
               <ListGroupItemHeading>Core Cards</ListGroupItemHeading>
@@ -243,7 +243,7 @@ function Suggestions() {
               <CardBody>
                 <Row>
                   {reversedCuts.map((add, index) => (
-                    <Col key={add.cardID} xs="12" lg="6" className="p-1">
+                    <Col key={add.cardID} xs={12} lg="6" className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}

@@ -150,7 +150,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
         <DynamicFlash />
         <Alerts alerts={alerts} />
         <Row className="justify-content-center">
-          <Col xs="12" md="6" xl="6">
+          <Col xs={12} md="6" xl="6">
             {defaultDraftFormat === -1 && <StandardDraftFormatCard />}
             {formatsSorted.map((format) => (
               <CustomDraftCard
@@ -167,7 +167,7 @@ const CubePlaytestPage = ({ cube, decks, loginCallback }) => {
             <SealedCard className="mb-3" />
             <GridDraftCard className="mb-3" />
           </Col>
-          <Col xs="12" md="6" xl="6">
+          <Col xs={12} md="6" xl="6">
             <SamplePackCard className="mb-3" />
             {decks.length !== 0 && <PlaytestDecksCard decks={decks} className="mb-3" />}
           </Col>

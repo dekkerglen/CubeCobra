@@ -45,12 +45,12 @@ const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcasts
               - <TimeAgo date={podcast.date} />
             </p>
             <Row>
-              <Col xs="12" sm="6">
+              <Col xs={12} sm="6">
                 <Button color="primary" block outline href={`/podcast/${podcast.id}`}>
                   Listen
                 </Button>
               </Col>
-              <Col xs="12" sm="6">
+              <Col xs={12} sm="6">
                 <Button color="secondary" block outline href={`/podcast/${podcast.id}/details`}>
                   Details
                 </Button>

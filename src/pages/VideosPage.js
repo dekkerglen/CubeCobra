@@ -53,7 +53,7 @@ const VideosPage = ({ loginCallback, videos, lastKey }) => {
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((item) => (
-            <Col className="mb-3" xs="12" sm="6" lg="4">
+            <Col className="mb-3" xs={12} sm="6" lg="4">
               <VideoPreview video={item} />
             </Col>
           ))}

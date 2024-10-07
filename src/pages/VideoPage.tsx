@@ -35,7 +35,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ loginCallback = '/', videos }) =>
       {videos.map((video) => (
         <CardBody key={video.id} className="border-top">
           <Row>
-            <Col xs="12" sm="8">
+            <Col xs={12} sm={8}>
               <h5>{video.title}</h5>
               <p>{video.description}</p>
               <p>
@@ -46,7 +46,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ loginCallback = '/', videos }) =>
                 - <TimeAgo date={video.date} />
               </p>
             </Col>
-            <Col xs="12" sm="4">
+            <Col xs={12} sm={4}>
               <Button color="primary" outline block href={`/video/${video.id}`}>
                 Watch Video
               </Button>

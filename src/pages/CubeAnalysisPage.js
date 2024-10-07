@@ -187,7 +187,7 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
         <h5 className="mt-3 mb-3">This cube doesn't have any cards. Add cards to see analytics.</h5>
       ) : (
         <Row className="mt-3">
-          <Col xs="12" lg="2">
+          <Col xs={12} lg="2">
             <Nav vertical="lg" pills className="justify-content-sm-start justify-content-center mb-3">
               {analytics.map((analytic, index) => (
                 <NavLink
@@ -201,7 +201,7 @@ const CubeAnalysisPage = ({ cubeAnalytics }) => {
               ))}
             </Nav>
           </Col>
-          <Col xs="12" lg="10" className="overflow-x">
+          <Col xs={12} lg="10" className="overflow-x">
             <Card className="mb-3">
               <CardBody>
                 <NavLink href="#" onClick={toggleFilterCollapse}>

@@ -161,7 +161,7 @@ const AddCubeButton = withModal(Button, AddCubeModal);
 const RotateButton = withModal(Button, RotateModal);
 
 const QueueItem = ({ cube, index, onMove }) => (
-  <Col xs={12} md={6} className="mb-3">
+  <Col  xs={12} md={6} className="mb-3">
     <Card className={index < 2 ? 'border-primary' : ''}>
       <CardBody>
         <Row className="align-items-center">
@@ -250,7 +250,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
         </CardHeader>
         <CardBody>
           <Row>
-            <Col xs={12} md={6}>
+            <Col  xs={12} md={6}>
               <h6>
                 Rotation period: <span className="text-muted">{rotationPeriod} days</span>
                 <SetRotationButton

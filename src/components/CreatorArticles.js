@@ -56,7 +56,7 @@ const CreatorArticles = ({ articles, lastKey }) => {
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((article) => (
-            <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
+            <Col xs={12} sm="6" md="4" lg="3" className="mb-3">
               <ArticlePreview article={article} showStatus />
             </Col>
           ))}

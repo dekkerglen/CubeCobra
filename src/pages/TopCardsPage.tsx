@@ -34,7 +34,7 @@ const TopCardsPage: React.FC<TopCardsPageProps> = ({ loginCallback = '/', cards 
       {cards.map((card) => (
         <CardBody key={card.id} className="border-top">
           <Row>
-            <Col xs="12" sm="8">
+            <Col xs={12} sm={8}>
               <p>{card.name}</p>
               <p>
                 Added by{' '}
@@ -44,7 +44,7 @@ const TopCardsPage: React.FC<TopCardsPageProps> = ({ loginCallback = '/', cards 
                 - <TimeAgo date={card.date} />
               </p>
             </Col>
-            <Col xs="12" sm="4">
+            <Col xs={12} sm={4}>
               <Button color="primary" outline block href={`/card/${card.id}`}>
                 View Card
               </Button>

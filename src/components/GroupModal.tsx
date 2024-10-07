@@ -245,12 +245,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
               )}
             </Row>
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button className="my-1" block outline color="unsafe" onClick={removeAll}>
                   Remove all from cube
                 </Button>
               </Col>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button
                   className="my-1"
                   color="warning"
@@ -265,7 +265,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   <span className="d-sm-none">Maybeboard</span>
                 </Button>
               </Col>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button
                   className="my-1"
                   color="warning"
@@ -283,7 +283,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             </Row>
             {anyCardRemoved && (
               <Row>
-                <Col xs="12">
+                <Col xs={12}>
                   <Button className="my-1" block outline color="primary" onClick={revertRemoval}>
                     Revert removal of removed cards
                   </Button>
@@ -292,7 +292,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             )}
             {anyCardChanged && (
               <Row>
-                <Col xs="12">
+                <Col xs={12}>
                   <Button className="my-1" block outline color="primary" onClick={bulkRevertEditAll}>
                     Revert changes of edited cards
                   </Button>
@@ -300,7 +300,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
               </Row>
             )}
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <MassBuyButton className="my-1" block outline cards={cards}>
                   Buy all
                 </MassBuyButton>
@@ -402,7 +402,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
               />
             </fieldset>
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button className="my-1" block outline color="accent" disabled={!fieldsChanged} onClick={applyChanges}>
                   Apply to all
                 </Button>

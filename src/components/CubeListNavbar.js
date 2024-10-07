@@ -46,7 +46,7 @@ const CompareCollapse = (props) => {
   return (
     <Collapse {...props}>
       <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
-        <Col xs={12}>
+        <Col  xs={12}>
           <Input
             type="text"
             className="mb-2 me-2"

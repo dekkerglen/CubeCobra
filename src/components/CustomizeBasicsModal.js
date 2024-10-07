@@ -58,7 +58,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
           may result in confusing our draft bots' deckbuilding.
         </p>
         <Row className="pb-3">
-          <Col xs="12" md="8">
+          <Col xs={12} md="8">
             <AutocompleteInput
               treeUrl="/cube/api/fullnames"
               treePath="cardnames"
@@ -73,7 +73,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
               noMargin
             />
           </Col>
-          <Col xs="12" md="4">
+          <Col xs={12} md="4">
             <Button
               color="accent"
               block
