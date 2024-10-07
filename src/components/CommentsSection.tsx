@@ -24,35 +24,31 @@ const CommentsSection: React.FC<CommentsProps> = ({ parent, collapse = true, par
 
   return (
     <>
-      {comments.length > 0 && (
-        <>
-          {collapse && (
-            <div className="p-2 border-b">
-              <Link className="ml-1" onClick={toggle}>
-                {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
-              </Link>
+      {collapse && (
+        <div className="p-2 border-b">
+          <Link className="ml-1" onClick={toggle}>
+            {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
+          </Link>
+        </div>
+      )}
+      <Collapse isOpen={expanded}>
+        <CommentList comments={comments} editComment={editComment}>
+          {user && (
+            <div className="w-full">
+              <Collapse isOpen={!replyExpanded}>
+                <Link className="ml-1" onClick={toggleReply}>
+                  Add a Comment
+                </Link>
+              </Collapse>
+              <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
             </div>
           )}
-          <Collapse isOpen={expanded}>
-            <CommentList comments={comments} editComment={editComment}>
-              {user && (
-                <div className="w-full">
-                  <Collapse isOpen={!replyExpanded}>
-                    <Link className="ml-1" onClick={toggleReply}>
-                      Add a Comment
-                    </Link>
-                  </Collapse>
-                  <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
-                </div>
-              )}
-            </CommentList>
-          </Collapse>
-          {hasMore && (
-            <LoadingButton className="m-2" outline block color="accent" onClick={getMore} loading={loading}>
-              View More...
-            </LoadingButton>
-          )}
-        </>
+        </CommentList>
+      </Collapse>
+      {hasMore && (
+        <LoadingButton className="m-2" outline block color="accent" onClick={getMore} loading={loading}>
+          View More...
+        </LoadingButton>
       )}
     </>
   );

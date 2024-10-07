@@ -1590,6 +1590,11 @@ video {
   border-color: rgb(var(--border) / var(--tw-border-opacity));
 }
 
+.border-border-secondary {
+  --tw-border-opacity: 1;
+  border-color: rgb(var(--border-secondary) / var(--tw-border-opacity));
+}
+
 .border-button-accent {
   --tw-border-opacity: 1;
   border-color: rgb(var(--button-accent) / var(--tw-border-opacity));
@@ -1647,11 +1652,6 @@ video {
 
 .border-transparent {
   border-color: transparent;
-}
-
-.border-border-secondary {
-  --tw-border-opacity: 1;
-  border-color: rgb(var(--border-secondary) / var(--tw-border-opacity));
 }
 
 .bg-advert {
