@@ -74,10 +74,10 @@ const EditVideoPage = ({ loginCallback, video }) => {
       <Card>
         <CardBody>
           <Row>
-            <Col xs={12} sm="6">
+            <Col xs={12} sm={6}>
               <h4>Edit Video</h4>
             </Col>
-            <Col xs={12} sm="6">
+            <Col xs={12} sm={6}>
               <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
@@ -220,7 +220,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
           <TabPane tabId="1">
             <CardBody>
               <Row className="px-3">
-                <Col xs={12} sm="6" md="4" className="mb-3">
+                <Col xs={12} sm={6} md={4} className="mb-3">
                   <VideoPreview
                     video={{
                       username: user.username,
@@ -234,7 +234,7 @@ const EditVideoPage = ({ loginCallback, video }) => {
                     }}
                   />
                 </Col>
-                <Col xs={12} sm="6" md="4" lg="3" className="mb-3">
+                <Col xs={12} sm={6} md={4} lg={3} className="mb-3">
                   <VideoPreview
                     video={{
                       username: user.username,

@@ -56,7 +56,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
         </CardHeader>
         <Row>
           {podcasts.map((podcast) => (
-            <Col xs={12} sm="6" lg="3">
+            <Col xs={12} sm={6} lg={3}>
               <PodcastPreview podcast={podcast} />
             </Col>
           ))}
@@ -66,7 +66,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((episode) => (
-            <Col className="mb-3" xs={12} sm="6" lg="4">
+            <Col className="mb-3" xs={12} sm={6} lg="4">
               <PodcastEpisodePreview episode={episode} />
             </Col>
           ))}

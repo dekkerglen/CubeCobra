@@ -114,7 +114,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
           <h5 className="mt-3">Feed</h5>
           <Feed items={posts} lastKey={lastKey} />
         </Col>
-        <Col className="d-none d-md-block mt-3" md="4">
+        <Col className="d-none d-md-block mt-3" md={4}>
           <Row>
             <Col xs={12}>
               <Row>

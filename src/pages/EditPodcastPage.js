@@ -30,10 +30,10 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
       <Card>
         <CardBody>
           <Row>
-            <Col xs={12} sm="6">
+            <Col xs={12} sm={6}>
               <h4>Edit Podcast</h4>
             </Col>
-            <Col xs={12} sm="6">
+            <Col xs={12} sm={6}>
               <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
@@ -97,7 +97,7 @@ const EditPodcastPage = ({ loginCallback, podcast }) => {
           <TabPane tabId="1">
             <CardBody>
               <Row>
-                <Col xs={12} sm="6" md="4" lg="3" className="mb-3">
+                <Col xs={12} sm={6} md={4} lg={3} className="mb-3">
                   <PodcastPreview podcast={podcast} />
                 </Col>
               </Row>

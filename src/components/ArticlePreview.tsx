@@ -27,6 +27,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
         {article.image && <MtgImage image={article.image} />}
         <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-article bg-opacity-50 w-full mb-0 p-1">
           Article
+          {showStatus && ` - Status: ${statusMap[article.status]}`}
         </Text>
       </AspectRatioBox>
       <Flexbox direction="col" className="p-1 flex-grow">
@@ -46,7 +47,6 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
             {article.short}
           </Text>
         </div>
-        {showStatus && <Text>Status: {statusMap[article.status]}</Text>}
       </Flexbox>
     </Tile>
   );

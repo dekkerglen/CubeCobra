@@ -73,7 +73,7 @@ const CustomizeBasicsModal = ({ isOpen, toggle, cube, updateBasics, onError }) =
               noMargin
             />
           </Col>
-          <Col xs={12} md="4">
+          <Col xs={12} md={4}>
             <Button
               color="accent"
               block

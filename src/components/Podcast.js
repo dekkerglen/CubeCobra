@@ -34,7 +34,7 @@ const Podcast = ({ podcast, episodes }) => {
         ) : (
           <Row>
             {episodes.map((episode) => (
-              <Col xs={12} sm="6" md="3" className="pb-3">
+              <Col xs={12} sm={6} md="3" className="pb-3">
                 <PodcastEpisodePreview episode={episode} />
               </Col>
             ))}

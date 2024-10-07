@@ -55,12 +55,12 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
                 - <TimeAgo date={application.date} />
               </p>
               <Row>
-                <Col xs={12} sm="6">
+                <Col xs={12} sm={6}>
                   <Button color="primary" block outline href={`/admin/application/approve/${application.id}`}>
                     Approve
                   </Button>
                 </Col>
-                <Col xs={12} sm="6">
+                <Col xs={12} sm={6}>
                   <Button color="danger" block outline href={`/admin/application/decline/${application.id}`}>
                     Decline
                   </Button>
@@ -92,12 +92,12 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
                 - <TimeAgo date={report.date} />
               </p>
               <Row>
-                <Col xs={12} sm="6">
+                <Col xs={12} sm={6}>
                   <Button color="primary" block outline href={`/admin/ignorereport/${report.id}`}>
                     Ignore
                   </Button>
                 </Col>
-                <Col xs={12} sm="6">
+                <Col xs={12} sm={6}>
                   <Button color="danger" block outline href={`/admin/removecomment/${report.id}`}>
                     Remove Comment
                   </Button>

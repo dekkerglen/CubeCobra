@@ -36,7 +36,7 @@ const SortCollapse = ({ isOpen }) => {
   return (
     <Collapse isOpen={isOpen}>
       <Row>
-        <Col xs={12} sm="6" className="mt-2">
+        <Col xs={12} sm={6} className="mt-2">
           <h6>Primary Sort</h6>
           <Input
             type="select"
@@ -52,7 +52,7 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs={12} sm="6" className="mt-2">
+        <Col xs={12} sm={6} className="mt-2">
           <h6>Secondary Sort</h6>
           <Input
             type="select"
@@ -68,7 +68,7 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs={12} sm="6" className="mt-2">
+        <Col xs={12} sm={6} className="mt-2">
           <h6>Tertiary Sort</h6>
           <Input
             type="select"
@@ -84,7 +84,7 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs={12} sm="6" className="mt-2">
+        <Col xs={12} sm={6} className="mt-2">
           <h6>Ordered Sort</h6>
           <Input
             type="select"
