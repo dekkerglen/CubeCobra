@@ -741,10 +741,6 @@ video {
   z-index: 1050;
 }
 
-.col-auto {
-  grid-column: auto;
-}
-
 .col-span-1 {
   grid-column: span 1 / span 1;
 }
@@ -2399,6 +2395,11 @@ img.mana-symbol {
 
 img.mana-symbol-sm {
   height: 1.3rem;
+}
+
+.markdown-input {
+  font-family: "Fira Mono", monospace;
+  min-height: 20rem !important;
 }
 
 @media (min-width: 640px) {

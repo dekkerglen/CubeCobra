@@ -6,7 +6,7 @@ export interface ButtonProps {
   color?: 'primary' | 'danger' | 'accent' | 'secondary';
   outline?: boolean;
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   href?: string;
   target?: string;
   rel?: string;
@@ -66,7 +66,18 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button className={classes} onClick={onClick} disabled={disabled} type={type} onSubmit={onSubmit}>
+    <button
+      className={classes}
+      onClick={(e) => {
+        e.preventDefault();
+        if (onClick) {
+          onClick(e);
+        }
+      }}
+      disabled={disabled}
+      type={type}
+      onSubmit={onSubmit}
+    >
       {children}
     </button>
   );

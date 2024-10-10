@@ -19,14 +19,14 @@ const CubeLayoutInner: React.FC<CubeLayoutInnerProps> = ({ children }) => {
 
   return (
     <TagColorContext.Provider value={tagColors}>
-      <ErrorBoundary className="mt-3">{children}</ErrorBoundary>
+      <ErrorBoundary>{children}</ErrorBoundary>
     </TagColorContext.Provider>
   );
 };
 
 interface CubeLayoutProps {
   cube: Cube;
-  cards: Record<BoardType, Card[]>;
+  cards?: Record<BoardType, Card[]>;
   activeLink: string;
   children?: React.ReactNode;
   loadVersionDict?: boolean;

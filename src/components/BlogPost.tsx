@@ -63,7 +63,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
       </CardHeader>
       {hasChangelist && hasBody && (
         <Row className="gap-0">
-          <Col xs={12} md={4} className="border-r">
+          <Col xs={12} md={4} className="border-r border-border">
             <div style={scrollStyle}>
               <CardBody>
                 <BlogPostChangelog changelog={post.Changelog ?? {}} />
@@ -100,8 +100,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
           </CardBody>
         </div>
       )}
-      <div className="border-t">
-        <CommentsSection parentType="blog" parent={post.id} collapse={false} />
+      <div className="border-t border-border">
+        <CommentsSection parentType="blog" parent={post.id} collapse={false} comments={post.comments} />
       </div>
     </Card>
   );

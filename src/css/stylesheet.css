@@ -177,3 +177,9 @@ img.mana-symbol {
 img.mana-symbol-sm {
 	height: 1.3rem;
 }
+
+
+.markdown-input {
+	font-family: "Fira Mono", monospace;
+	min-height: 20rem !important;
+}

@@ -329,12 +329,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               </FormGroup>
               <FormGroup>
                 <Label className="visually-hidden">Blog body</Label>
-                <TextEntry
-                  name="blog"
-                  value={postContent}
-                  onChange={(event) => setPostContent(event.target.value)}
-                  maxLength={10000}
-                />
+                <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} />
               </FormGroup>
             </Col>
           )}

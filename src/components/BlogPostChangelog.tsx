@@ -1,16 +1,18 @@
 import React from 'react';
-import { Col, Row } from 'reactstrap';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
 import withAutocard from 'components/WithAutocard';
 import Card, { BoardType } from 'datatypes/Card';
+import { Flexbox } from './base/Layout';
+import Text from './base/Text';
+import Link from './base/Link';
 
 export interface AddProps {
   card: Card;
 }
 
-const TextAutocard = withAutocard('a');
+const TextAutocard = withAutocard(Link);
 
 const capitalizeFirstLetter = (string: string): string => {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -106,16 +108,14 @@ const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
         }
         return (
           <div key={board} className="mb-2">
-            <h6>
-              <Row>
-                <Col>{capitalizeFirstLetter(board)} Changelist</Col>
-                <Col className="col-auto">
-                  <div className="text-secondary">
-                    +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
-                  </div>
-                </Col>
-              </Row>
-            </h6>
+            <Flexbox direction="row" justify="between">
+              <Text md semibold>
+                {capitalizeFirstLetter(board)} Changelist
+              </Text>
+              <Text sm semibold className="text-text-secondary">
+                +{(adds || []).length + (swaps || []).length}, -{(removes || []).length + (swaps || []).length}
+              </Text>
+            </Flexbox>
             <ul className="changelist">
               {adds && adds.map((card) => <Add key={card.cardID} card={card} />)}
               {removes && removes.map((remove) => <Remove key={remove.oldCard.cardID} oldCard={remove.oldCard} />)}

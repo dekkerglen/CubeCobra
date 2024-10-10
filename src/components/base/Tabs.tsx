@@ -29,11 +29,20 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
         );
 
         return tab.href ? (
-          <a key={index} href={tab.href} className={commonClasses} onClick={tab.onClick}>
+          <a key={index} href={tab.href} className={commonClasses}>
             {tab.label}
           </a>
         ) : (
-          <button key={index} className={commonClasses} onClick={tab.onClick}>
+          <button
+            key={index}
+            className={commonClasses}
+            onClick={(e) => {
+              e.preventDefault();
+              if (tab.onClick) {
+                tab.onClick();
+              }
+            }}
+          >
             {tab.label}
           </button>
         );

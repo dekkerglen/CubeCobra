@@ -8,11 +8,13 @@ import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
 import Collapse from './base/Collapse';
 import LoadingButton from './LoadingButton';
+import Comment from 'datatypes/Comment';
 
 export interface CommentsProps {
   parent: string;
   collapse?: boolean;
   parentType: string;
+  comments?: Comment[];
 }
 
 const CommentsSection: React.FC<CommentsProps> = ({ parent, collapse = true, parentType }) => {

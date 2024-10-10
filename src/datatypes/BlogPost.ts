@@ -1,6 +1,7 @@
 import { Changes } from 'datatypes/Card';
+import Commentable from './Commentable';
 
-export default interface BlogPost {
+export default interface BlogPost extends Commentable {
   id: string;
   body: string;
   owner: string;

@@ -1,9 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import { Collapse, Nav, Navbar, NavItem, NavLink, Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import InfiniteScroll from 'react-infinite-scroll-component';
 
 import BlogPost from 'components/BlogPost';
 import CreateBlogModal from 'components/CreateBlogModal';
@@ -13,9 +8,22 @@ import withModal from 'components/WithModal';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import { wait } from 'utils/Util';
+import Spinner from 'components/base/Spinner';
+import Cube from 'datatypes/Cube';
+import PostType from 'datatypes/BlogPost';
+import { Flexbox } from 'components/base/Layout';
+import Button from 'components/base/Button';
+import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 
-const CreateBlogModalLink = withModal(NavLink, CreateBlogModal);
+interface CubeBlogPageProps {
+  cube: Cube;
+  lastKey: any;
+  posts: PostType[];
+  loginCallback?: string;
+}
+
+const CreateBlogModalLink = withModal(Button, CreateBlogModal);
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -23,14 +31,13 @@ const loader = (
   </div>
 );
 
-const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
-  const [items, setItems] = useState(posts);
+const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, loginCallback = '/' }) => {
+  const [items, setItems] = useState<PostType[]>(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
+  const [loading, setLoading] = useState(false);
 
   const fetchMoreData = useCallback(async () => {
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
-
+    setLoading(true);
     const response = await csrfFetch(`/cube/blog/getmoreblogsbycube`, {
       method: 'POST',
       headers: {
@@ -49,52 +56,37 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
         setLastKey(json.lastKey);
       }
     }
+    setLoading(false);
   }, [cube, currentLastKey, items]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="blog">
-        <Navbar expand light className="usercontrols mb-3">
-          <Collapse navbar>
-            <Nav navbar>
-              <NavItem>
-                <CreateBlogModalLink modalprops={{ cubeID: cube.id }}>Create new blog post</CreateBlogModalLink>
-              </NavItem>
-            </Nav>
-          </Collapse>
-        </Navbar>
-        <DynamicFlash />
-        <InfiniteScroll
-          dataLength={items.length}
-          next={fetchMoreData}
-          hasMore={currentLastKey !== null}
-          loader={loader}
-        >
+        <Flexbox direction="col" gap="2" className="my-2">
+          <Banner />
+          <DynamicFlash />
+          <Flexbox direction="row" justify="end">
+            <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>
+              Create new blog post
+            </CreateBlogModalLink>
+          </Flexbox>
           {items.length > 0 ? (
             items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (
-            <h5>No blog posts for this cube.</h5>
+            <Text lg semibold>
+              No blog posts for this cube.
+            </Text>
           )}
-        </InfiniteScroll>
+          {loading && loader}
+          {!loading && currentLastKey && (
+            <Button onClick={fetchMoreData} disabled={loading}>
+              Load More
+            </Button>
+          )}
+        </Flexbox>
       </CubeLayout>
     </MainLayout>
   );
-};
-
-CubeBlogPage.propTypes = {
-  cube: CubePropType.isRequired,
-  lastKey: PropTypes.shape({}),
-  posts: PropTypes.arrayOf(
-    PropTypes.shape({
-      markdown: PropTypes.string,
-    }),
-  ).isRequired,
-  loginCallback: PropTypes.string,
-};
-
-CubeBlogPage.defaultProps = {
-  loginCallback: '/',
-  lastKey: null,
 };
 
 export default RenderToRoot(CubeBlogPage);
