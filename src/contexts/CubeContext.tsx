@@ -91,11 +91,14 @@ export interface CubeContextValue {
   sortSecondary: string | null;
   sortTertiary: string | null;
   sortQuaternary: string | null;
-  setSortPrimary: Dispatch<SetStateAction<string | null>>;
-  setSortSecondary: Dispatch<SetStateAction<string | null>>;
-  setSortTertiary: Dispatch<SetStateAction<string | null>>;
-  setSortQuaternary: Dispatch<SetStateAction<string | null>>;
-  filterResult: string;
+  setSortPrimary: Dispatch<SetStateAction<string>>;
+  setSortSecondary: Dispatch<SetStateAction<string>>;
+  setSortTertiary: Dispatch<SetStateAction<string>>;
+  setSortQuaternary: Dispatch<SetStateAction<string>>;
+  filterResult: {
+    mainboard?: [number, number];
+    maybeboard?: [number, number];
+  };
   unfilteredChangedCards: Record<string, Card[]>;
   useBlog: boolean;
   setUseBlog: Dispatch<SetStateAction<boolean>>;
@@ -150,7 +153,7 @@ const CubeContext = createContext<CubeContextValue>({
   setSortSecondary: defaultFn,
   setSortTertiary: defaultFn,
   setSortQuaternary: defaultFn,
-  filterResult: '',
+  filterResult: {},
   unfilteredChangedCards: {} as Record<string, Card[]>,
   useBlog: false,
   setUseBlog: defaultFn,
@@ -247,7 +250,7 @@ export function CubeContextProvider({
   const [sortSecondary, setSortSecondary] = useQueryParam('s2', defaultSorts[1]);
   const [sortTertiary, setSortTertiary] = useQueryParam('s3', defaultSorts[2]);
   const [sortQuaternary, setSortQuaternary] = useQueryParam('s4', defaultSorts[3]);
-  const [filterResult, setFilterResult] = useState('');
+  const [filterResult, setFilterResult] = useState({});
   const [useBlog, setUseBlog] = useLocalStorage<boolean>(`${cube.id}-useBlog`, true);
 
   const allTags = useMemo(() => {
@@ -608,14 +611,17 @@ export function CubeContextProvider({
 
     if (filterInput !== '') {
       if (changed.maybeboard.length > 0) {
-        setFilterResult(
-          `Showing ${result.mainboard.length}/${changed.mainboard.length} in Mainboard, ${result.maybeboard.length}/${changed.maybeboard.length} in Maybeboard`,
-        );
+        setFilterResult({
+          mainboard: [result.mainboard.length, changed.mainboard.length],
+          maybeboard: [result.maybeboard.length, changed.maybeboard.length],
+        });
       } else {
-        setFilterResult(`Showing ${result.mainboard.length}/${changed.mainboard.length}`);
+        setFilterResult({
+          mainboard: [result.mainboard.length, changed.mainboard.length],
+        });
       }
     } else {
-      setFilterResult('');
+      setFilterResult({});
     }
 
     return [result, changed];

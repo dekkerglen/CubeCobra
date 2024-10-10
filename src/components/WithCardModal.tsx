@@ -7,7 +7,7 @@ export interface WithCardModalProps {
   children?: React.ReactNode;
   className?: string;
   altClick?: () => void;
-  modalProps: {
+  modalprops: {
     card: {
       board?: BoardType;
       index?: number;
@@ -25,7 +25,7 @@ const withCardModal = <P,>(Tag: React.ComponentType<P>) => {
           props.altClick();
         } else {
           event.preventDefault();
-          const { board, index } = props.modalProps.card;
+          const { board, index } = props.modalprops.card;
           if (board !== undefined && index !== undefined) setModalSelection({ board, index });
           setModalOpen(true);
         }

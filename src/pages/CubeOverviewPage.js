@@ -121,7 +121,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
               <Nav navbar>
                 <NavItem>
                   <CubeOverviewModalLink
-                    modalProps={{
+                    modalprops={{
                       cube: cubeState,
                       cubeID: cubeState.id,
                       onError: (message) => addAlert('danger', message),
@@ -132,11 +132,11 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </CubeOverviewModalLink>
                 </NavItem>
                 <NavItem>
-                  <CubeSettingsModalLink modalProps={{ addAlert, onCubeUpdate }}>Edit Settings</CubeSettingsModalLink>
+                  <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate }}>Edit Settings</CubeSettingsModalLink>
                 </NavItem>
                 <NavItem>
                   <CustomizeBasicsModalLink
-                    modalProps={{
+                    modalprops={{
                       cube: cubeState,
                       onError: (message) => {
                         addAlert('danger', message);
@@ -152,7 +152,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </CustomizeBasicsModalLink>
                 </NavItem>
                 <NavItem>
-                  <DeleteCubeModalLink modalProps={{ cubeId: cubeState.id, cubeName: cubeState.name }}>
+                  <DeleteCubeModalLink modalprops={{ cubeId: cubeState.id, cubeName: cubeState.name }}>
                     Delete Cube
                   </DeleteCubeModalLink>
                 </NavItem>
@@ -194,7 +194,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   </Tooltip>
                 </TextBadge>
                 <CubeIdModalLink
-                  modalProps={{ fullID: cube.id, shortId: getCubeId(cubeState), alert: addAlert }}
+                  modalprops={{ fullID: cube.id, shortId: getCubeId(cubeState), alert: addAlert }}
                   aria-label="Show Cube IDs"
                   className="ms-1 pt-1"
                 >
@@ -209,7 +209,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
               <CardBody className="pt-2 px-3 pb-3">
                 <p className="mb-1">{getCubeDescription(cubeState)}</p>
                 <h6 className="card-subtitle mb-2" style={{ marginTop: 10 }}>
-                  <FollowersModalLink href="#" modalProps={{ followers }}>
+                  <FollowersModalLink href="#" modalprops={{ followers }}>
                     {(cubeState.following || []).length}{' '}
                     {(cubeState.following || []).length === 1 ? 'follower' : 'followers'}
                   </FollowersModalLink>
@@ -222,7 +222,7 @@ const CubeOverview = ({ post, cards, priceOwned, pricePurchase, cube, followed, 
                   • <a href={`/cube/rss/${cubeState.id}`}>RSS</a> •{' '}
                   <QRCodeModalLink
                     href="#"
-                    modalProps={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
+                    modalprops={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
                   >
                     QR Code
                   </QRCodeModalLink>

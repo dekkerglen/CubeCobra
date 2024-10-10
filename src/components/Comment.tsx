@@ -18,13 +18,13 @@ import Text from './base/Text';
 import classNames from 'classnames';
 
 export interface ShareCommentModalButtonProps {
-  modalProps: {
+  modalprops: {
     comment: Comment;
   };
 }
 
 export interface ReportCommentModalButtonProps {
-  modalProps: {
+  modalprops: {
     comment: Comment;
   };
 }
@@ -146,10 +146,10 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
                 <Text sm>{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</Text>
               </Link>
             )}
-            <ShareCommentModalButton modalProps={{ comment }}>
+            <ShareCommentModalButton modalprops={{ comment }}>
               <Text sm>Share</Text>
             </ShareCommentModalButton>
-            <ReportCommentModalButton modalProps={{ comment }}>
+            <ReportCommentModalButton modalprops={{ comment }}>
               <Text sm>Report</Text>
             </ReportCommentModalButton>
           </Flexbox>

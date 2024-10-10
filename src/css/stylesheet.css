@@ -131,7 +131,6 @@ div.advertisement-div > div:not(.report-link) {
 }
 
 .autocard-background {
-	background-color: var(--bg-dark);
 	background-clip: content-box;
 }
 

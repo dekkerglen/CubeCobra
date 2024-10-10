@@ -61,10 +61,10 @@ const Text: React.FC<TextProps> = ({
   );
 
   if (area) {
-    return <p className={`${classes} h-full overflow-hidden`}>{children}</p>;
+    return <p className={`${classes} h-full`}>{children}</p>;
   }
 
-  return <span className={`${classes} overflow-hidden`}>{children}</span>;
+  return <span className={`${classes}`}>{children}</span>;
 };
 
 export default Text;

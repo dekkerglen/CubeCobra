@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import Query from 'utils/Query';
 
-const useQueryParam = (
-  name: string,
-  defaultValue: string | null,
-): [string | null, React.Dispatch<React.SetStateAction<string | null>>] => {
+const useQueryParam = (name: string, defaultValue: string): [string, React.Dispatch<React.SetStateAction<string>>] => {
   const didMountRef = useRef(false);
-  const [value, setValue] = useState<string | null>(defaultValue ?? null);
+  const [value, setValue] = useState<string>(defaultValue);
 
   useEffect(() => {
     if (didMountRef.current) {
@@ -26,6 +23,7 @@ const useQueryParam = (
       didMountRef.current = true;
     }
   }, [name, value, setValue, defaultValue]);
+
   return [value, setValue];
 };
 

@@ -14,14 +14,18 @@ import ResponsiveDiv from './base/ResponsiveDiv';
 
 interface FilterCollapseProps {
   isOpen: boolean;
-  hideDescription: boolean;
   showReset?: boolean;
+  className?: string;
+  buttonLabel?: string;
+  filterTextFn?: (filter: { mainboard?: [number, number]; maybeboard?: [number, number] }) => string;
 }
 
 const FilterCollapse: React.FC<FilterCollapseProps> = ({
   isOpen = false,
   showReset = false,
-  hideDescription = false,
+  buttonLabel = 'Filter',
+  className,
+  filterTextFn,
 }) => {
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
   const { filterResult } = useContext(CubeContext);
@@ -72,7 +76,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
   );
 
   return (
-    <Collapse isOpen={isOpen}>
+    <Collapse isOpen={isOpen} className={className}>
       <Flexbox direction="col" gap="2">
         <Flexbox direction="row" className="w-100" justify="between" gap="2" alignItems="stretch">
           <Input
@@ -91,7 +95,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
             }}
           />
           <Button color="primary" onClick={() => setFilterInput(searchFilterInput || '')}>
-            <span className="px-4 whitespace-nowrap">Search</span>
+            <span className="px-4 whitespace-nowrap">{buttonLabel}</span>
           </Button>
           {showReset && (
             <ResponsiveDiv md>
@@ -109,9 +113,9 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
         <Text sm>
           Having trouble using filter syntax? Check out our <Link href="/filters">syntax guide</Link>.
         </Text>
-        {filterResult && filterResult.length > 0 && !hideDescription && (
+        {filterResult && filterResult.mainboard && filterTextFn && (
           <Text italic sm>
-            {filterResult}
+            {filterTextFn(filterResult)}
           </Text>
         )}
         <AdvancedFilterModal

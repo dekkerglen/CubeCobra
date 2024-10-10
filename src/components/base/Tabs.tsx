@@ -16,11 +16,11 @@ interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
   return (
-    <Flexbox direction="row" className={className}>
+    <Flexbox direction="row" className={className} wrap="wrap">
       {tabs.map((tab, index) => {
         const isActive = activeTab === index;
         const commonClasses = classNames(
-          'px-8 py-2 text-md font-medium focus:outline-none transition-colors duration-300',
+          'px-2 md:px-8 py-2 text-md font-medium focus:outline-none transition-colors duration-300',
           {
             'border-b-2 border-button-primary text-text': isActive,
             'border-transparent hover:text-button-primary text-button-primary hover:text-button-primary-active':
@@ -52,7 +52,10 @@ export const TabContent: React.FC<TabContentProps> = ({ activeTab, contents, cla
   return (
     <div className={className}>
       {contents.map((content, index) => (
-        <div key={index} className={index === activeTab ? 'block' : 'hidden'}>
+        <div
+          key={index}
+          className={classNames('max-w-full', { block: index === activeTab, hidden: index !== activeTab })}
+        >
           {content}
         </div>
       ))}

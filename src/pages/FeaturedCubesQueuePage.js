@@ -255,7 +255,7 @@ const FeaturedCubesQueuePage = ({ cubes, daysBetweenRotations, lastRotation, log
                 Rotation period: <span className="text-muted">{rotationPeriod} days</span>
                 <SetRotationButton
                   className="p-1 ms-2"
-                  modalProps={{ period: rotationPeriod, onSubmit: updateRotationPeriod }}
+                  modalprops={{ period: rotationPeriod, onSubmit: updateRotationPeriod }}
                 >
                   <span style={{ position: 'relative', top: '-1px' }}>
                     <GearIcon size={17} />

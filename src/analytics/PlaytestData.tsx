@@ -1,32 +1,55 @@
-import React, { useMemo } from 'react';
-import { ListGroupItem } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CardPropType from 'proptypes/CardPropType';
-import CubeAnalyticPropType from 'proptypes/CubeAnalyticPropType';
+import React, { useContext, useMemo } from 'react';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import withAutocard from 'components/WithAutocard';
 import { encodeName, mainboardRate, pickRate } from 'utils/Card';
 import { fromEntries } from 'utils/Util';
+import Card from 'datatypes/Card';
+import CubeContext from 'contexts/CubeContext';
+import { Flexbox } from 'components/base/Layout';
 
-const AutocardItem = withAutocard(ListGroupItem);
+interface CubeAnalytics {
+  [oracle_id: string]: {
+    elo: number;
+    mainboards: number;
+    sideboards: number;
+    picks: number;
+    passes: number;
+  };
+}
 
-const renderCardLink = (card) => (
-  <AutocardItem className="p-0" key={card.index} card={card} data-in-modal index={card.index}>
+interface PlaytestDataProps {
+  cubeAnalytics: CubeAnalytics;
+}
+
+const AutocardItem = withAutocard('div');
+
+const renderCardLink = (card: Card) => (
+  <AutocardItem className="p-0" key={card.index} card={card}>
     <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer">
-      {card.details.name}
+      {card.details?.name}
     </a>
   </AutocardItem>
 );
 
-const renderPercent = (val) => {
-  return <>{parseInt(val * 1000, 10) / 10}%</>;
+const renderPercent = (val: number) => {
+  return <>{parseInt((val * 1000).toString(), 10) / 10}%</>;
 };
 
-const PlaytestData = ({ cards, cubeAnalytics }) => {
-  const cardDict = useMemo(() => fromEntries(cards.map((card) => [card.details.oracle_id, card])), [cards]);
+const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
+  const { changedCards } = useContext(CubeContext);
+  const cards = changedCards.mainboard;
+
+  const cardDict = useMemo(
+    () =>
+      fromEntries(
+        cards
+          .filter((card) => card.details && card.details.oracle_id)
+          .map((card) => [card.details?.oracle_id || '', card]),
+      ),
+    [cards],
+  );
 
   const data = useMemo(
     () =>
@@ -47,7 +70,7 @@ const PlaytestData = ({ cards, cubeAnalytics }) => {
   );
 
   return (
-    <>
+    <Flexbox direction="col" gap="2" className="m-2">
       <ErrorBoundary>
         <SortableTable
           columnProps={[
@@ -68,13 +91,8 @@ const PlaytestData = ({ cards, cubeAnalytics }) => {
           sortFns={{ label: compareStrings }}
         />
       </ErrorBoundary>
-    </>
+    </Flexbox>
   );
-};
-
-PlaytestData.propTypes = {
-  cards: PropTypes.arrayOf(CardPropType.isRequired).isRequired,
-  cubeAnalytics: CubeAnalyticPropType.isRequired,
 };
 
 export default PlaytestData;

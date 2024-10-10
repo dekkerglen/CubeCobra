@@ -370,7 +370,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 block
                                 outline
                                 color="accent"
-                                modalProps={{ cubes: user.cubes }}
+                                modalprops={{ cubes: user.cubes }}
                               >
                                 Replace in&nbsp;queue
                               </AddFeaturedButton>
@@ -382,7 +382,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         ) : [2, 3].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
-                            <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
+                            <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user.cubes }}>
                               Add cube to queue
                             </AddFeaturedButton>
                           </>

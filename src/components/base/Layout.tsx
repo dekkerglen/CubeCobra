@@ -40,6 +40,7 @@ interface FlexboxProps {
     | '96';
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
 const Flexbox: React.FC<FlexboxProps> = ({
@@ -51,9 +52,10 @@ const Flexbox: React.FC<FlexboxProps> = ({
   gap = '0',
   children,
   className = '',
+  onClick,
 }) => {
   const classes = classNames(
-    'flex',
+    'flex max-w-full',
     `flex-${direction}`,
     `flex-${wrap}`,
     `justify-${justify}`,
@@ -63,7 +65,11 @@ const Flexbox: React.FC<FlexboxProps> = ({
     className,
   );
 
-  return <div className={classes}>{children}</div>;
+  return (
+    <div className={classes} onClick={onClick}>
+      {children}
+    </div>
+  );
 };
 
 export type NumCols = 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12;
@@ -85,16 +91,17 @@ const Row: React.FC<RowProps> = ({ children, className = '', xs, sm, md, lg, xl,
   return (
     <div
       className={classNames(
+        'grid max-w-full',
         {
           'gap-4': !noGutters,
-          'grid grid-cols-12': numCols === 12,
-          'grid grid-cols-10': numCols === 10,
-          'grid grid-cols-8': numCols === 8,
-          'grid grid-cols-6': numCols === 6,
-          'grid grid-cols-5': numCols === 5,
-          'grid grid-cols-4': numCols === 4,
-          'grid grid-cols-3': numCols === 3,
-          'grid grid-cols-2': numCols === 2,
+          'grid-cols-12': numCols === 12,
+          'grid-cols-10': numCols === 10,
+          'grid-cols-8': numCols === 8,
+          'grid-cols-6': numCols === 6,
+          'grid-cols-5': numCols === 5,
+          'grid-cols-4': numCols === 4,
+          'grid-cols-3': numCols === 3,
+          'grid-cols-2': numCols === 2,
           'sm:grid-cols-12': sm === 12,
           'sm:grid-cols-10': sm === 10,
           'sm:grid-cols-8': sm === 8,

@@ -207,7 +207,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
           <Flexbox direction="row" justify="end">
             <CreatePackageModalLink
               color="primary"
-              modalProps={{
+              modalprops={{
                 onError: (message: string) => {
                   addAlert('danger', message);
                 },

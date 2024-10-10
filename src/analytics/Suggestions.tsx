@@ -1,103 +1,35 @@
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Col,
-  Label,
-  ListGroup,
-  ListGroupItem,
-  ListGroupItemHeading,
-  Row,
-} from 'reactstrap';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
-import AddToCubeModal from 'components/AddToCubeModal';
-import withAutocard from 'components/WithAutocard';
-import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import useToggle from 'hooks/UseToggle';
-import { encodeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
-
-const AutocardA = withAutocard('a');
-const AddModal = withModal(AutocardA, AddToCubeModal);
-
-function Suggestion({ card, index, cube }) {
-  return (
-    <ListGroupItem>
-      <h6>
-        {index + 1}
-        {'. '}
-        <AddModal
-          card={card}
-          href={`/tool/card/${encodeName(card.cardID)}`}
-          modalProps={{ card: card.details, hideAnalytics: false, cubeContext: cube.id }}
-        >
-          {card.details.name}
-        </AddModal>
-      </h6>
-    </ListGroupItem>
-  );
-}
-
-Suggestion.propTypes = {
-  card: PropTypes.shape({
-    cardID: PropTypes.string.isRequired,
-    details: PropTypes.shape({
-      image_normal: PropTypes.string.isRequired,
-      image_flip: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  cube: CubePropType.isRequired,
-  index: PropTypes.number.isRequired,
-};
-
-function ImageSuggestion({ card, cube }) {
-  return (
-    <AddModal
-      card={card}
-      href={`/tool/card/${encodeName(card.cardID)}`}
-      modalProps={{ card: card.details, hideAnalytics: false, cubeContext: cube.id }}
-    >
-      <img className="pr-1 w-100" src={card.details.image_normal} />
-    </AddModal>
-  );
-}
-
-ImageSuggestion.propTypes = {
-  card: PropTypes.shape({
-    cardID: PropTypes.string.isRequired,
-    details: PropTypes.shape({
-      image_normal: PropTypes.string.isRequired,
-      image_flip: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  cube: CubePropType.isRequired,
-  index: PropTypes.number.isRequired,
-};
+import Suggestion from './Suggestion';
+import ImageSuggestion from './ImageSuggestion';
+import FilterContext from 'contexts/FilterContext';
+import CardType from 'datatypes/Card';
+import Checkbox from 'components/base/Checkbox';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Text from 'components/base/Text';
+import Button from 'components/base/Button';
 
 const PAGE_SIZE = 100;
 
-function Suggestions() {
-  const { cube, filterInput } = useContext(CubeContext);
-  const [maybeOnly, toggleMaybeOnly] = useToggle(false);
-  const [useImages, toggleUseImages] = useToggle(false);
+const Suggestions: React.FC = () => {
+  const { filterInput } = useContext(FilterContext);
+  const { cube } = useContext(CubeContext);
+  const [maybeOnly, setMaybeOnly] = useState(false);
+  const [useImages, setUseImages] = useState(false);
 
-  const [addCards, setAddCards] = React.useState([]);
+  const [addCards, setAddCards] = React.useState<CardType[]>([]);
   const [addsLoading, setAddsLoading] = React.useState(true);
   const [hasMoreAdds, setHasMoreAdds] = React.useState(true);
 
-  const [cutCards, setCutCards] = React.useState([]);
+  const [cutCards, setCutCards] = React.useState<CardType[]>([]);
   const [cutsLoading, setCutsLoading] = React.useState(true);
 
   const addsInMaybe = useMemo(
-    () => addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details.oracle_id === card.details.oracle_id)),
+    () =>
+      addCards.filter((card) => cube.cards.maybeboard.some((c) => c.details?.oracle_id === card.details?.oracle_id)),
     [addCards, cube],
   );
 
@@ -174,32 +106,31 @@ function Suggestions() {
   const reversedCuts = [...cutCards].reverse();
 
   return (
-    <>
-      <h4 className="d-lg-block d-none">Recommender</h4>
-      <p>
+    <Flexbox direction="col" gap="2" className="m-2">
+      <Text>
         The Cube Cobra Recommender is a machine learning model that powers draftbots, deckbuilding, and can also be used
         to suggest cards to add and identifies cards that are core to your cube. Recommended additions are not just
         cards that are commonly included in similar cubes, but are selected based on what makes your cube unique.
-      </p>
-      <p>
+      </Text>
+      <Text>
         The recommended additions can be filtered using scryfall-like syntax, making it a useful tool for searching for
         cards with a meaningful sort for your cube.
-      </p>
-      <input className="me-2" type="checkbox" checked={useImages} onClick={toggleUseImages} />
-      <Label for="toggleImages">Show card images</Label>
+      </Text>
+      <Checkbox checked={useImages} setChecked={setUseImages} label="Show card images" />
       <Row>
-        <Col xs={12} lg="6">
+        <Col xs={12} lg={6}>
           <Card>
             <CardHeader>
-              <ListGroupItemHeading>Recommended Additions</ListGroupItemHeading>
-              <input className="me-2" type="checkbox" checked={maybeOnly} onClick={toggleMaybeOnly} />
-              <Label for="toggleMaybeboard">Show cards from my maybeboard only.</Label>
+              <Text semibold lg>
+                Recommended Additions
+              </Text>
+              <Checkbox checked={maybeOnly} setChecked={setMaybeOnly} label="Show cards from my maybeboard only." />
             </CardHeader>
             {useImages ? (
               <CardBody>
                 <Row>
                   {cardsToUse.map((add, index) => (
-                    <Col key={add.cardID} xs={12} lg="6" className="p-1">
+                    <Col key={add.cardID} xs={12} lg={6} className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}
@@ -212,7 +143,7 @@ function Suggestions() {
                 )}
               </CardBody>
             ) : (
-              <ListGroup className="pb-3">
+              <Flexbox direction="col" gap="2">
                 {cardsToUse.length > 0 &&
                   cardsToUse.map((add, index) => <Suggestion key={add.cardID} index={index} card={add} cube={cube} />)}
                 {!addsLoading && cardsToUse.length === 0 && (
@@ -226,31 +157,35 @@ function Suggestions() {
                     Load More
                   </Button>
                 )}
-              </ListGroup>
+              </Flexbox>
             )}
           </Card>
         </Col>
-        <Col xs={12} lg="6">
+        <Col xs={12} lg={6}>
           <Card>
             <CardHeader>
-              <ListGroupItemHeading>Core Cards</ListGroupItemHeading>
-              <p>
-                The algorithm believes these cards are core to your cube. It is a sorted order, with the most core cards
-                at the top.
-              </p>
+              <Flexbox direction="col" gap="2">
+                <Text semibold lg>
+                  Core Cards
+                </Text>
+                <Text md>
+                  The algorithm believes these cards are core to your cube. It is a sorted order, with the most core
+                  cards at the top.
+                </Text>
+              </Flexbox>
             </CardHeader>
             {useImages ? (
               <CardBody>
                 <Row>
                   {reversedCuts.map((add, index) => (
-                    <Col key={add.cardID} xs={12} lg="6" className="p-1">
+                    <Col key={add.cardID} xs={12} lg={6} className="p-1">
                       <ImageSuggestion key={add.cardID} index={index} card={add} cube={cube} />
                     </Col>
                   ))}
                 </Row>
               </CardBody>
             ) : (
-              <ListGroup className="pb-3">
+              <Flexbox direction="col" gap="2">
                 {cutCards.length > 0 &&
                   reversedCuts.map((add, index) => (
                     <Suggestion key={add.cardID} index={index} card={add} cube={cube} />
@@ -261,17 +196,13 @@ function Suggestions() {
                   </CardBody>
                 )}
                 {cutsLoading && <CardBody>Loading...</CardBody>}
-              </ListGroup>
+              </Flexbox>
             )}
           </Card>
         </Col>
       </Row>
-    </>
+    </Flexbox>
   );
-}
-
-Suggestions.defaultProps = {
-  filter: null,
 };
 
 export default Suggestions;

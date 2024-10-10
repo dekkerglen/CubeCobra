@@ -51,7 +51,7 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
                       window.open(`/tool/card/${card.cardID}`);
                     }}
                     className={index === 0 ? 'cmc-group' : undefined}
-                    modalProps={{
+                    modalprops={{
                       card,
                     }}
                   />

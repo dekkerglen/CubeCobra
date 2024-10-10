@@ -2709,6 +2709,13 @@
   resolved "https://registry.npmjs.org/@types/range-parser/-/range-parser-1.2.7.tgz"
   integrity sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==
 
+"@types/react-csv@^1.1.10":
+  version "1.1.10"
+  resolved "https://registry.npmjs.org/@types/react-csv/-/react-csv-1.1.10.tgz"
+  integrity sha512-PESAyASL7Nfi/IyBR3ufd8qZkyoS+7jOylKmJxRZUZLFASLo4NZaRsJ8rNP8pCcbIziADyWBbLPD1nPddhsL4g==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-dom@^18.0.0", "@types/react-dom@^18.3.0":
   version "18.3.0"
   resolved "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.0.tgz"
@@ -2771,6 +2778,11 @@
     "@types/http-errors" "*"
     "@types/node" "*"
     "@types/send" "*"
+
+"@types/shuffle-seed@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.npmjs.org/@types/shuffle-seed/-/shuffle-seed-1.1.3.tgz"
+  integrity sha512-D05NnrEz9YvwCp8GSzyI/UipvOtmiMbEtLgupa5buU6QJkmelKb7Pwuslsb8C7c+Wkn3qiAAL329+/E2PfUd0A==
 
 "@types/sockjs@^0.3.36":
   version "0.3.36"

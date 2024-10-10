@@ -813,11 +813,6 @@ video {
   margin: 1rem;
 }
 
-.-mx-4 {
-  margin-left: -1rem;
-  margin-right: -1rem;
-}
-
 .mx-0 {
   margin-left: 0px;
   margin-right: 0px;
@@ -894,10 +889,6 @@ video {
 
 .mb-5 {
   margin-bottom: 1.25rem;
-}
-
-.mb-6 {
-  margin-bottom: 1.5rem;
 }
 
 .mb-8 {
@@ -984,10 +975,6 @@ video {
   margin-top: 1.5rem;
 }
 
-.mt-auto {
-  margin-top: auto;
-}
-
 .block {
   display: block;
 }
@@ -1034,6 +1021,10 @@ video {
 
 .h-4 {
   height: 1rem;
+}
+
+.h-5 {
+  height: 1.25rem;
 }
 
 .h-6 {
@@ -1086,6 +1077,10 @@ video {
 
 .w-4 {
   width: 1rem;
+}
+
+.w-5 {
+  width: 1.25rem;
 }
 
 .w-6 {
@@ -1468,6 +1463,12 @@ video {
   margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
+.space-x-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-right: calc(0.75rem * var(--tw-space-x-reverse));
+  margin-left: calc(0.75rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
 .overflow-auto {
   overflow: auto;
 }
@@ -1815,9 +1816,9 @@ video {
   background-image: linear-gradient(to bottom, var(--tw-gradient-stops));
 }
 
-.from-bg {
-  --tw-gradient-from: rgb(var(--bg) / 1) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(var(--bg) / 0) var(--tw-gradient-to-position);
+.from-bg-accent {
+  --tw-gradient-from: rgb(var(--bg-accent) / 1) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(var(--bg-accent) / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
@@ -1872,11 +1873,6 @@ video {
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
-}
-
-.px-8 {
-  padding-left: 2rem;
-  padding-right: 2rem;
 }
 
 .py-0\.5 {
@@ -2357,7 +2353,6 @@ div.advertisement-div > div:not(.report-link) {
 }
 
 .autocard-background {
-  background-color: var(--bg-dark);
   background-clip: content-box;
 }
 
@@ -2821,10 +2816,6 @@ img.mana-symbol-sm {
     display: none;
   }
 
-  .sm\:w-1\/2 {
-    width: 50%;
-  }
-
   .sm\:max-w-screen-sm {
     max-width: 640px;
   }
@@ -2950,10 +2941,6 @@ img.mana-symbol-sm {
     width: 33.333333%;
   }
 
-  .md\:w-1\/4 {
-    width: 25%;
-  }
-
   .md\:max-w-screen-md {
     max-width: 768px;
   }
@@ -2988,6 +2975,11 @@ img.mana-symbol-sm {
 
   .md\:grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .md\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 

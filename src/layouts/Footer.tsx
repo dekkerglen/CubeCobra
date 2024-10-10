@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import Copyright from 'components/Copyright';
 import Text from 'components/base/Text';
+import { Col, Row } from 'components/base/Layout';
 
 interface FooterLinkProps {
   href: string;
@@ -25,8 +26,8 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-bg-secondary text-text-secondary py-6">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap -mx-4">
-          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
+        <Row>
+          <Col xs={6} sm={3}>
             <Text sm>
               <h6 className="text-lg font-semibold mb-2">Content</h6>
               <ul className="list-none p-0">
@@ -44,8 +45,8 @@ const Footer: React.FC = () => {
                 </li>
               </ul>
             </Text>
-          </div>
-          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
+          </Col>
+          <Col xs={6} sm={3}>
             <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cube</h6>
               <ul className="list-none p-0">
@@ -57,8 +58,8 @@ const Footer: React.FC = () => {
                 </li>
               </ul>
             </Text>
-          </div>
-          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
+          </Col>
+          <Col xs={6} sm={3}>
             <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cards</h6>
               <ul className="list-none p-0">
@@ -76,8 +77,8 @@ const Footer: React.FC = () => {
                 </li>
               </ul>
             </Text>
-          </div>
-          <div className="w-full sm:w-1/2 md:w-1/4 px-4 mb-6">
+          </Col>
+          <Col xs={6} sm={3}>
             <Text sm>
               <h6 className="text-lg font-semibold mb-2">Cube Cobra</h6>
               <ul className="list-none p-0">
@@ -100,8 +101,8 @@ const Footer: React.FC = () => {
                 </li>
               </ul>
             </Text>
-          </div>
-        </div>
+          </Col>
+        </Row>
         <div id="ncmp-consent-link"></div>
         <p className="text-center text-sm mt-6">
           <FooterLink href="/privacy">Privacy Policy</FooterLink>

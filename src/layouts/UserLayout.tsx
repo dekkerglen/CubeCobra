@@ -35,7 +35,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, act
         <NavItem>
           <h5 style={{ color: '#218937' }}>{user.username}</h5>
           {numFollowers > 0 ? (
-            <FollowersModalLink href="#" modalProps={{ followers }}>
+            <FollowersModalLink href="#" modalprops={{ followers }}>
               {followersText}
             </FollowersModalLink>
           ) : (

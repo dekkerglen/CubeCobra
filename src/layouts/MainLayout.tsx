@@ -24,11 +24,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, loginCallback = '/' }
       <Navbar expanded={expanded} toggle={toggle} loginCallback={loginCallback} />
       <div className="bg-bg flex-grow">
         <Container xxxl>
-          <Flexbox className="flex-grow" direction="row" gap="4">
+          <Flexbox className="flex-grow max-w-full" direction="row" gap="4">
             <ResponsiveDiv xl className="pl-2 py-2 min-w-fit">
               <SideBanner placementId="left-rail" />
             </ResponsiveDiv>
-            <div className="flex-grow px-2">
+            <div className="flex-grow px-2 max-w-full">
               <ErrorBoundary>{children}</ErrorBoundary>
             </div>
             <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">

@@ -54,7 +54,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
               <Row className="g-0">
                 {user.cubes.length > 0 ? (
                   user.cubes.slice(0, 4).map((cube) => (
-                    <Col key={cube.id} xs={12} sm="12" md="12" lg="6">
+                    <Col key={cube.id} xs={12} sm="12" md="12" lg={6}>
                       <CubePreview cube={cube} />
                     </Col>
                   ))

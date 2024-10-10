@@ -106,7 +106,7 @@ const CardSearch: React.FC = () => {
               </Flexbox>
             </ResponsiveDiv>
           </Flexbox>
-          <FilterCollapse hideDescription isOpen />
+          <FilterCollapse isOpen buttonLabel="Search" />
           <Row>
             <Col xs={12} sm={4}>
               <Select

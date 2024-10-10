@@ -69,7 +69,7 @@ const Remove = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >
@@ -89,7 +89,7 @@ const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >

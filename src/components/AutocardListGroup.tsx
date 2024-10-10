@@ -32,11 +32,11 @@ const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
   return (
     <ListGroup className="list-outline">
       {canEdit ? (
-        <GroupModalLink tag="div" className="list-group-heading" modalProps={{ cards }}>
+        <GroupModalLink tag="div" className="list-group-heading" modalprops={{ cards }}>
           {heading}
         </GroupModalLink>
       ) : (
-        <ListGroupItem tag="div" className="list-group-heading" modalProps={{ cards }}>
+        <ListGroupItem tag="div" className="list-group-heading" modalprops={{ cards }}>
           {heading}
         </ListGroupItem>
       )}
@@ -50,7 +50,7 @@ const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
               window.open(`/tool/card/${card.cardID}`);
             }}
             className={index === 0 ? 'cmc-group' : undefined}
-            modalProps={{
+            modalprops={{
               card,
             }}
           />

@@ -58,7 +58,7 @@ const CubeBlogPage = ({ cube, lastKey, posts, loginCallback }) => {
           <Collapse navbar>
             <Nav navbar>
               <NavItem>
-                <CreateBlogModalLink modalProps={{ cubeID: cube.id }}>Create new blog post</CreateBlogModalLink>
+                <CreateBlogModalLink modalprops={{ cubeID: cube.id }}>Create new blog post</CreateBlogModalLink>
               </NavItem>
             </Nav>
           </Collapse>

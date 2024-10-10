@@ -1,4 +1,5 @@
 import User from 'datatypes/User';
+import { DraftFormat } from './Draft';
 
 export interface CubeImage {
   uri: string;
@@ -30,7 +31,7 @@ interface Cube {
   date: number;
   defaultSorts: string[];
   showUnsorted?: boolean;
-  formats: { title: string }[];
+  formats: DraftFormat[];
   following: string[];
   defaultStatus: string;
   defaultPrinting: string;

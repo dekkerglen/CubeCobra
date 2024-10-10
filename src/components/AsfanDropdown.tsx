@@ -1,15 +1,17 @@
-import React, { Dispatch, SetStateAction } from 'react';
-import { Input, InputGroup, InputGroupText } from 'reactstrap';
+import React, { Dispatch } from 'react';
 
 import Cube from 'datatypes/Cube';
+import { Flexbox } from './base/Layout';
+import Checkbox from './base/Checkbox';
+import Select from './base/Select';
 
 export interface AsfanDropdownProps {
   cube: Cube;
   alwaysOn?: boolean;
   useAsfans: boolean;
-  setUseAsfans: Dispatch<SetStateAction<boolean>>;
-  draftFormat: number;
-  setDraftFormat: Dispatch<SetStateAction<number>>;
+  setUseAsfans: Dispatch<boolean>;
+  draftFormat: string;
+  setDraftFormat: Dispatch<string>;
 }
 
 const AsfanDropdown: React.FC<AsfanDropdownProps> = ({
@@ -21,27 +23,16 @@ const AsfanDropdown: React.FC<AsfanDropdownProps> = ({
   setDraftFormat,
 }) => {
   return (
-    <InputGroup className="mb-3">
-      {alwaysOn ? (
-        <InputGroupText>Draft Format:</InputGroupText>
-      ) : (
-        <>
-          <InputGroupText>Use Asfans</InputGroupText>
-          <InputGroupText>
-            <Input addon type="checkbox" checked={useAsfans} onChange={() => setUseAsfans(!useAsfans)} />
-          </InputGroupText>
-        </>
-      )}
-      <Input addon type="select" value={draftFormat} onChange={(e) => setDraftFormat(parseInt(e.target.value, 10))}>
-        <option value={0}>Standard Draft Format</option>
-        {cube.formats.length > 0 && <option disabled>Custom Formats</option>}
-        {cube.formats.map((format, index) => (
-          <option key={index} value={index}>
-            {format.title}
-          </option>
-        ))}
-      </Input>
-    </InputGroup>
+    <Flexbox justify="between" direction="row" gap="2">
+      {!alwaysOn && <Checkbox label="Use Asfans" checked={useAsfans} setChecked={setUseAsfans} />}
+      <Select
+        className="flex-grow"
+        options={cube.formats.map((format, index) => ({ value: index.toString(), label: format.title }))}
+        value={draftFormat}
+        onChange={setDraftFormat}
+        label="Draft Format for Asfans"
+      />
+    </Flexbox>
   );
 };
 
