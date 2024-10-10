@@ -358,10 +358,10 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         {/* ternaries are impossible to avoid in jsx */}
                         {featured ? (
                           <Row>
-                            <Col xs={12} lg={5} className="p-0">
+                            <Col  xs={12} lg={5} className="p-0">
                               <CubePreview cube={featured?.cube} />
                             </Col>
-                            <Col xs={12} lg={7} className="mt-4 mt-lg-0">
+                            <Col  xs={12} lg={7} className="mt-4 mt-lg-0">
                               <h6>
                                 Current position in&nbsp;queue: <span className="text-muted">{featured?.position}</span>
                               </h6>
@@ -370,7 +370,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                                 block
                                 outline
                                 color="accent"
-                                modalProps={{ cubes: user.cubes }}
+                                modalprops={{ cubes: user.cubes }}
                               >
                                 Replace in&nbsp;queue
                               </AddFeaturedButton>
@@ -382,7 +382,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         ) : [2, 3].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
-                            <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
+                            <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user.cubes }}>
                               Add cube to queue
                             </AddFeaturedButton>
                           </>

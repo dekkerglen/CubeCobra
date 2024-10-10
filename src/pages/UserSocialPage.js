@@ -25,7 +25,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
             <CardBody className="p-0">
               <Row className="g-0">
                 {followedCubes.map((cube) => (
-                  <Col key={cube.id} xs={12} sm={6}>
+                  <Col key={cube.id}  xs={12} sm={6}>
                     <CubePreview cube={cube} />
                   </Col>
                 ))}
@@ -45,7 +45,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
             <CardBody className="p-0">
               <Row className="g-0">
                 {followedUsers.map((item) => (
-                  <Col key={item.id} xs={12} sm={6}>
+                  <Col key={item.id}  xs={12} sm={6}>
                     <UserPreview user={item} />
                   </Col>
                 ))}
@@ -57,7 +57,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
         </Card>
       </Col>
       {followers.length > 0 && (
-        <Col xs={12}>
+        <Col  xs={12}>
           <Card className="mt-3">
             <CardHeader>
               <h5 className="mb-0">Followers</h5>

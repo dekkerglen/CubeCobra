@@ -67,6 +67,8 @@ function cardFromId(id, fields) {
   let details;
   if (data._carddict[id]) {
     details = data._carddict[id];
+  } else if (data.oracleToId[id]) {
+    details = getFirstReasonable(data.oracleToId[id]);
   } else {
     details = getPlaceholderCard(id);
   }

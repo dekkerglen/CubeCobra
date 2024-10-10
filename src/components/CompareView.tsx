@@ -51,7 +51,7 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
                       window.open(`/tool/card/${card.cardID}`);
                     }}
                     className={index === 0 ? 'cmc-group' : undefined}
-                    modalProps={{
+                    modalprops={{
                       card,
                     }}
                   />
@@ -159,7 +159,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
           const column = columnsSecondary[columnLabel];
           return (
             <Row key={columnLabel}>
-              <Col xs="12" md="10" lg="8" className="mx-auto">
+              <Col xs={12} md="10" lg="8" className="mx-auto">
                 <div className="compare-header pt-2">
                   <Row>
                     <Col>

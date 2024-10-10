@@ -1,6 +1,7 @@
 import React from 'react';
 
 import User from 'datatypes/User';
+import Link from './base/Link';
 
 interface UsernameProps {
   user: string | User;
@@ -17,11 +18,7 @@ const Username: React.FC<UsernameProps> = ({ user, nolink = false }) => {
     return 'Anonymous';
   }
 
-  return (
-    <a data-sublink href={`/user/view/${typeof user === 'string' ? user : user.id || user}`}>
-      {username}
-    </a>
-  );
+  return <Link href={`/user/view/${typeof user === 'string' ? user : user.id || user}`}>{username}</Link>;
 };
 
 export default Username;

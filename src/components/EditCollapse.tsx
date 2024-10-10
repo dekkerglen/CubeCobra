@@ -227,7 +227,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="add"
               value={addValue}
               setValue={setAddValue}
-              onSubmit={handleAdd}
+              onSubmit={(e) => handleAdd(e, removeValue)}
               placeholder="Card to Add"
               autoComplete="off"
               data-lpignore
@@ -249,7 +249,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="remove"
               value={removeValue}
               setValue={setRemoveValue}
-              onSubmit={handleRemoveReplace}
+              onSubmit={(e) => handleRemoveReplace(e, removeValue)}
               placeholder="Card to Remove"
               autoComplete="off"
               data-lpignore
@@ -317,11 +317,11 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         className="pt-1"
       >
         <Row>
-          <Col xs="12" md="6">
+          <Col xs={12} md="6">
             <Changelist />
           </Col>
           {useBlog && (
-            <Col xs="12" md="6">
+            <Col xs={12} md="6">
               <h6>Blog Post</h6>
               <FormGroup>
                 <Label className="visually-hidden">Blog title</Label>
@@ -340,12 +340,12 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           )}
         </Row>
         <Row className="mb-2">
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <LoadingButton color="accent" block onClick={submit} loading={loading}>
               Save Changes
             </LoadingButton>
           </Col>
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <Button
               color="unsafe"
               block

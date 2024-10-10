@@ -1,42 +1,37 @@
-import React, { useState } from 'react';
-import {
-  AlertProps,
-  Button,
-  Input,
-  InputGroup,
-  InputGroupText,
-  ListGroup,
-  ListGroupItem,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  UncontrolledAlert,
-} from 'reactstrap';
+import React, { useCallback, useState } from 'react';
 
 import LoadingButton from 'components/LoadingButton';
-import withAutocard from 'components/WithAutocard';
 import CardDetails from 'datatypes/CardDetails';
 import CubePropType from 'datatypes/Cube';
 import { csrfFetch } from 'utils/CSRF';
-import { getColorClass } from 'utils/Util';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
+import Button from 'components/base/Button';
+import Alert from 'components/base/Alert';
+import CardList from 'components/base/CardList';
+import Select from 'components/base/Select';
+import { detailsToCard } from 'utils/Card';
+import { Flexbox } from './base/Layout';
 
 export interface AddGroupToCubeModalProps {
   cards: CardDetails[];
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (open: boolean) => void;
   cubes: CubePropType[];
   packid?: string;
 }
 
-const AutocardItem = withAutocard(ListGroupItem);
+interface AlertProps {
+  color: string;
+  message: string;
+}
 
-const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen, toggle, cubes, packid = null }) => {
+const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen, setOpen, cubes, packid = null }) => {
   const [selectedCube, setSelectedCube] = useState<string | null>(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
+  const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  const add = async (board: 'mainboard' | 'maybeboard') => {
+  const add = useCallback(async () => {
     setLoadingSubmit(true);
     try {
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {
@@ -53,7 +48,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       if (response.ok) {
         const json = await response.json();
         if (json.success === 'true') {
-          toggle();
+          setOpen(false);
         }
       } else {
         setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
@@ -62,29 +57,18 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       setAlerts([...alerts, { color: 'danger', message: 'Error, could not add card' }]);
     }
     setLoadingSubmit(false);
-  };
+  }, [selectedCube, cards, packid, board, alerts, setOpen]);
 
   if (!cubes || cubes.length === 0) {
     return (
-      <Modal isOpen={isOpen} toggle={toggle} size="xs">
-        <ModalHeader toggle={toggle}>Add Package to Cube</ModalHeader>
+      <Modal isOpen={isOpen} setOpen={setOpen} sm>
+        <ModalHeader setOpen={setOpen}>Add Package to Cube</ModalHeader>
         <ModalBody>
-          <ListGroup className="list-outline">
-            {cards.map((card) => (
-              <AutocardItem
-                key={card.scryfall_id}
-                card={{ details: card }}
-                className={`card-list-item d-flex flex-row ${getColorClass(card.type, card.colors)}`}
-                data-in-modal
-              >
-                {card.name}
-              </AutocardItem>
-            ))}
-          </ListGroup>
+          <CardList cards={cards.map(detailsToCard)} />
           <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="unsafe" onClick={toggle}>
+          <Button block color="danger" onClick={() => setOpen(false)}>
             Close
           </Button>
         </ModalFooter>
@@ -93,48 +77,42 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
   }
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="xs">
-      <ModalHeader toggle={toggle}>Add Package to Cube</ModalHeader>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm>
+      <ModalHeader setOpen={setOpen}>Add Package to Cube</ModalHeader>
       <ModalBody>
-        {' '}
-        {alerts.map(({ color, message }) => (
-          <UncontrolledAlert key={message} color={color} className="mt-2">
-            {message}
-          </UncontrolledAlert>
-        ))}
-        <ListGroup className="list-outline">
-          {cards.map((card) => (
-            <AutocardItem
-              key={card.scryfall_id}
-              card={{ details: card }}
-              className={`card-list-item d-flex flex-row ${getColorClass(card.type, card.colors)}`}
-              data-in-modal
-            >
-              {card.name}
-            </AutocardItem>
+        <Flexbox direction="col" gap="2">
+          {alerts.map(({ color, message }) => (
+            <Alert key={message} color={color} className="mt-2">
+              {message}
+            </Alert>
           ))}
-        </ListGroup>
-        <InputGroup className="my-3">
-          <InputGroupText>Cube: </InputGroupText>
-          <Input type="select" value={selectedCube ?? ''} onChange={(event) => setSelectedCube(event.target.value)}>
-            {cubes.map((cube) => (
-              <option key={cube.id} value={cube.id}>
-                {cube.name}
-              </option>
-            ))}
-          </Input>
-        </InputGroup>
+          <CardList cards={cards.map(detailsToCard)} />
+          <Select
+            label="Cube"
+            value={selectedCube ?? ''}
+            onChange={(value) => setSelectedCube(value)}
+            options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
+          />
+          <Select
+            label="Board"
+            value={board}
+            onChange={(value) => setBoard(value as 'mainboard' | 'maybeboard')}
+            options={[
+              { value: 'mainboard', label: 'Mainboard' },
+              { value: 'maybeboard', label: 'Maybeboard' },
+            ]}
+          />
+        </Flexbox>
       </ModalBody>
       <ModalFooter>
-        <LoadingButton loading={loadingSubmit} color="accent" onClick={() => add('mainboard')}>
-          Add
-        </LoadingButton>
-        <LoadingButton loading={loadingSubmit} color="secondary" onClick={() => add('maybeboard')}>
-          Maybeboard
-        </LoadingButton>
-        <Button color="unsafe" onClick={toggle}>
-          Close
-        </Button>
+        <Flexbox direction="row" gap="2" className="w-full">
+          <LoadingButton block loading={loadingSubmit} color="accent" onClick={() => add()}>
+            Add
+          </LoadingButton>
+          <Button block color="danger" onClick={() => setOpen(false)}>
+            Close
+          </Button>
+        </Flexbox>
       </ModalFooter>
     </Modal>
   );

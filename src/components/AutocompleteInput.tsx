@@ -1,8 +1,9 @@
-import React, { forwardRef, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Input, InputProps } from 'reactstrap';
+import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import withAutocard from 'components/WithAutocard';
 import AutocardContext from 'contexts/AutocardContext';
+import Input, { InputProps } from 'components/base/Input';
+import classNames from 'classnames';
 
 export interface AutocardLiProps {
   inModal: boolean;
@@ -12,9 +13,7 @@ export interface AutocardLiProps {
   children?: ReactNode;
 }
 
-const AutocardLi = withAutocard('li') as React.ForwardRefExoticComponent<
-  AutocardLiProps & React.RefAttributes<HTMLLIElement>
->;
+const AutocardDiv = withAutocard('div');
 
 // Deepmerge utility
 function isMergeableObject(val: any): val is Record<string, any> {
@@ -201,116 +200,131 @@ export interface AutocompleteInputProps extends InputProps {
   onSubmit?: (event: React.FormEvent<HTMLInputElement>, match?: string) => void;
   wrapperClassName?: string;
   cubeId?: string;
-  noMargin?: boolean;
 }
 
-const AutocompleteInput = forwardRef<Input, AutocompleteInputProps>(
-  ({ treeUrl, treePath, value, setValue, onSubmit, cubeId, noMargin, ...props }, ref) => {
-    const [tree, setTree] = useState<TreeNode>({});
-    const [position, setPosition] = useState(-1);
-    const [visible, setVisible] = useState(false);
-    const { hideCard } = useContext(AutocardContext);
+const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
+  treeUrl,
+  treePath,
+  value,
+  setValue,
+  onSubmit,
+  cubeId,
+  ...props
+}) => {
+  const [tree, setTree] = useState<TreeNode>({});
+  const [position, setPosition] = useState(-1);
+  const [visible, setVisible] = useState(false);
+  const { hideCard } = useContext(AutocardContext);
 
-    useEffect(() => {
-      const wrapper = async () => {
-        try {
-          if (!treeCache[treeUrl]) {
-            treeCache[treeUrl] = fetchTree(treeUrl, treePath);
-          }
-          setTree((await treeCache[treeUrl]) ?? {});
-        } catch (e) {
-          console.error('Error getting autocomplete tree.', e);
+  useEffect(() => {
+    const wrapper = async () => {
+      try {
+        if (!treeCache[treeUrl]) {
+          treeCache[treeUrl] = fetchTree(treeUrl, treePath);
         }
-      };
-      wrapper();
-    }, [treePath, treeUrl]);
+        setTree((await treeCache[treeUrl]) ?? {});
+      } catch (e) {
+        console.error('Error getting autocomplete tree.', e);
+      }
+    };
+    wrapper();
+  }, [treePath, treeUrl]);
 
-    const handleChange = useCallback(
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(event.target.value);
-        setVisible(true);
-        hideCard();
-      },
-      [hideCard, setValue],
-    );
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setValue(event.target.value);
+      setVisible(true);
+      hideCard();
+    },
+    [hideCard, setValue],
+  );
 
-    const acceptSuggestion = useCallback(
-      (newValue: string) => {
-        setValue(newValue);
-        setVisible(false);
-        hideCard();
-        setPosition(-1);
-      },
-      [hideCard, setValue],
-    );
+  const acceptSuggestion = useCallback(
+    (newValue: string) => {
+      setValue(newValue);
+      setVisible(false);
+      hideCard();
+      setPosition(-1);
+    },
+    [hideCard, setValue],
+  );
 
-    const handleClickSuggestion = useCallback(
-      (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
+  const handleClickSuggestion = useCallback(
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      event.preventDefault();
+      acceptSuggestion(event.currentTarget.textContent!);
+    },
+    [acceptSuggestion],
+  );
+
+  // Replace curly quotes with straight quotes. Needed for iOS.
+  const normalizedValue = (value || '')
+    .replace(/[\u2018\u2019\u201C\u201D]/g, (c: string) => '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1))
+    .trim()
+    .normalize('NFD') // convert to consistent unicode format
+    .replace(/[\u0300-\u036f]/g, '') // remove unicode
+    .toLowerCase();
+
+  const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
+  const showMatches = visible && value && matches.length > 0 && !(matches.length === 1 && matches[0] === value);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.keyCode === 40) {
+        // DOWN key
         event.preventDefault();
-        acceptSuggestion(event.currentTarget.textContent!);
-      },
-      [acceptSuggestion],
-    );
-
-    // Replace curly quotes with straight quotes. Needed for iOS.
-    const normalizedValue = (value || '')
-      .replace(/[\u2018\u2019\u201C\u201D]/g, (c: string) => '\'\'""'.substr('\u2018\u2019\u201C\u201D'.indexOf(c), 1))
-      .trim()
-      .normalize('NFD') // convert to consistent unicode format
-      .replace(/[\u0300-\u036f]/g, '') // remove unicode
-      .toLowerCase();
-
-    const matches = useMemo(() => getAllMatches(tree, normalizedValue), [tree, normalizedValue]);
-    const showMatches = visible && value && matches.length > 0 && !(matches.length === 1 && matches[0] === value);
-
-    const handleKeyDown = useCallback(
-      (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.keyCode === 40) {
-          // DOWN key
-          event.preventDefault();
-          setPosition((p) => (p < 9 ? p + 1 : p));
-        } else if (event.keyCode === 38) {
-          // UP key
-          event.preventDefault();
-          setPosition((p) => (p > -1 ? p - 1 : p));
-        } else if (event.keyCode === 9 || event.keyCode === 13) {
-          // TAB or ENTER key
-          if (showMatches) {
-            const goodPosition = position >= 0 && position < matches.length ? position : 0;
-            const match = matches[goodPosition];
-            acceptSuggestion(match);
-            if (event.keyCode === 13 && onSubmit) {
-              // ENTER key
-              onSubmit(event, match);
-            }
+        setPosition((p) => (p < 9 ? p + 1 : p));
+      } else if (event.keyCode === 38) {
+        // UP key
+        event.preventDefault();
+        setPosition((p) => (p > -1 ? p - 1 : p));
+      } else if (event.keyCode === 9 || event.keyCode === 13) {
+        // TAB or ENTER key
+        if (showMatches) {
+          const goodPosition = position >= 0 && position < matches.length ? position : 0;
+          const match = matches[goodPosition];
+          acceptSuggestion(match);
+          if (event.keyCode === 13 && onSubmit) {
+            // ENTER key
+            onSubmit(event, match);
           }
         }
-      },
-      [position, acceptSuggestion, matches, showMatches, onSubmit],
-    );
+      }
+    },
+    [position, acceptSuggestion, matches, showMatches, onSubmit],
+  );
 
-    return (
-      <>
-        <Input ref={ref} value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
-        {showMatches && (
-          <ul className={`autocomplete-list ${noMargin ? 'mt-0' : ''}`}>
-            {matches.map((match, index) => (
-              <AutocardLi
-                inModal
-                image={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
-                key={index}
-                onClick={handleClickSuggestion}
-                className={index === position ? 'active' : undefined}
-              >
-                {match}
-              </AutocardLi>
-            ))}
-          </ul>
-        )}
-      </>
-    );
-  },
-);
+  return (
+    <div className="relative overflow-y-visible">
+      <Input value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
+      {showMatches && (
+        <div
+          className={classNames(
+            'absolute border border-border rounded-md top-0 left-0 translate-y-9 w-full flex flex-col overflow-y-visible z-[1050]',
+          )}
+        >
+          {matches.map((match, index) => (
+            <AutocardDiv
+              inModal
+              image={cubeId ? `/tool/cardimageforcube/${match}/${cubeId}` : `/tool/cardimage/${match}`}
+              key={index}
+              onClick={(e) => handleClickSuggestion(e)}
+              className={classNames(
+                'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
+                { 'border-t border-border': index !== 0 },
+                { 'bg-bg-active': index === position },
+                { 'rounded-t-md': index === 0 },
+                { 'rounded-b-md': index === matches.length - 1 },
+              )}
+            >
+              {match}
+            </AutocardDiv>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 AutocompleteInput.displayName = 'AutocompleteInput';
 

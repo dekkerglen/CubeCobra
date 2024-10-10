@@ -1,12 +1,13 @@
 import React, { useContext } from 'react';
-import { Button, Collapse, Spinner } from 'reactstrap';
 
 import CommentEntry from 'components/CommentEntry';
-import LinkButton from 'components/LinkButton';
+import Link from 'components/base/Link';
 import CommentList from 'components/PagedCommentList';
 import UserContext from 'contexts/UserContext';
 import useComments from 'hooks/UseComments';
 import useToggle from 'hooks/UseToggle';
+import Collapse from './base/Collapse';
+import LoadingButton from './LoadingButton';
 
 export interface CommentsProps {
   parent: string;
@@ -23,45 +24,31 @@ const CommentsSection: React.FC<CommentsProps> = ({ parent, collapse = true, par
 
   return (
     <>
-      {user && (
-        <div className="p-2 border-bottom">
-          <Collapse isOpen={!replyExpanded}>
-            <h6>
-              <LinkButton className="ms-1" onClick={toggleReply}>
-                Add a Comment
-              </LinkButton>
-            </h6>
-          </Collapse>
-          <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
+      {collapse && (
+        <div className="p-2 border-b">
+          <Link className="ml-1" onClick={toggle}>
+            {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
+          </Link>
         </div>
       )}
-      {comments.length > 0 && (
-        <>
-          {collapse && (
-            <div className="p-2 border-bottom">
-              <h6>
-                <LinkButton className="ms-1" onClick={toggle}>
-                  {`${expanded ? 'Hide' : 'View'} Comments (${comments.length})`}
-                </LinkButton>
-              </h6>
+      <Collapse isOpen={expanded}>
+        <CommentList comments={comments} editComment={editComment}>
+          {user && (
+            <div className="w-full">
+              <Collapse isOpen={!replyExpanded}>
+                <Link className="ml-1" onClick={toggleReply}>
+                  Add a Comment
+                </Link>
+              </Collapse>
+              <CommentEntry submit={addComment} expanded={replyExpanded} toggle={toggleReply} />
             </div>
           )}
-          <Collapse isOpen={expanded}>
-            <CommentList comments={comments} editComment={editComment} />
-          </Collapse>
-          {loading && hasMore && (
-            <div className="centered m-1">
-              <Spinner />
-            </div>
-          )}
-          {hasMore && (
-            <div className="p-1">
-              <Button outline block color="primary" onClick={getMore} disabled={loading}>
-                View More...
-              </Button>
-            </div>
-          )}
-        </>
+        </CommentList>
+      </Collapse>
+      {hasMore && (
+        <LoadingButton className="m-2" outline block color="accent" onClick={getMore} loading={loading}>
+          View More...
+        </LoadingButton>
       )}
     </>
   );

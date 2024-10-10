@@ -26,12 +26,12 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
           </h6>
         </CardHeader>
         <Row className="g-0">
-          <Col xs="12" sm="4" className="pe-0">
+          <Col xs={12} sm={4} className="pe-0">
             <AspectRatioBox ratio={1} className="text-ellipsis">
               <img className="w-100" alt={episode.title} src={episode.image} />
             </AspectRatioBox>
           </Col>
-          <Col xs="12" sm="8" className="border-start ps-0">
+          <Col xs={12} sm={8} className="border-start ps-0">
             <CardBody>
               <ReactAudioPlayer src={episode.url} controls />
             </CardBody>

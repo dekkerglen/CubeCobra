@@ -1,51 +1,48 @@
 import React from 'react';
-import { Col, ColProps, Row } from 'reactstrap';
 
-import CardDetails from 'datatypes/CardDetails';
+import CardImage, { CardImageProps } from './CardImage';
+import Card from 'datatypes/Card';
+import { Col, Row, NumCols } from 'components/base/Layout';
 
-export interface CardImageProps<T extends { card: { imgUrl?: string; details?: CardDetails } }> {
-  Tag: React.ComponentType<T>;
-  cardProps: T;
-  linkDetails: boolean;
+export interface CardGridProps {
+  cards: Card[];
+  cardProps?: CardImageProps;
+  xs?: NumCols;
+  sm?: NumCols;
+  md?: NumCols;
+  lg?: NumCols;
+  xl?: NumCols;
+  xxl?: NumCols;
+  hrefFn?: (card: Card) => string;
+  onClick?: (card: Card) => void;
 }
 
-function cardImage<T extends { card: { imgUrl?: string; details?: CardDetails } }>({
-  Tag,
-  cardProps,
-  linkDetails,
-}: CardImageProps<T>): React.ReactNode {
-  const { card } = cardProps;
-  const cardTag = <Tag {...cardProps} modalProps={{ card }} />;
-  if (linkDetails && card.details?.scryfall_id) {
-    return <a href={`/tool/card/${card.details?.scryfall_id}`}>{cardTag}</a>;
+function CardGrid({ cards, cardProps, xs, sm, md, lg, xl, xxl, hrefFn, onClick }: CardGridProps) {
+  if (hrefFn) {
+    return (
+      <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
+        {cards.map((card, cardIndex) => (
+          <Col key={cardIndex} xs={1}>
+            <a href={hrefFn(card)} className="hover:cursor-pointer">
+              <CardImage card={card} autocard {...cardProps} />
+            </a>
+          </Col>
+        ))}
+      </Row>
+    );
   }
-  return cardTag;
-}
 
-export interface CardGridProps<T extends { card: { imgUrl?: string; details?: CardDetails } }> {
-  cardList: { imgUrl?: string; details?: CardDetails }[];
-  Tag: React.ComponentType<T>;
-  colProps?: ColProps;
-  cardProps: Omit<T, 'card'>;
-  linkDetails: boolean;
-}
-
-function CardGrid<T extends { card: { imgUrl?: string; details?: CardDetails } }>({
-  cardList,
-  Tag,
-  colProps,
-  cardProps,
-  linkDetails = false,
-  ...props
-}: CardGridProps<T>) {
   return (
-    <Row className="justify-content-center g-0" {...props}>
-      {cardList.map((card, cardIndex) => (
-        <Col key={cardIndex} {...colProps}>
-          {
-            // @ts-expect-error (this will always work out in practice)
-            cardImage<T>({ Tag, cardProps: { ...cardProps, card }, linkDetails })
-          }
+    <Row xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
+      {cards.map((card, cardIndex) => (
+        <Col key={cardIndex} xs={1}>
+          <CardImage
+            card={card}
+            autocard
+            onClick={() => onClick && onClick(card)}
+            className={onClick ? 'hover:cursor-pointer' : ''}
+            {...cardProps}
+          />
         </Col>
       ))}
     </Row>

@@ -1,18 +1,29 @@
 import React from 'react';
-import { Button, Input, InputGroup } from 'reactstrap';
+import { Flexbox } from './base/Layout';
+import Input from './base/Input';
+import Button from './base/Button';
 
 const CardSearchBar: React.FC = () => {
+  const [search, setSearch] = React.useState('');
+
   return (
-    <form method="GET" action="/tool/searchcards" autoComplete="off" className="w-100">
-      <div className="search-bar flex-container flex-align-stretch flex-grow">
-        <InputGroup>
-          <Input name="f" placeholder="Search cards..." />
-          <Button className="search-button" type="submit" color="accent">
-            Go
-          </Button>
-        </InputGroup>
-      </div>
-    </form>
+    <Flexbox direction="row" className="w-100" justify="between" gap="1">
+      <Input
+        name="f"
+        placeholder="Search cards..."
+        className="flex-grow"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            window.location.href = `/tool/searchcards?f=${encodeURIComponent(search)}`;
+          }
+        }}
+      />
+      <Button color="primary" href={`/tool/searchcards?f=${encodeURIComponent(search)}`}>
+        <span className="px-4">Go</span>
+      </Button>
+    </Flexbox>
   );
 };
 

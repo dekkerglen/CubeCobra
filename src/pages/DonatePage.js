@@ -33,7 +33,7 @@ const ContactPage = ({ loginCallback }) => (
             supporters
           </li>
           <li>
-            A place for your cube on the <strong>featured cubes</strong> list (from $5/month)
+            A place for your cube on the <Text semibold>featured cubes</Text> list (from $5/month)
           </li>
           <li>
             Ability to submit high priority feature requests that will be prioritized by the developers (from $15/month)
@@ -46,26 +46,26 @@ const ContactPage = ({ loginCallback }) => (
         </p>
         <h5>Donation Links</h5>
         <Row>
-          <Col xs="12" sm="4">
-            <strong>Patreon (subscription)</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>Patreon (subscription)</Text>
           </Col>
-          <Col xs="12" sm="8" className="mb-1">
+          <Col xs={12} sm={8} className="mb-1">
             <a href="https://www.patreon.com/cubecobra" target="_blank" rel="noopener noreferrer">
               https://www.patreon.com/cubecobra
             </a>
           </Col>
-          <Col xs="12" sm="4">
-            <strong>Paypal (one-time donation)</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>Paypal (one-time donation)</Text>
           </Col>
-          <Col xs="12" sm="8" className="mb-1">
+          <Col xs={12} sm={8} className="mb-1">
             <a href="https://www.paypal.me/cubecobra" target="_blank" rel="noopener noreferrer">
               https://www.paypal.me/cubecobra
             </a>
           </Col>
-          <Col xs="12" sm="4">
-            <strong>TCGPlayer Affiliate</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>TCGPlayer Affiliate</Text>
           </Col>
-          <Col xs="12" sm="8" className="mb-1">
+          <Col xs={12} sm={8} className="mb-1">
             <a
               href="https://www.tcgplayer.com/&partner=CubeCobra&utm_campaign=affiliate&utm_medium=CubeCobra&utm_source=CubeCobra"
               target="_blank"
@@ -74,10 +74,10 @@ const ContactPage = ({ loginCallback }) => (
               https://www.tcgplayer.com/
             </a>
           </Col>
-          <Col xs="12" sm="4" className="mb-1">
-            <strong>Inked Gaming (merch store)</strong>
+          <Col xs={12} sm={4} className="mb-1">
+            <Text semibold>Inked Gaming (merch store)</Text>
           </Col>
-          <Col xs="12" sm="8">
+          <Col xs={12} sm={8}>
             <a
               href="https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372"
               target="_blank"

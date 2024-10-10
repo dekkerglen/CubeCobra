@@ -168,6 +168,8 @@ export const cardCost = (card: Card): string[] => card.details?.parsed_cost ?? [
 
 export const cardSet = (card: Card): string => card.details?.set ?? '';
 
+export const cardSetName = (card: Card): string => card.details?.set_name ?? '';
+
 export const cardCollectorNumber = (card: Card): string => card.details?.collector_number ?? '';
 
 export const cardPromo = (card: Card): boolean => card.details?.promo ?? false;
@@ -202,6 +204,23 @@ const cardLegalityFilter = (card: Card, legality: string): string[] => {
 export const cardLegalIn = (card: Card): string[] => cardLegalityFilter(card, 'legal');
 export const cardBannedIn = (card: Card): string[] => cardLegalityFilter(card, 'banned');
 export const cardRestrictedIn = (card: Card): string[] => cardLegalityFilter(card, 'restricted');
+
+export const detailsToCard = (details: CardDetails): Card => {
+  return {
+    cardID: details.scryfall_id,
+    type_line: details.type,
+    status: details.error ? 'Not Found' : 'Not Owned',
+    cmc: details.cmc,
+    tags: [],
+    finish: 'Non-foil',
+    imgUrl: details.image_normal,
+    imgBackUrl: details.image_flip,
+    notes: '',
+    colorCategory: details.colorcategory,
+    rarity: details.rarity,
+    details,
+  };
+};
 
 export const cardColors = (card: Card): string[] => card.details?.colors ?? [];
 

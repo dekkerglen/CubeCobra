@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 
-interface SortConfig {
+export interface SortConfig {
   key: string;
   direction: 'ascending' | 'descending';
 }

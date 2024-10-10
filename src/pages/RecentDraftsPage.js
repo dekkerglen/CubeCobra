@@ -52,7 +52,7 @@ const RecentDraftsPage = ({ decks, lastKey, loginCallback }) => {
       <Banner />
       <DynamicFlash />
       <Row className="my-3">
-        <Col xs="12">
+        <Col xs={12}>
           <Card>
             <CardHeader>
               <h5>Recent drafts of your cubes</h5>

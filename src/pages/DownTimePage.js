@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import RenderToRoot from 'components/RenderToRoot';
 
 const DownTimePage = () => (
-  <Col xs="12" md="8" xl="5" style={{ margin: 'auto' }}>
+  <Col xs={12} md="8" xl="5" style={{ margin: 'auto' }}>
     <Row className="mb-5 mt-4">
       <img src="/content/logo.png" alt="Cube Cobra logo" width="50%" style={{ margin: 'auto' }} />
     </Row>
@@ -23,24 +23,24 @@ const DownTimePage = () => (
         </p>
 
         <Row>
-          <Col xs="12" sm="4">
-            <strong>Official Twitter</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>Official Twitter</Text>
           </Col>
-          <Col xs="12" sm="8" className="mb-3">
+          <Col xs={12} sm={8} className="mb-3">
             <a href="https://twitter.com/CubeCobra1" target="_blank" rel="noopener noreferrer">
               @CubeCobra1
             </a>
           </Col>
-          <Col xs="12" sm="4">
-            <strong>email</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>email</Text>
           </Col>
-          <Col xs="12" sm="8" className="mb-3">
+          <Col xs={12} sm={8} className="mb-3">
             <a href="mailto:support@cubecobra.com">support@cubecobra.com</a>
           </Col>
-          <Col xs="12" sm="4">
-            <strong>Discord</strong>
+          <Col xs={12} sm={4}>
+            <Text semibold>Discord</Text>
           </Col>
-          <Col xs="12" sm="8">
+          <Col xs={12} sm={8}>
             <a href="https://discord.gg/Hn39bCU" target="_blank" rel="noopener noreferrer">
               https://discord.gg/Hn39bCU
             </a>

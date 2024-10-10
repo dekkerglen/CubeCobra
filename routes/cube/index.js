@@ -648,14 +648,15 @@ router.get('/analysis/:id', async (req, res) => {
     }
 
     const cards = await Cube.getCards(cube.id);
+    const tokenMap = {};
 
     for (const [boardname, list] of Object.entries(cards)) {
       if (boardname !== 'id') {
         for (const card of list) {
           if (card.details.tokens) {
-            card.details.tokens = card.details.tokens.map((oracle) => {
+            for (const oracle of card.details.tokens) {
               const tokenDetails = carddb.cardFromId(oracle);
-              return {
+              tokenMap[oracle] = {
                 tags: [],
                 status: 'Not Owned',
                 colors: tokenDetails.color_identity,
@@ -666,7 +667,7 @@ router.get('/analysis/:id', async (req, res) => {
                 finish: 'Non-foil',
                 details: tokenDetails,
               };
-            });
+            }
           }
         }
       }
@@ -681,6 +682,7 @@ router.get('/analysis/:id', async (req, res) => {
       {
         cube,
         cards,
+        tokenMap,
         cubeAnalytics: cubeAnalytics || { cards: [] },
         cubeID: req.params.id,
       },

@@ -6,7 +6,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
-import Notification from 'components/Notification';
+import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';

@@ -74,17 +74,17 @@ const EditArticlePage = ({ loginCallback, article }) => {
       <Card>
         <CardBody>
           <Row>
-            <Col xs="12" sm="6">
+            <Col xs={12} sm={6}>
               <h4>Edit Article</h4>
             </Col>
-            <Col xs="12" sm="6">
+            <Col xs={12} sm={6}>
               <a href="/content/creators" className="float-end">
                 Back to Dashboard
               </a>
             </Col>
           </Row>
           <Row>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/editarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
@@ -96,7 +96,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                 </Button>
               </CSRFForm>
             </Col>
-            <Col xs="6">
+            <Col xs={6}>
               <CSRFForm method="POST" action="/content/submitarticle" autoComplete="off">
                 <Input type="hidden" name="articleid" value={article.id} />
                 <Input type="hidden" name="title" value={title} />
@@ -209,7 +209,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
             <CardBody>
               <h5>Article Previews</h5>
               <Row>
-                <Col xs="12" sm="6" md="4" className="mb-3">
+                <Col xs={12} sm={6} md={4} className="mb-3">
                   <ArticlePreview
                     article={{
                       id: article.id,
@@ -226,7 +226,7 @@ const EditArticlePage = ({ loginCallback, article }) => {
                     }}
                   />
                 </Col>
-                <Col xs="12" sm="6" md="4" lg="3" className="mb-3">
+                <Col xs={12} sm={6} md={4} lg={3} className="mb-3">
                   <ArticlePreview
                     article={{
                       id: article.id,

@@ -145,7 +145,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 treePath="tags"
                 type="text"
                 name="tag"
-                value={values.tag}
+                value={values.tag ?? ''}
                 setValue={(tag: string) => updateValue(tag, 'tag')}
                 placeholder={'Any text, e.g. "Zombie Testing"'}
                 autoComplete="off"

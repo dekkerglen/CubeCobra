@@ -159,11 +159,11 @@ const DeckbuilderNavbar = ({
             </CSRFForm>
           </NavItem>
           <NavItem>
-            <DeleteDeckModalLink modalProps={{ deckID: deck.id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
+            <DeleteDeckModalLink modalprops={{ deckID: deck.id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
           </NavItem>
           <NavItem>
             <BasicsModalLink
-              modalProps={{
+              modalprops={{
                 basics: deck.basics,
                 addBasics,
                 deck: deck.mainboard.flat(3).map(({ index }) => index),

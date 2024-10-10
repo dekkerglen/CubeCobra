@@ -104,7 +104,7 @@ const CardModal: React.FC<CardModalProps> = ({
       <ModalBody>
         {versions ? (
           <Row>
-            <Col xs="12" sm="4">
+            <Col xs={12} sm={4}>
               <FoilCardImage card={card} finish={card.finish} />
               <Row className="mb-2 g-0">
                 {card.details?.prices && Number.isFinite(cardPrice(card)) && (
@@ -142,10 +142,10 @@ const CardModal: React.FC<CardModalProps> = ({
                 {canEdit && (
                   <>
                     {card.markedForDelete ? (
-                      <Col xs="12">
+                      <Col xs={12}>
                         <Button
                           className="my-1"
-                          color="success"
+                          color="primary"
                           block
                           outline
                           onClick={() => revertRemove(card.removeIndex!, card.board!)}
@@ -155,7 +155,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       </Col>
                     ) : (
                       <>
-                        <Col xs="12">
+                        <Col xs={12}>
                           <Button
                             className="my-1"
                             color="danger"
@@ -171,7 +171,7 @@ const CardModal: React.FC<CardModalProps> = ({
                           </Button>
                         </Col>
                         {card.board === 'mainboard' ? (
-                          <Col xs="12">
+                          <Col xs={12}>
                             <Button
                               className="my-1"
                               color="warning"
@@ -187,7 +187,7 @@ const CardModal: React.FC<CardModalProps> = ({
                             </Button>
                           </Col>
                         ) : (
-                          <Col xs="12">
+                          <Col xs={12}>
                             <Button
                               className="my-1"
                               color="warning"
@@ -206,10 +206,10 @@ const CardModal: React.FC<CardModalProps> = ({
                       </>
                     )}
                     {card.editIndex !== undefined && (
-                      <Col xs="12">
+                      <Col xs={12}>
                         <Button
                           className="my-1"
-                          color="success"
+                          color="primary"
                           block
                           outline
                           onClick={() => {
@@ -224,12 +224,12 @@ const CardModal: React.FC<CardModalProps> = ({
                     )}
                   </>
                 )}
-                <Col xs="12">
+                <Col xs={12}>
                   <Button
                     className="my-1"
                     block
                     outline
-                    color="primary"
+                    color="accent"
                     href={card.details?.scryfall_uri}
                     target="_blank"
                   >
@@ -237,12 +237,12 @@ const CardModal: React.FC<CardModalProps> = ({
                     <span className="d-sm-none">Scryfall</span>
                   </Button>
                 </Col>
-                <Col xs="12">
+                <Col xs={12}>
                   <Button
                     className="my-1"
                     block
                     outline
-                    color="primary"
+                    color="accent"
                     href={`/tool/card/${card.cardID}`}
                     target="_blank"
                   >
@@ -251,15 +251,15 @@ const CardModal: React.FC<CardModalProps> = ({
                   </Button>
                 </Col>
                 {card.details && (
-                  <Col xs="12">
-                    <Button className="my-1" block outline color="primary" href={getTCGLink(card)} target="_blank">
+                  <Col xs={12}>
+                    <Button className="my-1" block outline color="accent" href={getTCGLink(card)} target="_blank">
                       Buy
                     </Button>
                   </Col>
                 )}
               </Row>
             </Col>
-            <Col xs="12" sm="8">
+            <Col xs={12} sm={8}>
               <h5>Card Attributes</h5>
               <fieldset disabled={disabled}>
                 <InputGroup className="mb-3">

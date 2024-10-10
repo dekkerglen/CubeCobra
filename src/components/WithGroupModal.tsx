@@ -7,7 +7,7 @@ export interface WithGroupModalProps {
   children: React.ReactNode;
   className?: string;
   altClick?: () => void;
-  modalProps: {
+  modalprops: {
     cards: Card[];
   };
 }
@@ -22,7 +22,7 @@ const withGroupModal = <P,>(Tag: React.ComponentType<P>) => {
         } else {
           event.preventDefault();
           setModalSelection(
-            props.modalProps.cards.filter((c) => c.board !== undefined && c.index !== undefined) as {
+            props.modalprops.cards.filter((c) => c.board !== undefined && c.index !== undefined) as {
               index: number;
               board: BoardType;
             }[],
