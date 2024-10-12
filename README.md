@@ -12,7 +12,13 @@ If you are interested in contributing towards Cube Cobra, please read the [Contr
 
 You will need to install NodeJS, Redis, and an IDE of your preference (I recommend VSCode). You can find the necessary resources here:
 
+### NodeJS
+
+Node 20
+
 NodeJS: https://nodejs.org/en/download/
+
+### Redis
 
 Redis Server:
 
@@ -20,23 +26,96 @@ Redis Server:
 - Mac: `brew install redis`
 - Linux: `apt-get install redis`
 
+After installing redis, start the server. On mac, a shortcut to do this is `brew services start redis`. You can seet the status with `brew services list`.
+
+### Localstack
+
+[Localstack][localstack] provides a local emulation of AWS Services required to run CubeCobra including S3, DynamoDB and Cloudwatch.
+
+You may follow the installation guidelines from the localstack site. The recommended setup involves running localstack in a docker container, which requires [Docker Desktop][docker] as well.
+
+- Windows: Download and install the binary from localstack
+- Mac: `brew install localstack/tap/localstack-cli`
+- Linux: Use the `curl` command from localstack
+
+[localstack]: https://docs.localstack.cloud/getting-started/installation/
+[docker]: https://docs.docker.com/desktop/install/mac-install/
+
+Once localstack is installed, you can start the server in the background with the CLI: `localstack start --detached`. You can see the status with `localstack status`.
+
+### Code Editor (IDE)
+
 VSCode (strongly recommended, but not required): https://code.visualstudio.com/
 ESLint Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+Prettier Extension for VSCode: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
 
-VSCode (with the ESLint extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Using this plugin will make adhering to the linting rules significantly easier.
+VSCode (with the ESLint and Prettier extension) is the recommended environment. When using this setup, make sure that your selected workspace is the root folder that you have cloned, this will ensure that the ESLint plugin can work with our linting rules. Prettier will automatically apply standard formatting to your code. Using these plugins will make adhering to the linting and code formatting rules significantly easier.
 
-### Environment Variables
+### Initial Setup
 
-Environment variables are populated from the `.env` file. There is no `.env` file checked in, so the first thing you need to do is copy `.env_EXAMPLE` to `.env` and fill out the values. Cube Cobra uses several AWS resources, including S3, DynamoDB, and Cloudwatch. For development purposes, you will need to create an AWS account and insert your credentials into the `.env` file.
+For the first setup, you will need to run:
+
+```sh
+yarn install && yarn build
+yarn setup:local
+```
+
+This will:
+- install dependencies
+- build the application code to run setup scripts
+- run setup scripts to:
+  - create a .env file with values for running the application locally already set
+  - setup localstack w/ s3 bucket
+  - setup local files for application perisistence
+  - setup localstack dynamodb tables (ex. Users, Cubes, Cards, etc.)
+  - download bulk card data from scryfall, persist to files and load it to localstack s3
+
+If you are on Windows, you will need to set bash as your script shell:
+
+You will need to make sure you have `bash` installed somewhere and run the following command [with your `bash` path in place of the path below].
+
+```sh
+yarn config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
+```
+
+### Running CubeCobra
+
+Then you can start the program like so:
+
+```sh
+yarn start:dev
+```
+
+This script will:
+- ensure localstack is running
+- ensure nearly parsers for card filters have compiled
+- compile & watch scss (bootstrap) styles
+- compile & watch server javascript w/ nodemon
+- run & watch webpack dev server
+
+You can now open up a browser and connect to the app through: http://localhost:8080.
+
+(Despite the fact that node says it is running on port 5000 in the logs, you should use port 8080 to connect.)
+
+Nodemon will restart the application anytime there is a change to a source file.
+
+After accessing the application locally you will need to create a new user account using the "Resister" link on the nav bar.
+
+### Environment Variables & Connecting to AWS
+
+Environment variables are populated from the `.env` file. There is no `.env` file checked in, so the setup script copies `.env_EXAMPLE` to `.env` and with some default values to support CubeCobra backed by LocalStack.
+
+You can run a local instance of Cube Cobra against real AWS resources rather than LocalStack, if desired. After setting up S3, DynamoDB, and Cloudwatch using your AWS account, you can insert your credentials into the `.env` file.
 
 Here is a table on how to fill out the env vars:
 
 | Variable Name          | Description                                                                                  | Required? |
 | ---------------------- | -------------------------------------------------------------------------------------------- | --------- | --- |
 | AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                         | Yes       |
+| AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.        |           |
 | AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                             | Yes       |
 | AWS_LOG_STREAM         | The name of the AWS CloudWatch log stream to use.                                            |           |
-| AWS_REGION             | The AWS region to use.                                                                       | Yes       |
+| AWS_REGION             | The AWS region to use  (default: us-east-2).                                                 | Yes       |
 | AWS_SECRET_ACCESS_KEY  | The AWS secret access key for your account.                                                  | Yes       |
 | CUBECOBRA_VERSION      | The version of Cube Cobra.                                                                   |           |
 | DATA_BUCKET            | The name of the AWS S3 bucket to use. You will need to create this bucket in your account.   | Yes       |
@@ -64,47 +143,69 @@ Here is a table on how to fill out the env vars:
 | AUTOSCALING_GROUP      | The name of the autoscaling group this instance is run in, used for the distributed cache.   |           |
 | CACHE_SECRET           | The secret for the distributed cache.                                                        |           |
 
-### Initial Setup
-
-For the first setup, you will need to run:
-
-```sh
-yarn install && yarn build
-node one_shot_scripts/create_local_files.js
-node --max-old-space-size=4096 one_shot_scripts/createTables.js
-node --max-old-space-size=4096 jobs/update_cards.js
-```
-
-If you are on Windows, you will need to set bash as your script shell:
-You will need to make sure you have `bash` installed somewhere and run the following command [with your `bash` path in place of the path below].
-
-    yarn config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
-
-Then you can start the program like so:
-
-    yarn devstart
-
-You can now open up a browser and connect to the app through: http://localhost:8080. Despite the fact that node says it is running on port 5000, you should use port 8080 to connect.
-
-Nodemon will restart the application anytime there is a change to a source file.
-
 ### Updating Card Definitions and Analytics
 
-From the previous script, `jobs/update_cards` is what creates the card definitions. Running this script will pull the latest data from scryfall. If you want card analytics, you'll need to run the following scripts in this order:
+In the initial setup scripts, `yarn update-cards` is what creates the card definitions. Running this script will pull the latest data from scryfall.
+
+If you want card analytics, can run the following script:
 
 ```sh
-node --max-old-space-size=4096 jobs/update_draft_history.js
-node --max-old-space-size=4096 jobs/update_cube_history.js
-node --max-old-space-size=4096 jobs/update_metadata_dict.js
-node --max-old-space-size=4096 jobs/update_cards.js
+yarn update-all
 ```
+
+This will, in sequence:
+- update draft history
+- update cube history
+- update metadata dictionary
+- update cards
 
 # Concepts
 
+## Backend
+
+### API & Template Rendering
+
+[Express 4][express] provides a minimalist web framework to support both template rendering with [PugJS 3][pug] and definition of JSON-based API endpoints. HTML templates are mainly used to render a minimal page for React to bootstrap itself into with initial props injected from the server.
+
+[express]: https://expressjs.com/en/4x/api.html
+
+[pug]: https://pugjs.org/api/getting-started.html
+
 ### Cards
 
-We keep all card definitions in large pre-processed files, so that nodes in production just need to download and load the files, and can fetch the latest files from S3 when they're ready. We do this because it's much faster to read from memory than to have to make requests to some other service anytime we need card data. An external process is responsible for updating the card definitions, and uploading to S3. This same process is also responsible for updating the card analytics, and data exports.
+We keep all card definitions in large pre-processed files, so that nodes in production just need to download and load the files, and can fetch the latest files from S3 when they're ready. We do this because it's much faster to read from memory than to have to make requests to some other service anytime we need card data.
+
+An external process is responsible for updating the card definitions, and uploading to S3. This same process is also responsible for updating the card analytics, and data exports.
 
 ### Multiplayer Drafting
 
 We use redis for concurrency control for multiplayer drafting. All redis operations are handled in `multiplayerDrafting.js`
+
+### Scheduled jobs
+
+Each instance of the express server runs a job using node-schedule on a nightly basis to update the in-memory carddb from s3.
+
+Bash scripts (`jobs/definition`) are executed periodically on AWS to run hourly, daily & weekly jobs.
+
+### Card Filters
+
+Card filters are defined that can be used by the frontend and backend. [Nearley][nearly] is a nodejs parser toolkit that is used to generate code that define filters that can be applied to the card database.
+
+[nearly]: https://nearley.js.org/
+
+## Frontend
+
+### Typescript
+
+[TypeScript 5.5][typescript] is gradually being rolled out to replace usage of vanilla JS components with PropTypes.
+
+[typescript]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html
+
+### Components & Styling
+
+Components are provided by [Reactstrap 9][reactstrap] which is powered by [Bootstrap v5.1][boostrap], which uses SCSS.
+
+Components typically directly use bootstrap classes for additional styling, but may also use global classnames defined in public CSS files.
+
+[reactstrap]: https://reactstrap.github.io/
+[bootstrap]: https://getbootstrap.com/docs/5.1/getting-started/introduction/
