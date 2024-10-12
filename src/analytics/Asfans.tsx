@@ -67,7 +67,7 @@ const Asfans: React.FC = () => {
             label="Order By"
             options={SORTS.map((item) => ({ value: item, label: item }))}
             value={sort}
-            onChange={setSort}
+            setValue={setSort}
           />
         </Col>
       </Row>

@@ -17,7 +17,7 @@ const Alert: React.FC<AlertProps> = ({ color, children, className = '' }) => {
   return (
     <div className={`relative ${className}`}>
       <div
-        className={classNames(`p-4 rounded-md mb-4`, {
+        className={classNames(`p-4 rounded-md`, {
           'bg-green-100 text-green-800': color === 'success',
           'bg-red-100 text-red-800': color === 'danger',
           'bg-yellow-100 text-yellow-800': color === 'warning',

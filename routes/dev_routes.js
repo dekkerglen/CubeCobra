@@ -1,7 +1,7 @@
 const express = require('express');
 
 const { csrfProtection, ensureRole } = require('./middleware');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 
 const Blog = require('../dynamo/models/blog');
 const Feed = require('../dynamo/models/feed');

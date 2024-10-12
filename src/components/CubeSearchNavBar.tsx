@@ -52,7 +52,7 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
           <Select
             options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
             defaultValue={searchOrder}
-            onChange={(value) => setSearchOrder(value)}
+            setValue={(value) => setSearchOrder(value)}
           />
           <Select
             options={[
@@ -60,7 +60,7 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
               { value: 'false', label: 'Descending' },
             ]}
             defaultValue={searchAscending}
-            onChange={(value) => setSearchAscending(value)}
+            setValue={(value) => setSearchAscending(value)}
           />
           <Button color="primary">
             <span className="px-4">Search</span>

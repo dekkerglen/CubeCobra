@@ -122,7 +122,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             label="Cube"
             options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
             value={selectedCube}
-            onChange={(val) => setSelectedCube(val)}
+            setValue={(val) => setSelectedCube(val)}
           />
           <Select
             label="Board"
@@ -131,7 +131,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
               { value: 'maybeboard', label: 'Maybeboard' },
             ]}
             value={selectedBoard}
-            onChange={(val) => setSelectedBoard(val)}
+            setValue={(val) => setSelectedBoard(val)}
           />
           <LoadingButton block loading={loading} color="primary" onClick={add}>
             Add

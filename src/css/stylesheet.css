@@ -183,3 +183,13 @@ img.mana-symbol-sm {
 	font-family: "Fira Mono", monospace;
 	min-height: 20rem !important;
 }
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

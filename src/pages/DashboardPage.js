@@ -45,7 +45,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
       <Banner />
       <DynamicFlash />
       <Row className="mt-3">
-        <Col xs={12} md="6">
+        <Col xs={12} md={6}>
           <Card>
             <CardHeader>
               <h5>Your Cubes</h5>
@@ -79,7 +79,7 @@ const DashboardPage = ({ posts, lastKey, decks, loginCallback, content, featured
             />
           )}
         </Col>
-        <Col xs={12} md="6">
+        <Col xs={12} md={6}>
           {featuredPosition === 'right' && (
             <CubesCard
               className="mb-4"

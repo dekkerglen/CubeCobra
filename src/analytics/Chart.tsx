@@ -134,7 +134,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
             label="Group By"
             options={SORTS.map((item) => ({ value: item, label: item }))}
             value={sort}
-            onChange={setSort}
+            setValue={setSort}
           />
         </Col>
         <Col xs={12} md={6}>
@@ -142,7 +142,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
             label="Characteristic"
             options={Object.keys(characteristics).map((item) => ({ value: item, label: item }))}
             value={characteristic}
-            onChange={setCharacteristic}
+            setValue={setCharacteristic}
           />
         </Col>
       </Row>

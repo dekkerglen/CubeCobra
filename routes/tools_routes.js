@@ -10,7 +10,7 @@ const { makeFilter, filterCardsDetails } = require('../dist/filtering/FilterCard
 const generateMeta = require('../serverjs/meta');
 const util = require('../serverjs/util');
 const { csrfProtection } = require('./middleware');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 
 const CardHistory = require('../dynamo/models/cardhistory');
 const Cube = require('../dynamo/models/cube');
@@ -205,7 +205,7 @@ router.get('/card/:id', async (req, res) => {
     const card = carddb.cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     // otherwise just go to this ID.
@@ -283,7 +283,7 @@ router.get('/cardjson/:id', async (req, res) => {
     const card = carddb.cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     // otherwise just go to this ID.
@@ -346,12 +346,12 @@ router.get('/cardimage/:id', async (req, res) => {
     // if id is not a scryfall ID, error
     const card = carddb.cardFromId(id);
     if (card.error) {
-      return res.redirect('/content/default_card.png');
+      return redirect(req, res, '/content/default_card.png');
     }
 
-    return res.redirect(card.image_normal);
+    return redirect(req, res, card.image_normal);
   } catch {
-    return res.redirect('/content/default_card.png');
+    return redirect(req, res, '/content/default_card.png');
   }
 });
 
@@ -373,10 +373,10 @@ router.get('/cardimageforcube/:id/:cubeid', async (req, res) => {
     const card = carddb.cardFromId(found ? found.cardID : '');
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
-    return res.redirect(card.image_normal);
+    return redirect(req, res, card.image_normal);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
@@ -408,10 +408,10 @@ router.get('/cardimageflip/:id', async (req, res) => {
     const card = carddb.cardFromId(id);
     if (card.error) {
       req.flash('danger', `Card with id ${id} not found.`);
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
-    return res.redirect(card.image_flip);
+    return redirect(req, res, card.image_flip);
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }

@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const carddb = require('../serverjs/carddb');
 

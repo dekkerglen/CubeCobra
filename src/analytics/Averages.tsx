@@ -101,7 +101,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
             label="Order By"
             options={SORTS.map((item) => ({ value: item, label: item }))}
             value={sort || DEFAULT_SORT}
-            onChange={setSort}
+            setValue={setSort}
           />
         </Col>
         <Col xs={12} md={6}>
@@ -109,7 +109,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
             label="Characteristic"
             options={Object.keys(characteristics).map((item) => ({ value: item, label: item }))}
             value={characteristic || DEFAULT_CHARACTERISTIC}
-            onChange={setCharacteristic}
+            setValue={setCharacteristic}
           />
         </Col>
       </Row>

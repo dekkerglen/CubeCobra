@@ -56,7 +56,7 @@ const ReportCommentModal: React.FC<ReportCommentModalProps> = ({ comment, isOpen
                 },
               ]}
               value={formData.reason}
-              onChange={(val) =>
+              setValue={(val) =>
                 setFormData((old) => ({
                   ...old,
                   reason: val,

@@ -105,7 +105,7 @@ const AnalyticTable: React.FC = ({}) => {
             label="Columns"
             options={SORTS.map((item) => ({ value: item, label: item }))}
             value={column}
-            onChange={setColumn}
+            setValue={setColumn}
           />
         </Col>
         <Col xs={12} md={4}>
@@ -113,7 +113,7 @@ const AnalyticTable: React.FC = ({}) => {
             label="Rows"
             options={SORTS.map((item) => ({ value: item, label: item }))}
             value={row}
-            onChange={setRow}
+            setValue={setRow}
           />
         </Col>
         <Col xs={12} md={4}>
@@ -121,7 +121,7 @@ const AnalyticTable: React.FC = ({}) => {
             label="Show Percent Of"
             options={['total', 'row', 'column', 'none'].map((item) => ({ value: item, label: item }))}
             value={percentOf}
-            onChange={setPercentOf}
+            setValue={setPercentOf}
           />
         </Col>
       </Row>

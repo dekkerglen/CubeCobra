@@ -9,6 +9,8 @@ import TagColorContext from 'contexts/TagColorContext';
 import Card, { BoardType } from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import { getCubeId } from 'utils/Util';
+import classNames from 'classnames';
+import Banner from 'components/Banner';
 
 interface CubeLayoutInnerProps {
   children: ReactNode;
@@ -31,6 +33,7 @@ interface CubeLayoutProps {
   children?: React.ReactNode;
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
+  hasControls?: boolean;
 }
 
 const tabs = [
@@ -67,6 +70,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   children,
   loadVersionDict = false,
   useChangedCards = false,
+  hasControls = false,
 }) => {
   return (
     <CubeContextProvider
@@ -75,7 +79,12 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
       loadVersionDict={loadVersionDict}
       useChangedCards={useChangedCards}
     >
-      <div className="bg-bg-accent border-r border-l border-b border-border rounded-b-md">
+      <div
+        className={classNames('bg-bg-accent border-r border-l border-b border-border', {
+          'rounded-b-md': !hasControls,
+        })}
+      >
+        <Banner className="px-2" />
         <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
           <CubeSubtitle />
           <Tabs

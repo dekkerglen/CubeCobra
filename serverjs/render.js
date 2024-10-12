@@ -14,6 +14,12 @@ const getCubes = async (req, callback) => {
   }
 };
 
+const redirect = (req, res, to) => {
+  return req.session.save(() => {
+    return res.redirect(to);
+  });
+}
+
 const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, async (cubes) => {
     if (req.user) {
@@ -68,4 +74,5 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
 module.exports = {
   render,
+  redirect
 };

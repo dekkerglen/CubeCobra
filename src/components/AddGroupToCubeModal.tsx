@@ -90,13 +90,13 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
           <Select
             label="Cube"
             value={selectedCube ?? ''}
-            onChange={(value) => setSelectedCube(value)}
+            setValue={(value) => setSelectedCube(value)}
             options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
           />
           <Select
             label="Board"
             value={board}
-            onChange={(value) => setBoard(value as 'mainboard' | 'maybeboard')}
+            setValue={(value) => setBoard(value as 'mainboard' | 'maybeboard')}
             options={[
               { value: 'mainboard', label: 'Mainboard' },
               { value: 'maybeboard', label: 'Maybeboard' },

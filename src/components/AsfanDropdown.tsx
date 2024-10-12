@@ -29,7 +29,7 @@ const AsfanDropdown: React.FC<AsfanDropdownProps> = ({
         className="flex-grow"
         options={cube.formats.map((format, index) => ({ value: index.toString(), label: format.title }))}
         value={draftFormat}
-        onChange={setDraftFormat}
+        setValue={setDraftFormat}
         label="Draft Format for Asfans"
       />
     </Flexbox>

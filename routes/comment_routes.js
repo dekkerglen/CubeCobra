@@ -12,7 +12,7 @@ const Blog = require('../dynamo/models/blog');
 const Package = require('../dynamo/models/package');
 const Notice = require('../dynamo/models/notice');
 const Draft = require('../dynamo/models/draft');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 
 const router = express.Router();
 
@@ -179,7 +179,7 @@ router.post(
       'Thank you for the report! Our moderators will review the report can decide whether to take action.',
     );
 
-    return res.redirect(`/comment/${commentid}`);
+    return redirect(req, res, `/comment/${commentid}`);
   }),
 );
 
@@ -190,7 +190,7 @@ router.get(
 
     if (!comment) {
       req.flash('danger', 'Comment not found.');
-      return res.redirect('/404');
+      return redirect(req, res, '/404');
     }
 
     return render(

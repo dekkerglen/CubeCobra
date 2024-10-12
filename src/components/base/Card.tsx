@@ -9,6 +9,7 @@ interface CardProps {
 interface CardHeaderProps {
   className?: string;
   children: React.ReactNode;
+  onClick?: () => void;
 }
 
 interface CardFooterProps {
@@ -28,8 +29,12 @@ const CardBody: React.FC<CardProps> = ({ className, children }) => {
   return <div className={classNames('p-4', className)}>{children}</div>;
 };
 
-const CardHeader: React.FC<CardHeaderProps> = ({ className, children }) => {
-  return <div className={classNames('py-2 px-4 border-b border-border', className)}>{children}</div>;
+const CardHeader: React.FC<CardHeaderProps> = ({ className, children, onClick }) => {
+  return (
+    <div className={classNames('py-2 px-4 border-b border-border', className)} onClick={onClick}>
+      {children}
+    </div>
+  );
 };
 
 const CardFooter: React.FC<CardFooterProps> = ({ className, children }) => {

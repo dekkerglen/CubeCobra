@@ -13,7 +13,6 @@ import Cube from 'datatypes/Cube';
 import PostType from 'datatypes/BlogPost';
 import { Flexbox } from 'components/base/Layout';
 import Button from 'components/base/Button';
-import Banner from 'components/Banner';
 import Text from 'components/base/Text';
 
 interface CubeBlogPageProps {
@@ -63,7 +62,6 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, login
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="blog">
         <Flexbox direction="col" gap="2" className="my-2">
-          <Banner />
           <DynamicFlash />
           <Flexbox direction="row" justify="end">
             <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>

@@ -140,7 +140,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
         label="Cube type"
         id="cubeType"
         value={type}
-        onChange={(c) => setCubeType(c)}
+        setValue={(c) => setCubeType(c)}
         options={[
           { value: 'total', label: 'All' },
           { value: 'vintage', label: 'Vintage' },
@@ -161,7 +161,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
             label="Period"
             id="period"
             value={period}
-            onChange={(p) => updateZoomAndPeriod(zoom, p)}
+            setValue={(p) => updateZoomAndPeriod(zoom, p)}
             options={[
               { value: 'month', label: 'Month' },
               { value: 'week', label: 'Week' },
@@ -174,7 +174,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
             label="Zoom"
             id="zoom"
             value={zoom}
-            onChange={(z) => updateZoomAndPeriod(z, period)}
+            setValue={(z) => updateZoomAndPeriod(z, period)}
             options={[
               { value: 'month', label: 'Month' },
               { value: 'year', label: 'Year' },

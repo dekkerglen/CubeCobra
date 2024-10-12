@@ -8,7 +8,7 @@ const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverjs/cubefn');
 

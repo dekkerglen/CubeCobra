@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { getFeedData } = require('../serverjs/rss');
 const { updatePodcast } = require('../serverjs/podcast');
 const generateMeta = require('../serverjs/meta');
@@ -146,17 +146,17 @@ router.get('/article/:id', async (req, res) => {
 
   if (!article) {
     req.flash('danger', 'Article not found');
-    return res.redirect('/content/browse');
+    return redirect(req, res, '/content/browse');
   }
 
   if (article.status !== Content.STATUS.PUBLISHED) {
     if (!req.user || req.user.id !== article.owner.id) {
       req.flash('danger', 'Article not found');
-      return res.redirect('/content/browse');
+      return redirect(req, res, '/content/browse');
     }
 
     if (req.user.id === article.owner.id) {
-      return res.redirect(`/content/article/edit/${article.id}`);
+      return redirect(req, res, `/content/article/edit/${article.id}`);
     }
   }
 
@@ -182,7 +182,7 @@ router.get('/podcast/:id', async (req, res) => {
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
-    return res.redirect('/content/browse');
+    return redirect(req, res, '/content/browse');
   }
   let result = await Content.getByTypeAndStatus(Content.TYPES.EPISODE, Content.STATUS.PUBLISHED);
   let episodes = result.items.filter((item) => item.podcast === podcast.id);
@@ -214,7 +214,7 @@ router.get('/episode/:id', async (req, res) => {
 
   if (!episode) {
     req.flash('danger', 'Podcast episode not found');
-    return res.redirect('/content/browse');
+    return redirect(req, res, '/content/browse');
   }
 
   return render(
@@ -239,7 +239,7 @@ router.get('/video/:id', async (req, res) => {
 
   if (!video) {
     req.flash('danger', 'Video not found');
-    return res.redirect('/content/browse');
+    return redirect(req, res, '/content/browse');
   }
 
   return render(
@@ -264,17 +264,17 @@ router.get('/article/edit/:id', ensureContentCreator, async (req, res) => {
 
   if (!article) {
     req.flash('danger', 'Article not found');
-    return res.redirect('/404');
+    return redirect(req, res, '/404');
   }
 
   if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   if (article.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   return render(req, res, 'EditArticlePage', { article });
@@ -285,17 +285,17 @@ router.get('/podcast/edit/:id', ensureContentCreator, async (req, res) => {
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
-    return res.redirect('/404');
+    return redirect(req, res, '/404');
   }
 
   if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   if (podcast.status === 'published') {
     req.flash('danger', 'Unauthorized: Podcasts cannot be editted after being published.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   return render(req, res, 'EditPodcastPage', { podcast });
@@ -306,24 +306,24 @@ router.get('/podcast/update/:id', ensureContentCreator, async (req, res) => {
 
   if (!podcast) {
     req.flash('danger', 'Podcast not found');
-    return res.redirect('/404');
+    return redirect(req, res, '/404');
   }
 
   if (req.user.id !== podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can fetch podcast episodes.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   if (podcast.status !== 'published') {
     req.flash('danger', 'Unauthorized: Only podcasts that have been published can have episodes fetched.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   await updatePodcast(podcast);
 
   req.flash('success', 'Podcast has been updated with all episodes.');
 
-  return res.redirect(`/content/podcast/${podcast.id}`);
+  return redirect(req, res, `/content/podcast/${podcast.id}`);
 });
 
 router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
@@ -331,17 +331,17 @@ router.get('/video/edit/:id', ensureContentCreator, async (req, res) => {
 
   if (!video) {
     req.flash('danger', 'Video not found');
-    return res.redirect('/404');
+    return redirect(req, res, '/404');
   }
 
   if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   if (video.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Videos cannot be editted after being published.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   return render(req, res, 'EditVideoPage', { video });
@@ -354,12 +354,12 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   if (article.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   article.title = title.substring(0, 1000);
@@ -369,7 +369,7 @@ router.post('/editarticle', ensureContentCreator, async (req, res) => {
 
   await Content.update(article);
 
-  return res.redirect(`/content/article/edit/${article.id}`);
+  return redirect(req, res, `/content/article/edit/${article.id}`);
 });
 
 router.post('/editpodcast', ensureContentCreator, async (req, res) => {
@@ -379,12 +379,12 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   if (podcast.status === 'published') {
     req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   podcast.url = rss;
@@ -396,7 +396,7 @@ router.post('/editpodcast', ensureContentCreator, async (req, res) => {
 
   await Content.update(podcast);
 
-  return res.redirect(`/content/podcast/edit/${podcast.id}`);
+  return redirect(req, res, `/content/podcast/edit/${podcast.id}`);
 });
 
 router.post('/editvideo', ensureContentCreator, async (req, res) => {
@@ -406,12 +406,12 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   if (video.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: videos cannot be editted after being published.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   video.title = title.substring(0, 1000);
@@ -422,7 +422,7 @@ router.post('/editvideo', ensureContentCreator, async (req, res) => {
 
   await Content.update(video);
 
-  return res.redirect(`/content/video/edit/${video.id}`);
+  return redirect(req, res, `/content/video/edit/${video.id}`);
 });
 
 router.post('/submitarticle', ensureContentCreator, async (req, res) => {
@@ -432,12 +432,12 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === article.owner.id) {
     req.flash('danger', 'Unauthorized: Only article owners can edit articles.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   if (article.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: Articles cannot be editted after being published.');
-    return res.redirect(`/content/article/${article.id}`);
+    return redirect(req, res, `/content/article/${article.id}`);
   }
 
   article.title = title.substring(0, 1000);
@@ -452,7 +452,7 @@ router.post('/submitarticle', ensureContentCreator, async (req, res) => {
     'Your article has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  return res.redirect(`/content/article/edit/${article.id}`);
+  return redirect(req, res, `/content/article/edit/${article.id}`);
 });
 
 router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
@@ -462,12 +462,12 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === podcast.owner.id) {
     req.flash('danger', 'Unauthorized: Only podcast owners can edit podcasts.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   if (podcast.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: podcasts cannot be editted after being published.');
-    return res.redirect(`/content/podcast/${podcast.id}`);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
   podcast.url = rss;
@@ -484,7 +484,7 @@ router.post('/submitpodcast', ensureContentCreator, async (req, res) => {
     'Your podcast has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  return res.redirect(`/content/podcast/edit/${podcast.id}`);
+  return redirect(req, res, `/content/podcast/edit/${podcast.id}`);
 });
 
 router.post('/submitvideo', ensureContentCreator, async (req, res) => {
@@ -494,12 +494,12 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
 
   if (!req.user.id === video.owner.id) {
     req.flash('danger', 'Unauthorized: Only video owners can edit videos.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   if (video.status === Content.STATUS.PUBLISHED) {
     req.flash('danger', 'Unauthorized: videos cannot be editted after being published.');
-    return res.redirect(`/content/video/${video.id}`);
+    return redirect(req, res, `/content/video/${video.id}`);
   }
 
   video.title = title.substring(0, 1000);
@@ -515,7 +515,7 @@ router.post('/submitvideo', ensureContentCreator, async (req, res) => {
     'Your video has been submitted for review. You can still submit changes before it is published. If you want to expedite this review, PM Dekkaru on Discord.',
   );
 
-  return res.redirect(`/content/video/edit/${video.id}`);
+  return redirect(req, res, `/content/video/edit/${video.id}`);
 });
 
 router.get('/newarticle', ensureContentCreator, async (req, res) => {
@@ -533,7 +533,7 @@ router.get('/newarticle', ensureContentCreator, async (req, res) => {
 
   const id = await Content.put(article, Content.TYPES.ARTICLE);
 
-  return res.redirect(`/content/article/edit/${id}`);
+  return redirect(req, res, `/content/article/edit/${id}`);
 });
 
 router.get('/newpodcast', ensureContentCreator, async (req, res) => {
@@ -549,7 +549,7 @@ router.get('/newpodcast', ensureContentCreator, async (req, res) => {
 
   const id = await Content.put(podcast, Content.TYPES.PODCAST);
 
-  return res.redirect(`/content/podcast/edit/${id}`);
+  return redirect(req, res, `/content/podcast/edit/${id}`);
 });
 
 router.get('/newvideo', ensureContentCreator, async (req, res) => {
@@ -567,7 +567,7 @@ router.get('/newvideo', ensureContentCreator, async (req, res) => {
 
   const id = await Content.put(video, Content.TYPES.VIDEO);
 
-  return res.redirect(`/content/video/edit/${id}`);
+  return redirect(req, res, `/content/video/edit/${id}`);
 });
 
 router.post('/getcreatorcontent', ensureContentCreator, async (req, res) => {

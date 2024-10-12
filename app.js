@@ -19,6 +19,7 @@ const { updateCardbase } = require('./serverjs/updatecards');
 const carddb = require('./serverjs/carddb');
 const { render } = require('./serverjs/render');
 const { setup } = require('./serverjs/socketio');
+const flash = require('connect-flash');
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason) => {
@@ -102,7 +103,7 @@ app.use(
 );
 
 // Express messages middleware
-app.use(require('connect-flash')());
+app.use(flash());
 
 app.use((req, res, next) => {
   res.locals.messages = require('express-messages')(req, res);

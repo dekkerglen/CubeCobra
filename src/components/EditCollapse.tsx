@@ -317,11 +317,11 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         className="pt-1"
       >
         <Row>
-          <Col xs={12} md="6">
+          <Col xs={12} md={6}>
             <Changelist />
           </Col>
           {useBlog && (
-            <Col xs={12} md="6">
+            <Col xs={12} md={6}>
               <h6>Blog Post</h6>
               <FormGroup>
                 <Label className="visually-hidden">Blog title</Label>

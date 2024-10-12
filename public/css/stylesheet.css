@@ -2402,6 +2402,17 @@ img.mana-symbol-sm {
   min-height: 20rem !important;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;

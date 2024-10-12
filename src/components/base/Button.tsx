@@ -54,6 +54,7 @@ const Button: React.FC<ButtonProps> = ({
       'opacity-50 cursor-not-allowed': disabled,
       'focus:ring-2 focus:ring-focus-ring focus:ring-opacity-50 focus:border-focus-ring': true,
       'w-full': block,
+      'flex flex-row justify-center': type === 'link',
     },
   );
 

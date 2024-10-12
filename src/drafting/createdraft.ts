@@ -2,7 +2,7 @@ import seedrandom from 'seedrandom';
 
 import Card from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
-import Draft, { DraftFormat, DraftState } from 'datatypes/Draft';
+import Draft, { createDefaultDraftFormat, DraftFormat, DraftState } from 'datatypes/Draft';
 import User from 'datatypes/User';
 import { fromEntries } from 'utils/Util';
 import { compileFilter, Filter } from './draftFilter';
@@ -42,17 +42,6 @@ interface CheckResult {
   messages: string[];
 }
 type CheckFn = (cardFilters: string[]) => CheckResult;
-
-export const createDefaultDraftFormat = (packsPerPlayer: number, cardsPerPack: number): DraftFormat => {
-  return {
-    title: `Standard Draft`,
-    packs: Array.from({ length: packsPerPlayer }, () => ({
-      slots: Array.from({ length: cardsPerPack }, () => '*'),
-      steps: [{ action: 'pick', amount: 1 }],
-    })),
-    multiples: false,
-  };
-};
 
 const matchingCards = (cards: Card[], filter: Filter): Card[] => {
   // Implement the matchingCards function
@@ -175,7 +164,7 @@ const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn)
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps,
+        steps: format.packs[packNum].steps || [],
         cards: [],
       };
 
@@ -257,7 +246,7 @@ const checkPacks = (format: DraftFormat, seats: number, checkFn: CheckFn): Check
       }
 
       result.initialState[seat][packNum] = {
-        steps: format.packs[packNum].steps,
+        steps: format.packs[packNum].steps || [],
         cards: [],
       };
 

@@ -112,7 +112,7 @@ const CardSearch: React.FC = () => {
               <Select
                 label="Sort"
                 value={sort}
-                onChange={(value) => updateSort(value)}
+                setValue={(value) => updateSort(value)}
                 options={ORDERED_SORTS.map((s) => ({ value: s, label: s }))}
               />
             </Col>
@@ -120,7 +120,7 @@ const CardSearch: React.FC = () => {
               <Select
                 label="Direction"
                 value={direction}
-                onChange={(value) => updateDirection(value)}
+                setValue={(value) => updateDirection(value)}
                 options={[
                   { value: 'ascending', label: 'Ascending' },
                   { value: 'descending', label: 'Descending' },
@@ -131,7 +131,7 @@ const CardSearch: React.FC = () => {
               <Select
                 label="Distinct"
                 value={distinct}
-                onChange={(value) => updateDistinct(value)}
+                setValue={(value) => updateDistinct(value)}
                 options={[
                   { value: 'names', label: 'Names' },
                   { value: 'printings', label: 'Printings' },

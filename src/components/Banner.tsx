@@ -8,7 +8,7 @@ import UserContext, { UserContextValue } from 'contexts/UserContext';
 import { Flexbox } from './base/Layout';
 import ResponsiveDiv from './base/ResponsiveDiv';
 
-const BANNER_RATE: number = 3; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE: number = 1; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
   <Text lg>
@@ -41,14 +41,16 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
 
   if (option < options.length) {
     return (
-      <Card className={`my-2 ${className}`}>
-        <CardBody className="bg-advert overflow-hidden">{options[option]}</CardBody>
-      </Card>
+      <div className={`${className} py-2`}>
+        <Card>
+          <CardBody className="bg-advert overflow-hidden">{options[option]}</CardBody>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Flexbox direction="row" justify="between" gap="2" className={`my-2 ${className}`}>
+    <Flexbox direction="row" justify="between" gap="2" className={`py-2 ${className}`}>
       <ResponsiveDiv lg className="flex-grow">
         <Advertisment placementId="banner" media="desktop" size="banner" />
       </ResponsiveDiv>

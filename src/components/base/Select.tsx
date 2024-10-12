@@ -3,11 +3,15 @@ import classNames from 'classnames';
 
 import { Flexbox } from './Layout';
 
+const range = (lo: number, hi: number): number[] => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
+export const rangeOptions = (lo: number, hi: number): { value: string; label: string }[] =>
+  range(lo, hi).map((n) => ({ value: n.toString(), label: n.toString() }));
+
 interface SelectProps {
   options: { value: string; label: string }[];
   defaultValue?: string;
   value?: string;
-  onChange?: (value: string) => void;
+  setValue?: (value: string) => void;
   className?: string;
   label?: string;
   link?: {
@@ -17,10 +21,10 @@ interface SelectProps {
   id?: string;
 }
 
-const Select: React.FC<SelectProps> = ({ options, defaultValue, value, onChange, label, link, id, className = '' }) => {
+const Select: React.FC<SelectProps> = ({ options, defaultValue, value, setValue, label, link, id, className = '' }) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onChange) {
-      onChange(event.target.value);
+    if (setValue) {
+      setValue(event.target.value);
     }
   };
 

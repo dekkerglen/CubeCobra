@@ -163,7 +163,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
                     { value: 'u', label: 'Your Packages' },
                   ]}
                   value={type || 'approved'}
-                  onChange={async (value) => {
+                  setValue={async (value) => {
                     setType(value);
                     await getNewData(value, filter, sort, ascending);
                   }}
@@ -178,7 +178,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
                     { value: 'date', label: 'Date' },
                   ]}
                   value={sort || 'votes'}
-                  onChange={async (value) => {
+                  setValue={async (value) => {
                     setSort(value);
                     await getNewData(type, filter, value, ascending);
                   }}
@@ -193,7 +193,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
                     { value: 'false', label: 'Descending' },
                   ]}
                   value={ascending || 'false'}
-                  onChange={async (value) => {
+                  setValue={async (value) => {
                     setAscending(value);
                     await getNewData(type, filter, sort, value);
                   }}

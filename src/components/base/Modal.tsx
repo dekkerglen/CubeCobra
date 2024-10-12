@@ -30,7 +30,9 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
           <div className="fixed inset-0 bg-bg bg-opacity-75 transition-opacity" />
         </TransitionChild>
         <div className="fixed inset-0 z-30">
-          <div className={classNames('flex min-h-full justify-center text-center items-start ')}>
+          <div
+            className={classNames('flex min-h-full justify-center text-center items-start max-h-screen overflow-auto')}
+          >
             <div
               className={classNames(`grow`, {
                 'max-w-screen-sm': sm,
@@ -48,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({ children, isOpen, setOpen, sm, md,
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <div className="max-h-screen p-4">
+                <div className="p-4">
                   <DialogPanel className="relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col max-h-modal">
                     {children}
                   </DialogPanel>
