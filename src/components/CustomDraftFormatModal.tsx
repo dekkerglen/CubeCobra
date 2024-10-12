@@ -30,11 +30,8 @@ const CustomDraftFormatModal: React.FC<CustomDraftFormatModalProps> = ({ isOpen,
 
   const formdata: Record<string, string> = useMemo(() => {
     return {
-      title: format.title,
-      defaultSeats: `${format.defaultSeats}`,
-      multiples: `${format.multiples}`,
-      markdown: format.markdown || '',
-      packs: JSON.stringify(format.packs),
+      id: `${formatIndex}`,
+      serializedFormat: JSON.stringify(format),
     };
   }, [format]);
 
