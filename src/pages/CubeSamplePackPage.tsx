@@ -22,31 +22,33 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, login
   return (
     <MainLayout loginCallback={loginCallback}>
       <CubeLayout cube={cube} activeLink="playtest">
-        <DynamicFlash />
-        <Card>
-          <CardHeader>
-            <Flexbox direction="row" justify="between" alignItems="center">
-              <Text semibold lg>
-                Sample Pack
-              </Text>
-              <Flexbox direction="row" gap="2">
-                <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
-                  New Pack
-                </Button>
-                <Button type="link" color="accent" href={`/cube/samplepackimage/${cube.id}/${seed}`}>
-                  Get image
-                </Button>
+        <Flexbox direction="col" gap="2" className="my-2">
+          <DynamicFlash />
+          <Card>
+            <CardHeader>
+              <Flexbox direction="row" justify="between" alignItems="center">
+                <Text semibold lg>
+                  Sample Pack
+                </Text>
+                <Flexbox direction="row" gap="2">
+                  <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
+                    New Pack
+                  </Button>
+                  <Button type="link" color="accent" href={`/cube/samplepackimage/${cube.id}/${seed}`}>
+                    Get image
+                  </Button>
+                </Flexbox>
               </Flexbox>
-            </Flexbox>
-          </CardHeader>
-          <CardBody>
-            <Row className="pack-body justify-content-center g-0">
-              <Col>
-                <CardGrid cards={pack} xs={3} md={5} />
-              </Col>
-            </Row>
-          </CardBody>
-        </Card>
+            </CardHeader>
+            <CardBody>
+              <Row className="pack-body justify-content-center g-0">
+                <Col>
+                  <CardGrid cards={pack} xs={3} md={5} />
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        </Flexbox>
       </CubeLayout>
     </MainLayout>
   );

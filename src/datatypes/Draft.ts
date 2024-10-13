@@ -56,7 +56,12 @@ export const getErrorsInFormat = (format: DraftFormat) => {
 
     let amount = 0;
 
-    for (const step of pack.steps || []) {
+    if (!pack.steps) {
+      // this is ok, it just means the pack is a default pack
+      continue;
+    }
+
+    for (const step of pack.steps) {
       if (step === null) {
         continue;
       }
