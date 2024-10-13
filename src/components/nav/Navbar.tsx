@@ -55,7 +55,7 @@ const navItems = [
         label: 'Merchandise',
         href: 'https://www.inkedgaming.com/collections/artists-gwen-dekker?rfsn=4250904.d3f372&utm_source=refersion&utm_medium=affiliate&utm_campaign=4250904.d3f372',
       },
-      { label: 'Donate', href: '/about/donate' },
+      { label: 'Donate', href: '/donate' },
       { label: 'Github', href: 'https://github.com/dekkerglen/CubeCobra' },
     ],
   },
