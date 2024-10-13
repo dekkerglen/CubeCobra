@@ -87,7 +87,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 )}
               </Row>
               {featuredPosition !== 'left' && (
-                <CardFooter>{cubes.length > 2 && <a href={`/user/view/${user?.id}`}>View All</a>}</CardFooter>
+                <CardFooter>{cubes.length > 2 && <Link href={`/user/view/${user?.id}`}>View All</Link>}</CardFooter>
               )}
             </Card>
             {featuredPosition === 'left' && (
@@ -129,12 +129,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <CardBody>
                 <Text>
                   Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
-                  <a href="https://discord.gg/Hn39bCU">Discord draft exchange?</a>
+                  <Link href="https://discord.gg/Hn39bCU">Discord draft exchange?</Link>
                 </Text>
               </CardBody>
             )}
             <CardFooter>
-              <a href="/dashboard/decks">View All</a>
+              <Link href="/dashboard/decks">View All</Link>
             </CardFooter>
           </Card>
           <Col className="d-none d-md-block mt-3" md={4}>

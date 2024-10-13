@@ -1,18 +1,29 @@
-import React, { useCallback, useContext, useState } from 'react';
-import { Button, Card, CardBody, FormGroup, Input, Label, Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import InfiniteScroll from 'react-infinite-scroll-component';
-
 import Banner from 'components/Banner';
+import Button from 'components/base/Button';
+import { Card, CardBody } from 'components/base/Card';
+import Input from 'components/base/Input';
+import { Flexbox } from 'components/base/Layout';
+import Spinner from 'components/base/Spinner';
+import Text from 'components/base/Text';
 import BlogPost from 'components/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import TextEntry from 'components/TextEntry';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
+import React, { useCallback, useContext, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
-import { wait } from 'utils/Util';
+
+interface DevBlogEntryProps {
+  items: any[];
+  setItems: (items: any[]) => void;
+}
+
+interface DevBlogProps {
+  blogs: any[];
+  lastKey: string | null;
+  loginCallback?: string;
+}
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -20,8 +31,7 @@ const loader = (
   </div>
 );
 
-// eslint-disable-next-line react/prop-types
-const DevBlogEntry = ({ items, setItems }) => {
+const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
@@ -54,15 +64,14 @@ const DevBlogEntry = ({ items, setItems }) => {
   return (
     <Card className="my-3">
       <CardBody>
-        <h5>Create New Blog Post</h5>
-        <FormGroup>
-          <Label>title:</Label>
-          <Input maxLength="200" value={title} onChange={(e) => setTitle(e.target.value)} />
-        </FormGroup>
-        <FormGroup>
-          <Label>body:</Label>
-          <TextEntry name="blog" value={body} onChange={(event) => setBody(event.target.value)} maxLength={10000} />
-        </FormGroup>
+        <Text semibold lg>
+          Create New Blog Post
+        </Text>
+        <Input label="Title" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Text semibold md>
+          Body:
+        </Text>
+        <TextEntry name="blog" value={body} setValue={setBody} maxLength={10000} />
         <Button color="accent" block outline onClick={submit}>
           Submit
         </Button>
@@ -71,14 +80,14 @@ const DevBlogEntry = ({ items, setItems }) => {
   );
 };
 
-const DevBlog = ({ blogs, lastKey, loginCallback }) => {
+const DevBlog: React.FC<DevBlogProps> = ({ blogs, lastKey, loginCallback = '/' }) => {
   const [items, setItems] = useState(blogs);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const user = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
 
   const fetchMoreData = useCallback(async () => {
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
+    setLoading(true);
 
     const response = await csrfFetch(`/dev/getmoreblogs`, {
       method: 'POST',
@@ -97,39 +106,30 @@ const DevBlog = ({ blogs, lastKey, loginCallback }) => {
         setLastKey(json.lastKey);
       }
     }
+    setLoading(false);
   }, [items, setItems, currentLastKey]);
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <Banner />
-      <DynamicFlash />
-      <div className="mt-3">
-        <h3>Developer Blog</h3>
+      <Flexbox direction="col" gap="2" className="my-2">
+        <Banner />
+        <DynamicFlash />
+        <Text semibold lg>
+          Developer Blog
+        </Text>
         {user && user.roles && user.roles.includes('Admin') && <DevBlogEntry items={items} setItems={setItems} />}
-        <InfiniteScroll
-          dataLength={items.length}
-          next={fetchMoreData}
-          hasMore={currentLastKey !== null}
-          loader={loader}
-        >
-          {items.map((post) => (
-            <BlogPost key={post.id} post={post} />
-          ))}
-        </InfiniteScroll>
-      </div>
+        {items.map((post) => (
+          <BlogPost key={post.id} post={post} />
+        ))}
+        {loading && loader}
+        {!loading && currentLastKey && (
+          <Button color="primary" block onClick={fetchMoreData}>
+            Load More
+          </Button>
+        )}
+      </Flexbox>
     </MainLayout>
   );
-};
-
-DevBlog.propTypes = {
-  blogs: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  lastKey: PropTypes.shape({}),
-  loginCallback: PropTypes.string,
-};
-
-DevBlog.defaultProps = {
-  loginCallback: '/',
-  lastKey: null,
 };
 
 export default RenderToRoot(DevBlog);
