@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { getCubeDescription, getCubeId } from 'utils/Util';
 import Cube from 'datatypes/Cube';
-import { Tile } from './base/Tile';
+import { getCubeDescription, getCubeId } from 'utils/Util';
 import { Flexbox } from './base/Layout';
 import Text from './base/Text';
+import { Tile } from './base/Tile';
 
 interface CubePreviewProps {
   cube: Cube;
@@ -29,7 +29,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
           </Text>
         </Flexbox>
         <div className="flex-grow flex-shrink relative">
-          <img src={cube.image.uri} alt={cube.name} className="object-cover w-full h-full" />
+          <img src={cube.image.uri} alt={cube.name} className="object-cover object-center w-full h-full" />
         </div>
       </Flexbox>
     </Tile>

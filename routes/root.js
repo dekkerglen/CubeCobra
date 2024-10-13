@@ -53,7 +53,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'DashboardPage', {
-      posts: posts.items,
+      posts: posts.items.map((item) => item.document),
       lastKey: posts.lastKey,
       decks: decks.items,
       content: content.items.filter((item) => item.type !== 'p'),
@@ -65,13 +65,14 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
 });
 
 router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
-  const { lastKey, user } = req.body;
+  const { lastKey } = req.body;
+  const { user } = req;
 
-  const result = await Feed.getByTo(user, lastKey);
+  const result = await Feed.getByTo(user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',
-    items: result.items,
+    items: result.items.map((item) => item.document),
     lastKey: result.lastKey,
   });
 });

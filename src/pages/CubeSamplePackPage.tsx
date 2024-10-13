@@ -1,15 +1,15 @@
-import React from 'react';
-import { Col, Flexbox, Row } from 'components/base/Layout';
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardGrid from 'components/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import CubeLayout from 'layouts/CubeLayout';
-import MainLayout from 'layouts/MainLayout';
 import CardType from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
-import Button from 'components/base/Button';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import React from 'react';
 
 interface SamplePackPageProps {
   seed: string;
@@ -41,11 +41,7 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, login
               </Flexbox>
             </CardHeader>
             <CardBody>
-              <Row className="pack-body justify-content-center g-0">
-                <Col>
-                  <CardGrid cards={pack} xs={3} md={5} />
-                </Col>
-              </Row>
+              <CardGrid cards={pack} xs={3} md={5} />
             </CardBody>
           </Card>
         </Flexbox>

@@ -1826,6 +1826,10 @@ video {
   object-fit: cover;
 }
 
+.object-center {
+  object-position: center;
+}
+
 .p-0 {
   padding: 0px;
 }

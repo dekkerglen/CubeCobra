@@ -11,7 +11,6 @@ import Collapse from './base/Collapse';
 interface CubesCardProps {
   cubes: Cube[];
   title: string;
-  header?: string;
   children?: React.ReactNode;
   sideLink?: {
     href: string;
@@ -21,7 +20,7 @@ interface CubesCardProps {
   [key: string]: any; // To allow additional props
 }
 
-const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, header, sideLink, lean = false, ...props }) => {
+const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink, lean = false, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);

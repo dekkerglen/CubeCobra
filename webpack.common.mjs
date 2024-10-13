@@ -65,7 +65,7 @@ export const clientConfig = merge(config, {
     CubeHistoryPage: './src/pages/CubeHistoryPage.js',
     CubeOverviewPage: './src/pages/CubeOverviewPage.js',
     CubePlaytestPage: './src/pages/CubePlaytestPage.tsx',
-    DashboardPage: './src/pages/DashboardPage.js',
+    DashboardPage: './src/pages/DashboardPage.tsx',
     GridDraftPage: './src/pages/GridDraftPage.js',
     DevBlog: './src/pages/DevBlog.js',
     ContactPage: './src/pages/ContactPage.tsx',
@@ -129,7 +129,7 @@ export const clientConfig = merge(config, {
 export const serverConfig = merge(config, {
   target: 'node',
   entry: {
-    'pages/DashboardPage': './src/pages/DashboardPage.js',
+    'pages/DashboardPage': './src/pages/DashboardPage.tsx',
     'pages/DevBlog': './src/pages/DevBlog.js',
     'pages/Loading': './src/pages/Loading.js',
     'pages/BlogPostPage': './src/pages/BlogPostPage.tsx',

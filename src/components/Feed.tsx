@@ -1,23 +1,25 @@
 import React, { useCallback, useContext, useState } from 'react';
-import { Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import BlogPostPropType from 'proptypes/BlogPostPropType';
-import InfiniteScroll from 'react-infinite-scroll-component';
-
 import BlogPost from 'components/BlogPost';
 import UserContext from 'contexts/UserContext';
 import { csrfFetch } from 'utils/CSRF';
-import { wait } from 'utils/Util';
+import Spinner from 'components/base/Spinner';
+import BlogPostType from 'datatypes/BlogPost';
+import { Flexbox } from './base/Layout';
+import Button from './base/Button';
 
-const Feed = ({ items, lastKey }) => {
+interface FeedProps {
+  items: BlogPostType[];
+  lastKey?: string;
+}
+
+const Feed: React.FC<FeedProps> = ({ items, lastKey = null }) => {
   const user = useContext(UserContext);
   const [feedItems, setFeedItems] = useState(items);
+  const [loading, setLoading] = useState(false);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
 
   const fetchMoreData = useCallback(async () => {
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
+    setLoading(true);
 
     const response = await csrfFetch(`/getmorefeeditems`, {
       method: 'POST',
@@ -26,18 +28,18 @@ const Feed = ({ items, lastKey }) => {
       },
       body: JSON.stringify({
         lastKey: currentLastKey,
-        user: user.id,
       }),
     });
 
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        setFeedItems([...items, ...json.items]);
+        setFeedItems([...feedItems, ...json.items]);
         setCurrentLastKey(json.lastKey);
       }
     }
-  }, [currentLastKey, items, user.id]);
+    setLoading(false);
+  }, [currentLastKey, feedItems, user]);
 
   const loader = (
     <div className="centered py-3 my-4">
@@ -46,27 +48,18 @@ const Feed = ({ items, lastKey }) => {
   );
 
   return (
-    <InfiniteScroll
-      dataLength={feedItems.length}
-      next={fetchMoreData}
-      hasMore={currentLastKey}
-      loader={loader}
-      endMessage="You've reached the end of the feed!"
-    >
+    <Flexbox direction="col" className="w-full" gap="2">
       {feedItems.map((item) => (
-        <BlogPost key={item.document.id} post={item.document} />
+        <BlogPost key={item.id} post={item} />
       ))}
-    </InfiniteScroll>
+      {loading && loader}
+      {!loading && currentLastKey && (
+        <Button onClick={fetchMoreData} className="w-full">
+          Load More
+        </Button>
+      )}
+    </Flexbox>
   );
-};
-
-Feed.propTypes = {
-  items: PropTypes.arrayOf(BlogPostPropType).isRequired,
-  lastKey: PropTypes.string,
-};
-
-Feed.defaultProps = {
-  lastKey: null,
 };
 
 export default Feed;
