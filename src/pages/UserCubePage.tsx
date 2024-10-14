@@ -19,7 +19,7 @@ type Props = {
   following: boolean;
   cubes: Cube[];
   loginCallback: string;
-}
+};
 
 const UserCubePage: React.FC<Props> = ({ owner, followers, following, cubes, loginCallback = '/' }) => {
   const user = useContext(UserContext);

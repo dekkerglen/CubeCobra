@@ -18,7 +18,7 @@ const redirect = (req, res, to) => {
   return req.session.save(() => {
     return res.redirect(to);
   });
-}
+};
 
 const render = (req, res, page, reactProps = {}, options = {}) => {
   getCubes(req, async (cubes) => {
@@ -55,7 +55,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
     }
 
     try {
-      const theme =(req && req.user && req.user.theme) || 'default';
+      const theme = (req && req.user && req.user.theme) || 'default';
       res.render('main', {
         reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
         reactProps: serialize(reactProps),
@@ -64,7 +64,7 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
         title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
         patron: req.user && (req.user.roles || []).includes('Patron'),
         notice: process.env.NOTICE,
-        theme
+        theme,
       });
     } catch {
       res.status(500).send('Error rendering page');
@@ -74,5 +74,5 @@ const render = (req, res, page, reactProps = {}, options = {}) => {
 
 module.exports = {
   render,
-  redirect
+  redirect,
 };

@@ -42,7 +42,10 @@ router.use('/download', require('./download'));
 
 router.post('/add', ensureAuth, async (req, res) => {
   try {
-    const { body: { name }, user } = req;
+    const {
+      body: { name },
+      user,
+    } = req;
     if (!name || name.length < 5 || name.length > 100) {
       req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
       return redirect(req, res, `/user/view/${user.id}`);
@@ -720,7 +723,7 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
     let pack;
     try {
       pack = await generatePack(cube, cards, carddb, req.params.seed);
-    } catch(err) {
+    } catch (err) {
       req.flash('danger', "Failed to generate pack. If trying again doesn't work, please file a bug report.");
       req.logger.error(err.message, err.stack);
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);

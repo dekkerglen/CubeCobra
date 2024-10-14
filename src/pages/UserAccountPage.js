@@ -358,10 +358,10 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         {/* ternaries are impossible to avoid in jsx */}
                         {featured ? (
                           <Row>
-                            <Col  xs={12} lg={5} className="p-0">
+                            <Col xs={12} lg={5} className="p-0">
                               <CubePreview cube={featured?.cube} />
                             </Col>
-                            <Col  xs={12} lg={7} className="mt-4 mt-lg-0">
+                            <Col xs={12} lg={7} className="mt-4 mt-lg-0">
                               <h6>
                                 Current position in&nbsp;queue: <span className="text-muted">{featured?.position}</span>
                               </h6>

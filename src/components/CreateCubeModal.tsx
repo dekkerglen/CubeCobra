@@ -11,12 +11,12 @@ import CSRFForm from 'components/CSRFForm';
 type Props = {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-}
+};
 
 const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
   const [loading, setLoading] = useState(false);
   const formRef = React.createRef<HTMLFormElement>();
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
 
   const formData = useMemo(() => ({ name }), [name]);
 
@@ -27,8 +27,14 @@ const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
         <ModalBody>
           <Row>
             <Col>
-              <Input label="Cube name:" value={name}
-                onChange={(e) => setName(e.target.value)} maxLength={1000} name="name" type="text" />
+              <Input
+                label="Cube name:"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={1000}
+                name="name"
+                type="text"
+              />
             </Col>
           </Row>
         </ModalBody>
@@ -44,7 +50,7 @@ const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
           )}
         </ModalFooter>
       </CSRFForm>
-    </Modal >
+    </Modal>
   );
 };
 

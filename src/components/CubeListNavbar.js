@@ -47,7 +47,7 @@ const CompareCollapse = (props) => {
   return (
     <Collapse {...props}>
       <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
-        <Col  xs={12}>
+        <Col xs={12}>
           <Input
             type="text"
             className="mb-2 me-2"
@@ -72,16 +72,8 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
-  const {
-    canEdit,
-    hasCustomImages,
-    cube,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    setShowUnsorted,
-  } = useContext(CubeContext);
+  const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
+    useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   const {

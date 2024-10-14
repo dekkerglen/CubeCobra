@@ -12,7 +12,6 @@ const router = express.Router();
 router.use(csrfProtection);
 
 const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
-  
   console.log('getPackages', type, keywords, ascending, sort, lastKey);
 
   let packages = {
@@ -20,13 +19,12 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
     lastKey,
   };
 
-  if(type === 'u' && req.user) {
+  if (type === 'u' && req.user) {
     do {
       const result = await Package.queryByOwner(req.user.id, packages.lastKey);
 
       packages.items.push(...result.items);
       packages.lastKey = result.lastKey;
-
     } while (packages.lastKey);
 
     if (sort === 'votes' || sort === '') {
@@ -52,10 +50,10 @@ const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
     } else {
       packages = await Package.querySortedByDate(type, keywords, ascending, packages.lastKey);
     }
-  };
+  }
 
   return packages;
-}
+};
 
 router.get('/', async (req, res) => {
   const type = req.query.t || Package.STATUSES.APPROVED;
