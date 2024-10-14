@@ -150,7 +150,6 @@ router.post(
       document.owner = null;
     }
 
-
     await Comment.put(document);
 
     return res.status(200).send({

@@ -15,7 +15,6 @@ import { SortableItem, SortableList } from './DND';
 
 const BOT_NAME = 'Bot';
 
-
 const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
   const [order, setOrder] = React.useState({});

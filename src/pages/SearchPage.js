@@ -64,7 +64,7 @@ const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) 
         >
           <Row noGutters>
             {items.map((cube) => (
-              <Col className="pb-4" xl={3} lg={3} md={4} sm={6}  xs={12}>
+              <Col className="pb-4" xl={3} lg={3} md={4} sm={6} xs={12}>
                 <CubePreview cube={cube} />
               </Col>
             ))}

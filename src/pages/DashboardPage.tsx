@@ -21,6 +21,7 @@ import Cube from 'datatypes/Cube';
 import Deck from 'datatypes/Deck';
 import MainLayout from 'layouts/MainLayout';
 import React, { useContext } from 'react';
+import classNames from 'classnames';
 
 interface DashboardPageProps {
   posts: BlogPost[];
@@ -72,7 +73,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   Your Cubes
                 </Text>
               </CardHeader>
-              <Row noGutters>
+              <Row className="items-center" noGutters>
                 {cubes.length > 0 ? (
                   cubes.slice(0, 12).map((cube) => (
                     <Col key={cube.id} lg={6} xl={4}>
@@ -80,10 +81,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     </Col>
                   ))
                 ) : (
-                  <p className="m-2">
-                    You don't have any cubes.{' '}
+                  <Col className={classNames('p-4', 'grid-flow-col')}>
+                    <span>You don't have any cubes.</span>
                     <CreateCubeModalButton color="accent">Add a new cube?</CreateCubeModalButton>
-                  </p>
+                  </Col>
                 )}
               </Row>
               {featuredPosition !== 'left' && (

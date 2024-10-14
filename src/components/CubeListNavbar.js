@@ -30,6 +30,7 @@ import UploadBulkModal from 'components/UploadBulkModal';
 import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
+import FilterContext from 'contexts/FilterContext';
 import DisplayContext from 'contexts/DisplayContext';
 
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
@@ -46,7 +47,7 @@ const CompareCollapse = (props) => {
   return (
     <Collapse {...props}>
       <Form method="GET" action={targetUrl} className="row row-cols-lg-auto gx-2">
-        <Col  xs={12}>
+        <Col xs={12}>
           <Input
             type="text"
             className="mb-2 me-2"
@@ -71,17 +72,9 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
 
-  const {
-    canEdit,
-    hasCustomImages,
-    cube,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    setShowUnsorted,
-    filterInput,
-  } = useContext(CubeContext);
+  const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
+    useContext(CubeContext);
+  const { filterInput } = useContext(FilterContext);
 
   const {
     showCustomImages,
@@ -123,7 +116,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const sortUrlSegment = `primary=${enc(sortPrimary)}&secondary=${enc(sortSecondary)}&tertiary=${enc(
     sortTertiary,
   )}&quaternary=${enc(sortQuaternary)}&showother=${enc(cube.showUnsorted)}`;
-  const filterUrlSegment = filterInput.length > 0 ? `&filter=${enc(filterInput)}` : '';
+  const filterUrlSegment = filterInput?.length > 0 ? `&filter=${enc(filterInput)}` : '';
   const urlSegment = `${isSortUsed ? sortUrlSegment : ''}${isFilterUsed ? filterUrlSegment : ''}`;
 
   return (

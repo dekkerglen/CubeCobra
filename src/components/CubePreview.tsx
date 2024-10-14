@@ -28,8 +28,8 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
             Designed by {cube.owner.username}
           </Text>
         </Flexbox>
-        <div className="flex-grow flex-shrink relative">
-          <img src={cube.image.uri} alt={cube.name} className="object-cover object-center w-full h-full" />
+        <div className="overflow-hidden flex">
+          <img src={cube.image.uri} alt={cube.name} className="max-w-full self-center" />
         </div>
       </Flexbox>
     </Tile>

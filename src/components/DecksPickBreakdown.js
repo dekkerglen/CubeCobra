@@ -28,7 +28,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
 
   return (
     <Row>
-      <Col  xs={12} sm={3}>
+      <Col xs={12} sm={3}>
         <h4>Pick Order</h4>
         {picksList.map((list, listindex) => (
           <ListGroup key={listindex} className="list-outline">
@@ -52,7 +52,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
           </ListGroup>
         ))}
       </Col>
-      <Col  xs={12} sm={9}>
+      <Col xs={12} sm={9}>
         <h4>{`Pack ${pack}: Pick ${pick}`}</h4>
         <Row className="g-0">
           {cardsInPack.map((cardIndex) => (

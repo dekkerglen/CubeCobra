@@ -1,6 +1,7 @@
 import Cube from 'datatypes/Cube';
 
 import { Notification } from 'datatypes/Notification';
+import Image from './Image';
 
 export default interface User {
   id: string;
@@ -12,6 +13,7 @@ export default interface User {
   followedCubes?: string[];
   followedUsers?: string[];
   following?: string[];
+  image?: Image;
   imageName?: string;
   roles?: string[];
   theme?: string;
