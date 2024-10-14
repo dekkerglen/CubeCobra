@@ -86,9 +86,10 @@ app.use(
         writeCapacityUnits: 10,
       },
       dynamoConfig: {
+        endpoint: process.env.AWS_ENDPOINT || undefined,
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION,
+        region: process.env.AWS_REGION || 'us-east-2',
       },
       keepExpired: false,
       touchInterval: 30000,
