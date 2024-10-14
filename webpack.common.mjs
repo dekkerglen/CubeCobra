@@ -112,7 +112,7 @@ export const clientConfig = merge(config, {
     BrowseContentPage: './src/pages/BrowseContentPage.tsx',
     LeaveWarningPage: './src/pages/LeaveWarningPage.tsx',
     PackagePage: './src/pages/PackagePage.js',
-    FeaturedCubesQueuePage: './src/pages/FeaturedCubesQueuePage.js',
+    FeaturedCubesQueuePage: './src/pages/FeaturedCubesQueuePage.tsx',
     PackagesPage: './src/pages/PackagesPage.tsx',
   },
   output: {
@@ -191,7 +191,7 @@ export const serverConfig = merge(config, {
     'pages/BrowseContentPage': './src/pages/BrowseContentPage.tsx',
     'pages/LeaveWarningPage': './src/pages/LeaveWarningPage.tsx',
     'pages/PackagePage': './src/pages/PackagePage.js',
-    'pages/FeaturedCubesQueuePage': './src/pages/FeaturedCubesQueuePage.js',
+    'pages/FeaturedCubesQueuePage': './src/pages/FeaturedCubesQueuePage.tsx',
     'pages/PackagesPage': './src/pages/PackagesPage.tsx',
     'drafting/createdraft': './src/drafting/createdraft.ts',
     'drafting/draftutil': './src/drafting/draftutil.js',

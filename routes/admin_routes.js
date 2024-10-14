@@ -290,7 +290,7 @@ router.get('/application/decline/:id', ensureAdmin, async (req, res) => {
 });
 
 router.get('/featuredcubes', ensureAdmin, async (req, res) => {
-  const featured = await FeaturedQueue.querySortedByDate();
+  const featured = await FeaturedQueue.querySortedByDate(null, 10000);
   const cubes = await Cube.batchGet(featured.items.map((f) => f.cube));
   const sortedCubes = featured.items.map((f) => cubes.find((c) => c.id === f.cube));
 
@@ -333,10 +333,10 @@ router.post('/featuredcubes/rotate', ensureAdmin, async (req, res) => {
 });
 
 router.post(
-  '/featuredcubes/setperiod/:days',
+  '/featuredcubes/setperiod',
   ensureAdmin,
   util.wrapAsyncApi(async (req, res) => {
-    const days = Number.parseInt(req.params.days, 10);
+    const days = Number.parseInt(req.body.days, 10);
     if (!Number.isInteger(days)) {
       return res.status(400).send({
         success: 'false',

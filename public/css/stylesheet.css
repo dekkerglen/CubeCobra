@@ -1582,6 +1582,11 @@ video {
   border-top-width: 1px;
 }
 
+.border-blue-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(37 99 235 / var(--tw-border-opacity));
+}
+
 .border-border {
   --tw-border-opacity: 1;
   border-color: rgb(var(--border) / var(--tw-border-opacity));
