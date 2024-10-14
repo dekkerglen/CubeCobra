@@ -295,7 +295,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   );
 
   return (
-    <div className="relative overflow-y-visible">
+    <div className="relative overflow-y-visible w-full">
       <Input value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
       {showMatches && (
         <div

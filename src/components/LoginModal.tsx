@@ -20,7 +20,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, setOpen, loginCallback 
   });
 
   return (
-    <Modal lg isOpen={isOpen} setOpen={setOpen}>
+    <Modal sm isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>Login</ModalHeader>
       <ModalBody>
         <CSRFForm ref={formRef} method="POST" action="/user/login" formData={formData}>

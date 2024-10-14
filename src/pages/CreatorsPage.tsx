@@ -31,7 +31,7 @@ const CreatorsPage: React.FC<CreatorsPageProps> = ({ loginCallback = '/', articl
   return (
     <MainLayout loginCallback={loginCallback}>
       <Controls>
-        <Flexbox direction="col" gap="2" className="mx-2 mt-2">
+        <Flexbox direction="col" gap="2" className="mx-2">
           <Banner />
           <Text semibold xl>
             Content Creator Dashboard

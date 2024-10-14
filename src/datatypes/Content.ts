@@ -2,7 +2,7 @@ import User from './User';
 export default interface Content {
   id: string;
   date: number;
-  status: string;
+  status: 'p' | 'r' | 'd';
   owner: User;
   type: string;
   typeStatusComp: string;
@@ -13,3 +13,9 @@ export default interface Content {
   url?: string;
   username?: string;
 }
+
+export const CONVERT_STATUS = {
+  p: 'Published',
+  r: 'In Review',
+  d: 'Draft',
+};

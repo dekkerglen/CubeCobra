@@ -5,9 +5,9 @@ import AspectRatioBox from 'components/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 import Video from 'datatypes/Video';
-import Text from './base/Text';
-import { Tile } from './base/Tile';
-import { Flexbox } from './base/Layout';
+import Text from '../base/Text';
+import { Tile } from '../base/Tile';
+import { Flexbox } from '../base/Layout';
 
 export interface VideoPreviewProps {
   video: Video;
@@ -15,7 +15,7 @@ export interface VideoPreviewProps {
 
 const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
   return (
-    <Tile href={`/content/video/${video.id}`}>
+    <Tile href={video.status === 'p' ? `/content/video/${video.id}` : `/content/video/edit/${video.id}`}>
       <AspectRatioBox ratio={1.9}>
         {video.image && <MtgImage image={video.image} />}
         <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-video bg-opacity-50 w-full mb-0 p-1">

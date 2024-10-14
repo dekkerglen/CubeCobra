@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
-import ArticlePreview from 'components/ArticlePreview';
+import ArticlePreview from 'components/content/ArticlePreview';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/VideoPreview';
+import VideoPreview from 'components/content/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
@@ -14,6 +14,8 @@ import Spinner from 'components/base/Spinner';
 import { Col, Row } from 'components/base/Layout';
 import Content from 'datatypes/Content';
 import Episode from 'datatypes/Episode';
+import Video from 'datatypes/Video';
+import Article from 'datatypes/Article';
 
 interface BrowseContentPageProps {
   loginCallback?: string;
@@ -71,8 +73,8 @@ const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ loginCallback = '
             .filter((item) => ['a', 'v', 'e'].includes(item.type))
             .map((item) => (
               <Col key={item.id} xs={6} sm={6} lg={4} xxl={3}>
-                {item.type === 'a' && <ArticlePreview article={item} />}
-                {item.type === 'v' && <VideoPreview video={item} />}
+                {item.type === 'a' && <ArticlePreview article={item as Article} />}
+                {item.type === 'v' && <VideoPreview video={item as Video} />}
                 {item.type === 'e' && <PodcastEpisodePreview episode={item as Episode} />}
               </Col>
             ))}

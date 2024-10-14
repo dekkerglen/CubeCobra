@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import Article from 'components/Article';
+import Article from 'components/content/Article';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';

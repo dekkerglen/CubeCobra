@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import PodcastPreview from 'components/PodcastPreview';
+import PodcastPreview from 'components/content/PodcastPreview';
 import { csrfFetch } from 'utils/CSRF';
 import Spinner from 'components/base/Spinner';
 import { Col, Flexbox, Row } from 'components/base/Layout';

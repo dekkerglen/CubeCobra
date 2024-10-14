@@ -6,7 +6,7 @@ import ContentPropType from 'proptypes/ContentPropType';
 
 import AspectRatioBox from 'components/AspectRatioBox';
 import CommentsSection from 'components/CommentsSection';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';
 
 const Podcast = ({ podcast, episodes }) => {

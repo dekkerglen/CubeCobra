@@ -2,9 +2,9 @@ import React from 'react';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/AspectRatioBox';
-import Text from './base/Text';
-import { Tile } from './base/Tile';
-import { Flexbox } from './base/Layout';
+import Text from '../base/Text';
+import { Tile } from '../base/Tile';
+import { Flexbox } from '../base/Layout';
 import Podcast from 'datatypes/Podcast';
 
 interface PodcastPreviewProps {

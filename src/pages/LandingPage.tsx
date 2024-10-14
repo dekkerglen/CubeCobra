@@ -3,14 +3,14 @@ import React from 'react';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 
-import ArticlePreview from 'components/ArticlePreview';
+import ArticlePreview from 'components/content/ArticlePreview';
 import CubesCard from 'components/CubesCard';
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/VideoPreview';
+import VideoPreview from 'components/content/VideoPreview';
 import Article from 'datatypes/Article';
 import Cube from 'datatypes/Cube';
 import Deck from 'datatypes/Deck';
@@ -18,6 +18,7 @@ import MainLayout from 'layouts/MainLayout';
 import Text from 'components/base/Text';
 import Link from 'components/base/Link';
 import Episode from 'datatypes/Episode';
+import Video from 'datatypes/Video';
 
 interface LandingPageProps {
   featured: Cube[];
@@ -89,8 +90,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
             <Row>
               {content.map((item: Article) => (
                 <Col key={item.id} xxl={3} lg={4} sm={6} className="mb-4">
-                  {item.type === 'a' && <ArticlePreview article={item} />}
-                  {item.type === 'v' && <VideoPreview video={item} />}
+                  {item.type === 'a' && <ArticlePreview article={item as Article} />}
+                  {item.type === 'v' && <VideoPreview video={item as Video} />}
                   {item.type === 'e' && <PodcastEpisodePreview episode={item as any as Episode} />}
                 </Col>
               ))}

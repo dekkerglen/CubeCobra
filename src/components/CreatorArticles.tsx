@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import ArticlePreview from 'components/ArticlePreview';
+import ArticlePreview from 'components/content/ArticlePreview';
 import { csrfFetch } from 'utils/CSRF';
 import Article from 'datatypes/Article';
 import Spinner from 'components/base/Spinner';

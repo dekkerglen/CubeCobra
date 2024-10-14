@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import VideoPreview from 'components/VideoPreview';
+import VideoPreview from 'components/content/VideoPreview';
 import { csrfFetch } from 'utils/CSRF';
 import Video from 'datatypes/Video';
 import Spinner from 'components/base/Spinner';

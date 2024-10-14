@@ -7,7 +7,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/VideoPreview';
+import VideoPreview from 'components/content/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';

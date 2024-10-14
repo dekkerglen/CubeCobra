@@ -1,4 +1,4 @@
-import ArticlePreview from 'components/ArticlePreview';
+import ArticlePreview from 'components/content/ArticlePreview';
 import Banner from 'components/Banner';
 import CreateCubeModal from 'components/CreateCubeModal';
 import CubePreview from 'components/CubePreview';
@@ -6,9 +6,9 @@ import CubesCard from 'components/CubesCard';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/VideoPreview';
+import VideoPreview from 'components/content/VideoPreview';
 import withModal from 'components/WithModal';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';

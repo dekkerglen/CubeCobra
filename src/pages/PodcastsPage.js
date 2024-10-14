@@ -6,8 +6,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
-import PodcastEpisodePreview from 'components/PodcastEpisodePreview';
-import PodcastPreview from 'components/PodcastPreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
+import PodcastPreview from 'components/content/PodcastPreview';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';

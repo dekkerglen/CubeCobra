@@ -6,9 +6,9 @@ import CommentsSection from 'components/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import ArticleData from 'datatypes/Article';
-import { CardBody, CardHeader } from './base/Card';
-import Text from './base/Text';
-import { Flexbox } from './base/Layout';
+import { CardBody, CardHeader } from '../base/Card';
+import Text from '../base/Text';
+import { Flexbox } from '../base/Layout';
 
 export interface ArticleProps {
   article: ArticleData;
