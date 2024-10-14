@@ -1,7 +1,10 @@
 import React, { ReactNode } from 'react';
-import { Card, CardBody, CardHeader, Collapse } from 'reactstrap';
 
 import useToggle from 'hooks/UseToggle';
+import { Card, CardBody, CardHeader } from './base/Card';
+import Collapse from './base/Collapse';
+import Text from './base/Text';
+import { Flexbox } from './base/Layout';
 
 export interface AccordionProps {
   defaultExpand?: boolean;
@@ -13,18 +16,20 @@ const Accordion: React.FC<AccordionProps> = ({ defaultExpand = false, children, 
   const [expanded, toggle] = useToggle(defaultExpand);
 
   return (
-    <div className="accordion" id="syntax-accordion">
-      <Card>
-        <CardHeader onClick={toggle}>
-          <button className="btn btn-link" type="button">
-            <h5>{title}</h5>
-          </button>
-        </CardHeader>
-        <Collapse isOpen={expanded}>
-          <CardBody>{children}</CardBody>
-        </Collapse>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader onClick={toggle} className="cursor-pointer bg-bg-accent hover:bg-bg-active">
+        <Text semibold md>
+          {title}
+        </Text>
+      </CardHeader>
+      <Collapse isOpen={expanded}>
+        <CardBody>
+          <Flexbox direction="col" gap="2">
+            {children}
+          </Flexbox>
+        </CardBody>
+      </Collapse>
+    </Card>
   );
 };
 
