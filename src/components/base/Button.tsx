@@ -70,7 +70,7 @@ const Button: React.FC<ButtonProps> = ({
     <button
       className={classes}
       onClick={(e) => {
-        e.preventDefault();
+        type !== "submit" && e.preventDefault();
         if (onClick) {
           onClick(e);
         }

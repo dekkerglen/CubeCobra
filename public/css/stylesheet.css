@@ -1099,6 +1099,10 @@ video {
   min-width: fit-content;
 }
 
+.min-w-full {
+  min-width: 100%;
+}
+
 .max-w-full {
   max-width: 100%;
 }
@@ -1203,6 +1207,10 @@ video {
 
 .list-none {
   list-style-type: none;
+}
+
+.grid-flow-col {
+  grid-auto-flow: column;
 }
 
 .grid-cols-10 {

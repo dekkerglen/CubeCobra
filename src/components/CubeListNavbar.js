@@ -30,6 +30,7 @@ import UploadBulkModal from 'components/UploadBulkModal';
 import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
+import FilterContext from 'contexts/FilterContext';
 import DisplayContext from 'contexts/DisplayContext';
 
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
@@ -80,8 +81,8 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
     sortTertiary,
     sortQuaternary,
     setShowUnsorted,
-    filterInput,
   } = useContext(CubeContext);
+  const { filterInput } = useContext(FilterContext);
 
   const {
     showCustomImages,
@@ -123,7 +124,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const sortUrlSegment = `primary=${enc(sortPrimary)}&secondary=${enc(sortSecondary)}&tertiary=${enc(
     sortTertiary,
   )}&quaternary=${enc(sortQuaternary)}&showother=${enc(cube.showUnsorted)}`;
-  const filterUrlSegment = filterInput.length > 0 ? `&filter=${enc(filterInput)}` : '';
+  const filterUrlSegment = filterInput?.length > 0 ? `&filter=${enc(filterInput)}` : '';
   const urlSegment = `${isSortUsed ? sortUrlSegment : ''}${isFilterUsed ? filterUrlSegment : ''}`;
 
   return (
