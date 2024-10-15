@@ -278,6 +278,115 @@ router.post(
   }),
 );
 
+router.post(
+  '/editoverview',
+  ensureAuth,
+  async (req, res) => {
+    try {
+      const updatedCube = JSON.parse(req.body.cube);
+
+      const cube = await Cube.getById(updatedCube.id);
+      const { user } = req;
+
+      if (!isCubeViewable(cube, user)) {
+        req.flash('danger', 'Cube not found');
+        return redirect(req, res, '/404');
+      }
+
+      if (cube.owner.id !== user.id) {
+        req.flash('danger', 'Unauthorized');
+        return redirect(req, res, '/cube/overview/' + cube.id);
+      }
+
+      if (updatedCube.shortId !== cube.shortId) {
+        const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
+
+        if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
+          req.flash('danger', 'Custom URL is already taken');
+          return redirect(req, res, '/cube/overview/' + cube.id);
+        }
+        if (taken.items.length > 1) {
+          req.flash('danger', 'Custom URL is already taken');
+          return redirect(req, res, '/cube/overview/' + cube.id);
+        }
+
+        cube.shortId = updatedCube.shortId;
+      }
+
+      cube.name = updatedCube.name;
+      cube.imageName = updatedCube.imageName;
+
+      if (updatedCube.description !== null) {
+        cube.description = updatedCube.description;
+      }
+      cube.date = Date.now().valueOf();
+
+      // cube category override
+      if (updatedCube.categoryOverride !== null) {
+        const categories = [
+          '',
+          'Vintage',
+          'Legacy+',
+          'Legacy',
+          'Modern',
+          'Premodern',
+          'Pioneer',
+          'Historic',
+          'Standard',
+          'Set',
+        ];
+
+        if (!categories.includes(updatedCube.categoryOverride)) {
+          req.flash('danger', 'Not a valid category override.');
+          return redirect(req, res, '/cube/overview/' + cube.id);
+        }
+
+
+        cube.categoryOverride = updatedCube.categoryOverride;
+      } else {
+        cube.categoryOverride = null;
+      }
+
+      if (updatedCube.categoryPrefixes !== null) {
+        const prefixes = [
+          'Powered',
+          'Unpowered',
+          'Pauper',
+          'Peasant',
+          'Budget',
+          'Silver-bordered',
+          'Commander',
+          'Battle Box',
+          'Multiplayer',
+          'Judge Tower',
+          'Desert',
+        ];
+        for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
+          if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+            req.flash('danger', 'Not a valid category prefix.');
+            return redirect(req, res, '/cube/overview/' + cube.id);
+          }
+        }
+        cube.categoryPrefixes = updatedCube.categoryPrefixes;
+      } else {
+        cube.categoryPrefixes = [];
+      }
+
+
+      // cube tags
+      cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
+
+      await Cube.update(cube);
+      req.flash('success', 'Cube updated successfully');
+      return redirect(req, res, '/cube/overview/' + cube.id);
+    } catch (err) {
+      req.logger.error(err.message, err.stack);
+      req.flash('danger', 'Error updating cube');
+      return redirect(req, res, '/cube/overview/' + cube.id);
+    }
+  },
+);
+
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
   try {

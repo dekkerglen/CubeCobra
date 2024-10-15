@@ -1,13 +1,16 @@
 import React from 'react';
 import classNames from 'classnames';
 
+import { XIcon } from '@primer/octicons-react';
 interface TagProps {
   href?: string;
   style?: React.CSSProperties;
   text: string;
+  color?: string;
+  onDelete?: () => void;
 }
 
-const Tag: React.FC<TagProps> = ({ href, style, text }) => {
+const Tag: React.FC<TagProps> = ({ href, style, text, onDelete }) => {
   const baseClasses = 'text-sm p-2 m-1 inline-block border bg-bg-active border-border transition-all duration-300';
 
   if (href) {
@@ -25,6 +28,11 @@ const Tag: React.FC<TagProps> = ({ href, style, text }) => {
   return (
     <span className={classNames(baseClasses)} style={style}>
       {text}
+      {onDelete && (
+        <button className="ml-1" onClick={onDelete}>
+          <XIcon size={16} />
+        </button>
+      )}
     </span>
   );
 };

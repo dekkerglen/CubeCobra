@@ -1,29 +1,39 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import AutocompleteInput from 'components/base/AutocompleteInput';
+import Button from 'components/base/Button';
+import { Card, CardHeader } from 'components/base/Card';
+import Checkbox from 'components/base/Checkbox';
+import Input from 'components/base/Input';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import RadioButtonGroup from 'components/base/RadioButtonGroup';
+import Text from 'components/base/Text';
+import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import MtgImage from 'components/MtgImage';
 import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
+import Cube from 'datatypes/Cube';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription } from 'utils/Util';
-import Cube from 'datatypes/Cube';
-import Text from 'components/base/Text';
-
 interface CubeOverviewModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
   cube: Cube;
-  onError: (message: string) => void;
-  onCubeUpdate: (cube: Cube) => void;
 }
 
-const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube, onError, onCubeUpdate }) => {
+const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube }) => {
   const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
   const [imageDict, setImageDict] = useState<Record<string, string>>({});
+  const formRef = React.createRef<HTMLFormElement>();
+
+  const formData = useMemo(
+    () => ({
+      cube: JSON.stringify(state),
+    }),
+    [state],
+  );
 
   useEffect(() => {
     const getData = async () => {
@@ -45,205 +55,150 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
     [imageDict, setState, state],
   );
 
-  const submit = useCallback(async () => {
-    const response = await csrfFetch('/cube/api/editoverview', {
-      method: 'POST',
-      body: JSON.stringify(state),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const json = await response.json();
-    if (response.ok) {
-      onCubeUpdate(state);
-      if (cube.shortId !== state.shortId) {
-        window.location.href = `/cube/overview/${encodeURIComponent(state.shortId || state.id)}`;
-      }
-    } else if (json.message) {
-      onError(json.message);
-    } else if (json.errors) {
-      for (const error of json.errors) {
-        onError(error);
-      }
-    }
-    setOpen(false);
-  }, [cube, onCubeUpdate, onError, state, setOpen]);
-
   return (
-    <Modal md isOpen={isOpen} setOpen={setOpen}>
+    <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
           Edit Overview
         </Text>
       </ModalHeader>
-
-      <form method="POST" action={`/cube/editoverview/${state.id}`} autoComplete="off">
+      <CSRFForm method="POST" action={`/cube/editoverview`} ref={formRef} formData={formData}>
         <ModalBody>
-          <Text semibold sm>
-            Cube name
-          </Text>
-          <input
-            className="form-control"
-            name="name"
-            type="text"
-            value={state.name}
-            required
-            onChange={(event) => setState({ ...state, name: event.target.value })}
-          />
-          <br />
-          <Text semibold sm>
-            Category
-          </Text>
-          <input className="form-control" name="name" type="text" disabled value={getCubeDescription(state)} />
-          <Row>
-            <Col>
-              <fieldset>
-                {[
-                  null,
-                  'Vintage',
-                  'Legacy+',
-                  'Legacy',
-                  'Modern',
-                  'Premodern',
-                  'Pioneer',
-                  'Historic',
-                  'Standard',
-                  'Set',
-                ].map((label) => (
-                  <div key={label}>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="categoryOverride"
-                        value={label || ''}
-                        checked={state.categoryOverride === label}
-                        onChange={(event) => setState({ ...state, categoryOverride: event.target.value })}
-                      />
-                      <span className="ml-2">{label || <i>[None]</i>}</span>
-                    </label>
-                  </div>
-                ))}
-              </fieldset>
-            </Col>
-            <Col>
-              {[
-                'Powered',
-                'Unpowered',
-                'Pauper',
-                'Peasant',
-                'Budget',
-                'Silver-bordered',
-                'Commander',
-                'Battle Box',
-                'Multiplayer',
-                'Judge Tower',
-              ].map((label) => (
-                <div className="form-check" key={label}>
-                  <input
-                    className="form-check-input"
-                    name="category_prefix"
-                    id={`categoryPrefix${label}`}
-                    value={label}
-                    type="checkbox"
-                    checked={(state.categoryPrefixes || []).includes(label)}
-                    onChange={(event) => {
-                      if (event.target.checked) {
-                        setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
-                      } else {
-                        setState({
-                          ...state,
-                          categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
-                        });
-                      }
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor={`categoryPrefix${label}`}>
-                    {label}
-                  </label>
-                </div>
-              ))}
-            </Col>
-          </Row>
-          <Text semibold sm>
-            image
-          </Text>
-          <Row>
-            <Col xs={12} sm={6} md={6} lg={6}>
-              <Card>
-                <CardHeader>
-                  <Text semibold lg>
-                    Preview
-                  </Text>
-                </CardHeader>
-                <CardBody>
+          <Flexbox direction="col" gap="2">
+            <Input
+              label="Cube Name"
+              value={state.name}
+              required
+              onChange={(event) => setState({ ...state, name: event.target.value })}
+            />
+            <Text semibold md>
+              Category: {getCubeDescription(state)}
+            </Text>
+            <Row>
+              <Col xs={6}>
+                <RadioButtonGroup
+                  selected={state.categoryOverride || ''}
+                  setSelected={(value) => setState({ ...state, categoryOverride: value })}
+                  options={[
+                    { value: '', label: 'None' },
+                    { value: 'Vintage', label: 'Vintage' },
+                    { value: 'Legacy+', label: 'Legacy+' },
+                    { value: 'Legacy', label: 'Legacy' },
+                    { value: 'Modern', label: 'Modern' },
+                    { value: 'Premodern', label: 'Premodern' },
+                    { value: 'Pioneer', label: 'Pioneer' },
+                    { value: 'Historic', label: 'Historic' },
+                    { value: 'Standard', label: 'Standard' },
+                    { value: 'Set', label: 'Set' },
+                  ]}
+                />
+              </Col>
+              <Col xs={6}>
+                <Flexbox direction="col" gap="2">
+                  {[
+                    'Powered',
+                    'Unpowered',
+                    'Pauper',
+                    'Peasant',
+                    'Budget',
+                    'Silver-bordered',
+                    'Commander',
+                    'Battle Box',
+                    'Multiplayer',
+                    'Judge Tower',
+                    'Desert',
+                  ].map((label) => (
+                    <Checkbox
+                      key={label}
+                      label={label}
+                      checked={(state.categoryPrefixes || []).includes(label)}
+                      setChecked={(checked) => {
+                        if (checked) {
+                          setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
+                        } else {
+                          setState({
+                            ...state,
+                            categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
+                          });
+                        }
+                      }}
+                    />
+                  ))}
+                </Flexbox>
+              </Col>
+            </Row>
+            <Text semibold md>
+              Image
+            </Text>
+            <Row>
+              <Col xs={12} sm={6} md={6} lg={6}>
+                <Card>
+                  <CardHeader>
+                    <Text semibold lg>
+                      Preview
+                    </Text>
+                  </CardHeader>
                   <MtgImage image={state.image} showArtist />
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-          <br />
-          <AutocompleteInput
-            treeUrl="/cube/api/fullnames"
-            treePath="cardnames"
-            type="text"
-            className="me-2"
-            name="remove"
-            value={imagename}
-            setValue={changeImage}
-            placeholder="Cardname for image"
-            autoComplete="off"
-          />
-          <br />
-          <Text semibold sm>
-            description
-          </Text>
-          <TextEntry
-            name="blog"
-            value={state.description}
-            setValue={(value) => setState({ ...state, description: value })}
-            maxLength={100000}
-          />
-          <br />
-          <Text semibold sm>
-            tags
-          </Text>
-          <TagInput
-            tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
-            addTag={(tag) => setState({ ...state, tags: [...state.tags, tag.text] })}
-            deleteTag={(index) => {
-              const newTags = [...state.tags];
-              newTags.splice(index, 1);
-              setState({ ...state, tags: newTags });
-            }}
-          />
-          <br />
-          <Text semibold sm>
-            short ID
-          </Text>
-          <input
-            className="form-control"
-            id="shortId"
-            name="shortId"
-            type="text"
-            value={state.shortId}
-            onChange={(event) => setState({ ...state, shortId: event.target.value })}
-            required
-            placeholder="Give this cube an easy to remember URL."
-          />
-          <p className="text-sm text-gray-500">Changing the short ID may break existing links to your cube.</p>
-          <br />
+                </Card>
+              </Col>
+            </Row>
+            <AutocompleteInput
+              treeUrl="/cube/api/fullnames"
+              treePath="cardnames"
+              type="text"
+              className="me-2"
+              name="remove"
+              value={imagename}
+              setValue={changeImage}
+              placeholder="Cardname for image"
+              autoComplete="off"
+            />
+            <Text semibold md>
+              Description
+            </Text>
+            <TextEntry
+              name="blog"
+              value={state.description}
+              setValue={(value) => setState({ ...state, description: value })}
+              maxLength={100000}
+            />
+            <TagInput
+              label="Tags"
+              tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
+              addTag={(tag) => setState({ ...state, tags: [...state.tags, tag.text] })}
+              deleteTag={(index) => {
+                const newTags = [...state.tags];
+                newTags.splice(index, 1);
+                setState({ ...state, tags: newTags });
+              }}
+            />
+            <Input
+              label="Short ID"
+              className="form-control"
+              id="shortId"
+              name="shortId"
+              type="text"
+              value={state.shortId}
+              onChange={(event) => setState({ ...state, shortId: event.target.value })}
+              required
+              placeholder="Give this cube an easy to remember URL."
+            />
+            <Text semibold sm>
+              Changing the short ID may break existing links to your cube.
+            </Text>
+          </Flexbox>
         </ModalBody>
         <ModalFooter>
-          <Flexbox direction="row" className="w-full justify-end">
-            <button className="bg-gray-600 text-white px-4 py-2 rounded block" onClick={() => setOpen(false)}>
+          <Flexbox direction="row" justify="between" className="w-full" gap="2">
+            <Button block color="danger" onClick={() => setOpen(false)}>
               Close
-            </button>
-            <LoadingButton className="bg-accent text-white px-4 py-2 rounded block ml-2" onClick={async () => submit()}>
+            </Button>
+            <LoadingButton color="primary" block onClick={() => formRef.current?.submit()}>
               Save Changes
             </LoadingButton>
           </Flexbox>
         </ModalFooter>
-      </form>
+      </CSRFForm>
     </Modal>
   );
 };

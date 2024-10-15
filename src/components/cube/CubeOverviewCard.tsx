@@ -19,7 +19,6 @@ import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
-import Cube from 'datatypes/Cube';
 import useAlerts from 'hooks/UseAlerts';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription, getCubeId } from 'utils/Util';
@@ -44,17 +43,10 @@ interface CubeOverviewCardProps {
   priceOwned: number;
   pricePurchase: number;
   followers: number;
-  cubeState: Cube;
   followed: boolean;
 }
 
-const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
-  followed,
-  priceOwned,
-  pricePurchase,
-  followers,
-  cubeState,
-}) => {
+const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwned, pricePurchase, followers }) => {
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
   const [followedState, setFollowedState] = useState(followed);
@@ -94,36 +86,35 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
             <CardHeader>
               <Flexbox direction="row" justify="between">
                 <Text xl semibold>
-                  {cubeState.name} {cubeState.visibility !== 'pu' && <PrivateCubeIcon />}
+                  {cube.name} {cube.visibility !== 'pu' && <PrivateCubeIcon />}
                 </Text>
                 <TextBadge name="Cube ID">
                   <CubeIdModalLink
                     onClick={() => {
-                      navigator.clipboard.writeText(getCubeId(cubeState));
+                      navigator.clipboard.writeText(getCubeId(cube));
                       addAlert('success', 'Cube ID copied to clipboard.');
                     }}
                   >
-                    {getCubeId(cubeState)}
+                    {getCubeId(cube)}
                   </CubeIdModalLink>
                 </TextBadge>
               </Flexbox>
             </CardHeader>
-            <MtgImage image={cubeState.image} showArtist className="w-full" />
+            <MtgImage image={cube.image} showArtist className="w-full" />
             <CardBody>
               <Flexbox direction="col" gap="1">
                 <Text semibold md>
-                  {getCubeDescription(cubeState)}
+                  {getCubeDescription(cube)}
                 </Text>
                 <FollowersModalLink href="#" modalprops={{ followers }}>
-                  {(cubeState.following || []).length}{' '}
-                  {(cubeState.following || []).length === 1 ? 'follower' : 'followers'}
+                  {(cube.following || []).length} {(cube.following || []).length === 1 ? 'follower' : 'followers'}
                 </FollowersModalLink>
                 <Text>
                   <Text italic>
                     {'Designed by '}
-                    <Username user={cubeState.owner} />
+                    <Username user={cube.owner} />
                   </Text>{' '}
-                  • <Link href={`/cube/rss/${cubeState.id}`}>RSS</Link> •{' '}
+                  • <Link href={`/cube/rss/${cube.id}`}>RSS</Link> •{' '}
                   <QRCodeModalLink
                     href="#"
                     modalprops={{ link: `https://cubecobra.com/c/${cube.id}`, cubeName: cube.name }}
@@ -131,10 +122,10 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
                     QR Code
                   </QRCodeModalLink>
                 </Text>
-                <Link href={`https://luckypaper.co/resources/cube-map/?cube=${cubeState.id}`}>
+                <Link href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}>
                   View in Cube Map <LinkExternalIcon size={16} />
                 </Link>
-                {cubeState.priceVisibility === 'pu' && (
+                {cube.priceVisibility === 'pu' && (
                   <Flexbox direction="row" gap="2">
                     {Number.isFinite(priceOwned) && (
                       <TextBadge name="Owned">
@@ -153,18 +144,15 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
                   </Flexbox>
                 )}
                 {user && user.roles && user.roles.includes('Admin') && (
-                  <CSRFForm
-                    method="POST"
-                    action={`/cube/${cubeState.featured ? 'unfeature/' : 'feature/'}${cubeState.id}`}
-                  >
-                    <Button color="accent" type="submit" disabled={cubeState.visibility !== 'pu'}>
+                  <CSRFForm method="POST" action={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}>
+                    <Button color="accent" type="submit" disabled={cube.visibility !== 'pu'}>
                       {' '}
-                      {cubeState.featured ? 'Remove from featured' : 'Add to featured'}
+                      {cube.featured ? 'Remove from featured' : 'Add to featured'}
                     </Button>
                   </CSRFForm>
                 )}
                 {user &&
-                  cubeState.owner.id !== user.id &&
+                  cube.owner.id !== user.id &&
                   (followedState ? (
                     <Button color="danger" block onClick={unfollow}>
                       Unfollow
@@ -176,10 +164,10 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
                   ))}
               </Flexbox>
             </CardBody>
-            {cubeState.tags && cubeState.tags.length > 0 && (
+            {cube.tags && cube.tags.length > 0 && (
               <CardFooter>
                 <Flexbox direction="row" gap="2" wrap="wrap">
-                  {cubeState.tags.map((tag) => (
+                  {cube.tags.map((tag) => (
                     <Tag href={`/search/tag:${tag}`} key={tag} text={tag} />
                   ))}
                 </Flexbox>
@@ -190,7 +178,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({
         <Col xs={12} md={6} lg={7} xl={8}>
           <Card>
             <CardBody>
-              <Markdown markdown={cubeState.description || ''} />
+              <Markdown markdown={cube.description || ''} />
             </CardBody>
           </Card>
         </Col>

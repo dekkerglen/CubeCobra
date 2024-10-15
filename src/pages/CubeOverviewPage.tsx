@@ -47,55 +47,49 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
   const user = useContext(UserContext);
 
   const [alerts, setAlerts] = useState<{ color: string; message: string }[]>([]);
-  const [cubeState, setCubeState] = useState(cube);
 
   const addAlert = (color: string, message: string) => {
     setAlerts([...alerts, { color, message }]);
-  };
-
-  const onCubeUpdate = (updated: Cube) => {
-    addAlert('success', 'Update Successful');
-    setCubeState(updated);
   };
 
   return (
     <MainLayout>
       <CubeLayout
         cards={cards}
-        cube={cubeState}
+        cube={cube}
         activeLink="overview"
         hasControls={user != null && cube.owner.id == user.id}
       >
         <Flexbox direction="col" gap="2" className="mb-2">
-          {user && cubeState.owner.id === user.id && (
+          {user && cube.owner.id === user.id && (
             <Controls>
               <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
                 <CubeOverviewModalLink
                   modalprops={{
-                    cube: cubeState,
-                    onError: (message: string) => addAlert('danger', message),
-                    onCubeUpdate,
+                    cube: cube,
                   }}
                 >
                   Edit Overview
                 </CubeOverviewModalLink>
-                <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate }}>Edit Settings</CubeSettingsModalLink>
+                <CubeSettingsModalLink modalprops={{ addAlert, onCubeUpdate: () => {} }}>
+                  Edit Settings
+                </CubeSettingsModalLink>
                 <CustomizeBasicsModalLink
                   modalprops={{
-                    cube: cubeState,
+                    cube: cube,
                     onError: (message: string) => {
                       addAlert('danger', message);
                     },
                     updateBasics: (basics: any) => {
-                      const deepClone = JSON.parse(JSON.stringify(cubeState));
+                      const deepClone = JSON.parse(JSON.stringify(cube));
                       deepClone.basics = basics;
-                      onCubeUpdate(deepClone);
+                      // onCubeUpdate(deepClone);
                     },
                   }}
                 >
                   Customize basics
                 </CustomizeBasicsModalLink>
-                <DeleteCubeModalLink modalprops={{ cubeId: cubeState.id, cubeName: cubeState.name }}>
+                <DeleteCubeModalLink modalprops={{ cubeId: cube.id, cubeName: cube.name }}>
                   Delete Cube
                 </DeleteCubeModalLink>
               </Flexbox>
@@ -108,7 +102,6 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
             </div>
           ))}
           <CubeOverviewCard
-            cubeState={cubeState}
             priceOwned={priceOwned}
             pricePurchase={pricePurchase}
             followers={followers}
@@ -116,7 +109,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
           />
           {post && <BlogPost key={post.id} post={post} />}
           {post && (
-            <Button color="primary" block href={`/cube/blog/${cubeState.id}`}>
+            <Button color="primary" block href={`/cube/blog/${cube.id}`}>
               View All Blog Posts
             </Button>
           )}

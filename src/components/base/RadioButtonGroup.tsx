@@ -2,7 +2,7 @@ import React from 'react';
 import { Flexbox } from './Layout';
 
 interface RadioButtonGroupProps {
-  label: string;
+  label?: string;
   selected: string;
   setSelected: (selected: string) => void;
   options: { value: string; label: string }[];
