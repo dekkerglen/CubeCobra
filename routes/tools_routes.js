@@ -346,11 +346,14 @@ router.get('/cardimage/:id', async (req, res) => {
     // if id is not a scryfall ID, error
     const card = carddb.cardFromId(id);
     if (card.error) {
+      res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
       return redirect(req, res, '/content/default_card.png');
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
     return redirect(req, res, card.image_normal);
   } catch {
+    res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 year
     return redirect(req, res, '/content/default_card.png');
   }
 });
