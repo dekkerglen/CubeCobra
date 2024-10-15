@@ -30,9 +30,9 @@ const UserPreview = ({ user }) => {
         <MtgImage image={user.image} showArtist />
       </AspectRatioBox>
       <div className="w-full py-1 px-2 text-muted text-truncate">
-        <h5 className="mb-0">
+        <Text semibold md>
           <Username user={user} />
-        </h5>
+        </Text>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>
     </Card>

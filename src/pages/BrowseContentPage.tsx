@@ -16,6 +16,7 @@ import Content from 'datatypes/Content';
 import Episode from 'datatypes/Episode';
 import Video from 'datatypes/Video';
 import Article from 'datatypes/Article';
+import Text from 'components/base/Text';
 
 interface BrowseContentPageProps {
   loginCallback?: string;
@@ -65,7 +66,9 @@ const BrowseContentPage: React.FC<BrowseContentPageProps> = ({ loginCallback = '
           <Col xs={12}>
             <Row>
               <Col xs={6}>
-                <h4>Browse Content</h4>
+                <Text semibold lg>
+                  Browse Content
+                </Text>
               </Col>
             </Row>
           </Col>

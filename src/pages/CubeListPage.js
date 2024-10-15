@@ -39,12 +39,12 @@ const CubeListPageRaw = () => {
           <ErrorBoundary key={boardname}>
             {(showMaybeboard || boardname !== 'maybeboard') && (
               <>
-                {boardname !== 'mainboard' && <h4 className="boardTitle">{boardname}</h4>}
+                {boardname !== 'mainboard' && <Text semibold md>{boardname}</Text>}
                 {boardcards.length === 0 &&
                   (filter ? (
-                    <h5 className="mt-1 mb-3">No cards match filter.</h5>
+                    <Text semibold md>No cards match filter.</Text>
                   ) : (
-                    <h5 className="mt-1 mb-3">This board is empty.</h5>
+                    <Text semibold md>This board is empty.</Text>
                   ))}
                 {
                   {

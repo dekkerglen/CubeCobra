@@ -12,6 +12,7 @@ import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 import User from 'datatypes/User';
 import Cube from 'datatypes/Cube';
+import Text from 'components/base/Text';
 
 type Props = {
   owner: User;
@@ -30,7 +31,9 @@ const UserCubePage: React.FC<Props> = ({ owner, followers, following, cubes, log
         <DynamicFlash />
         <Card>
           <CardHeader>
-            <h5 className="mb-0">About</h5>
+            <Text semibold md>
+              About
+            </Text>
           </CardHeader>
           <CardBody>
             <Row className="mb-3">

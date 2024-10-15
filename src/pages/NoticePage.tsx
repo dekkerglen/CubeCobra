@@ -7,6 +7,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import User from 'datatypes/User';
+import Text from 'components/base/Text';
 
 interface Notice {
   id: string;
@@ -31,7 +32,9 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
-          <h5>Content Creator Applications</h5>
+          <Text md semibold>
+            Content Creator Applications
+          </Text>
         </CardHeader>
         {applications.map((application) => (
           <Card key={application.id}>
@@ -72,7 +75,9 @@ const NoticePage: React.FC<NoticePageProps> = ({ loginCallback = '/', notices })
       </Card>
       <Card className="my-3">
         <CardHeader>
-          <h5>Recent Comment Reports</h5>
+          <Text md semibold>
+            Recent Comment Reports
+          </Text>
         </CardHeader>
         {reports.map((report) => (
           <Card key={report.id}>

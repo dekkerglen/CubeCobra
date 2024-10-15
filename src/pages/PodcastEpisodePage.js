@@ -18,12 +18,12 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
       <DynamicFlash />
       <Card className="mb-3">
         <CardHeader>
-          <h1>{episode.title}</h1>
-          <h6>
+          <Text semibold xl>{episode.title}</Text>
+          <Text semibold sm>
             from <a href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</a>
             {' - '}
             <TimeAgo date={episode.date} />
-          </h6>
+          </Text>
         </CardHeader>
         <Row className="g-0">
           <Col xs={12} sm={4} className="pe-0">

@@ -14,7 +14,7 @@ const ContactPage = ({ title, content, loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
-        <h5>{title}</h5>
+        <Text md semibold>{title}</Text>
       </CardHeader>
       <CardBody>
         {content.map((item) =>

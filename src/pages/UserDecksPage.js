@@ -20,7 +20,7 @@ const UserDecksPage = ({ owner, followers, following, decks, pages, activePage, 
       {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/user/decks/${owner.id}/${i}`} />}
       <Card>
         <CardHeader>
-          <h5 className="mb-0">All Decks</h5>
+          <Text semibold md>All Decks</Text>
         </CardHeader>
         {decks.length > 0 ? (
           <CardBody className="p-0">

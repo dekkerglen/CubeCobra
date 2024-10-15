@@ -6,6 +6,7 @@ import Button from 'components/base/Button';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import Text from 'components/base/Text';
 
 interface User {
   id: string;
@@ -30,12 +31,16 @@ const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcasts
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Podcasts</h5>
+        <Text md semibold>
+          Podcasts
+        </Text>
       </CardHeader>
       {podcasts.map((podcast) => (
         <Card key={podcast.id}>
           <CardBody>
-            <h5>{podcast.title}</h5>
+            <Text md semibold>
+              {podcast.title}
+            </Text>
             <p>{podcast.description}</p>
             <p>
               By{' '}

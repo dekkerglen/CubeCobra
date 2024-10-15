@@ -8,6 +8,7 @@ import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import CardData, { boardTypes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
+import Text from 'components/base/Text';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;
@@ -149,7 +150,7 @@ const Changelist: React.FC = () => {
         }
         return (
           <div key={board} className="mb-2">
-            <h6>
+            <Text semibold sm>
               <Row>
                 <Col>{capitalizeFirstLetter(board)} Changelist</Col>
                 <Col className="col-sm-auto">
@@ -159,7 +160,7 @@ const Changelist: React.FC = () => {
                   </div>
                 </Col>
               </Row>
-            </h6>
+            </Text>
             <Card className="changelist-container p-2">
               <ul className="changelist">
                 {adds &&

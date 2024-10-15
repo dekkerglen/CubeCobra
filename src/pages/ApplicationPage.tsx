@@ -9,6 +9,7 @@ import Button from 'components/base/Button';
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import TextArea from 'components/base/TextArea';
+import Text from 'components/base/Text';
 
 interface AdminDashboardPageProps {
   loginCallback?: string;
@@ -21,7 +22,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ loginCallback =
       <Card className="my-3 mx-4">
         <CSRFForm method="POST" action="/content/submitapplication">
           <CardHeader>
-            <h5>Apply to be a Cube Cobra Content Creator Partner</h5>
+            <Text md semibold>
+              Apply to be a Cube Cobra Content Creator Partner
+            </Text>
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="2">

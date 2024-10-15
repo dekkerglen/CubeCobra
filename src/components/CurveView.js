@@ -14,9 +14,9 @@ const TypeRow = ({ cardType, group }) => {
   const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
   return (
     <>
-      <h6>
+      <Text semibold sm>
         {cardType} ({group.length})
-      </h6>
+      </Text>
       <Row className="row-low-padding mb-2">
         {cmc2Labels.map((cmc) => (
           <div key={cmc} className="col-low-padding" style={{ width: `${100 / cmc2Labels.length}%` }}>
@@ -40,9 +40,9 @@ TypeRow.propTypes = {
 const ColorCard = ({ color, group }) => (
   <Card className="mb-3">
     <CardHeader>
-      <h5 className="mb-0">
+      <Text semibold md>
         {color} {group.length}
-      </h5>
+      </Text>
     </CardHeader>
     <CardBody>
       {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (

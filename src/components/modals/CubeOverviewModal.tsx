@@ -1,23 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Button,
-  Card,
-  CardHeader,
-  Col,
-  FormGroup,
-  FormText,
-  Input,
-  Label,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Row,
-} from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Row, Col, Flexbox } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import LoadingButton from 'components/LoadingButton';
 import MtgImage from 'components/MtgImage';
@@ -25,11 +9,21 @@ import TagInput from 'components/TagInput';
 import TextEntry from 'components/TextEntry';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription } from 'utils/Util';
+import Cube from 'datatypes/Cube';
+import Text from 'components/base/Text';
 
-const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
-  const [state, setState] = useState(JSON.parse(JSON.stringify(cube)));
+interface CubeOverviewModalProps {
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+  cube: Cube;
+  onError: (message: string) => void;
+  onCubeUpdate: (cube: Cube) => void;
+}
+
+const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube, onError, onCubeUpdate }) => {
+  const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
-  const [imageDict, setImageDict] = useState({});
+  const [imageDict, setImageDict] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const getData = async () => {
@@ -42,7 +36,7 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
   }, []);
 
   const changeImage = useCallback(
-    (image) => {
+    (image: string) => {
       setImagename(image);
       if (imageDict[image.toLowerCase()]) {
         setState({ ...state, imageName: image });
@@ -51,41 +45,43 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
     [imageDict, setState, state],
   );
 
-  const submit = useCallback(
-    async (event) => {
-      event.preventDefault();
-      const response = await csrfFetch('/cube/api/editoverview', {
-        method: 'POST',
-        body: JSON.stringify(state),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const json = await response.json();
-      if (response.ok) {
-        onCubeUpdate(state);
-        if (cube.shortId !== state.shortId) {
-          window.location.href = `/cube/overview/${encodeURIComponent(state.shortId || state.id)}`;
-        }
-      } else if (json.message) {
-        onError(json.message);
-      } else if (json.errors) {
-        for (const error of json.errors) {
-          onError(error);
-        }
+  const submit = useCallback(async () => {
+    const response = await csrfFetch('/cube/api/editoverview', {
+      method: 'POST',
+      body: JSON.stringify(state),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const json = await response.json();
+    if (response.ok) {
+      onCubeUpdate(state);
+      if (cube.shortId !== state.shortId) {
+        window.location.href = `/cube/overview/${encodeURIComponent(state.shortId || state.id)}`;
       }
-      toggle();
-    },
-    [cube, onCubeUpdate, onError, state, toggle],
-  );
+    } else if (json.message) {
+      onError(json.message);
+    } else if (json.errors) {
+      for (const error of json.errors) {
+        onError(error);
+      }
+    }
+    setOpen(false);
+  }, [cube, onCubeUpdate, onError, state, setOpen]);
 
   return (
-    <Modal size="lg" isOpen={isOpen} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Edit Overview</ModalHeader>
+    <Modal md isOpen={isOpen} setOpen={setOpen}>
+      <ModalHeader setOpen={setOpen}>
+        <Text semibold lg>
+          Edit Overview
+        </Text>
+      </ModalHeader>
 
       <form method="POST" action={`/cube/editoverview/${state.id}`} autoComplete="off">
         <ModalBody>
-          <h6>Cube name</h6>
+          <Text semibold sm>
+            Cube name
+          </Text>
           <input
             className="form-control"
             name="name"
@@ -95,11 +91,13 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             onChange={(event) => setState({ ...state, name: event.target.value })}
           />
           <br />
-          <h6>Category</h6>
+          <Text semibold sm>
+            Category
+          </Text>
           <input className="form-control" name="name" type="text" disabled value={getCubeDescription(state)} />
           <Row>
             <Col>
-              <FormGroup tag="fieldset">
+              <fieldset>
                 {[
                   null,
                   'Vintage',
@@ -112,20 +110,20 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
                   'Standard',
                   'Set',
                 ].map((label) => (
-                  <FormGroup check key={label}>
-                    <Label check>
-                      <Input
+                  <div key={label}>
+                    <label className="flex items-center">
+                      <input
                         type="radio"
                         name="categoryOverride"
-                        value={label}
+                        value={label || ''}
                         checked={state.categoryOverride === label}
                         onChange={(event) => setState({ ...state, categoryOverride: event.target.value })}
-                      />{' '}
-                      {label || <i>[None]</i>}
-                    </Label>
-                  </FormGroup>
+                      />
+                      <span className="ml-2">{label || <i>[None]</i>}</span>
+                    </label>
+                  </div>
                 ))}
-              </FormGroup>
+              </fieldset>
             </Col>
             <Col>
               {[
@@ -166,12 +164,20 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
               ))}
             </Col>
           </Row>
-          <h6>image</h6>
+          <Text semibold sm>
+            image
+          </Text>
           <Row>
             <Col xs={12} sm={6} md={6} lg={6}>
               <Card>
-                <CardHeader>Preview</CardHeader>
-                <MtgImage image={state.image} showArtist />
+                <CardHeader>
+                  <Text semibold lg>
+                    Preview
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <MtgImage image={state.image} showArtist />
+                </CardBody>
               </Card>
             </Col>
           </Row>
@@ -186,19 +192,21 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             setValue={changeImage}
             placeholder="Cardname for image"
             autoComplete="off"
-            data-lpignore
-            noMargin
           />
           <br />
-          <h6>description</h6>
+          <Text semibold sm>
+            description
+          </Text>
           <TextEntry
             name="blog"
             value={state.description}
-            onChange={(event) => setState({ ...state, description: event.target.value })}
+            setValue={(value) => setState({ ...state, description: value })}
             maxLength={100000}
           />
           <br />
-          <h6>tags</h6>
+          <Text semibold sm>
+            tags
+          </Text>
           <TagInput
             tags={state.tags.map((tag) => ({ text: tag, id: tag }))}
             addTag={(tag) => setState({ ...state, tags: [...state.tags, tag.text] })}
@@ -207,14 +215,11 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
               newTags.splice(index, 1);
               setState({ ...state, tags: newTags });
             }}
-            reorderTag={(tag, currInex, newIndex) => {
-              const newTags = [...state.tags];
-              newTags.splice(newIndex, 0, newTags.splice(currInex, 1)[0]);
-              setState({ ...state, tags: newTags });
-            }}
           />
           <br />
-          <h6>short ID</h6>
+          <Text semibold sm>
+            short ID
+          </Text>
           <input
             className="form-control"
             id="shortId"
@@ -225,29 +230,22 @@ const CubeOverviewModal = ({ isOpen, toggle, cube, onError, onCubeUpdate }) => {
             required
             placeholder="Give this cube an easy to remember URL."
           />
-          <FormText>Changing the short ID may break existing links to your cube.</FormText>
+          <p className="text-sm text-gray-500">Changing the short ID may break existing links to your cube.</p>
           <br />
         </ModalBody>
         <ModalFooter>
-          <Button color="secondary" onClick={toggle}>
-            Close
-          </Button>{' '}
-          <LoadingButton color="accent" onClick={submit}>
-            Save Changes
-          </LoadingButton>
+          <Flexbox direction="row" className="w-full justify-end">
+            <button className="bg-gray-600 text-white px-4 py-2 rounded block" onClick={() => setOpen(false)}>
+              Close
+            </button>
+            <LoadingButton className="bg-accent text-white px-4 py-2 rounded block ml-2" onClick={async () => submit()}>
+              Save Changes
+            </LoadingButton>
+          </Flexbox>
         </ModalFooter>
       </form>
     </Modal>
   );
 };
-
-CubeOverviewModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  cube: CubePropType.isRequired,
-  onError: PropTypes.func.isRequired,
-  onCubeUpdate: PropTypes.func.isRequired,
-};
-CubeOverviewModal.defaultProps = {};
 
 export default CubeOverviewModal;

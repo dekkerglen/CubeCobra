@@ -52,7 +52,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
-          <h5>Podcasts</h5>
+          <Text md semibold>Podcasts</Text>
         </CardHeader>
         <Row>
           {podcasts.map((podcast) => (
@@ -62,7 +62,7 @@ const PodcastsPage = ({ loginCallback, episodes, podcasts, lastKey }) => {
           ))}
         </Row>
       </Card>
-      <h4>Podcast Episodes</h4>
+      <Text semibold lg>Podcast Episodes</Text>
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((episode) => (

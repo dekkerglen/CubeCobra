@@ -31,10 +31,10 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
               flexBasis: compressedView ? `${100 / Math.min(sorted.length, 9)}%` : undefined,
             }}
           >
-            <h6 className="text-center card-list-heading">
+            <Text semibold sm>
               {columnLabel}
               <br />({countGroup(column)})
-            </h6>
+            </Text>
             {column.map(([label, row]) => (
               <AutocardListGroup
                 key={label}

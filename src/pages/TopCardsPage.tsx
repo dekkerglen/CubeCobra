@@ -6,6 +6,7 @@ import Button from 'components/base/Button';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import Text from 'components/base/Text';
 
 interface User {
   id: string;
@@ -29,7 +30,9 @@ const TopCardsPage: React.FC<TopCardsPageProps> = ({ loginCallback = '/', cards 
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Top Cards</h5>
+        <Text md semibold>
+          Top Cards
+        </Text>
       </CardHeader>
       {cards.map((card) => (
         <CardBody key={card.id} className="border-top">

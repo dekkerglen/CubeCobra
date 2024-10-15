@@ -64,7 +64,7 @@ const BulkUploadPageRaw = ({ missing, added }) => {
   return (
     <Card className="mt-3">
       <CardHeader>
-        <h5>Confirm Upload</h5>
+        <Text md semibold>Confirm Upload</Text>
       </CardHeader>
       <CardBody>
         <p>

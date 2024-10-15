@@ -2,7 +2,6 @@ import React, { useContext, useState } from 'react';
 
 import TimeAgo from 'react-timeago';
 
-import BlogContextMenu from 'components/blog/BlogContextMenu';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CommentsSection from 'components/comments/CommentsSection';
 import EditBlogModal from 'components/EditBlogModal';
@@ -38,7 +37,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
             <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
             {canEdit && (
               <Flexbox direction="row">
-                <BlogContextMenu post={post} value="..." onEdit={() => setEditOpen(true)} />
                 <EditBlogModal
                   isOpen={editOpen}
                   toggle={() => setEditOpen((open) => !open)}
@@ -96,7 +94,9 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
       {!hasChangelist && !hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <h5>Uh oh, there doesn't seem to be anything here.</h5>
+            <Text md semibold>
+              Uh oh, there doesn't seem to be anything here.
+            </Text>
           </CardBody>
         </div>
       )}

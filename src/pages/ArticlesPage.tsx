@@ -12,6 +12,7 @@ import ArticleType from 'datatypes/Article';
 import { Row, Col } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 
+import Text from 'components/base/Text';
 interface ArticlesPageProps {
   loginCallback?: string;
   articles: ArticleType[];
@@ -55,7 +56,9 @@ const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articl
     <MainLayout loginCallback={loginCallback}>
       <Banner />
       <DynamicFlash />
-      <h4>Articles</h4>
+      <Text semibold lg>
+        Articles
+      </Text>
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row>
           {items.map((item) => (

@@ -40,14 +40,14 @@ const Pack = ({ pack, packNumber, pickNumber, makePick, seatIndex, turn }) => (
   <Card className="mt-3">
     <CardHeader>
       <CardTitle className="mb-0">
-        <h4>
+        <Text semibold lg>
           Pack {packNumber + 1}, Pick {pickNumber + 1}
-        </h4>
-        <h4 className="mb-0">
+        </Text>
+        <Text semibold lg>
           {turn && (
             <Badge color={turn === 1 ? 'primary' : 'danger'}>{`Player ${turn === 1 ? 'one' : 'two'}'s pick`}</Badge>
           )}
-        </h4>
+        </Text>
       </CardTitle>
     </CardHeader>
     <CardBody>

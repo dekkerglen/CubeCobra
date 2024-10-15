@@ -99,11 +99,11 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
     <Card>
       <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
-          <h4 className="mb-0 me-auto">{seat.name}</h4>
+          <Text md semibold>{seat.name}</Text>
           {!seat.bot && (
-            <h6 className="mb-0 font-weight-normal d-none d-sm-block">
+            <Text md semibold>
               Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
-            </h6>
+            </Text>
           )}
         </CardTitle>
       </CardHeader>
@@ -143,7 +143,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
             <Row>
               <Col>
                 <CardBody className="border-bottom">
-                  <h4>sideboard</h4>
+                  <Text semibold lg>sideboard</Text>
                 </CardBody>
                 <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="sideboard" />
               </Col>
@@ -153,7 +153,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       )}
       {view === 'visual' && (
         <CardBody>
-          <h4>Mainboard</h4>
+          <Text semibold lg>Mainboard</Text>
           <CardGrid
             cardList={sorted}
             Tag={CardImage}
@@ -164,7 +164,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
           {seat.sideboard.flat(2).length > 0 && (
             <>
               <hr className="my-4" />
-              <h4 className="mt-4">Sideboard</h4>
+              <Text semibold md>Sideboard</Text>
               <CardGrid
                 cardList={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])}
                 Tag={CardImage}

@@ -49,7 +49,7 @@ const VideosPage = ({ loginCallback, videos, lastKey }) => {
     <MainLayout loginCallback={loginCallback}>
       <Banner />
       <DynamicFlash />
-      <h4>videos</h4>
+      <Text semibold lg>videos</Text>
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((item) => (

@@ -27,7 +27,7 @@ interface Cube {
   visibility: string;
   priceVisibility: string;
   featured: boolean;
-  categoryOverride: string;
+  categoryOverride?: string;
   categoryPrefixes: any[];
   tagColors: TagColor[];
   defaultFormat: number;

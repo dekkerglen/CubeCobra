@@ -17,7 +17,7 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {
     <Card className="mt-3">
       <CardHeader>
         <CardTitle className="mb-0">
-          <h4 className="mb-1">{title}</h4>
+          <Text semibold md>{title}</Text>
         </CardTitle>
       </CardHeader>
       <CardBody>

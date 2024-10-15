@@ -13,12 +13,12 @@ const Video = ({ video }) => {
   return (
     <>
       <CardHeader>
-        <h1>{video.title}</h1>
-        <h6>
+        <Text semibold xl>{video.title}</Text>
+        <Text semibold sm>
           By <Username user={video.owner} />
           {' | '}
           <TimeAgo date={video.date} />
-        </h6>
+        </Text>
       </CardHeader>
       <CardBody>
         <div className="player-wrapper">

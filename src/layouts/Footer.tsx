@@ -29,7 +29,9 @@ const Footer: React.FC = () => {
         <Row>
           <Col xs={6} sm={3}>
             <Text sm>
-              <h6 className="text-lg font-semibold mb-2">Content</h6>
+              <Text semibold lg>
+                Content
+              </Text>
               <ul className="list-none p-0">
                 <li className="mb-2">
                   <FooterLink href="/content/browse">Browse</FooterLink>
@@ -48,7 +50,9 @@ const Footer: React.FC = () => {
           </Col>
           <Col xs={6} sm={3}>
             <Text sm>
-              <h6 className="text-lg font-semibold mb-2">Cube</h6>
+              <Text semibold lg>
+                Cube
+              </Text>
               <ul className="list-none p-0">
                 <li className="mb-2">
                   <FooterLink href="/explore">Explore Cubes</FooterLink>
@@ -61,7 +65,9 @@ const Footer: React.FC = () => {
           </Col>
           <Col xs={6} sm={3}>
             <Text sm>
-              <h6 className="text-lg font-semibold mb-2">Cards</h6>
+              <Text semibold lg>
+                Cards
+              </Text>
               <ul className="list-none p-0">
                 <li className="mb-2">
                   <FooterLink href="/tool/topcards">Top Cards</FooterLink>
@@ -80,7 +86,9 @@ const Footer: React.FC = () => {
           </Col>
           <Col xs={6} sm={3}>
             <Text sm>
-              <h6 className="text-lg font-semibold mb-2">Cube Cobra</h6>
+              <Text semibold lg>
+                Cube Cobra
+              </Text>
               <ul className="list-none p-0">
                 <li className="mb-2">
                   <FooterLink href="/dev/blog">Dev Blog</FooterLink>

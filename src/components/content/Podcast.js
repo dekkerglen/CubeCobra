@@ -13,10 +13,10 @@ const Podcast = ({ podcast, episodes }) => {
   return (
     <>
       <CardHeader>
-        <h1>{podcast.title}</h1>
-        <h6>
+        <Text semibold xl>{podcast.title}</Text>
+        <Text semibold sm>
           By <Username user={podcast.owner} />
-        </h6>
+        </Text>
       </CardHeader>
       <Row>
         <Col xs={12} sm={4}>

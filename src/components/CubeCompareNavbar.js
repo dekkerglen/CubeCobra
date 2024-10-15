@@ -52,8 +52,8 @@ class CubeCompareNavbar extends Component {
         <div className="cubenav">
           <ul className="nav nav-tabs nav-fill pt-2">
             <li className="nav-item">
-              <h5 style={{ color: '#218937' }}>Compare cubes</h5>
-              <h6 className="my-3" style={{ color: '#218937' }}>
+              <Text semibold md>Compare cubes</Text>
+              <Text semibold md>
                 <span className="text-muted">Base Cube:</span>{' '}
                 <a href={`/cube/list/${cubeAID}`} className="me-3" style={{ color: '#218937' }}>
                   {cubeA.name} ({cubeA.cardCount} cards)
@@ -62,7 +62,7 @@ class CubeCompareNavbar extends Component {
                 <a href={`/cube/list/${cubeBID}`} style={{ color: '#218937' }}>
                   {cubeB.name} ({cubeB.cardCount} cards)
                 </a>
-              </h6>
+              </Text>
             </li>
           </ul>
         </div>

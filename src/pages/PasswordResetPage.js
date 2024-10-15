@@ -15,7 +15,7 @@ const PasswordResetPage = ({ loginCallback, code }) => (
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Reset Password</h5>
+        <Text md semibold>Reset Password</Text>
       </CardHeader>
       <CardBody>
         <CSRFForm method="POST" action={`/user/lostpasswordreset/${code}`}>

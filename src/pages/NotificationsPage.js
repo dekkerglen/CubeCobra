@@ -50,7 +50,7 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
       <DynamicFlash />
       <Card className="mx-auto">
         <CardHeader>
-          <h5>Notifications</h5>
+          <Text md semibold>Notifications</Text>
         </CardHeader>
         <InfiniteScroll
           dataLength={items.length}

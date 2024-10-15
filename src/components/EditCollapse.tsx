@@ -23,6 +23,7 @@ import { BoardType } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
+import Text from 'components/base/Text';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -322,7 +323,9 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           </Col>
           {useBlog && (
             <Col xs={12} md={6}>
-              <h6>Blog Post</h6>
+              <Text semibold sm>
+                Blog Post
+              </Text>
               <FormGroup>
                 <Label className="visually-hidden">Blog title</Label>
                 <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />

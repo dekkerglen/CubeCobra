@@ -8,13 +8,13 @@ const Notification = ({ notification }) => {
   return (
     <a className="no-underline-hover" href={`/user/notification/${notification.id}`}>
       <div className="border-top pb-2 pt-3 px-2 deck-preview">
-        <h6 className="card-subtitle mb-2 text-muted">
+        <Text semibold sm>
           <a href={`/user/notification/${notification.id}`}>{texts[0]}</a>
           <a href={`/user/view/${notification.from}`}>{notification.fromUsername}</a>
           <a href={`/user/notification/${notification.id}`}>{texts[1]}</a>
           {' - '}
           <TimeAgo date={notification.date} />
-        </h6>
+        </Text>
       </div>
     </a>
   );

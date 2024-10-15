@@ -15,14 +15,14 @@ const MarkdownPage = ({ loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
-        <h4>Markdown Guide</h4>
+        <Text semibold lg>Markdown Guide</Text>
       </CardHeader>
       <CardBody>
         <p>
           CubeCobra supports regular Markdown as well as some extra features specific to our site. If you need any help
           regarding how to use markdown, please <a href="/contact">contact us</a>.
         </p>
-        <h5>Contents</h5>
+        <Text md semibold>Contents</Text>
         <ol>
           <li>
             <a href="#formatting">Basic Formatting</a>
@@ -57,14 +57,14 @@ const MarkdownPage = ({ loginCallback }) => (
         </ol>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="formatting">Basic Formatting</h5>
+        <Text semibold md id="formatting">Basic Formatting</Text>
         <p>
           Our Markdown syntax is based on the CommonMark specification, which includes all the common Markdown
           constructs you may already be familiar with. <a href="https://commonmark.org/help/">Learn more.</a>
         </p>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="cards">Linking cards</h5>
+        <Text semibold md id="cards">Linking cards</Text>
         <p>
           There are multiple ways to link cards. To link a card with autocard, you can use double square brackets to
           wrap a card name, like so:
@@ -248,7 +248,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="symbols">Symbols</h5>
+        <Text semibold md id="symbols">Symbols</Text>
         <p>Symbols can be added using curly braces. Most MTG symbols are supported.</p>
         <Row>
           <Col xs={12} sm={6}>
@@ -341,7 +341,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="users">Linking Users</h5>
+        <Text semibold md id="users">Linking Users</Text>
         <p>You can link to a user by adding an @ before the username.</p>
         <Row>
           <Col xs={12} sm={6}>
@@ -366,7 +366,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="latex">LaTeX</h5>
+        <Text semibold md id="latex">LaTeX</Text>
         <p>
           You can add LaTeX math expressions using '$' for inline LaTeX, and double '$' on a separate line for block
           LaTeX.
@@ -444,7 +444,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="strikethrough">Strikethrough</h5>
+        <Text semibold md id="strikethrough">Strikethrough</Text>
         <p>For strikethrough text, wrap the text in double tilde.</p>
         <Row>
           <Col xs={12} sm={6}>
@@ -468,7 +468,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="centering">Centering</h5>
+        <Text semibold md id="centering">Centering</Text>
         <p>You can center elements by wrapping them in triple angle brackets.</p>
         <Row>
           <Col xs={12} sm={6}>
@@ -568,7 +568,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="tables">Tables</h5>
+        <Text semibold md id="tables">Tables</Text>
         <p>
           Tables consist of a header row, a delimiter row, and one or more data rows. The separators between columns
           don't have to be vertically aligned, but it helps readability.
@@ -634,7 +634,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="tasklists">Task Lists</h5>
+        <Text semibold md id="tasklists">Task Lists</Text>
         <p>Adding brackets to a list turns it into a task list.</p>
         <Row>
           <Col xs={12} sm={6}>
@@ -670,7 +670,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="syntax">Syntax Highlighting</h5>
+        <Text semibold md id="syntax">Syntax Highlighting</Text>
         <p>
           When writing a code block, specifying a language will enable syntax highlighting for that language. You can
           specify{' '}

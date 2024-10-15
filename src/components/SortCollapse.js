@@ -37,7 +37,7 @@ const SortCollapse = ({ isOpen }) => {
     <Collapse isOpen={isOpen}>
       <Row>
         <Col xs={12} sm={6} className="mt-2">
-          <h6>Primary Sort</h6>
+          <Text semibold sm>Primary Sort</Text>
           <Input
             type="select"
             value={sortPrimary}
@@ -53,7 +53,7 @@ const SortCollapse = ({ isOpen }) => {
           </Input>
         </Col>
         <Col xs={12} sm={6} className="mt-2">
-          <h6>Secondary Sort</h6>
+          <Text semibold sm>Secondary Sort</Text>
           <Input
             type="select"
             value={sortSecondary}
@@ -69,7 +69,7 @@ const SortCollapse = ({ isOpen }) => {
           </Input>
         </Col>
         <Col xs={12} sm={6} className="mt-2">
-          <h6>Tertiary Sort</h6>
+          <Text semibold sm>Tertiary Sort</Text>
           <Input
             type="select"
             value={sortTertiary}
@@ -85,7 +85,7 @@ const SortCollapse = ({ isOpen }) => {
           </Input>
         </Col>
         <Col xs={12} sm={6} className="mt-2">
-          <h6>Ordered Sort</h6>
+          <Text semibold sm>Ordered Sort</Text>
           <Input
             type="select"
             value={sortQuaternary}

@@ -5,6 +5,7 @@ import Button from 'components/base/Button';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import Text from 'components/base/Text';
 
 interface LeaveWarningPageProps {
   url: string;
@@ -18,7 +19,9 @@ const LeaveWarningPage: React.FC<LeaveWarningPageProps> = ({ url, loginCallback 
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h4>You are about to leave CubeCobra</h4>
+        <Text semibold lg>
+          You are about to leave CubeCobra
+        </Text>
       </CardHeader>
       <CardBody>
         <p>

@@ -15,7 +15,7 @@ const LostPassword = ({ loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Recover Password</h5>
+        <Text md semibold>Recover Password</Text>
       </CardHeader>
       <CardBody>
         <p>

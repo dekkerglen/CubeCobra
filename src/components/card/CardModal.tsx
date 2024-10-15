@@ -21,6 +21,7 @@ import Tooltip from 'components/base/Tooltip';
 import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
+import Text from 'components/base/Text';
 import { getTCGLink } from 'utils/Affiliate';
 import {
   cardCmc,
@@ -260,7 +261,9 @@ const CardModal: React.FC<CardModalProps> = ({
               </Row>
             </Col>
             <Col xs={12} sm={8}>
-              <h5>Card Attributes</h5>
+              <Text md semibold>
+                Card Attributes
+              </Text>
               <fieldset disabled={disabled}>
                 <InputGroup className="mb-3">
                   <InputGroupText>Version (Set and #)</InputGroupText>
@@ -384,7 +387,9 @@ const CardModal: React.FC<CardModalProps> = ({
                   </Input>
                 </InputGroup>
 
-                <h5>Notes</h5>
+                <Text md semibold>
+                  Notes
+                </Text>
                 <InputGroup className="mb-3">
                   <Input
                     type="textarea"
@@ -394,7 +399,9 @@ const CardModal: React.FC<CardModalProps> = ({
                   />
                 </InputGroup>
 
-                <h5>Tags</h5>
+                <Text md semibold>
+                  Tags
+                </Text>
                 <TagInput
                   tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
                   readOnly={!canEdit}

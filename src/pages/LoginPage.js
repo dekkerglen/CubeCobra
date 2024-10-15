@@ -15,7 +15,7 @@ const LoginPage = ({ loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Login</h5>
+        <Text md semibold>Login</Text>
       </CardHeader>
       <CardBody>
         <CSRFForm method="POST" action="/user/login">

@@ -5,11 +5,11 @@ import { csrfFetch } from 'utils/CSRF';
 
 export interface BlogDeleteModalProps {
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: () => void;
   postID: string;
 }
 
-const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, toggle, postID }) => {
+const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, setOpen, postID }) => {
   const confirm = async () => {
     const response = await csrfFetch(`/cube/blog/remove/${postID}`, {
       method: 'DELETE',
@@ -25,7 +25,7 @@ const BlogDeleteModal: React.FC<BlogDeleteModalProps> = ({ isOpen, toggle, postI
 
   return (
     <ConfirmDeleteModal
-      toggle={toggle}
+      setOpen={setOpen}
       submitDelete={confirm}
       isOpen={isOpen}
       text="Are you sure you wish to delete this post? This action cannot be undone."

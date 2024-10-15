@@ -7,6 +7,7 @@ import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import User from 'datatypes/User';
+import Text from 'components/base/Text';
 
 interface UserLayoutProps {
   user: User;
@@ -25,15 +26,17 @@ const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, act
 
   const numFollowers = followers.length;
   const followersText = (
-    <h6>
+    <Text semibold sm>
       {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
-    </h6>
+    </Text>
   );
   return (
     <>
       <Nav tabs fill className="cubenav pt-2">
         <NavItem>
-          <h5 style={{ color: '#218937' }}>{user.username}</h5>
+          <Text semibold md>
+            {user.username}
+          </Text>
           {numFollowers > 0 ? (
             <FollowersModalLink href="#" modalprops={{ followers }}>
               {followersText}

@@ -26,6 +26,7 @@ import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
+import Text from 'components/base/Text';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -310,7 +311,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <Col xs="8">
             <fieldset disabled={!canEdit}>
               <Label for="groupStatus">
-                <h5>Set status of all</h5>
+                <Text md semibold>
+                  Set status of all
+                </Text>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Status</InputGroupText>
@@ -328,7 +331,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
               </InputGroup>
 
               <Label for="groupStatus">
-                <h5>Set finish of all</h5>
+                <Text md semibold>
+                  Set finish of all
+                </Text>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Finish</InputGroupText>
@@ -345,7 +350,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 </Input>
               </InputGroup>
 
-              <h5>Override Attribute on All</h5>
+              <Text md semibold>
+                Override Attribute on All
+              </Text>
               <InputGroup className="mb-2">
                 <InputGroupText>Mana Value</InputGroupText>
                 <Input type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
@@ -364,7 +371,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 only colorless will cause the selected cards' color identity to be set to colorless.
               </FormText>
 
-              <h5 className="mt-3">Edit tags</h5>
+              <Text semibold md>
+                Edit tags
+              </Text>
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
