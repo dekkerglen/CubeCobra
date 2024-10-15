@@ -18,11 +18,7 @@ interface CardFooterProps {
 }
 
 const Card: React.FC<CardProps> = ({ className, children }) => {
-  return (
-    <div className={classNames('bg-bg-accent shadow rounded-md overflow-hidden border border-border', className)}>
-      {children}
-    </div>
-  );
+  return <div className={classNames('bg-bg-accent shadow rounded-md border border-border', className)}>{children}</div>;
 };
 
 const CardBody: React.FC<CardProps> = ({ className, children }) => {

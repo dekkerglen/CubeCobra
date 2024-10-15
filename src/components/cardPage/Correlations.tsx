@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Card, CardBody } from 'components/base/Card';
-import CardGrid from 'components/CardGrid';
+import CardGrid from 'components/card/CardGrid';
 import CardType from 'datatypes/CardDetails';
 import { TabbedView } from 'components/base/Tabs';
 import useQueryParam from 'hooks/useQueryParam';

@@ -1,6 +1,6 @@
 import ArticlePreview from 'components/content/ArticlePreview';
 import Banner from 'components/Banner';
-import CreateCubeModal from 'components/CreateCubeModal';
+import CreateCubeModal from 'components/modals/CreateCubeModal';
 import CubePreview from 'components/CubePreview';
 import CubesCard from 'components/CubesCard';
 import DeckPreview from 'components/DeckPreview';

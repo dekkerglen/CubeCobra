@@ -35,7 +35,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ loginCallback =
                 you looking to create?
               </p>
               <TextArea
-                className="w-100 mb-3"
+                className="w-full mb-3"
                 id="info"
                 name="info"
                 placeholder="Please list as much info as you can here."

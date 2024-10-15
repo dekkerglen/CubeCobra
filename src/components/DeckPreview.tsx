@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import UserContext from 'contexts/UserContext';
 import TimeAgo from 'react-timeago';
-import DeckDeleteModal from 'components/DeckDeleteModal';
+import DeckDeleteModal from 'components/modals/DeckDeleteModal';
 import Deck from 'datatypes/Deck';
 import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';

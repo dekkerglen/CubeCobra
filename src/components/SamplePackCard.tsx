@@ -1,11 +1,11 @@
 import React, { useContext, useState } from 'react';
 
 import CubeContext from 'contexts/CubeContext';
-import Button from './base/Button';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
-import Input from './base/Input';
-import { Flexbox } from './base/Layout';
-import Text from './base/Text';
+import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
+import Input from 'components/base/Input';
+import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 
 const SamplePackCard: React.FC = () => {
   const { cube } = useContext(CubeContext);

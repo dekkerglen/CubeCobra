@@ -26,7 +26,7 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import PatronPropType from 'proptypes/PatronPropType';
 
-import AutocompleteInput from 'components/AutocompleteInput';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Banner from 'components/Banner';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/CubePreview';

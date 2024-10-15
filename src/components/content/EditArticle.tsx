@@ -1,5 +1,5 @@
 import ArticlePreview from 'components/content/ArticlePreview';
-import AutocompleteInput from 'components/AutocompleteInput';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';

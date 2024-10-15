@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { CardBody } from 'components/base/Card';
-import LegalityBadge from 'components/CardLegalityBadge';
+import LegalityBadge from 'components/card/CardLegalityBadge';
 import Markdown from 'components/Markdown';
 import CardType from 'datatypes/CardDetails';
 import HistoryType from 'datatypes/History';

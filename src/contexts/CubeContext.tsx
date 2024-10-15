@@ -14,7 +14,7 @@ import { AlertProps, UncontrolledAlertProps } from 'reactstrap';
 
 import { Object } from 'core-js';
 
-import CardModal from 'components/CardModal';
+import CardModal from 'components/card/CardModal';
 import GroupModal from 'components/GroupModal';
 import DisplayContext from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';

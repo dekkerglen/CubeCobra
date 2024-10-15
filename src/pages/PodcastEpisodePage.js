@@ -6,8 +6,8 @@ import ContentPropType from 'proptypes/ContentPropType';
 import ReactAudioPlayer from 'react-audio-player';
 import TimeAgo from 'react-timeago';
 
-import AspectRatioBox from 'components/AspectRatioBox';
-import CommentsSection from 'components/CommentsSection';
+import AspectRatioBox from 'components/base/AspectRatioBox';
+import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
@@ -28,7 +28,7 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
         <Row className="g-0">
           <Col xs={12} sm={4} className="pe-0">
             <AspectRatioBox ratio={1} className="text-ellipsis">
-              <img className="w-100" alt={episode.title} src={episode.image} />
+              <img className="w-full" alt={episode.title} src={episode.image} />
             </AspectRatioBox>
           </Col>
           <Col xs={12} sm={8} className="border-start ps-0">

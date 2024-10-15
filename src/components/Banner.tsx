@@ -5,8 +5,8 @@ import Link from 'components/base/Link';
 
 import Advertisment from 'components/Advertisment';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
-import { Flexbox } from './base/Layout';
-import ResponsiveDiv from './base/ResponsiveDiv';
+import { Flexbox } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
 const BANNER_RATE: number = 1; // an alternate message appears with probability of 1/BANNER_RATE
 

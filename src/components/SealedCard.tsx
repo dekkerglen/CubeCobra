@@ -2,11 +2,11 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
-import Text from './base/Text';
-import Select, { rangeOptions } from './base/Select';
-import Button from './base/Button';
-import { Flexbox } from './base/Layout';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
+import Text from 'components/base/Text';
+import Select, { rangeOptions } from 'components/base/Select';
+import Button from 'components/base/Button';
+import { Flexbox } from 'components/base/Layout';
 
 const SealedCard: React.FC = () => {
   const { cube } = useContext(CubeContext);

@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import AutocardListItem from 'components/AutocardListItem';
-import withCardModal from 'components/WithCardModal';
+import AutocardListItem from 'components/card/AutocardListItem';
+import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import Card from 'datatypes/Card';
 import { getLabels, sortIntoGroups } from 'utils/Sort';

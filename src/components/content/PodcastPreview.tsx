@@ -1,7 +1,7 @@
 import React from 'react';
 import TimeAgo from 'react-timeago';
 
-import AspectRatioBox from 'components/AspectRatioBox';
+import AspectRatioBox from 'components/base/AspectRatioBox';
 import Text from '../base/Text';
 import { Tile } from '../base/Tile';
 import { Flexbox } from '../base/Layout';
@@ -15,7 +15,7 @@ const PodcastPreview: React.FC<PodcastPreviewProps> = ({ podcast }) => {
   return (
     <Tile href={`/content/podcast/${podcast.id}`}>
       <AspectRatioBox ratio={1.9} className="text-ellipsis">
-        {podcast.image && <img className="w-100" alt={podcast.title} src={podcast.image} />}
+        {podcast.image && <img className="w-full" alt={podcast.title} src={podcast.image} />}
         <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-podcast bg-opacity-50 w-full mb-0 p-1">
           Podcast Episode
         </Text>

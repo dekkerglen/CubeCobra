@@ -2,7 +2,7 @@ import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import CardGrid from 'components/CardGrid';
+import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import CardType from 'datatypes/Card';

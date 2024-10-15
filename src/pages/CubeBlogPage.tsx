@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 
-import BlogPost from 'components/BlogPost';
-import CreateBlogModal from 'components/CreateBlogModal';
+import BlogPost from 'components/blog/BlogPost';
+import CreateBlogModal from 'components/modals/CreateBlogModal';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';

@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Flexbox } from './base/Layout';
+import { Flexbox } from 'components/base/Layout';
 
 interface TextBadgeProps {
   name: string;

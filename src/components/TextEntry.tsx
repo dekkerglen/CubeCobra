@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 
 import ErrorBoundary from 'components/ErrorBoundary';
 import Markdown from 'components/Markdown';
-import { Card, CardBody } from './base/Card';
-import Link from './base/Link';
-import { TabbedView } from './base/Tabs';
-import Text from './base/Text';
-import TextArea from './base/TextArea';
+import { Card, CardBody } from 'components/base/Card';
+import Link from 'components/base/Link';
+import { TabbedView } from 'components/base/Tabs';
+import Text from 'components/base/Text';
+import TextArea from 'components/base/TextArea';
 
 interface TextEntryProps {
   name?: string;
@@ -31,7 +31,7 @@ const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength =
                   <TextArea
                     name="textarea"
                     maxLength={maxLength}
-                    className="w-100 markdown-input"
+                    className="w-full markdown-input"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                   />

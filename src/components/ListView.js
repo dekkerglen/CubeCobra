@@ -86,7 +86,7 @@ const ListViewRow = ({ card, versions, checked, onCheck }) => {
           value={card.cardID}
           onChange={(e) => updateField('cardID', e.target.value)}
           style={{ maxWidth: '6rem' }}
-          className="w-100"
+          className="w-full"
         >
           {Object.entries(versions).map(([key, value]) => {
             return (

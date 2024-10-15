@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import AsfanDropdown from 'components/AsfanDropdown';
+import AsfanDropdown from 'components/analytics/AsfanDropdown';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import ErrorBoundary from 'components/ErrorBoundary';

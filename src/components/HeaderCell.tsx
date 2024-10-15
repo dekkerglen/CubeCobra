@@ -1,7 +1,7 @@
 import { SortConfig } from 'hooks/UseSortableData';
 import React from 'react';
-import { Flexbox } from './base/Layout';
-import Text from './base/Text';
+import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 
 interface HeaderCellProps {
   label: string;

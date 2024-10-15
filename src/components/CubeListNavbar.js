@@ -22,12 +22,12 @@ import PropTypes from 'prop-types';
 
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
-import PasteBulkModal from 'components/PasteBulkModal';
+import PasteBulkModal from 'components/modals/PasteBulkModal';
 import SortCollapse from 'components/SortCollapse';
-import TagColorsModal from 'components/TagColorsModal';
-import Tooltip from 'components/Tooltip';
-import UploadBulkModal from 'components/UploadBulkModal';
-import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
+import TagColorsModal from 'components/modals/TagColorsModal';
+import Tooltip from 'components/base/Tooltip';
+import UploadBulkModal from 'components/modals/UploadBulkModal';
+import UploadBulkReplaceModal from 'components/modals/UploadBulkReplaceModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import FilterContext from 'contexts/FilterContext';

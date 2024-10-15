@@ -1,5 +1,5 @@
 import React from 'react';
-import Comment from 'components/Comment';
+import Comment from 'components/comments/Comment';
 import PagedList from 'components/PagedList';
 import CommentType from 'datatypes/Comment';
 import { EditRequest } from 'hooks/UseComments';

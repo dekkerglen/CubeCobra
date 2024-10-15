@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import CubePreview from 'components/CubePreview';
 import Cube from 'datatypes/Cube';
 import Text from 'components/base/Text';
-import Link from './base/Link';
-import { Card, CardBody, CardHeader } from './base/Card';
-import { Row, Col } from './base/Layout';
-import Button from './base/Button';
-import Collapse from './base/Collapse';
+import Link from 'components/base/Link';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Row, Col } from 'components/base/Layout';
+import Button from 'components/base/Button';
+import Collapse from 'components/base/Collapse';
 
 interface CubesCardProps {
   cubes: Cube[];

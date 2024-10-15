@@ -5,7 +5,7 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
-import BlogPost from 'components/BlogPost';
+import BlogPost from 'components/blog/BlogPost';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import TextEntry from 'components/TextEntry';

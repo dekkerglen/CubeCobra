@@ -2,7 +2,7 @@ import React from 'react';
 
 import TimeAgo from 'react-timeago';
 
-import CommentsSection from 'components/CommentsSection';
+import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import ArticleData from 'datatypes/Article';

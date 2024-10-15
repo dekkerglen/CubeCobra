@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import Banner from 'components/Banner';
-import CardPackage from 'components/CardPackage';
-import CreatePackageModal from 'components/CreatePackageModal';
+import CardPackage from 'components/card/CardPackage';
+import CreatePackageModal from 'components/modals/CreatePackageModal';
 import DynamicFlash from 'components/DynamicFlash';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';

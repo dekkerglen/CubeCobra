@@ -1,11 +1,11 @@
 import React, { useCallback, useContext, useState } from 'react';
-import BlogPost from 'components/BlogPost';
+import BlogPost from 'components/blog/BlogPost';
 import UserContext from 'contexts/UserContext';
 import { csrfFetch } from 'utils/CSRF';
 import Spinner from 'components/base/Spinner';
 import BlogPostType from 'datatypes/BlogPost';
-import { Flexbox } from './base/Layout';
-import Button from './base/Button';
+import { Flexbox } from 'components/base/Layout';
+import Button from 'components/base/Button';
 
 interface FeedProps {
   items: BlogPostType[];

@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, Col, Row, Spinner } from 'reactstrap';
 import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
-import BlogPostChangelog from 'components/BlogPostChangelog';
+import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CubeContext from 'contexts/CubeContext';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';

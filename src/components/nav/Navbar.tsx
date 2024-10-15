@@ -4,7 +4,7 @@ import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 
 import { CardFooter } from 'components/base/Card';
 import NavButton from 'components/base/NavButton';
-import CardSearchBar from 'components/CardSearchBar';
+import CardSearchBar from 'components/card/CardSearchBar';
 import LoginModal from 'components/LoginModal';
 import UserContext from 'contexts/UserContext';
 import Button from '../base/Button';

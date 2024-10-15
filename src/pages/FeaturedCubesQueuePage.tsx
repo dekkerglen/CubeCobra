@@ -5,7 +5,7 @@ import React from 'react';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import ConfirmActionModal from 'components/ConfirmActionModal';
+import ConfirmActionModal from 'components/modals/ConfirmActionModal';
 import DynamicFlash from 'components/DynamicFlash';
 import AddCubeModal from 'components/featuredQueue/AddCubeModal';
 import QueueItem from 'components/featuredQueue/QueueItem';

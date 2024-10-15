@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
-import AutocardListGroup from 'components/AutocardListGroup';
+import AutocardListGroup from 'components/card/AutocardListGroup';
 import CubeContext from 'contexts/CubeContext';
 import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';

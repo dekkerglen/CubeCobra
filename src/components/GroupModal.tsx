@@ -15,12 +15,12 @@ import {
   Row,
 } from 'reactstrap';
 
-import AutocardListItem from 'components/AutocardListItem';
+import AutocardListItem from 'components/card/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
-import Tooltip from 'components/Tooltip';
+import Tooltip from 'components/base/Tooltip';
 import AutocardContext from 'contexts/AutocardContext';
 import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
@@ -204,8 +204,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
       <ModalBody>
         <Row>
           <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
-            <Row className="w-100 g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
-              <ListGroup className="list-outline w-100">
+            <Row className="w-full g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
+              <ListGroup className="list-outline w-full">
                 {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal inModal>
                     <Button close className="me-1" data-index={card.index} onClick={() => filterOut(card)} />

@@ -2,7 +2,7 @@ import React from 'react';
 
 import TimeAgo from 'react-timeago';
 
-import AspectRatioBox from 'components/AspectRatioBox';
+import AspectRatioBox from 'components/base/AspectRatioBox';
 import MtgImage from 'components/MtgImage';
 import Article from 'datatypes/Article';
 import Text from '../base/Text';

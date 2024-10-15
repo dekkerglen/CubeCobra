@@ -13,8 +13,8 @@ import withModal, { WithModalProps } from 'components/WithModal';
 import CardDetails from 'datatypes/CardDetails';
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
 import { isInternalURL, isSamePageURL } from 'utils/Util';
-import Text from './base/Text';
-import Link, { LinkProps } from './base/Link';
+import Text from 'components/base/Text';
+import Link, { LinkProps } from 'components/base/Link';
 
 type AutocardLinkProps = WithAutocardProps & LinkProps;
 const AutocardLink: React.FC<AutocardLinkProps> = withAutocard(Link);

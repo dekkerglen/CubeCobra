@@ -12,7 +12,7 @@ import {
   BarElement,
 } from 'chart.js';
 
-import AsfanDropdown from 'components/AsfanDropdown';
+import AsfanDropdown from 'components/analytics/AsfanDropdown';
 import useQueryParam from 'hooks/useQueryParam';
 import { calculateAsfans } from 'drafting/createdraft';
 import { sortIntoGroups, SORTS } from 'utils/Sort';

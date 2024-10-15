@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Accordion from 'components/Accordion';
+import Accordion from 'components/base/Accordion';
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';

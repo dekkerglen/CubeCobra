@@ -15,10 +15,10 @@ import History from 'datatypes/History';
 
 import { csrfFetch } from 'utils/CSRF';
 import { formatDate } from 'utils/Date';
-import { Row, Col, Flexbox } from './base/Layout';
-import Select from './base/Select';
-import Spinner from './base/Spinner';
-import Text from './base/Text';
+import { Row, Col, Flexbox } from 'components/base/Layout';
+import Select from 'components/base/Select';
+import Spinner from 'components/base/Spinner';
+import Text from 'components/base/Text';
 
 interface EloGraphProps {
   defaultHistories: History[];

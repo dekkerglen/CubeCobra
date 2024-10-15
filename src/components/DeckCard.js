@@ -5,9 +5,9 @@ import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
-import CardGrid from 'components/CardGrid';
-import CardImage from 'components/CardImage';
-import CommentsSection from 'components/CommentsSection';
+import CardGrid from 'components/card/CardGrid';
+import CardImage from 'components/card/CardImage';
+import CommentsSection from 'components/comments/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
@@ -21,7 +21,7 @@ const DeckStacksStatic = ({ piles, cards }) => (
       <Row key={index} className="row-low-padding">
         {row.map((column, index2) => (
           <Col key={index2} className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding" xs={3}>
-            <div className="w-100 text-center mb-1">
+            <div className="w-full text-center mb-1">
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
             <div className="stack">

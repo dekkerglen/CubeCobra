@@ -3,13 +3,13 @@ import React, { useMemo } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import { buildDefaultSteps, DEFAULT_STEPS, DraftAction, Pack } from 'datatypes/Draft';
 import useToggle from 'hooks/UseToggle';
-import Button from './base/Button';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
-import Collapse from './base/Collapse';
-import Input from './base/Input';
-import { Flexbox } from './base/Layout';
-import Select from './base/Select';
-import Text from './base/Text';
+import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
+import Collapse from 'components/base/Collapse';
+import Input from 'components/base/Input';
+import { Flexbox } from 'components/base/Layout';
+import Select from 'components/base/Select';
+import Text from 'components/base/Text';
 
 interface CustomPackCardProps {
   packIndex: number;

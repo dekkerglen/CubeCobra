@@ -13,9 +13,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDate } from 'utils/Date';
-import { Col, Row, Flexbox } from './base/Layout';
-import Spinner from './base/Spinner';
-import Select from './base/Select';
+import { Col, Row, Flexbox } from 'components/base/Layout';
+import Spinner from 'components/base/Spinner';
+import Select from 'components/base/Select';
 import History, { CubeType } from 'datatypes/History';
 import useQueryParam from 'hooks/useQueryParam';
 

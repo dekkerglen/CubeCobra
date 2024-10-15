@@ -2,11 +2,11 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import CSRFForm from 'components/CSRFForm';
 import CubeContext from 'contexts/CubeContext';
-import Button from './base/Button';
-import { Card, CardBody, CardFooter, CardHeader } from './base/Card';
-import { Flexbox } from './base/Layout';
-import Select, { rangeOptions } from './base/Select';
-import Text from './base/Text';
+import Button from 'components/base/Button';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
+import Select, { rangeOptions } from 'components/base/Select';
+import Text from 'components/base/Text';
 
 interface StandardDraftCardProps {
   defaultDraftFormat: number;

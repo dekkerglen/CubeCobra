@@ -1,6 +1,6 @@
 import React from 'react';
 
-import AddToCubeModal from 'components/AddToCubeModal';
+import AddToCubeModal from 'components/modals/AddToCubeModal';
 import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 import { encodeName } from 'utils/Card';

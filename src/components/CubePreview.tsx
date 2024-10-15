@@ -2,9 +2,9 @@ import React from 'react';
 
 import Cube from 'datatypes/Cube';
 import { getCubeDescription, getCubeId } from 'utils/Util';
-import { Flexbox } from './base/Layout';
-import Text from './base/Text';
-import { Tile } from './base/Tile';
+import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
+import { Tile } from 'components/base/Tile';
 
 interface CubePreviewProps {
   cube: Cube;

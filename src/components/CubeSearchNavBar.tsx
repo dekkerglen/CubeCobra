@@ -6,7 +6,7 @@ import Input from 'components/base/Input';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Controls from 'components/base/Controls';
-import { Flexbox } from './base/Layout';
+import { Flexbox } from 'components/base/Layout';
 
 interface CubeSearchNavBarProps {
   query?: string;

@@ -1,8 +1,8 @@
 import React from 'react';
 
-import CreatorArticles from 'components/CreatorArticles';
-import CreatorPodcasts from 'components/CreatorPodcasts';
-import CreatorVideos from 'components/CreatorVideos';
+import CreatorArticles from 'components/content/CreatorArticles';
+import CreatorPodcasts from 'components/content/CreatorPodcasts';
+import CreatorVideos from 'components/content/CreatorVideos';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
-import CreateCubeModal from 'components/CreateCubeModal';
+import CreateCubeModal from 'components/modals/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
@@ -42,12 +42,12 @@ const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, act
             followersText
           )}
           {!following && !canEdit && (
-            <Button color="accent" className="rounded-0 w-100" href={`/user/follow/${user.id}`}>
+            <Button color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
               Follow
             </Button>
           )}
           {following && !canEdit && (
-            <Button color="unsafe" outline className="rounded-0 w-100" href={`/user/unfollow/${user.id}`}>
+            <Button color="unsafe" outline className="rounded-0 w-full" href={`/user/unfollow/${user.id}`}>
               Unfollow
             </Button>
           )}

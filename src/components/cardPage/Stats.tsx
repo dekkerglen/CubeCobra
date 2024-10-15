@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 
-import AddToCubeModal from 'components/AddToCubeModal';
+import AddToCubeModal from 'components/modals/AddToCubeModal';
 import Button from 'components/base/Button';
-import CardIdBadge from 'components/CardIdBadge';
+import CardIdBadge from 'components/card/CardIdBadge';
 import ImageFallback from 'components/ImageFallback';
 import TextBadge from 'components/TextBadge';
 import withModal from 'components/WithModal';

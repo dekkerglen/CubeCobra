@@ -1,5 +1,6 @@
 import User from 'datatypes/User';
 import { DraftFormat } from './Draft';
+import Card from './Card';
 
 export interface CubeImage {
   uri: string;
@@ -11,6 +12,11 @@ export interface CubeImage {
 export interface TagColor {
   color: string | null;
   tag: string;
+}
+
+export interface CubeCards {
+  mainboard: Card[];
+  maybeboard: Card[];
 }
 
 interface Cube {

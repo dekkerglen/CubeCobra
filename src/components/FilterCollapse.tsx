@@ -1,16 +1,16 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import AdvancedFilterModal from 'components/AdvancedFilterModal';
+import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
 import Collapse from 'components/base/Collapse';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import CubeContext from 'contexts/CubeContext';
 import FilterContext from 'contexts/FilterContext';
 import { allFields, FilterValues, isColorField, isNumField } from 'datatypes/CardDetails';
-import Button from './base/Button';
-import Link from './base/Link';
-import Text from './base/Text';
-import ResponsiveDiv from './base/ResponsiveDiv';
+import Button from 'components/base/Button';
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
 interface FilterCollapseProps {
   isOpen: boolean;
@@ -78,7 +78,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
   return (
     <Collapse isOpen={isOpen} className={className}>
       <Flexbox direction="col" gap="2">
-        <Flexbox direction="row" className="w-100" justify="between" gap="2" alignItems="stretch">
+        <Flexbox direction="row" className="w-full" justify="between" gap="2" alignItems="stretch">
           <Input
             type="text"
             id="filterInput"

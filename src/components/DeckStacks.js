@@ -4,7 +4,7 @@ import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import CardStack from 'components/CardStack';
+import CardStack from 'components/card/CardStack';
 import DraggableCard from 'components/DraggableCard';
 import Location from 'drafting/DraftLocation';
 

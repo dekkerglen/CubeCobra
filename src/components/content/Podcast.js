@@ -4,8 +4,8 @@ import { CardBody, CardHeader, Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
-import AspectRatioBox from 'components/AspectRatioBox';
-import CommentsSection from 'components/CommentsSection';
+import AspectRatioBox from 'components/base/AspectRatioBox';
+import CommentsSection from 'components/comments/CommentsSection';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';
 
@@ -21,7 +21,7 @@ const Podcast = ({ podcast, episodes }) => {
       <Row>
         <Col xs={12} sm={4}>
           <AspectRatioBox ratio={1} className="text-ellipsis">
-            <img className="w-100" alt={podcast.title} src={podcast.image} />
+            <img className="w-full" alt={podcast.title} src={podcast.image} />
           </AspectRatioBox>
         </Col>
         <Col xs={12} sm={8}>

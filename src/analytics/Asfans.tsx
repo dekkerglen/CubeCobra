@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import AsfanDropdown from 'components/AsfanDropdown';
+import AsfanDropdown from 'components/analytics/AsfanDropdown';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { compareStrings, SortableTable } from 'components/SortableTable';
 import { calculateAsfans } from 'drafting/createdraft';

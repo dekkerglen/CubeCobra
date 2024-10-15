@@ -4,9 +4,9 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import CardGrid from 'components/CardGrid';
+import CardGrid from 'components/card/CardGrid';
 import SpoilerImage from 'components/SpoilerImage';
-import withCardModal from 'components/WithCardModal';
+import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import useQueryParam from 'hooks/useQueryParam';
 import { sortDeep } from 'utils/Sort';

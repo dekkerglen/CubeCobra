@@ -13,7 +13,7 @@ import {
   UncontrolledAlertProps,
 } from 'reactstrap';
 
-import AutocompleteInput from 'components/AutocompleteInput';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Changelist from 'components/Changelist';
 import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';

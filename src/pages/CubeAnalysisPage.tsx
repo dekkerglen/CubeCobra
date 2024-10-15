@@ -35,6 +35,7 @@ import {
   pickRate,
 } from 'utils/Card';
 import { cardIsLabel, getLabels } from 'utils/Sort';
+import Cube, { CubeCards } from 'datatypes/Cube';
 
 interface CubeAnalysisPageProps {
   cubeAnalytics: any;
@@ -215,11 +216,8 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
 };
 
 interface CubeAnalysisPageWrapperProps {
-  cube: any; // Adjust the type as needed
-  cards: {
-    mainboard: any[];
-    maybeboard: any[];
-  };
+  cube: Cube; // Adjust the type as needed
+  cards: CubeCards;
   loginCallback?: string;
   cubeAnalytics: any; // Adjust the type as needed
   tokenMap: { [key: string]: CardType };
