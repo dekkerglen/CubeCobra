@@ -26,7 +26,7 @@ import CustomImageToggler from 'components/CustomImageToggler';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import SampleHandModal from 'components/SampleHandModal';
+import SampleHandModal from 'components/modals/SampleHandModal';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';

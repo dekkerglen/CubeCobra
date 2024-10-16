@@ -29,7 +29,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
   return (
     <Row>
       <Col xs={12} sm={3}>
-        <h4>Pick Order</h4>
+        <Text semibold lg>Pick Order</Text>
         {picksList.map((list, listindex) => (
           <ListGroup key={listindex} className="list-outline">
             <ListGroupItem className="list-group-heading">{`Pack ${listindex + 1}`}</ListGroupItem>
@@ -43,7 +43,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
                 data-pick-number={pickindex}
               >
                 {drafterState.pickNumber === pickNumber ? (
-                  <strong>{`${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`}</strong>
+                  <Text semibold>{`${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`}</Text>
                 ) : (
                   <>{`${ACTION_LABELS[action]}: ${cardName(draft.cards[cardIndex])}`}</>
                 )}
@@ -53,7 +53,7 @@ const DecksPickBreakdown = ({ draft, seatNumber, defaultIndex }) => {
         ))}
       </Col>
       <Col xs={12} sm={9}>
-        <h4>{`Pack ${pack}: Pick ${pick}`}</h4>
+        <Text semibold lg>{`Pack ${pack}: Pick ${pick}`}</Text>
         <Row className="g-0">
           {cardsInPack.map((cardIndex) => (
             <Col key={cardIndex} xs={4} sm={2}>

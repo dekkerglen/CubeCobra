@@ -13,7 +13,7 @@ import {
   UncontrolledAlertProps,
 } from 'reactstrap';
 
-import AutocompleteInput from 'components/AutocompleteInput';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Changelist from 'components/Changelist';
 import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';
@@ -23,6 +23,7 @@ import { BoardType } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
+import Text from 'components/base/Text';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -227,7 +228,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="add"
               value={addValue}
               setValue={setAddValue}
-              onSubmit={handleAdd}
+              onSubmit={(e) => handleAdd(e, removeValue)}
               placeholder="Card to Add"
               autoComplete="off"
               data-lpignore
@@ -249,7 +250,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
               name="remove"
               value={removeValue}
               setValue={setRemoveValue}
-              onSubmit={handleRemoveReplace}
+              onSubmit={(e) => handleRemoveReplace(e, removeValue)}
               placeholder="Card to Remove"
               autoComplete="off"
               data-lpignore
@@ -317,35 +318,32 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
         className="pt-1"
       >
         <Row>
-          <Col xs="12" md="6">
+          <Col xs={12} md={6}>
             <Changelist />
           </Col>
           {useBlog && (
-            <Col xs="12" md="6">
-              <h6>Blog Post</h6>
+            <Col xs={12} md={6}>
+              <Text semibold sm>
+                Blog Post
+              </Text>
               <FormGroup>
                 <Label className="visually-hidden">Blog title</Label>
                 <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
               </FormGroup>
               <FormGroup>
                 <Label className="visually-hidden">Blog body</Label>
-                <TextEntry
-                  name="blog"
-                  value={postContent}
-                  onChange={(event) => setPostContent(event.target.value)}
-                  maxLength={10000}
-                />
+                <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} />
               </FormGroup>
             </Col>
           )}
         </Row>
         <Row className="mb-2">
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <LoadingButton color="accent" block onClick={submit} loading={loading}>
               Save Changes
             </LoadingButton>
           </Col>
-          <Col xs="6" md="3">
+          <Col xs={6} md="3">
             <Button
               color="unsafe"
               block

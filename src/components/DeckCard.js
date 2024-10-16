@@ -5,9 +5,9 @@ import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
-import CardGrid from 'components/CardGrid';
-import CardImage from 'components/CardImage';
-import CommentsSection from 'components/CommentsSection';
+import CardGrid from 'components/card/CardGrid';
+import CardImage from 'components/card/CardImage';
+import CommentsSection from 'components/comments/CommentsSection';
 import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
@@ -21,7 +21,7 @@ const DeckStacksStatic = ({ piles, cards }) => (
       <Row key={index} className="row-low-padding">
         {row.map((column, index2) => (
           <Col key={index2} className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding" xs={3}>
-            <div className="w-100 text-center mb-1">
+            <div className="w-full text-center mb-1">
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
             <div className="stack">
@@ -99,11 +99,11 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
     <Card>
       <CardHeader>
         <CardTitle className="mb-0 d-flex flex-row align-items-end">
-          <h4 className="mb-0 me-auto">{seat.name}</h4>
+          <Text md semibold>{seat.name}</Text>
           {!seat.bot && (
-            <h6 className="mb-0 font-weight-normal d-none d-sm-block">
+            <Text md semibold>
               Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
-            </h6>
+            </Text>
           )}
         </CardTitle>
       </CardHeader>
@@ -143,7 +143,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
             <Row>
               <Col>
                 <CardBody className="border-bottom">
-                  <h4>sideboard</h4>
+                  <Text semibold lg>sideboard</Text>
                 </CardBody>
                 <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="sideboard" />
               </Col>
@@ -153,7 +153,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       )}
       {view === 'visual' && (
         <CardBody>
-          <h4>Mainboard</h4>
+          <Text semibold lg>Mainboard</Text>
           <CardGrid
             cardList={sorted}
             Tag={CardImage}
@@ -164,7 +164,7 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
           {seat.sideboard.flat(2).length > 0 && (
             <>
               <hr className="my-4" />
-              <h4 className="mt-4">Sideboard</h4>
+              <Text semibold md>Sideboard</Text>
               <CardGrid
                 cardList={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])}
                 Tag={CardImage}

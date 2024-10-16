@@ -71,7 +71,7 @@ const SearchPage = ({ cubes, query, order, loginCallback, lastKey, ascending }) 
           </Row>
         </InfiniteScroll>
       ) : (
-        <h4>No Results</h4>
+        <Text semibold lg>No Results</Text>
       )}
     </MainLayout>
   );

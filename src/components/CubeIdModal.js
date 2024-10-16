@@ -15,7 +15,7 @@ const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
     <Modal isOpen={isOpen} toggle={toggle}>
       <ModalHeader>Cube ID</ModalHeader>
       <ModalBody>
-        <h6>short ID</h6>
+        <Text semibold sm>short ID</Text>
         <InputGroup>
           <Input className="bg-white monospaced" value={shortId} readOnly />
           <Button
@@ -27,8 +27,7 @@ const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
           </Button>
         </InputGroup>
         <Label for="short-id-input">A custom, memorable ID that owners are allowed to modify.</Label>
-
-        <h6 className="mt-3">Full ID</h6>
+        <Text semibold sm>Full ID</Text>
         <InputGroup>
           <Input className="bg-white monospaced" value={fullID} readOnly />
           <Button

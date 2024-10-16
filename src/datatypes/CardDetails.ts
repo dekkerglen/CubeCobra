@@ -45,6 +45,7 @@ export default interface CardDetails {
     tix?: number;
   };
   tokens: string[];
+  set_name: string;
 
   // Computed values
   elo?: number;

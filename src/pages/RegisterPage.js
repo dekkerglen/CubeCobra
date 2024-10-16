@@ -15,7 +15,7 @@ const RegisterPage = ({ username, email, loginCallback }) => (
     <DynamicFlash />
     <Card className="mt-3">
       <CardHeader>
-        <h5>Register</h5>
+        <Text md semibold>Register</Text>
       </CardHeader>
       <CardBody>
         <CSRFForm method="POST" action="/user/register">

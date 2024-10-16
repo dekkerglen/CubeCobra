@@ -15,36 +15,36 @@ const PasswordResetPage = ({ loginCallback, code }) => (
     <DynamicFlash />
     <Card className="my-3">
       <CardHeader>
-        <h5>Reset Password</h5>
+        <Text md semibold>Reset Password</Text>
       </CardHeader>
       <CardBody>
         <CSRFForm method="POST" action={`/user/lostpasswordreset/${code}`}>
           <FormGroup>
             <Row>
-              <Col sm="4">
+              <Col sm={4}>
                 <Label>Email Address:</Label>
               </Col>
-              <Col sm="8">
+              <Col sm={8}>
                 <Input maxLength="1000" name="email" id="email" type="text" />
               </Col>
             </Row>
           </FormGroup>
           <FormGroup>
             <Row>
-              <Col sm="4">
+              <Col sm={4}>
                 <Label>New Password:</Label>
               </Col>
-              <Col sm="8">
+              <Col sm={8}>
                 <Input maxLength="1000" name="password" id="password" type="password" />
               </Col>
             </Row>
           </FormGroup>
           <FormGroup>
             <Row>
-              <Col sm="4">
+              <Col sm={4}>
                 <Label>Confirm New Password:</Label>
               </Col>
-              <Col sm="8">
+              <Col sm={8}>
                 <Input maxLength="1000" name="password2" id="confirmPassword" type="password" />
               </Col>
             </Row>

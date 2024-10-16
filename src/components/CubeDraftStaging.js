@@ -15,7 +15,6 @@ import { SortableItem, SortableList } from './DND';
 
 const BOT_NAME = 'Bot';
 
-
 const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
   const [order, setOrder] = React.useState({});
@@ -103,7 +102,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     return (
       <Card className="mt-4">
         <CardHeader>
-          <h4>Setting Up Draft...</h4>
+          <Text semibold lg>Setting Up Draft...</Text>
         </CardHeader>
         <CardBody>
           <div className="centered py-3">
@@ -124,7 +123,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <h4>Setting Up Draft...</h4>
+        <Text semibold lg>Setting Up Draft...</Text>
       </CardHeader>
       <CardBody>
         {loading ? (

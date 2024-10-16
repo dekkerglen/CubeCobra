@@ -5,10 +5,10 @@ import PropTypes from 'prop-types';
 
 const LabelRow = ({ htmlFor, label, children, ...props }) => (
   <FormGroup row {...props}>
-    <Label xs="4" md="6" lg="5" htmlFor={htmlFor}>
+    <Label xs="4" md={6} lg="5" htmlFor={htmlFor}>
       {label}
     </Label>
-    <Col xs="8" md="6" lg="7">
+    <Col xs="8" md={6} lg="7">
       {children}
     </Col>
   </FormGroup>

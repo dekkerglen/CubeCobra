@@ -8,13 +8,13 @@ const ensureAuth = (req, res, next) => {
   }
 
   req.flash('danger', 'Please login to view this content');
-  return res.redirect('/user/login');
+  return redirect(req, res, '/user/login');
 };
 
 const ensureRole = (role) => async (req, res, next) => {
   if (!req.isAuthenticated()) {
     req.flash('danger', 'Please login to view this content');
-    return res.redirect('/user/login');
+    return redirect(req, res, '/user/login');
   }
 
   const user = await User.getById(req.user.id);
@@ -22,7 +22,7 @@ const ensureRole = (role) => async (req, res, next) => {
   if (user.roles && user.roles.includes(role)) {
     return next();
   }
-  return res.redirect('/404');
+  return redirect(req, res, '/404');
 };
 
 const csrfProtection = [

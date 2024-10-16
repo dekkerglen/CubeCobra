@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import Card from 'datatypes/Card';
 import { cardFinish, cardTags } from 'utils/Card';
+import { Flexbox } from 'components/base/Layout';
 
 interface Tag {
   value: string;
@@ -67,8 +68,8 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
       style={{ zIndex, ...position }}
       ref={autocardPopup}
     >
-      <div className="autocard-background">
-        <div className="row g-0">
+      <div className="autocard-background bg-bg-secondary">
+        <Flexbox direction="row">
           {front && (
             <div className="col position-relative card-border">
               {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
@@ -81,7 +82,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
               <img id="autocardImageBack" src={back} alt={back} key={back} />
             </div>
           )}
-        </div>
+        </Flexbox>
         {tags.length > 0 && (
           <div className="row g-0 p-1" id="autocardTags">
             {tags.map((tag) => (

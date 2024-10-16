@@ -4,10 +4,10 @@ import { Collapse, Input, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'r
 import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 
-import BasicsModal from 'components/BasicsModal';
+import BasicsModal from 'components/modals/BasicsModal';
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
-import DeckDeleteModal from 'components/DeckDeleteModal';
+import DeckDeleteModal from 'components/modals/DeckDeleteModal';
 import withModal from 'components/WithModal';
 import { cardsAreEquivalent } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
@@ -159,11 +159,11 @@ const DeckbuilderNavbar = ({
             </CSRFForm>
           </NavItem>
           <NavItem>
-            <DeleteDeckModalLink modalProps={{ deckID: deck.id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
+            <DeleteDeckModalLink modalprops={{ deckID: deck.id, cubeID: deck.cube }}>Delete Deck</DeleteDeckModalLink>
           </NavItem>
           <NavItem>
             <BasicsModalLink
-              modalProps={{
+              modalprops={{
                 basics: deck.basics,
                 addBasics,
                 deck: deck.mainboard.flat(3).map(({ index }) => index),

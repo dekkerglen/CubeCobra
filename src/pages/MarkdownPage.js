@@ -15,14 +15,14 @@ const MarkdownPage = ({ loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
-        <h4>Markdown Guide</h4>
+        <Text semibold lg>Markdown Guide</Text>
       </CardHeader>
       <CardBody>
         <p>
           CubeCobra supports regular Markdown as well as some extra features specific to our site. If you need any help
           regarding how to use markdown, please <a href="/contact">contact us</a>.
         </p>
-        <h5>Contents</h5>
+        <Text md semibold>Contents</Text>
         <ol>
           <li>
             <a href="#formatting">Basic Formatting</a>
@@ -57,20 +57,20 @@ const MarkdownPage = ({ loginCallback }) => (
         </ol>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="formatting">Basic Formatting</h5>
+        <Text semibold md id="formatting">Basic Formatting</Text>
         <p>
           Our Markdown syntax is based on the CommonMark specification, which includes all the common Markdown
           constructs you may already be familiar with. <a href="https://commonmark.org/help/">Learn more.</a>
         </p>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="cards">Linking cards</h5>
+        <Text semibold md id="cards">Linking cards</Text>
         <p>
           There are multiple ways to link cards. To link a card with autocard, you can use double square brackets to
           wrap a card name, like so:
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -80,7 +80,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -100,7 +100,7 @@ const MarkdownPage = ({ loginCallback }) => (
           will be whatever is to the left of the pipe (|).For example:
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -112,7 +112,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -131,7 +131,7 @@ const MarkdownPage = ({ loginCallback }) => (
           specific IDs.
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -143,7 +143,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -160,7 +160,7 @@ const MarkdownPage = ({ loginCallback }) => (
           width of the screen, so try it out on different screen widths to make sure you're happy with it, like so:
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -168,7 +168,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -180,7 +180,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
         <p>For DFCs, you can similarly add a slash to get the back side in autocard.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -190,7 +190,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -205,7 +205,7 @@ const MarkdownPage = ({ loginCallback }) => (
           double angle brackets. This feature is not available for blog posts. Take the following example:
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -215,7 +215,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -226,7 +226,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
         <br />
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -236,7 +236,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -248,10 +248,10 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="symbols">Symbols</h5>
+        <Text semibold md id="symbols">Symbols</Text>
         <p>Symbols can be added using curly braces. Most MTG symbols are supported.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -261,7 +261,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -273,7 +273,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
         <p>Create hybrid symbols by including a slash.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -283,7 +283,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -295,7 +295,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
         <p>Similarly, we can do hybrid color/2 colorless symbols, and Phrexian mana.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -307,7 +307,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -319,7 +319,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
         <p>There are many more symbols available. Anything you'd see in a text box, we should support. For example:</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -329,7 +329,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -341,10 +341,10 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="users">Linking Users</h5>
+        <Text semibold md id="users">Linking Users</Text>
         <p>You can link to a user by adding an @ before the username.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -354,7 +354,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -366,13 +366,13 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="latex">LaTeX</h5>
+        <Text semibold md id="latex">LaTeX</Text>
         <p>
           You can add LaTeX math expressions using '$' for inline LaTeX, and double '$' on a separate line for block
           LaTeX.
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -382,7 +382,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -393,7 +393,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
         <br />
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -407,7 +407,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -419,7 +419,7 @@ const MarkdownPage = ({ loginCallback }) => (
         <br />
         <p>You can use LaTeX in headers, and in block quotes as well.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -431,7 +431,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -444,10 +444,10 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="strikethrough">Strikethrough</h5>
+        <Text semibold md id="strikethrough">Strikethrough</Text>
         <p>For strikethrough text, wrap the text in double tilde.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -457,7 +457,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -468,10 +468,10 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="centering">Centering</h5>
+        <Text semibold md id="centering">Centering</Text>
         <p>You can center elements by wrapping them in triple angle brackets.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -481,7 +481,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -496,7 +496,7 @@ const MarkdownPage = ({ loginCallback }) => (
           centered block.
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -506,7 +506,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -516,7 +516,7 @@ const MarkdownPage = ({ loginCallback }) => (
           </Col>
         </Row>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -530,7 +530,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -540,7 +540,7 @@ const MarkdownPage = ({ loginCallback }) => (
           </Col>
         </Row>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -557,7 +557,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -568,13 +568,13 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="tables">Tables</h5>
+        <Text semibold md id="tables">Tables</Text>
         <p>
           Tables consist of a header row, a delimiter row, and one or more data rows. The separators between columns
           don't have to be vertically aligned, but it helps readability.
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -588,7 +588,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -603,7 +603,7 @@ const MarkdownPage = ({ loginCallback }) => (
           also support basic formatting.
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -619,7 +619,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -634,10 +634,10 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="tasklists">Task Lists</h5>
+        <Text semibold md id="tasklists">Task Lists</Text>
         <p>Adding brackets to a list turns it into a task list.</p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -655,7 +655,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>
@@ -670,7 +670,7 @@ const MarkdownPage = ({ loginCallback }) => (
         </Row>
       </CardBody>
       <CardBody className="border-top">
-        <h5 id="syntax">Syntax Highlighting</h5>
+        <Text semibold md id="syntax">Syntax Highlighting</Text>
         <p>
           When writing a code block, specifying a language will enable syntax highlighting for that language. You can
           specify{' '}
@@ -679,7 +679,7 @@ const MarkdownPage = ({ loginCallback }) => (
           </a>
         </p>
         <Row>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Source</CardHeader>
               <CardBody>
@@ -695,7 +695,7 @@ const MarkdownPage = ({ loginCallback }) => (
               </CardBody>
             </Card>
           </Col>
-          <Col xs="12" sm="6">
+          <Col xs={12} sm={6}>
             <Card>
               <CardHeader>Result</CardHeader>
               <CardBody>

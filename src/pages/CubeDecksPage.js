@@ -7,7 +7,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import Paginate from 'components/Paginate';
+import Paginate from 'components/base/Pagination';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -20,7 +20,7 @@ const CubeDecksPage = ({ cube, decks, pages, activePage, loginCallback }) => (
         {pages > 1 && <Paginate count={pages} active={activePage} urlF={(i) => `/cube/deck/decks/${cube.id}/${i}`} />}
         <Card>
           <CardHeader>
-            <h5 className="mb-0">All Decks</h5>
+            <Text semibold md>All Decks</Text>
           </CardHeader>
           <CardBody className="p-0">
             {decks.map((deck) => (

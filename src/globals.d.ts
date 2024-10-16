@@ -46,7 +46,7 @@ interface NitroAdOptions {
   renderVisibleOnly?: boolean;
   report?: ReportOptions;
   rewarded?: RewardedOptions;
-  sizes: [string, string][];
+  sizes?: [string, string][];
   skipBidders?: string[];
   stickyStackLimit?: number;
   stickyStackOffset?: number;

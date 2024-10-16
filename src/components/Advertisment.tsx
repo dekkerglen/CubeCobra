@@ -13,6 +13,7 @@ interface SizeTypes {
   banner: [string, string][];
   side: [string, string][];
   mobile: [string, string][];
+  video: [string, string][];
 }
 
 export interface AdvertismentProps {
@@ -24,7 +25,7 @@ export interface AdvertismentProps {
   enabled?: boolean;
   media: keyof MediaTypes;
   size: keyof SizeTypes;
-  format?: 'display' | 'sticky-stack' | 'rail' | 'anchor';
+  format?: 'display' | 'sticky-stack' | 'rail' | 'anchor' | 'floating';
   stickyStackLimit?: number;
   stickyStackSpace?: number;
   stickyStackOffset?: number;
@@ -48,12 +49,13 @@ const sizeTypes: SizeTypes = {
   ],
   side: [['160', '600']],
   mobile: [['320', '50']],
+  video: [['300', '250']],
 };
 
 const Advertisment: React.FC<AdvertismentProps> = ({
   placementId,
   refreshLimit = 10,
-  refreshTime = 90,
+  refreshTime = 30,
   position = 'fixed-bottom-right',
   wording = 'Report Ad',
   enabled = true,
@@ -121,6 +123,19 @@ const Advertisment: React.FC<AdvertismentProps> = ({
             position,
           },
         });
+      } else if (format === 'floating') {
+        window.nitroAds.createAd(placementId, {
+          format,
+          demo: !adsEnabled,
+          refreshLimit,
+          refreshTime,
+          mediaQuery: mediaTypes[media],
+          report: {
+            enabled,
+            wording,
+            position,
+          },
+        });
       } else {
         // format === display
         window.nitroAds.createAd(placementId, {
@@ -140,7 +155,11 @@ const Advertisment: React.FC<AdvertismentProps> = ({
     }
   });
 
-  return <div className="advertisement-div" id={placementId} />;
+  if (format === 'floating') {
+    return '';
+  }
+
+  return <div className="advertisement-div mb-8" id={placementId} />;
 };
 
 export default Advertisment;

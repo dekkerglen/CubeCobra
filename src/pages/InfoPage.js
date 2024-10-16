@@ -14,7 +14,7 @@ const ContactPage = ({ title, content, loginCallback }) => (
     <DynamicFlash />
     <Card className="my-3 mx-4">
       <CardHeader>
-        <h5>{title}</h5>
+        <Text md semibold>{title}</Text>
       </CardHeader>
       <CardBody>
         {content.map((item) =>
@@ -31,10 +31,10 @@ const ContactPage = ({ title, content, loginCallback }) => (
             </Table>
           ) : (
             <Row key={item.label} className={item.label.length > 0 ? 'mt-3' : 'my-0'}>
-              <Col xs="12" sm="3">
-                <strong>{item.label}</strong>
+              <Col xs={12} sm="3">
+                <Text semibold>{item.label}</Text>
               </Col>
-              <Col xs="12" sm="9">
+              <Col xs={12} sm="9">
                 <p>{item.text}</p>
               </Col>
             </Row>
