@@ -65,7 +65,7 @@ router.post('/add', ensureAuth, async (req, res) => {
       description: 'This is a brand new cube!',
       date: Date.now().valueOf(),
       visibility: Cube.VISIBILITY.PUBLIC,
-      priceVisibility: Cube.PRICE_VISIBLITY.PUBLIC,
+      priceVisibility: Cube.PRICE_VISIBILITY.PUBLIC,
       featured: false,
       tagColors: [],
       defaultFormat: -1,
@@ -127,7 +127,7 @@ router.get('/clone/:id', async (req, res) => {
       description: `Cloned from [${source.name}](/c/${source.id})\n\n${source.description}`,
       date: Date.now().valueOf(),
       visibility: Cube.VISIBILITY.PUBLIC,
-      priceVisibility: Cube.PRICE_VISIBLITY.PUBLIC,
+      priceVisibility: Cube.PRICE_VISIBILITY.PUBLIC,
       featured: false,
       tagColors: source.tagColors,
       defaultFormat: source.defaultFormat,
@@ -278,114 +278,108 @@ router.post(
   }),
 );
 
-router.post(
-  '/editoverview',
-  ensureAuth,
-  async (req, res) => {
-    try {
-      const updatedCube = JSON.parse(req.body.cube);
+router.post('/editoverview', ensureAuth, async (req, res) => {
+  try {
+    const updatedCube = JSON.parse(req.body.cube);
 
-      const cube = await Cube.getById(updatedCube.id);
-      const { user } = req;
+    const cube = await Cube.getById(updatedCube.id);
+    const { user } = req;
 
-      if (!isCubeViewable(cube, user)) {
-        req.flash('danger', 'Cube not found');
-        return redirect(req, res, '/404');
+    if (!isCubeViewable(cube, user)) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    if (cube.owner.id !== user.id) {
+      req.flash('danger', 'Unauthorized');
+      return redirect(req, res, '/cube/overview/' + cube.id);
+    }
+
+    if (updatedCube.shortId !== cube.shortId) {
+      const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
+
+      if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
+        req.flash('danger', 'Custom URL is already taken');
+        return redirect(req, res, '/cube/overview/' + cube.id);
       }
-
-      if (cube.owner.id !== user.id) {
-        req.flash('danger', 'Unauthorized');
+      if (taken.items.length > 1) {
+        req.flash('danger', 'Custom URL is already taken');
         return redirect(req, res, '/cube/overview/' + cube.id);
       }
 
-      if (updatedCube.shortId !== cube.shortId) {
-        const taken = await CubeHash.getSortedByName(`shortid:${updatedCube.shortId.toLowerCase()}`);
-
-        if (taken.items.length === 1 && taken.items[0].cube !== cube.id) {
-          req.flash('danger', 'Custom URL is already taken');
-          return redirect(req, res, '/cube/overview/' + cube.id);
-        }
-        if (taken.items.length > 1) {
-          req.flash('danger', 'Custom URL is already taken');
-          return redirect(req, res, '/cube/overview/' + cube.id);
-        }
-
-        cube.shortId = updatedCube.shortId;
-      }
-
-      cube.name = updatedCube.name;
-      cube.imageName = updatedCube.imageName;
-
-      if (updatedCube.description !== null) {
-        cube.description = updatedCube.description;
-      }
-      cube.date = Date.now().valueOf();
-
-      // cube category override
-      if (updatedCube.categoryOverride !== null) {
-        const categories = [
-          '',
-          'Vintage',
-          'Legacy+',
-          'Legacy',
-          'Modern',
-          'Premodern',
-          'Pioneer',
-          'Historic',
-          'Standard',
-          'Set',
-        ];
-
-        if (!categories.includes(updatedCube.categoryOverride)) {
-          req.flash('danger', 'Not a valid category override.');
-          return redirect(req, res, '/cube/overview/' + cube.id);
-        }
-
-
-        cube.categoryOverride = updatedCube.categoryOverride;
-      } else {
-        cube.categoryOverride = null;
-      }
-
-      if (updatedCube.categoryPrefixes !== null) {
-        const prefixes = [
-          'Powered',
-          'Unpowered',
-          'Pauper',
-          'Peasant',
-          'Budget',
-          'Silver-bordered',
-          'Commander',
-          'Battle Box',
-          'Multiplayer',
-          'Judge Tower',
-          'Desert',
-        ];
-        for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
-          if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
-            req.flash('danger', 'Not a valid category prefix.');
-            return redirect(req, res, '/cube/overview/' + cube.id);
-          }
-        }
-        cube.categoryPrefixes = updatedCube.categoryPrefixes;
-      } else {
-        cube.categoryPrefixes = [];
-      }
-
-
-      // cube tags
-      cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
-
-      await Cube.update(cube);
-      req.flash('success', 'Cube updated successfully');
-      return redirect(req, res, '/cube/overview/' + cube.id);
-    } catch (err) {
-      req.logger.error(err.message, err.stack);
-      req.flash('danger', 'Error updating cube');
-      return redirect(req, res, '/cube/overview/' + cube.id);
+      cube.shortId = updatedCube.shortId;
     }
-  },
-);
+
+    cube.name = updatedCube.name;
+    cube.imageName = updatedCube.imageName;
+
+    if (updatedCube.description !== null) {
+      cube.description = updatedCube.description;
+    }
+    cube.date = Date.now().valueOf();
+
+    // cube category override
+    if (updatedCube.categoryOverride !== null) {
+      const categories = [
+        '',
+        'Vintage',
+        'Legacy+',
+        'Legacy',
+        'Modern',
+        'Premodern',
+        'Pioneer',
+        'Historic',
+        'Standard',
+        'Set',
+      ];
+
+      if (!categories.includes(updatedCube.categoryOverride)) {
+        req.flash('danger', 'Not a valid category override.');
+        return redirect(req, res, '/cube/overview/' + cube.id);
+      }
+
+      cube.categoryOverride = updatedCube.categoryOverride;
+    } else {
+      cube.categoryOverride = null;
+    }
+
+    if (updatedCube.categoryPrefixes !== null) {
+      const prefixes = [
+        'Powered',
+        'Unpowered',
+        'Pauper',
+        'Peasant',
+        'Budget',
+        'Silver-bordered',
+        'Commander',
+        'Battle Box',
+        'Multiplayer',
+        'Judge Tower',
+        'Desert',
+      ];
+      for (let i = 0; i < (updatedCube.categoryPrefixes || []).length; i += 1) {
+        if (!prefixes.includes(updatedCube.categoryPrefixes[i])) {
+          req.flash('danger', 'Not a valid category prefix.');
+          return redirect(req, res, '/cube/overview/' + cube.id);
+        }
+      }
+      cube.categoryPrefixes = updatedCube.categoryPrefixes;
+    } else {
+      cube.categoryPrefixes = [];
+    }
+
+    // cube tags
+    cube.tags = updatedCube.tags.filter((tag) => tag && tag.length > 0).map((tag) => tag.toLowerCase());
+
+    await Cube.update(cube);
+    req.flash('success', 'Cube updated successfully');
+    return redirect(req, res, '/cube/overview/' + cube.id);
+  } catch (err) {
+    req.logger.error(err.message, err.stack);
+    req.flash('danger', 'Error updating cube');
+    return redirect(req, res, '/cube/overview/' + cube.id);
+  }
+});
 
 router.post('/feature/:id', ensureAuth, async (req, res) => {
   const redirect = `/cube/overview/${encodeURIComponent(req.params.id)}`;
@@ -1471,6 +1465,64 @@ router.get('/format/remove/:cubeid/:index', ensureAuth, param('index').toInt(), 
     req.logger.error(err.message, err.stack);
     req.flash('danger', 'Error removing format.');
     return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.cubeid)}`);
+  }
+});
+
+router.post('/updatesettings/:id', ensureAuth, async (req, res) => {
+  try {
+    const { priceVisibility, disableAlerts, defaultStatus, defaultPrinting, visibility } = req.body;
+
+    const errors = [];
+    if (priceVisibility !== 'true' && priceVisibility !== 'false') {
+      errors.push({ msg: 'Invalid Price visibility' });
+    }
+    if (disableAlerts !== 'true' && disableAlerts !== 'false') {
+      errors.push({ msg: 'Invalid value for disableAlerts' });
+    }
+    if (!['Owned', 'Not Owned'].includes(defaultStatus)) {
+      errors.push({ msg: 'Status must be valid.' });
+    }
+    if (!['recent', 'first'].includes(defaultPrinting)) {
+      errors.push({ msg: 'Printing must be valid.' });
+    }
+    if (!Object.values(Cube.VISIBILITY).includes(visibility)) {
+      errors.push({ msg: 'Visibility must be valid' });
+    }
+
+    if (errors.length > 0) {
+      req.flash('danger', 'Error updating cube: ' + errors.map((error) => error.msg).join(', '));
+      return redirect(req, res, '/cube/overview/' + req.params.id);
+    }
+
+    const cube = await Cube.getById(req.params.id);
+
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found.');
+      return redirect(req, res, '/404');
+    }
+
+    if (cube.owner.id !== req.user.id) {
+      req.flash('danger', 'Unauthorized');
+      return redirect(req, res, '/cube/overview/' + req.params.id);
+    }
+
+    const update = req.body;
+    for (const field of ['visibility', 'defaultStatus', 'defaultPrinting']) {
+      if (update[field] !== undefined) {
+        cube[field] = update[field];
+      }
+    }
+    cube.disableAlerts = update.disableAlerts === 'true';
+    cube.priceVisibility =
+      update.priceVisibility === 'true' ? Cube.PRICE_VISIBILITY.PUBLIC : Cube.PRICE_VISIBILITY.PRIVATE;
+
+    await Cube.update(cube);
+    req.flash('success', 'Settings updated successfully.');
+    return redirect(req, res, '/cube/overview/' + req.params.id);
+  } catch (err) {
+    req.flash('danger', 'Error updating settings. ' + err.message);
+    req.logger.error('Error updating settings:', err);
+    return redirect(req, res, '/cube/overview/' + req.params.id);
   }
 });
 

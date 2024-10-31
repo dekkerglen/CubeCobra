@@ -28,7 +28,7 @@ const FIELDS = {
   OWNER: 'owner',
   NAME: 'name',
   VISIBILITY: 'visibility',
-  PRICE_VISIBLITY: 'priceVisibility',
+  PRICE_VISIBILITY: 'priceVisibility',
   FEATURED: 'featured',
   CATEGORY_OVERRIDE: 'categoryOverride',
   CATEGORY_PREFIXES: 'categoryPrefixes',
@@ -57,7 +57,7 @@ const VISIBILITY = {
   UNLISTED: 'un',
 };
 
-const PRICE_VISIBLITY = {
+const PRICE_VISIBILITY = {
   PUBLIC: 'pu',
   PRIVATE: 'pr',
 };
@@ -377,7 +377,7 @@ module.exports = {
     [FIELDS.SHORT_ID]: cube.shortID,
     [FIELDS.OWNER]: `${cube.owner}`,
     [FIELDS.VISIBILITY]: getVisibility(cube.isListed, cube.isPrivate),
-    [FIELDS.PRICE_VISIBLITY]: cube.privatePrices ? PRICE_VISIBLITY.PRIVATE : PRICE_VISIBLITY.PUBLIC,
+    [FIELDS.PRICE_VISIBILITY]: cube.privatePrices ? PRICE_VISIBILITY.PRIVATE : PRICE_VISIBILITY.PUBLIC,
     [FIELDS.FEATURED]: cube.isFeatured,
     [FIELDS.CATEGORY_OVERRIDE]: cube.overrideCategory ? cube.categoryOverride : null,
     [FIELDS.CATEGORY_PREFIXES]: cube.overrideCategory ? cube.categoryPrefixes : null,
@@ -448,6 +448,6 @@ module.exports = {
     };
   },
   VISIBILITY,
-  PRICE_VISIBLITY,
+  PRICE_VISIBILITY,
   FIELDS,
 };

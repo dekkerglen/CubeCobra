@@ -15,7 +15,6 @@ const { generatePack, buildTagColors, cubeCardTags, isCubeViewable } = require('
 
 // Bring in models
 const Cube = require('../../dynamo/models/cube');
-const CubeHash = require('../../dynamo/models/cubeHash');
 const Draft = require('../../dynamo/models/draft');
 const Package = require('../../dynamo/models/package');
 const Blog = require('../../dynamo/models/blog');
@@ -38,50 +37,6 @@ router.get('/cardimages', (_, res) =>
   res.status(200).send({
     success: 'true',
     cardimages: carddb.cardimages,
-  }),
-);
-
-
-
-router.post(
-  '/settings/:id',
-  ensureAuth,
-  body('priceVisibility', 'Invalid Price visibility').isIn(
-    Object.entries(Cube.PRICE_VISIBLITY).map((entry) => entry[1]),
-  ),
-  body('disableAlerts').toBoolean(),
-  body('defaultStatus', 'status must be valid.').isIn(['Owned', 'Not Owned']),
-  body('defaultPrinting', 'Printing must be valid.').isIn(['recent', 'first']),
-  body('visibility', 'visibility must be valid').isIn(Object.entries(Cube.VISIBILITY).map((entry) => entry[1])),
-  jsonValidationErrors,
-  util.wrapAsyncApi(async (req, res) => {
-    const cube = await Cube.getById(req.params.id);
-
-    if (!isCubeViewable(cube, req.user)) {
-      return res.status(404).send({
-        success: 'false',
-        message: 'Cube Not Found',
-      });
-    }
-
-    if (cube.owner.id !== req.user.id) {
-      return res.status(403).send({
-        success: 'false',
-        message: 'Unauthorized',
-      });
-    }
-
-    const update = req.body;
-    for (const field of ['visibility', 'priceVisibility', 'disableAlerts', 'defaultStatus', 'defaultPrinting']) {
-      if (update[field] !== undefined) {
-        cube[field] = update[field];
-      }
-    }
-
-    await Cube.update(cube);
-    return res.status(200).send({
-      success: 'true',
-    });
   }),
 );
 
