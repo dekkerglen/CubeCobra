@@ -8,7 +8,7 @@
     "node": ">=20.0.0 <21.0.0"
   },
   "scripts": {
-    "build": "yarn run nearley && yarn run sass && tsc -b && yarn run webpack &&  && npx tailwindcss -i ./src/css/stylesheet.css -o ./public/css/stylesheet.css",
+    "build": "yarn run nearley && yarn run sass && tsc -b && yarn run webpack && npx tailwindcss -i ./src/css/stylesheet.css -o ./public/css/stylesheet.css",
     "lint": "yarn run prettier-base --check && yarn run eslint --max-warnings 0",
     "bash": "bash",
     "beautify": "yarn run prettier",
