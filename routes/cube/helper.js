@@ -241,7 +241,8 @@ const exportToMtgo = (res, fileName, mainCards, sideCards, cards) => {
 
   const side = {};
   for (const cardIndex of sideCards.flat()) {
-    const card = carddb.cardFromId(cards[cardIndex].cardID);
+    const cardID = cardIndex.cardID || cards[cardIndex].cardID;
+    const card = carddb.cardFromId(cardID);
     if (card) {
       if (side[card.name]) {
         side[card.name] += 1;
