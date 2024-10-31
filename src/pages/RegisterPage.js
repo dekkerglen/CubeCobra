@@ -4,6 +4,7 @@ import { Button, Card, CardBody, CardHeader, Col, FormGroup, Input, Label, Row }
 import PropTypes from 'prop-types';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';

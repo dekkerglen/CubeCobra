@@ -5,6 +5,7 @@ import { LockIcon, PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 
+import Text from 'components/base/Text';
 import Username from 'components/Username';
 import DomainContext from 'contexts/DomainContext';
 import UserContext from 'contexts/UserContext';

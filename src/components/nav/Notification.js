@@ -3,6 +3,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TimeAgo from 'react-timeago';
 
+import Text from 'components/base/Text';
+
 const Notification = ({ notification }) => {
   const texts = notification.body.split(notification.fromUsername);
   return (
