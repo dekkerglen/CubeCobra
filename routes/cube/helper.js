@@ -195,7 +195,7 @@ function writeCard(res, card, maybe) {
   } else {
     imgBackUrl = '';
   }
-  res.write(`"${name.replace(/"/, '""')}",`);
+  res.write(`"${name.replaceAll(/"/g, '""')}",`);
   res.write(`${card.cmc || cmc},`);
   res.write(`"${card.type_line.replace('—', '-')}",`);
   res.write(`${(card.colors || colorIdentity).join('')},`);
