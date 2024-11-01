@@ -30,7 +30,7 @@ const sortCardsByQuery = (req, cards) => {
     req.query.secondary,
     req.query.tertiary,
     req.query.quaternary,
-    req.query.showother,
+    req.query.showother === "true", //Coerce string parameter to boolean
   );
 };
 
