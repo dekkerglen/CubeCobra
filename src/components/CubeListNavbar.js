@@ -20,6 +20,7 @@ import {
 import { QuestionIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 
+import ArenaExportModal from 'components/ArenaExportModal';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
 import PasteBulkModal from 'components/PasteBulkModal';
@@ -31,7 +32,9 @@ import UploadBulkReplaceModal from 'components/UploadBulkReplaceModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
+import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
+const ArenaExportModalItem = withModal(DropdownItem, ArenaExportModal);
 const PasteBulkModalItem = withModal(DropdownItem, PasteBulkModal);
 const UploadBulkModalItem = withModal(DropdownItem, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(DropdownItem, UploadBulkReplaceModal);
@@ -70,6 +73,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
   const [tagColorsModalOpen, setTagColorsModalOpen] = useState(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
+  const { alerts, addAlert } = useAlerts();
 
   const {
     canEdit,
@@ -211,6 +215,9 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
                 <DropdownItem href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</DropdownItem>
                 <DropdownItem href={`/cube/download/mtgo/${cube.id}?${urlSegment}`}>MTGO (.txt)</DropdownItem>
                 <DropdownItem href={`/cube/download/xmage/${cube.id}?${urlSegment}`}>XMage (.dck)</DropdownItem>
+                <ArenaExportModalItem modalProps={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed }}>
+                  Arena (.txt)
+                </ArenaExportModalItem>
                 <DropdownItem divider />
                 <DropdownItem toggle={false} onClick={() => setIsSortUsed((is) => !is)}>
                   <FormGroup check style={{ display: 'flex' }}>
@@ -242,6 +249,7 @@ const CubeListNavbar = ({ cubeView, setCubeView }) => {
       <FilterCollapse isOpen={openCollapse === 'filter'} />
       <CompareCollapse isOpen={openCollapse === 'compare'} />
       <TagColorsModal canEdit={canEdit} isOpen={tagColorsModalOpen} toggle={handleToggleTagColorsModal} />
+      <Alerts alerts={alerts} />
     </div>
   );
 };
