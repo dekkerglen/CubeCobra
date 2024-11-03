@@ -17,7 +17,7 @@ export const Alerts: React.FC<AlertsProps> = ({ alerts, ...props }) =>
     </UncontrolledAlert>
   ));
 
-const useAlerts = (): { addAlert: (color: string, message: string) => void; alerts: Alert[] } => {
+const useAlerts = (): { addAlert: (color: string, message: string) => void; dismissAlerts: () => void; alerts: Alert[] } => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const addAlert = useCallback(
@@ -25,7 +25,13 @@ const useAlerts = (): { addAlert: (color: string, message: string) => void; aler
     [],
   );
 
-  return { addAlert, alerts };
+  const dismissAlerts = useCallback(
+    () => setAlerts([]),
+    [],
+  );
+
+
+  return { addAlert, dismissAlerts, alerts };
 };
 
 export default useAlerts;
