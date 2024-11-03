@@ -30,6 +30,12 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
     sortQuaternary,
   ]);
 
+  /*
+  * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
+  * Known issues:
+  * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
+  * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
+  */
   async function generateArenaExport() {
     let cards = cube.cards.mainboard;
     if (isFilterUsed) {
@@ -51,7 +57,8 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
     for (const card of sortedCards) {
       /*
        * While card set and collector number can be imported to Arena, if the set is not available on Arena (or if in a different set code than paper),
-       * it causes a failure to import for the card name. Thus we omit the information.
+       * it causes a failure to import for the card name. Thus we omit the information even if it can be used.
+       * Similar to the majority of the exports, treat each card in the cube as indepenent instead of counting by name to group.
        */
       exportText += `1 ${getCardNameForArena(card.details)}\n`;
     }
@@ -74,6 +81,7 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
   }
 
   function closeAlert() {
+    //Dimiss the copied to clipboard alert if it is present, so the next time the modal opens it is hidden
     dismissAlerts();
   }
 
@@ -89,8 +97,9 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
       </ModalHeader>
       <ModalBody>
         <p>Copy the textbox or use the Copy to clipboard button.</p>
+        <p>Note: Arena can only import 250 cards into a deck.</p>
         <Alerts alerts={alerts} />
-        <Input type="textarea" rows="10" placeholder="Copy Cube" name="body" value={text} readOnly="true" />
+        <Input type="textarea" rows="10" name="body" value={text} readOnly="true" />
         <ModalFooter>
           <Button color="accent" onClick={copyToClipboard}>
             Copy to clipboard
