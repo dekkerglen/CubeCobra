@@ -9,7 +9,7 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import { sortForDownload } from 'utils/Sort';
 
 const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
-  const { alerts, addAlert } = useAlerts();
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
 
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, filterInput } = useContext(CubeContext);
 
@@ -73,13 +73,17 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
     return name;
   }
 
+  function closeAlert() {
+    dismissAlerts();
+  }
+
   async function copyToClipboard() {
     await navigator.clipboard.writeText(text);
     addAlert('success', 'Copied to clipboard successfully.');
   }
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="arenaExportModalTitle" onOpened={generateExport}>
+    <Modal isOpen={isOpen} toggle={toggle} labelledBy="arenaExportModalTitle" onOpened={generateExport} onClosed={closeAlert}>
       <ModalHeader id="arenaExportModalTitle" toggle={toggle}>
         Arena Export
       </ModalHeader>
