@@ -31,11 +31,11 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
   ]);
 
   /*
-  * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
-  * Known issues:
-  * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
-  * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
-  */
+   * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
+   * Known issues:
+   * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
+   * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
+   */
   async function generateArenaExport() {
     let cards = cube.cards.mainboard;
     if (isFilterUsed) {
@@ -91,7 +91,13 @@ const ArenaExportModal = ({ isOpen, toggle, isFilterUsed, isSortUsed }) => {
   }
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} labelledBy="arenaExportModalTitle" onOpened={generateExport} onClosed={closeAlert}>
+    <Modal
+      isOpen={isOpen}
+      toggle={toggle}
+      labelledBy="arenaExportModalTitle"
+      onOpened={generateExport}
+      onClosed={closeAlert}
+    >
       <ModalHeader id="arenaExportModalTitle" toggle={toggle}>
         Arena Export
       </ModalHeader>
