@@ -43,7 +43,7 @@
     "sync-podcasts": "node --max-old-space-size=4096 jobs/update_podcasts.js",
     "start:localstack": "./scripts/local/start_localstack.sh",
     "setup:local": "yarn start:localstack && yarn setup:local:env && yarn setup:local:localstack && yarn setup:local:files && yarn setup:local:db && yarn update-cards",
-    "setup:local:localstack": "./scripts/init_localstack.sh",
+    "setup:local:localstack": "./scripts/local/init_localstack.sh",
     "setup:local:env": "cp .env_EXAMPLE .env",
     "setup:local:files": "node one_shot_scripts/create_local_files.js",
     "setup:local:db": "node --max-old-space-size=4096 one_shot_scripts/createTables.js",

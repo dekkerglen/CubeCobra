@@ -1,4 +1,4 @@
-import fs from 'fs';
+const fs = require('fs');
 
 fs.mkdirSync('model/', { recursive: true });
 fs.writeFileSync('model/elos.json', '[]');
