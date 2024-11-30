@@ -131,7 +131,7 @@ You can run a local instance of Cube Cobra against real AWS resources rather tha
 Here is a table on how to fill out the env vars:
 
 | Variable Name          | Description                                                                                  | Required? |
-| ---------------------- | -------------------------------------------------------------------------------------------- | --------- | --- |
+| ---------------------- | -------------------------------------------------------------------------------------------- | --------- |
 | AWS_ACCESS_KEY_ID      | The AWS access key for your account.                                                         | Yes       |
 | AWS_ENDPOINT           | The base endpoint to use for AWS. Used to point to localstack rather than hosted AWS.        |           |
 | AWS_LOG_GROUP          | The name of the AWS CloudWatch log group to use.                                             | Yes       |
@@ -145,7 +145,7 @@ Here is a table on how to fill out the env vars:
 | DYNAMO_PREFIX          | The prefix to use for DynamoDB tables. You can leave this as the default value               | Yes       |
 | EMAIL_CONFIG_PASSWORD  | The password for the email account to use for sending emails.                                |           |
 | EMAIL_CONFIG_USERNAME  | The username for the email account to use for sending emails.                                |           |
-| ENV                    | The environment to run Cube Cobra in.                                                        | Yes       | \   |
+| ENV                    | The environment to run Cube Cobra in.                                                        | Yes       |
 | NITROPAY_ENABLED       | Whether or not to enable NitroPay, our ad provider.                                          |           |
 | NODE_ENV               | The environment to run Cube Cobra in.                                                        | Yes       |
 | PATREON_CLIENT_ID      | The client ID for the Patreon OAuth app.                                                     |           |
