@@ -5,9 +5,10 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import DeckPropType from 'proptypes/DeckPropType';
 
+import Paginate from 'components/base/Pagination';
+import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
-import Paginate from 'components/base/Pagination';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';

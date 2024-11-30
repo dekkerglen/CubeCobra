@@ -4,6 +4,8 @@ import { Button, Input, InputGroup, Label, Modal, ModalBody, ModalFooter, ModalH
 import { PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
+
 const CubeIdModal = ({ toggle, isOpen, shortId, fullID, alert }) => {
   const onCopyClick = async (id, label) => {
     await navigator.clipboard.writeText(id);

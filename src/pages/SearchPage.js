@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
+import Text from 'components/base/Text';
 import CubePreview from 'components/CubePreview';
 import CubeSearchNavBar from 'components/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';

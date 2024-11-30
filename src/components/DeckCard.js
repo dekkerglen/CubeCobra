@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import DeckPropType from 'proptypes/DeckPropType';
 import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
+import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import CardImage from 'components/card/CardImage';
 import CommentsSection from 'components/comments/CommentsSection';

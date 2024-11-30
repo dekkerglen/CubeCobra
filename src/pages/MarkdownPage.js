@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import Markdown from 'components/Markdown';
 import RenderToRoot from 'components/RenderToRoot';

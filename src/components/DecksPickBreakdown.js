@@ -4,6 +4,7 @@ import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 
+import Text from 'components/base/Text';
 import FoilCardImage from 'components/FoilCardImage';
 import withAutocard from 'components/WithAutocard';
 import { getDrafterState } from 'drafting/draftutil';
