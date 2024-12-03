@@ -5,9 +5,10 @@ import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
+import VideoPreview from 'components/content/VideoPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/content/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';

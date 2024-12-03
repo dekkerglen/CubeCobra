@@ -2,9 +2,10 @@
 import React, { Component } from 'react';
 import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 
+import Text from 'components/base/Text';
 import FilterCollapse from 'components/FilterCollapse';
-import SortCollapse from 'components/SortCollapse';
 import TagColorsModal from 'components/modals/TagColorsModal';
+import SortCollapse from 'components/SortCollapse';
 
 class CubeCompareNavbar extends Component {
   constructor(props) {

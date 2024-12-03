@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';

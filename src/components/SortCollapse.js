@@ -3,6 +3,7 @@ import { Button, Col, Collapse, Input, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import CubeContext from 'contexts/CubeContext';
 import { ORDERED_SORTS, SORTS } from 'utils/Sort';

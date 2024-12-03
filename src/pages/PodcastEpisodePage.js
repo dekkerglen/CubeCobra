@@ -7,6 +7,7 @@ import ReactAudioPlayer from 'react-audio-player';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';

@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, Col, Label, Row, UncontrolledAlert } from '
 import PropTypes from 'prop-types';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
+import Text from 'components/base/Text';
 import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
 import { getCard } from 'components/EditCollapse';
