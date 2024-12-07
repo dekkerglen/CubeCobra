@@ -1,21 +1,88 @@
-import { cardCmc, cardType } from 'utils/Card';
+import Draft from 'datatypes/Draft';
+import { cardType } from 'utils/Card';
 import { cmcColumn } from 'utils/Util';
 
-export const setupPicks = (rows, cols) => {
-  const res = [];
-  for (let i = 0; i < rows; i++) {
-    const row = [];
-    for (let j = 0; j < cols; j++) {
-      row.push([]);
+interface Step {
+  action: string;
+  amount?: number;
+  pick?: number;
+  cardsInPack?: number;
+}
+
+interface FlattenedStep extends Step {
+  pack: number;
+}
+
+interface DrafterState {
+  picked: number[];
+  trashed: number[];
+  pickQueue: number[];
+  trashQueue: number[];
+  cardsPicked: number[];
+  cardsInPack: number[];
+  picksList: {
+    cardIndex: number;
+    action: string;
+    index: number;
+  }[][];
+  pick?: number;
+  pack?: number;
+  selection?: number;
+  step?: Step;
+}
+
+export const flattenSteps = (steps: Step[], pack: number): FlattenedStep[] => {
+  const res: FlattenedStep[] = [];
+  let pick = 0;
+  let cardsInPack = steps.map((step) => (step.action === 'pass' ? 0 : step.amount || 0)).reduce((a, b) => a + b, 0) + 1;
+
+  for (const step of steps) {
+    if (step.amount) {
+      for (let i = 0; i < step.amount; i++) {
+        if (step.action !== 'pass') {
+          pick += 1;
+          cardsInPack -= 1;
+
+          res.push({
+            pick,
+            action: step.action,
+            cardsInPack,
+            amount: step.amount - i,
+            pack,
+          });
+        } else {
+          res.push({
+            pick,
+            action: step.action,
+            cardsInPack: cardsInPack - 1,
+            pack,
+          });
+        }
+      }
+    } else if (step.action !== 'pass') {
+      pick += 1;
+      cardsInPack -= 1;
+
+      res.push({
+        pick,
+        action: step.action,
+        cardsInPack,
+        amount: 1,
+        pack,
+      });
+    } else {
+      res.push({
+        pick,
+        action: step.action,
+        cardsInPack: cardsInPack - 1,
+        pack,
+      });
     }
-    res.push(row);
   }
   return res;
 };
 
-export const getCardCol = (draft, cardIndex) => Math.max(0, Math.min(7, cardCmc(draft.cards[cardIndex])));
-
-export const defaultStepsForLength = (length) =>
+export const defaultStepsForLength = (length: number): Step[] =>
   new Array(length)
     .fill([
       { action: 'pick', amount: 1 },
@@ -25,42 +92,10 @@ export const defaultStepsForLength = (length) =>
     .slice(0, length * 2 - 1) // Remove the final pass.
     .map((action) => ({ ...action }));
 
-const flattenSteps = (steps) => {
-  const res = [];
-  let pick = 0;
-  let cardsInPack = steps.map((step) => (step.action === 'pass' ? 0 : step.amount)).reduce((a, b) => a + b, 0) + 1;
-
-  for (const step of steps) {
-    if (step.amount) {
-      for (let i = 0; i < step.amount; i++) {
-        if (step.action !== 'pass') {
-          pick += 1;
-          cardsInPack -= 1;
-
-          res.push({ pick, action: step.action, cardsInPack, amount: step.amount - i });
-        } else {
-          res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
-        }
-      }
-    } else if (step.action !== 'pass') {
-      pick += 1;
-      cardsInPack -= 1;
-
-      res.push({ pick, action: step.action, cardsInPack, amount: 1 });
-    } else {
-      res.push({ pick, action: step.action, cardsInPack: cardsInPack - 1 });
-    }
-  }
-  return res;
-};
-
-export const getStepList = (initialState) =>
+export const getStepList = (initialState: any[]): FlattenedStep[] =>
   initialState[0]
-    .map((pack, packIndex) => [
-      ...flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length)).map((step) => ({
-        pack: packIndex + 1,
-        ...step,
-      })),
+    .map((pack: any, packIndex: number) => [
+      ...flattenSteps(pack.steps || defaultStepsForLength(pack.cards.length), packIndex),
       {
         pack: packIndex + 1,
         action: 'endpack',
@@ -68,8 +103,8 @@ export const getStepList = (initialState) =>
     ])
     .flat();
 
-export const nextStep = (draft, seat, cardsPicked) => {
-  const steps = getStepList(draft.InitialState);
+export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
+  const steps = getStepList(draft.initial_state);
 
   let picks = 0;
 
@@ -86,16 +121,16 @@ export const nextStep = (draft, seat, cardsPicked) => {
   return null;
 };
 
-export const getDrafterState = (draft, seatNumber, pickNumber) => {
+export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
   // build list of steps and match to pick and pack number
-  const steps = getStepList(draft.InitialState);
+  const steps = getStepList(draft.initial_state);
 
   // build a list of states for each seat
-  const states = [];
+  const states: DrafterState[] = [];
   for (let i = 0; i < draft.seats.length; i++) {
-    const picksList = [];
-    const pickQueue = draft.seats[i].pickorder.slice().map((val) => parseInt(val, 10));
-    const trashQueue = (draft.seats[i].trashorder || []).slice().map((val) => parseInt(val, 10));
+    const picksList: any[] = [];
+    const pickQueue = (draft.seats[i].pickorder || []).slice();
+    const trashQueue = (draft.seats[i].trashorder || []).slice();
     let index = 0;
 
     for (let j = 0; j < steps.length; j++) {
@@ -117,7 +152,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     states.push({
       picked: [],
       trashed: [],
-      pickQueue: draft.seats[i].pickorder.slice(),
+      pickQueue: (draft.seats[i].pickorder || []).slice(),
       trashQueue: (draft.seats[i].trashorder || []).slice(),
       cardsPicked: [...draft.seats[i].mainboard.flat(3), ...draft.seats[i].sideboard.flat(3)],
       cardsInPack: [],
@@ -126,7 +161,7 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   }
 
   // setup some useful context variables
-  let packsWithCards = [];
+  let packsWithCards: any[] = [];
   let offset = 0;
 
   // go through steps and update states
@@ -135,8 +170,8 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
     if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
-      for (let i = 0; i < draft.InitialState.length; i++) {
-        packsWithCards[i] = draft.InitialState[i][step.pack - 1].cards.slice();
+      for (let i = 0; i < draft.initial_state.length; i++) {
+        packsWithCards[i] = draft.initial_state[i][step.pack - 1].cards.slice();
       }
 
       offset = 0;
@@ -163,24 +198,24 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
           }
         }
 
-        seat.picked.push(picked);
+        seat.picked.push(picked || -1);
         seat.selection = picked;
         seat.step = step;
 
         // remove this card from the pack
         packsWithCards[(i + offset) % states.length] = packsWithCards[(i + offset) % states.length].filter(
-          (card) => card !== picked,
+          (card: number) => card !== picked,
         );
       } else if (step.action === 'trash' || step.action === 'trashrandom') {
         seat.cardsInPack = packsWithCards[(i + offset) % states.length].slice();
         const trashed = seat.trashQueue.pop();
-        seat.trashed.push(trashed);
+        seat.trashed.push(trashed || -1);
         seat.selection = trashed;
         seat.step = step;
 
         // remove this card from the pack
         packsWithCards[(i + offset) % states.length] = packsWithCards[(i + offset) % states.length].filter(
-          (card) => card !== trashed,
+          (card: number) => card !== trashed,
         );
       }
     }
@@ -200,21 +235,21 @@ export const getDrafterState = (draft, seatNumber, pickNumber) => {
   return states[seatNumber];
 };
 
-export const getDefaultPosition = (card, picks) => {
+export const getDefaultPosition = (card: any, picks: any[][][]): [number, number, number] => {
   const row = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
   const col = cmcColumn(card);
   const colIndex = picks[row][col].length;
   return [row, col, colIndex];
 };
 
-export const stepListToTitle = (steps) => {
+export const stepListToTitle = (steps: Step[]): string => {
   if (steps.length <= 1) {
     return 'Finishing up draft...';
   }
 
-  if (steps[0] === 'pick') {
+  if (steps[0].action === 'pick') {
     let count = 1;
-    while (steps.length > count && steps[count] === 'pick') {
+    while (steps.length > count && steps[count].action === 'pick') {
       count += 1;
     }
     if (count > 1) {
@@ -222,9 +257,9 @@ export const stepListToTitle = (steps) => {
     }
     return 'Pick one more card';
   }
-  if (steps[0] === 'trash') {
+  if (steps[0].action === 'trash') {
     let count = 1;
-    while (steps.length > count && steps[count] === 'trash') {
+    while (steps.length > count && steps[count].action === 'trash') {
       count += 1;
     }
     if (count > 1) {
@@ -232,14 +267,20 @@ export const stepListToTitle = (steps) => {
     }
     return 'Trash one more card';
   }
-  if (steps[0] === 'endpack') {
+  if (steps[0].action === 'endpack') {
     return 'Waiting for next pack to open...';
   }
 
   return 'Making random selection...';
 };
 
-export const draftStateToTitle = (draft, picks, trashed, loading, stepQueue) => {
+export const draftStateToTitle = (
+  draft: Draft,
+  picks: any[][][],
+  trashed: any[],
+  loading: boolean,
+  stepQueue: Step[],
+): string => {
   let stepText = stepListToTitle(stepQueue);
   // get count of picks
   const totalPicks = picks.reduce((acc, row) => acc + row.reduce((acc2, col) => acc2 + col.length, 0), 0);
@@ -249,7 +290,7 @@ export const draftStateToTitle = (draft, picks, trashed, loading, stepQueue) => 
   let pack = 1;
   let pick = 1;
 
-  const steplist = getStepList(draft.InitialState);
+  const steplist = getStepList(draft.initial_state);
   let pickCount = 0;
   let trashCount = 0;
 

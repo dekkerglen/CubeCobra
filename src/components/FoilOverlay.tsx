@@ -21,11 +21,16 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
     }
 
     const Result = (
-      <WrapperTag className="position-relative">
-        {finish === 'Foil' && (
-          <img src="/content/foilOverlay.png" className="foilOverlay card-border" width="100%" alt="Foil overlay" />
-        )}
+      <WrapperTag className="relative">
         <Tag {...(props as any)} />
+        {finish === 'Foil' && (
+          <img
+            src="/content/foilOverlay.png"
+            className="absolute inset-0 w-full h-full foilOverlay card-border"
+            width="100%"
+            alt="Foil overlay"
+          />
+        )}
       </WrapperTag>
     );
     return Result;

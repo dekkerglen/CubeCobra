@@ -8,9 +8,10 @@ interface NavMenuProps {
   label: React.ReactNode;
   children: React.ReactNode;
   wide?: boolean;
+  navBar?: boolean;
 }
 
-const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide }) => {
+const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide, navBar }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -33,8 +34,10 @@ const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide }) => {
       <ResponsiveDiv baseVisible md>
         <a
           className={classNames('py-2 dropdown-toggle font-semibold', {
-            'text-text-secondary': !isOpen,
-            'text-text-secondary-active': isOpen,
+            'text-text-secondary': !isOpen && navBar,
+            'text-text-secondary-active': isOpen && navBar,
+            'text-link': !isOpen && !navBar,
+            'text-link-active': isOpen && !navBar,
           })}
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -55,8 +58,10 @@ const NavMenu: React.FC<NavMenuProps> = ({ label, children, wide }) => {
           className={classNames(
             'rounded-md rounded-br-none select-none p-2 dropdown-toggle font-semibold cursor-pointer transition-colors duration-200 ease-in-out',
             {
-              'text-text-secondary hover:text-text-secondary-active': !isOpen,
-              'text-text bg-bg': isOpen,
+              'text-text-secondary hover:text-text-secondary-active': !isOpen && navBar,
+              'text-text bg-bg': isOpen && navBar,
+              'text-link hover:text-link-active': !isOpen && !navBar,
+              'bg-link text-bg': isOpen && !navBar,
             },
           )}
           onClick={() => setIsOpen(!isOpen)}

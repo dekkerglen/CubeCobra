@@ -73,7 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
   const navs = (
     <>
       {navItems.map((item) => (
-        <NavMenu key={item.title} label={item.title}>
+        <NavMenu key={item.title} label={item.title} navBar>
           <Flexbox direction="col" gap="2" className="p-3">
             {item.items.map((subItem) => (
               <NavLink key={subItem.label} href={subItem.href}>
@@ -86,7 +86,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
       {user ? (
         <>
           <NotificationsNav />
-          <NavMenu label="Your Cubes">
+          <NavMenu label="Your Cubes" navBar>
             <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
               {(user.cubes || []).map((item) => (
                 <NavLink key={`dropdown_cube_${item.name}`} href={`/cube/overview/${item.id}`}>
@@ -98,7 +98,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
               <NavLink href="/cube/create">Create A New Cube</NavLink>
             </CardFooter>
           </NavMenu>
-          <NavMenu label={user.username}>
+          <NavMenu label={user.username} navBar>
             <Flexbox direction="col" gap="2" className="p-3">
               <NavLink href={`/user/view/${user.id}`}>Your Profile</NavLink>
               {user.roles && user.roles.includes('Admin') && <NavLink href="/admin/dashboard">Admin Page</NavLink>}

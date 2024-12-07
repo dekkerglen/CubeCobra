@@ -1,6 +1,7 @@
 const csurf = require('csurf');
 const { validationResult } = require('express-validator');
 const User = require('../dynamo/models/user');
+const { redirect } = require('../serverjs/render');
 
 const ensureAuth = (req, res, next) => {
   if (req.isAuthenticated()) {

@@ -1,9 +1,11 @@
+import User from './User';
+
 export default interface DeckSeat {
   description?: string;
-  deck?: number[][][];
+  mainboard: number[][][];
   sideboard: number[][][];
-  username?: string;
-  userid?: string;
+  pickorder: number[];
   bot: any[];
   name?: string;
+  owner: string | User;
 }

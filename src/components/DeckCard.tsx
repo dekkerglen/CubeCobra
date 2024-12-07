@@ -1,26 +1,29 @@
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Row } from 'components/base/Layout';
+import Text from 'components/base/Text';
+import Deck from 'datatypes/Deck';
+import DeckSeat from 'datatypes/DeckSeat';
 import React, { useMemo } from 'react';
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import DeckPropType from 'proptypes/DeckPropType';
-import DeckSeatPropType from 'proptypes/DeckSeatPropType';
 
 import CardGrid from 'components/card/CardGrid';
-import CardImage from 'components/card/CardImage';
 import CommentsSection from 'components/comments/CommentsSection';
-import DecksPickBreakdown from 'components/DecksPickBreakdown';
 import FoilCardImage from 'components/FoilCardImage';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
-import { makeSubtitle } from 'utils/Card';
+import CardType from 'datatypes/Card';
 import { sortDeep } from 'utils/Sort';
 
-const DeckStacksStatic = ({ piles, cards }) => (
+interface DeckStacksStaticProps {
+  piles: number[][][];
+  cards: any[];
+}
+
+const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
     {piles.map((row, index) => (
-      <Row key={index} className="row-low-padding">
+      <Row key={index} xs={2} md={4} lg={8}>
         {row.map((column, index2) => (
-          <Col key={index2} className="card-stack col-md-1-5 col-lg-1-5 col-xl-1-5 col-low-padding" xs={3}>
+          <Col key={index2} xs={1}>
             <div className="w-full text-center mb-1">
               <b>{column.length > 0 ? column.length : ''}</b>
             </div>
@@ -29,8 +32,8 @@ const DeckStacksStatic = ({ piles, cards }) => (
                 const card = cards[cardIndex];
                 return (
                   <div className="stacked" key={index3}>
-                    <a href={card.cardID ? `/tool/card/${card.cardID}` : null}>
-                      <FoilCardImage card={card} tags={[]} autocard />
+                    <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
+                      <FoilCardImage card={card} autocard />
                     </a>
                   </div>
                 );
@@ -43,12 +46,14 @@ const DeckStacksStatic = ({ piles, cards }) => (
   </CardBody>
 );
 
-DeckStacksStatic.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({ cardID: PropTypes.string })).isRequired,
-  piles: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number.isRequired))).isRequired,
-};
+interface DeckCardProps {
+  seat: DeckSeat;
+  view?: string;
+  deck: Deck;
+  seatIndex: string;
+}
 
-const DeckCard = ({ seat, deck, seatIndex, view }) => {
+const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -89,7 +94,8 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       'Color Category',
       'Mana Value Full',
       'Unsorted',
-    );
+    ) as [string, [string, [string, CardType[]][]][]][];
+
     return deep
       .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
       .flat(4);
@@ -98,24 +104,24 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="mb-0 d-flex flex-row align-items-end">
-          <Text md semibold>{seat.name}</Text>
-          {!seat.bot && (
-            <Text md semibold>
-              Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
-            </Text>
-          )}
-        </CardTitle>
+        <Text semibold lg>
+          {seat.name}
+        </Text>
+        {!seat.bot && (
+          <Text md semibold>
+            Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
+          </Text>
+        )}
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
           {deck.type === 'd' ? (
             <>
-              {deck.seats[0].pickorder ? (
-                <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} draft={deck} />
+              {/* {deck.seats[0].pickorder ? (
+                <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} />
               ) : (
                 <p>There is no draft log associated with this deck.</p>
-              )}
+              )} */}
             </>
           ) : (
             <p>This type of deck does not have a pick breakdown yet.</p>
@@ -124,54 +130,32 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       )}
       {view === 'deck' && (
         <>
-          <Row className="mt-3">
-            <Col>
-              <DeckStacksStatic
-                piles={stackedDeck}
-                cards={deck.cards}
-                title="Deck"
-                subtitle={makeSubtitle(
-                  seat.mainboard
-                    .flat()
-                    .flat()
-                    .map((cardIndex) => deck.cards[cardIndex]),
-                )}
-              />
-            </Col>
-          </Row>
+          <DeckStacksStatic piles={stackedDeck} cards={deck.cards} />
           {stackedSideboard && stackedSideboard.length > 0 && (
-            <Row>
-              <Col>
-                <CardBody className="border-bottom">
-                  <Text semibold lg>sideboard</Text>
-                </CardBody>
-                <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} title="sideboard" />
-              </Col>
-            </Row>
+            <>
+              <CardBody className="border-bottom">
+                <Text semibold lg>
+                  sideboard
+                </Text>
+              </CardBody>
+              <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} />
+            </>
           )}
         </>
       )}
       {view === 'visual' && (
         <CardBody>
-          <Text semibold lg>Mainboard</Text>
-          <CardGrid
-            cardList={sorted}
-            Tag={CardImage}
-            colProps={{ className: 'col-1-2' }}
-            cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-            linkDetails
-          />
+          <Text semibold lg>
+            Mainboard
+          </Text>
+          <CardGrid cards={sorted} xs={8} />
           {seat.sideboard.flat(2).length > 0 && (
             <>
               <hr className="my-4" />
-              <Text semibold md>Sideboard</Text>
-              <CardGrid
-                cardList={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])}
-                Tag={CardImage}
-                colProps={{ className: 'col-1-2' }}
-                cardProps={{ autocard: true, 'data-in-modal': true, className: 'clickable' }}
-                linkDetails
-              />
+              <Text semibold md>
+                Sideboard
+              </Text>
+              <CardGrid cards={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])} xs={8} />
             </>
           )}
         </CardBody>
@@ -184,17 +168,6 @@ const DeckCard = ({ seat, deck, seatIndex, view }) => {
       </div>
     </Card>
   );
-};
-
-DeckCard.propTypes = {
-  seat: DeckSeatPropType.isRequired,
-  view: PropTypes.string,
-  deck: DeckPropType.isRequired,
-  seatIndex: PropTypes.string.isRequired,
-};
-
-DeckCard.defaultProps = {
-  view: 'deck',
 };
 
 export default DeckCard;

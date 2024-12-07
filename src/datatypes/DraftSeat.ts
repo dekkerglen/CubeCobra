@@ -1,7 +1,9 @@
 export default interface DraftSeat {
   description?: string;
-  deck?: number[][][];
+  mainboard: number[][][];
   sideboard: number[][][];
+  pickorder?: number[];
+  trashorder?: number[];
   username?: string;
   userid?: string;
   bot?: boolean;

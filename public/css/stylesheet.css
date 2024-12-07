@@ -1253,6 +1253,10 @@ video {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+.grid-cols-7 {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
 .grid-cols-8 {
   grid-template-columns: repeat(8, minmax(0, 1fr));
 }
@@ -1800,6 +1804,11 @@ video {
   background-color: rgb(220 252 231 / var(--tw-bg-opacity));
 }
 
+.bg-link {
+  --tw-bg-opacity: 1;
+  background-color: rgb(var(--link) / var(--tw-bg-opacity));
+}
+
 .bg-podcast {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--podcast) / var(--tw-bg-opacity));
@@ -1832,16 +1841,6 @@ video {
 .bg-yellow-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 249 195 / var(--tw-bg-opacity));
-}
-
-.bg-gray-600 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(75 85 99 / var(--tw-bg-opacity));
-}
-
-.bg-red-600 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(220 38 38 / var(--tw-bg-opacity));
 }
 
 .bg-opacity-50 {
@@ -1970,10 +1969,6 @@ video {
 
 .pe-0 {
   padding-inline-end: 0px;
-}
-
-.pe-2 {
-  padding-inline-end: 0.5rem;
 }
 
 .pe-3 {
@@ -2112,6 +2107,11 @@ video {
   font-style: italic;
 }
 
+.text-bg {
+  --tw-text-opacity: 1;
+  color: rgb(var(--bg) / var(--tw-text-opacity));
+}
+
 .text-blue-800 {
   --tw-text-opacity: 1;
   color: rgb(30 64 175 / var(--tw-text-opacity));
@@ -2175,6 +2175,11 @@ video {
 .text-link {
   --tw-text-opacity: 1;
   color: rgb(var(--link) / var(--tw-text-opacity));
+}
+
+.text-link-active {
+  --tw-text-opacity: 1;
+  color: rgb(var(--link-active) / var(--tw-text-opacity));
 }
 
 .text-red-800 {
@@ -2920,6 +2925,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .sm\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
   .sm\:grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
@@ -3028,6 +3037,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .md\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
   .md\:grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
@@ -3134,6 +3147,10 @@ img.mana-symbol-sm {
 
   .lg\:grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .lg\:grid-cols-8 {
@@ -3279,6 +3296,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .xl\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
   .xl\:grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
@@ -3378,6 +3399,10 @@ img.mana-symbol-sm {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .\32xl\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
   .\32xl\:grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
@@ -3396,4 +3421,3 @@ img.mana-symbol-sm {
     max-width: 1920px;
   }
 }
-

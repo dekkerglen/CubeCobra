@@ -19,9 +19,20 @@ interface SelectProps {
     text: string;
   };
   id?: string;
+  dense?: boolean;
 }
 
-const Select: React.FC<SelectProps> = ({ options, defaultValue, value, setValue, label, link, id, className = '' }) => {
+const Select: React.FC<SelectProps> = ({
+  options,
+  defaultValue,
+  value,
+  setValue,
+  label,
+  link,
+  id,
+  dense,
+  className = '',
+}) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (setValue) {
       setValue(event.target.value);
@@ -35,7 +46,7 @@ const Select: React.FC<SelectProps> = ({ options, defaultValue, value, setValue,
   );
 
   return (
-    <div className="block w-full">
+    <div className={classNames({ 'block w-full': !dense })}>
       <Flexbox justify="between" direction="row">
         {label && (
           <label className="block text-sm font-medium text-text" htmlFor={id}>
