@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Row, Spinner } from 'reacts
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
+import Text from 'components/base/Text';
 import DraggableCard from 'components/DraggableCard';
 import FoilCardImage from 'components/FoilCardImage';
 import DraftLocation from 'drafting/DraftLocation';

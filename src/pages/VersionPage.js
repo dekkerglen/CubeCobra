@@ -3,6 +3,7 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 

@@ -6,6 +6,7 @@ import DeckPropType from 'proptypes/DeckPropType';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';

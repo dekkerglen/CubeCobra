@@ -19,6 +19,7 @@ import CardPropType from 'proptypes/CardPropType';
 import CubePropType from 'proptypes/CubePropType';
 import DraftPropType from 'proptypes/DraftPropType';
 
+import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import CustomImageToggler from 'components/CustomImageToggler';
 import DeckStacks from 'components/DeckStacks';

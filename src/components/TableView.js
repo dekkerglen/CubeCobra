@@ -4,6 +4,7 @@ import { Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
+import Text from 'components/base/Text';
 import AutocardListGroup from 'components/card/AutocardListGroup';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';

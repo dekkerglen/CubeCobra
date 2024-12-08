@@ -3,6 +3,8 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
+
 const CubeDraftError = ({ message }) => {
   return (
     <Card className="mt-4">

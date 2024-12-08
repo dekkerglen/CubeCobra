@@ -4,6 +4,7 @@ import { Card } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Text from 'components/base/Text';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 

@@ -619,6 +619,7 @@ video {
   --card-multi: 92 88 9;
   --card-colorless: 60 58 64;
   --card-lands: 95 58 36;
+  color-scheme: dark;
 }
 
 .container {

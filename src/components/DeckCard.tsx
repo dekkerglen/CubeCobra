@@ -5,6 +5,7 @@ import Deck from 'datatypes/Deck';
 import DeckSeat from 'datatypes/DeckSeat';
 import React, { useMemo } from 'react';
 
+import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import CommentsSection from 'components/comments/CommentsSection';
 import FoilCardImage from 'components/FoilCardImage';

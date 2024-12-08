@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import ContentPropType from 'proptypes/ContentPropType';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
+import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';

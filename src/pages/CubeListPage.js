@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
+import Text from 'components/base/Text';
 import CubeListNavbar from 'components/CubeListNavbar';
 import CurveView from 'components/CurveView';
 import DynamicFlash from 'components/DynamicFlash';
