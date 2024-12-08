@@ -169,6 +169,7 @@ module.exports = {
   batchAdd: async (documents) => {
     return client.batchPut(documents);
   },
+  deleteById: async (id) => client.delete({id}),
   batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),
   convertUser: (user) => ({
