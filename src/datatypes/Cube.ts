@@ -1,4 +1,6 @@
 import User from 'datatypes/User';
+import { DraftFormat } from './Draft';
+import Card from './Card';
 
 export interface CubeImage {
   uri: string;
@@ -12,6 +14,11 @@ export interface TagColor {
   tag: string;
 }
 
+export interface CubeCards {
+  mainboard: Card[];
+  maybeboard: Card[];
+}
+
 interface Cube {
   id: string;
   shortId: string;
@@ -20,7 +27,7 @@ interface Cube {
   visibility: string;
   priceVisibility: string;
   featured: boolean;
-  categoryOverride: string;
+  categoryOverride?: string;
   categoryPrefixes: any[];
   tagColors: TagColor[];
   defaultFormat: number;
@@ -30,7 +37,7 @@ interface Cube {
   date: number;
   defaultSorts: string[];
   showUnsorted?: boolean;
-  formats: { title: string }[];
+  formats: DraftFormat[];
   following: string[];
   defaultStatus: string;
   defaultPrinting: string;

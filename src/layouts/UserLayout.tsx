@@ -1,12 +1,13 @@
 import React, { useContext } from 'react';
 import { Button, Nav, Navbar, NavItem, NavLink, Row } from 'reactstrap';
 
-import CreateCubeModal from 'components/CreateCubeModal';
+import CreateCubeModal from 'components/modals/CreateCubeModal';
 import ErrorBoundary from 'components/ErrorBoundary';
 import FollowersModal from 'components/FollowersModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import User from 'datatypes/User';
+import Text from 'components/base/Text';
 
 interface UserLayoutProps {
   user: User;
@@ -25,29 +26,31 @@ const UserLayout: React.FC<UserLayoutProps> = ({ user, followers, following, act
 
   const numFollowers = followers.length;
   const followersText = (
-    <h6>
+    <Text semibold sm>
       {numFollowers} {numFollowers === 1 ? 'follower' : 'followers'}
-    </h6>
+    </Text>
   );
   return (
     <>
       <Nav tabs fill className="cubenav pt-2">
         <NavItem>
-          <h5 style={{ color: '#218937' }}>{user.username}</h5>
+          <Text semibold md>
+            {user.username}
+          </Text>
           {numFollowers > 0 ? (
-            <FollowersModalLink href="#" modalProps={{ followers }}>
+            <FollowersModalLink href="#" modalprops={{ followers }}>
               {followersText}
             </FollowersModalLink>
           ) : (
             followersText
           )}
           {!following && !canEdit && (
-            <Button color="accent" className="rounded-0 w-100" href={`/user/follow/${user.id}`}>
+            <Button color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
               Follow
             </Button>
           )}
           {following && !canEdit && (
-            <Button color="unsafe" outline className="rounded-0 w-100" href={`/user/unfollow/${user.id}`}>
+            <Button color="unsafe" outline className="rounded-0 w-full" href={`/user/unfollow/${user.id}`}>
               Unfollow
             </Button>
           )}

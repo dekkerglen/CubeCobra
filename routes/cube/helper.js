@@ -1,5 +1,5 @@
 const carddb = require('../../serverjs/carddb');
-const { render } = require('../../serverjs/render');
+const { render, redirect } = require('../../serverjs/render');
 const util = require('../../serverjs/util');
 const { CSVtoCards } = require('../../serverjs/cubefn');
 
@@ -92,7 +92,7 @@ async function updateCubeAndBlog(req, res, cube, cards, cardsToWrite, changelog,
       req.flash('danger', 'No changes made.');
     }
 
-    return res.redirect(`/cube/list/${encodeURIComponent(req.params.id)}`);
+    return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
   }

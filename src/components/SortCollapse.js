@@ -3,7 +3,8 @@ import { Button, Col, Collapse, Input, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
-import Tooltip from 'components/Tooltip';
+import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import CubeContext from 'contexts/CubeContext';
 import { ORDERED_SORTS, SORTS } from 'utils/Sort';
 
@@ -36,8 +37,8 @@ const SortCollapse = ({ isOpen }) => {
   return (
     <Collapse isOpen={isOpen}>
       <Row>
-        <Col xs="12" sm="6" className="mt-2">
-          <h6>Primary Sort</h6>
+        <Col xs={12} sm={6} className="mt-2">
+          <Text semibold sm>Primary Sort</Text>
           <Input
             type="select"
             value={sortPrimary}
@@ -52,8 +53,8 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs="12" sm="6" className="mt-2">
-          <h6>Secondary Sort</h6>
+        <Col xs={12} sm={6} className="mt-2">
+          <Text semibold sm>Secondary Sort</Text>
           <Input
             type="select"
             value={sortSecondary}
@@ -68,8 +69,8 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs="12" sm="6" className="mt-2">
-          <h6>Tertiary Sort</h6>
+        <Col xs={12} sm={6} className="mt-2">
+          <Text semibold sm>Tertiary Sort</Text>
           <Input
             type="select"
             value={sortTertiary}
@@ -84,8 +85,8 @@ const SortCollapse = ({ isOpen }) => {
             ))}
           </Input>
         </Col>
-        <Col xs="12" sm="6" className="mt-2">
-          <h6>Ordered Sort</h6>
+        <Col xs={12} sm={6} className="mt-2">
+          <Text semibold sm>Ordered Sort</Text>
           <Input
             type="select"
             value={sortQuaternary}

@@ -32,6 +32,7 @@ interface Card {
   addedTmsp?: string;
   notes?: string;
   details?: CardDetails;
+  asfan?: number;
 }
 
 export default Card;

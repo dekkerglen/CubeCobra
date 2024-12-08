@@ -3,7 +3,7 @@ import { Table } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
-import Paginate from 'components/Paginate';
+import Paginate from 'components/base/Pagination';
 import useQueryParam from 'hooks/useQueryParam';
 
 const PagedTable = ({ pageSize, rows, children, ...props }) => {

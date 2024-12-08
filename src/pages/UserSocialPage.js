@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -19,7 +20,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
       <Col xs={6}>
         <Card>
           <CardHeader>
-            <h5 className="mb-0">Followed cubes</h5>
+            <Text semibold md>Followed cubes</Text>
           </CardHeader>
           {followedCubes.length > 0 ? (
             <CardBody className="p-0">
@@ -39,7 +40,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
       <Col xs={6}>
         <Card>
           <CardHeader>
-            <h5 className="mb-0">Followed Users</h5>
+            <Text semibold md>Followed Users</Text>
           </CardHeader>
           {followedUsers.length > 0 ? (
             <CardBody className="p-0">
@@ -60,7 +61,7 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
         <Col xs={12}>
           <Card className="mt-3">
             <CardHeader>
-              <h5 className="mb-0">Followers</h5>
+              <Text semibold md>Followers</Text>
             </CardHeader>
             <CardBody className="p-0">
               <Row className="g-0">

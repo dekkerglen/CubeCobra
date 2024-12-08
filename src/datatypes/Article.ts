@@ -1,25 +1,7 @@
-import User from 'datatypes/User';
+import Image from 'datatypes/Image';
+import Content from 'datatypes/Content';
 
-interface Image {
-  uri: string;
-  artist: string;
-  id: string;
-  imageName: string;
-}
-
-interface Article {
-  id: string;
-  date: number;
-  status: string;
-  username?: string;
-  owner: User;
-  type: string;
-  typeStatusComp: string;
-  typeOwnerComp: string;
-  title?: string;
-  body?: string;
-  short?: string;
-  url?: string;
+interface Article extends Content {
   image?: Image;
   imageName?: string;
 }

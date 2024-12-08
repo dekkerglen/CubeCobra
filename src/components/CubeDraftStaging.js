@@ -5,6 +5,7 @@ import { LockIcon, PasteIcon } from '@primer/octicons-react';
 import PropTypes from 'prop-types';
 import DraftPropType from 'proptypes/DraftPropType';
 
+import Text from 'components/base/Text';
 import Username from 'components/Username';
 import DomainContext from 'contexts/DomainContext';
 import UserContext from 'contexts/UserContext';
@@ -14,7 +15,6 @@ import { callApi } from 'utils/CSRF';
 import { SortableItem, SortableList } from './DND';
 
 const BOT_NAME = 'Bot';
-
 
 const CubeDraftStaging = ({ draft, socket, start }) => {
   const [loading, setLoading] = React.useState(true);
@@ -103,7 +103,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
     return (
       <Card className="mt-4">
         <CardHeader>
-          <h4>Setting Up Draft...</h4>
+          <Text semibold lg>Setting Up Draft...</Text>
         </CardHeader>
         <CardBody>
           <div className="centered py-3">
@@ -124,7 +124,7 @@ const CubeDraftStaging = ({ draft, socket, start }) => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <h4>Setting Up Draft...</h4>
+        <Text semibold lg>Setting Up Draft...</Text>
       </CardHeader>
       <CardBody>
         {loading ? (

@@ -5,8 +5,9 @@ import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
-import Notification from 'components/Notification';
+import Notification from 'components/nav/Notification';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
@@ -50,7 +51,7 @@ const Notifications = ({ notifications, lastKey, loginCallback }) => {
       <DynamicFlash />
       <Card className="mx-auto">
         <CardHeader>
-          <h5>Notifications</h5>
+          <Text md semibold>Notifications</Text>
         </CardHeader>
         <InfiniteScroll
           dataLength={items.length}

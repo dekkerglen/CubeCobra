@@ -4,7 +4,8 @@ import { CardBody, CardHeader, CardTitle, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import CardStack from 'components/CardStack';
+import Text from 'components/base/Text';
+import CardStack from 'components/card/CardStack';
 import DraggableCard from 'components/DraggableCard';
 import Location from 'drafting/DraftLocation';
 
@@ -12,8 +13,8 @@ const DeckStacks = ({ cards, title, subtitle, locationType, canDrop, onMoveCard,
   <>
     <CardHeader {...props}>
       <CardTitle className="mb-0 d-flex flex-row align-items-end">
-        <h4 className="mb-0 me-auto">{title}</h4>
-        <h6 className="mb-0 font-weight-normal d-sm-block">{subtitle}</h6>
+        <Text semibold xl>{title}</Text>
+        <Text semibold md>{subtitle}</Text>
       </CardTitle>
     </CardHeader>
     <CardBody className="pt-0">
