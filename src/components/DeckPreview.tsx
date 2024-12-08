@@ -2,13 +2,13 @@ import React, { useContext, useState } from 'react';
 import UserContext from 'contexts/UserContext';
 import TimeAgo from 'react-timeago';
 import DeckDeleteModal from 'components/modals/DeckDeleteModal';
-import Deck from 'datatypes/Deck';
+import Draft from 'datatypes/Draft';
 import Text from 'components/base/Text';
 import { Flexbox } from 'components/base/Layout';
 import User from 'datatypes/User';
 
 interface DeckPreviewProps {
-  deck: Deck;
+  deck: Draft;
   nextURL?: string;
 }
 

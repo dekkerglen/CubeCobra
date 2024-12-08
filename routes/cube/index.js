@@ -1303,7 +1303,7 @@ router.post(
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      draft.InitialState = populated.initial_state;
+      draft.InitialState = populated.InitialState;
       draft.seats = populated.seats;
       draft.cube = cube.id;
       draft.owner = req.user.id;

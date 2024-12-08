@@ -1,8 +1,5 @@
-import React, { useCallback, useContext, useEffect } from 'react';
-import { Card } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import DraftPropType from 'proptypes/DraftPropType';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { Card } from 'components/base/Card';
 
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
@@ -12,8 +9,18 @@ import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { makeSubtitle } from 'utils/Card';
 import { callApi } from 'utils/CSRF';
+import Draft from 'datatypes/Draft';
+import { Step } from 'datatypes/Draftbots';
 
-const fetchPicks = async (draft, seat) => {
+interface CubeDraftProps {
+  draft: Draft;
+  socket: {
+    on: (event: string, callback: (data: any) => void) => void;
+    emit: (event: string, data: any) => void;
+  };
+}
+
+const fetchPicks = async (draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpicks', {
     draft: draft.id,
     seat,
@@ -28,7 +35,7 @@ const fetchPicks = async (draft, seat) => {
   return picks;
 };
 
-const fetchPack = async (draft, seat) => {
+const fetchPack = async (draft: Draft, seat: number) => {
   const res = await callApi('/multiplayer/getpack', {
     draft: draft.id,
     seat,
@@ -37,20 +44,20 @@ const fetchPack = async (draft, seat) => {
   return json.data;
 };
 
-let staticPicks;
+let staticPicks: any[][][];
 
 let seat = 0;
 
-const CubeDraft = ({ draft, socket }) => {
-  const [packQueue, setPackQueue] = React.useState([]);
-  const [pack, setPack] = React.useState([]);
-  const [picks, setPicks] = React.useState(setupPicks(2, 8));
-  const [loading, setLoading] = React.useState(true);
-  const [stepQueue, setStepQueue] = React.useState([]);
-  const [trashed, setTrashed] = React.useState([]);
+const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
+  const [packQueue, setPackQueue] = useState<any[]>([]);
+  const [pack, setPack] = useState<number[]>([]);
+  const [picks, setPicks] = useState<any[][][]>(setupPicks(2, 8));
+  const [loading, setLoading] = useState(true);
+  const [stepQueue, setStepQueue] = useState<Step[]>([]);
+  const [trashed, setTrashed] = useState<number[]>([]);
   const { hideCard } = useContext(AutocardContext);
 
-  const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
+  const disabled = stepQueue[0].action === 'pickrandom' || stepQueue[0].action === 'trashrandom';
 
   staticPicks = picks;
 
@@ -65,10 +72,10 @@ const CubeDraft = ({ draft, socket }) => {
   }, [pack, packQueue]);
 
   const makePick = useCallback(
-    async (pick) => {
+    async (pick: number) => {
       hideCard();
 
-      if (stepQueue[1] === 'pass' || pack.length < 1) {
+      if (stepQueue[1].action === 'pass' || pack.length < 1) {
         tryPopPack();
       } else {
         const slice = stepQueue.slice(1, stepQueue.length);
@@ -82,7 +89,7 @@ const CubeDraft = ({ draft, socket }) => {
     [hideCard, stepQueue, pack, draft.id, tryPopPack],
   );
 
-  const updatePack = async (data) => {
+  const updatePack = async (data: any) => {
     if (pack.length === 0) {
       setPack(data.pack);
       setStepQueue(data.steps);
@@ -125,7 +132,7 @@ const CubeDraft = ({ draft, socket }) => {
 
       socket.emit('joinDraft', { draftId: draft.id, seat });
 
-      socket.on('draft', async (data) => {
+      socket.on('draft', async (data: any) => {
         if (data.finished === 'true') {
           const res = await callApi('/multiplayer/editdeckbydraft', {
             draftId: draft.id,
@@ -138,7 +145,7 @@ const CubeDraft = ({ draft, socket }) => {
           window.location.href = `/cube/deck/deckbuilder/${json.deck}`;
         }
       });
-      socket.on('seat', (data) => {
+      socket.on('seat', (data: any) => {
         updatePack(data);
         setLoading(false);
       });
@@ -147,7 +154,7 @@ const CubeDraft = ({ draft, socket }) => {
       updatePack(await fetchPack(draft, seat));
       setLoading(false);
 
-      if (seat === '0') {
+      if (seat === 0) {
         delayedTryBotPicksLoop();
       }
     };
@@ -155,16 +162,16 @@ const CubeDraft = ({ draft, socket }) => {
   });
 
   const onMoveCard = useCallback(
-    async (source, target) => {
+    async (source: DraftLocation, target: DraftLocation) => {
       if (source.equals(target)) {
         return;
       }
 
       if (source.type === DraftLocation.PACK) {
         if (target.type === DraftLocation.PICKS) {
-          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
+          if (stepQueue[0].action === 'pick' || stepQueue[0].action === 'pickrandom') {
             setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
-          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+          } else if (stepQueue[0].action === 'trash' || stepQueue[0].action === 'trashrandom') {
             setTrashed([...trashed, pack[source.data]]);
           }
 
@@ -184,7 +191,7 @@ const CubeDraft = ({ draft, socket }) => {
   );
 
   const onClickCard = useCallback(
-    (cardIndex) => {
+    (cardIndex: number) => {
       const col = getCardCol(draft, pack[cardIndex]);
       onMoveCard(
         new DraftLocation(DraftLocation.PACK, cardIndex),
@@ -195,7 +202,11 @@ const CubeDraft = ({ draft, socket }) => {
   );
 
   useEffect(() => {
-    if ((stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom') && pack.length > 0 && !loading) {
+    if (
+      (stepQueue[0].action === 'pickrandom' || stepQueue[0].action === 'trashrandom') &&
+      pack.length > 0 &&
+      !loading
+    ) {
       setLoading(true);
       setTimeout(() => {
         onClickCard(Math.floor(Math.random() * pack.length));
@@ -219,20 +230,12 @@ const CubeDraft = ({ draft, socket }) => {
           title="picks"
           subtitle={makeSubtitle(picks.flat(3).map((index) => draft.cards[index]))}
           locationType={DraftLocation.PICKS}
-          canDrop={(_, to) => to.type === DraftLocation.PICKS}
+          canDrop={(_: any, to: DraftLocation) => to.type === DraftLocation.PICKS}
           onMoveCard={onMoveCard}
         />
       </Card>
     </>
   );
-};
-
-CubeDraft.propTypes = {
-  draft: DraftPropType.isRequired,
-  socket: PropTypes.shape({
-    on: PropTypes.func.isRequired,
-    emit: PropTypes.func.isRequired,
-  }).isRequired,
 };
 
 export default CubeDraft;

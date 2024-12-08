@@ -1,11 +1,10 @@
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
-import Deck from 'datatypes/Deck';
-import DeckSeat from 'datatypes/DeckSeat';
+import Deck from 'datatypes/Draft';
+import DeckSeat from 'datatypes/DraftSeat';
 import React, { useMemo } from 'react';
 
-import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import CommentsSection from 'components/comments/CommentsSection';
 import FoilCardImage from 'components/FoilCardImage';
@@ -13,6 +12,7 @@ import Markdown from 'components/Markdown';
 import Username from 'components/Username';
 import CardType from 'datatypes/Card';
 import { sortDeep } from 'utils/Sort';
+import DecksPickBreakdown from './DecksPickBreakdown';
 
 interface DeckStacksStaticProps {
   piles: number[][][];
@@ -50,11 +50,11 @@ const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => 
 interface DeckCardProps {
   seat: DeckSeat;
   view?: string;
-  deck: Deck;
+  draft: Deck;
   seatIndex: string;
 }
 
-const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
+const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIndex }) => {
   const stackedDeck = seat.mainboard.slice();
   const stackedSideboard = seat.sideboard.slice();
   let sbCount = 0;
@@ -89,7 +89,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
 
   const sorted = useMemo(() => {
     const deep = sortDeep(
-      seat.mainboard.flat(3).map((cardIndex) => deck.cards[cardIndex]),
+      seat.mainboard.flat(3).map((cardIndex) => draft.cards[cardIndex]),
       true,
       'Unsorted',
       'Color Category',
@@ -100,7 +100,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
     return deep
       .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
       .flat(4);
-  }, [deck.cards, seat.mainboard]);
+  }, [draft.cards, seat.mainboard]);
 
   return (
     <Card>
@@ -116,30 +116,30 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
       </CardHeader>
       {view === 'picks' && (
         <CardBody>
-          {deck.type === 'd' ? (
+          {draft.type === 'd' ? (
             <>
-              {/* {deck.seats[0].pickorder ? (
-                <DecksPickBreakdown deck={deck} seatNumber={parseInt(seatIndex, 10)} />
+              {draft.seats[0].pickorder ? (
+                <DecksPickBreakdown draft={draft} seatNumber={parseInt(seatIndex, 10)} />
               ) : (
-                <p>There is no draft log associated with this deck.</p>
-              )} */}
+                <p>There is no draft log associated with this draft.</p>
+              )}
             </>
           ) : (
-            <p>This type of deck does not have a pick breakdown yet.</p>
+            <p>This type of draft does not have a pick breakdown yet.</p>
           )}
         </CardBody>
       )}
-      {view === 'deck' && (
+      {view === 'draft' && (
         <>
-          <DeckStacksStatic piles={stackedDeck} cards={deck.cards} />
+          <DeckStacksStatic piles={stackedDeck} cards={draft.cards} />
           {stackedSideboard && stackedSideboard.length > 0 && (
             <>
               <CardBody className="border-bottom">
                 <Text semibold lg>
-                  sideboard
+                  Sideboard
                 </Text>
               </CardBody>
-              <DeckStacksStatic piles={stackedSideboard} cards={deck.cards} />
+              <DeckStacksStatic piles={stackedSideboard} cards={draft.cards} />
             </>
           )}
         </>
@@ -153,10 +153,10 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
           {seat.sideboard.flat(2).length > 0 && (
             <>
               <hr className="my-4" />
-              <Text semibold md>
+              <Text semibold lg>
                 Sideboard
               </Text>
-              <CardGrid cards={seat.sideboard.flat(2).map((cardIndex) => deck.cards[cardIndex])} xs={8} />
+              <CardGrid cards={seat.sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex])} xs={8} />
             </>
           )}
         </CardBody>
@@ -165,7 +165,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, deck, view = 'deck' }) => {
         <Markdown markdown={seat.description} />
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="deck" parent={deck.id} collapse={false} />
+        <CommentsSection parentType="draft" parent={draft.id} collapse={false} />
       </div>
     </Card>
   );

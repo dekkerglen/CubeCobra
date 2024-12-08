@@ -751,14 +751,14 @@ router.get('/:id', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await Draft.getById(req.params.id);
+    const draft = await Draft.getById(req.params.id);
 
-    if (!deck) {
+    if (!draft) {
       req.flash('danger', 'Deck not found');
       return redirect(req, res, '/404');
     }
 
-    const cube = await Cube.getById(deck.cube);
+    const cube = await Cube.getById(draft.cube);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
@@ -771,7 +771,7 @@ router.get('/:id', async (req, res) => {
       'CubeDeckPage',
       {
         cube,
-        deck,
+        draft,
       },
       {
         title: `Draft deck of ${abbreviate(cube.name)}`,

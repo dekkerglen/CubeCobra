@@ -13,7 +13,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import VideoPreview from 'components/content/VideoPreview';
 import Article from 'datatypes/Article';
 import Cube from 'datatypes/Cube';
-import Deck from 'datatypes/Deck';
+import Draft from 'datatypes/Draft';
 import MainLayout from 'layouts/MainLayout';
 import Text from 'components/base/Text';
 import Link from 'components/base/Link';
@@ -23,7 +23,7 @@ import Video from 'datatypes/Video';
 interface LandingPageProps {
   featured: Cube[];
   content: Article[];
-  recentDecks: Deck[];
+  recentDecks: Draft[];
   loginCallback: string;
 }
 

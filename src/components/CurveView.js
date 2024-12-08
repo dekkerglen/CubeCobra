@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import Text from 'components/base/Text';
-import AutocardListGroup from 'components/card/AutocardListGroup';
+import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
@@ -21,7 +21,7 @@ const TypeRow = ({ cardType, group }) => {
       <Row className="row-low-padding mb-2">
         {cmc2Labels.map((cmc) => (
           <div key={cmc} className="col-low-padding" style={{ width: `${100 / cmc2Labels.length}%` }}>
-            <AutocardListGroup
+            <TableViewCardGroup
               heading={`${cmc} (${(sorted[cmc] || []).length})`}
               cards={sorted[cmc] || []}
               sort="Unsorted"

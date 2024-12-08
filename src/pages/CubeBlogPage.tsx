@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 
 import BlogPost from 'components/blog/BlogPost';
 import CreateBlogModal from 'components/modals/CreateBlogModal';
@@ -14,6 +14,9 @@ import PostType from 'datatypes/BlogPost';
 import { Flexbox } from 'components/base/Layout';
 import Button from 'components/base/Button';
 import Text from 'components/base/Text';
+import Controls from 'components/base/Controls';
+import Link from 'components/base/Link';
+import UserContext from 'contexts/UserContext';
 
 interface CubeBlogPageProps {
   cube: Cube;
@@ -22,7 +25,7 @@ interface CubeBlogPageProps {
   loginCallback?: string;
 }
 
-const CreateBlogModalLink = withModal(Button, CreateBlogModal);
+const CreateBlogModalLink = withModal(Link, CreateBlogModal);
 
 const loader = (
   <div className="centered py-3 my-4">
@@ -31,6 +34,7 @@ const loader = (
 );
 
 const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, loginCallback = '/' }) => {
+  const user = useContext(UserContext);
   const [items, setItems] = useState<PostType[]>(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
@@ -60,14 +64,16 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, login
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <CubeLayout cube={cube} activeLink="blog">
-        <Flexbox direction="col" gap="2" className="my-2">
-          <DynamicFlash />
-          <Flexbox direction="row" justify="end">
+      <CubeLayout cube={cube} activeLink="blog" hasControls={user != null && cube.owner.id == user.id}>
+        <Controls>
+          <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
             <CreateBlogModalLink color="primary" modalprops={{ cubeID: cube.id, post: null }}>
               Create new blog post
             </CreateBlogModalLink>
           </Flexbox>
+        </Controls>
+        <Flexbox direction="col" gap="2" className="my-2">
+          <DynamicFlash />
           {items.length > 0 ? (
             items.map((post) => <BlogPost key={post.id} post={post} />)
           ) : (

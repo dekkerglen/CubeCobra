@@ -18,14 +18,14 @@ import Text from 'components/base/Text';
 import UserContext from 'contexts/UserContext';
 import BlogPost from 'datatypes/BlogPost';
 import Cube from 'datatypes/Cube';
-import Deck from 'datatypes/Deck';
+import Draft from 'datatypes/Draft';
 import MainLayout from 'layouts/MainLayout';
 import React, { useContext } from 'react';
 import classNames from 'classnames';
 
 interface DashboardPageProps {
   posts: BlogPost[];
-  decks: Deck[];
+  decks: Draft[];
   content: any[];
   loginCallback?: string;
   featured?: Cube[];

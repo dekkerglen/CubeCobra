@@ -2,12 +2,12 @@ import React, { useContext } from 'react';
 import { Card, CardFooter, CardHeader } from 'components/base/Card';
 import DeckPreview from 'components/DeckPreview';
 import CubeContext from 'contexts/CubeContext';
-import Deck from 'datatypes/Deck';
+import Draft from 'datatypes/Draft';
 import Text from 'components/base/Text';
 import Link from 'components/base/Link';
 
 interface PlaytestDecksCardProps {
-  decks: Deck[];
+  decks: Draft[];
 }
 
 const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks }) => {

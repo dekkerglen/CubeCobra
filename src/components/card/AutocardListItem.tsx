@@ -7,6 +7,7 @@ import TagColorContext from 'contexts/TagColorContext';
 import UserContext from 'contexts/UserContext';
 import Card from 'datatypes/Card';
 import { getCardTagColorClass } from 'utils/Util';
+import { ListGroupItem } from 'components/base/ListGroup';
 
 export interface AutocardListItemProps {
   card: Card;
@@ -14,9 +15,11 @@ export interface AutocardListItemProps {
   inModal?: boolean;
   className?: string;
   children?: React.ReactNode;
+  onClick?: (event: React.MouseEvent) => void;
+  last?: boolean;
 }
 
-const AutocardDiv = withAutocard('li');
+const AutocardDiv = withAutocard(ListGroupItem);
 
 const CARD_NAME_FALLBACK = 'Unidentified Card';
 const CARD_ID_FALLBACK = 'undefined';
@@ -35,7 +38,8 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   inModal = false,
   className = '',
   children,
-  ...props
+  onClick,
+  last,
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -68,12 +72,12 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(styles.root, colorClassname, className)}
+      className={cx(styles.root, `bg-card-${colorClassname}`, className)}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
-      role="button"
-      {...props}
+      onClick={onClick}
+      last={last}
     >
       <span className={styles.children}>{children}</span>
       <span className={styles.name}>{cardName}</span>

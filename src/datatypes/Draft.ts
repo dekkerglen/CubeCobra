@@ -1,5 +1,6 @@
 import Card from 'datatypes/Card';
 import DraftSeat from 'datatypes/DraftSeat';
+import User from './User';
 
 export type DraftAction = 'pick' | 'pass' | 'trash' | 'pickrandom' | 'trashrandom';
 
@@ -103,8 +104,14 @@ export default interface Draft {
   seats: DraftSeat[];
   cards: Card[];
   cube: string;
-  initial_state: DraftState;
+  InitialState: DraftState;
   basics: number[];
   id: string;
   seed: string;
+  // g: grid, d: draft, u: upload, s: sealed
+  type: 'g' | 'd' | 'u' | 's';
+  owner: string | User;
+  cubeOwner: string | User;
+  date: Date;
+  name: string;
 }

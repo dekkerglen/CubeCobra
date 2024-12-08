@@ -1,6 +1,5 @@
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Cube from 'datatypes/Cube';
-import Deck from 'datatypes/Deck';
 import Draft from 'datatypes/Draft';
 import React, { useContext } from 'react';
 
@@ -25,90 +24,93 @@ const SampleHandModalLink = withModal(Link, SampleHandModal);
 
 interface CubeDeckPageProps {
   cube: Cube;
-  deck: Deck;
-  draft?: Draft | null;
+  draft: Draft;
   loginCallback: string;
 }
 
-const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, deck, loginCallback }) => {
+const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback }) => {
   const user = useContext(UserContext);
   const [seatIndex, setSeatIndex] = useQueryParam('seat', '0');
-  const [view, setView] = useQueryParam('view', 'deck');
+  const [view, setView] = useQueryParam('view', 'draft');
 
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <Controls>
-            <Flexbox direction="row" justify="start" gap="4" alignItems="center" className="py-2 px-4">
-              <Select
-                value={seatIndex}
-                setValue={setSeatIndex}
-                options={deck.seats.map((seat, index) => ({
-                  value: index.toString(),
-                  label: `Seat ${index + 1}: ${seat.name}`,
-                }))}
-                dense
-              />
-              <Select
-                value={view}
-                setValue={setView}
-                options={[
-                  { value: 'deck', label: 'Deck View' },
-                  { value: 'visual', label: 'Visual Spoiler' },
-                  { value: 'picks', label: 'Pick by Pick Breakdown' },
-                ]}
-                dense
-              />
-              {user && deck.owner && user.id === (deck.owner as User).id && (
-                <Link href={`/cube/deck/edit/${deck.id}/${seatIndex}`} className="nav-link">
-                  Edit
+            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4">
+              <Flexbox direction="row" justify="start" gap="4" alignItems="center">
+                <Select
+                  value={seatIndex}
+                  setValue={setSeatIndex}
+                  options={draft.seats.map((seat, index) => ({
+                    value: index.toString(),
+                    label: `Seat ${index + 1}: ${seat.name}`,
+                  }))}
+                  dense
+                />
+                <Select
+                  value={view}
+                  setValue={setView}
+                  options={[
+                    { value: 'draft', label: 'Deck View' },
+                    { value: 'visual', label: 'Visual Spoiler' },
+                    { value: 'picks', label: 'Pick by Pick Breakdown' },
+                  ]}
+                  dense
+                />
+              </Flexbox>
+              <Flexbox direction="row" justify="start" gap="4" alignItems="center">
+                {user && draft.owner && user.id === (draft.owner as User).id && (
+                  <Link href={`/cube/draft/edit/${draft.id}/${seatIndex}`} className="nav-link">
+                    Edit
+                  </Link>
+                )}
+                <SampleHandModalLink
+                  modalprops={{
+                    deck: draft.seats[parseInt(seatIndex || '0')].mainboard
+                      ?.flat(3)
+                      .map((cardIndex) => draft.cards[cardIndex]),
+                  }}
+                >
+                  Sample Hand
+                </SampleHandModalLink>
+                <Link href={`/cube/draft/rebuild/${draft.id}/${seatIndex}`} className="nav-link">
+                  Clone and Rebuild
                 </Link>
-              )}
-              <SampleHandModalLink
-                modalprops={{
-                  deck: deck.seats[parseInt(seatIndex || '0')].mainboard
-                    ?.flat(3)
-                    .map((cardIndex) => deck.cards[cardIndex]),
-                }}
-              >
-                Sample Hand
-              </SampleHandModalLink>
-              <Link href={`/cube/deck/rebuild/${deck.id}/${seatIndex}`} className="nav-link">
-                Clone and Rebuild
-              </Link>
-              <CustomImageToggler />
-              <NavMenu label="Export">
-                <Flexbox direction="col" gap="2" className="p-3">
-                  <Link href={`/cube/deck/download/txt/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    Card Names (.txt)
-                  </Link>
-                  <Link href={`/cube/deck/download/forge/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    Forge (.dck)
-                  </Link>
-                  <Link href={`/cube/deck/download/xmage/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    XMage (.dck)
-                  </Link>
-                  <Link href={`/cube/deck/download/mtgo/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    MTGO (.txt)
-                  </Link>
-                  <Link href={`/cube/deck/download/arena/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    Arena (.txt)
-                  </Link>
-                  <Link href={`/cube/deck/download/cockatrice/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    Cockatrice (.txt)
-                  </Link>
-                  <Link href={`/cube/deck/download/topdecked/${deck.id}/${seatIndex}`} className="dropdown-item">
-                    TopDecked (.csv)
-                  </Link>
-                </Flexbox>
-              </NavMenu>
+                <CustomImageToggler />
+                <NavMenu label="Export">
+                  <Flexbox direction="col" gap="2" className="p-3">
+                    <Link href={`/cube/draft/download/txt/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      Card Names (.txt)
+                    </Link>
+                    <Link href={`/cube/draft/download/forge/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      Forge (.dck)
+                    </Link>
+                    <Link href={`/cube/draft/download/xmage/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      XMage (.dck)
+                    </Link>
+                    <Link href={`/cube/draft/download/mtgo/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      MTGO (.txt)
+                    </Link>
+                    <Link href={`/cube/draft/download/arena/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      Arena (.txt)
+                    </Link>
+                    <Link href={`/cube/draft/download/cockatrice/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      Cockatrice (.txt)
+                    </Link>
+                    <Link href={`/cube/draft/download/topdecked/${draft.id}/${seatIndex}`} className="dropdown-item">
+                      TopDecked (.csv)
+                    </Link>
+                  </Flexbox>
+                </NavMenu>
+              </Flexbox>
             </Flexbox>
           </Controls>
           <DynamicFlash />
           <Row className="mt-3 mb-3">
             <Col>
-              <DeckCard seat={deck.seats[parseInt(seatIndex)]} deck={deck} seatIndex={`${seatIndex}`} view={view} />
+              <DeckCard seat={draft.seats[parseInt(seatIndex)]} draft={draft} seatIndex={`${seatIndex}`} view={view} />
             </Col>
           </Row>
         </CubeLayout>

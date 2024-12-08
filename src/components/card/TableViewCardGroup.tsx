@@ -8,7 +8,7 @@ import CubeContext from 'contexts/CubeContext';
 import Card from 'datatypes/Card';
 import { sortDeep } from 'utils/Sort';
 
-export interface AutocardListGroupProps {
+export interface TableViewCardGroupProps {
   cards: Card[];
   heading: React.ReactNode;
   sort?: string;
@@ -19,7 +19,7 @@ export interface AutocardListGroupProps {
 const CardModalLink = withCardModal(AutocardListItem);
 const GroupModalLink = withGroupModal(ListGroupItem);
 
-const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
+const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   cards,
   heading,
   sort = 'Mana Value Full',
@@ -30,7 +30,7 @@ const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
   const sorted = useMemo(() => sortDeep(cards, showOther, orderedSort, sort), [cards, showOther, orderedSort, sort]);
 
   return (
-    <ListGroup className="list-outline">
+    <ListGroup>
       {canEdit ? (
         <GroupModalLink tag="div" className="list-group-heading" modalprops={{ cards }}>
           {heading}
@@ -60,4 +60,4 @@ const AutocardListGroup: React.FC<AutocardListGroupProps> = ({
   );
 };
 
-export default AutocardListGroup;
+export default TableViewCardGroup;

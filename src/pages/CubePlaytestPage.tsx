@@ -16,13 +16,13 @@ import UploadDecklistModal from 'components/modals/UploadDecklistModal';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
 import Cube from 'datatypes/Cube';
-import Deck from 'datatypes/Deck';
+import Draft from 'datatypes/Draft';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 interface CubePlaytestPageProps {
   cube: Cube;
-  decks: Deck[];
+  decks: Draft[];
   loginCallback?: string;
 }
 

@@ -400,7 +400,7 @@ const methods = {
     const draft = createDraft(cube, format, cards.mainboard, 1, { username: 'Anonymous' }, seed);
     return {
       seed,
-      pack: draft.initial_state[0][0].cards.map((cardIndex) => ({
+      pack: draft.InitialState[0][0].cards.map((cardIndex) => ({
         ...draft.cards[cardIndex],
         details: carddb.cardFromId(draft.cards[cardIndex].cardID),
       })),

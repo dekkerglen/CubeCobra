@@ -1,5 +1,5 @@
 import Draft from 'datatypes/Draft';
-import { cardType } from 'utils/Card';
+import { cardCmc, cardType } from 'utils/Card';
 import { cmcColumn } from 'utils/Util';
 
 interface Step {
@@ -104,7 +104,7 @@ export const getStepList = (initialState: any[]): FlattenedStep[] =>
     .flat();
 
 export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
-  const steps = getStepList(draft.initial_state);
+  const steps = getStepList(draft.InitialState);
 
   let picks = 0;
 
@@ -123,7 +123,7 @@ export const nextStep = (draft: Draft, cardsPicked: number): string | null => {
 
 export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
   // build list of steps and match to pick and pack number
-  const steps = getStepList(draft.initial_state);
+  const steps = getStepList(draft.InitialState);
 
   // build a list of states for each seat
   const states: DrafterState[] = [];
@@ -136,15 +136,15 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
     for (let j = 0; j < steps.length; j++) {
       const step = steps[j];
 
-      if (!picksList[step.pack - 1]) {
-        picksList[step.pack - 1] = [];
+      if (!picksList[step.pack]) {
+        picksList[step.pack] = [];
       }
 
       if (step.action === 'pick' || step.action === 'pickrandom') {
-        picksList[step.pack - 1].push({ action: step.action, cardIndex: pickQueue.pop(), index });
+        picksList[step.pack].push({ action: step.action, cardIndex: pickQueue.pop(), index });
         index += 1;
       } else if (step.action === 'trash' || step.action === 'trashrandom') {
-        picksList[step.pack - 1].push({ action: step.action, cardIndex: trashQueue.pop(), index });
+        picksList[step.pack].push({ action: step.action, cardIndex: trashQueue.pop(), index });
         index += 1;
       }
     }
@@ -164,14 +164,15 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
   let packsWithCards: any[] = [];
   let offset = 0;
 
+  console.log(steps);
   // go through steps and update states
   for (const step of steps) {
     // open pack if we need to open a new pack
     if (step.pick === 1 && step.action !== 'pass') {
       packsWithCards = [];
 
-      for (let i = 0; i < draft.initial_state.length; i++) {
-        packsWithCards[i] = draft.initial_state[i][step.pack - 1].cards.slice();
+      for (let i = 0; i < draft.InitialState.length; i++) {
+        packsWithCards[i] = draft.InitialState[i][step.pack].cards.slice();
       }
 
       offset = 0;
@@ -227,7 +228,7 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
 
     // now if it's a pass we can pass
     if (step.action === 'pass') {
-      const passLeft = step.pack % 2 === 1;
+      const passLeft = step.pack % 2 === 0;
       offset = (offset + (passLeft ? 1 : states.length - 1)) % states.length;
     }
   }
@@ -290,7 +291,7 @@ export const draftStateToTitle = (
   let pack = 1;
   let pick = 1;
 
-  const steplist = getStepList(draft.initial_state);
+  const steplist = getStepList(draft.InitialState);
   let pickCount = 0;
   let trashCount = 0;
 
@@ -322,4 +323,19 @@ export const draftStateToTitle = (
   }
 
   return `Pack ${pack} Pick ${pick}: ${stepText}`;
+};
+
+export const getCardCol: (draft: Draft, cardIndex: number) => number = (draft: Draft, cardIndex: number) =>
+  Math.max(0, Math.min(7, cardCmc(draft.cards[cardIndex])));
+
+export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: number, cols: number) => {
+  const res = [];
+  for (let i = 0; i < rows; i++) {
+    const row = [];
+    for (let j = 0; j < cols; j++) {
+      row.push([]);
+    }
+    res.push(row);
+  }
+  return res;
 };
