@@ -38,7 +38,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <Controls>
-            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4">
+            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4" wrap="wrap">
               <Flexbox direction="row" justify="start" gap="4" alignItems="center">
                 <Select
                   value={seatIndex}

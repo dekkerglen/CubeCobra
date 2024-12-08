@@ -164,7 +164,6 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
   let packsWithCards: any[] = [];
   let offset = 0;
 
-  console.log(steps);
   // go through steps and update states
   for (const step of steps) {
     // open pack if we need to open a new pack

@@ -4,11 +4,10 @@ import Text from 'components/base/Text';
 
 import Deck from 'datatypes/Draft';
 
-import FoilCardImage from 'components/FoilCardImage';
 import { getDrafterState } from 'drafting/draftutil';
 import useQueryParam from 'hooks/useQueryParam';
-import { encodeName } from 'utils/Card';
 import CardListGroup from './card/CardListGroup';
+import CardGrid from './card/CardGrid';
 
 export const ACTION_LABELS = Object.freeze({
   pick: 'Picked ',
@@ -31,7 +30,7 @@ const DecksPickBreakdown: React.FC<DecksPickBreakdownProps> = ({ draft, seatNumb
 
   return (
     <Row>
-      <Col xs={12} sm={3}>
+      <Col xs={6} sm={4} lg={3} xl={2}>
         <Text semibold lg>
           Pick Order
         </Text>
@@ -43,22 +42,20 @@ const DecksPickBreakdown: React.FC<DecksPickBreakdownProps> = ({ draft, seatNumb
                 cards={list.map(({ cardIndex }) => draft.cards[cardIndex])}
                 heading={`Pack ${listindex + 1}`}
                 key={listindex}
-                onClick={(index) => setPickNumber(`${index}`)}
+                onClick={(index) => {
+                  let picks = 0;
+                  for (let i = 0; i < listindex; i++) {
+                    picks += draft.InitialState[0][i].cards.length;
+                  }
+                  setPickNumber((picks + index).toString());
+                }}
               />
             ))}
         </Flexbox>
       </Col>
-      <Col xs={12} sm={9}>
+      <Col xs={6} sm={8} lg={9} xl={10}>
         <Text semibold lg>{`Pack ${(pack || 0) + 1}: Pick ${pick}`}</Text>
-        <Row className="g-0">
-          {cardsInPack.map((cardIndex) => (
-            <Col key={cardIndex} xs={4} sm={2}>
-              <a href={`/tool/card/${encodeName(draft.cards[cardIndex]?.details?.name ?? '')}`}>
-                <FoilCardImage autocard data-in-modal card={draft.cards[cardIndex]} className="clickable" />
-              </a>
-            </Col>
-          ))}
-        </Row>
+        <CardGrid xs={2} sm={3} lg={4} xl={5} cards={cardsInPack.map((cardIndex) => draft.cards[cardIndex])} />
       </Col>
     </Row>
   );

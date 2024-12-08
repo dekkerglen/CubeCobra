@@ -13,7 +13,6 @@ export interface AutocardListItemProps {
   card: Card;
   noCardModal?: boolean;
   inModal?: boolean;
-  className?: string;
   children?: React.ReactNode;
   onClick?: (event: React.MouseEvent) => void;
   last?: boolean;
@@ -26,17 +25,10 @@ const CARD_ID_FALLBACK = 'undefined';
 
 const noOp = () => undefined;
 
-const styles = {
-  root: 'card-list-item list-group-item',
-  name: 'card-list-item_name',
-  children: 'card-list-item_children',
-};
-
 const AutocardListItem: React.FC<AutocardListItemProps> = ({
   card,
   noCardModal = false,
   inModal = false,
-  className = '',
   children,
   onClick,
   last,
@@ -72,15 +64,15 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(styles.root, `bg-card-${colorClassname}`, className)}
+      className={cx(`bg-card-${colorClassname}`)}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
       onClick={onClick}
       last={last}
     >
-      <span className={styles.children}>{children}</span>
-      <span className={styles.name}>{cardName}</span>
+      {children && <span>{children}</span>}
+      <span>{cardName}</span>
     </AutocardDiv>
   );
 };
