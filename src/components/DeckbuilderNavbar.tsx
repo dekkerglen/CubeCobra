@@ -16,12 +16,13 @@ import Link from './base/Link';
 import Button from './base/Button';
 import Collapse from './base/Collapse';
 import CSRFForm from './CSRFForm';
+import Draft from 'datatypes/Draft';
 
 const DeleteDeckModalLink = withModal(Link, DeckDeleteModal);
 const BasicsModalLink = withModal(Link, BasicsModal);
 
 interface DeckbuilderNavbarProps {
-  draftId: string;
+  draft: Draft;
   cubeID: string;
   cards: Card[];
   basics: number[];
@@ -39,7 +40,7 @@ interface DeckbuilderNavbarProps {
 const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   cards,
   basics,
-  draftId,
+  draft,
   cubeID,
   mainboard,
   sideboard,
@@ -121,12 +122,12 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
   const controls = (
     <>
-      <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draftId}`} formData={formData}>
+      <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
         <Link href="#" onClick={() => formRef.current?.submit()}>
           Save Deck
         </Link>
       </CSRFForm>
-      <DeleteDeckModalLink modalprops={{ deckID: draftId, cubeID }}>Delete Deck</DeleteDeckModalLink>
+      <DeleteDeckModalLink modalprops={{ deck: draft, cubeID }}>Delete Deck</DeleteDeckModalLink>
       <BasicsModalLink
         modalprops={{
           basics: basics,

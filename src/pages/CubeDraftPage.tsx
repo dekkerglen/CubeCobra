@@ -1,9 +1,4 @@
 import React, { useContext, useState } from 'react';
-import { Spinner } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-import DraftPropType from 'proptypes/DraftPropType';
 import socketIOClient from 'socket.io-client';
 
 import CubeDraft from 'components/CubeDraft';
@@ -16,10 +11,19 @@ import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { callApi } from 'utils/CSRF';
+import Cube from 'datatypes/Cube';
+import Draft from 'datatypes/Draft';
+import Text from 'components/base/Text';
 
 const socket = socketIOClient('/', { rejectUnauthorized: false });
 
-const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
+interface CubeDraftPageProps {
+  cube: Cube;
+  initialDraft: Draft;
+  loginCallback?: string;
+}
+
+const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, initialDraft, loginCallback }) => {
   const user = useContext(UserContext);
   const [state, setState] = useState('loading');
   const [message, setMessage] = useState('');
@@ -64,7 +68,9 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
         <CubeLayout cube={cube} activeLink="playtest">
           {state === 'loading' && (
             <div className="centered py-3">
-              <Spinner className="position-absolute" />
+              <Text semibold lg>
+                Loading...
+              </Text>
             </div>
           )}
           {state === 'staging' && <CubeDraftStaging draft={initialDraft} start={start} socket={socket} />}
@@ -74,16 +80,6 @@ const CubeDraftPage = ({ cube, initialDraft, loginCallback }) => {
       </DisplayContextProvider>
     </MainLayout>
   );
-};
-
-CubeDraftPage.propTypes = {
-  cube: CubePropType.isRequired,
-  initialDraft: DraftPropType.isRequired,
-  loginCallback: PropTypes.string,
-};
-
-CubeDraftPage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(CubeDraftPage);

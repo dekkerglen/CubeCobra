@@ -90,6 +90,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                 </Text>
                 <TextBadge name="Cube ID">
                   <CubeIdModalLink
+                    className="text-xs"
                     onClick={() => {
                       navigator.clipboard.writeText(getCubeId(cube));
                       addAlert('success', 'Cube ID copied to clipboard.');

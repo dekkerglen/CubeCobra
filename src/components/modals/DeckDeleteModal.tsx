@@ -1,18 +1,20 @@
 import React from 'react';
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
 import { csrfFetch } from 'utils/CSRF';
+import Draft from 'datatypes/Draft';
+import User from 'datatypes/User';
 
 interface DeckDeleteModalProps {
-  deckID: string;
+  deck: Draft;
   cubeID: string;
   nextURL?: string;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
 }
 
-const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deckID, cubeID, nextURL, isOpen, setOpen }) => {
+const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deck, cubeID, nextURL, isOpen, setOpen }) => {
   const confirm = async () => {
-    const response = await csrfFetch(`/cube/deck/deletedeck/${deckID}`, {
+    const response = await csrfFetch(`/cube/deck/deletedeck/${deck.id}`, {
       method: 'DELETE',
       headers: {},
     });
@@ -26,12 +28,15 @@ const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deckID, cubeID, nextU
     }
   };
 
+  // if owner is an object it's a user, otherwise it's a string
+  const owner = typeof deck.owner === 'object' ? (deck.owner as User).username : deck.owner;
+
   return (
     <ConfirmDeleteModal
       setOpen={setOpen}
       submitDelete={confirm}
       isOpen={isOpen}
-      text="Are you sure you wish to delete this deck? This action cannot be undone."
+      text={`Are you sure you wish to delete ${deck.name} by ${owner}? This action cannot be undone.`}
     />
   );
 };

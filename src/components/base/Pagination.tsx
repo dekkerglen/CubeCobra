@@ -48,11 +48,7 @@ const Paginate: React.FC<PaginateProps> = ({
   if (onClick) {
     return (
       <Flexbox direction="row" gap="2" alignItems="center" className={className}>
-        {hasMore ? (
-          <Text semibold className="mr-4">{`Page ${active + 1} of ${count}...`}</Text>
-        ) : (
-          <Text semibold className="mr-4">{`Page ${active + 1} of ${count}`}</Text>
-        )}
+        <Text semibold className="mr-4">{`Page ${active + 1} of ${count}${hasMore ? '+' : ''}`}</Text>
         {loading && <Spinner sm />}
         <Button color="primary" onClick={() => onClick(0)} disabled={active === 0 && !loading}>
           <MoveToStartIcon size={16} />

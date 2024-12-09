@@ -8,7 +8,7 @@ import UserContext, { UserContextValue } from 'contexts/UserContext';
 import { Flexbox } from 'components/base/Layout';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
-const BANNER_RATE: number = 1; // an alternate message appears with probability of 1/BANNER_RATE
+const BANNER_RATE: number = 5; // an alternate message appears with probability of 1/BANNER_RATE
 
 const options: React.ReactNode[] = [
   <Text lg>
@@ -43,7 +43,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
     return (
       <div className={`${className} py-2`}>
         <Card>
-          <CardBody className="bg-advert overflow-hidden">{options[option]}</CardBody>
+          <CardBody className="bg-advert overflow-hidden rounded-md">{options[option]}</CardBody>
         </Card>
       </div>
     );
@@ -56,7 +56,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
       </ResponsiveDiv>
       <ResponsiveDiv xxxl className="pb-8">
         <Card className="h-full bg-advert">
-          <CardBody className="bg-advert h-full">
+          <CardBody className="bg-advert h-full rounded-md">
             <Flexbox direction="col" justify="center" className="h-full">
               <Text lg>
                 Tired of seeing advertisments? Become a supporter of Cube Cobra to remove all advertisments and gain
