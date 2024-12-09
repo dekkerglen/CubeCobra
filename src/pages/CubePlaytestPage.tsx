@@ -23,13 +23,14 @@ import MainLayout from 'layouts/MainLayout';
 interface CubePlaytestPageProps {
   cube: Cube;
   decks: Draft[];
+  decksLastKey: any;
   loginCallback?: string;
 }
 
 const UploadDecklistModalLink = withModal(Link, UploadDecklistModal);
 const CreateCustomFormatLink = withModal(Link, CustomDraftFormatModal);
 
-const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, loginCallback = '/' }) => {
+const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, decksLastKey, loginCallback = '/' }) => {
   const user = useContext(UserContext);
   const defaultDraftFormat = cube.defaultFormat ?? -1;
 
@@ -72,6 +73,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, loginC
           <Row>
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">
+                <SamplePackCard />
                 {defaultDraftFormat === -1 && <StandardDraftCard defaultDraftFormat={defaultDraftFormat} />}
                 {formatsSorted.map((format) => (
                   <CustomDraftCard
@@ -88,8 +90,7 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({ cube, decks, loginC
             </Col>
             <Col xs={12} md={6} xl={6}>
               <Flexbox direction="col" gap="2">
-                <SamplePackCard />
-                {decks.length !== 0 && <PlaytestDecksCard decks={decks} />}
+                <PlaytestDecksCard decks={decks} decksLastKey={decksLastKey} cubeId={cube.id} />
               </Flexbox>
             </Col>
           </Row>

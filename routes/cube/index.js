@@ -711,6 +711,23 @@ router.post('/getmorechangelogs', async (req, res) => {
   });
 });
 
+router.post('/getmoredecks', async (req, res) => {
+  try {
+    const { lastKey, cubeId } = req.body;
+    const query = await Draft.getByCube(cubeId, lastKey);
+
+    return res.status(200).send({
+      success: 'true',
+      decks: query.items,
+      lastKey: query.lastKey,
+    });
+  } catch(e) {
+    return res.status(500).send({
+      success: 'false',
+    });
+  }
+});
+
 router.get('/playtest/:id', async (req, res) => {
   try {
     const cube = await Cube.getById(req.params.id);
@@ -729,6 +746,7 @@ router.get('/playtest/:id', async (req, res) => {
       {
         cube,
         decks: decks.items,
+        decksLastKey: decks.lastEvaluatedKey
       },
       {
         title: `${abbreviate(cube.name)} - Playtest`,

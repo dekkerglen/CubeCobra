@@ -416,45 +416,6 @@ router.get('/deckbuilder/:id', async (req, res) => {
   }
 });
 
-router.get('/decks/:cubeid', async (req, res) => {
-  try {
-    const { cubeid } = req.params;
-
-    const cube = await Cube.getById(cubeid);
-    if (!isCubeViewable(cube, req.user)) {
-      req.flash('danger', 'Cube not found');
-      return redirect(req, res, '/404');
-    }
-
-    const decks = await Draft.getByCube(cube.id);
-
-    return render(
-      req,
-      res,
-      'CubeDecksPage',
-      {
-        cube,
-        decks: decks.items,
-        lastKey: decks.lastKey,
-      },
-      {
-        title: `${abbreviate(cube.name)} - Draft Decks`,
-        metadata: generateMeta(
-          `Cube Cobra Decks: ${cube.name}`,
-          cube.description,
-          cube.image.uri,
-          `https://cubecobra.com/user/decks/${encodeURIComponent(req.params.cubeid)}`,
-        ),
-      },
-    );
-  } catch (err) {
-    return util.handleRouteError(req, res, err, `/cube/playtest/${encodeURIComponent(req.params.cubeid)}`);
-  }
-});
-
-router.get('/decks/:id', async (req, res) => {
-  res.redirect(`/cube/deck/decks/${encodeURIComponent(req.params.id)}/0`);
-});
 
 router.get('/rebuild/:id/:index', ensureAuth, async (req, res) => {
   try {
