@@ -4,10 +4,11 @@ import { Card, Col, Row, Spinner } from 'reactstrap';
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
 import withAutocard from 'components/WithAutocard';
-import withCardModal from 'components/WithCardModal';
+import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import CardData, { boardTypes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
+import Text from 'components/base/Text';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;
@@ -69,7 +70,7 @@ const Remove = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >
@@ -89,7 +90,7 @@ const Edit = ({ card, revert }: { card: CardData; revert: () => void }) => (
       altClick={() => {
         window.open(`/tool/card/${card.cardID}`);
       }}
-      modalProps={{
+      modalprops={{
         card,
       }}
     >
@@ -149,7 +150,7 @@ const Changelist: React.FC = () => {
         }
         return (
           <div key={board} className="mb-2">
-            <h6>
+            <Text semibold sm>
               <Row>
                 <Col>{capitalizeFirstLetter(board)} Changelist</Col>
                 <Col className="col-sm-auto">
@@ -159,7 +160,7 @@ const Changelist: React.FC = () => {
                   </div>
                 </Col>
               </Row>
-            </h6>
+            </Text>
             <Card className="changelist-container p-2">
               <ul className="changelist">
                 {adds &&

@@ -8,7 +8,7 @@ const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverjs/cubefn');
 
@@ -53,7 +53,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'DashboardPage', {
-      posts: posts.items,
+      posts: posts.items.map((item) => item.document),
       lastKey: posts.lastKey,
       decks: decks.items,
       content: content.items.filter((item) => item.type !== 'p'),
@@ -65,13 +65,14 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
 });
 
 router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
-  const { lastKey, user } = req.body;
+  const { lastKey } = req.body;
+  const { user } = req;
 
-  const result = await Feed.getByTo(user, lastKey);
+  const result = await Feed.getByTo(user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',
-    items: result.items,
+    items: result.items.map((item) => item.document),
     lastKey: result.lastKey,
   });
 });
@@ -106,16 +107,12 @@ router.get('/landing', async (req, res) => {
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
   const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-  const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
-  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
-
   const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
 
   return render(req, res, 'LandingPage', {
     featured,
-    popular,
     content: content.items.filter((item) => item.type !== 'p'),
     recentDecks: recentDecks.items.filter((deck) => deck.complete),
   });

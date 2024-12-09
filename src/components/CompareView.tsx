@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
 import { Col, ListGroup, ListGroupItem, Row } from 'reactstrap';
 
-import AutocardListItem from 'components/AutocardListItem';
-import withCardModal from 'components/WithCardModal';
+import AutocardListItem from 'components/card/AutocardListItem';
+import withCardModal from 'components/modals/WithCardModal';
 import CubeContext from 'contexts/CubeContext';
 import Card from 'datatypes/Card';
 import { getLabels, sortIntoGroups } from 'utils/Sort';
+import Text from 'components/base/Text';
 
 export interface CompareGroupProps {
   heading: string;
@@ -51,7 +52,7 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
                       window.open(`/tool/card/${card.cardID}`);
                     }}
                     className={index === 0 ? 'cmc-group' : undefined}
-                    modalProps={{
+                    modalprops={{
                       card,
                     }}
                   />
@@ -128,27 +129,29 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
         <div className="compare-header pt-2">
           <Row>
             <Col>
-              <h6 className="text-center">Total</h6>
+              <Text semibold md>
+                Total
+              </Text>
             </Col>
           </Row>
           <Row>
             <Col xs="4">
-              <h6 className="text-center">
+              <Text semibold md>
                 In Both cubes
                 <br />({bothCounts.total})
-              </h6>
+              </Text>
             </Col>
             <Col xs="4">
-              <h6 className="text-center">
+              <Text semibold md>
                 Only in Base Cube
                 <br />({onlyACounts.total})
-              </h6>
+              </Text>
             </Col>
             <Col xs="4">
-              <h6 className="text-center">
+              <Text semibold md>
                 Only in Comparison Cube
                 <br />({onlyBCounts.total})
-              </h6>
+              </Text>
             </Col>
           </Row>
         </div>
@@ -159,31 +162,33 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
           const column = columnsSecondary[columnLabel];
           return (
             <Row key={columnLabel}>
-              <Col xs="12" md="10" lg="8" className="mx-auto">
+              <Col xs={12} md="10" lg="8" className="mx-auto">
                 <div className="compare-header pt-2">
                   <Row>
                     <Col>
-                      <h6 className="text-center">{columnLabel}</h6>
+                      <Text semibold md>
+                        {columnLabel}
+                      </Text>
                     </Col>
                   </Row>
                   <Row>
                     <Col xs="4">
-                      <h6 className="text-center">
+                      <Text semibold md>
                         In Both cubes
                         <br />({bothCounts[columnLabel]})
-                      </h6>
+                      </Text>
                     </Col>
                     <Col xs="4">
-                      <h6 className="text-center">
+                      <Text semibold md>
                         Only in Base Cube
                         <br />({onlyACounts[columnLabel]})
-                      </h6>
+                      </Text>
                     </Col>
                     <Col xs="4">
-                      <h6 className="text-center">
+                      <Text semibold md>
                         Only in Comparison Cube
                         <br />({onlyBCounts[columnLabel]})
-                      </h6>
+                      </Text>
                     </Col>
                   </Row>
                 </div>

@@ -42,7 +42,7 @@ module.exports = {
       [FIELDS.STATUS]: STATUS.ACTIVE,
     });
   },
-  querySortedByDate: async (lastKey) => {
+  querySortedByDate: async (lastKey, limit = 36) => {
     const query = {
       IndexName: 'ByDate',
       KeyConditionExpression: '#status = :status',
@@ -52,6 +52,7 @@ module.exports = {
       ExpressionAttributeValues: {
         ':status': STATUS.ACTIVE,
       },
+      Limit: limit,
     };
     if (lastKey) {
       query.ExclusiveStartKey = lastKey;

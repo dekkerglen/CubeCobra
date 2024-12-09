@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { ensureAuth, ensureRole, csrfProtection } = require('./middleware');
 const carddb = require('../serverjs/carddb');
 
@@ -11,79 +11,72 @@ const router = express.Router();
 
 router.use(csrfProtection);
 
-router.get('/browse', async (req, res) => {
-  return res.redirect('/packages/approved');
-});
+const getPackages = async (req, type, keywords, ascending, sort, lastKey) => {
+  console.log('getPackages', type, keywords, ascending, sort, lastKey);
 
-router.get('/approved', async (req, res) => {
-  const packages = await Package.querySortedByVoteCount(Package.STATUSES.APPROVED, '', false);
+  let packages = {
+    items: [],
+    lastKey,
+  };
 
-  return render(req, res, 'ApprovedPackagesPage', {
-    items: packages.items,
-    lastKey: packages.lastKey,
-  });
-});
+  if (type === 'u' && req.user) {
+    do {
+      const result = await Package.queryByOwner(req.user.id, packages.lastKey);
 
-router.post('/getmoreapproved', async (req, res) => {
-  const { keywords, lastKey, ascending, sort } = req.body;
+      packages.items.push(...result.items);
+      packages.lastKey = result.lastKey;
+    } while (packages.lastKey);
 
-  let packages = [];
-
-  if (sort === 'votes') {
-    packages = await Package.querySortedByVoteCount(Package.STATUSES.APPROVED, keywords, ascending, lastKey);
+    if (sort === 'votes' || sort === '') {
+      packages.items.sort((a, b) => {
+        if (ascending) {
+          return a.voters.length - b.voters.length;
+        } else {
+          return b.voters.length - a.voters.length;
+        }
+      });
+    } else {
+      packages.items.sort((a, b) => {
+        if (ascending) {
+          return a.date - b.date;
+        } else {
+          return b.date - a.date;
+        }
+      });
+    }
   } else {
-    packages = await Package.querySortedByDate(Package.STATUSES.APPROVED, keywords, ascending, lastKey);
+    if (sort === 'votes' || sort === '') {
+      packages = await Package.querySortedByVoteCount(type, keywords, ascending, packages.lastKey);
+    } else {
+      packages = await Package.querySortedByDate(type, keywords, ascending, packages.lastKey);
+    }
   }
 
-  return res.status(200).send({
-    packages: packages.items,
-    lastKey: packages.lastKey,
-  });
-});
+  return packages;
+};
 
-router.get('/submitted', async (req, res) => {
-  const packages = await Package.querySortedByDate(Package.STATUSES.SUBMITTED, '', false);
+router.get('/', async (req, res) => {
+  const type = req.query.t || Package.STATUSES.APPROVED;
+  const keywords = req.query.kw || '';
+  const ascending = req.query.a === 'true';
+  const sort = req.query.s || 'votes';
 
-  return render(req, res, 'SubmittedPackagesPage', {
+  let packages = await getPackages(req, type, keywords, ascending, sort, null);
+
+  return render(req, res, 'PackagesPage', {
     items: packages.items,
     lastKey: packages.lastKey,
   });
 });
 
-router.post('/getmoresubmitted', async (req, res) => {
-  const { keywords, lastKey, ascending, sort } = req.body;
+router.post('/getmore', async (req, res) => {
+  const type = req.body.type || Package.STATUSES.APPROVED;
+  const keywords = req.body.keywords || '';
+  const ascending = req.body.ascending === 'true';
+  const sort = req.body.sort || 'votes';
+  let lastKey = req.body.lastKey;
 
-  let packages = [];
-
-  if (sort === 'votes') {
-    packages = await Package.querySortedByVoteCount(Package.STATUSES.SUBMITTED, keywords, ascending, lastKey);
-  } else {
-    packages = await Package.querySortedByDate(Package.STATUSES.SUBMITTED, keywords, ascending, lastKey);
-  }
-
-  return res.status(200).send({
-    packages: packages.items,
-    lastKey: packages.lastKey,
-  });
-});
-
-router.get('/user', async (req, res) => {
-  if (!req.user) {
-    req.flash('danger', 'You must be logged in to view your packages.');
-    return res.redirect('/404');
-  }
-  const packages = await Package.queryByOwner(req.user.id);
-
-  return render(req, res, 'UserPackagesPage', {
-    items: packages.items,
-    lastKey: packages.lastKey,
-  });
-});
-
-router.post('/getmoreuser', async (req, res) => {
-  const { lastKey } = req.body;
-
-  const packages = await Package.queryByOwner(req.user.id, lastKey);
+  let packages = await getPackages(req, type, keywords, ascending, sort, lastKey);
 
   return res.status(200).send({
     packages: packages.items,
@@ -223,7 +216,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/', (req, res) => {
-  res.redirect('/packages/browse');
+  res.redirect('/packages');
 });
 
 module.exports = router;

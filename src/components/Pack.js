@@ -4,12 +4,13 @@ import { Card, CardBody, CardHeader, CardTitle, Col, Row, Spinner } from 'reacts
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
+import Text from 'components/base/Text';
 import DraggableCard from 'components/DraggableCard';
 import FoilCardImage from 'components/FoilCardImage';
 import DraftLocation from 'drafting/DraftLocation';
 
 const canDrop = (_, target) => {
-  return target.type === DraftLocation.PICKS;
+  return target.type === locations.picks;
 };
 
 const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {
@@ -17,7 +18,7 @@ const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {
     <Card className="mt-3">
       <CardHeader>
         <CardTitle className="mb-0">
-          <h4 className="mb-1">{title}</h4>
+          <Text semibold md>{title}</Text>
         </CardTitle>
       </CardHeader>
       <CardBody>

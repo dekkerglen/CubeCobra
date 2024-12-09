@@ -4,7 +4,8 @@ import { Col, Row } from 'reactstrap';
 import PropTypes from 'prop-types';
 import CardPropType from 'proptypes/CardPropType';
 
-import AutocardListGroup from 'components/AutocardListGroup';
+import Text from 'components/base/Text';
+import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import { countGroup, sortDeep } from 'utils/Sort';
@@ -31,12 +32,12 @@ const TableView = ({ cards, noGroupModal, className, ...props }) => {
               flexBasis: compressedView ? `${100 / Math.min(sorted.length, 9)}%` : undefined,
             }}
           >
-            <h6 className="text-center card-list-heading">
+            <Text semibold sm>
               {columnLabel}
               <br />({countGroup(column)})
-            </h6>
+            </Text>
             {column.map(([label, row]) => (
-              <AutocardListGroup
+              <TableViewCardGroup
                 key={label}
                 heading={`${label} (${countGroup(row)})`}
                 cards={row}

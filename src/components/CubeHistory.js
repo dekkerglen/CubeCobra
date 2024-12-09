@@ -4,7 +4,8 @@ import { Card, CardBody, CardHeader, Col, Row, Spinner } from 'reactstrap';
 import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
-import BlogPostChangelog from 'components/BlogPostChangelog';
+import Text from 'components/base/Text';
+import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CubeContext from 'contexts/CubeContext';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';
@@ -56,7 +57,7 @@ const CubeHistory = ({ changes, lastKey }) => {
 
   const endMessage = (
     <div className="centered">
-      <h5>{`${cube.name} was created`}</h5>
+      <Text md semibold>{`${cube.name} was created`}</Text>
     </div>
   );
 
@@ -90,9 +91,9 @@ const CubeHistory = ({ changes, lastKey }) => {
               evens.map((changelog) => (
                 <Card className="my-2 rightArrowBox">
                   <CardHeader className="text-end">
-                    <h6>
-                      <h6>{formatDateTime(new Date(changelog.date))}</h6>
-                    </h6>
+                    <Text semibold sm>
+                      <Text semibold sm>{formatDateTime(new Date(changelog.date))}</Text>
+                    </Text>
                   </CardHeader>
                   <div style={{ overflow: 'auto', height: '15vh' }}>
                     <CardBody>
@@ -110,7 +111,7 @@ const CubeHistory = ({ changes, lastKey }) => {
             {odds.map((changelog) => (
               <Card className="my-2 leftArrowBox">
                 <CardHeader>
-                  <h6>{formatDateTime(new Date(changelog.date))}</h6>
+                  <Text semibold sm>{formatDateTime(new Date(changelog.date))}</Text>
                 </CardHeader>
                 <div style={{ overflow: 'auto', height: '15vh' }}>
                   <CardBody>

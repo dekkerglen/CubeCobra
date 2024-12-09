@@ -5,9 +5,10 @@ import PropTypes from 'prop-types';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Banner from 'components/Banner';
+import Text from 'components/base/Text';
+import VideoPreview from 'components/content/VideoPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/VideoPreview';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
 import { wait } from 'utils/Util';
@@ -49,11 +50,11 @@ const VideosPage = ({ loginCallback, videos, lastKey }) => {
     <MainLayout loginCallback={loginCallback}>
       <Banner />
       <DynamicFlash />
-      <h4>videos</h4>
+      <Text semibold lg>videos</Text>
       <InfiniteScroll dataLength={items.length} next={fetchMoreData} hasMore={currentLastKey !== null} loader={loader}>
         <Row className="mx-0">
           {items.map((item) => (
-            <Col className="mb-3" xs="12" sm="6" lg="4">
+            <Col className="mb-3" xs={12} sm={6} lg="4">
               <VideoPreview video={item} />
             </Col>
           ))}

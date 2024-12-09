@@ -3,11 +3,13 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
+
 const CubeDraftError = ({ message }) => {
   return (
     <Card className="mt-4">
       <CardHeader>
-        <h4>Error: could not join draft.</h4>
+        <Text semibold lg>Error: could not join draft.</Text>
       </CardHeader>
       <CardBody>
         <p>{message}</p>

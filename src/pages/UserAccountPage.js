@@ -26,7 +26,7 @@ import PropTypes from 'prop-types';
 import CubePropType from 'proptypes/CubePropType';
 import PatronPropType from 'proptypes/PatronPropType';
 
-import AutocompleteInput from 'components/AutocompleteInput';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Banner from 'components/Banner';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/CubePreview';
@@ -39,7 +39,7 @@ import useMount from 'hooks/UseMount';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
-
+import Text from 'components/base/Text';
 const LEVELS = ['Patron', 'Cobra Hatchling', 'Coiling Oracle', 'Lotus Cobra'];
 
 const AddFeaturedModal = ({ isOpen, toggle, cubes }) => {
@@ -159,7 +159,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
   return (
     <MainLayout loginCallback={loginCallback}>
       <Banner />
-      <h2 className="mt-3">My Account </h2>
+      <Text semibold xl>My Account </Text>
       <DynamicFlash />
       <Row className="mb-3">
         <Col xs={3}>
@@ -351,7 +351,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                     )}
                     <Card className="my-3">
                       <CardHeader>
-                        <h5>Featured Cube</h5>
+                        <Text md semibold>Featured Cube</Text>
                       </CardHeader>
                       <CardBody>
                         {' '}
@@ -362,15 +362,15 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                               <CubePreview cube={featured?.cube} />
                             </Col>
                             <Col xs={12} lg={7} className="mt-4 mt-lg-0">
-                              <h6>
+                              <Text semibold sm>
                                 Current position in&nbsp;queue: <span className="text-muted">{featured?.position}</span>
-                              </h6>
+                              </Text>
                               <AddFeaturedButton
                                 className="mt-3"
                                 block
                                 outline
                                 color="accent"
-                                modalProps={{ cubes: user.cubes }}
+                                modalprops={{ cubes: user.cubes }}
                               >
                                 Replace in&nbsp;queue
                               </AddFeaturedButton>
@@ -382,7 +382,7 @@ const UserAccountPage = ({ defaultNav, loginCallback, patreonClientId, patreonRe
                         ) : [2, 3].includes(patron.level) ? (
                           <>
                             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
-                            <AddFeaturedButton block outline color="accent" modalProps={{ cubes: user.cubes }}>
+                            <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user.cubes }}>
                               Add cube to queue
                             </AddFeaturedButton>
                           </>

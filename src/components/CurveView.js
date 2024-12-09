@@ -3,7 +3,8 @@ import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
-import AutocardListGroup from 'components/AutocardListGroup';
+import Text from 'components/base/Text';
+import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
@@ -14,13 +15,13 @@ const TypeRow = ({ cardType, group }) => {
   const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
   return (
     <>
-      <h6>
+      <Text semibold sm>
         {cardType} ({group.length})
-      </h6>
+      </Text>
       <Row className="row-low-padding mb-2">
         {cmc2Labels.map((cmc) => (
           <div key={cmc} className="col-low-padding" style={{ width: `${100 / cmc2Labels.length}%` }}>
-            <AutocardListGroup
+            <TableViewCardGroup
               heading={`${cmc} (${(sorted[cmc] || []).length})`}
               cards={sorted[cmc] || []}
               sort="Unsorted"
@@ -40,9 +41,9 @@ TypeRow.propTypes = {
 const ColorCard = ({ color, group }) => (
   <Card className="mb-3">
     <CardHeader>
-      <h5 className="mb-0">
+      <Text semibold md>
         {color} {group.length}
-      </h5>
+      </Text>
     </CardHeader>
     <CardBody>
       {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
