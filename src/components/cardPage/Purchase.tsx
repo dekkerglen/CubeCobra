@@ -14,7 +14,7 @@ interface PurchaseProps {
 
 const Purchase: React.FC<PurchaseProps> = ({ card }) => {
   return (
-    <Card className="mt-4">
+    <Card>
       <CardHeader>
         <Text semibold lg>
           Purchase
@@ -23,7 +23,7 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
       <CardBody>
         <Flexbox direction="col" gap="2">
           <Button type="link" outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
-            <Flexbox direction="row" justify="between">
+            <Flexbox direction="row" justify="between" className="w-full">
               <Text semibold>TCGPlayer</Text>
               {card.prices.usd && <Text semibold>{`$${card.prices.usd.toFixed(2)}`}</Text>}
             </Flexbox>
@@ -36,7 +36,7 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
             href={getCardKingdomLink(detailsToCard(card))}
             target="_blank"
           >
-            <Flexbox direction="row" justify="between">
+            <Flexbox direction="row" justify="between" className="w-full">
               <Text semibold>Card Kingdom</Text>
             </Flexbox>
           </Button>
@@ -48,7 +48,7 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
             href={getCardMarketLink(detailsToCard(card))}
             target="_blank"
           >
-            <Flexbox direction="row" justify="between">
+            <Flexbox direction="row" justify="between" className="w-full">
               <Text semibold>CardMarket</Text>
               {card.prices.eur && <Text semibold>{`€${card.prices.eur.toFixed(2)}`}</Text>}
             </Flexbox>
@@ -61,7 +61,7 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
             href={getCardHoarderLink(detailsToCard(card))}
             target="_blank"
           >
-            <Flexbox direction="row" justify="between">
+            <Flexbox direction="row" justify="between" className="w-full">
               <Text semibold>CardHoarder</Text>
               {card.prices.tix && <Text semibold>{`${card.prices.tix.toFixed(2)} TIX`}</Text>}{' '}
             </Flexbox>

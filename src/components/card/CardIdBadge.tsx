@@ -16,8 +16,7 @@ const CardIdBadge: React.FC<CardIdBadgeProps> = ({ id }) => {
 
   return (
     <Flexbox direction="row" justify="between" className="border border-border rounded-md">
-      <span className="whitespace-nowrap px-3 py-1 bg-bg-active text-text rounded-l-md">Card ID</span>
-      <input className="flex-grow flex-shrink px-3 py-1 bg-bg border border-x text-text text-sm" value={id} disabled />
+      <input className="rounded-s-md flex-grow flex-shrink px-3 py-1 bg-bg text-text text-sm" value={id} disabled />
       <button className="px-3 py-1 hover:bg-bg-active text-text rounded-e-md min-w-fit" onClick={onCopyClick}>
         {copied ? <CheckIcon size={16} /> : <PasteIcon size={16} />}
       </button>

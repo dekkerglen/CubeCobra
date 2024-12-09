@@ -10,7 +10,7 @@ import FoilCardImage from 'components/FoilCardImage';
 import DraftLocation from 'drafting/DraftLocation';
 
 const canDrop = (_, target) => {
-  return target.type === DraftLocation.PICKS;
+  return target.type === locations.picks;
 };
 
 const Pack = ({ pack, onMoveCard, onClickCard, loading, title, disabled }) => {

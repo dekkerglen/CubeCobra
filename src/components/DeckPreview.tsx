@@ -19,15 +19,6 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
   const { date } = deck;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const openDeleteModal = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-  };
-
   // if owner is an object it's a user, otherwise it's a string
   const owner = typeof deck.owner === 'object' ? (deck.owner as User).username : deck.owner;
 
@@ -56,10 +47,13 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
                 border: '1px solid rgba(0,0,0,.5)',
                 float: 'right',
               }}
-              onClick={openDeleteModal}
+              onClick={(e) => {
+                e.preventDefault();
+                setDeleteModalOpen(true);
+              }}
             >
               <DeckDeleteModal
-                toggle={closeDeleteModal}
+                setOpen={setDeleteModalOpen}
                 isOpen={deleteModalOpen}
                 deckID={deck.id}
                 cubeID={deck.cube}

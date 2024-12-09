@@ -19,6 +19,11 @@ import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import User from 'datatypes/User';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Collapse from 'components/base/Collapse';
+import Button from 'components/base/Button';
+import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import useToggle from 'hooks/UseToggle';
 
 const SampleHandModalLink = withModal(Link, SampleHandModal);
 
@@ -32,13 +37,56 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
   const user = useContext(UserContext);
   const [seatIndex, setSeatIndex] = useQueryParam('seat', '0');
   const [view, setView] = useQueryParam('view', 'draft');
+  const [expanded, toggleExpanded] = useToggle(false);
+
+  const controls = (
+    <>
+      {user && draft.owner && user.id === (draft.owner as User).id && (
+        <Link href={`/cube/deck/deckbuilder/${draft.id}`}>Edit</Link>
+      )}
+      <SampleHandModalLink
+        modalprops={{
+          deck: draft.seats[parseInt(seatIndex || '0')].mainboard?.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+        }}
+      >
+        Sample Hand
+      </SampleHandModalLink>
+      <Link href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}>Clone and Rebuild</Link>
+      <CustomImageToggler />
+      <NavMenu label="Export">
+        <Flexbox direction="col" gap="2" className="p-3">
+          <Link href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`} className="dropdown-item">
+            Card Names (.txt)
+          </Link>
+          <Link href={`/cube/deck/download/forge/${draft.id}/${seatIndex}`} className="dropdown-item">
+            Forge (.dck)
+          </Link>
+          <Link href={`/cube/deck/download/xmage/${draft.id}/${seatIndex}`} className="dropdown-item">
+            XMage (.dck)
+          </Link>
+          <Link href={`/cube/deck/download/mtgo/${draft.id}/${seatIndex}`} className="dropdown-item">
+            MTGO (.txt)
+          </Link>
+          <Link href={`/cube/deck/download/arena/${draft.id}/${seatIndex}`} className="dropdown-item">
+            Arena (.txt)
+          </Link>
+          <Link href={`/cube/deck/download/cockatrice/${draft.id}/${seatIndex}`} className="dropdown-item">
+            Cockatrice (.txt)
+          </Link>
+          <Link href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`} className="dropdown-item">
+            TopDecked (.csv)
+          </Link>
+        </Flexbox>
+      </NavMenu>
+    </>
+  );
 
   return (
     <MainLayout loginCallback={loginCallback}>
       <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest">
+        <CubeLayout cube={cube} activeLink="playtest" hasControls>
           <Controls>
-            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4" wrap="wrap">
+            <Flexbox direction="row" justify="between" alignItems="center" className="py-2 px-4">
               <Flexbox direction="row" justify="start" gap="4" alignItems="center">
                 <Select
                   value={seatIndex}
@@ -59,53 +107,25 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
                   ]}
                   dense
                 />
+                <ResponsiveDiv baseVisible lg>
+                  <Button color="secondary" onClick={toggleExpanded}>
+                    {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
+                  </Button>
+                </ResponsiveDiv>
               </Flexbox>
-              <Flexbox direction="row" justify="start" gap="4" alignItems="center">
-                {user && draft.owner && user.id === (draft.owner as User).id && (
-                  <Link href={`/cube/draft/edit/${draft.id}/${seatIndex}`} className="nav-link">
-                    Edit
-                  </Link>
-                )}
-                <SampleHandModalLink
-                  modalprops={{
-                    deck: draft.seats[parseInt(seatIndex || '0')].mainboard
-                      ?.flat(3)
-                      .map((cardIndex) => draft.cards[cardIndex]),
-                  }}
-                >
-                  Sample Hand
-                </SampleHandModalLink>
-                <Link href={`/cube/draft/rebuild/${draft.id}/${seatIndex}`} className="nav-link">
-                  Clone and Rebuild
-                </Link>
-                <CustomImageToggler />
-                <NavMenu label="Export">
-                  <Flexbox direction="col" gap="2" className="p-3">
-                    <Link href={`/cube/draft/download/txt/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      Card Names (.txt)
-                    </Link>
-                    <Link href={`/cube/draft/download/forge/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      Forge (.dck)
-                    </Link>
-                    <Link href={`/cube/draft/download/xmage/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      XMage (.dck)
-                    </Link>
-                    <Link href={`/cube/draft/download/mtgo/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      MTGO (.txt)
-                    </Link>
-                    <Link href={`/cube/draft/download/arena/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      Arena (.txt)
-                    </Link>
-                    <Link href={`/cube/draft/download/cockatrice/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      Cockatrice (.txt)
-                    </Link>
-                    <Link href={`/cube/draft/download/topdecked/${draft.id}/${seatIndex}`} className="dropdown-item">
-                      TopDecked (.csv)
-                    </Link>
-                  </Flexbox>
-                </NavMenu>
-              </Flexbox>
+              <ResponsiveDiv lg>
+                <Flexbox direction="row" justify="start" gap="4" alignItems="center">
+                  {controls}
+                </Flexbox>
+              </ResponsiveDiv>
             </Flexbox>
+            <ResponsiveDiv baseVisible lg>
+              <Collapse isOpen={expanded}>
+                <Flexbox direction="col" gap="2" className="py-2 px-4">
+                  {controls}
+                </Flexbox>
+              </Collapse>
+            </ResponsiveDiv>
           </Controls>
           <DynamicFlash />
           <Row className="mt-3 mb-3">

@@ -14,7 +14,7 @@ import DraftLocation from 'drafting/DraftLocation';
 import { makeSubtitle } from 'utils/Card';
 
 const canDrop = (_, target) => {
-  return target.type === DraftLocation.PICKS;
+  return target.type === locations.picks;
 };
 
 const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
@@ -50,16 +50,16 @@ const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
   const handleMoveCard = useCallback(
     async (source, target) => {
       if (source.equals(target)) return;
-      if (source.type === DraftLocation.PACK) {
-        if (target.type === DraftLocation.PICKS) {
+      if (source.type === locations.pack) {
+        if (target.type === locations.picks) {
           setPicking(source.data);
           await takeCard(cardsInPack[source.data], target.data);
           setPicking(null);
         } else {
           console.error("Can't move cards inside pack.");
         }
-      } else if (source.type === DraftLocation.PICKS) {
-        if (target.type === DraftLocation.PICKS) {
+      } else if (source.type === locations.picks) {
+        if (target.type === locations.picks) {
           moveCard({ target: target.data, source: source.data });
         } else {
           console.error("Can't move cards from picks back to pack.");
@@ -112,7 +112,7 @@ const CubeDraftNavBar = ({ drafterState, mainboard, takeCard, moveCard }) => {
             cards={picks}
             title="picks"
             subtitle={makeSubtitle(picks.flat(3))}
-            locationType={DraftLocation.PICKS}
+            locationType={locations.picks}
             canDrop={canDrop}
             onMoveCard={handleMoveCard}
           />

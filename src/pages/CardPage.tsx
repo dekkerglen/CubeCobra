@@ -67,13 +67,19 @@ const CardPage: React.FC<CardPageProps> = ({
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
       <Banner />
-      <CardBreakdown card={card} history={history} />
-      <Row>
-        <Col xs={12} sm={6}>
-          <CardVersions card={card} versions={filteredVersions} />
+      <Row className="my-3">
+        <Col xs={12} xxl={8}>
+          <CardBreakdown card={card} history={history} />
         </Col>
-        <Col xs={12} sm={6}>
-          <CardPurchase card={card} />
+        <Col xs={12} xxl={4}>
+          <Row>
+            <Col xs={12} md={6} xxl={12}>
+              <CardVersions card={card} versions={filteredVersions} />
+            </Col>
+            <Col xs={12} md={6} xxl={12}>
+              <CardPurchase card={card} />
+            </Col>
+          </Row>
         </Col>
       </Row>
       <Correlations draftedWith={draftedWith} cubedWith={cubedWith} synergistic={synergistic} />

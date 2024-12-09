@@ -1,11 +1,16 @@
 import React from 'react';
-
-import PropTypes from 'prop-types';
-
 import ConfirmDeleteModal from 'components/modals/ConfirmDeleteModal';
 import { csrfFetch } from 'utils/CSRF';
 
-const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
+interface DeckDeleteModalProps {
+  deckID: string;
+  cubeID: string;
+  nextURL?: string;
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+const DeckDeleteModal: React.FC<DeckDeleteModalProps> = ({ deckID, cubeID, nextURL, isOpen, setOpen }) => {
   const confirm = async () => {
     const response = await csrfFetch(`/cube/deck/deletedeck/${deckID}`, {
       method: 'DELETE',
@@ -23,24 +28,12 @@ const DeckDeleteModal = ({ deckID, cubeID, nextURL, isOpen, toggle }) => {
 
   return (
     <ConfirmDeleteModal
-      toggle={toggle}
+      setOpen={setOpen}
       submitDelete={confirm}
       isOpen={isOpen}
       text="Are you sure you wish to delete this deck? This action cannot be undone."
     />
   );
-};
-
-DeckDeleteModal.propTypes = {
-  toggle: PropTypes.func.isRequired,
-  deckID: PropTypes.string.isRequired,
-  cubeID: PropTypes.string.isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  nextURL: PropTypes.string,
-};
-
-DeckDeleteModal.defaultProps = {
-  nextURL: null,
 };
 
 export default DeckDeleteModal;

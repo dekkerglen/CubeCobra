@@ -4,7 +4,7 @@ import { Card } from 'components/base/Card';
 import DeckStacks from 'components/DeckStacks';
 import Pack from 'components/Pack';
 import AutocardContext from 'contexts/AutocardContext';
-import DraftLocation, { moveOrAddCard } from 'drafting/DraftLocation';
+import DraftLocation, { locations, addCard, removeCard } from 'drafting/DraftLocation';
 import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
 import { makeSubtitle } from 'utils/Card';
@@ -167,21 +167,22 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         return;
       }
 
-      if (source.type === DraftLocation.PACK) {
-        if (target.type === DraftLocation.PICKS) {
+      if (source.type === locations.pack) {
+        if (target.type === locations.picks) {
           if (stepQueue[0].action === 'pick' || stepQueue[0].action === 'pickrandom') {
-            setPicks(moveOrAddCard(picks, target.data, pack[source.data]));
+            setPicks(addCard(picks, target, pack[source.index]));
           } else if (stepQueue[0].action === 'trash' || stepQueue[0].action === 'trashrandom') {
-            setTrashed([...trashed, pack[source.data]]);
+            setTrashed([...trashed, pack[source.index]]);
           }
 
-          makePick(source.data);
+          makePick(source.index);
         } else {
           console.error("Can't move cards inside pack.");
         }
-      } else if (source.type === DraftLocation.PICKS) {
-        if (target.type === DraftLocation.PICKS) {
-          setPicks(moveOrAddCard(picks, target.data, source.data));
+      } else if (source.type === locations.picks) {
+        if (target.type === locations.picks) {
+          const [card, newCards] = removeCard(picks, source);
+          setPicks(addCard(newCards, target, card));
         } else {
           console.error("Can't move cards from picks back to pack.");
         }
@@ -193,10 +194,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
   const onClickCard = useCallback(
     (cardIndex: number) => {
       const col = getCardCol(draft, pack[cardIndex]);
-      onMoveCard(
-        new DraftLocation(DraftLocation.PACK, cardIndex),
-        new DraftLocation(DraftLocation.PICKS, [0, col, picks[0][col].length]),
-      );
+      onMoveCard(DraftLocation.pack(cardIndex), DraftLocation.picks(0, col, picks[0][col].length));
     },
     [pack, onMoveCard, picks, draft],
   );
@@ -229,9 +227,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
           cards={picks.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
           title="picks"
           subtitle={makeSubtitle(picks.flat(3).map((index) => draft.cards[index]))}
-          locationType={DraftLocation.PICKS}
-          canDrop={(_: any, to: DraftLocation) => to.type === DraftLocation.PICKS}
-          onMoveCard={onMoveCard}
+          locationType={locations.picks}
         />
       </Card>
     </>

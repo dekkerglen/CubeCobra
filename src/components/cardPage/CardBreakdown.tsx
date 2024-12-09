@@ -22,7 +22,7 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
   const [selectedTab, setSelectedTab] = useQueryParam('tab', '0');
 
   return (
-    <Card className="mt-2">
+    <Card>
       <div className="border-b border-border pt-2 px-4">
         <Flexbox direction="row" justify="between" alignItems="end">
           <Flexbox direction="col">
@@ -53,10 +53,10 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
         </Flexbox>
       </div>
       <Row noGutters>
-        <Col xs={12} md={6} xl={4} xxl={3}>
+        <Col xs={12} md={5} xl={4} xxl={3}>
           <CardBreakdownStats card={card} history={history} />
         </Col>
-        <Col xs={12} md={6} xl={8} xxl={9}>
+        <Col xs={12} md={7} xl={8} xxl={9}>
           <TabContent
             contents={[
               <CardBreakdownInfo card={card} history={history} />,

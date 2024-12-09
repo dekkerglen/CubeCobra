@@ -1560,6 +1560,11 @@ video {
   border-bottom-right-radius: 0.375rem;
 }
 
+.rounded-s-md {
+  border-start-start-radius: 0.375rem;
+  border-end-start-radius: 0.375rem;
+}
+
 .rounded-t-md {
   border-top-left-radius: 0.375rem;
   border-top-right-radius: 0.375rem;
@@ -1579,11 +1584,6 @@ video {
 
 .border-4 {
   border-width: 4px;
-}
-
-.border-x {
-  border-left-width: 1px;
-  border-right-width: 1px;
 }
 
 .border-y {
@@ -2475,6 +2475,32 @@ img.mana-symbol-sm {
   /* IE and Edge */
   scrollbar-width: none;
   /* Firefox */
+}
+
+/*
+	TODO: Migrate these to Tailwind
+*/
+
+.outline {
+  box-shadow: 0px 0px 15px 0px var(--glow);
+}
+
+.transparent {
+  opacity: 0;
+}
+
+.stacked {
+  /* This is calculated relative to containing width */
+  margin-top: -124%;
+}
+
+.stack {
+  padding-top: 124%;
+}
+
+.off-screen {
+  position: absolute;
+  z-index: -10000;
 }
 
 @media (min-width: 640px) {

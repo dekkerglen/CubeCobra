@@ -28,7 +28,7 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import FoilCardImage from 'components/FoilCardImage';
 import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
-import Location, { moveOrAddCard } from 'drafting/DraftLocation';
+import Location, { addCard } from 'drafting/DraftLocation';
 import { getDefaultPosition } from 'drafting/draftutil';
 import { calculateGridBotPick, getGridDrafterState } from 'drafting/griddraftutils';
 import CubeLayout from 'layouts/CubeLayout';
@@ -133,7 +133,7 @@ const MUTATIONS = {
     newGridDraft.seats[seatIndex].pickedIndices.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
       const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].mainboard);
-      newGridDraft.seats[seatIndex].mainboard = moveOrAddCard(newGridDraft.seats[seatIndex].mainboard, pos, cardIndex);
+      newGridDraft.seats[seatIndex].mainboard = addCard(newGridDraft.seats[seatIndex].mainboard, pos, cardIndex);
     }
   },
 };

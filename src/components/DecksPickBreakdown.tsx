@@ -55,7 +55,15 @@ const DecksPickBreakdown: React.FC<DecksPickBreakdownProps> = ({ draft, seatNumb
       </Col>
       <Col xs={6} sm={8} lg={9} xl={10}>
         <Text semibold lg>{`Pack ${(pack || 0) + 1}: Pick ${pick}`}</Text>
-        <CardGrid xs={2} sm={3} lg={4} xl={5} cards={cardsInPack.map((cardIndex) => draft.cards[cardIndex])} />
+        <CardGrid
+          xs={2}
+          sm={3}
+          md={4}
+          lg={5}
+          xl={6}
+          cards={cardsInPack.map((cardIndex) => draft.cards[cardIndex])}
+          hrefFn={(card) => `/tool/card/${card?.details?.scryfall_id}`}
+        />
       </Col>
     </Row>
   );

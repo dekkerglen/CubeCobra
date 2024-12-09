@@ -34,7 +34,7 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
   });
 
   return (
-    <Card className="mt-4">
+    <Card>
       {filteredVersions.length > 0 ? (
         <PagedTable
           headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}

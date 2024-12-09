@@ -15,7 +15,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, setOpen
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
+    <Modal isOpen={isOpen} setOpen={setOpen} md>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
           Confirm Delete
@@ -25,7 +25,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, setOpen
         <p>{text}</p>
       </ModalBody>
       <ModalFooter>
-        <Flexbox direction="row" className="w-full justify-end">
+        <Flexbox direction="row" className="w-full justify-end" gap="2">
           <Button
             block
             color="danger"

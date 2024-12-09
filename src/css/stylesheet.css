@@ -194,3 +194,30 @@ img.mana-symbol-sm {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+
+/*
+	TODO: Migrate these to Tailwind
+*/
+
+.outline {
+  box-shadow: 0px 0px 15px 0px var(--glow);
+}
+
+.transparent {
+  opacity: 0;
+}
+
+.stacked {
+  /* This is calculated relative to containing width */
+  margin-top: -124%;
+}
+
+.stack {
+  padding-top: 124%;
+}
+
+.off-screen {
+  position: absolute;
+  z-index: -10000;
+}

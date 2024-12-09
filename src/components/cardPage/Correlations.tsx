@@ -97,7 +97,7 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({ draftedWith, cubedWith,
   const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
 
   return (
-    <Card className="my-3">
+    <Card>
       <TabbedView
         tabs={[
           {
