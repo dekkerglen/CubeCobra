@@ -4,18 +4,18 @@ import User from 'datatypes/User';
 import Link from 'components/base/Link';
 
 interface UsernameProps {
-  user: string | User;
+  user?: string | User;
   nolink?: boolean;
 }
 
 const Username: React.FC<UsernameProps> = ({ user, nolink = false }) => {
+  if (!user) {
+    return 'Anonymous';
+  }
+
   const username = (user as User).username ?? 'User';
   if (nolink) {
     return username;
-  }
-
-  if (!user) {
-    return 'Anonymous';
   }
 
   return <Link href={`/user/view/${typeof user === 'string' ? user : user.id || user}`}>{username}</Link>;

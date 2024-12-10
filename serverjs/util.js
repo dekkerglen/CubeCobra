@@ -146,6 +146,7 @@ function wrapAsyncApi(route) {
 }
 
 function handleRouteError(req, res, err, reroute) {
+  console.error(err);
   req.logger.error(err.message, err.stack);
   req.flash('danger', err.message);
   res.redirect(reroute);

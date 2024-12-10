@@ -1,6 +1,6 @@
 import React from 'react';
 import { CardBody, CardHeader } from 'components/base/Card';
-import { Flexbox, Row } from 'components/base/Layout';
+import { Flexbox, NumCols, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardStack from 'components/card/CardStack';
 import DraggableCard from 'components/DraggableCard';
@@ -13,9 +13,12 @@ interface DeckStacksProps {
   subtitle?: React.ReactNode;
   locationType: location;
   onClickCard?: (card: Card) => void;
+  xs?: NumCols;
+  md?: NumCols;
+  lg?: NumCols;
 }
 
-const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locationType }) => (
+const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locationType, xs, md, lg }) => (
   <>
     <CardHeader>
       <Flexbox direction="row" alignItems="end" justify="between">
@@ -29,7 +32,7 @@ const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locatio
     </CardHeader>
     <CardBody className="pt-0">
       {cards.map((row, index) => (
-        <Row key={`row-${index}`} xs={4} md={8}>
+        <Row key={`row-${index}`} xs={xs} md={md} lg={lg}>
           {row.map((column, index2) => (
             <CardStack
               key={`row-${index}-col-${index2}`}

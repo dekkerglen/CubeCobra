@@ -1293,10 +1293,15 @@ router.post(
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }
 
-      const params = req.body;
-
       // setup draft
-      const format = createdraft.getDraftFormat(params, cube);
+      const format = createdraft.getDraftFormat({
+        id: parseInt(req.body.id),
+        packs: parseInt(req.body.packs),
+        players: parseInt(req.body.seats),
+        cards: parseInt(req.body.cards),
+      }, cube);
+
+      console.log(format);
 
       const draft = {
         complete: false,
@@ -1305,18 +1310,15 @@ router.post(
       let populated = {};
       try {
         populated = createdraft.createDraft(
+          cube,
           format,
           mainboard,
-          params.seats,
+          parseInt(req.body.seats),
           req.user
-            ? req.user
-            : {
-                username: 'Anonymous',
-              },
-          req.body.botsOnly,
         );
       } catch (err) {
         // This is a 4XX error, not a 5XX error
+        console.error(err);
         req.flash('danger', err.message);
         return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
       }

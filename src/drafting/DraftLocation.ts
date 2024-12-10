@@ -4,7 +4,6 @@ export type location = 'pack' | 'picks' | 'deck' | 'sideboard';
 
 export const locations: { [key: string]: location } = {
   pack: 'pack',
-  picks: 'picks',
   deck: 'deck',
   sideboard: 'sideboard',
 };

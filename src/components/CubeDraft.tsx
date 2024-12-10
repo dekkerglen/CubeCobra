@@ -7,10 +7,12 @@ import AutocardContext from 'contexts/AutocardContext';
 import DraftLocation, { locations, addCard, removeCard } from 'drafting/DraftLocation';
 import { draftStateToTitle, getCardCol, setupPicks } from 'drafting/draftutil';
 import useMount from 'hooks/UseMount';
-import { makeSubtitle } from 'utils/Card';
+import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
 import { callApi } from 'utils/CSRF';
 import Draft from 'datatypes/Draft';
-import { Step } from 'datatypes/Draftbots';
+import { Col, Row } from './base/Layout';
+import { DndContext } from '@dnd-kit/core';
+import ResponsiveDiv from './base/ResponsiveDiv';
 
 interface CubeDraftProps {
   draft: Draft;
@@ -51,15 +53,17 @@ let seat = 0;
 const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
   const [packQueue, setPackQueue] = useState<any[]>([]);
   const [pack, setPack] = useState<number[]>([]);
-  const [picks, setPicks] = useState<any[][][]>(setupPicks(2, 8));
+  const [mainboard, setMainboard] = useState<any[][][]>(setupPicks(2, 8));
+  const [sideboard, setSideboard] = useState<any[][][]>(setupPicks(2, 1));
   const [loading, setLoading] = useState(true);
-  const [stepQueue, setStepQueue] = useState<Step[]>([]);
+  const [stepQueue, setStepQueue] = useState<string[]>([]);
   const [trashed, setTrashed] = useState<number[]>([]);
+  const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   const { hideCard } = useContext(AutocardContext);
 
-  const disabled = stepQueue[0].action === 'pickrandom' || stepQueue[0].action === 'trashrandom';
+  const disabled = stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom';
 
-  staticPicks = picks;
+  staticPicks = mainboard;
 
   const tryPopPack = useCallback(async () => {
     if (packQueue.length > 0 && pack.length === 0) {
@@ -75,7 +79,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     async (pick: number) => {
       hideCard();
 
-      if (stepQueue[1].action === 'pass' || pack.length < 1) {
+      if (stepQueue[1] === 'pass' || pack.length < 1) {
         tryPopPack();
       } else {
         const slice = stepQueue.slice(1, stepQueue.length);
@@ -150,7 +154,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         setLoading(false);
       });
 
-      setPicks(await fetchPicks(draft, seat));
+      setMainboard(await fetchPicks(draft, seat));
       updatePack(await fetchPack(draft, seat));
       setLoading(false);
 
@@ -161,47 +165,94 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     run();
   });
 
+  const onClickCard = useCallback(
+    (cardIndex: number) => {
+      const card = draft.cards[pack[cardIndex]];
+
+      const isCreature = cardType(card).toLowerCase().includes('creature');
+      const cmc = cardCmc(card);
+
+      const row = isCreature ? 0 : 1;
+      const col = Math.max(0, Math.min(7, cmc));
+
+      setMainboard(
+        addCard(mainboard, new DraftLocation(locations.deck, row, col, mainboard[row][col].length), cardIndex),
+      );
+      makePick(cardIndex);
+    },
+    [pack, mainboard, draft],
+  );
+
   const onMoveCard = useCallback(
-    async (source: DraftLocation, target: DraftLocation) => {
+    async (event: any) => {
+      const { active, over } = event;
+
+      const source = active.data.current as DraftLocation;
+      const target = over.data.current as DraftLocation;
+
+      if (!over) {
+        return;
+      }
+
       if (source.equals(target)) {
+        // player dropped card back in the same location
+        const dragTime = Date.now() - (dragStartTime ?? 0);
+
+        if (dragTime < 200) {
+          return onClickCard(source.index);
+        }
+      }
+
+      if (target.type === locations.pack) {
+        console.error("Can't move cards inside pack.");
         return;
       }
 
       if (source.type === locations.pack) {
-        if (target.type === locations.picks) {
-          if (stepQueue[0].action === 'pick' || stepQueue[0].action === 'pickrandom') {
-            setPicks(addCard(picks, target, pack[source.index]));
-          } else if (stepQueue[0].action === 'trash' || stepQueue[0].action === 'trashrandom') {
+        if (target.type === locations.deck) {
+          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
+            setMainboard(addCard(mainboard, target, pack[source.index]));
+          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
             setTrashed([...trashed, pack[source.index]]);
           }
 
           makePick(source.index);
-        } else {
-          console.error("Can't move cards inside pack.");
+        } else if (target.type === locations.sideboard) {
+          if (stepQueue[0] === 'pick' || stepQueue[0] === 'pickrandom') {
+            setSideboard(addCard(sideboard, target, pack[source.index]));
+          } else if (stepQueue[0] === 'trash' || stepQueue[0] === 'trashrandom') {
+            setTrashed([...trashed, pack[source.index]]);
+          }
+
+          makePick(source.index);
         }
-      } else if (source.type === locations.picks) {
-        if (target.type === locations.picks) {
-          const [card, newCards] = removeCard(picks, source);
-          setPicks(addCard(newCards, target, card));
-        } else {
-          console.error("Can't move cards from picks back to pack.");
+      } else if (source.type === locations.deck) {
+        if (target.type === locations.deck) {
+          const [card, newCards] = removeCard(mainboard, source);
+          setMainboard(addCard(newCards, target, card));
+        } else if (target.type === locations.sideboard) {
+          const [card, newCards] = removeCard(mainboard, source);
+          setSideboard(addCard(sideboard, target, card));
+          setMainboard(newCards);
+        }
+      } else if (source.type === locations.sideboard) {
+        if (target.type === locations.deck) {
+          const [card, newCards] = removeCard(sideboard, source);
+          setMainboard(addCard(mainboard, target, card));
+          setSideboard(newCards);
+        } else if (target.type === locations.sideboard) {
+          const [card, newCards] = removeCard(sideboard, source);
+          setSideboard(addCard(newCards, target, card));
         }
       }
     },
-    [stepQueue, makePick, picks, pack, trashed],
-  );
-
-  const onClickCard = useCallback(
-    (cardIndex: number) => {
-      const col = getCardCol(draft, pack[cardIndex]);
-      onMoveCard(DraftLocation.pack(cardIndex), DraftLocation.picks(0, col, picks[0][col].length));
-    },
-    [pack, onMoveCard, picks, draft],
+    [stepQueue, makePick, mainboard, pack, trashed],
   );
 
   useEffect(() => {
     if (
-      (stepQueue[0].action === 'pickrandom' || stepQueue[0].action === 'trashrandom') &&
+      stepQueue[0] &&
+      (stepQueue[0] === 'pickrandom' || stepQueue[0] === 'trashrandom') &&
       pack.length > 0 &&
       !loading
     ) {
@@ -213,24 +264,46 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
   }, [stepQueue, onClickCard, pack, loading]);
 
   return (
-    <>
+    <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
       <Pack
         pack={pack.map((index) => draft.cards[index])}
-        onMoveCard={onMoveCard}
-        onClickCard={onClickCard}
         loading={loading}
-        title={draftStateToTitle(draft, picks, trashed, loading, stepQueue)}
+        title={draftStateToTitle(
+          draft,
+          mainboard,
+          trashed,
+          loading,
+          stepQueue.map((step) => ({ action: step })),
+        )}
         disabled={disabled}
       />
-      <Card className="my-3">
-        <DeckStacks
-          cards={picks.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
-          title="picks"
-          subtitle={makeSubtitle(picks.flat(3).map((index) => draft.cards[index]))}
-          locationType={locations.picks}
-        />
-      </Card>
-    </>
+      <Row xs={8} className="my-3">
+        <Col xs={8} xl={7}>
+          <Card>
+            <DeckStacks
+              cards={mainboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
+              title="Mainboard"
+              subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
+              locationType={locations.deck}
+              xs={4}
+              lg={8}
+            />
+          </Card>
+        </Col>
+        <ResponsiveDiv xl>
+          <Col xl={1}>
+            <Card>
+              <DeckStacks
+                cards={sideboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
+                title="Sideboard"
+                locationType={locations.sideboard}
+                xs={1}
+              />
+            </Card>
+          </Col>
+        </ResponsiveDiv>
+      </Row>
+    </DndContext>
   );
 };
 
