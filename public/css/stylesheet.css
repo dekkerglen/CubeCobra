@@ -1590,10 +1590,6 @@ video {
   border-width: 1px;
 }
 
-.border-4 {
-  border-width: 4px;
-}
-
 .border-y {
   border-top-width: 1px;
   border-bottom-width: 1px;
@@ -2026,10 +2022,6 @@ video {
   padding-inline-start: 0.5rem;
 }
 
-.ps-4 {
-  padding-inline-start: 1rem;
-}
-
 .pt-0 {
   padding-top: 0px;
 }
@@ -2054,8 +2046,8 @@ video {
   text-align: center;
 }
 
-.text-end {
-  text-align: end;
+.text-right {
+  text-align: right;
 }
 
 .align-middle {
@@ -3516,3 +3508,4 @@ img.mana-symbol-sm {
     max-width: 1920px;
   }
 }
+

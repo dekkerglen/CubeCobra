@@ -1,7 +1,5 @@
 import React from 'react';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
+import Cube from 'datatypes/Cube';
 
 import CubeHistory from 'components/CubeHistory';
 import RenderToRoot from 'components/RenderToRoot';
@@ -9,7 +7,14 @@ import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
-const CubeHistoryPage = ({ cube, changes, lastKey, loginCallback }) => (
+interface CubeHistoryPageProps {
+  cube: Cube;
+  changes: Record<string, any>[];
+  lastKey?: string;
+  loginCallback?: string;
+}
+
+const CubeHistoryPage: React.FC<CubeHistoryPageProps> = ({ cube, changes, lastKey, loginCallback }) => (
   <MainLayout loginCallback={loginCallback}>
     <DisplayContextProvider cubeID={cube.id}>
       <CubeLayout cube={cube} activeLink="history">
@@ -18,17 +23,5 @@ const CubeHistoryPage = ({ cube, changes, lastKey, loginCallback }) => (
     </DisplayContextProvider>
   </MainLayout>
 );
-
-CubeHistoryPage.propTypes = {
-  cube: CubePropType.isRequired,
-  changes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  lastKey: PropTypes.string,
-  loginCallback: PropTypes.string,
-};
-
-CubeHistoryPage.defaultProps = {
-  loginCallback: '/',
-  lastKey: null,
-};
 
 export default RenderToRoot(CubeHistoryPage);

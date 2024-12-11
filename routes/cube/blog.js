@@ -146,7 +146,7 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
 
 router.post('/getmoreblogsbycube', async (req, res) => {
   const { lastKey, cube } = req.body;
-  const posts = await Blog.getByCube(cube, 10, lastKey);
+  const posts = await Blog.getByCube(cube, 20, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -164,7 +164,7 @@ router.get('/:id', async (req, res) => {
       return redirect(req, res, '/404');
     }
 
-    const query = await Blog.getByCube(cube.id, 10);
+    const query = await Blog.getByCube(cube.id, 20);
 
     return render(
       req,

@@ -1,39 +1,39 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
-import { Card, CardBody, CardHeader, Col, Row, Spinner } from 'reactstrap';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import PropTypes from 'prop-types';
-import InfiniteScroll from 'react-infinite-scroll-component';
-
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
-import CubeContext from 'contexts/CubeContext';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';
-import { wait } from 'utils/Util';
+import Pagination from './base/Pagination';
 
-const loader = (
-  <div className="centered py-3 my-4">
-    <Spinner className="position-absolute" />
-  </div>
-);
+interface CubeHistoryProps {
+  changes: Record<string, any>[];
+  lastKey?: string;
+}
 
-const CubeHistory = ({ changes, lastKey }) => {
-  const { cube } = useContext(CubeContext);
+const PAGE_SIZE = 18;
 
+const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
   const [items, setItems] = useState(changes);
   const [currentLastKey, setLastKey] = useState(lastKey);
+  const [page, setPage] = React.useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const pageCount = Math.ceil(items.length / PAGE_SIZE);
+  const hasMore = !!currentLastKey;
 
   const evens = useMemo(() => {
-    return items.filter((item, index) => index % 2 === 0);
-  }, [items]);
+    return items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).filter((_, index) => index % 2 === 0);
+  }, [items, page]);
 
   const odds = useMemo(() => {
-    return items.filter((item, index) => index % 2 !== 0);
-  }, [items]);
+    return items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).filter((_, index) => index % 2 !== 0);
+  }, [items, page]);
 
   const fetchMoreData = useCallback(async () => {
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
+    setLoading(true);
 
     const response = await csrfFetch(`/cube/getmorechangelogs`, {
       method: 'POST',
@@ -50,29 +50,43 @@ const CubeHistory = ({ changes, lastKey }) => {
       const json = await response.json();
       if (json.success === 'true') {
         setItems([...items, ...json.posts]);
+        setPage(page + 1);
         setLastKey(json.lastKey);
       }
     }
-  }, [currentLastKey, items]);
+    setLoading(false);
+  }, [currentLastKey, items, page]);
 
-  const endMessage = (
-    <div className="centered">
-      <Text md semibold>{`${cube.name} was created`}</Text>
-    </div>
+  const pager = (
+    <Pagination
+      count={pageCount}
+      active={page}
+      hasMore={hasMore}
+      onClick={async (newPage) => {
+        console.log(newPage, pageCount);
+        if (newPage >= pageCount) {
+          await fetchMoreData();
+        } else {
+          setPage(newPage);
+        }
+      }}
+      loading={loading}
+    />
   );
 
   return (
-    <InfiniteScroll
-      dataLength={items.length}
-      next={fetchMoreData}
-      hasMore={currentLastKey !== null}
-      loader={loader}
-      endMessage={endMessage}
-    >
-      <div className="d-block d-sm-none">
+    <Flexbox direction="col" gap="2" className="my-2">
+      <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+        <Text lg semibold>
+          Changes ({items.length}
+          {hasMore ? '+' : ''})
+        </Text>
+        {pager}
+      </Flexbox>
+      <div className="block sm:hidden">
         {items.length > 0 ? (
           items.map((changelog) => (
-            <Card className="my-2">
+            <Card className="my-2" key={changelog.date}>
               <div style={{ overflow: 'auto', maxHeight: '20vh' }}>
                 <CardBody>
                   <BlogPostChangelog changelog={changelog.changelog} />
@@ -84,15 +98,15 @@ const CubeHistory = ({ changes, lastKey }) => {
           <p>This cube has no history!</p>
         )}
       </div>
-      <div className="d-none d-sm-block">
+      <div className="hidden sm:block">
         <Row className="g-0 m-0 p-0">
-          <Col xs={6} className="pe-4 border-end border-4">
+          <Col xs={6} className="pe-4">
             {items.length > 0 ? (
               evens.map((changelog) => (
-                <Card className="my-2 rightArrowBox">
-                  <CardHeader className="text-end">
+                <Card className="my-2" key={changelog.date}>
+                  <CardHeader className="text-right">
                     <Text semibold sm>
-                      <Text semibold sm>{formatDateTime(new Date(changelog.date))}</Text>
+                      {formatDateTime(new Date(changelog.date))}
                     </Text>
                   </CardHeader>
                   <div style={{ overflow: 'auto', height: '15vh' }}>
@@ -106,12 +120,14 @@ const CubeHistory = ({ changes, lastKey }) => {
               <p>This cube has no history!</p>
             )}
           </Col>
-          <Col xs={6} className="ps-4">
+          <Col xs={6} className="pl-4">
             <div style={{ height: '8vh' }} />
             {odds.map((changelog) => (
-              <Card className="my-2 leftArrowBox">
+              <Card className="my-2" key={changelog.date}>
                 <CardHeader>
-                  <Text semibold sm>{formatDateTime(new Date(changelog.date))}</Text>
+                  <Text semibold sm>
+                    {formatDateTime(new Date(changelog.date))}
+                  </Text>
                 </CardHeader>
                 <div style={{ overflow: 'auto', height: '15vh' }}>
                   <CardBody>
@@ -122,18 +138,12 @@ const CubeHistory = ({ changes, lastKey }) => {
             ))}
           </Col>
         </Row>
-      </div>
-    </InfiniteScroll>
+      </div>{' '}
+      <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+        {pager}
+      </Flexbox>
+    </Flexbox>
   );
-};
-
-CubeHistory.propTypes = {
-  changes: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  lastKey: PropTypes.string,
-};
-
-CubeHistory.defaultProps = {
-  lastKey: null,
 };
 
 export default CubeHistory;

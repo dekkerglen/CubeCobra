@@ -1,22 +1,21 @@
 import React, { useCallback, useContext, useState } from 'react';
 
+import Controls from 'components/base/Controls';
+import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import Pagination from 'components/base/Pagination';
+import Text from 'components/base/Text';
 import BlogPost from 'components/blog/BlogPost';
-import CreateBlogModal from 'components/modals/CreateBlogModal';
 import DynamicFlash from 'components/DynamicFlash';
+import CreateBlogModal from 'components/modals/CreateBlogModal';
 import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
+import UserContext from 'contexts/UserContext';
+import PostType from 'datatypes/BlogPost';
+import Cube from 'datatypes/Cube';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { csrfFetch } from 'utils/CSRF';
-import Spinner from 'components/base/Spinner';
-import Cube from 'datatypes/Cube';
-import PostType from 'datatypes/BlogPost';
-import { Flexbox } from 'components/base/Layout';
-import Button from 'components/base/Button';
-import Text from 'components/base/Text';
-import Controls from 'components/base/Controls';
-import Link from 'components/base/Link';
-import UserContext from 'contexts/UserContext';
 
 interface CubeBlogPageProps {
   cube: Cube;
@@ -27,17 +26,17 @@ interface CubeBlogPageProps {
 
 const CreateBlogModalLink = withModal(Link, CreateBlogModal);
 
-const loader = (
-  <div className="centered py-3 my-4">
-    <Spinner className="position-absolute" />
-  </div>
-);
+const PAGE_SIZE = 20;
 
 const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, loginCallback = '/' }) => {
   const user = useContext(UserContext);
   const [items, setItems] = useState<PostType[]>(posts);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = React.useState(0);
+
+  const pageCount = Math.ceil(items.length / PAGE_SIZE);
+  const hasMore = !!currentLastKey;
 
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
@@ -56,11 +55,29 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, login
       const json = await response.json();
       if (json.success === 'true') {
         setItems([...items, ...json.posts]);
+        setPage(page + 1);
         setLastKey(json.lastKey);
       }
     }
     setLoading(false);
-  }, [cube, currentLastKey, items]);
+  }, [cube, currentLastKey, items, page]);
+
+  const pager = (
+    <Pagination
+      count={pageCount}
+      active={page}
+      hasMore={hasMore}
+      onClick={async (newPage) => {
+        console.log(newPage, pageCount);
+        if (newPage >= pageCount) {
+          await fetchMoreData();
+        } else {
+          setPage(newPage);
+        }
+      }}
+      loading={loading}
+    />
+  );
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -75,17 +92,25 @@ const CubeBlogPage: React.FC<CubeBlogPageProps> = ({ cube, lastKey, posts, login
         <Flexbox direction="col" gap="2" className="my-2">
           <DynamicFlash />
           {items.length > 0 ? (
-            items.map((post) => <BlogPost key={post.id} post={post} />)
+            <>
+              <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+                <Text lg semibold>
+                  Blog Posts ({items.length}
+                  {hasMore ? '+' : ''})
+                </Text>
+                {pager}
+              </Flexbox>
+              {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((post) => (
+                <BlogPost key={post.id} post={post} />
+              ))}
+              <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+                {pager}
+              </Flexbox>
+            </>
           ) : (
             <Text lg semibold>
               No blog posts for this cube.
             </Text>
-          )}
-          {loading && loader}
-          {!loading && currentLastKey && (
-            <Button onClick={fetchMoreData} disabled={loading}>
-              Load More
-            </Button>
           )}
         </Flexbox>
       </CubeLayout>

@@ -141,6 +141,7 @@ div.advertisement-div > div:not(.report-link) {
 	}
 }
 
+
 /* make autocard text more obvious in comments and descriptions */
 .card-text .autocard {
 	font-weight: bolder;
@@ -158,7 +159,6 @@ div.advertisement-div > div:not(.report-link) {
 .card-border {
 	border-radius: 4.72% / 3.37%;
 }
-
 
 .profile-thumbnail {
 	border-radius: 50%;
@@ -221,3 +221,4 @@ img.mana-symbol-sm {
   position: absolute;
   z-index: -10000;
 }
+
