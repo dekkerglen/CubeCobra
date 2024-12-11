@@ -8,7 +8,7 @@ import { Flexbox } from 'components/base/Layout';
 import User from 'datatypes/User';
 import withModal from './WithModal';
 import Button from './base/Button';
-import { TrashIcon } from '@primer/octicons-react';
+import { XIcon } from '@primer/octicons-react';
 import Link from './base/Link';
 
 const DeleteModalButton = withModal(Button, DeckDeleteModal);
@@ -50,8 +50,8 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck, nextURL }) => {
           </Text>
         </Flexbox>
         {canEdit && (
-          <DeleteModalButton color="danger" outline modalprops={{ deck, cubeID: deck.cube, nextURL }}>
-            <TrashIcon size={16} className="mx-1" />
+          <DeleteModalButton color="secondary" outline modalprops={{ deck, cubeID: deck.cube, nextURL }}>
+            <XIcon size={16} className="mx-1" />
           </DeleteModalButton>
         )}
       </Flexbox>

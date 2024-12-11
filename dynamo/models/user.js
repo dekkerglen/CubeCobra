@@ -1,5 +1,6 @@
 const { getImageData } = require('../../serverjs/util');
 const createClient = require('../util');
+const { deleteById } = require('./cube');
 
 const FIELDS = {
   ID: 'id',
@@ -171,6 +172,7 @@ module.exports = {
   },
   batchGet: async (ids) => batchHydrate(batchStripSensitiveData(await client.batchGet(ids.map((id) => `${id}`)))),
   createTable: async () => client.createTable(),
+  deleteById: async (id) => client.delete({id}),
   convertUser: (user) => ({
     [FIELDS.ID]: `${user._id}`,
     [FIELDS.USERNAME]: user.username,

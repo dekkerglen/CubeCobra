@@ -153,6 +153,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
                       .map((index) => initialDeck.cards[index]),
                   )}
                   locationType={locations.deck}
+                  xs={4}
+                  lg={8}
                 />
                 <DeckStacks
                   cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
@@ -164,6 +166,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
                       .flat()
                       .map((index) => initialDeck.cards[index]),
                   )}
+                  xs={4}
+                  lg={8}
                 />
               </ErrorBoundary>
             </DndContext>

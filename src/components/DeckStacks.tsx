@@ -6,6 +6,7 @@ import CardStack from 'components/card/CardStack';
 import DraggableCard from 'components/DraggableCard';
 import Location, { location } from 'drafting/DraftLocation';
 import Card from 'datatypes/Card';
+import ResponsiveDiv from './base/ResponsiveDiv';
 
 interface DeckStacksProps {
   cards: Card[][][];
@@ -25,9 +26,11 @@ const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locatio
         <Text semibold lg>
           {title}
         </Text>
-        <Text semibold md>
-          {subtitle}
-        </Text>
+        <ResponsiveDiv lg>
+          <Text semibold md>
+            {subtitle}
+          </Text>
+        </ResponsiveDiv>
       </Flexbox>
     </CardHeader>
     <CardBody className="pt-0">

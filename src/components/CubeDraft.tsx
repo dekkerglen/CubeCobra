@@ -10,9 +10,7 @@ import useMount from 'hooks/UseMount';
 import { cardCmc, cardType, makeSubtitle } from 'utils/Card';
 import { callApi } from 'utils/CSRF';
 import Draft from 'datatypes/Draft';
-import { Col, Row } from './base/Layout';
 import { DndContext } from '@dnd-kit/core';
-import ResponsiveDiv from './base/ResponsiveDiv';
 
 interface CubeDraftProps {
   draft: Draft;
@@ -54,7 +52,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
   const [packQueue, setPackQueue] = useState<any[]>([]);
   const [pack, setPack] = useState<number[]>([]);
   const [mainboard, setMainboard] = useState<any[][][]>(setupPicks(2, 8));
-  const [sideboard, setSideboard] = useState<any[][][]>(setupPicks(2, 1));
+  const [sideboard, setSideboard] = useState<any[][][]>(setupPicks(1, 8));
   const [loading, setLoading] = useState(true);
   const [stepQueue, setStepQueue] = useState<string[]>([]);
   const [trashed, setTrashed] = useState<number[]>([]);
@@ -90,7 +88,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
       await callApi('/multiplayer/draftpick', { draft: draft.id, seat, pick });
     },
-    [hideCard, stepQueue, pack, draft.id, tryPopPack],
+    [hideCard, stepQueue, pack, draft.id, tryPopPack, seat],
   );
 
   const updatePack = async (data: any) => {
@@ -132,7 +130,9 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
     const run = async () => {
       const getSeat = await callApi('/multiplayer/getseat', { draftid: draft.id });
       const seatJson = await getSeat.json();
-      seat = seatJson.seat;
+      seat = parseInt(seatJson.seat);
+
+      console.log('Joining draft', seatJson);
 
       socket.emit('joinDraft', { draftId: draft.id, seat });
 
@@ -167,6 +167,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
 
   const onClickCard = useCallback(
     (cardIndex: number) => {
+      console.log('click', cardIndex);
       const card = draft.cards[pack[cardIndex]];
 
       const isCreature = cardType(card).toLowerCase().includes('creature');
@@ -176,31 +177,33 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
       const col = Math.max(0, Math.min(7, cmc));
 
       setMainboard(
-        addCard(mainboard, new DraftLocation(locations.deck, row, col, mainboard[row][col].length), cardIndex),
+        addCard(mainboard, new DraftLocation(locations.deck, row, col, mainboard[row][col].length), pack[cardIndex]),
       );
       makePick(cardIndex);
     },
-    [pack, mainboard, draft],
+    [pack, mainboard, draft.cards, makePick, setMainboard],
   );
 
   const onMoveCard = useCallback(
     async (event: any) => {
       const { active, over } = event;
 
-      const source = active.data.current as DraftLocation;
-      const target = over.data.current as DraftLocation;
-
       if (!over) {
         return;
       }
 
-      if (source.equals(target)) {
+      const source = active.data.current as DraftLocation;
+      const target = over.data.current as DraftLocation;
+
+      if (source.equals(target) && source.type === locations.pack) {
         // player dropped card back in the same location
         const dragTime = Date.now() - (dragStartTime ?? 0);
 
         if (dragTime < 200) {
           return onClickCard(source.index);
         }
+      } else if (source.equals(target)) {
+        return;
       }
 
       if (target.type === locations.pack) {
@@ -246,7 +249,7 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         }
       }
     },
-    [stepQueue, makePick, mainboard, pack, trashed],
+    [stepQueue, makePick, mainboard, pack, trashed, onClickCard, dragStartTime, sideboard],
   );
 
   useEffect(() => {
@@ -277,32 +280,28 @@ const CubeDraft: React.FC<CubeDraftProps> = ({ draft, socket }) => {
         )}
         disabled={disabled}
       />
-      <Row xs={8} className="my-3">
-        <Col xs={8} xl={7}>
-          <Card>
-            <DeckStacks
-              cards={mainboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
-              title="Mainboard"
-              subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
-              locationType={locations.deck}
-              xs={4}
-              lg={8}
-            />
-          </Card>
-        </Col>
-        <ResponsiveDiv xl>
-          <Col xl={1}>
-            <Card>
-              <DeckStacks
-                cards={sideboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
-                title="Sideboard"
-                locationType={locations.sideboard}
-                xs={1}
-              />
-            </Card>
-          </Col>
-        </ResponsiveDiv>
-      </Row>
+      <Card className="my-3">
+        <DeckStacks
+          cards={mainboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
+          title="Mainboard"
+          subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
+          locationType={locations.deck}
+          xs={4}
+          lg={8}
+        />
+        {/* 
+        
+        We can add this back when we have a mechanism to push cards to the sideboard on end of draft.
+        There is no tracking of positions of cards in either the mainboard or sideboard at the moment.
+          
+        <DeckStacks
+          cards={sideboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])))}
+          title="Sideboard"
+          locationType={locations.sideboard}
+          xs={4}
+          lg={8}
+        /> */}
+      </Card>
     </DndContext>
   );
 };

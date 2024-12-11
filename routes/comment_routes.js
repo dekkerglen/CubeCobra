@@ -133,7 +133,6 @@ router.post(
   util.wrapAsyncApi(async (req, res) => {
     const { id, content, remove } = req.body.comment;
 
-    console.log(req.body.comment);
     const document = await Comment.getById(id);
 
     console.log(document);

@@ -93,7 +93,7 @@ const Row: React.FC<RowProps> = ({ children, className = '', xs, sm, md, lg, xl,
       className={classNames(
         'grid max-w-full',
         {
-          'gap-4': !noGutters,
+          'gap-2': !noGutters,
           'grid-cols-12': numCols === 12,
           'grid-cols-10': numCols === 10,
           'grid-cols-9': numCols === 9,

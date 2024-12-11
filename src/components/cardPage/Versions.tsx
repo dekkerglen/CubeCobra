@@ -15,6 +15,13 @@ interface CardPageProps {
   versions: CardType[];
 }
 
+const capStringLength = (str: string, maxLength: number) => {
+  if (str.length > maxLength + 3) {
+    return `${str.substring(0, maxLength)}...`;
+  }
+  return str;
+};
+
 const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
@@ -41,7 +48,7 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
           rows={filteredVersions.map((version) => ({
             Version: (
               <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
-                {`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`}
+                {capStringLength(`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`, 30)}
               </AutocardA>
             ),
             USD: version.prices.usd ? `$${version.prices.usd}` : '',

@@ -28,7 +28,7 @@ const Pack: React.FC<PackProps> = ({ pack, loading = false, title = 'Pack', disa
             <div className="spinner" />
           </div>
         ) : (
-          <Row className="g-0" xs={3} sm={5} lg={8}>
+          <Row className="g-0" sm={4} lg={8}>
             {pack.map((card, index) => (
               <Col
                 key={`pack-${card.details?.scryfall_id}`}
