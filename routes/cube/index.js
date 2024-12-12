@@ -711,10 +711,10 @@ router.post('/getmorechangelogs', async (req, res) => {
   });
 });
 
-router.post('/getmoredecks', async (req, res) => {
+router.post('/getmoredecks/:id', async (req, res) => {
   try {
-    const { lastKey, cubeId } = req.body;
-    const query = await Draft.getByCube(cubeId, lastKey);
+    const { lastKey } = req.body;
+    const query = await Draft.getByCube(req.params.id, lastKey);
 
     return res.status(200).send({
       success: 'true',

@@ -2,21 +2,21 @@ import React, { useState } from 'react';
 
 import Banner from 'components/Banner';
 import { Flexbox } from 'components/base/Layout';
-import ArticlePreview from 'components/content/ArticlePreview';
+import VideoPreview from 'components/content/VideoPreview';
 import DynamicFlash from 'components/DynamicFlash';
+import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
 import RenderToRoot from 'components/RenderToRoot';
-import ArticleType from 'datatypes/Article';
+import Video from 'datatypes/Video';
 import MainLayout from 'layouts/MainLayout';
 
-import IndefinitePaginatedList from 'components/IndefinitePaginatedList';
-interface ArticlesPageProps {
+interface VideosPageProps {
   loginCallback?: string;
-  articles: ArticleType[];
-  lastKey: any; // Define a more specific type if possible
+  videos: Video[];
+  lastKey?: string;
 }
 
-const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articles, lastKey }) => {
-  const [items, setItems] = useState<ArticleType[]>(articles);
+const VideosPage: React.FC<VideosPageProps> = ({ loginCallback = '/', videos, lastKey }) => {
+  const [items, setItems] = useState(videos);
   const [currentLastKey, setLastKey] = useState(lastKey);
 
   return (
@@ -30,10 +30,10 @@ const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articl
           lastKey={currentLastKey}
           setLastKey={setLastKey}
           pageSize={24}
-          header="Articles"
-          fetchMoreRoute={`/content/getmorearticles`}
-          renderItem={(item) => <ArticlePreview article={item} />}
-          noneMessage="No articles found."
+          header="Videos"
+          fetchMoreRoute={`/content/getmorevideos`}
+          renderItem={(item) => <VideoPreview video={item} />}
+          noneMessage="No videos found."
           xs={6}
           lg={4}
           xl={3}
@@ -45,4 +45,4 @@ const ArticlesPage: React.FC<ArticlesPageProps> = ({ loginCallback = '/', articl
   );
 };
 
-export default RenderToRoot(ArticlesPage);
+export default RenderToRoot(VideosPage);

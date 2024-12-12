@@ -97,9 +97,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 }}
               />
             )}
-            <Text className="mt-3" semibold lg>
-              Feed
-            </Text>
             <Feed items={posts} lastKey={lastKey} />
           </Flexbox>
         </Col>

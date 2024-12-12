@@ -144,13 +144,13 @@ router.delete('/remove/:id', ensureAuth, async (req, res) => {
   }
 });
 
-router.post('/getmoreblogsbycube', async (req, res) => {
-  const { lastKey, cube } = req.body;
-  const posts = await Blog.getByCube(cube, 20, lastKey);
+router.post('/getmoreblogsbycube/:id', async (req, res) => {
+  const { lastKey } = req.body;
+  const posts = await Blog.getByCube(req.params.id, 20, lastKey);
 
   return res.status(200).send({
     success: 'true',
-    posts: posts.items,
+    items: posts.items,
     lastKey: posts.lastKey,
   });
 });
