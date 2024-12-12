@@ -1,18 +1,29 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
-import Banner from 'components/Banner';
+import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import Banner from 'components/Banner';
 import CubePreview from 'components/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserPreview from 'components/UserPreview';
 import MainLayout from 'layouts/MainLayout';
+import Cube from 'datatypes/Cube';
+import User from 'datatypes/User';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
 
-const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback }) => (
+interface UserSocialPageProps {
+  followedCubes: Cube[];
+  followedUsers: User[];
+  followers: User[];
+  loginCallback?: string;
+}
+
+const UserSocialPage: React.FC<UserSocialPageProps> = ({
+  followedCubes,
+  followedUsers,
+  followers,
+  loginCallback = '/',
+}) => (
   <MainLayout loginCallback={loginCallback}>
     <Banner />
     <DynamicFlash />
@@ -20,13 +31,15 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
       <Col xs={6}>
         <Card>
           <CardHeader>
-            <Text semibold md>Followed cubes</Text>
+            <Text semibold lg>
+              Followed cubes
+            </Text>
           </CardHeader>
           {followedCubes.length > 0 ? (
             <CardBody className="p-0">
               <Row className="g-0">
                 {followedCubes.map((cube) => (
-                  <Col key={cube.id} xs={12} sm={6}>
+                  <Col key={cube.id} xs={6} md={4}>
                     <CubePreview cube={cube} />
                   </Col>
                 ))}
@@ -40,13 +53,15 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
       <Col xs={6}>
         <Card>
           <CardHeader>
-            <Text semibold md>Followed Users</Text>
+            <Text semibold lg>
+              Followed Users
+            </Text>
           </CardHeader>
           {followedUsers.length > 0 ? (
             <CardBody className="p-0">
               <Row className="g-0">
                 {followedUsers.map((item) => (
-                  <Col key={item.id} xs={12} sm={6}>
+                  <Col key={item.id} xs={6} md={4}>
                     <UserPreview user={item} />
                   </Col>
                 ))}
@@ -61,12 +76,14 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
         <Col xs={12}>
           <Card className="mt-3">
             <CardHeader>
-              <Text semibold md>Followers</Text>
+              <Text semibold lg>
+                Followers
+              </Text>
             </CardHeader>
             <CardBody className="p-0">
               <Row className="g-0">
                 {followers.map((item) => (
-                  <Col key={item.id} xs={6} sm={3}>
+                  <Col key={item.id} xs={6} sm={3} lg={2}>
                     <UserPreview user={item} />
                   </Col>
                 ))}
@@ -78,16 +95,5 @@ const UserSocialPage = ({ followedCubes, followedUsers, followers, loginCallback
     </Row>
   </MainLayout>
 );
-
-UserSocialPage.propTypes = {
-  followedCubes: PropTypes.arrayOf(CubePropType).isRequired,
-  followedUsers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  followers: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  loginCallback: PropTypes.string,
-};
-
-UserSocialPage.defaultProps = {
-  loginCallback: '/',
-};
 
 export default RenderToRoot(UserSocialPage);
