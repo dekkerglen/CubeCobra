@@ -56,7 +56,7 @@ const GridDraftCard: React.FC = () => {
           </Flexbox>
         </CardBody>
         <CardFooter>
-          <Button block color="primary">
+          <Button block color="primary" onClick={() => formRef.current?.submit()}>
             Start Grid Draft
           </Button>
         </CardFooter>

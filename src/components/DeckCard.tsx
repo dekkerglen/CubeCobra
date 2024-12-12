@@ -1,5 +1,5 @@
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Col, Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import Deck from 'datatypes/Draft';
 import DeckSeat from 'datatypes/DraftSeat';
@@ -105,14 +105,16 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
   return (
     <Card>
       <CardHeader>
-        <Text semibold lg>
-          {seat.name}
-        </Text>
-        {!seat.bot && (
-          <Text md semibold>
-            Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
+        <Flexbox direction="col" alignItems="start" gap="1">
+          <Text semibold lg>
+            {seat.name}
           </Text>
-        )}
+          {!seat.bot && (
+            <Text md semibold>
+              Drafted by {seat.owner ? <Username user={seat.owner} /> : 'Anonymous'}
+            </Text>
+          )}
+        </Flexbox>
       </CardHeader>
       {view === 'picks' && (
         <CardBody>

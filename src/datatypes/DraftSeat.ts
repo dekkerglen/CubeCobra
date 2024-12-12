@@ -10,4 +10,6 @@ export default interface DraftSeat {
   owner?: string | User;
   bot?: boolean;
   name?: string;
+  // grid draft only
+  pickedIndices?: number[];
 }
