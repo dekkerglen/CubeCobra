@@ -1,29 +1,22 @@
 import React from 'react';
-
-import PropTypes from 'prop-types';
-import CardPackagePropType from 'proptypes/CardPackagePropType';
-
 import Banner from 'components/Banner';
 import CardPackage from 'components/card/CardPackage';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import CardPackageType from 'datatypes/CardPackage';
 
-const PackagePage = ({ pack, loginCallback }) => (
+interface PackagePageProps {
+  pack: CardPackageType;
+  loginCallback?: string;
+}
+
+const PackagePage: React.FC<PackagePageProps> = ({ pack, loginCallback = '/' }) => (
   <MainLayout loginCallback={loginCallback}>
     <Banner />
     <DynamicFlash />
-    <CardPackage cardPackage={pack} refresh={() => window.location.reload()} />
+    <CardPackage cardPackage={pack} />
   </MainLayout>
 );
-
-PackagePage.propTypes = {
-  pack: CardPackagePropType.isRequired,
-  loginCallback: PropTypes.string,
-};
-
-PackagePage.defaultProps = {
-  loginCallback: '/',
-};
 
 export default RenderToRoot(PackagePage);
