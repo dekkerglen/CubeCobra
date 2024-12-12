@@ -21,7 +21,7 @@ const CreateCubeModal: React.FC<Props> = ({ isOpen, setOpen }) => {
   const formData = useMemo(() => ({ name }), [name]);
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm>
       <ModalHeader setOpen={setOpen}>Create New Cube</ModalHeader>
       <CSRFForm ref={formRef} method="POST" action="/cube/add" formData={formData} onSubmit={() => setLoading(true)}>
         <ModalBody>

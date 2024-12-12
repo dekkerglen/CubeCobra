@@ -75,8 +75,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   ))
                 ) : (
                   <Col className={classNames('p-4', 'grid-flow-col')}>
-                    <span>You don't have any cubes.</span>
-                    <CreateCubeModalButton color="accent">Add a new cube?</CreateCubeModalButton>
+                    <Flexbox direction="col" gap="2" alignItems="start">
+                      <span>You don't have any cubes.</span>
+                      <CreateCubeModalButton color="accent">Add a new cube?</CreateCubeModalButton>
+                    </Flexbox>
                   </Col>
                 )}
               </Row>

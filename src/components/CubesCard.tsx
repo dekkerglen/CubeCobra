@@ -4,7 +4,7 @@ import Cube from 'datatypes/Cube';
 import Text from 'components/base/Text';
 import Link from 'components/base/Link';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Row, Col } from 'components/base/Layout';
+import { Row, Col, Flexbox } from 'components/base/Layout';
 import Button from 'components/base/Button';
 import Collapse from 'components/base/Collapse';
 
@@ -28,10 +28,12 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink,
   return (
     <Card {...props}>
       <CardHeader className="cubes-card-header">
-        <Text semibold xl>
-          {title}
-        </Text>
-        {sideLink && <Link href={sideLink.href}>{sideLink.text}</Link>}
+        <Flexbox direction="row" justify="between">
+          <Text semibold xl>
+            {title}
+          </Text>
+          {sideLink && <Link href={sideLink.href}>{sideLink.text}</Link>}
+        </Flexbox>
       </CardHeader>
       <Row noGutters>
         {cubes.slice(0, 2).map((cube) => (

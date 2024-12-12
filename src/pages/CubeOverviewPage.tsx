@@ -109,7 +109,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
           />
           {post && <BlogPost key={post.id} post={post} />}
           {post && (
-            <Button color="primary" block href={`/cube/blog/${cube.id}`}>
+            <Button color="primary" block href={`/cube/blog/${cube.id}`} type="link">
               View All Blog Posts
             </Button>
           )}

@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
 
 import Banner from 'components/Banner';
-import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
+import LoadingButton from './LoadingButton';
 
-interface CubeSearchNavBarProps {
+interface CubeSearchControllerProps {
   query?: string;
   order?: string;
   title?: string;
-  ascending?: boolean;
+  ascending?: string;
+  go: (query: string, order: string, ascending: string) => Promise<void>;
 }
 
-const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
+const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
   query = '',
   order = 'pop',
   title = null,
   ascending = false,
+  go,
 }) => {
   const [queryText, setQuery] = useState<string>(query);
   const [searchOrder, setSearchOrder] = useState<string>(order);
@@ -52,16 +54,12 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
           defaultValue={searchAscending}
           setValue={(value) => setSearchAscending(value)}
         />
-        <Button
-          type="link"
-          color="primary"
-          href={`/search/?q=${encodeURIComponent(queryText)}&order=${searchOrder}&ascending=${searchAscending}`}
-        >
-          Search
-        </Button>
+        <LoadingButton color="primary" onClick={() => go(queryText, searchOrder, searchAscending)}>
+          <span className="px-4">Search</span>
+        </LoadingButton>
       </Flexbox>
     </Controls>
   );
 };
 
-export default CubeSearchNavBar;
+export default CubeSearchController;

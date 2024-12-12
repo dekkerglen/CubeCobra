@@ -113,13 +113,6 @@ router.get('/version', async (req, res) => {
   });
 });
 
-router.get('/search', async (req, res) => {
-  return render(req, res, 'SearchPage', {
-    query: '',
-    cubes: [],
-  });
-});
-
 const searchCubes = async (query, order, lastKey, ascending, user) => {
   let sanitizedQuery = query.toLowerCase().replace(/[^a-z0-9: ]/g, '');
   const split = sanitizedQuery.split(':');
@@ -157,18 +150,16 @@ const searchCubes = async (query, order, lastKey, ascending, user) => {
   };
 };
 
-router.get('/search/:query', async (req, res) => {
-  const ascending = req.query.ascending || false;
+router.get('/search', async (req, res) => {
+  const ascending = req.query.ascending || 'false';
   const order = req.query.order || 'pop';
-
-  const result = await searchCubes(req.params.query, order, null, ascending, req.user);
+  const query = req.query.q || '';
+  
+  const result = query !== '' ? await searchCubes(query, order, null, ascending === 'true', req.user) : { cubes: [], lastKey: null };
 
   return render(req, res, 'SearchPage', {
-    query: req.params.query,
     cubes: result.cubes,
     lastKey: result.lastKey,
-    ascending,
-    order,
   });
 });
 

@@ -34,7 +34,7 @@ const navItems = [
     title: 'Cube',
     items: [
       { label: 'Explore cubes', href: '/explore' },
-      { label: 'Search cubes', href: '/cube/search' },
+      { label: 'Search cubes', href: '/search' },
     ],
   },
   {

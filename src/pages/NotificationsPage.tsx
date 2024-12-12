@@ -79,7 +79,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
               Notifications ({items.length}
               {hasMore ? '+' : ''})
             </Text>
-            {pager}
+            {items.length > 0 && pager}
           </Flexbox>
         </CardHeader>
         {items.length > 0 ? (

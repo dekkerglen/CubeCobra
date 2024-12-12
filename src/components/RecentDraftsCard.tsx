@@ -72,7 +72,7 @@ const RecentDraftsCard: React.FC<CubesCardProps> = ({ decks, lastKey }) => {
             Drafts of your Cubes ({items.length}
             {hasMore ? '+' : ''})
           </Text>
-          {pager}
+          {decks.length > 0 && pager}
         </Flexbox>
       </CardHeader>
       {decks.length > 0 ? (
