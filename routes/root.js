@@ -11,6 +11,7 @@ const Feed = require('../dynamo/models/feed');
 const { render, redirect } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverjs/cubefn');
+const { last } = require('lodash');
 
 const router = express.Router();
 
@@ -56,6 +57,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       posts: posts.items.map((item) => item.document),
       lastKey: posts.lastKey,
       decks: decks.items,
+      lastDeckKey: decks.lastEvaluatedKey,
       content: content.items.filter((item) => item.type !== 'p'),
       featured,
     });
@@ -77,24 +79,10 @@ router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
   });
 });
 
-router.get('/dashboard/decks', ensureAuth, async (req, res) => {
-  try {
-    const decks = await Draft.getByCubeOwner(req.user.id);
-
-    return render(req, res, 'RecentDraftsPage', {
-      decks: decks.items,
-      lastKey: decks.lastEvaluatedKey,
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send(err);
-  }
-});
-
 router.post('/getmoredecks', ensureAuth, async (req, res) => {
   const { lastKey } = req.body;
 
-  const result = await Draft.getByCubeOwner(lastKey.cubeOwner, lastKey);
+  const result = await Draft.getByCubeOwner(req.user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',

@@ -1,27 +1,27 @@
-import ArticlePreview from 'components/content/ArticlePreview';
+import classNames from 'classnames';
 import Banner from 'components/Banner';
-import CreateCubeModal from 'components/modals/CreateCubeModal';
 import CubePreview from 'components/CubePreview';
 import CubesCard from 'components/CubesCard';
-import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
-import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
+import RecentDraftsCard from 'components/RecentDraftsCard';
 import RenderToRoot from 'components/RenderToRoot';
-import VideoPreview from 'components/content/VideoPreview';
 import withModal from 'components/WithModal';
 import Button from 'components/base/Button';
-import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
+import { Card, CardFooter, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
+import ArticlePreview from 'components/content/ArticlePreview';
+import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
+import VideoPreview from 'components/content/VideoPreview';
+import CreateCubeModal from 'components/modals/CreateCubeModal';
 import UserContext from 'contexts/UserContext';
 import BlogPost from 'datatypes/BlogPost';
 import Cube from 'datatypes/Cube';
 import Draft from 'datatypes/Draft';
 import MainLayout from 'layouts/MainLayout';
 import React, { useContext } from 'react';
-import classNames from 'classnames';
 
 interface DashboardPageProps {
   posts: BlogPost[];
@@ -29,7 +29,8 @@ interface DashboardPageProps {
   content: any[];
   loginCallback?: string;
   featured?: Cube[];
-  lastKey?: string;
+  lastKey: any;
+  lastDeckKey: any;
 }
 
 const CreateCubeModalButton = withModal(Button, CreateCubeModal);
@@ -37,6 +38,7 @@ const CreateCubeModalButton = withModal(Button, CreateCubeModal);
 const DashboardPage: React.FC<DashboardPageProps> = ({
   posts,
   lastKey,
+  lastDeckKey,
   decks,
   loginCallback = '/',
   content,
@@ -49,15 +51,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   let featuredPosition;
   if (!user?.hideFeatured) {
     featuredPosition = cubes.length > 2 ? 'right' : 'left';
-  }
-
-  // the number of drafted decks shown, based on where cubes are located
-  let filteredDecks = decks;
-  if (featuredPosition === 'right') {
-    filteredDecks = decks.slice(0, 8);
-  }
-  if (!featuredPosition && cubes.length <= 2) {
-    filteredDecks = decks.slice(0, 12);
   }
 
   return (
@@ -118,26 +111,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               header={{ hLevel: 5, sideLink: '/donate', sideText: 'Learn more...' }}
             />
           )}
-          <Card>
-            <CardHeader>
-              <Text semibold lg>
-                Recent Drafts of Your Cubes
-              </Text>
-            </CardHeader>
-            {decks.length > 0 ? (
-              filteredDecks.map((deck) => <DeckPreview key={deck.id} deck={deck} nextURL="/dashboard" />)
-            ) : (
-              <CardBody>
-                <Text>
-                  Nobody has drafted your cubes! Perhaps try reaching out on the{' '}
-                  <Link href="https://discord.gg/Hn39bCU">Discord draft exchange?</Link>
-                </Text>
-              </CardBody>
-            )}
-            <CardFooter>
-              <Link href="/dashboard/decks">View All</Link>
-            </CardFooter>
-          </Card>
+          <RecentDraftsCard decks={decks} lastKey={lastDeckKey} />
           <Col className="d-none d-md-block mt-3" md={4}>
             <Flexbox direction="col" gap="2">
               <Flexbox direction="row" justify="between">
