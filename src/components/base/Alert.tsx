@@ -15,7 +15,7 @@ const Alert: React.FC<AlertProps> = ({ color, children, className = '' }) => {
   if (!visible) return null;
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className} mt-3`}>
       <div
         className={classNames(`p-4 rounded-md`, {
           'bg-green-100 text-green-800': color === 'success',
