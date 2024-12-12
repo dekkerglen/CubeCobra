@@ -1,30 +1,39 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import ContentPropType from 'proptypes/ContentPropType';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import ReactAudioPlayer from 'react-audio-player';
 import TimeAgo from 'react-timeago';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
-import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
+import Episode from 'datatypes/Episode';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Link from 'components/base/Link';
 
-const PodcastEpisodePage = ({ loginCallback, episode }) => {
+interface PodcastEpisodePageProps {
+  loginCallback?: string;
+  episode: Episode;
+}
+
+const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ loginCallback = '/', episode }) => {
   return (
     <MainLayout loginCallback={loginCallback}>
       <DynamicFlash />
-      <Card className="mb-3">
+      <Card className="my-3">
         <CardHeader>
-          <Text semibold xl>{episode.title}</Text>
-          <Text semibold sm>
-            from <a href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</a>
-            {' - '}
-            <TimeAgo date={episode.date} />
-          </Text>
+          <Flexbox direction="col" gap="2" alignItems="start">
+            <Text semibold lg>
+              {episode.title}
+            </Text>
+            <Text semibold sm>
+              from <Link href={`/content/podcast/${episode.podcast}`}>{episode.podcastName}</Link>
+              {' - '}
+              <TimeAgo date={episode.date} />
+            </Text>
+          </Flexbox>
         </CardHeader>
         <Row className="g-0">
           <Col xs={12} sm={4} className="pe-0">
@@ -34,9 +43,11 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
           </Col>
           <Col xs={12} sm={8} className="border-start ps-0">
             <CardBody>
-              <ReactAudioPlayer src={episode.url} controls />
+              <ReactAudioPlayer src={episode.url} controls className="w-full" />
             </CardBody>
-            <CardBody className="border-top" dangerouslySetInnerHTML={{ __html: episode.body }} />
+            <CardBody className="border-top">
+              <div dangerouslySetInnerHTML={{ __html: episode.body || '' }} />
+            </CardBody>
           </Col>
         </Row>
         <div className="border-top">
@@ -45,15 +56,6 @@ const PodcastEpisodePage = ({ loginCallback, episode }) => {
       </Card>
     </MainLayout>
   );
-};
-
-PodcastEpisodePage.propTypes = {
-  loginCallback: PropTypes.string,
-  episode: ContentPropType.isRequired,
-};
-
-PodcastEpisodePage.defaultProps = {
-  loginCallback: '/',
 };
 
 export default RenderToRoot(PodcastEpisodePage);

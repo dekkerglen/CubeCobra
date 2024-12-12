@@ -1,23 +1,31 @@
 import React from 'react';
-import { CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-import ContentPropType from 'proptypes/ContentPropType';
-
-import AspectRatioBox from 'components/base/AspectRatioBox';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import { CardHeader, CardBody } from 'components/base/Card';
 import Text from 'components/base/Text';
+import AspectRatioBox from 'components/base/AspectRatioBox';
 import CommentsSection from 'components/comments/CommentsSection';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import Username from 'components/Username';
+import Episode from 'datatypes/Episode';
+import PodcastType from 'datatypes/Podcast';
 
-const Podcast = ({ podcast, episodes }) => {
+interface PodcastProps {
+  podcast: PodcastType;
+  episodes: Episode[];
+}
+
+const Podcast: React.FC<PodcastProps> = ({ podcast, episodes }) => {
   return (
     <>
       <CardHeader>
-        <Text semibold xl>{podcast.title}</Text>
-        <Text semibold sm>
-          By <Username user={podcast.owner} />
-        </Text>
+        <Flexbox direction="col" gap="2" alignItems="start">
+          <Text semibold xl>
+            {podcast.title}
+          </Text>
+          <Text semibold sm>
+            By <Username user={podcast.owner} />
+          </Text>
+        </Flexbox>
       </CardHeader>
       <Row>
         <Col xs={12} sm={4}>
@@ -26,7 +34,9 @@ const Podcast = ({ podcast, episodes }) => {
           </AspectRatioBox>
         </Col>
         <Col xs={12} sm={8}>
-          <CardBody dangerouslySetInnerHTML={{ __html: podcast.description }} />
+          <CardBody>
+            <div dangerouslySetInnerHTML={{ __html: podcast.description || '' }} />
+          </CardBody>
         </Col>
       </Row>
       <CardBody className="border-top">
@@ -35,7 +45,7 @@ const Podcast = ({ podcast, episodes }) => {
         ) : (
           <Row>
             {episodes.map((episode) => (
-              <Col xs={12} sm={6} md="3" className="pb-3">
+              <Col key={episode.id} xs={12} sm={6} md={3} className="pb-3">
                 <PodcastEpisodePreview episode={episode} />
               </Col>
             ))}
@@ -47,14 +57,6 @@ const Podcast = ({ podcast, episodes }) => {
       </div>
     </>
   );
-};
-Podcast.propTypes = {
-  podcast: ContentPropType.isRequired,
-  episodes: PropTypes.arrayOf(PropTypes.shape({})),
-};
-
-Podcast.defaultProps = {
-  episodes: [],
 };
 
 export default Podcast;

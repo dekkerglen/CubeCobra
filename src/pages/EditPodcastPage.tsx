@@ -75,7 +75,7 @@ const EditPodcastPage: React.FC<EditPodcastPageProps> = ({ loginCallback = '/', 
             {
               label: 'Preview',
               onClick: () => setTab('1'),
-              content: <Podcast podcast={podcast} />,
+              content: <Podcast podcast={podcast} episodes={[]} />,
             },
           ]}
         />

@@ -1,71 +1,29 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-import TimeAgo from 'react-timeago';
-
-import Button from 'components/base/Button';
+import { Card } from 'components/base/Card';
+import Banner from 'components/Banner';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import Text from 'components/base/Text';
-
-interface User {
-  id: string;
-  username: string;
-}
-
-interface Podcast {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  user: User;
-}
+import Podcast from 'components/content/Podcast';
+import Episode from 'datatypes/Episode';
+import PodcastType from 'datatypes/Podcast';
 
 interface PodcastPageProps {
   loginCallback?: string;
-  podcasts: Podcast[];
+  podcast: PodcastType;
+  episodes: Episode[];
 }
 
-const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcasts }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DynamicFlash />
-    <Card className="my-3">
-      <CardHeader>
-        <Text md semibold>
-          Podcasts
-        </Text>
-      </CardHeader>
-      {podcasts.map((podcast) => (
-        <Card key={podcast.id}>
-          <CardBody>
-            <Text md semibold>
-              {podcast.title}
-            </Text>
-            <p>{podcast.description}</p>
-            <p>
-              By{' '}
-              <a href={`/user/view/${podcast.user.id}`} target="_blank" rel="noopener noreferrer">
-                {podcast.user.username}
-              </a>
-              - <TimeAgo date={podcast.date} />
-            </p>
-            <Row>
-              <Col xs={12} sm={6}>
-                <Button color="primary" block outline href={`/podcast/${podcast.id}`}>
-                  Listen
-                </Button>
-              </Col>
-              <Col xs={12} sm={6}>
-                <Button color="secondary" block outline href={`/podcast/${podcast.id}/details`}>
-                  Details
-                </Button>
-              </Col>
-            </Row>
-          </CardBody>
-        </Card>
-      ))}
-    </Card>
-  </MainLayout>
-);
+const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcast, episodes }) => {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <Banner />
+      <DynamicFlash />
+      <Card className="my-3">
+        <Podcast podcast={podcast} episodes={episodes} />
+      </Card>
+    </MainLayout>
+  );
+};
 
 export default RenderToRoot(PodcastPage);
