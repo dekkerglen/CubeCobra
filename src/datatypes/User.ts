@@ -17,6 +17,7 @@ export default interface User {
   imageName?: string;
   roles?: string[];
   theme?: string;
+  email?: string;
   hideFeatured?: boolean;
   patron?: string;
   notifications?: Notification[];

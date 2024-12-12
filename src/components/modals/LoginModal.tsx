@@ -1,8 +1,8 @@
 import React from 'react';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'components/base/Modal';
-import LoadingButton from './LoadingButton';
-import LoginForm from './forms/LoginForm';
+import LoadingButton from '../LoadingButton';
+import LoginForm from '../forms/LoginForm';
 
 interface LoginModalProps {
   isOpen: boolean;

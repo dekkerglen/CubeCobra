@@ -37,7 +37,6 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
 
   useEffect(() => {
     const getData = async () => {
-      // load the card images
       const response = await csrfFetch('/cube/api/imagedict');
       const json = await response.json();
       setImageDict(json.dict);

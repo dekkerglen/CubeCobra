@@ -6,9 +6,9 @@ import Button from 'components/base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import Tag from 'components/base/Tag';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
-import CSRFForm from 'components/CSRFForm';
 import CubeIdModal from 'components/CubeIdModal';
 import FollowersModal from 'components/FollowersModal';
 import Markdown from 'components/Markdown';
@@ -22,7 +22,6 @@ import UserContext from 'contexts/UserContext';
 import useAlerts from 'hooks/UseAlerts';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription, getCubeId } from 'utils/Util';
-import Tag from 'components/base/Tag';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
@@ -145,12 +144,14 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
                   </Flexbox>
                 )}
                 {user && user.roles && user.roles.includes('Admin') && (
-                  <CSRFForm method="POST" action={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}>
-                    <Button color="accent" type="submit" disabled={cube.visibility !== 'pu'}>
-                      {' '}
-                      {cube.featured ? 'Remove from featured' : 'Add to featured'}
-                    </Button>
-                  </CSRFForm>
+                  <Button
+                    color="accent"
+                    type="link"
+                    disabled={cube.visibility !== 'pu'}
+                    href={`/cube/${cube.featured ? 'unfeature/' : 'feature/'}${cube.id}`}
+                  >
+                    {cube.featured ? 'Remove from featured' : 'Add to featured'}
+                  </Button>
                 )}
                 {user &&
                   cube.owner.id !== user.id &&

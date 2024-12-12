@@ -5,8 +5,8 @@ import { getCsrfToken } from 'utils/CSRF';
 interface CSRFFormProps {
   children: ReactNode;
   method: 'GET' | 'POST';
-  action?: string;
-  formData?: Record<string, string>;
+  action: string;
+  formData: Record<string, string>;
   onSubmit?: () => void;
 }
 
