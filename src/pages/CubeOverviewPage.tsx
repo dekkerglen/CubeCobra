@@ -18,6 +18,7 @@ import BlogPostType from 'datatypes/BlogPost';
 import Cube, { CubeCards } from 'datatypes/Cube';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import User from 'datatypes/User';
 
 const CubeOverviewModalLink = withModal(Link, CubeOverviewModal);
 const CubeSettingsModalLink = withModal(Link, CubeSettingsModal);
@@ -31,7 +32,7 @@ interface CubeOverviewProps {
   cube: Cube;
   cards: CubeCards;
   followed: boolean;
-  followers: number;
+  followers: User[];
   loginCallback: () => void;
 }
 

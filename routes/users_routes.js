@@ -456,11 +456,22 @@ router.get('/decks/:userid', async (req, res) => {
       followers,
       following: req.user && (req.user.followedUsers || []).some((id) => id === user.id),
       decks: decks.items,
-      lastKey: decks.lastKey,
+      lastKey: decks.lastEvaluatedKey,
     });
   } catch (err) {
     return util.handleRouteError(req, res, err, '/404');
   }
+});
+
+router.post('/getmoredecks', ensureAuth, async (req, res) => {
+  const { lastKey } = req.body;
+  const decks = await Draft.getByOwner(req.user.id, lastKey);
+
+  return res.status(200).send({
+    success: 'true',
+    decks: decks.items,
+    lastKey: decks.lastEvaluatedKey,
+  });
 });
 
 router.get('/notifications', ensureAuth, async (req, res) => {

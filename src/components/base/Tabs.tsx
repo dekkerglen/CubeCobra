@@ -16,7 +16,7 @@ interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
   return (
-    <Flexbox direction="row" className={className} wrap="wrap">
+    <Flexbox direction="row" className={className} wrap="wrap" alignItems="end">
       {tabs.map((tab, index) => {
         const isActive = activeTab === index;
         const commonClasses = classNames(

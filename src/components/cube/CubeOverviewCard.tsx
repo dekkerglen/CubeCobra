@@ -10,7 +10,7 @@ import Tag from 'components/base/Tag';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import CubeIdModal from 'components/CubeIdModal';
-import FollowersModal from 'components/FollowersModal';
+import FollowersModal from 'components/modals/FollowersModal';
 import Markdown from 'components/Markdown';
 import QRCodeModal from 'components/modals/QRCodeModal';
 import MtgImage from 'components/MtgImage';
@@ -22,6 +22,7 @@ import UserContext from 'contexts/UserContext';
 import useAlerts from 'hooks/UseAlerts';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription, getCubeId } from 'utils/Util';
+import User from 'datatypes/User';
 
 const FollowersModalLink = withModal(Link, FollowersModal);
 const CubeIdModalLink = withModal(Link, CubeIdModal);
@@ -41,7 +42,7 @@ const PrivateCubeIcon = () => (
 interface CubeOverviewCardProps {
   priceOwned: number;
   pricePurchase: number;
-  followers: number;
+  followers: User[];
   followed: boolean;
 }
 

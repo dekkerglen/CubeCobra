@@ -16,6 +16,7 @@ import Cube from 'datatypes/Cube';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
 import { getCubeDescription } from 'utils/Util';
+import Image from 'datatypes/Image';
 interface CubeOverviewModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -25,7 +26,7 @@ interface CubeOverviewModalProps {
 const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, cube }) => {
   const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
-  const [imageDict, setImageDict] = useState<Record<string, string>>({});
+  const [imageDict, setImageDict] = useState<Record<string, Image>>({});
   const formRef = React.createRef<HTMLFormElement>();
 
   const formData = useMemo(
@@ -48,7 +49,7 @@ const CubeOverviewModal: React.FC<CubeOverviewModalProps> = ({ isOpen, setOpen, 
     (image: string) => {
       setImagename(image);
       if (imageDict[image.toLowerCase()]) {
-        setState({ ...state, imageName: image });
+        setState({ ...state, imageName: image, image: imageDict[image.toLowerCase()] });
       }
     },
     [imageDict, setState, state],
