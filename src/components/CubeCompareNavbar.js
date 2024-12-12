@@ -2,9 +2,10 @@
 import React, { Component } from 'react';
 import { Collapse, Nav, Navbar, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 
+import Text from 'components/base/Text';
 import FilterCollapse from 'components/FilterCollapse';
+import TagColorsModal from 'components/modals/TagColorsModal';
 import SortCollapse from 'components/SortCollapse';
-import TagColorsModal from 'components/TagColorsModal';
 
 class CubeCompareNavbar extends Component {
   constructor(props) {
@@ -52,8 +53,8 @@ class CubeCompareNavbar extends Component {
         <div className="cubenav">
           <ul className="nav nav-tabs nav-fill pt-2">
             <li className="nav-item">
-              <h5 style={{ color: '#218937' }}>Compare cubes</h5>
-              <h6 className="my-3" style={{ color: '#218937' }}>
+              <Text semibold md>Compare cubes</Text>
+              <Text semibold md>
                 <span className="text-muted">Base Cube:</span>{' '}
                 <a href={`/cube/list/${cubeAID}`} className="me-3" style={{ color: '#218937' }}>
                   {cubeA.name} ({cubeA.cardCount} cards)
@@ -62,7 +63,7 @@ class CubeCompareNavbar extends Component {
                 <a href={`/cube/list/${cubeBID}`} style={{ color: '#218937' }}>
                   {cubeB.name} ({cubeB.cardCount} cards)
                 </a>
-              </h6>
+              </Text>
             </li>
           </ul>
         </div>

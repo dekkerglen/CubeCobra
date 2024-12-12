@@ -3,6 +3,7 @@ import { Card, CardBody, CardHeader } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
+import Text from 'components/base/Text';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
@@ -11,7 +12,7 @@ const VersionPage = ({ version, host, loginCallback }) => {
     <MainLayout loginCallback={loginCallback}>
       <Card className="my-3">
         <CardHeader>
-          <h4>Deployment Details</h4>
+          <Text semibold lg>Deployment Details</Text>
         </CardHeader>
         <CardBody>
           <dl className="row">

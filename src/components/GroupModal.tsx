@@ -15,17 +15,18 @@ import {
   Row,
 } from 'reactstrap';
 
-import AutocardListItem from 'components/AutocardListItem';
+import AutocardListItem from 'components/card/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import MassBuyButton from 'components/MassBuyButton';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
-import Tooltip from 'components/Tooltip';
+import Tooltip from 'components/base/Tooltip';
 import AutocardContext from 'contexts/AutocardContext';
 import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
+import Text from 'components/base/Text';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -204,8 +205,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
       <ModalBody>
         <Row>
           <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
-            <Row className="w-100 g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
-              <ListGroup className="list-outline w-100">
+            <Row className="w-full g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
+              <ListGroup className="list-outline w-full">
                 {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal inModal>
                     <Button close className="me-1" data-index={card.index} onClick={() => filterOut(card)} />
@@ -245,12 +246,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
               )}
             </Row>
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button className="my-1" block outline color="unsafe" onClick={removeAll}>
                   Remove all from cube
                 </Button>
               </Col>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button
                   className="my-1"
                   color="warning"
@@ -265,7 +266,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                   <span className="d-sm-none">Maybeboard</span>
                 </Button>
               </Col>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button
                   className="my-1"
                   color="warning"
@@ -283,8 +284,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
             </Row>
             {anyCardRemoved && (
               <Row>
-                <Col xs="12">
-                  <Button className="my-1" block outline color="success" onClick={revertRemoval}>
+                <Col xs={12}>
+                  <Button className="my-1" block outline color="primary" onClick={revertRemoval}>
                     Revert removal of removed cards
                   </Button>
                 </Col>
@@ -292,15 +293,15 @@ const GroupModal: React.FC<GroupModalProps> = ({
             )}
             {anyCardChanged && (
               <Row>
-                <Col xs="12">
-                  <Button className="my-1" block outline color="success" onClick={bulkRevertEditAll}>
+                <Col xs={12}>
+                  <Button className="my-1" block outline color="primary" onClick={bulkRevertEditAll}>
                     Revert changes of edited cards
                   </Button>
                 </Col>
               </Row>
             )}
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <MassBuyButton className="my-1" block outline cards={cards}>
                   Buy all
                 </MassBuyButton>
@@ -310,7 +311,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <Col xs="8">
             <fieldset disabled={!canEdit}>
               <Label for="groupStatus">
-                <h5>Set status of all</h5>
+                <Text md semibold>
+                  Set status of all
+                </Text>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Status</InputGroupText>
@@ -328,7 +331,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
               </InputGroup>
 
               <Label for="groupStatus">
-                <h5>Set finish of all</h5>
+                <Text md semibold>
+                  Set finish of all
+                </Text>
               </Label>
               <InputGroup className="mb-3">
                 <InputGroupText>Finish</InputGroupText>
@@ -345,7 +350,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 </Input>
               </InputGroup>
 
-              <h5>Override Attribute on All</h5>
+              <Text md semibold>
+                Override Attribute on All
+              </Text>
               <InputGroup className="mb-2">
                 <InputGroupText>Mana Value</InputGroupText>
                 <Input type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
@@ -364,7 +371,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 only colorless will cause the selected cards' color identity to be set to colorless.
               </FormText>
 
-              <h5 className="mt-3">Edit tags</h5>
+              <Text semibold md>
+                Edit tags
+              </Text>
               <FormGroup tag="fieldset">
                 <FormGroup check>
                   <Label check>
@@ -402,7 +411,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
               />
             </fieldset>
             <Row>
-              <Col xs="12">
+              <Col xs={12}>
                 <Button className="my-1" block outline color="accent" disabled={!fieldsChanged} onClick={applyChanges}>
                   Apply to all
                 </Button>

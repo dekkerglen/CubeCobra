@@ -3,7 +3,8 @@ import { Card } from 'reactstrap';
 
 import PropTypes from 'prop-types';
 
-import AspectRatioBox from 'components/AspectRatioBox';
+import AspectRatioBox from 'components/base/AspectRatioBox';
+import Text from 'components/base/Text';
 import MtgImage from 'components/MtgImage';
 import Username from 'components/Username';
 
@@ -29,10 +30,10 @@ const UserPreview = ({ user }) => {
       <AspectRatioBox ratio={626 / 457} className="text-ellipsis">
         <MtgImage image={user.image} showArtist />
       </AspectRatioBox>
-      <div className="w-100 py-1 px-2 text-muted text-truncate">
-        <h5 className="mb-0">
+      <div className="w-full py-1 px-2 text-muted text-truncate">
+        <Text semibold md>
           <Username user={user} />
-        </h5>
+        </Text>
         {followers} {followers === 1 ? 'follower' : 'followers'}
       </div>
     </Card>

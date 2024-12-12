@@ -13,6 +13,7 @@ const setup = (io) => {
     socket.on('joinLobby', ({ draftId }) => {
       const onDraftUpdate = async (data) => {
         socket.emit('draft', data);
+        console.log('draft', data);
       };
 
       const onLobbySeatsUpdate = async (data) => {

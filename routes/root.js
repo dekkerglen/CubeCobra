@@ -8,9 +8,10 @@ const Draft = require('../dynamo/models/draft');
 const Content = require('../dynamo/models/content');
 const Feed = require('../dynamo/models/feed');
 
-const { render } = require('../serverjs/render');
+const { render, redirect } = require('../serverjs/render');
 const { csrfProtection, ensureAuth } = require('./middleware');
 const { isCubeListed } = require('../serverjs/cubefn');
+const { last } = require('lodash');
 
 const router = express.Router();
 
@@ -53,9 +54,10 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     const decks = await Draft.getByCubeOwner(req.user.id);
 
     return render(req, res, 'DashboardPage', {
-      posts: posts.items,
+      posts: posts.items.map((item) => item.document),
       lastKey: posts.lastKey,
       decks: decks.items,
+      lastDeckKey: decks.lastEvaluatedKey,
       content: content.items.filter((item) => item.type !== 'p'),
       featured,
     });
@@ -65,35 +67,22 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
 });
 
 router.post('/getmorefeeditems', ensureAuth, async (req, res) => {
-  const { lastKey, user } = req.body;
+  const { lastKey } = req.body;
+  const { user } = req;
 
-  const result = await Feed.getByTo(user, lastKey);
+  const result = await Feed.getByTo(user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',
-    items: result.items,
+    items: result.items.map((item) => item.document),
     lastKey: result.lastKey,
   });
-});
-
-router.get('/dashboard/decks', ensureAuth, async (req, res) => {
-  try {
-    const decks = await Draft.getByCubeOwner(req.user.id);
-
-    return render(req, res, 'RecentDraftsPage', {
-      decks: decks.items,
-      lastKey: decks.lastEvaluatedKey,
-    });
-  } catch (err) {
-    req.logger.error(err.message, err.stack);
-    return res.status(500).send(err);
-  }
 });
 
 router.post('/getmoredecks', ensureAuth, async (req, res) => {
   const { lastKey } = req.body;
 
-  const result = await Draft.getByCubeOwner(lastKey.cubeOwner, lastKey);
+  const result = await Draft.getByCubeOwner(req.user.id, lastKey);
 
   return res.status(200).send({
     success: 'true',
@@ -106,16 +95,12 @@ router.get('/landing', async (req, res) => {
   const featuredHashes = await CubeHash.getSortedByName(`featured:true`, false);
   const featured = await Cube.batchGet(featuredHashes.items.map((hash) => hash.cube));
 
-  const popularHashes = await CubeHash.getSortedByFollowers(`featured:false`, false);
-  const popular = await Cube.batchGet(popularHashes.items.map((hash) => hash.cube));
-
   const content = await Content.getByStatus(Content.STATUS.PUBLISHED);
 
   const recentDecks = await Draft.queryByTypeAndDate(Draft.TYPES.DRAFT);
 
   return render(req, res, 'LandingPage', {
     featured,
-    popular,
     content: content.items.filter((item) => item.type !== 'p'),
     recentDecks: recentDecks.items.filter((deck) => deck.complete),
   });
@@ -125,13 +110,6 @@ router.get('/version', async (req, res) => {
   return render(req, res, 'VersionPage', {
     version: process.env.CUBECOBRA_VERSION,
     host: process.env.DOMAIN,
-  });
-});
-
-router.get('/search', async (req, res) => {
-  return render(req, res, 'SearchPage', {
-    query: '',
-    cubes: [],
   });
 });
 
@@ -172,18 +150,16 @@ const searchCubes = async (query, order, lastKey, ascending, user) => {
   };
 };
 
-router.get('/search/:query', async (req, res) => {
-  const ascending = req.query.ascending || false;
+router.get('/search', async (req, res) => {
+  const ascending = req.query.ascending || 'false';
   const order = req.query.order || 'pop';
-
-  const result = await searchCubes(req.params.query, order, null, ascending, req.user);
+  const query = req.query.q || '';
+  
+  const result = query !== '' ? await searchCubes(query, order, null, ascending === 'true', req.user) : { cubes: [], lastKey: null };
 
   return render(req, res, 'SearchPage', {
-    query: req.params.query,
     cubes: result.cubes,
     lastKey: result.lastKey,
-    ascending,
-    order,
   });
 });
 
