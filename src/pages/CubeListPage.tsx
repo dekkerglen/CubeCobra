@@ -1,33 +1,43 @@
 import React, { useContext } from 'react';
 
-import PropTypes from 'prop-types';
-import CubePropType from 'proptypes/CubePropType';
-
 import Text from 'components/base/Text';
-import CubeListNavbar from 'components/CubeListNavbar';
-import CurveView from 'components/CurveView';
+import CubeListNavbar from 'components/cube/CubeListNavbar';
+import CurveView from 'components/cube/CurveView';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
-import ListView from 'components/ListView';
+import ListView from 'components/cube/ListView';
 import RenderToRoot from 'components/RenderToRoot';
 import TableView from 'components/TableView';
-import VisualSpoiler from 'components/VisualSpoiler';
+import VisualSpoiler from 'components/cube/VisualSpoiler';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import Cube from 'datatypes/Cube';
+import Card from 'datatypes/Card';
+import FilterContext from 'contexts/FilterContext';
 
-const CubeListPageRaw = () => {
-  const { changedCards, filter } = useContext(CubeContext);
+interface CubeListPageProps {
+  cube: Cube;
+  cards: {
+    mainboard: Card[];
+    maybeboard: Card[];
+  };
+  loginCallback?: string;
+}
+
+const CubeListPageRaw: React.FC = () => {
+  const { changedCards } = useContext(CubeContext);
   const { showMaybeboard } = useContext(DisplayContext);
+  const { cardFilter } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('view', 'table');
 
   const tagList = [];
   for (const [boardname, list] of Object.entries(changedCards)) {
     if (boardname !== 'id') {
-      tagList.push(...new Set([].concat(...list.map((card) => card.tags))));
+      tagList.push(...new Set([...list.map((card) => card.tags || [])]));
     }
   }
 
@@ -40,12 +50,20 @@ const CubeListPageRaw = () => {
           <ErrorBoundary key={boardname}>
             {(showMaybeboard || boardname !== 'maybeboard') && (
               <>
-                {boardname !== 'mainboard' && <Text semibold md>{boardname}</Text>}
+                {boardname !== 'mainboard' && (
+                  <Text semibold md>
+                    {boardname}
+                  </Text>
+                )}
                 {boardcards.length === 0 &&
-                  (filter ? (
-                    <Text semibold md>No cards match filter.</Text>
+                  (cardFilter ? (
+                    <Text semibold md>
+                      No cards match filter.
+                    </Text>
                   ) : (
-                    <Text semibold md>This board is empty.</Text>
+                    <Text semibold md>
+                      This board is empty.
+                    </Text>
                   ))}
                 {
                   {
@@ -65,26 +83,14 @@ const CubeListPageRaw = () => {
   );
 };
 
-const CubeListPage = ({ cube, cards, loginCallback }) => (
+const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards, loginCallback = '/' }) => (
   <MainLayout loginCallback={loginCallback}>
     <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards>
+      <CubeLayout cube={cube} cards={cards} activeLink="list" loadVersionDict useChangedCards hasControls>
         <CubeListPageRaw />
       </CubeLayout>
     </DisplayContextProvider>
   </MainLayout>
 );
-
-CubeListPage.propTypes = {
-  cube: CubePropType.isRequired,
-  cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
-  }).isRequired,
-  loginCallback: PropTypes.string,
-};
-
-CubeListPage.defaultProps = {
-  loginCallback: '/',
-};
 
 export default RenderToRoot(CubeListPage);

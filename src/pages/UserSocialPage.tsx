@@ -2,7 +2,7 @@ import React from 'react';
 import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import Banner from 'components/Banner';
-import CubePreview from 'components/CubePreview';
+import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserPreview from 'components/UserPreview';

@@ -6,7 +6,7 @@ import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import { csrfFetch } from 'utils/CSRF';
 import { formatDateTime } from 'utils/Date';
-import Pagination from './base/Pagination';
+import Pagination from '../base/Pagination';
 
 interface CubeHistoryProps {
   changes: Record<string, any>[];

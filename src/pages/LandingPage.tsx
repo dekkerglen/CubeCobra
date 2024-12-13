@@ -4,8 +4,8 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 
 import ArticlePreview from 'components/content/ArticlePreview';
-import CubesCard from 'components/CubesCard';
-import CubeSearchNavBar from 'components/CubeSearchNavBar';
+import CubesCard from 'components/cube/CubesCard';
+import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';

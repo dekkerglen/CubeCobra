@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react';
 import socketIOClient from 'socket.io-client';
 
-import CubeDraft from 'components/CubeDraft';
-import CubeDraftError from 'components/CubeDraftError';
-import CubeDraftStaging from 'components/CubeDraftStaging';
+import CubeDraft from 'components/draft/CubeDraft';
+import CubeDraftError from 'components/draft/CubeDraftError';
+import CubeDraftStaging from 'components/draft/CubeDraftStaging';
 import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';

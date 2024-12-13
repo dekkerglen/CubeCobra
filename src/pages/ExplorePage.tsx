@@ -2,8 +2,8 @@ import React from 'react';
 import { Col, Row } from 'components/base/Layout';
 import Cube from 'datatypes/Cube';
 
-import CubesCard from 'components/CubesCard';
-import CubeSearchNavBar from 'components/CubeSearchNavBar';
+import CubesCard from 'components/cube/CubesCard';
+import CubeSearchNavBar from 'components/cube/CubeSearchNavBar';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';

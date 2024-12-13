@@ -6,7 +6,7 @@ import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
-import LoadingButton from './LoadingButton';
+import LoadingButton from '../LoadingButton';
 
 interface CubeSearchControllerProps {
   query?: string;

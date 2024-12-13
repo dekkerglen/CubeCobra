@@ -1,17 +1,4 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
-import {
-  Button,
-  Col,
-  Collapse,
-  FormGroup,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Label,
-  Row,
-  UncontrolledAlert,
-  UncontrolledAlertProps,
-} from 'reactstrap';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Changelist from 'components/Changelist';
@@ -23,7 +10,13 @@ import { BoardType } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import useLocalStorage from 'hooks/useLocalStorage';
 import { csrfFetch } from 'utils/CSRF';
-import Text from 'components/base/Text';
+import Alert, { UncontrolledAlertProps } from './base/Alert';
+import Collapse from './base/Collapse';
+import { Col, Flexbox, Row } from './base/Layout';
+import Select from './base/Select';
+import Button from './base/Button';
+import Checkbox from './base/Checkbox';
+import Input from './base/Input';
 
 interface GetCardResponse {
   success: 'true' | 'false';
@@ -195,169 +188,133 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
   }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
 
   return (
-    <Collapse className="px-3" isOpen={isOpen}>
-      {alerts.map(({ color, message }, index) => (
-        <UncontrolledAlert key={index} color={color} className="mt-2">
-          {message}
-        </UncontrolledAlert>
-      ))}
-      <Row className="mb-2">
-        {showMaybeboard && (
-          <Col xs={12} md={3}>
-            <InputGroup className="mb-1">
-              <Input disabled value="Board" />
-              <Input
-                value={activeBoard}
-                onChange={(e) => setActiveBoard(e.target.value as BoardType)}
-                name="select"
-                type="select"
-              >
-                <option value="mainboard">Mainboard</option>
-                <option value="maybeboard">Maybeboard</option>
-              </Input>
-            </InputGroup>
-          </Col>
-        )}
-        <Col xs={12} md={3}>
-          <InputGroup className="mb-1">
-            <AutocompleteInput
-              treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
-              treePath="cardnames"
-              type="text"
-              innerRef={addRef}
-              name="add"
-              value={addValue}
-              setValue={setAddValue}
-              onSubmit={(e) => handleAdd(e, removeValue)}
-              placeholder="Card to Add"
-              autoComplete="off"
-              data-lpignore
-              className="square-right"
-            />
-            <Button color="accent" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
-              Add
-            </Button>
-          </InputGroup>
-        </Col>
-        <Col xs={12} md={4}>
-          <InputGroup className="flex-nowrap mb-1">
-            <AutocompleteInput
-              cubeId={cube.id}
-              treeUrl={`/cube/api/cubecardnames/${cube.id}/${boardToEdit}`}
-              treePath="cardnames"
-              type="text"
-              innerRef={removeRef}
-              name="remove"
-              value={removeValue}
-              setValue={setRemoveValue}
-              onSubmit={(e) => handleRemoveReplace(e, removeValue)}
-              placeholder="Card to Remove"
-              autoComplete="off"
-              data-lpignore
-              className="square-right"
-            />
-            <Button
-              color="accent"
-              disabled={removeValue.length === 0}
-              onClick={(e) => handleRemoveReplace(e, removeValue)}
-            >
-              Remove/Replace
-            </Button>
-          </InputGroup>
-        </Col>
-      </Row>
-      <Row className="mb-2">
-        <Col xs={12} md={2}>
-          <InputGroup className="mb-1">
-            <InputGroupText>
-              <Input
-                addon
-                type="checkbox"
-                aria-label="Checkbox for following text input"
-                checked={specifyEdition}
-                onChange={() => setSpecifyEdition(!specifyEdition)}
-              />
-            </InputGroupText>
-            <Input disabled value="Specify Versions" />
-          </InputGroup>
-        </Col>
-        <Col xs={12} md={2}>
-          <InputGroup className="mb-1">
-            <InputGroupText>
-              <Input
-                addon
-                type="checkbox"
-                aria-label="Checkbox for following text input"
-                checked={showMaybeboard}
-                onChange={toggleShowMaybeboard}
-              />
-            </InputGroupText>
-            <Input disabled value="Use Maybeboard" />
-          </InputGroup>
-        </Col>
-        <Col xs={12} md={2}>
-          <InputGroup className="mb-1">
-            <InputGroupText>
-              <Input
-                addon
-                type="checkbox"
-                aria-label="Checkbox for following text input"
-                checked={useBlog}
-                onChange={() => setUseBlog(!useBlog)}
-              />
-            </InputGroupText>
-            <Input disabled value="Create Blog Post" />
-          </InputGroup>
-        </Col>
-      </Row>
-      <Collapse
-        isOpen={
-          Object.values(changes.mainboard).some((c) => c.length > 0) ||
-          Object.values(changes.maybeboard).some((c) => c.length > 0)
-        }
-        className="pt-1"
-      >
+    <Collapse isOpen={isOpen}>
+      <Flexbox direction="col" gap="2">
+        {alerts.map(({ color, message }, index) => (
+          <Alert key={index} color={color}>
+            {message}
+          </Alert>
+        ))}
         <Row>
-          <Col xs={12} md={6}>
-            <Changelist />
-          </Col>
-          {useBlog && (
-            <Col xs={12} md={6}>
-              <Text semibold sm>
-                Blog Post
-              </Text>
-              <FormGroup>
-                <Label className="visually-hidden">Blog title</Label>
-                <Input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
-              </FormGroup>
-              <FormGroup>
-                <Label className="visually-hidden">Blog body</Label>
-                <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} />
-              </FormGroup>
+          {showMaybeboard && (
+            <Col xs={12} md={3}>
+              <Select
+                label="Board"
+                value={activeBoard}
+                setValue={(value) => setActiveBoard(value as BoardType)}
+                options={[
+                  { value: 'mainboard', label: 'Mainboard' },
+                  { value: 'maybeboard', label: 'Maybeboard' },
+                ]}
+              />
             </Col>
           )}
-        </Row>
-        <Row className="mb-2">
-          <Col xs={6} md="3">
-            <LoadingButton color="accent" block onClick={submit} loading={loading}>
-              Save Changes
-            </LoadingButton>
+          <Col xs={12} md={3}>
+            <Flexbox direction="row" justify="start" gap="1">
+              <AutocompleteInput
+                treeUrl={specifyEdition ? '/cube/api/fullnames' : '/cube/api/cardnames'}
+                treePath="cardnames"
+                type="text"
+                innerRef={addRef}
+                name="add"
+                value={addValue}
+                setValue={setAddValue}
+                onSubmit={(e) => handleAdd(e, removeValue)}
+                placeholder="Card to Add"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <Button color="primary" disabled={addValue.length === 0} onClick={(e) => handleAdd(e, addValue)}>
+                Add
+              </Button>
+            </Flexbox>
           </Col>
-          <Col xs={6} md="3">
-            <Button
-              color="unsafe"
-              block
-              onClick={() => {
-                discardAllChanges();
-                setPostTitle(DEFAULT_BLOG_TITLE);
-                setPostContent('');
-              }}
-            >
-              Discard All
-            </Button>
+          <Col xs={12} md={4}>
+            <Flexbox direction="row" justify="start" gap="1">
+              <AutocompleteInput
+                cubeId={cube.id}
+                treeUrl={`/cube/api/cubecardnames/${cube.id}/${boardToEdit}`}
+                treePath="cardnames"
+                type="text"
+                innerRef={removeRef}
+                name="remove"
+                value={removeValue}
+                setValue={setRemoveValue}
+                onSubmit={(e) => handleRemoveReplace(e, removeValue)}
+                placeholder="Card to Remove"
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <Button
+                color="accent"
+                disabled={removeValue.length === 0}
+                onClick={(e) => handleRemoveReplace(e, removeValue)}
+              >
+                Remove/Replace
+              </Button>
+            </Flexbox>
           </Col>
         </Row>
-      </Collapse>
+        <Row>
+          <Flexbox direction="row" justify="start" gap="4">
+            <Checkbox
+              label="Specify Versions"
+              checked={!specifyEdition}
+              setChecked={(value) => setSpecifyEdition(!value)}
+            />
+            <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
+            <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
+          </Flexbox>
+        </Row>
+        <Collapse
+          isOpen={
+            Object.values(changes.mainboard).some((c) => c.length > 0) ||
+            Object.values(changes.maybeboard).some((c) => c.length > 0)
+          }
+          className="pt-1"
+        >
+          <Row>
+            <Col xs={12} md={6}>
+              <Changelist />
+            </Col>
+            {useBlog && (
+              <Col xs={12} md={6}>
+                <Flexbox direction="col" gap="2">
+                  <Input
+                    label="Blog Post"
+                    type="text"
+                    value={postTitle}
+                    onChange={(e) => setPostTitle(e.target.value)}
+                  />
+                  <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} />
+                </Flexbox>
+              </Col>
+            )}
+          </Row>
+          <Row className="mb-2">
+            <Col xs={6} md={3}>
+              <LoadingButton color="accent" block onClick={submit} loading={loading}>
+                Save Changes
+              </LoadingButton>
+            </Col>
+            <Col xs={6} md={3}>
+              <Button
+                color="danger"
+                block
+                onClick={() => {
+                  discardAllChanges();
+                  setPostTitle(DEFAULT_BLOG_TITLE);
+                  setPostContent('');
+                }}
+              >
+                Discard All
+              </Button>
+            </Col>
+          </Row>
+        </Collapse>
+      </Flexbox>
     </Collapse>
   );
 };

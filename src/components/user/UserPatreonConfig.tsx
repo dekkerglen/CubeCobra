@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Flexbox, Row, Col } from 'components/base/Layout';
 import Button from 'components/base/Button';
 import Text from 'components/base/Text';
-import CubePreview from 'components/CubePreview';
+import CubePreview from 'components/cube/CubePreview';
 import AddFeaturedModal from 'components/modals/AddFeaturedModal';
 import RemoveFeaturedCubeModal from 'components/modals/RemoveFeaturedCubeModal';
 import withModal from 'components/WithModal';

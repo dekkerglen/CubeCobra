@@ -9,7 +9,7 @@ import Link from 'components/base/Link';
 import Tag from 'components/base/Tag';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
-import CubeIdModal from 'components/CubeIdModal';
+import CubeIdModal from 'components/cube/CubeIdModal';
 import FollowersModal from 'components/modals/FollowersModal';
 import Markdown from 'components/Markdown';
 import QRCodeModal from 'components/modals/QRCodeModal';

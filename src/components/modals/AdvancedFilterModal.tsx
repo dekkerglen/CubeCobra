@@ -1,57 +1,44 @@
 import React, { ChangeEvent, useContext } from 'react';
-import {
-  Button,
-  Col,
-  Form,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Row,
-} from 'reactstrap';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
-import TextField from 'components/TextField';
 import CubeContext from 'contexts/CubeContext';
 import { FilterValues } from 'datatypes/CardDetails';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import Text from 'components/base/Text';
+import Input from 'components/base/Input';
+import Select from 'components/base/Select';
+import Button from 'components/base/Button';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (open: boolean) => void;
   values: Partial<FilterValues>;
   updateValue: (value: string | string[], key: keyof FilterValues) => void;
   apply: () => void;
 }
 
-const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggle, values, updateValue, apply }) => {
+const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOpen, values, updateValue, apply }) => {
   const { cube } = useContext(CubeContext) ?? {};
   const cubeId = cube ? cube.id : null;
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="lg">
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          apply();
-        }}
-      >
-        <ModalHeader toggle={toggle}>Advanced Filters</ModalHeader>
-        <ModalBody>
-          <TextField
+    <Modal isOpen={isOpen} setOpen={setOpen} lg>
+      <ModalHeader setOpen={setOpen}>Advanced Filters</ModalHeader>
+      <ModalBody>
+        <Flexbox direction="col" gap="2">
+          <Input
             name="name"
-            humanName="Card name"
+            label="Card name"
             placeholder={'Any words in the name, e.g. "Fire"'}
             value={values.name}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'name')}
           />
-          <TextField
+          <Input
             name="oracle"
-            humanName="Oracle Text"
+            label="Oracle Text"
             placeholder={'Any text, e.g. "Draw a card"'}
             value={values.oracle}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'oracle')}
@@ -65,81 +52,77 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             setValue={(value: string) => updateValue(value, 'mv')}
             setOperator={(operator: string) => updateValue(operator, 'mvOp')}
           />
-          <InputGroup className="mb-3">
-            <InputGroupText>Color</InputGroupText>
+          <Flexbox direction="row" gap="1" justify="start">
+            <Text semibold>Color</Text>
             <ColorChecksAddon
               colorless
               values={values.color ?? []}
               setValues={(v: string[]) => updateValue(v, 'color')}
             />
-            <Input
-              type="select"
-              id="colorOp"
-              name="colorOp"
+            <Select
               value={values.colorOp}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'colorOp')}
-            >
-              <option value="=">Exactly these colors</option>
-              <option value=">=">Including these colors</option>
-              <option value="<=">At most these colors</option>
-            </Input>
-          </InputGroup>
-          <InputGroup className="mb-3">
-            <InputGroupText>Color Identity</InputGroupText>
+              setValue={(v: string) => updateValue(v, 'colorOp')}
+              options={[
+                { value: '=', label: 'Exactly these colors' },
+                { value: '>=', label: 'Including these colors' },
+                { value: '<=', label: 'At most these colors' },
+              ]}
+            />
+          </Flexbox>
+          <Flexbox direction="row" gap="1" justify="start">
+            <Text semibold>Color Identity</Text>
             <ColorChecksAddon
               colorless
               values={values.colorIdentity ?? []}
               setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />
-            <Input
-              type="select"
-              id="identityOp"
-              name="identityOp"
+            <Select
               value={values.colorIdentityOp}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'colorIdentityOp')}
-            >
-              <option value="=">Exactly these colors</option>
-              <option value=">=">Including these colors</option>
-              <option value="<=">At most these colors</option>
-            </Input>
-          </InputGroup>
-          <TextField
+              setValue={(v: string) => updateValue(v, 'colorIdentityOp')}
+              options={[
+                { value: '=', label: 'Exactly these colors' },
+                { value: '>=', label: 'Including these colors' },
+                { value: '<=', label: 'At most these colors' },
+              ]}
+            />
+          </Flexbox>
+          <Input
             name="mana"
-            humanName="Mana Cost"
+            label="Mana Cost"
             placeholder={'Any mana cost, e.g. "{1}{W}"'}
             value={values.mana}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'mana')}
           />
-          <InputGroup className="mb-3">
-            <InputGroupText>Manacost Type</InputGroupText>
-            <Input
-              type="select"
-              name="is"
+          <Flexbox direction="row" gap="1" justify="start">
+            <Text semibold>Manacost Type</Text>
+            <Select
               value={values.is}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'is')}
-            >
-              {['', 'Gold', 'Hybrid', 'Phyrexian'].map((type) => (
-                <option key={type}>{type}</option>
-              ))}
-            </Input>
-          </InputGroup>
-          <TextField
+              setValue={(v: string) => updateValue(v, 'is')}
+              options={[
+                { value: '', label: 'Any' },
+                { value: 'Gold', label: 'Gold' },
+                { value: 'Hybrid', label: 'Hybrid' },
+                { value: 'Phyrexian', label: 'Phyrexian' },
+              ]}
+            />
+          </Flexbox>
+          <Input
             name="type"
-            humanName="Type Line"
+            label="Type Line"
             placeholder="Choose any card type, supertype, or subtypes to match"
             value={values.type}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'type')}
           />
-          <TextField
+          <Input
             name="set"
-            humanName="Set"
+            label="Set"
             placeholder={'Any set code, e.g. "WAR"'}
             value={values.set}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'set')}
           />
           {cubeId && (
-            <InputGroup className="mb-3">
-              <InputGroupText>Tag</InputGroupText>
+            <Flexbox direction="row" gap="1" justify="start">
+              <Text semibold>Tag</Text>
               <AutocompleteInput
                 treeUrl={`/cube/api/cubecardtags/${cubeId}`}
                 treePath="tags"
@@ -153,41 +136,38 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
                 className="tag-autocomplete-input"
                 wrapperClassName="tag-autocomplete-wrapper"
               />
-            </InputGroup>
+            </Flexbox>
           )}
-          <Row className="row-mid-padding">
+          <Row>
             <Col md={6}>
-              <InputGroup className="mb-3">
-                <InputGroupText>status</InputGroupText>
-                <Input
-                  type="select"
-                  name="status"
-                  value={values.status}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'status')}
-                >
-                  {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((status) => (
-                    <option key={status}>{status}</option>
-                  ))}
-                </Input>
-              </InputGroup>
+              <Select
+                label="Status"
+                value={values.status}
+                setValue={(v: string) => updateValue(v, 'status')}
+                options={[
+                  { value: '', label: 'Any' },
+                  { value: 'Not Owned', label: 'Not Owned' },
+                  { value: 'Ordered', label: 'Ordered' },
+                  { value: 'Owned', label: 'Owned' },
+                  { value: 'Premium Owned', label: 'Premium Owned' },
+                  { value: 'Proxied', label: 'Proxied' },
+                ]}
+              />
             </Col>
             <Col md={6}>
-              <InputGroup className="mb-3">
-                <InputGroupText>Finish</InputGroupText>
-                <Input
-                  type="select"
-                  name="finish"
-                  value={values.finish}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'finish')}
-                >
-                  {['', 'Foil', 'Non-foil'].map((finish) => (
-                    <option key={finish}>{finish}</option>
-                  ))}
-                </Input>
-              </InputGroup>
+              <Select
+                label="Finish"
+                value={values.finish}
+                setValue={(v: string) => updateValue(v, 'finish')}
+                options={[
+                  { value: '', label: 'Any' },
+                  { value: 'Foil', label: 'Foil' },
+                  { value: 'Non-foil', label: 'Non-foil' },
+                ]}
+              />
             </Col>
           </Row>
-          <Row className="row-mid-padding">
+          <Row>
             <Col md={6}>
               <NumericField
                 name="price"
@@ -278,57 +258,61 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, toggl
             setValue={(value: string) => updateValue(value, 'rarity')}
             setOperator={(operator: string) => updateValue(operator, 'rarityOp')}
           />
-          <InputGroup className="mb-3">
-            <InputGroupText>Legality</InputGroupText>
-            <Input
-              type="select"
-              id="legalityOp"
-              name="legalityOp"
-              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'legalityOp')}
-            >
-              <option value="=">legal</option>
-              <option value="!=">not legal</option>
-            </Input>
-            <Input
-              type="select"
-              name="legality"
+          <Flexbox direction="row" gap="1" justify="start">
+            <Text semibold>Legality</Text>
+            <Select
+              value={values.legalityOp}
+              setValue={(v: string) => updateValue(v, 'legalityOp')}
+              options={[
+                { value: '=', label: 'legal' },
+                { value: '!=', label: 'not legal' },
+              ]}
+            />
+            <Select
               value={values.legality}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'legality')}
-            >
-              {[
-                '',
-                'Standard',
-                'Pioneer',
-                'Modern',
-                'Legacy',
-                'Vintage',
-                'Brawl',
-                'Historic',
-                'Pauper',
-                'Penny',
-                'Commander',
-              ].map((legality) => (
-                <option key={legality}>{legality}</option>
-              ))}
-            </Input>
-          </InputGroup>
-          <TextField
+              setValue={(v: string) => updateValue(v, 'legality')}
+              options={[
+                { value: '', label: 'Any' },
+                { value: 'Standard', label: 'Standard' },
+                { value: 'Pioneer', label: 'Pioneer' },
+                { value: 'Modern', label: 'Modern' },
+                { value: 'Legacy', label: 'Legacy' },
+                { value: 'Vintage', label: 'Vintage' },
+                { value: 'Brawl', label: 'Brawl' },
+                { value: 'Historic', label: 'Historic' },
+                { value: 'Pauper', label: 'Pauper' },
+                { value: 'Penny', label: 'Penny' },
+                { value: 'Commander', label: 'Commander' },
+              ]}
+            />
+          </Flexbox>
+          <Input
             name="artist"
-            humanName="Artist"
+            label="Artist"
             placeholder={'Any text, e.g. "seb"'}
             value={values.artist}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'artist')}
           />
-        </ModalBody>
-        <ModalFooter>
-          <Button color="unsafe" aria-label="Close" onClick={toggle}>
+        </Flexbox>
+      </ModalBody>
+      <ModalFooter>
+        <Flexbox gap="2" justify="between" className="w-full">
+          <Button color="danger" aria-label="Close" onClick={() => setOpen(false)} block>
             Cancel
           </Button>
-          <Button color="accent" type="submit">
+          <Button
+            color="accent"
+            type="submit"
+            onClick={() => {
+              setOpen(false);
+              apply();
+            }}
+            block
+          >
             Apply
           </Button>
-        </ModalFooter>
-      </Form>
+        </Flexbox>
+      </ModalFooter>
     </Modal>
   );
 };

@@ -16,8 +16,8 @@ import Select from './base/Select';
 import DynamicFlash from './DynamicFlash';
 import FilterCollapse from './FilterCollapse';
 import { cardElo, detailsToCard } from 'utils/Card';
-import { Spinner } from 'reactstrap';
 import Table from './base/Table';
+import Spinner from './base/Spinner';
 
 const AutocardA = withAutocard(Link);
 

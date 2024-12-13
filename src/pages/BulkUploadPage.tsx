@@ -1,13 +1,10 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
-import { Card, CardBody, CardHeader, Col, Label, Row, UncontrolledAlert } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-
-import AutocompleteInput from 'components/base/AutocompleteInput';
+import { Col, Row } from 'components/base/Layout';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
+import AutocompleteInput from 'components/base/AutocompleteInput';
 import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
-import { getCard } from 'components/EditCollapse';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
@@ -15,10 +12,18 @@ import useLocalStorage from 'hooks/useLocalStorage';
 import useMount from 'hooks/UseMount';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import Cube from 'datatypes/Cube';
+import CardType from 'datatypes/Card';
+import { getCard } from 'components/EditCollapse';
 
-const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
+const DEFAULT_BLOG_TITLE = 'Cube Updated - Automatic Post';
 
-const BulkUploadPageRaw = ({ missing, added }) => {
+interface BulkUploadPageRawProps {
+  missing: string[];
+  added: string[];
+}
+
+const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added }) => {
   const [addValue, setAddValue] = useState('');
 
   const { alerts, setAlerts, cube, loading, addCard, bulkAddCard, commitChanges } = useContext(CubeContext);
@@ -26,11 +31,15 @@ const BulkUploadPageRaw = ({ missing, added }) => {
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, DEFAULT_BLOG_TITLE);
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, '');
 
-  const addInput = useRef();
+  const addInput = useRef<HTMLInputElement>(null);
 
   useMount(() => {
     bulkAddCard(
-      added.map((cardid) => ({ cardID: cardid, addedTmsp: new Date().valueOf(), status: cube.defaultStatus })),
+      added.map((cardid) => ({
+        cardID: cardid,
+        addedTmsp: new Date().valueOf().toString(),
+        status: cube.defaultStatus,
+      })),
       'mainboard',
     );
   });
@@ -45,42 +54,47 @@ const BulkUploadPageRaw = ({ missing, added }) => {
   }, [commitChanges, cube.id, postContent, postTitle, setPostContent, setPostTitle]);
 
   const handleAdd = useCallback(
-    async (event, match) => {
-      event.preventDefault();
+    async (match: any) => {
       try {
         const card = await getCard(cube.defaultPrinting, match, setAlerts);
         if (!card) {
           return;
         }
-        addCard({ cardID: card.scryfall_id, addedTmsp: new Date().valueOf(), status: cube.defaultStatus }, 'mainboard');
+        addCard(
+          { cardID: card.scryfall_id, addedTmsp: new Date().valueOf().toString(), status: cube.defaultStatus },
+          'mainboard',
+        );
         setAddValue('');
 
-        addInput.current.focus();
+        addInput.current?.focus();
       } catch (e) {
         console.error(e);
       }
     },
     [cube.defaultPrinting, cube.defaultStatus, setAlerts, addCard],
   );
+
   return (
     <Card className="mt-3">
       <CardHeader>
-        <Text md semibold>Confirm Upload</Text>
+        <Text semibold lg>
+          Confirm Upload
+        </Text>
       </CardHeader>
       <CardBody>
-        <p>
+        <Text>
           There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through and
           manually add them. No changes have been saved.
-        </p>
+        </Text>
         <Row>
           <Col>
             {missing.map((card, index) => (
-              <p key={index}>{card}</p>
+              <Text key={index}>{card}</Text>
             ))}
           </Col>
           <Col>
             <Row>
-              <Col xs="8">
+              <Col xs={8}>
                 <AutocompleteInput
                   treeUrl="/cube/api/cardnames"
                   treePath="cardnames"
@@ -89,27 +103,26 @@ const BulkUploadPageRaw = ({ missing, added }) => {
                   value={addValue}
                   setValue={setAddValue}
                   placeholder="Card to Add"
-                  noMargin
                 />
               </Col>
-              <Col xs="4">
+              <Col xs={4}>
                 <LoadingButton
                   block
                   color="accent"
                   disabled={addValue.length === 0}
                   loading={loading}
-                  onClick={(e) => handleAdd(e, addValue)}
+                  onClick={async () => await handleAdd(addValue)}
                 >
                   Add
                 </LoadingButton>
               </Col>
             </Row>
-            {alerts.map(({ color, message }) => (
-              <UncontrolledAlert color={color} className="mt-2">
+            {alerts.map(({ color, message }, index) => (
+              <Text key={index} className={`alert alert-${color} mt-2`}>
                 {message}
-              </UncontrolledAlert>
+              </Text>
             ))}
-            <Label>Changelist:</Label>
+            <Text semibold>Changelist:</Text>
             <div className="changelist-container mb-2">
               <Changelist />
             </div>
@@ -123,42 +136,28 @@ const BulkUploadPageRaw = ({ missing, added }) => {
   );
 };
 
-BulkUploadPageRaw.propTypes = {
-  cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
-  }).isRequired,
-  missing: PropTypes.arrayOf(PropTypes.string).isRequired,
-  blogpost: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    html: PropTypes.string.isRequired,
-  }).isRequired,
-};
+interface BulkUploadPageProps {
+  cube: Cube;
+  cards: {
+    mainboard: CardType[];
+    maybeboard: CardType[];
+  };
+  added: string[];
+  loginCallback?: string;
+  blogpost: {
+    title: string;
+    html: string;
+  };
+  missing: string[];
+}
 
-const BulkUploadPage = ({ cube, cards, added, loginCallback, blogpost, missing }) => (
+const BulkUploadPage: React.FC<BulkUploadPageProps> = ({ cube, cards, added, loginCallback, missing }) => (
   <MainLayout loginCallback={loginCallback}>
     <DynamicFlash />
     <CubeLayout cube={cube} cards={cards} activeLink="list" useChangedCards>
-      <BulkUploadPageRaw added={added} blogpost={blogpost} missing={missing} />
+      <BulkUploadPageRaw added={added} missing={missing} />
     </CubeLayout>
   </MainLayout>
 );
-
-BulkUploadPage.propTypes = {
-  cards: PropTypes.shape({
-    boards: PropTypes.arrayOf(PropTypes.object),
-  }).isRequired,
-  added: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      image_normal: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  ...BulkUploadPageRaw.propTypes,
-  loginCallback: PropTypes.string,
-};
-
-BulkUploadPage.defaultProps = {
-  loginCallback: '/',
-};
 
 export default RenderToRoot(BulkUploadPage);

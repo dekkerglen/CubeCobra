@@ -904,10 +904,6 @@ video {
   margin-inline-end: 0px;
 }
 
-.me-1 {
-  margin-inline-end: 0.25rem;
-}
-
 .me-2 {
   margin-inline-end: 0.5rem;
 }
@@ -1512,6 +1508,10 @@ video {
 
 .overflow-x-auto {
   overflow-x: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
 }
 
 .overflow-y-visible {

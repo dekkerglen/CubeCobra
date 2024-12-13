@@ -1,5 +1,4 @@
 import React, { useContext, useMemo } from 'react';
-import { ListGroup, ListGroupItem } from 'reactstrap';
 
 import AutocardListItem from 'components/card/AutocardListItem';
 import withCardModal from 'components/modals/WithCardModal';
@@ -7,6 +6,7 @@ import withGroupModal from 'components/modals/WithGroupModal';
 import CubeContext from 'contexts/CubeContext';
 import Card from 'datatypes/Card';
 import { sortDeep } from 'utils/Sort';
+import { ListGroup, ListGroupItem } from 'components/base/ListGroup';
 
 export interface TableViewCardGroupProps {
   cards: Card[];
@@ -32,13 +32,9 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   return (
     <ListGroup>
       {canEdit ? (
-        <GroupModalLink tag="div" className="list-group-heading" modalprops={{ cards }}>
-          {heading}
-        </GroupModalLink>
+        <GroupModalLink modalprops={{ cards }}>{heading}</GroupModalLink>
       ) : (
-        <ListGroupItem tag="div" className="list-group-heading" modalprops={{ cards }}>
-          {heading}
-        </ListGroupItem>
+        <ListGroupItem>{heading}</ListGroupItem>
       )}
 
       {(sorted as [string, Card[]][]).map(([, group]) =>

@@ -1,18 +1,22 @@
 import React, { useContext } from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-
-import PropTypes from 'prop-types';
-
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Row, Col } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
 import { getLabels, sortDeep } from 'utils/Sort';
 import { fromEntries } from 'utils/Util';
+import CardType from 'datatypes/Card';
 
 const cmc2Labels = getLabels(null, 'Mana Value 2');
 
-const TypeRow = ({ cardType, group }) => {
-  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2'));
+interface TypeRowProps {
+  cardType: string;
+  group: CardType[];
+}
+
+const TypeRow: React.FC<TypeRowProps> = ({ cardType, group }) => {
+  const sorted = fromEntries(sortDeep(group, false, 'Alphabetical', 'Mana Value 2') as [string, CardType[]][]);
   return (
     <>
       <Text semibold sm>
@@ -33,12 +37,12 @@ const TypeRow = ({ cardType, group }) => {
   );
 };
 
-TypeRow.propTypes = {
-  cardType: PropTypes.string.isRequired,
-  group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-};
+interface ColorCardProps {
+  color: string;
+  group: CardType[];
+}
 
-const ColorCard = ({ color, group }) => (
+const ColorCard: React.FC<ColorCardProps> = ({ color, group }) => (
   <Card className="mb-3">
     <CardHeader>
       <Text semibold md>
@@ -46,35 +50,38 @@ const ColorCard = ({ color, group }) => (
       </Text>
     </CardHeader>
     <CardBody>
-      {sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature').map(([label, cncGroup]) => (
-        <TypeRow key={label} cardType={label} group={cncGroup} />
-      ))}
+      {(sortDeep(group, false, 'Alphabetical', 'Creature/Non-Creature') as [string, CardType[]][]).map(
+        ([label, cncGroup]) => (
+          <TypeRow key={label} cardType={label} group={cncGroup} />
+        ),
+      )}
     </CardBody>
   </Card>
 );
 
-ColorCard.propTypes = {
-  color: PropTypes.string.isRequired,
-  group: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-};
+interface CurveViewProps {
+  cards: CardType[];
+}
 
-const CurveView = ({ cards, ...props }) => {
+const CurveView: React.FC<CurveViewProps> = ({ cards, ...props }) => {
   const { sortPrimary, cube } = useContext(CubeContext);
 
-  // We call the groups color and type even though they might be other sorts.
+  const sorted = fromEntries(
+    sortDeep(cards, cube.showUnsorted || false, 'Alphabetical', sortPrimary || 'Color Category') as [
+      string,
+      CardType[],
+    ][],
+  );
+
   return (
     <Row {...props}>
       <Col>
-        {sortDeep(cards, cube.showUnsorted, 'Alphabetical', sortPrimary).map(([color, group]) => (
+        {Object.entries(sorted).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
         ))}
       </Col>
     </Row>
   );
-};
-
-CurveView.propTypes = {
-  cards: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
 };
 
 export default CurveView;

@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { ReactNode } from 'react';
 import Text from './Text';
 
-interface TableProps {
+export interface TableProps {
   headers?: string[];
   rows: { [key: string]: ReactNode }[];
 }

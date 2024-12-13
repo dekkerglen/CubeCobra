@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 
 import Text from 'components/base/Text';
-import CubePreview from 'components/CubePreview';
+import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
@@ -10,7 +10,7 @@ import Cube from 'datatypes/Cube';
 import { Row, Col, Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
 import useQueryParam from 'hooks/useQueryParam';
-import CubeSearchController from 'components/CubeSearchController';
+import CubeSearchController from 'components/cube/CubeSearchController';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 
 interface SearchPageProps {

@@ -1,20 +1,24 @@
 import React from 'react';
-import { CardBody, CardHeader } from 'reactstrap';
-
-import ContentPropType from 'proptypes/ContentPropType';
+import { CardBody, CardHeader } from 'components/base/Card';
 import ReactPlayer from 'react-player';
 import TimeAgo from 'react-timeago';
-
 import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import Markdown from 'components/Markdown';
 import Username from 'components/Username';
+import VideoType from 'datatypes/Video';
 
-const Video = ({ video }) => {
+interface VideoProps {
+  video: VideoType;
+}
+
+const Video: React.FC<VideoProps> = ({ video }) => {
   return (
     <>
       <CardHeader>
-        <Text semibold xl>{video.title}</Text>
+        <Text semibold lg>
+          {video.title}
+        </Text>
         <Text semibold sm>
           By <Username user={video.owner} />
           {' | '}
@@ -29,14 +33,11 @@ const Video = ({ video }) => {
       <CardBody>
         <Markdown markdown={video.body} />
       </CardBody>
-      <div className="border-top">
+      <div className="border-t">
         <CommentsSection parentType="video" parent={video.id} collapse={false} />
       </div>
     </>
   );
-};
-Video.propTypes = {
-  video: ContentPropType.isRequired,
 };
 
 export default Video;

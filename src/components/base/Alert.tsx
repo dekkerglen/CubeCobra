@@ -9,6 +9,11 @@ export interface AlertProps {
   className?: string;
 }
 
+export interface UncontrolledAlertProps {
+  color: 'danger' | 'warning' | 'success' | 'info';
+  message: string;
+}
+
 const Alert: React.FC<AlertProps> = ({ color, children, className = '' }) => {
   const [visible, setVisible] = useState(true);
 

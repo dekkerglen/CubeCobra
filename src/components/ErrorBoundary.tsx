@@ -1,6 +1,7 @@
 import React, { Component, Fragment, ReactNode } from 'react';
-import { Card, Container } from 'reactstrap';
 import Text from 'components/base/Text';
+import Container from './base/Container';
+import { Card } from './base/Card';
 interface ErrorBoundaryProps {
   className?: string;
   children: ReactNode;

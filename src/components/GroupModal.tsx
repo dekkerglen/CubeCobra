@@ -1,19 +1,4 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
-import {
-  Button,
-  Col,
-  FormGroup,
-  FormText,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Label,
-  ListGroup,
-  Modal,
-  ModalBody,
-  ModalHeader,
-  Row,
-} from 'reactstrap';
 
 import AutocardListItem from 'components/card/AutocardListItem';
 import { ColorChecksAddon } from 'components/ColorCheck';
@@ -27,6 +12,15 @@ import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
 import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from 'utils/Card';
 import Text from 'components/base/Text';
+import { Modal, ModalBody, ModalHeader } from './base/Modal';
+import { Col, Flexbox, Row } from './base/Layout';
+import { ListGroup } from './base/ListGroup';
+import Button from './base/Button';
+import { XIcon } from '@primer/octicons-react';
+import Link from './base/Link';
+import Select from './base/Select';
+import Input from './base/Input';
+import RadioButtonGroup from './base/RadioButtonGroup';
 
 function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: number }[] {
   return cards.filter((card) => card.board !== undefined && card.index !== undefined) as {
@@ -37,7 +31,7 @@ function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: numbe
 
 export interface GroupModalProps {
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (open: boolean) => void;
   cards: Card[];
   canEdit?: boolean;
   bulkEditCard: (cards: { board: BoardType; index: number }[]) => void;
@@ -52,7 +46,7 @@ export interface GroupModalProps {
 
 const GroupModal: React.FC<GroupModalProps> = ({
   isOpen,
-  toggle,
+  setOpen,
   cards,
   canEdit = false,
   bulkEditCard,
@@ -95,8 +89,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
         index: number;
       }[],
     );
-    toggle();
-  }, [bulkRemoveCard, cards, toggle]);
+    setOpen(false);
+  }, [bulkRemoveCard, cards, setOpen]);
 
   const revertRemoval = useCallback(() => {
     bulkRevertRemove(
@@ -178,8 +172,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
 
     bulkEditCard(updates);
     setModalSelection([]);
-    toggle();
-  }, [addTags, bulkEditCard, cards, cmc, color, finish, setModalSelection, status, tags, toggle, typeLine]);
+    setOpen(false);
+  }, [addTags, bulkEditCard, cards, cmc, color, finish, setModalSelection, status, tags, setOpen, typeLine]);
 
   const anyCardChanged = useMemo(() => {
     return cards.some((card) => card.editIndex !== undefined);
@@ -200,16 +194,18 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const totalPriceTix = cards.length ? cards.reduce((total, card) => total + (cardTix(card) ?? 0), 0) : 0;
 
   return (
-    <Modal size="xl" isOpen={isOpen} toggle={toggle}>
-      <ModalHeader toggle={toggle}>Edit Selected ({cards.length} cards)</ModalHeader>
+    <Modal xl isOpen={isOpen} setOpen={setOpen}>
+      <ModalHeader setOpen={setOpen}>Edit Selected ({cards.length} cards)</ModalHeader>
       <ModalBody>
         <Row>
-          <Col xs="4" className="d-flex flex-column" style={{ maxHeight: '35rem' }}>
-            <Row className="w-full g-0" style={{ overflowY: 'auto', flexShrink: 1 }}>
-              <ListGroup className="list-outline w-full">
+          <Col xs={4}>
+            <Row className="overflow-y-auto">
+              <ListGroup>
                 {cards.map((card) => (
                   <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                    <Button close className="me-1" data-index={card.index} onClick={() => filterOut(card)} />
+                    <Link onClick={() => filterOut(card)}>
+                      <XIcon size={16} />
+                    </Link>
                   </AutocardListItem>
                 ))}
               </ListGroup>
@@ -247,19 +243,19 @@ const GroupModal: React.FC<GroupModalProps> = ({
             </Row>
             <Row>
               <Col xs={12}>
-                <Button className="my-1" block outline color="unsafe" onClick={removeAll}>
+                <Button className="my-1" block outline color="danger" onClick={removeAll}>
                   Remove all from cube
                 </Button>
               </Col>
               <Col xs={12}>
                 <Button
                   className="my-1"
-                  color="warning"
+                  color="danger"
                   block
                   outline
                   onClick={() => {
                     bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
-                    toggle();
+                    setOpen(false);
                   }}
                 >
                   <span className="d-none d-sm-inline">Move all to Maybeboard</span>
@@ -269,12 +265,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
               <Col xs={12}>
                 <Button
                   className="my-1"
-                  color="warning"
+                  color="danger"
                   block
                   outline
                   onClick={() => {
                     bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
-                    toggle();
+                    setOpen(false);
                   }}
                 >
                   <span className="d-none d-sm-inline">Move all to Mainboard</span>
@@ -308,96 +304,60 @@ const GroupModal: React.FC<GroupModalProps> = ({
               </Col>
             </Row>
           </Col>
-          <Col xs="8">
-            <fieldset disabled={!canEdit}>
-              <Label for="groupStatus">
-                <Text md semibold>
-                  Set status of all
-                </Text>
-              </Label>
-              <InputGroup className="mb-3">
-                <InputGroupText>Status</InputGroupText>
-                <Input
-                  type="select"
-                  id="groupStatus"
-                  name="status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  {['', 'Not Owned', 'Ordered', 'Owned', 'Premium Owned', 'Proxied'].map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </Input>
-              </InputGroup>
-
-              <Label for="groupStatus">
-                <Text md semibold>
-                  Set finish of all
-                </Text>
-              </Label>
-              <InputGroup className="mb-3">
-                <InputGroupText>Finish</InputGroupText>
-                <Input
-                  type="select"
-                  id="groupFinish"
-                  name="finish"
-                  value={finish}
-                  onChange={(e) => setFinish(e.target.value)}
-                >
-                  {['', 'Non-foil', 'Foil'].map((f) => (
-                    <option key={f}>{f}</option>
-                  ))}
-                </Input>
-              </InputGroup>
-
+          <Col xs={8}>
+            <Flexbox direction="col" gap="2">
+              <Select
+                label="Set status of all"
+                options={[
+                  { value: '', label: 'None' },
+                  { value: 'Not Owned', label: 'Not Owned' },
+                  { value: 'Ordered', label: 'Ordered' },
+                  { value: 'Owned', label: 'Owned' },
+                  { value: 'Premium Owned', label: 'Premium Owned' },
+                ]}
+                value={status}
+                setValue={setStatus}
+              />
+              <Select
+                label="Set finish of all"
+                options={[
+                  { value: '', label: 'None' },
+                  { value: 'Non-foil', label: 'Non-foil' },
+                  { value: 'Foil', label: 'Foil' },
+                ]}
+                value={finish}
+                setValue={setFinish}
+              />
               <Text md semibold>
                 Override Attribute on All
               </Text>
-              <InputGroup className="mb-2">
-                <InputGroupText>Mana Value</InputGroupText>
-                <Input type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
-              </InputGroup>
-              <InputGroup className="mb-2">
-                <InputGroupText>Type</InputGroupText>
-                <Input type="text" name="type_line" value={typeLine} onChange={(e) => setTypeLine(e.target.value)} />
-              </InputGroup>
-
-              <InputGroup>
-                <InputGroupText className="square-right">Color Identity</InputGroupText>
+              <Input label="Mana Value" type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
+              <Input
+                label="Type Line"
+                type="text"
+                name="type_line"
+                value={typeLine}
+                onChange={(e) => setTypeLine(e.target.value)}
+              />
+              <Flexbox direction="row" gap="2">
+                <Text semibold>Color Identity</Text>
                 <ColorChecksAddon colorless values={color} setValues={setColor as (values: string[]) => void} />
-              </InputGroup>
-              <FormText>
+              </Flexbox>
+              <Text>
                 Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
                 only colorless will cause the selected cards' color identity to be set to colorless.
-              </FormText>
-
+              </Text>
               <Text semibold md>
                 Edit tags
               </Text>
-              <FormGroup tag="fieldset">
-                <FormGroup check>
-                  <Label check>
-                    <Input
-                      type="radio"
-                      name="addTags"
-                      checked={addTags}
-                      onChange={(e) => setAddTags(e.target.checked)}
-                    />{' '}
-                    Add tags to all
-                  </Label>
-                </FormGroup>
-                <FormGroup check>
-                  <Label check>
-                    <Input
-                      type="radio"
-                      name="deleteTags"
-                      checked={!addTags}
-                      onChange={(e) => setAddTags(!e.target.checked)}
-                    />{' '}
-                    Delete tags from all
-                  </Label>
-                </FormGroup>
-              </FormGroup>
+              <RadioButtonGroup
+                options={[
+                  { value: 'Add', label: 'Add tags to all' },
+                  { value: 'Delete', label: 'Delete tags from all' },
+                ]}
+                selected={addTags ? 'Add' : 'Delete'}
+                setSelected={(selected) => setAddTags(selected === 'Add')}
+              />
               <TagInput
                 tags={tags}
                 addTag={(tag: TagData) => setTags([...tags, tag])}
@@ -409,7 +369,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 tagColors={tagColors}
                 suggestions={allTags}
               />
-            </fieldset>
+            </Flexbox>
             <Row>
               <Col xs={12}>
                 <Button className="my-1" block outline color="accent" disabled={!fieldsChanged} onClick={applyChanges}>

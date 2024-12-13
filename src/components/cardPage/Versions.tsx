@@ -57,11 +57,7 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
             TIX: version.prices.tix ? `${version.prices.tix}` : '',
           }))}
           className="m-2 ml-4"
-        >
-          <Text semibold lg>
-            Versions
-          </Text>
-        </PagedTable>
+        />
       ) : (
         <CardBody>
           <p>No other versions</p>

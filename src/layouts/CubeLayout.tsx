@@ -2,7 +2,7 @@ import React, { ReactNode, useContext } from 'react';
 
 import { Flexbox } from 'components/base/Layout';
 import { Tabs } from 'components/base/Tabs';
-import CubeSubtitle from 'components/CubeSubtitle';
+import CubeSubtitle from 'components/cube/CubeSubtitle';
 import ErrorBoundary from 'components/ErrorBoundary';
 import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import TagColorContext from 'contexts/TagColorContext';

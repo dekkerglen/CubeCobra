@@ -1,27 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Badge,
-  Button,
-  Col,
-  Input,
-  InputGroup,
-  InputGroupText,
-  Modal,
-  ModalBody,
-  ModalHeader,
-  Row,
-  Spinner,
-} from 'reactstrap';
 
 import { ColorChecksAddon } from 'components/ColorCheck';
 import FoilCardImage from 'components/FoilCardImage';
 import TagInput from 'components/TagInput';
 import TextBadge from 'components/TextBadge';
+import Badge from 'components/base/Badge';
+import Button from 'components/base/Button';
+import Input from 'components/base/Input';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
+import Select from 'components/base/Select';
+import Spinner from 'components/base/Spinner';
+import Text from 'components/base/Text';
+import TextArea from 'components/base/TextArea';
 import Tooltip from 'components/base/Tooltip';
 import Card, { BoardType } from 'datatypes/Card';
 import { TagColor } from 'datatypes/Cube';
 import TagData from 'datatypes/TagData';
-import Text from 'components/base/Text';
 import { getTCGLink } from 'utils/Affiliate';
 import {
   cardCmc,
@@ -41,11 +36,11 @@ import {
   cardType,
   normalizeName,
 } from 'utils/Card';
-import { cardGetLabels, getLabels } from 'utils/Sort';
+import { getLabels } from 'utils/Sort';
 
 export interface CardModalProps {
   isOpen: boolean;
-  toggle: () => void;
+  setOpen: (open: boolean) => void;
   card: Card;
   canEdit?: boolean;
   versionDict: Record<string, CardDetails[]>;
@@ -65,7 +60,7 @@ interface CardDetails {
 
 const CardModal: React.FC<CardModalProps> = ({
   isOpen,
-  toggle,
+  setOpen,
   card,
   canEdit = false,
   versionDict,
@@ -94,11 +89,9 @@ const CardModal: React.FC<CardModalProps> = ({
     [card, editCard],
   );
 
-  const disabled = !canEdit || card.markedForDelete;
-
   return (
-    <Modal size="xl" isOpen={isOpen} labelledby="cardModalHeader" toggle={toggle}>
-      <ModalHeader id="cardModalHeader" toggle={toggle}>
+    <Modal xl isOpen={isOpen} setOpen={setOpen}>
+      <ModalHeader setOpen={setOpen}>
         {cardName(card)} {card.markedForDelete && <Badge color="danger">Marked for Removal</Badge>}
         {card.editIndex !== undefined && <Badge color="warning">*Pending Edit*</Badge>}
       </ModalHeader>
@@ -164,7 +157,7 @@ const CardModal: React.FC<CardModalProps> = ({
                             outline
                             onClick={() => {
                               removeCard(card.index!, card.board!);
-                              toggle();
+                              setOpen(false);
                             }}
                           >
                             <span className="d-none d-sm-inline">Remove from cube</span>
@@ -175,12 +168,12 @@ const CardModal: React.FC<CardModalProps> = ({
                           <Col xs={12}>
                             <Button
                               className="my-1"
-                              color="warning"
+                              color="accent"
                               block
                               outline
                               onClick={() => {
                                 moveCard(card.index!, card.board!, 'maybeboard');
-                                toggle();
+                                setOpen(false);
                               }}
                             >
                               <span className="d-none d-sm-inline">Move to Maybeboard</span>
@@ -191,12 +184,12 @@ const CardModal: React.FC<CardModalProps> = ({
                           <Col xs={12}>
                             <Button
                               className="my-1"
-                              color="warning"
+                              color="accent"
                               block
                               outline
                               onClick={() => {
                                 moveCard(card.index!, card.board!, 'mainboard');
-                                toggle();
+                                setOpen(false);
                               }}
                             >
                               <span className="d-none d-sm-inline">Move to Mainboard</span>
@@ -261,144 +254,100 @@ const CardModal: React.FC<CardModalProps> = ({
               </Row>
             </Col>
             <Col xs={12} sm={8}>
-              <Text md semibold>
-                Card Attributes
-              </Text>
-              <fieldset disabled={disabled}>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Version (Set and #)</InputGroupText>
-                  <Input
-                    type="select"
-                    name="version"
-                    id="cardModalVersion"
-                    value={card.cardID}
-                    onChange={(e) => updateField('cardID', e.target.value)}
-                  >
-                    {Object.entries(versions!).map(([key, value]) => {
-                      return (
-                        <option key={key} value={key}>
-                          {value.version}
-                        </option>
-                      );
-                    })}
-                  </Input>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Status</InputGroupText>
-                  <Input
-                    type="select"
-                    name="status"
-                    id="cardModalStatus"
-                    value={cardStatus(card)}
-                    onChange={(event) => updateField('status', event.target.value)}
-                  >
-                    {getLabels(null, 'Status', false).map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </Input>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Finish</InputGroupText>
-                  <Input
-                    type="select"
-                    name="finish"
-                    id="cardModalFinish"
-                    value={cardFinish(card)}
-                    onChange={(event) => updateField('finish', event.target.value)}
-                  >
-                    {getLabels(null, 'Finish', false).map((finish) => (
-                      <option key={finish}>{finish}</option>
-                    ))}
-                  </Input>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Mana Value</InputGroupText>
-                  <Input
-                    type="text"
-                    name="cmc"
-                    value={cardCmc(card)}
-                    onChange={(event) => updateField('cmc', event.target.value)}
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Type</InputGroupText>
-                  <Input
-                    type="text"
-                    name="type_line"
-                    value={cardType(card)}
-                    onChange={(event) => updateField('type_line', event.target.value)}
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Rarity</InputGroupText>
-                  <Input
-                    type="select"
-                    name="rarity"
-                    id="cardModalRarity"
-                    value={cardRarity(card)}
-                    onChange={(event) => updateField('rarity', event.target.value)}
-                  >
-                    {getLabels(null, 'Rarity', false).map((rarity) => (
-                      <option key={rarity} value={rarity.toLowerCase()}>
-                        {rarity}
-                      </option>
-                    ))}
-                  </Input>
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Image URL</InputGroupText>
-                  <Input
-                    type="text"
-                    name="imgUrl"
-                    value={card.imgUrl || ''}
-                    onChange={(event) => updateField('imgUrl', event.target.value)}
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Image Back URL</InputGroupText>
-                  <Input
-                    type="text"
-                    name="imgBackUrl"
-                    value={card.imgBackUrl || ''}
-                    onChange={(event) => updateField('imgBackUrl', event.target.value)}
-                  />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText className="square-right">Color</InputGroupText>
+              <Flexbox direction="col" gap="2">
+                <Text md semibold>
+                  Card Attributes
+                </Text>
+                <Select
+                  label="Version"
+                  value={card.cardID}
+                  setValue={(v) => updateField('cardID', v)}
+                  options={Object.entries(versions!).map(([key, value]) => {
+                    return {
+                      value: key,
+                      label: value.version,
+                    };
+                  })}
+                />
+                <Select
+                  label="Status"
+                  value={cardStatus(card)}
+                  setValue={(v) => updateField('status', v)}
+                  options={getLabels(null, 'Status', false).map((status) => ({
+                    value: status,
+                    label: status,
+                  }))}
+                />
+                <Select
+                  label="Finish"
+                  value={cardFinish(card)}
+                  setValue={(v) => updateField('finish', v)}
+                  options={getLabels(null, 'Finish', false).map((finish) => ({
+                    value: finish,
+                    label: finish,
+                  }))}
+                />
+                <Input
+                  label="Mana Value"
+                  type="text"
+                  name="cmc"
+                  value={`${cardCmc(card)}`}
+                  onChange={(event) => updateField('cmc', event.target.value)}
+                />
+                <Input
+                  label="Type"
+                  type="text"
+                  name="type_line"
+                  value={cardType(card)}
+                  onChange={(event) => updateField('type_line', event.target.value)}
+                />
+                <Select
+                  label="Rarity"
+                  value={cardRarity(card)}
+                  setValue={(v) => updateField('rarity', v)}
+                  options={getLabels(null, 'Rarity', false).map((rarity) => ({
+                    value: rarity.toLowerCase(),
+                    label: rarity,
+                  }))}
+                />
+                <Input
+                  label="Image URL"
+                  type="text"
+                  name="imgUrl"
+                  value={card.imgUrl || ''}
+                  onChange={(event) => updateField('imgUrl', event.target.value)}
+                />
+                <Input
+                  label="Image Back URL"
+                  type="text"
+                  name="imgBackUrl"
+                  value={card.imgBackUrl || ''}
+                  onChange={(event) => updateField('imgBackUrl', event.target.value)}
+                />
+                <Flexbox direction="row" gap="1">
+                  <Text semibold>Color</Text>
                   <ColorChecksAddon
                     values={cardColorIdentity(card)}
                     setValues={(colors: string[]) => updateField('colors', colors)}
                   />
-                </InputGroup>
-                <InputGroup className="mb-3">
-                  <InputGroupText>Color Category</InputGroupText>
-                  <Input
-                    type="select"
-                    name="colorCategory"
-                    id="colorCat"
-                    value={cardColorCategory(card) || cardGetLabels(card, 'Color Category')}
-                    onChange={(event) => updateField('colorCategory', event.target.value)}
-                  >
-                    {getLabels(null, 'Color Category').map((colorCat) => (
-                      <option key={colorCat}>{colorCat}</option>
-                    ))}
-                  </Input>
-                </InputGroup>
-
+                </Flexbox>
+                <Select
+                  label="Color Category"
+                  value={cardColorCategory(card)}
+                  setValue={(v) => updateField('colorCategory', v)}
+                  options={getLabels(null, 'Color Category', false).map((category) => ({
+                    value: category,
+                    label: category,
+                  }))}
+                />
                 <Text md semibold>
                   Notes
                 </Text>
-                <InputGroup className="mb-3">
-                  <Input
-                    type="textarea"
-                    name="notes"
-                    value={card.notes || ''}
-                    onChange={(event) => updateField('notes', event.target.value)}
-                  />
-                </InputGroup>
-
+                <TextArea
+                  name="notes"
+                  value={card.notes || ''}
+                  onChange={(event) => updateField('notes', event.target.value)}
+                />
                 <Text md semibold>
                   Tags
                 </Text>
@@ -416,11 +365,11 @@ const CardModal: React.FC<CardModalProps> = ({
                   tagColors={tagColors}
                   suggestions={allTags}
                 />
-              </fieldset>
+              </Flexbox>
             </Col>
           </Row>
         ) : (
-          <Spinner size="lg" />
+          <Spinner lg />
         )}
       </ModalBody>
     </Modal>

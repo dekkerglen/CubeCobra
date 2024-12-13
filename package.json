@@ -125,7 +125,6 @@
     "react-qr-code": "^2.0.15",
     "react-syntax-highlighter": "^15.3.0",
     "react-timeago": "^7.1.0",
-    "reactstrap": "^9.2.2",
     "redis": "^3.1.2",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-katex": "^7.0.0",

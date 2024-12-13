@@ -10,7 +10,6 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { AlertProps, UncontrolledAlertProps } from 'reactstrap';
 
 import { Object } from 'core-js';
 
@@ -28,6 +27,7 @@ import { cardName, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { deepCopy, xorStrings } from 'utils/Util';
 import FilterContext from './FilterContext';
+import { UncontrolledAlertProps } from 'components/base/Alert';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -244,7 +244,7 @@ export function CubeContextProvider({
   >([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
-  const [alerts, setAlerts] = useState<AlertProps[]>([]);
+  const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortPrimary, setSortPrimary] = useQueryParam('s1', defaultSorts[0]);
   const [sortSecondary, setSortSecondary] = useQueryParam('s2', defaultSorts[1]);
@@ -728,7 +728,7 @@ export function CubeContextProvider({
           });
         }
       } catch {
-        setAlerts([{ color: 'error', message: 'Operation timed out' }]);
+        setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
       }
 
       setModalSelection([]);

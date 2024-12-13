@@ -1,7 +1,7 @@
 import React from 'react';
 import Cube from 'datatypes/Cube';
 
-import CubeHistory from 'components/CubeHistory';
+import CubeHistory from 'components/cube/CubeHistory';
 import RenderToRoot from 'components/RenderToRoot';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';

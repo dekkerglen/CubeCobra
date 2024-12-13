@@ -6,7 +6,7 @@ import React from 'react';
 import Button from 'components/base/Button';
 import { Card, CardBody } from 'components/base/Card';
 import CSRFForm from 'components/CSRFForm';
-import CubePreview from 'components/CubePreview';
+import CubePreview from 'components/cube/CubePreview';
 import MoveModal from 'components/featuredQueue/MoveModal';
 import withModal from 'components/WithModal';
 

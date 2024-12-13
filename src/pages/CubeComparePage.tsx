@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import CompareView from 'components/CompareView';
-import CubeCompareNavbar from 'components/CubeCompareNavbar';
+import CubeCompareNavbar from 'components/cube/CubeCompareNavbar';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';

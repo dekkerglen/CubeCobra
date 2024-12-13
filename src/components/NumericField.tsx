@@ -1,5 +1,8 @@
 import React from 'react';
-import { Input, InputGroup, InputGroupText } from 'reactstrap';
+import { Flexbox } from './base/Layout';
+import Text from './base/Text';
+import Input from './base/Input';
+import Select from './base/Select';
 
 interface NumericFieldProps {
   name: string;
@@ -20,22 +23,20 @@ const NumericField: React.FC<NumericFieldProps> = ({
   setValue,
   setOperator,
 }) => (
-  <InputGroup className="mb-3">
-    <InputGroupText>{humanName}</InputGroupText>
-    <Input
-      type="select"
-      id={`${name}Op`}
-      name={`${name}Op`}
+  <Flexbox direction="row" gap="2" justify="start">
+    <Text>{humanName}</Text>
+    <Select
       value={operator}
-      onChange={(event) => setOperator(event.target.value)}
-    >
-      <option value="=">equal to</option>
-      <option value="<">less than</option>
-      <option value=">">greater than</option>
-      <option value="<=">less than or equal to</option>
-      <option value=">=">greater than or equal to</option>
-      <option value="!=">not equal to</option>
-    </Input>
+      setValue={(v) => setOperator(v)}
+      options={[
+        { value: '=', label: 'equal to' },
+        { value: '<', label: 'less than' },
+        { value: '>', label: 'greater than' },
+        { value: '<=', label: 'less than or equal to' },
+        { value: '>=', label: 'greater than or equal to' },
+        { value: '!=', label: 'not equal to' },
+      ]}
+    />
     <Input
       type="text"
       name={name}
@@ -43,7 +44,7 @@ const NumericField: React.FC<NumericFieldProps> = ({
       value={value}
       onChange={(event) => setValue(event.target.value)}
     />
-  </InputGroup>
+  </Flexbox>
 );
 
 export default NumericField;

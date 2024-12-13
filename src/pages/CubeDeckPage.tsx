@@ -107,12 +107,12 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft, loginCallback 
                   ]}
                   dense
                 />
-                <ResponsiveDiv baseVisible lg>
-                  <Button color="secondary" onClick={toggleExpanded}>
-                    {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
-                  </Button>
-                </ResponsiveDiv>
               </Flexbox>
+              <ResponsiveDiv baseVisible lg>
+                <Button color="secondary" onClick={toggleExpanded}>
+                  {expanded ? <ChevronUpIcon size={32} /> : <ThreeBarsIcon size={32} />}
+                </Button>
+              </ResponsiveDiv>
               <ResponsiveDiv lg>
                 <Flexbox direction="row" justify="start" gap="4" alignItems="center">
                   {controls}
