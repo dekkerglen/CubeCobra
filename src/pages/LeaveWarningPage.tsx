@@ -1,11 +1,11 @@
 import React from 'react';
-import { Card, CardBody, CardFooter, CardHeader } from 'reactstrap';
 
 import Button from 'components/base/Button';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import Text from 'components/base/Text';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 
 interface LeaveWarningPageProps {
   url: string;

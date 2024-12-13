@@ -8,7 +8,6 @@ import Badge from 'components/base/Badge';
 import { CardHeader, CardFooter } from 'components/base/Card';
 import NavMenu from 'components/base/NavMenu';
 import { Flexbox } from 'components/base/Layout';
-import { NavLink } from 'reactstrap';
 
 const NotificationsNav: React.FC = () => {
   const user = useContext(UserContext);
@@ -61,7 +60,7 @@ const NotificationsNav: React.FC = () => {
           )}
         </Flexbox>
         <CardFooter className="pb-1 pt-1 font-semibold">
-          <NavLink href="/user/notifications">View Older Notifications</NavLink>
+          <Link href="/user/notifications">View Older Notifications</Link>
         </CardFooter>
       </Flexbox>
     </NavMenu>

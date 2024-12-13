@@ -1,71 +1,56 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
-import TimeAgo from 'react-timeago';
-
-import Button from 'components/base/Button';
+import { Col, Row } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
-import Text from 'components/base/Text';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Button from 'components/base/Button';
 
-interface User {
+interface Document {
   id: string;
-  username: string;
-}
-
-interface Podcast {
-  id: string;
+  type: string;
   title: string;
-  description: string;
-  date: string;
-  user: User;
 }
 
-interface PodcastPageProps {
+interface ReviewContentPageProps {
   loginCallback?: string;
-  podcasts: Podcast[];
+  content: Document[];
 }
 
-const PodcastPage: React.FC<PodcastPageProps> = ({ loginCallback = '/', podcasts }) => (
-  <MainLayout loginCallback={loginCallback}>
-    <DynamicFlash />
-    <Card className="my-3">
-      <CardHeader>
-        <Text md semibold>
-          Podcasts
-        </Text>
-      </CardHeader>
-      {podcasts.map((podcast) => (
-        <Card key={podcast.id}>
-          <CardBody>
-            <Text md semibold>
-              {podcast.title}
-            </Text>
-            <p>{podcast.description}</p>
-            <p>
-              By{' '}
-              <a href={`/user/view/${podcast.user.id}`} target="_blank" rel="noopener noreferrer">
-                {podcast.user.username}
-              </a>
-              - <TimeAgo date={podcast.date} />
-            </p>
+const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ loginCallback = '/', content }) => {
+  return (
+    <MainLayout loginCallback={loginCallback}>
+      <DynamicFlash />
+      <Card className="my-3">
+        <CardHeader>
+          <Text semibold lg>
+            Content in Review
+          </Text>
+        </CardHeader>
+        {content.map((document) => (
+          <CardBody key={document.id} className="border-t">
             <Row>
-              <Col xs={12} sm={6}>
-                <Button color="primary" block outline href={`/podcast/${podcast.id}`}>
-                  Listen
+              <Col xs={12} sm={4}>
+                <p>type: {document.type}</p>
+                <a href={`/content/${document.type}/${document.id}`}>{document.title}</a>
+              </Col>
+              <Col xs={12} sm={4}>
+                <Button type="link" color="accent" outline block href={`/admin/publish/${document.id}`}>
+                  Publish
                 </Button>
               </Col>
-              <Col xs={12} sm={6}>
-                <Button color="secondary" block outline href={`/podcast/${podcast.id}/details`}>
-                  Details
+              <Col xs={12} sm={4}>
+                <Button type="link" color="danger" outline block href={`/admin/removereview/${document.id}`}>
+                  Remove from Reviews
                 </Button>
               </Col>
             </Row>
           </CardBody>
-        </Card>
-      ))}
-    </Card>
-  </MainLayout>
-);
+        ))}
+      </Card>
+    </MainLayout>
+  );
+};
 
-export default RenderToRoot(PodcastPage);
+export default RenderToRoot(ReviewContentPage);

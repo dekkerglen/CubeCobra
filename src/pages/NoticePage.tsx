@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import TimeAgo from 'react-timeago';
 
 import Button from 'components/base/Button';
@@ -8,6 +7,8 @@ import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import User from 'datatypes/User';
 import Text from 'components/base/Text';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Col, Row } from 'components/base/Layout';
 
 interface Notice {
   id: string;
