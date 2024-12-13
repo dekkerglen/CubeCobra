@@ -37,7 +37,7 @@ const GridDraftCard: React.FC = () => {
             <Select
               label="Number of packs"
               id="packs"
-              defaultValue="3"
+              defaultValue="18"
               options={rangeOptions(1, 16)}
               value={packs}
               setValue={setPacks}

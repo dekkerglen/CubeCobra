@@ -1,30 +1,32 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import CardGrid from 'components/card/CardGrid';
-import DynamicFlash from 'components/DynamicFlash';
-import FilterCollapse from 'components/FilterCollapse';
 import Paginate from 'components/base/Pagination';
+import Text from 'components/base/Text';
+import withAutocard from 'components/WithAutocard';
+import FilterContext from 'contexts/FilterContext';
 import CardDetails from 'datatypes/CardDetails';
 import Query from 'utils/Query';
 import { ORDERED_SORTS } from 'utils/Sort';
-import { cardId, detailsToCard } from 'utils/Card';
-import FilterContext from 'contexts/FilterContext';
-import { Row, Col, Flexbox } from 'components/base/Layout';
-import Spinner from 'components/base/Spinner';
-import Select from 'components/base/Select';
-import Controls from 'components/base/Controls';
-import Text from 'components/base/Text';
-import ResponsiveDiv from 'components/base/ResponsiveDiv';
-import Banner from 'components/Banner';
-import Link from 'components/base/Link';
+import Banner from './Banner';
+import Controls from './base/Controls';
+import { Col, Flexbox, Row } from './base/Layout';
+import Link from './base/Link';
+import ResponsiveDiv from './base/ResponsiveDiv';
+import Select from './base/Select';
+import DynamicFlash from './DynamicFlash';
+import FilterCollapse from './FilterCollapse';
+import { cardElo, detailsToCard } from 'utils/Card';
+import { Spinner } from 'reactstrap';
+import Table from './base/Table';
 
-const CardSearch: React.FC = () => {
+const AutocardA = withAutocard(Link);
+
+const TopCardsTable = () => {
   const { filterInput } = useContext(FilterContext);
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
   const [count, setCount] = useState(Query.get('m', ''));
-  const [distinct, setDistinct] = useState(Query.get('di', 'names'));
   const [sort, setSort] = useState(Query.get('s', 'Elo'));
   const [direction, setDirection] = useState(Query.get('d', 'descending'));
 
@@ -34,10 +36,9 @@ const CardSearch: React.FC = () => {
       ['f', filterInput || ''],
       ['s', sort],
       ['d', direction],
-      ['di', distinct],
     ]);
 
-    const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
+    const response = await fetch(`/tool/api/topcards/?${params.toString()}`);
     if (!response.ok) {
       console.error(response);
     }
@@ -46,23 +47,17 @@ const CardSearch: React.FC = () => {
     Query.set('p', page.toString());
     Query.set('s', sort);
     Query.set('d', direction);
-    Query.set('di', distinct);
 
     const json = await response.json();
 
     setCards(json.data);
     setCount(json.numResults.toString());
     setLoading(false);
-  }, [page, filterInput, sort, direction, distinct]);
+  }, [page, filterInput, sort, direction]);
 
   useEffect(() => {
-    if (filterInput && filterInput !== '') {
-      fetchData();
-    } else {
-      setLoading(false);
-      setCards([]);
-    }
-  }, [page, direction, distinct, sort, filterInput]);
+    fetchData();
+  }, [page, direction, sort, filterInput]);
 
   const updatePage = (index: number) => {
     setLoading(true);
@@ -76,15 +71,22 @@ const CardSearch: React.FC = () => {
     setLoading(true);
     setDirection(index);
   };
-  const updateDistinct = (index: string) => {
-    setLoading(true);
-    setDistinct(index);
-  };
-
   useEffect(() => {
     setLoading(true);
     setPage(0);
   }, [filterInput]);
+
+  const headers = ['Name', 'Elo', 'Total Picks', 'Cube Count'];
+  const rows = cards.map((card) => ({
+    Name: (
+      <AutocardA href={`/tool/card/${card.scryfall_id}`} card={detailsToCard(card)}>
+        {card.name}
+      </AutocardA>
+    ),
+    Elo: card.elo === null ? '' : cardElo(detailsToCard(card)).toFixed(0),
+    'Total Picks': card.pickCount === null ? '' : card.pickCount,
+    'Cube Count': card.cubeCount === null ? '' : card.cubeCount,
+  }));
 
   return (
     <>
@@ -98,13 +100,13 @@ const CardSearch: React.FC = () => {
             <ResponsiveDiv sm>
               <Flexbox direction="row" gap="4">
                 <Link href="/tool/topcards">View Top cards</Link>
-                <Link href="/packages">View Card Packages</Link>
+                <Link href="/tool/searchcards">Search Cards</Link>
               </Flexbox>
             </ResponsiveDiv>
           </Flexbox>
           <FilterCollapse isOpen buttonLabel="Search" />
           <Row>
-            <Col xs={12} sm={4}>
+            <Col xs={12} sm={6}>
               <Select
                 label="Sort"
                 value={sort}
@@ -112,7 +114,7 @@ const CardSearch: React.FC = () => {
                 options={ORDERED_SORTS.map((s) => ({ value: s, label: s }))}
               />
             </Col>
-            <Col xs={12} sm={4}>
+            <Col xs={12} sm={6}>
               <Select
                 label="Direction"
                 value={direction}
@@ -120,17 +122,6 @@ const CardSearch: React.FC = () => {
                 options={[
                   { value: 'ascending', label: 'Ascending' },
                   { value: 'descending', label: 'Descending' },
-                ]}
-              />
-            </Col>
-            <Col xs={12} sm={4}>
-              <Select
-                label="Distinct"
-                value={distinct}
-                setValue={(value) => updateDistinct(value)}
-                options={[
-                  { value: 'names', label: 'Names' },
-                  { value: 'printings', label: 'Printings' },
                 ]}
               />
             </Col>
@@ -158,19 +149,7 @@ const CardSearch: React.FC = () => {
               <Spinner xl />
             </div>
           )}
-          {!loading && (
-            <CardGrid
-              cards={cards.map(detailsToCard)}
-              xs={2}
-              sm={3}
-              md={4}
-              lg={5}
-              xl={6}
-              xxl={8}
-              cardProps={{ autocard: true, className: 'clickable' }}
-              hrefFn={(card) => `/tool/card/${cardId(card)}`}
-            />
-          )}
+          {!loading && <Table headers={headers} rows={rows} />}
           <Flexbox direction="row" justify="end">
             <Paginate
               count={Math.ceil(parseInt(count, 10) / 96)}
@@ -188,4 +167,4 @@ const CardSearch: React.FC = () => {
   );
 };
 
-export default CardSearch;
+export default TopCardsTable;

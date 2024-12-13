@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { Card, CardFooter, CardHeader } from 'components/base/Card';
+import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
@@ -11,7 +11,6 @@ import Draft from 'datatypes/Draft';
 import User from 'datatypes/User';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
-import { CardBody } from 'reactstrap';
 import { csrfFetch } from 'utils/CSRF';
 
 interface UserDecksPageProps {

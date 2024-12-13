@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
-import { Button, ButtonGroup } from 'reactstrap';
 
 import { COLORS } from 'utils/Util';
+import Button from './base/Button';
+import { Flexbox } from './base/Layout';
+import Text from './base/Text';
 
 interface ColorCheckButtonProps {
   size?: string;
@@ -11,13 +13,12 @@ interface ColorCheckButtonProps {
   onClick: () => void;
 }
 
-export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ size = 'sm', color, short, checked, onClick }) => {
-  const symbolClassName = size ? `mana-symbol-${size}` : 'mana-symbol';
+export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ color, short, checked, onClick }) => {
+  const symbolClassName = 'mana-symbol';
   return (
     <Button
       className={`color-check-button${checked ? ' active' : ''}`}
       outline={!checked}
-      size={size}
       onClick={onClick}
       aria-label={color}
     >
@@ -28,32 +29,19 @@ export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({ size = 'sm',
 
 interface ColorChecksControlProps {
   colorless?: boolean;
-  size?: string;
   values: string[];
   setValues: (values: string[]) => void;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
-export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
-  colorless = false,
-  size = 'sm',
-  values,
-  setValues,
-  className,
-  style = {},
-}) => {
-  const smallStyle: React.CSSProperties = {
-    height: 'calc(1.5em + .5rem + 2px)',
-    fontSize: '0.875rem',
-  };
-
+export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({ colorless = false, values, setValues }) => {
   return (
-    <ButtonGroup size={size} style={size === 'sm' ? smallStyle : style} className={className}>
+    <Flexbox direction="row" gap="1">
+      <Text md semibold>
+        Colors:
+      </Text>
       {COLORS.map(([color, short]) => (
         <ColorCheckButton
           key={short}
-          size={size}
           color={color}
           short={short}
           checked={values.includes(short)}
@@ -68,7 +56,6 @@ export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
       ))}
       {colorless && (
         <ColorCheckButton
-          size={size}
           color="Colorless"
           short="C"
           checked={values.includes('C')}
@@ -81,7 +68,7 @@ export const ColorChecksControl: React.FC<ColorChecksControlProps> = ({
           }}
         />
       )}
-    </ButtonGroup>
+    </Flexbox>
   );
 };
 

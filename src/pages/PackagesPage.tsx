@@ -20,6 +20,7 @@ import Text from 'components/base/Text';
 import useQueryParam from 'hooks/useQueryParam';
 import RenderToRoot from 'components/RenderToRoot';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
+import Link from 'components/base/Link';
 
 const CreatePackageModalLink = withModal(Button, CreatePackageModal);
 
@@ -122,12 +123,8 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ loginCallback = '/', items,
               </Text>
               <ResponsiveDiv sm>
                 <Flexbox direction="row" gap="4">
-                  <Button type="link" outline color="accent" href="/tool/topcards">
-                    View Top cards
-                  </Button>
-                  <Button type="link" outline color="accent" href="/tool/searchcards">
-                    Search Cards
-                  </Button>
+                  <Link href="/tool/topcards">View Top cards</Link>
+                  <Link href="/tool/searchcards">Search Cards</Link>
                 </Flexbox>
               </ResponsiveDiv>
             </Flexbox>

@@ -1,5 +1,4 @@
 import React, { MouseEventHandler, useContext, useEffect, useState } from 'react';
-import { Card, Col, Row, Spinner } from 'reactstrap';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 
@@ -9,6 +8,9 @@ import CubeContext from 'contexts/CubeContext';
 import CardData, { boardTypes } from 'datatypes/Card';
 import CardDetails from 'datatypes/CardDetails';
 import Text from 'components/base/Text';
+import Spinner from './base/Spinner';
+import { Col, Row } from './base/Layout';
+import { Card } from './base/Card';
 
 interface RemoveButtonProps {
   onClick: MouseEventHandler;
@@ -50,11 +52,7 @@ const Add = ({ card, revert }: { card: CardData; revert: () => void }) => {
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />
       </span>
-      {!loading && details ? (
-        <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard>
-      ) : (
-        <Spinner size="sm" />
-      )}
+      {!loading && details ? <TextAutocard card={{ details, ...card }}>{details.name}</TextAutocard> : <Spinner sm />}
     </li>
   );
 };
@@ -127,7 +125,7 @@ const Swap = ({ card, oldCard, revert }: { card: CardData; oldCard: CardData; re
       {!loading && details ? (
         <TextAutocard card={{ ...oldCard, details }}>{details.name}</TextAutocard>
       ) : (
-        <Spinner size="sm" />
+        <Spinner sm />
       )}
     </li>
   );
