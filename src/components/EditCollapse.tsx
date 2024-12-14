@@ -261,8 +261,8 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           <Flexbox direction="row" justify="start" gap="4">
             <Checkbox
               label="Specify Versions"
-              checked={!specifyEdition}
-              setChecked={(value) => setSpecifyEdition(!value)}
+              checked={specifyEdition}
+              setChecked={(value) => setSpecifyEdition(value)}
             />
             <Checkbox label="Use Maybeboard" checked={showMaybeboard} setChecked={toggleShowMaybeboard} />
             <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />

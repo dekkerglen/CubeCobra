@@ -100,6 +100,8 @@ export const cardStatus = (card: Card): any => card.status;
 
 export const cardColorIdentity = (card: Card): string[] => card.colors ?? card.details?.color_identity ?? [];
 
+export const cardIndex = (card: Card): number => (card.index === undefined ? -1 : card.index);
+
 export const cardCmc = (card: Card): number => {
   if (card.cmc) {
     // if it's a string

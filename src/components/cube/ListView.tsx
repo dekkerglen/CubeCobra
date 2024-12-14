@@ -2,15 +2,31 @@ import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Select from 'components/base/Select';
-import Table from 'components/base/Table';
+import withCardModal from 'components/modals/WithCardModal';
+import PagedTable from 'components/PagedTable';
 import TagInput from 'components/TagInput';
+import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
 import CardType from 'datatypes/Card';
 import TagData from 'datatypes/TagData';
 import React, { useCallback, useContext, useState } from 'react';
-import { cardCmc, cardColorIdentity, cardFullName, cardName, cardTags, cardType, normalizeName } from 'utils/Card';
+import {
+  cardCmc,
+  cardColorIdentity,
+  cardFullName,
+  cardIndex,
+  cardName,
+  cardTags,
+  cardType,
+  normalizeName,
+} from 'utils/Card';
 import { getLabels } from 'utils/Sort';
+
+const AutoCardLink = withAutocard(Link);
+const CardModalLink = withCardModal(AutoCardLink);
+
 const colorCombos = [
   'C',
   'W',
@@ -63,22 +79,23 @@ interface ListViewProps {
 const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const { versionDict, editCard, tagColors, allTags } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
+  const [pageSize, setPageSize] = useState(50);
 
   const handleCheck = useCallback(
     (card: CardType) => {
       setChecked((prevChecked) => ({
         ...prevChecked,
-        [card.index || -1]: !prevChecked[card.index || -1],
+        [cardIndex(card)]: !prevChecked[cardIndex(card)],
       }));
     },
     [setChecked],
   );
 
   const handleCheckAll = useCallback(() => {
-    const allChecked = cards.every((card) => checked[card.index || -1]);
+    const allChecked = cards.every((card) => checked[cardIndex(card)]);
     const newChecked = cards.reduce(
       (acc, card) => {
-        acc[card.index || -1] = !allChecked;
+        acc[cardIndex(card)] = !allChecked;
         return acc;
       },
       {} as { [key: string]: boolean },
@@ -88,14 +105,21 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
 
   const updateField = useCallback(
     (card: CardType, field: any, value: any) => {
-      editCard(card.index || -1, { ...card, [field]: value }, card.board || 'mainboard');
+      editCard(cardIndex(card), { ...card, [field]: value }, card.board || 'mainboard');
     },
     [editCard],
   );
 
   const headers = ['Name', 'Version', 'Type', 'Status', 'Finish', 'CMC', 'Color Identity', 'Tags'];
   const rows = cards.map((card) => ({
-    Name: <Checkbox checked={checked[card.index || -1]} setChecked={() => handleCheck(card)} label={''} />,
+    Name: (
+      <Flexbox direction="row" gap="2">
+        <Checkbox label="" checked={checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
+        <CardModalLink card={card} modalprops={{ card: { board: card.board || 'mainboard', index: cardIndex(card) } }}>
+          {cardName(card)}
+        </CardModalLink>
+      </Flexbox>
+    ),
     Version: (
       <Select
         value={card.cardID}
@@ -176,10 +200,25 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
 
   return (
     <Flexbox direction="col" gap="2" className="my-3">
-      <Button color="primary" onClick={handleCheckAll}>
-        Check All
-      </Button>
-      <Table headers={headers} rows={rows} />
+      <Flexbox direction="row" justify="start" gap="2" alignItems="end">
+        <Button color="primary" onClick={handleCheckAll}>
+          Check All
+        </Button>
+        <Button color="accent" onClick={() => console.log('Bulk Edit')}>
+          Edit Selected
+        </Button>
+        <Select
+          label="Page Size"
+          value={`${pageSize}`}
+          setValue={(v) => setPageSize(parseInt(v, 10))}
+          options={[10, 25, 50, 100].map((size) => ({
+            value: `${size}`,
+            label: `${size}`,
+          }))}
+          dense
+        />
+      </Flexbox>
+      <PagedTable pageSize={pageSize} headers={headers} rows={rows} />
     </Flexbox>
   );
 };

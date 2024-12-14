@@ -203,14 +203,22 @@ const CardModal: React.FC<CardModalProps> = ({
                     )}
                   </>
                 )}
-                <Button block outline color="accent" href={card.details?.scryfall_uri} target="_blank">
+                <Button type="link" block outline color="accent" href={card.details?.scryfall_uri} target="_blank">
                   View on Scryfall
                 </Button>
-                <Button block outline color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
+                <Button type="link" block outline color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
                   View Card Analytics
                 </Button>
                 {card.details && (
-                  <Button className="my-1" block outline color="accent" href={getTCGLink(card)} target="_blank">
+                  <Button
+                    type="link"
+                    className="my-1"
+                    block
+                    outline
+                    color="accent"
+                    href={getTCGLink(card)}
+                    target="_blank"
+                  >
                     Buy
                   </Button>
                 )}

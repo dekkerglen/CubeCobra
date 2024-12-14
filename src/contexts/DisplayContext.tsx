@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useState } from 'react';
 
 import useLocalStorage from 'hooks/useLocalStorage';
+import { NumCols } from 'components/base/Layout';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
@@ -9,6 +10,8 @@ export interface DisplayContextValue {
   toggleShowMaybeboard: () => void;
   openCollapse: string | null;
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
+  cardsPerRow: NumCols;
+  setCardsPerRow: React.Dispatch<React.SetStateAction<NumCols>>;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -18,6 +21,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   toggleShowMaybeboard: () => {},
   openCollapse: null,
   setOpenCollapse: () => {},
+  cardsPerRow: 8,
+  setCardsPerRow: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -28,6 +33,7 @@ interface DisplayContextProviderProps {
 export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
   const [openCollapse, setOpenCollapse] = useState<string | null>(null);
+  const [cardsPerRow, setCardsPerRow] = useState<NumCols>(8);
 
   const toggleShowCustomImages = useCallback(() => {
     setShowCustomImages((prev) => !prev);
@@ -52,6 +58,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     toggleShowMaybeboard,
     openCollapse,
     setOpenCollapse,
+    cardsPerRow,
+    setCardsPerRow,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };

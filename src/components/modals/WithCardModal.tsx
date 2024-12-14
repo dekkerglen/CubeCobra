@@ -26,6 +26,7 @@ const withCardModal = <P,>(Tag: React.ComponentType<P>) => {
         } else {
           event.preventDefault();
           const { board, index } = props.modalprops.card;
+          console.log('board', board, 'index', index);
           if (board !== undefined && index !== undefined) setModalSelection({ board, index });
           setModalOpen(true);
         }

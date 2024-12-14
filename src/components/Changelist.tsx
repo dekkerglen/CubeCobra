@@ -47,7 +47,7 @@ const Add = ({ card, revert }: { card: CardData; revert: () => void }) => {
   }, [card.cardID]);
 
   return (
-    <Flexbox direction="row" gap="1">
+    <Flexbox direction="row" gap="1" alignItems="center">
       <RemoveButton onClick={revert} />
       <span className="mx-1" style={{ color: 'green' }}>
         <PlusCircleIcon />

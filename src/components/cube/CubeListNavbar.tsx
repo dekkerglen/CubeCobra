@@ -1,6 +1,6 @@
 import { ChevronUpIcon, QuestionIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import Button from 'components/base/Button';
-import { Flexbox } from 'components/base/Layout';
+import { Flexbox, NumCols } from 'components/base/Layout';
 import CompareCollapse from 'components/cube/CompareCollapse';
 import EditCollapse from 'components/EditCollapse';
 import FilterCollapse from 'components/FilterCollapse';
@@ -39,6 +39,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const [expanded, toggleExpanded] = useToggle(false);
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
+  const { cardsPerRow, setCardsPerRow } = useContext(DisplayContext);
 
   const { canEdit, hasCustomImages, cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, setShowUnsorted } =
     useContext(CubeContext);
@@ -141,6 +142,58 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               value={cubeView}
               setValue={setCubeView}
             />
+            {cubeView === 'spoiler' && (
+              <Select
+                value={`${cardsPerRow}`}
+                setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
+                options={[
+                  {
+                    value: '2',
+                    label: '2 Cards Per Row',
+                  },
+                  {
+                    value: '3',
+                    label: '3 Cards Per Row',
+                  },
+                  {
+                    value: '4',
+                    label: '4 Cards Per Row',
+                  },
+                  {
+                    value: '5',
+                    label: '5 Cards Per Row',
+                  },
+                  {
+                    value: '6',
+                    label: '6 Cards Per Row',
+                  },
+                  {
+                    value: '7',
+                    label: '7 Cards Per Row',
+                  },
+                  {
+                    value: '8',
+                    label: '8 Cards Per Row',
+                  },
+                  {
+                    value: '9',
+                    label: '9 Cards Per Row',
+                  },
+                  {
+                    value: '10',
+                    label: '10 Cards Per Row',
+                  },
+                  {
+                    value: '11',
+                    label: '11 Cards Per Row',
+                  },
+                  {
+                    value: '12',
+                    label: '12 Cards Per Row',
+                  },
+                ]}
+              />
+            )}
           </Flexbox>
           <ResponsiveDiv baseVisible lg>
             <Button color="secondary" onClick={toggleExpanded}>
