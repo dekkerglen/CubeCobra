@@ -75,6 +75,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
     [values],
   );
 
+  console.log(setFilterInput);
   return (
     <Collapse isOpen={isOpen} className={className}>
       <Flexbox direction="col" gap="2" className="mt-2">

@@ -71,7 +71,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
         Tokens
       </Text>
       <Text>All the tokens and emblems your cube uses and what cards require each of them.</Text>
-      <MassBuyButton color="accent" cards={data.map(({ card }) => card)}>
+      <MassBuyButton color="primary" cards={data.map(({ card }) => card)}>
         Buy All Tokens
       </MassBuyButton>
       <Row>

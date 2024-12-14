@@ -37,10 +37,10 @@ const AddFeaturedModal: React.FC<AddFeaturedModalProps> = ({ isOpen, setOpen, cu
         </ModalBody>
         <ModalFooter>
           <Flexbox direction="row" justify="between" className="w-full">
-            <Button color="accent" block onClick={() => formRef.current?.submit()}>
+            <Button color="primary" block onClick={() => formRef.current?.submit()}>
               Submit
             </Button>
-            <Button color="secondary" block onClick={() => setOpen(false)}>
+            <Button color="danger" block onClick={() => setOpen(false)}>
               Close
             </Button>
           </Flexbox>

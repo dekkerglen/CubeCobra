@@ -57,7 +57,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
           value={formData.password2}
           onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
         />
-        <Button color="accent" block onClick={() => formRef.current?.submit()}>
+        <Button color="primary" block onClick={() => formRef.current?.submit()}>
           Register
         </Button>
       </Flexbox>

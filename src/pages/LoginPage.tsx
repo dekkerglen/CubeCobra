@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
         <CardBody>
           <Flexbox direction="col" gap="2">
             <LoginForm loginCallback={'/'} formRef={formRef} />
-            <Button type="submit" color="accent" block onClick={() => formRef.current?.submit()}>
+            <Button type="submit" color="primary" block onClick={() => formRef.current?.submit()}>
               Login
             </Button>
           </Flexbox>

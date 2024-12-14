@@ -32,7 +32,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, setOpen, link, cubeNa
       </div>
     </ModalBody>
     <ModalFooter>
-      <Button color="accent" onClick={() => saveQRImage(cubeName)}>
+      <Button color="primary" onClick={() => saveQRImage(cubeName)}>
         Download
       </Button>
       <Button color="secondary" onClick={() => setOpen(false)}>

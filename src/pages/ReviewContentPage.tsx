@@ -36,7 +36,7 @@ const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ loginCallback = '
                 <a href={`/content/${document.type}/${document.id}`}>{document.title}</a>
               </Col>
               <Col xs={12} sm={4}>
-                <Button type="link" color="accent" outline block href={`/admin/publish/${document.id}`}>
+                <Button type="link" color="primary" outline block href={`/admin/publish/${document.id}`}>
                   Publish
                 </Button>
               </Col>

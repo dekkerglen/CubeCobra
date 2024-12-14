@@ -15,8 +15,9 @@ import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import Cube from 'datatypes/Cube';
-import Card from 'datatypes/Card';
+import Card, { BoardType } from 'datatypes/Card';
 import FilterContext from 'contexts/FilterContext';
+import { Flexbox } from 'components/base/Layout';
 
 interface CubeListPageProps {
   cube: Cube;
@@ -26,6 +27,11 @@ interface CubeListPageProps {
   };
   loginCallback?: string;
 }
+
+const boardToName: Record<BoardType, string> = {
+  mainboard: 'Mainboard',
+  maybeboard: 'Maybeboard',
+};
 
 const CubeListPageRaw: React.FC = () => {
   const { changedCards } = useContext(CubeContext);
@@ -48,34 +54,36 @@ const CubeListPageRaw: React.FC = () => {
       {Object.entries(changedCards)
         .map(([boardname, boardcards]) => (
           <ErrorBoundary key={boardname}>
-            {(showMaybeboard || boardname !== 'maybeboard') && (
-              <>
-                {boardname !== 'mainboard' && (
-                  <Text semibold md>
-                    {boardname}
-                  </Text>
-                )}
-                {boardcards.length === 0 &&
-                  (cardFilter ? (
+            <Flexbox direction="col" gap="2">
+              {(showMaybeboard || boardname !== 'maybeboard') && (
+                <>
+                  {boardname !== 'mainboard' && (
                     <Text semibold md>
-                      No cards match filter.
+                      {boardToName[boardname as BoardType]}
                     </Text>
-                  ) : (
-                    <Text semibold md>
-                      This board is empty.
-                    </Text>
-                  ))}
-                {
+                  )}
+                  {boardcards.length === 0 &&
+                    (cardFilter ? (
+                      <Text semibold md>
+                        No cards match filter.
+                      </Text>
+                    ) : (
+                      <Text semibold md>
+                        This board is empty.
+                      </Text>
+                    ))}
                   {
-                    table: <TableView cards={boardcards} />,
-                    spoiler: <VisualSpoiler cards={boardcards} />,
-                    curve: <CurveView cards={boardcards} />,
-                    list: <ListView cards={boardcards} />,
-                  }[cubeView]
-                }
-                {boardname !== 'mainboard' && <hr />}
-              </>
-            )}
+                    {
+                      table: <TableView cards={boardcards} />,
+                      spoiler: <VisualSpoiler cards={boardcards} />,
+                      curve: <CurveView cards={boardcards} />,
+                      list: <ListView cards={boardcards} />,
+                    }[cubeView]
+                  }
+                  {boardname !== 'mainboard' && <hr />}
+                </>
+              )}
+            </Flexbox>
           </ErrorBoundary>
         ))
         .reverse()}

@@ -5,8 +5,6 @@ import useLocalStorage from 'hooks/useLocalStorage';
 export interface DisplayContextValue {
   showCustomImages: boolean;
   toggleShowCustomImages: () => void;
-  compressedView: boolean;
-  toggleCompressedView: () => void;
   showMaybeboard: boolean;
   toggleShowMaybeboard: () => void;
   openCollapse: string | null;
@@ -15,10 +13,8 @@ export interface DisplayContextValue {
 
 const DisplayContext = React.createContext<DisplayContextValue>({
   showCustomImages: true,
-  compressedView: false,
   showMaybeboard: false,
   toggleShowCustomImages: () => {},
-  toggleCompressedView: () => {},
   toggleShowMaybeboard: () => {},
   openCollapse: null,
   setOpenCollapse: () => {},
@@ -37,14 +33,6 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
     setShowCustomImages((prev) => !prev);
   }, [setShowCustomImages]);
 
-  const [compressedView, setCompressedView] = useState<boolean>(() => {
-    return typeof localStorage !== 'undefined' && localStorage.getItem('compressed') === 'true';
-  });
-  const toggleCompressedView = useCallback(() => {
-    localStorage.setItem('compressed', (!compressedView).toString());
-    setCompressedView((prev) => !prev);
-  }, [compressedView]);
-
   const [showMaybeboard, setShowMaybeboard] = useState<boolean>(() => {
     return (
       typeof localStorage !== 'undefined' &&
@@ -60,8 +48,6 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ 
   const value: DisplayContextValue = {
     showCustomImages,
     toggleShowCustomImages,
-    compressedView,
-    toggleCompressedView,
     showMaybeboard,
     toggleShowMaybeboard,
     openCollapse,

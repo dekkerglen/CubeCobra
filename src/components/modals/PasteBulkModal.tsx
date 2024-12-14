@@ -1,4 +1,5 @@
 import Button from 'components/base/Button';
+import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
@@ -17,9 +18,9 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
   const formData = { body: bulkText };
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
-      <CSRFForm method="POST" action={`/cube/bulkadd/${cubeID}`} ref={formRef} formData={formData}>
-        <ModalHeader setOpen={setOpen}>Paste Bulk Add</ModalHeader>
+    <Modal isOpen={isOpen} setOpen={setOpen} md>
+      <CSRFForm method="POST" action={`/cube/bulkupload/${cubeID}`} ref={formRef} formData={formData}>
+        <ModalHeader setOpen={setOpen}>Bulk Upload</ModalHeader>
         <ModalBody>
           <Text>Paste a list of card names to add to the cube, one per line.</Text>
           <TextArea
@@ -31,12 +32,14 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
           />
         </ModalBody>
         <ModalFooter>
-          <Button color="accent" type="submit" disabled={!bulkText}>
-            Add Cards
-          </Button>
-          <Button color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <Flexbox direction="row" justify="between" gap="2" className="w-full">
+            <Button color="primary" disabled={!bulkText} block onClick={() => formRef.current?.submit()}>
+              Add Cards
+            </Button>
+            <Button color="danger" onClick={() => setOpen(false)} block>
+              Close
+            </Button>
+          </Flexbox>
         </ModalFooter>
       </CSRFForm>
     </Modal>

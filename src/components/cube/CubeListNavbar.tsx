@@ -18,6 +18,7 @@ import Collapse from '../base/Collapse';
 import Controls from '../base/Controls';
 import Link from '../base/Link';
 import ResponsiveDiv from '../base/ResponsiveDiv';
+import Text from '../base/Text';
 import Select from '../base/Select';
 import NavMenu from '../base/NavMenu';
 import Checkbox from '../base/Checkbox';
@@ -46,8 +47,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
   const {
     showCustomImages,
     toggleShowCustomImages,
-    compressedView,
-    toggleCompressedView,
     showMaybeboard,
     toggleShowMaybeboard,
     openCollapse,
@@ -82,9 +81,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               {showCustomImages ? 'Hide Custom Images' : 'Show Custom Images'}
             </Link>
           )}
-          <Link onClick={toggleCompressedView}>
-            {compressedView ? 'Disable Compressed View' : 'Enable Compressed View'}
-          </Link>
           <Link onClick={toggleShowMaybeboard}>{showMaybeboard ? 'Hide Maybeboard' : 'Show Maybeboard'}</Link>
           <Link onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             {cube.showUnsorted ? 'Hide Unsorted cards' : 'Show Unsorted cards'}
@@ -95,12 +91,13 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
         <Flexbox direction="col" gap="2" className="p-3">
           {canEdit && (
             <>
-              <Link disabled>Import</Link>
-              <PasteBulkModalItem>Paste Text</PasteBulkModalItem>
-              <UploadBulkModalItem>Upload File</UploadBulkModalItem>
-              <UploadBulkReplaceModalItem>Replace with CSV File Upload</UploadBulkReplaceModalItem>
-              <br />
-              <Link disabled>Export</Link>
+              <Text semibold>Import</Text>
+              <PasteBulkModalItem modalprops={{ cubeID: cube.id }}>Paste Text</PasteBulkModalItem>
+              <UploadBulkModalItem modalprops={{ cubeID: cube.id }}>Upload File</UploadBulkModalItem>
+              <UploadBulkReplaceModalItem modalprops={{ cubeID: cube.id }}>
+                Replace with CSV File Upload
+              </UploadBulkReplaceModalItem>
+              <Text semibold>Export</Text>
             </>
           )}
           <Link href={`/cube/download/plaintext/${cube.id}?${urlSegment}`}>Card Names (.txt)</Link>
@@ -108,7 +105,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           <Link href={`/cube/download/forge/${cube.id}?${urlSegment}`}>Forge (.dck)</Link>
           <Link href={`/cube/download/mtgo/${cube.id}?${urlSegment}`}>MTGO (.txt)</Link>
           <Link href={`/cube/download/xmage/${cube.id}?${urlSegment}`}>XMage (.dck)</Link>
-          <br />
           <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)}>
             <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
             <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">

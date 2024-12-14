@@ -57,7 +57,7 @@ const SampleHandModal: React.FC<SampleHandModalProps> = ({ deck, isOpen, setOpen
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" className="w-full" justify="between" gap="2">
-          <Button block color="accent" onClick={refresh}>
+          <Button block color="primary" onClick={refresh}>
             New Hand
           </Button>
           <Button block color="accent" onClick={draw}>

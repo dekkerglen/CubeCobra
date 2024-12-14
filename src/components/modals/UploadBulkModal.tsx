@@ -4,6 +4,7 @@ import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
+import { Flexbox } from 'components/base/Layout';
 
 interface UploadBulkModalProps {
   isOpen: boolean;
@@ -40,20 +41,22 @@ const UploadBulkModal: React.FC<UploadBulkModalProps> = ({ isOpen, setOpen, cube
   };
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
-      <CSRFForm method="POST" action={`/cube/bulkadd/${cubeID}`} ref={formRef} formData={formData}>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm>
+      <CSRFForm method="POST" action={`/cube/bulkuploadfile/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Upload Bulk Add</ModalHeader>
         <ModalBody>
           <Text>Upload a CSV file to add cards to the cube.</Text>
           <Input type="file" name="file" accept=".csv" onChange={handleFileChange} />
         </ModalBody>
         <ModalFooter>
-          <Button color="accent" type="submit" disabled={!file}>
-            Upload
-          </Button>
-          <Button color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <Flexbox direction="row" justify="between" gap="2" className="w-full">
+            <Button color="primary" type="submit" disabled={!file} block>
+              Upload
+            </Button>
+            <Button color="danger" onClick={() => setOpen(false)} block>
+              Close
+            </Button>
+          </Flexbox>
         </ModalFooter>
       </CSRFForm>
     </Modal>

@@ -106,7 +106,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({ cards, isOpen
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" gap="2" className="w-full">
-          <LoadingButton block loading={loadingSubmit} color="accent" onClick={() => add()}>
+          <LoadingButton block loading={loadingSubmit} color="primary" onClick={() => add()}>
             Add
           </LoadingButton>
           <Button block color="danger" onClick={() => setOpen(false)}>

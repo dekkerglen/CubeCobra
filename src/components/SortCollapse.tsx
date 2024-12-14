@@ -80,7 +80,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
           once.
         </Text>
         <Flexbox direction="row" gap="2">
-          <Button color="accent" onClick={resetSorts} disabled={!sortsModified}>
+          <Button color="danger" onClick={resetSorts} disabled={!sortsModified}>
             Reset Sort
           </Button>
           {canEdit && (

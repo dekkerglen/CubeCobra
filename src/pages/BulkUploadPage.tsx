@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
-import { Col, Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -82,55 +82,62 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, added })
         </Text>
       </CardHeader>
       <CardBody>
-        <Text>
-          There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through and
-          manually add them. No changes have been saved.
-        </Text>
-        <Row>
-          <Col>
-            {missing.map((card, index) => (
-              <Text key={index}>{card}</Text>
-            ))}
-          </Col>
-          <Col>
-            <Row>
-              <Col xs={8}>
-                <AutocompleteInput
-                  treeUrl="/cube/api/cardnames"
-                  treePath="cardnames"
-                  type="text"
-                  innerRef={addInput}
-                  value={addValue}
-                  setValue={setAddValue}
-                  placeholder="Card to Add"
-                />
-              </Col>
-              <Col xs={4}>
-                <LoadingButton
-                  block
-                  color="accent"
-                  disabled={addValue.length === 0}
-                  loading={loading}
-                  onClick={async () => await handleAdd(addValue)}
-                >
-                  Add
+        <Flexbox direction="col" gap="1">
+          <Text>
+            There were a few problems with your bulk upload. Below is a list of unrecognized cards, please go through
+            and manually add them. No changes have been saved.
+          </Text>
+          <Row>
+            <Col xs={6}>
+              <Card>
+                <CardBody>
+                  <Flexbox direction="col" gap="1">
+                    {missing.map((card, index) => (
+                      <Text key={index}>{card}</Text>
+                    ))}
+                  </Flexbox>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col xs={6}>
+              <Flexbox direction="col" gap="1">
+                <Row>
+                  <Col xs={8}>
+                    <AutocompleteInput
+                      treeUrl="/cube/api/cardnames"
+                      treePath="cardnames"
+                      type="text"
+                      innerRef={addInput}
+                      value={addValue}
+                      setValue={setAddValue}
+                      placeholder="Card to Add"
+                    />
+                  </Col>
+                  <Col xs={4}>
+                    <LoadingButton
+                      block
+                      color="accent"
+                      disabled={addValue.length === 0}
+                      loading={loading}
+                      onClick={async () => await handleAdd(addValue)}
+                    >
+                      Add
+                    </LoadingButton>
+                  </Col>
+                </Row>
+                {alerts.map(({ color, message }, index) => (
+                  <Text key={index} className={`alert alert-${color} mt-2`}>
+                    {message}
+                  </Text>
+                ))}
+                <Changelist />
+                <LoadingButton loading={loading} color="primary" className="mt-3" block onClick={submit}>
+                  Save Changes
                 </LoadingButton>
-              </Col>
-            </Row>
-            {alerts.map(({ color, message }, index) => (
-              <Text key={index} className={`alert alert-${color} mt-2`}>
-                {message}
-              </Text>
-            ))}
-            <Text semibold>Changelist:</Text>
-            <div className="changelist-container mb-2">
-              <Changelist />
-            </div>
-            <LoadingButton loading={loading} color="accent" className="mt-3" block outline onClick={submit}>
-              Save Changes
-            </LoadingButton>
-          </Col>
-        </Row>
+              </Flexbox>
+            </Col>
+          </Row>
+        </Flexbox>
       </CardBody>
     </Card>
   );

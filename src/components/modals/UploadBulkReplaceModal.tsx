@@ -4,6 +4,7 @@ import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
+import { Flexbox } from 'components/base/Layout';
 
 interface UploadBulkReplaceModalProps {
   isOpen: boolean;
@@ -40,20 +41,22 @@ const UploadBulkReplaceModal: React.FC<UploadBulkReplaceModalProps> = ({ isOpen,
   };
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
-      <CSRFForm method="POST" action={`/cube/bulkreplace/${cubeID}`} ref={formRef} formData={formData}>
+    <Modal isOpen={isOpen} setOpen={setOpen} md>
+      <CSRFForm method="POST" action={`/cube/bulkreplacefile/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Upload Bulk Replace</ModalHeader>
         <ModalBody>
           <Text>Upload a CSV file to replace the current cube list.</Text>
           <Input type="file" name="file" accept=".csv" onChange={handleFileChange} />
         </ModalBody>
         <ModalFooter>
-          <Button color="accent" type="submit" disabled={!file}>
-            Upload
-          </Button>
-          <Button color="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <Flexbox direction="row" justify="between" gap="2" className="w-full">
+            <Button color="primary" type="submit" disabled={!file} block onClick={() => formRef.current?.submit()}>
+              Upload
+            </Button>
+            <Button color="danger" onClick={() => setOpen(false)} block>
+              Close
+            </Button>
+          </Flexbox>
         </ModalFooter>
       </CSRFForm>
     </Modal>

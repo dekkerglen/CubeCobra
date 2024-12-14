@@ -22,7 +22,7 @@ const LostPasswordForm: React.FC = () => {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
-        <Button type="submit" color="accent" block onClick={() => formRef.current?.submit()}>
+        <Button type="submit" color="primary" block onClick={() => formRef.current?.submit()}>
           Continue
         </Button>
       </Flexbox>

@@ -195,7 +195,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
             {message}
           </Alert>
         ))}
-        <Row>
+        <Row className="items-end">
           {showMaybeboard && (
             <Col xs={12} md={3}>
               <Select
@@ -295,7 +295,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           </Row>
           <Row className="mb-2">
             <Col xs={6} md={3}>
-              <LoadingButton color="accent" block onClick={submit} loading={loading}>
+              <LoadingButton color="primary" block onClick={submit} loading={loading}>
                 Save Changes
               </LoadingButton>
             </Col>

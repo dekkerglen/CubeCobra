@@ -92,7 +92,7 @@ const CreatePackageModal: React.FC<CreatePackageModalProps> = ({ isOpen, setOpen
             data-lpignore
           />
           <Button
-            color="accent"
+            color="primary"
             block
             onClick={submitCard}
             disabled={!(imageDict && imageDict[cardName.toLowerCase()])}

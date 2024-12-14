@@ -80,7 +80,7 @@ const EditArticlePage: React.FC<EditArticlePageProps> = ({ loginCallback = '/', 
                 body: body || '',
               }}
             >
-              <Button color="accent" block disabled={!hasChanges} onClick={() => saveFormRef.current?.submit()}>
+              <Button color="primary" block disabled={!hasChanges} onClick={() => saveFormRef.current?.submit()}>
                 Save
               </Button>
             </CSRFForm>

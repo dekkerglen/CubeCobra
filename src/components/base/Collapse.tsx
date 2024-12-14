@@ -7,7 +7,7 @@ interface CollapseProps {
 }
 
 const Collapse: React.FC<CollapseProps> = ({ isOpen, children, className }) => {
-  return <div className={`overflow-hidden ${isOpen ? 'max-h-fit' : 'max-h-0'} ${className}`}>{children}</div>;
+  return <div className={`${isOpen ? 'max-h-fit' : 'overflow-hidden max-h-0'} ${className}`}>{children}</div>;
 };
 
 export default Collapse;

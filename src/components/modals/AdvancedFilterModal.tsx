@@ -301,8 +301,7 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             Cancel
           </Button>
           <Button
-            color="accent"
-            type="submit"
+            color="primary"
             onClick={() => {
               setOpen(false);
               apply();

@@ -373,7 +373,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
             </Flexbox>
             <Row>
               <Col xs={12}>
-                <Button className="my-1" block outline color="accent" disabled={!fieldsChanged} onClick={applyChanges}>
+                <Button className="my-1" block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
                   Apply to all
                 </Button>
               </Col>

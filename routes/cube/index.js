@@ -947,13 +947,12 @@ router.post('/bulkupload/:id', ensureAuth, async (req, res) => {
 
 router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.files) {
-      req.flash('danger', 'Please attach a file');
-      return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
-    }
+    const split = req.body.file.split(',');
+    const encodedFile = split[1];
 
-    const items = req.files.document.data.toString('utf8'); // the uploaded file object
-
+    // decode base64
+    const list = Buffer.from(encodedFile, 'base64').toString('utf8');
+    
     const cube = await Cube.getById(req.params.id);
 
     if (!isCubeViewable(cube, req.user)) {
@@ -966,7 +965,7 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
       return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
     }
 
-    await bulkUpload(req, res, items, cube);
+    await bulkUpload(req, res, list, cube);
     return null;
   } catch (err) {
     return util.handleRouteError(req, res, err, `/cube/list/${encodeURIComponent(req.params.id)}`);
@@ -975,11 +974,11 @@ router.post('/bulkuploadfile/:id', ensureAuth, async (req, res) => {
 
 router.post('/bulkreplacefile/:id', ensureAuth, async (req, res) => {
   try {
-    if (!req.files) {
-      req.flash('danger', 'Please attach a file');
-      return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id)}`);
-    }
-    const items = req.files.document.data.toString('utf8'); // the uploaded file object
+    const split = req.body.file.split(',');
+    const encodedFile = split[1];
+
+    // decode base64
+    const items = Buffer.from(encodedFile, 'base64').toString('utf8');
 
     const cube = await Cube.getById(req.params.id);
     // use this to maintain customized fields

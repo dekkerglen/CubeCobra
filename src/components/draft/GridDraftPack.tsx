@@ -41,7 +41,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
             <Button
               block
               outline
-              color="accent"
+              color="primary"
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -62,7 +62,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
             <Button
               className="float-end h-full"
               outline
-              color="accent"
+              color="primary"
               onClick={() => {
                 makePick({
                   seatIndex,

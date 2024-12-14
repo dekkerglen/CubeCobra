@@ -47,7 +47,7 @@ const EditPodcastPage: React.FC<EditPodcastPageProps> = ({ loginCallback = '/', 
               ref={saveFormRef}
               formData={{ rss, podcastid: podcast.id }}
             >
-              <Button color="accent" block disabled={!hasChanges} onClick={() => saveFormRef.current?.submit()}>
+              <Button color="primary" block disabled={!hasChanges} onClick={() => saveFormRef.current?.submit()}>
                 Save
               </Button>
             </CSRFForm>

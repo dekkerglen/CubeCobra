@@ -93,7 +93,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = ({
                   <Button
                     block
                     outline
-                    color="accent"
+                    color="primary"
                     href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
                       patreonRedirectUri,
                     )}`}

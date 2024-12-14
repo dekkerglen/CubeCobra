@@ -23,7 +23,7 @@ const CompareCollapse: React.FC<CompareCollapseProps> = ({ isOpen }) => {
     <Collapse isOpen={isOpen}>
       <Flexbox direction="row" gap="2" className="mt-2">
         <Input type="text" placeholder="Comparison Cube ID" value={compareID} onChange={handleChange} />
-        <Button color="accent" href={targetUrl} block>
+        <Button type="link" color="primary" href={targetUrl} block>
           Compare cubes
         </Button>
       </Flexbox>
