@@ -16,6 +16,7 @@ export interface AutocardListItemProps {
   children?: React.ReactNode;
   onClick?: (event: React.MouseEvent) => void;
   last?: boolean;
+  className?: string;
 }
 
 const AutocardDiv = withAutocard(ListGroupItem);
@@ -32,6 +33,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   children,
   onClick,
   last,
+  className,
 }) => {
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
@@ -64,7 +66,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(`bg-card-${colorClassname}`)}
+      className={cx(`bg-card-${colorClassname} ${className}`)}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}

@@ -7,6 +7,7 @@ import CubeContext from 'contexts/CubeContext';
 import Card from 'datatypes/Card';
 import { sortDeep } from 'utils/Sort';
 import { ListGroup, ListGroupItem } from 'components/base/ListGroup';
+import classNames from 'classnames';
 
 export interface TableViewCardGroupProps {
   cards: Card[];
@@ -34,18 +35,21 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
       {canEdit ? (
         <GroupModalLink modalprops={{ cards }}>{heading}</GroupModalLink>
       ) : (
-        <ListGroupItem>{heading}</ListGroupItem>
+        <ListGroupItem heading>{heading}</ListGroupItem>
       )}
 
-      {(sorted as [string, Card[]][]).map(([, group]) =>
+      {(sorted as [string, Card[]][]).map(([, group], groupIndex) =>
         group.map((card: Card, index: number) => (
           <CardModalLink
-            key={card.index}
+            key={index}
             card={card}
             altClick={() => {
               window.open(`/tool/card/${card.cardID}`);
             }}
-            className={index === 0 ? 'cmc-group' : undefined}
+            last={groupIndex === sorted.length - 1 && index === group.length - 1}
+            className={classNames({
+              'border-border-secondary border-t': index === 0,
+            })}
             modalprops={{
               card,
             }}

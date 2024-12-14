@@ -1,7 +1,6 @@
 import React, {
   createContext,
   Dispatch,
-  MouseEvent,
   ReactNode,
   SetStateAction,
   useCallback,
@@ -13,6 +12,7 @@ import React, {
 
 import { Object } from 'core-js';
 
+import { UncontrolledAlertProps } from 'components/base/Alert';
 import CardModal from 'components/card/CardModal';
 import GroupModal from 'components/GroupModal';
 import DisplayContext from 'contexts/DisplayContext';
@@ -27,7 +27,6 @@ import { cardName, normalizeName } from 'utils/Card';
 import { csrfFetch } from 'utils/CSRF';
 import { deepCopy, xorStrings } from 'utils/Util';
 import FilterContext from './FilterContext';
-import { UncontrolledAlertProps } from 'components/base/Alert';
 
 export interface CubeWithCards extends Cube {
   cards: {
@@ -68,7 +67,6 @@ export interface CubeContextValue {
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
   commitChanges: (title: string, blog: string) => Promise<void>;
-  toggle: (event?: MouseEvent<HTMLElement, MouseEvent>) => void;
   setModalSelection: Dispatch<
     SetStateAction<{ index: number; board: BoardType } | { index: number; board: BoardType }[]>
   >;
@@ -128,7 +126,6 @@ const CubeContext = createContext<CubeContextValue>({
   revertEdit: defaultFn,
   versionDict: {} as Record<string, CardVersion[]>,
   commitChanges: defaultFn,
-  toggle: defaultFn,
   setModalSelection: defaultFn,
   setModalOpen: defaultFn,
   tagColors: [],
@@ -285,16 +282,6 @@ export function CubeContextProvider({
       setOpenCollapse('edit');
     }
   });
-
-  const toggle = useCallback(
-    (event?: MouseEvent<HTMLElement, MouseEvent>) => {
-      if (event) {
-        event.preventDefault();
-      }
-      setModalOpen(!modalOpen);
-    },
-    [modalOpen],
-  );
 
   const updateShowTagColors = useCallback(
     async (showColors: boolean) => {
@@ -915,7 +902,6 @@ export function CubeContextProvider({
       revertEdit,
       versionDict,
       commitChanges,
-      toggle,
       setModalSelection,
       setModalOpen,
       tagColors,
@@ -965,7 +951,6 @@ export function CubeContextProvider({
       revertEdit,
       versionDict,
       commitChanges,
-      toggle,
       setModalSelection,
       setModalOpen,
       tagColors,
@@ -1008,7 +993,7 @@ export function CubeContextProvider({
             <CardModal
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
-              toggle={toggle}
+              setOpen={setModalOpen}
               canEdit={canEdit}
               versionDict={versionDict}
               editCard={editCard}
@@ -1024,7 +1009,7 @@ export function CubeContextProvider({
           <GroupModal
             cards={modalSelection.map((s) => unfilteredChangedCards[s.board][s.index])}
             isOpen={modalOpen}
-            toggle={toggle}
+            setOpen={setModalOpen}
             canEdit={canEdit}
             bulkEditCard={bulkEditCard}
             bulkRevertEdit={bulkRevertEdit}

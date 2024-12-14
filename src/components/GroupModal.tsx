@@ -48,7 +48,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
   isOpen,
   setOpen,
   cards,
-  canEdit = false,
   bulkEditCard,
   bulkMoveCard,
   bulkRevertEdit,

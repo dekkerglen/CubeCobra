@@ -18,7 +18,7 @@ interface ListGroupItemProps {
 
 export const ListGroup: FC<ListGroupProps> = ({ children }) => {
   return (
-    <Flexbox direction="col" className="border border-border rounded-md">
+    <Flexbox direction="col" className="border border-border-secondary rounded-md">
       {children}
     </Flexbox>
   );
@@ -31,13 +31,12 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   onAuxClick,
   heading = false,
   last = false,
-  ...props
 }) => {
   const itemClasses = classNames(
-    'px-1 py-[3px] transition-all duration-200',
+    'px-1 py-[3px] transition-all duration-200 truncate text-xs',
     {
-      'font-semibold text-sm centered border-b border-border bg-bg-active rounded-t-md': heading,
-      'text-xs': !heading,
+      'font-normal centered border-b border-border rounded-t-md': heading,
+      'font-light': !heading,
       'cursor-pointer hover:brightness-125': onClick || onAuxClick,
       'rounded-b-md': last,
     },
@@ -45,7 +44,7 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   );
 
   return (
-    <div className={itemClasses} onClick={onClick} onAuxClick={onAuxClick} {...props}>
+    <div className={itemClasses} onClick={onClick} onAuxClick={onAuxClick}>
       {children}
     </div>
   );

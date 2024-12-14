@@ -140,9 +140,12 @@ const EditVideoPage: React.FC<EditVideoPageProps> = ({ loginCallback = '/', vide
                     title,
                     body,
                     short,
-                    artist: imageArtist,
-                    imagename: imageName,
-                    image: imageUri,
+                    image: {
+                      uri: imageUri || video.image?.uri || '',
+                      artist: imageArtist || video.image?.artist || '',
+                      imageName: imageName || video.imageName || '',
+                      id: video.image?.id || '',
+                    },
                   }}
                 />
               ),

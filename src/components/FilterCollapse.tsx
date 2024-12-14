@@ -77,7 +77,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
 
   return (
     <Collapse isOpen={isOpen} className={className}>
-      <Flexbox direction="col" gap="2">
+      <Flexbox direction="col" gap="2" className="mt-2">
         <Flexbox direction="row" className="w-full" justify="between" gap="2" alignItems="stretch">
           <Input
             type="text"
@@ -120,7 +120,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
         )}
         <AdvancedFilterModal
           isOpen={advancedOpen}
-          toggle={() => setAdvancedOpen(false)}
+          setOpen={setAdvancedOpen}
           apply={applyAdvanced}
           values={values}
           updateValue={updateValue}

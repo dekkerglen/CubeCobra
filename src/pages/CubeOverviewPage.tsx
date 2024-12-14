@@ -90,9 +90,7 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({
                 >
                   Customize basics
                 </CustomizeBasicsModalLink>
-                <DeleteCubeModalLink modalprops={{ cubeId: cube.id, cubeName: cube.name }}>
-                  Delete Cube
-                </DeleteCubeModalLink>
+                <DeleteCubeModalLink modalprops={{ cubeID: cube.id }}>Delete Cube</DeleteCubeModalLink>
               </Flexbox>
             </Controls>
           )}

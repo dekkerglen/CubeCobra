@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { Flexbox } from 'components/base/Layout';
+import { Flexbox, NumCols } from 'components/base/Layout';
 import CardGrid from 'components/card/CardGrid';
 import CubeContext from 'contexts/CubeContext';
 import useQueryParam from 'hooks/useQueryParam';
@@ -33,17 +33,35 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
     .flat(4);
   const [scale, setScale] = useQueryParam('scale', 'medium');
 
-  let sizes = 'col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1-5';
+  let sizes: Record<string, NumCols> = {
+    xs: 3,
+    sm: 4,
+    md: 6,
+    lg: 6,
+    xl: 8,
+  };
 
   if (scale === 'small') {
-    sizes = 'col-2 col-sm-2 col-md-1-5 col-lg-1-5 col-xl-1';
+    sizes = {
+      xs: 4,
+      sm: 5,
+      md: 8,
+      lg: 8,
+      xl: 10,
+    };
   } else if (scale === 'large') {
-    sizes = 'col-12 col-sm-6 col-md-4 col-lg-4 col-xl-3';
+    sizes = {
+      xs: 2,
+      sm: 3,
+      md: 4,
+      lg: 4,
+      xl: 5,
+    };
   }
 
   return (
-    <>
-      <Flexbox direction="row" justify="center" gap="2" className="my-2">
+    <div className="my-2">
+      <Flexbox direction="row" justify="center" gap="2">
         <Button onClick={() => setScale('small')} outline={scale !== 'small'}>
           Small
         </Button>
@@ -60,8 +78,13 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
           setModalSelection({ board: card.board as BoardType, index: card.index || -1 });
           setModalOpen(true);
         }}
+        xs={sizes.xs}
+        sm={sizes.sm}
+        md={sizes.md}
+        lg={sizes.lg}
+        xl={sizes.xl}
       />
-    </>
+    </div>
   );
 };
 

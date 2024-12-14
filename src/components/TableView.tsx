@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { Col, Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import TableViewCardGroup from 'components/card/TableViewCardGroup';
 import CubeContext from 'contexts/CubeContext';
@@ -8,10 +8,9 @@ import Card from 'datatypes/Card';
 
 interface TableViewProps {
   cards: Card[];
-  className?: string;
 }
 
-const TableView: React.FC<TableViewProps> = ({ cards, className }) => {
+const TableView: React.FC<TableViewProps> = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
 
   const sorted = useMemo(
@@ -27,28 +26,29 @@ const TableView: React.FC<TableViewProps> = ({ cards, className }) => {
   );
 
   return (
-    <div className={`table-view-container${className ? ` ${className}` : ''}`}>
-      <Row>
-        {sorted.map(([columnLabel, column]) => (
-          <Col key={columnLabel} className="table-col">
-            <Text semibold sm>
-              {columnLabel}
-              <br />({countGroup(column)})
+    <Row xs={8} className="my-3">
+      {sorted.map(([columnLabel, column]) => (
+        <Col key={columnLabel} xs={1}>
+          <Flexbox direction="col" justify="center" className="w-full" alignContent="center" alignItems="center">
+            <Text semibold md>
+              {`${columnLabel} (${countGroup(column)})`}
             </Text>
-            {column.map(([label, row]) => (
-              <TableViewCardGroup
-                key={label}
-                heading={`${label} (${countGroup(row)})`}
-                cards={row}
-                sort={sortTertiary || 'CMC'}
-                orderedSort={sortQuaternary || 'Alphabetical'}
-                showOther={cube.showUnsorted}
-              />
-            ))}
-          </Col>
-        ))}
-      </Row>
-    </div>
+            <Flexbox direction="col" gap="2">
+              {column.map(([label, row]) => (
+                <TableViewCardGroup
+                  key={label}
+                  heading={`${label} (${countGroup(row)})`}
+                  cards={row}
+                  sort={sortTertiary || 'CMC'}
+                  orderedSort={sortQuaternary || 'Alphabetical'}
+                  showOther={cube.showUnsorted}
+                />
+              ))}
+            </Flexbox>
+          </Flexbox>
+        </Col>
+      ))}
+    </Row>
   );
 };
 

@@ -132,7 +132,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
 
   return (
     <Controls>
-      <Flexbox direction="col" gap="2" className="py-2 px-4">
+      <Flexbox direction="col" className="py-2 px-4">
         <Flexbox direction="row" wrap="wrap" justify="between" alignItems="center">
           <Flexbox direction="row" justify="start" gap="4" alignItems="center">
             <Select

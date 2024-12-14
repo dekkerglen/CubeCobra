@@ -1,12 +1,11 @@
 import React from 'react';
 
 import { Card, CardBody } from 'components/base/Card';
+import Link from 'components/base/Link';
 import PagedTable from 'components/base/PagedTable';
-import Text from 'components/base/Text';
 import withAutocard from 'components/WithAutocard';
 import CardType from 'datatypes/CardDetails';
 import { detailsToCard } from 'utils/Card';
-import Link from 'components/base/Link';
 
 const AutocardA = withAutocard(Link);
 

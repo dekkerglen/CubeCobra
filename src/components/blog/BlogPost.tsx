@@ -37,12 +37,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
             <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
             {canEdit && (
               <Flexbox direction="row">
-                <EditBlogModal
-                  isOpen={editOpen}
-                  toggle={() => setEditOpen((open) => !open)}
-                  post={post}
-                  cubeID={post.cube}
-                />
+                <EditBlogModal isOpen={editOpen} setOpen={setEditOpen} post={post} cubeID={post.cube} />
               </Flexbox>
             )}
           </Flexbox>

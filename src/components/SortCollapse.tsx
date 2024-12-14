@@ -5,6 +5,7 @@ import CubeContext from 'contexts/CubeContext';
 import React, { useContext, useMemo } from 'react';
 import { ORDERED_SORTS, SORTS } from 'utils/Sort';
 import Select from './base/Select';
+import Text from './base/Text';
 import Collapse from './base/Collapse';
 
 interface SortCollapseProps {
@@ -39,9 +40,9 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
 
   return (
     <Collapse isOpen={isOpen}>
-      <Flexbox direction="col" gap="2">
+      <Flexbox direction="col" gap="2" className="mt-2">
         <Row>
-          <Col xs={12} sm={6} className="mt-2">
+          <Col xs={12} sm={6}>
             <Select
               label="Primary Sort"
               value={sortPrimary || 'Color Category'}
@@ -49,7 +50,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
-          <Col xs={12} sm={6} className="mt-2">
+          <Col xs={12} sm={6}>
             <Select
               label="Secondary Sort"
               value={sortSecondary || 'Types-Multicolor'}
@@ -57,7 +58,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
-          <Col xs={12} sm={6} className="mt-2">
+          <Col xs={12} sm={6}>
             <Select
               label="Tertiary Sort"
               value={sortTertiary || 'Mana Value'}
@@ -65,7 +66,7 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
               options={SORTS.map((sort) => ({ value: sort, label: sort }))}
             />
           </Col>
-          <Col xs={12} sm={6} className="mt-2">
+          <Col xs={12} sm={6}>
             <Select
               label="Quaternary Sort"
               value={sortQuaternary || 'Alphabetical'}
@@ -74,30 +75,20 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
             />
           </Col>
         </Row>
-        <Row>
-          <Col>
-            <p className="my-2">
-              <em>
-                Cards will appear as duplicates if they fit in multiple categories. The counts will still only count
-                each item once.
-              </em>
-            </p>
-          </Col>
-        </Row>
+        <Text italic>
+          Cards will appear as duplicates if they fit in multiple categories. The counts will still only count each item
+          once.
+        </Text>
         <Flexbox direction="row" gap="2">
-          <Button color="accent" className="me-sm-2 mb-3" onClick={resetSorts} disabled={!sortsModified}>
+          <Button color="accent" onClick={resetSorts} disabled={!sortsModified}>
             Reset Sort
           </Button>
           {canEdit && (
-            <Button color="accent" className="me-sm-2 mb-3" onClick={saveSorts} disabled={!sortsModified}>
+            <Button color="accent" onClick={saveSorts} disabled={!sortsModified}>
               Save as Default Sort
             </Button>
           )}
-          <Button
-            color={cube.showUnsorted ? 'danger' : 'primary'}
-            className="me-sm-2 mb-3"
-            onClick={() => setShowUnsorted(!cube.showUnsorted)}
-          >
+          <Button color={cube.showUnsorted ? 'danger' : 'primary'} onClick={() => setShowUnsorted(!cube.showUnsorted)}>
             <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
               {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
             </Tooltip>

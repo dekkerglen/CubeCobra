@@ -52,7 +52,7 @@ const config = {
 export const clientConfig = merge(config, {
   entry: {
     BlogPostPage: './src/pages/BlogPostPage.tsx',
-    BulkUploadPage: './src/pages/BulkUploadPage.js',
+    BulkUploadPage: './src/pages/BulkUploadPage.tsx',
     CubeSamplePackPage: './src/pages/CubeSamplePackPage.tsx',
     CubeAnalysisPage: './src/pages/CubeAnalysisPage.tsx',
     CubeBlogPage: './src/pages/CubeBlogPage.tsx',
@@ -130,7 +130,7 @@ export const serverConfig = merge(config, {
     'pages/DashboardPage': './src/pages/DashboardPage.tsx',
     'pages/DevBlog': './src/pages/DevBlog.tsx',
     'pages/BlogPostPage': './src/pages/BlogPostPage.tsx',
-    'pages/BulkUploadPage': './src/pages/BulkUploadPage.js',
+    'pages/BulkUploadPage': './src/pages/BulkUploadPage.tsx',
     'pages/CubeAnalysisPage': './src/pages/CubeAnalysisPage.tsx',
     'pages/CubeBlogPage': './src/pages/CubeBlogPage.tsx',
     'pages/CubeComparePage': './src/pages/CubeComparePage.tsx',

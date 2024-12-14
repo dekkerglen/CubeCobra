@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import CompareView from 'components/CompareView';
 import CubeCompareNavbar from 'components/cube/CubeCompareNavbar';
@@ -11,6 +11,7 @@ import Card from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
+import FilterContext from 'contexts/FilterContext';
 
 interface CubeComparePageProps {
   cards: Card[];
@@ -32,9 +33,9 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   both,
 }) => {
   const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
-  const [filter, setFilter] = useState<((card: Card) => boolean) | null>(null);
+  const { cardFilter } = useContext(FilterContext);
 
-  const filteredCards = filter ? cards.filter(filter) : cards;
+  const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
 
   return (
     <MainLayout loginCallback={loginCallback}>
@@ -45,11 +46,8 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
             cubeAID={cube.id}
             cubeB={cubeB}
             cubeBID={cubeB.id}
-            cards={filteredCards}
             openCollapse={openCollapse}
             setOpenCollapse={setOpenCollapse}
-            filter={filter}
-            setFilter={setFilter}
           />
           <DynamicFlash />
           <ErrorBoundary>

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useState } from 'react';
-import { Col } from 'components/base/Layout';
+import { Flexbox } from 'components/base/Layout';
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import CubeContext from 'contexts/CubeContext';
@@ -21,20 +21,12 @@ const CompareCollapse: React.FC<CompareCollapseProps> = ({ isOpen }) => {
 
   return (
     <Collapse isOpen={isOpen}>
-      <Col xs={12}>
-        <Input
-          type="text"
-          className="mb-2 me-2"
-          placeholder="Comparison Cube ID"
-          value={compareID}
-          onChange={handleChange}
-        />
-      </Col>
-      <Col>
-        <Button color="accent" className="mb-2" href={targetUrl}>
+      <Flexbox direction="row" gap="2" className="mt-2">
+        <Input type="text" placeholder="Comparison Cube ID" value={compareID} onChange={handleChange} />
+        <Button color="accent" href={targetUrl} block>
           Compare cubes
         </Button>
-      </Col>
+      </Flexbox>
     </Collapse>
   );
 };

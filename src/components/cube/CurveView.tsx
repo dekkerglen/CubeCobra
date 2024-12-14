@@ -63,7 +63,7 @@ interface CurveViewProps {
   cards: CardType[];
 }
 
-const CurveView: React.FC<CurveViewProps> = ({ cards, ...props }) => {
+const CurveView: React.FC<CurveViewProps> = ({ cards }) => {
   const { sortPrimary, cube } = useContext(CubeContext);
 
   const sorted = fromEntries(
@@ -74,7 +74,7 @@ const CurveView: React.FC<CurveViewProps> = ({ cards, ...props }) => {
   );
 
   return (
-    <Row {...props}>
+    <Row className="my-3">
       <Col>
         {Object.entries(sorted).map(([color, group]) => (
           <ColorCard key={color} color={color} group={group} />
