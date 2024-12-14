@@ -338,10 +338,12 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 value={typeLine}
                 onChange={(e) => setTypeLine(e.target.value)}
               />
-              <Flexbox direction="row" gap="2">
-                <Text semibold>Color Identity</Text>
-                <ColorChecksAddon colorless values={color} setValues={setColor as (values: string[]) => void} />
-              </Flexbox>
+              <ColorChecksAddon
+                label="Color"
+                colorless
+                values={color}
+                setValues={setColor as (values: string[]) => void}
+              />
               <Text>
                 Selecting no mana symbols will cause the selected cards' color identity to remain unchanged. Selecting
                 only colorless will cause the selected cards' color identity to be set to colorless.

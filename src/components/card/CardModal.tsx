@@ -37,6 +37,7 @@ import {
   normalizeName,
 } from 'utils/Card';
 import { getLabels } from 'utils/Sort';
+import Tag from 'components/base/Tag';
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -89,6 +90,8 @@ const CardModal: React.FC<CardModalProps> = ({
     [card, editCard],
   );
 
+  const disabled = !canEdit || card.markedForDelete;
+
   return (
     <Modal xl isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
@@ -99,165 +102,122 @@ const CardModal: React.FC<CardModalProps> = ({
         {versions ? (
           <Row>
             <Col xs={12} sm={4}>
-              <FoilCardImage card={card} finish={card.finish} />
-              <Row className="mb-2 g-0">
-                {card.details?.prices && Number.isFinite(cardPrice(card)) && (
-                  <TextBadge name="Price" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardPrice(card)?.toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.details?.prices && Number.isFinite(cardFoilPrice(card)) && (
-                  <TextBadge name="Foil" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card)?.toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.details?.prices && Number.isFinite(cardEtchedPrice(card)) && (
-                  <TextBadge name="Etched" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card)?.toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.details?.prices && Number.isFinite(cardPriceEur(card)) && (
-                  <TextBadge name="EUR" className="mt-2 me-2">
-                    <Tooltip text="Cardmarket Price">€{cardPriceEur(card)?.toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {card.details?.prices && Number.isFinite(cardTix(card)) && (
-                  <TextBadge name="TIX" className="mt-2 me-2">
-                    <Tooltip text="MTGO TIX">{cardTix(card)?.toFixed(2)}</Tooltip>
-                  </TextBadge>
-                )}
-                {Number.isFinite(cardElo(card)) && (
-                  <TextBadge name="Elo" className="mt-2">
-                    {cardElo(card).toFixed(0)}
-                  </TextBadge>
-                )}
-              </Row>
-              <Row>
+              <Flexbox direction="col" gap="2">
+                <FoilCardImage card={card} finish={card.finish} />
+                <Flexbox direction="row" gap="2" wrap="wrap">
+                  {card.details?.prices && Number.isFinite(cardPrice(card)) && (
+                    <TextBadge name="Price" className="mt-2 me-2">
+                      <Tooltip text="TCGPlayer Market Price">${cardPrice(card)?.toFixed(2)}</Tooltip>
+                    </TextBadge>
+                  )}
+                  {card.details?.prices && Number.isFinite(cardFoilPrice(card)) && (
+                    <TextBadge name="Foil" className="mt-2 me-2">
+                      <Tooltip text="TCGPlayer Market Price">${cardFoilPrice(card)?.toFixed(2)}</Tooltip>
+                    </TextBadge>
+                  )}
+                  {card.details?.prices && Number.isFinite(cardEtchedPrice(card)) && (
+                    <TextBadge name="Etched" className="mt-2 me-2">
+                      <Tooltip text="TCGPlayer Market Price">${cardEtchedPrice(card)?.toFixed(2)}</Tooltip>
+                    </TextBadge>
+                  )}
+                  {card.details?.prices && Number.isFinite(cardPriceEur(card)) && (
+                    <TextBadge name="EUR" className="mt-2 me-2">
+                      <Tooltip text="Cardmarket Price">€{cardPriceEur(card)?.toFixed(2)}</Tooltip>
+                    </TextBadge>
+                  )}
+                  {card.details?.prices && Number.isFinite(cardTix(card)) && (
+                    <TextBadge name="TIX" className="mt-2 me-2">
+                      <Tooltip text="MTGO TIX">{cardTix(card)?.toFixed(2)}</Tooltip>
+                    </TextBadge>
+                  )}
+                  {Number.isFinite(cardElo(card)) && (
+                    <TextBadge name="Elo" className="mt-2">
+                      {cardElo(card).toFixed(0)}
+                    </TextBadge>
+                  )}
+                </Flexbox>
                 {canEdit && (
                   <>
                     {card.markedForDelete ? (
-                      <Col xs={12}>
-                        <Button
-                          className="my-1"
-                          color="primary"
-                          block
-                          outline
-                          onClick={() => revertRemove(card.removeIndex!, card.board!)}
-                        >
-                          Revert Removal
-                        </Button>
-                      </Col>
+                      <Button
+                        color="primary"
+                        block
+                        outline
+                        onClick={() => revertRemove(card.removeIndex!, card.board!)}
+                      >
+                        Revert Removal
+                      </Button>
                     ) : (
                       <>
-                        <Col xs={12}>
+                        <Button
+                          color="danger"
+                          block
+                          outline
+                          onClick={() => {
+                            removeCard(card.index!, card.board!);
+                            setOpen(false);
+                          }}
+                        >
+                          Remove from cube
+                        </Button>
+                        {card.board === 'mainboard' ? (
                           <Button
-                            className="my-1"
-                            color="danger"
+                            color="accent"
                             block
                             outline
                             onClick={() => {
-                              removeCard(card.index!, card.board!);
+                              moveCard(card.index!, card.board!, 'maybeboard');
                               setOpen(false);
                             }}
                           >
-                            <span className="d-none d-sm-inline">Remove from cube</span>
-                            <span className="d-sm-none">Remove</span>
+                            Move to Maybeboard
                           </Button>
-                        </Col>
-                        {card.board === 'mainboard' ? (
-                          <Col xs={12}>
-                            <Button
-                              className="my-1"
-                              color="accent"
-                              block
-                              outline
-                              onClick={() => {
-                                moveCard(card.index!, card.board!, 'maybeboard');
-                                setOpen(false);
-                              }}
-                            >
-                              <span className="d-none d-sm-inline">Move to Maybeboard</span>
-                              <span className="d-sm-none">Maybeboard</span>
-                            </Button>
-                          </Col>
                         ) : (
-                          <Col xs={12}>
-                            <Button
-                              className="my-1"
-                              color="accent"
-                              block
-                              outline
-                              onClick={() => {
-                                moveCard(card.index!, card.board!, 'mainboard');
-                                setOpen(false);
-                              }}
-                            >
-                              <span className="d-none d-sm-inline">Move to Mainboard</span>
-                              <span className="d-sm-none">Mainboard</span>
-                            </Button>
-                          </Col>
+                          <Button
+                            color="accent"
+                            block
+                            outline
+                            onClick={() => {
+                              moveCard(card.index!, card.board!, 'mainboard');
+                              setOpen(false);
+                            }}
+                          >
+                            Move to Mainboard
+                          </Button>
                         )}
                       </>
                     )}
                     {card.editIndex !== undefined && (
-                      <Col xs={12}>
-                        <Button
-                          className="my-1"
-                          color="primary"
-                          block
-                          outline
-                          onClick={() => {
-                            if (card.editIndex !== undefined && card.board !== undefined) {
-                              revertEdit(card.editIndex, card.board);
-                            }
-                          }}
-                        >
-                          Revert Edit
-                        </Button>
-                      </Col>
+                      <Button
+                        color="primary"
+                        block
+                        outline
+                        onClick={() => {
+                          if (card.editIndex !== undefined && card.board !== undefined) {
+                            revertEdit(card.editIndex, card.board);
+                          }
+                        }}
+                      >
+                        Revert Edit
+                      </Button>
                     )}
                   </>
                 )}
-                <Col xs={12}>
-                  <Button
-                    className="my-1"
-                    block
-                    outline
-                    color="accent"
-                    href={card.details?.scryfall_uri}
-                    target="_blank"
-                  >
-                    <span className="d-none d-sm-inline">View on Scryfall</span>
-                    <span className="d-sm-none">Scryfall</span>
-                  </Button>
-                </Col>
-                <Col xs={12}>
-                  <Button
-                    className="my-1"
-                    block
-                    outline
-                    color="accent"
-                    href={`/tool/card/${card.cardID}`}
-                    target="_blank"
-                  >
-                    <span className="d-none d-sm-inline">View Card Analytics</span>
-                    <span className="d-sm-none">Analytics</span>
-                  </Button>
-                </Col>
+                <Button block outline color="accent" href={card.details?.scryfall_uri} target="_blank">
+                  View on Scryfall
+                </Button>
+                <Button block outline color="accent" href={`/tool/card/${card.cardID}`} target="_blank">
+                  View Card Analytics
+                </Button>
                 {card.details && (
-                  <Col xs={12}>
-                    <Button className="my-1" block outline color="accent" href={getTCGLink(card)} target="_blank">
-                      Buy
-                    </Button>
-                  </Col>
+                  <Button className="my-1" block outline color="accent" href={getTCGLink(card)} target="_blank">
+                    Buy
+                  </Button>
                 )}
-              </Row>
+              </Flexbox>
             </Col>
             <Col xs={12} sm={8}>
               <Flexbox direction="col" gap="2">
-                <Text md semibold>
-                  Card Attributes
-                </Text>
                 <Select
                   label="Version"
                   value={card.cardID}
@@ -268,6 +228,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       label: value.version,
                     };
                   })}
+                  disabled={disabled}
                 />
                 <Select
                   label="Status"
@@ -277,6 +238,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     value: status,
                     label: status,
                   }))}
+                  disabled={disabled}
                 />
                 <Select
                   label="Finish"
@@ -286,6 +248,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     value: finish,
                     label: finish,
                   }))}
+                  disabled={disabled}
                 />
                 <Input
                   label="Mana Value"
@@ -293,6 +256,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   name="cmc"
                   value={`${cardCmc(card)}`}
                   onChange={(event) => updateField('cmc', event.target.value)}
+                  disabled={disabled}
                 />
                 <Input
                   label="Type"
@@ -300,6 +264,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   name="type_line"
                   value={cardType(card)}
                   onChange={(event) => updateField('type_line', event.target.value)}
+                  disabled={disabled}
                 />
                 <Select
                   label="Rarity"
@@ -309,6 +274,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     value: rarity.toLowerCase(),
                     label: rarity,
                   }))}
+                  disabled={disabled}
                 />
                 <Input
                   label="Image URL"
@@ -316,6 +282,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   name="imgUrl"
                   value={card.imgUrl || ''}
                   onChange={(event) => updateField('imgUrl', event.target.value)}
+                  disabled={disabled}
                 />
                 <Input
                   label="Image Back URL"
@@ -323,22 +290,29 @@ const CardModal: React.FC<CardModalProps> = ({
                   name="imgBackUrl"
                   value={card.imgBackUrl || ''}
                   onChange={(event) => updateField('imgBackUrl', event.target.value)}
+                  disabled={disabled}
                 />
-                <Flexbox direction="row" gap="1">
-                  <Text semibold>Color</Text>
-                  <ColorChecksAddon
-                    values={cardColorIdentity(card)}
-                    setValues={(colors: string[]) => updateField('colors', colors)}
-                  />
-                </Flexbox>
+                <ColorChecksAddon
+                  label="Color"
+                  values={cardColorIdentity(card)}
+                  setValues={(colors: string[]) => updateField('colors', colors)}
+                  disabled={disabled}
+                />
                 <Select
                   label="Color Category"
                   value={cardColorCategory(card)}
                   setValue={(v) => updateField('colorCategory', v)}
-                  options={getLabels(null, 'Color Category', false).map((category) => ({
-                    value: category,
-                    label: category,
-                  }))}
+                  options={[
+                    {
+                      value: '',
+                      label: '',
+                    },
+                    ...getLabels(null, 'Color Category', false).map((category) => ({
+                      value: category,
+                      label: category,
+                    })),
+                  ]}
+                  disabled={disabled}
                 />
                 <Text md semibold>
                   Notes
@@ -347,24 +321,33 @@ const CardModal: React.FC<CardModalProps> = ({
                   name="notes"
                   value={card.notes || ''}
                   onChange={(event) => updateField('notes', event.target.value)}
+                  disabled={disabled}
                 />
                 <Text md semibold>
                   Tags
                 </Text>
-                <TagInput
-                  tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
-                  readOnly={!canEdit}
-                  addTag={(tag: TagData) => {
-                    updateField('tags', [...cardTags(card), tag.text]);
-                  }}
-                  deleteTag={(index: number) => {
-                    const newTags = [...cardTags(card)];
-                    newTags.splice(index, 1);
-                    updateField('tags', newTags);
-                  }}
-                  tagColors={tagColors}
-                  suggestions={allTags}
-                />
+                {!disabled ? (
+                  <TagInput
+                    tags={cardTags(card).map((tag): TagData => ({ text: tag, id: tag }))}
+                    readOnly={!canEdit}
+                    addTag={(tag: TagData) => {
+                      updateField('tags', [...cardTags(card), tag.text]);
+                    }}
+                    deleteTag={(index: number) => {
+                      const newTags = [...cardTags(card)];
+                      newTags.splice(index, 1);
+                      updateField('tags', newTags);
+                    }}
+                    tagColors={tagColors}
+                    suggestions={allTags}
+                  />
+                ) : (
+                  <Flexbox direction="row" gap="2" wrap="wrap">
+                    {cardTags(card).map((tag) => (
+                      <Tag key={tag} color="accent" text={tag} />
+                    ))}
+                  </Flexbox>
+                )}
               </Flexbox>
             </Col>
           </Row>

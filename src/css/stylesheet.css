@@ -52,7 +52,7 @@
 		--border: 45 51 56;
 		--border-active: 17 12 16;
 		--border-secondary: 109 120 130;
-		--text: 255 255 255;
+		--text: 240 240 240;
 		--link: 50 166 255;
 		--link-active: 0 86 179;
 		--button-text: 255 255 255;
@@ -222,3 +222,77 @@ img.mana-symbol-sm {
   z-index: -10000;
 }
 
+/* On screens where not all columns display at once, scroll cubes horizontally. */
+.mobile-table-view-container {
+	/* Size to viewport. Have to do this so that scroll displays to edge of screen. */
+	overflow: hidden;
+	width: 100vw;
+	margin: -0.5rem calc(-50vw + 50%) 0rem;
+}
+
+.mobile-table-view-row {
+	overflow: auto;
+	flex-wrap: nowrap;
+	padding: 0 calc(50vw - 50% - 2px);
+	margin: 0 calc(-50vw + 50%);
+}
+
+.mobile-table-view-row:after {
+	content: '';
+	min-width: calc(50vw - 50% - 2px);
+	height: 1px;
+}
+
+/* Extra small screens (xs) */
+@media (min-width: 0px) {
+  .table-view-col {
+    width: 40%;
+		min-width: 40%;
+		max-width: 40%;
+  }
+}
+
+/* Small screens (sm) */
+@media (min-width: 640px) {
+  .table-view-col {
+    width: 25%;
+		min-width: 25%;
+		max-width: 25%;
+  }
+}
+
+/* Medium screens (md) */
+@media (min-width: 768px) {
+  .table-view-col {
+    width: 20%;
+		min-width: 20%;
+		max-width: 20%;
+  }
+}
+
+/* Large screens (lg) */
+@media (min-width: 1024px) {
+  .table-view-col {
+    width: 12%;
+		min-width: 12%;
+		max-width: 12.5%;
+  }
+}
+
+/* Extra large screens (xl) */
+@media (min-width: 1280px) {
+  .table-view-col {
+    width: 11.11%;
+		min-width: 11.11%;
+		max-width: 11.11%;
+  }
+}
+
+/* Extra extra large screens (xxl) */
+@media (min-width: 1536px) {
+	.table-view-col {
+    width: 10%;
+		min-width: 10%;
+		max-width: 10%;
+	}
+}

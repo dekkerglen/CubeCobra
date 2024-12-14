@@ -17,6 +17,7 @@ export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextArea
   onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   rows?: number;
+  disabled?: boolean;
 }
 
 const TextArea: React.FC<TextAreaProps> = ({
@@ -31,6 +32,7 @@ const TextArea: React.FC<TextAreaProps> = ({
   onChange,
   value,
   rows = 4,
+  disabled = false,
 }) => {
   return (
     <div className="block w-full">
@@ -53,16 +55,18 @@ const TextArea: React.FC<TextAreaProps> = ({
             'focus:ring-focus-ring': valid === undefined,
             'focus:ring-green-500 border-green-500': valid === true,
             'focus:ring-red-500 border-red-500': valid === false,
+            'opacity-50': disabled,
           },
           className,
         )}
         id={id}
         placeholder={placeholder}
         ref={innerRef}
-        onKeyDown={onKeyDown}
-        onChange={onChange}
+        onKeyDown={disabled ? undefined : onKeyDown}
+        onChange={disabled ? undefined : onChange}
         value={value}
         rows={rows}
+        disabled={disabled}
       />
     </div>
   );

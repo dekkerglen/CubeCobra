@@ -20,7 +20,7 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
       {tabs.map((tab, index) => {
         const isActive = activeTab === index;
         const commonClasses = classNames(
-          'px-2 md:px-8 py-2 text-md font-medium focus:outline-none transition-colors duration-300',
+          'px-2 md:px-8 py-2 text-sm md:text-md font-medium focus:outline-none transition-colors duration-300',
           {
             'border-b-2 border-button-primary text-text': isActive,
             'border-transparent hover:text-button-primary text-button-primary hover:text-button-primary-active':

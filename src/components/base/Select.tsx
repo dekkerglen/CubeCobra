@@ -20,6 +20,7 @@ interface SelectProps {
   };
   id?: string;
   dense?: boolean;
+  disabled?: boolean;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -32,8 +33,13 @@ const Select: React.FC<SelectProps> = ({
   id,
   dense,
   className = '',
+  disabled,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (disabled) {
+      return;
+    }
+
     if (setValue) {
       setValue(event.target.value);
     }
@@ -43,6 +49,9 @@ const Select: React.FC<SelectProps> = ({
     'block w-full px-3 py-2 border border-border bg-bg rounded-md shadow-sm sm:text-sm placeholder-text-secondary',
     'focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-focus-ring transition duration-200 ease-in-out',
     className,
+    {
+      'opacity-50': disabled,
+    },
   );
 
   return (

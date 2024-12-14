@@ -4,6 +4,7 @@ import classNames from 'classnames';
 interface ResponsiveDivProps {
   children: React.ReactNode;
   baseVisible?: boolean; // Determines if the base class is `block` or `hidden`
+  xs?: boolean;
   sm?: boolean;
   md?: boolean;
   lg?: boolean;
@@ -16,6 +17,7 @@ interface ResponsiveDivProps {
 const ResponsiveDiv: React.FC<ResponsiveDivProps> = ({
   children,
   baseVisible = false,
+  xs,
   sm,
   md,
   lg,
@@ -27,6 +29,8 @@ const ResponsiveDiv: React.FC<ResponsiveDivProps> = ({
   const classes = classNames(
     baseVisible ? 'block' : 'hidden',
     {
+      'xs:block': xs && !baseVisible,
+      'xs:hidden': xs && baseVisible,
       'sm:block': sm && !baseVisible,
       'sm:hidden': sm && baseVisible,
       'md:block': md && !baseVisible,

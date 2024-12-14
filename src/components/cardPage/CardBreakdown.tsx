@@ -52,7 +52,7 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
           />
         </Flexbox>
       </div>
-      <Row noGutters>
+      <Row gutters={0}>
         <Col xs={12} md={5} xl={4} xxl={3}>
           <CardBreakdownStats card={card} history={history} />
         </Col>

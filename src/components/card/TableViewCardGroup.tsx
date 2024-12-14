@@ -33,7 +33,9 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   return (
     <ListGroup>
       {canEdit ? (
-        <GroupModalLink modalprops={{ cards }}>{heading}</GroupModalLink>
+        <GroupModalLink heading modalprops={{ cards }}>
+          {heading}
+        </GroupModalLink>
       ) : (
         <ListGroupItem heading>{heading}</ListGroupItem>
       )}

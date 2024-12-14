@@ -53,8 +53,8 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setOperator={(operator: string) => updateValue(operator, 'mvOp')}
           />
           <Flexbox direction="row" gap="1" justify="start">
-            <Text semibold>Color</Text>
             <ColorChecksAddon
+              label="Color"
               colorless
               values={values.color ?? []}
               setValues={(v: string[]) => updateValue(v, 'color')}
@@ -70,9 +70,9 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             />
           </Flexbox>
           <Flexbox direction="row" gap="1" justify="start">
-            <Text semibold>Color Identity</Text>
             <ColorChecksAddon
               colorless
+              label="Color Identity"
               values={values.colorIdentity ?? []}
               setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />

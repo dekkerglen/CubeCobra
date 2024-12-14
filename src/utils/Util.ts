@@ -1,6 +1,7 @@
 import Card from 'datatypes/Card';
+import { ColorCategory } from 'datatypes/CardDetails';
 import { TagColor } from 'datatypes/Cube';
-import { cardCmc, cardColors, cardType } from 'utils/Card';
+import { cardCmc, cardColorCategory, cardType } from 'utils/Card';
 
 export function arraysEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -214,35 +215,24 @@ export function isSamePageURL(to: string): boolean {
   }
 }
 
-export function getColorClass(type: string, colors: string[]) {
-  if (type.toLowerCase().includes('land')) {
-    return 'lands';
-  }
-  if (colors.length === 0) {
-    return 'colorless';
-  }
-  if (colors.length > 1) {
-    return 'multi';
-  }
-  if (colors.length === 1 && [...'WUBRGC'].includes(colors[0])) {
-    return {
-      W: 'white',
-      U: 'blue',
-      B: 'black',
-      R: 'red',
-      G: 'green',
-      C: 'colorless',
-    }[colors[0]] as string;
-  }
-  return 'colorless';
-}
+const colorCategoryToColorClass: { [key in ColorCategory]: string } = {
+  White: 'white',
+  Blue: 'blue',
+  Black: 'black',
+  Red: 'red',
+  Green: 'green',
+  Colorless: 'colorless',
+  Multicolor: 'multi',
+  Hybrid: 'multi',
+  Lands: 'lands',
+};
 
 export function getCardColorClass(card: Card): string {
-  // if (!card) {
-  //   return 'colorless';
-  // }
+  if (!card) {
+    return 'colorless';
+  }
 
-  return getColorClass(cardType(card), cardColors(card));
+  return colorCategoryToColorClass[cardColorCategory(card)];
 }
 
 export function getCardTagColorClass(tagColors: TagColor[], card: Card): string {

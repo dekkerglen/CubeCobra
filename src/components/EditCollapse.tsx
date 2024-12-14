@@ -189,7 +189,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
 
   return (
     <Collapse isOpen={isOpen}>
-      <Flexbox direction="col" gap="2">
+      <Flexbox direction="col" gap="2" className="mt-2">
         {alerts.map(({ color, message }, index) => (
           <Alert key={index} color={color}>
             {message}

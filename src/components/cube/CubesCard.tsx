@@ -35,7 +35,7 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink,
           {sideLink && <Link href={sideLink.href}>{sideLink.text}</Link>}
         </Flexbox>
       </CardHeader>
-      <Row noGutters>
+      <Row gutters={0}>
         {cubes.slice(0, 2).map((cube) => (
           <Col key={cube.id} xs={6}>
             <CubePreview cube={cube} />
@@ -43,7 +43,7 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink,
         ))}
       </Row>
       <Collapse isOpen={isOpen}>
-        <Row noGutters>
+        <Row gutters={0}>
           {cubes.slice(2).map((cube) => (
             <Col key={cube.id} xs={6}>
               <CubePreview cube={cube} />

@@ -31,11 +31,12 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   onAuxClick,
   heading = false,
   last = false,
+  ...props
 }) => {
   const itemClasses = classNames(
     'px-1 py-[3px] transition-all duration-200 truncate text-xs',
     {
-      'font-normal centered border-b border-border rounded-t-md': heading,
+      'font-semibold centered border-b border-border rounded-t-md': heading,
       'font-light': !heading,
       'cursor-pointer hover:brightness-125': onClick || onAuxClick,
       'rounded-b-md': last,
@@ -44,7 +45,7 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   );
 
   return (
-    <div className={itemClasses} onClick={onClick} onAuxClick={onAuxClick}>
+    <div className={itemClasses} onClick={onClick} onAuxClick={onAuxClick} {...props}>
       {children}
     </div>
   );

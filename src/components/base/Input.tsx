@@ -17,6 +17,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   innerRef?: React.Ref<HTMLInputElement>;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -31,6 +32,7 @@ const Input: React.FC<InputProps> = ({
   onKeyDown,
   onChange,
   value,
+  disabled = false,
 }) => {
   return (
     <div className="block w-full">
@@ -53,6 +55,7 @@ const Input: React.FC<InputProps> = ({
             'focus:ring-focus-ring': valid === undefined,
             'focus:ring-green-500 border-green-500': valid === true,
             'focus:ring-red-500 border-red-500': valid === false,
+            'opacity-50': disabled,
           },
           className,
         )}
@@ -60,9 +63,10 @@ const Input: React.FC<InputProps> = ({
         type={type}
         placeholder={placeholder}
         ref={innerRef}
-        onKeyDown={onKeyDown}
-        onChange={onChange}
+        onKeyDown={disabled ? undefined : onKeyDown}
+        onChange={disabled ? undefined : onChange}
         value={value}
+        disabled={disabled}
       />
     </div>
   );

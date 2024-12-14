@@ -1,5 +1,5 @@
 import Card from 'datatypes/Card';
-import CardDetails from 'datatypes/CardDetails';
+import CardDetails, { ColorCategory } from 'datatypes/CardDetails';
 import CategoryOverrides from 'res/CategoryOverrides.json';
 import LandCategories from 'res/LandCategories.json';
 import { arraysEqual } from 'utils/Util';
@@ -128,8 +128,44 @@ export const cardImageBackUrl = (card: Card): string => card.imgBackUrl ?? card.
 
 export const cardNotes = (card: Card): string | null => card.notes ?? null;
 
-export const cardColorCategory = (card: Card): 'w' | 'u' | 'b' | 'r' | 'g' | 'h' | 'l' | 'c' | 'm' =>
-  card.colorCategory ?? card.details?.colorcategory ?? 'l';
+export const cardColorCategory = (card: Card): ColorCategory => {
+  if (card.colorCategory) {
+    return card.colorCategory;
+  }
+
+  if (cardType(card).includes('Land')) {
+    return 'Lands';
+  }
+
+  const colors = cardColorIdentity(card);
+
+  if (colors.length === 0) {
+    return 'Colorless';
+  }
+  if (colors.length > 1) {
+    return 'Multicolor';
+  }
+
+  if (colors.length === 1) {
+    if (colors.includes('W')) {
+      return 'White';
+    }
+    if (colors.includes('U')) {
+      return 'Blue';
+    }
+    if (colors.includes('B')) {
+      return 'Black';
+    }
+    if (colors.includes('R')) {
+      return 'Red';
+    }
+    if (colors.includes('G')) {
+      return 'Green';
+    }
+  }
+
+  return 'Colorless';
+};
 
 // prices being null causes unwanted coercing behaviour in price filters,
 // so nullish price values are transformed to undefined instead
@@ -222,7 +258,7 @@ export const detailsToCard = (details: CardDetails): Card => {
   };
 };
 
-export const cardColors = (card: Card): string[] => card.details?.colors ?? [];
+export const cardColors = (card: Card): string[] => card.colors ?? card.details?.colors ?? [];
 
 export const cardLanguage = (card: Card): string => card.details?.language ?? '';
 

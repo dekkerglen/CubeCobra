@@ -1,3 +1,13 @@
+export type ColorCategory =
+  | 'White'
+  | 'Blue'
+  | 'Black'
+  | 'Red'
+  | 'Green'
+  | 'Colorless'
+  | 'Multicolor'
+  | 'Hybrid'
+  | 'Lands';
 export default interface CardDetails {
   scryfall_id: string;
   oracle_id: string;
@@ -24,7 +34,7 @@ export default interface CardDetails {
   type: string;
   colors: string[];
   color_identity: string[];
-  colorcategory: 'w' | 'u' | 'b' | 'r' | 'g' | 'h' | 'l' | 'c' | 'm';
+  colorcategory: ColorCategory;
   loyalty?: string;
   power?: string;
   toughness?: string;

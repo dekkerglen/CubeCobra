@@ -1,10 +1,10 @@
-import CardType from 'datatypes/Card';
-import { cardColors, cardId, cardName, cardType } from 'utils/Card';
-import { getColorClass } from 'utils/Util';
-import { Flexbox } from './Layout';
-import React from 'react';
-import withAutocard from 'components/WithAutocard';
 import classNames from 'classnames';
+import withAutocard from 'components/WithAutocard';
+import CardType from 'datatypes/Card';
+import React from 'react';
+import { cardId, cardName } from 'utils/Card';
+import { getCardColorClass } from 'utils/Util';
+import { Flexbox } from './Layout';
 
 const AutocardItem = withAutocard('div');
 
@@ -20,15 +20,11 @@ const CardList: React.FC<CardListProps> = ({ cards }) => {
         <AutocardItem
           key={cardId(card)}
           card={card}
-          className={classNames(
-            `bg-card-${getColorClass(cardType(card), cardColors(card))}`,
-            'px-2 py-0.5 truncate text-sm',
-            {
-              'rounded-t-md': index === 0,
-              'rounded-b-md': index === cards.length - 1,
-              'border-t border-border-secondary': index !== 0,
-            },
-          )}
+          className={classNames(`bg-card-${getCardColorClass(card)}`, 'px-2 py-0.5 truncate text-sm', {
+            'rounded-t-md': index === 0,
+            'rounded-b-md': index === cards.length - 1,
+            'border-t border-border-secondary': index !== 0,
+          })}
         >
           {cardName(card)}
         </AutocardItem>

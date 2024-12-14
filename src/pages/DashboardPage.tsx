@@ -66,7 +66,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   Your Cubes
                 </Text>
               </CardHeader>
-              <Row className="items-center" noGutters>
+              <Row className="items-center" gutters={0}>
                 {cubes.length > 0 ? (
                   cubes.slice(0, 12).map((cube) => (
                     <Col key={cube.id} lg={6} xl={4}>

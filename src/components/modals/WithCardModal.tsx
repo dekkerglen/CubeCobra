@@ -34,15 +34,9 @@ const withCardModal = <P,>(Tag: React.ComponentType<P>) => {
     );
 
     return (
-      <>
-        <Tag
-          {...props}
-          className={props.className ? `${props.className} clickable` : 'clickable'}
-          onClick={handleClick}
-        >
-          {props.children}
-        </Tag>
-      </>
+      <Tag {...props} className={props.className ? `${props.className} clickable` : 'clickable'} onClick={handleClick}>
+        {props.children}
+      </Tag>
     );
   };
   Result.displayName = `withCardModal(${Tag.displayName ?? ''})`;
