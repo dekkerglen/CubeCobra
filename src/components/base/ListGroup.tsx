@@ -14,6 +14,7 @@ interface ListGroupItemProps {
   onAuxClick?: (event: React.MouseEvent) => void;
   heading?: boolean;
   last?: boolean;
+  first?: boolean;
 }
 
 export const ListGroup: FC<ListGroupProps> = ({ children }) => {
@@ -31,6 +32,7 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
   onAuxClick,
   heading = false,
   last = false,
+  first = false,
   ...props
 }) => {
   const itemClasses = classNames(
@@ -40,6 +42,7 @@ export const ListGroupItem: FC<ListGroupItemProps> = ({
       'font-light': !heading,
       'cursor-pointer hover:brightness-125': onClick || onAuxClick,
       'rounded-b-md': last,
+      'rounded-t-md': first,
     },
     className,
   );

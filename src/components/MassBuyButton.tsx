@@ -34,7 +34,7 @@ const MassBuyButton: React.FC<MassBuyButtonProps> = ({ cards, children }) => {
 
   return (
     <Form method="POST" action={tcgMassEntryUrl} formData={formData} ref={formRef}>
-      <Button type="submit" color="primary" onClick={() => formRef.current?.submit()}>
+      <Button block color="primary" onClick={() => formRef.current?.submit()}>
         {children}
       </Button>
     </Form>

@@ -198,110 +198,113 @@ const GroupModal: React.FC<GroupModalProps> = ({
       <ModalBody>
         <Row>
           <Col xs={4}>
-            <Row className="overflow-y-auto">
-              <ListGroup>
-                {cards.map((card) => (
-                  <AutocardListItem key={card.index} card={card} noCardModal inModal>
-                    <Link onClick={() => filterOut(card)}>
-                      <XIcon size={16} />
-                    </Link>
-                  </AutocardListItem>
-                ))}
-              </ListGroup>
-            </Row>
-            <Row className="g-0">
-              {Number.isFinite(totalPriceUsd) && (
-                <TextBadge name="Price USD" className="mt-2 me-2">
-                  <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
-                </TextBadge>
-              )}
-              {Number.isFinite(totalPriceUsdFoil) && (
-                <TextBadge name="Foil USD" className="mt-2 me-2">
-                  <Tooltip text="TCGPlayer Market Foil Price">
-                    ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                  </Tooltip>
-                </TextBadge>
-              )}
-              {Number.isFinite(totalPriceUsdEtched) && (
-                <TextBadge name="Etched USD" className="mt-2 me-2">
-                  <Tooltip text="TCGPlayer Market Foil Price">
-                    ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                  </Tooltip>
-                </TextBadge>
-              )}
-              {Number.isFinite(totalPriceEur) && (
-                <TextBadge name="EUR" className="mt-2 me-2">
-                  <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
-                </TextBadge>
-              )}
-              {Number.isFinite(totalPriceTix) && (
-                <TextBadge name="TIX" className="mt-2 me-2">
-                  <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
-                </TextBadge>
-              )}
-            </Row>
-            <Row>
-              <Col xs={12}>
-                <Button className="my-1" block outline color="danger" onClick={removeAll}>
-                  Remove all from cube
-                </Button>
-              </Col>
-              <Col xs={12}>
-                <Button
-                  className="my-1"
-                  color="danger"
-                  block
-                  outline
-                  onClick={() => {
-                    bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
-                    setOpen(false);
-                  }}
-                >
-                  <span className="d-none d-sm-inline">Move all to Maybeboard</span>
-                  <span className="d-sm-none">Maybeboard</span>
-                </Button>
-              </Col>
-              <Col xs={12}>
-                <Button
-                  className="my-1"
-                  color="danger"
-                  block
-                  outline
-                  onClick={() => {
-                    bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
-                    setOpen(false);
-                  }}
-                >
-                  <span className="d-none d-sm-inline">Move all to Mainboard</span>
-                  <span className="d-sm-none">Mainboard</span>
-                </Button>
-              </Col>
-            </Row>
-            {anyCardRemoved && (
+            <Flexbox direction="col" gap="2">
+              <div className="overflow-y-auto">
+                <ListGroup>
+                  {cards.map((card, index) => (
+                    <AutocardListItem
+                      key={card.index}
+                      card={card}
+                      noCardModal
+                      inModal
+                      last={index === cards.length - 1}
+                      first={index === 0}
+                    >
+                      <Link onClick={() => filterOut(card)}>
+                        <XIcon size={16} />
+                      </Link>
+                    </AutocardListItem>
+                  ))}
+                </ListGroup>
+              </div>
+              <Flexbox direction="row" gap="2" wrap="wrap">
+                {Number.isFinite(totalPriceUsd) && (
+                  <TextBadge name="Price USD" className="mt-2 me-2">
+                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceUsdFoil) && (
+                  <TextBadge name="Foil USD" className="mt-2 me-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceUsdEtched) && (
+                  <TextBadge name="Etched USD" className="mt-2 me-2">
+                    <Tooltip text="TCGPlayer Market Foil Price">
+                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
+                    </Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceEur) && (
+                  <TextBadge name="EUR" className="mt-2 me-2">
+                    <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+                {Number.isFinite(totalPriceTix) && (
+                  <TextBadge name="TIX" className="mt-2 me-2">
+                    <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
+                  </TextBadge>
+                )}
+              </Flexbox>
               <Row>
                 <Col xs={12}>
-                  <Button className="my-1" block outline color="primary" onClick={revertRemoval}>
-                    Revert removal of removed cards
+                  <Button block color="danger" onClick={removeAll}>
+                    Remove all from cube
+                  </Button>
+                </Col>
+                <Col xs={12}>
+                  <Button
+                    color="accent"
+                    block
+                    onClick={() => {
+                      bulkMoveCard(cardsWithBoardAndIndex(cards), 'maybeboard');
+                      setOpen(false);
+                    }}
+                  >
+                    Move all to Maybeboard
+                  </Button>
+                </Col>
+                <Col xs={12}>
+                  <Button
+                    color="accent"
+                    block
+                    onClick={() => {
+                      bulkMoveCard(cardsWithBoardAndIndex(cards), 'mainboard');
+                      setOpen(false);
+                    }}
+                  >
+                    Move all to Mainboard
                   </Button>
                 </Col>
               </Row>
-            )}
-            {anyCardChanged && (
+              {anyCardRemoved && (
+                <Row>
+                  <Col xs={12}>
+                    <Button className="my-1" block color="primary" onClick={revertRemoval}>
+                      Revert removal of removed cards
+                    </Button>
+                  </Col>
+                </Row>
+              )}
+              {anyCardChanged && (
+                <Row>
+                  <Col xs={12}>
+                    <Button className="my-1" block color="primary" onClick={bulkRevertEditAll}>
+                      Revert changes of edited cards
+                    </Button>
+                  </Col>
+                </Row>
+              )}
               <Row>
                 <Col xs={12}>
-                  <Button className="my-1" block outline color="primary" onClick={bulkRevertEditAll}>
-                    Revert changes of edited cards
-                  </Button>
+                  <MassBuyButton className="my-1" block cards={cards}>
+                    Buy All
+                  </MassBuyButton>
                 </Col>
               </Row>
-            )}
-            <Row>
-              <Col xs={12}>
-                <MassBuyButton className="my-1" block outline cards={cards}>
-                  Buy all
-                </MassBuyButton>
-              </Col>
-            </Row>
+            </Flexbox>
           </Col>
           <Col xs={8}>
             <Flexbox direction="col" gap="2">
@@ -327,9 +330,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 value={finish}
                 setValue={setFinish}
               />
-              <Text md semibold>
-                Override Attribute on All
-              </Text>
               <Input label="Mana Value" type="text" name="cmc" value={cmc} onChange={(e) => setCmc(e.target.value)} />
               <Input
                 label="Type Line"
@@ -370,14 +370,10 @@ const GroupModal: React.FC<GroupModalProps> = ({
                 tagColors={tagColors}
                 suggestions={allTags}
               />
+              <Button className="my-1" block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
+                Apply to all
+              </Button>
             </Flexbox>
-            <Row>
-              <Col xs={12}>
-                <Button className="my-1" block color="primary" disabled={!fieldsChanged} onClick={applyChanges}>
-                  Apply to all
-                </Button>
-              </Col>
-            </Row>
           </Col>
         </Row>
       </ModalBody>

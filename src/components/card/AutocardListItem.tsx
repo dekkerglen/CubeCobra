@@ -16,6 +16,7 @@ export interface AutocardListItemProps {
   children?: React.ReactNode;
   onClick?: (event: React.MouseEvent) => void;
   last?: boolean;
+  first?: boolean;
   className?: string;
 }
 
@@ -33,6 +34,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   children,
   onClick,
   last,
+  first,
   className,
 }) => {
   const tagColors = useContext(TagColorContext);
@@ -72,6 +74,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
       inModal={inModal}
       onClick={onClick}
       last={last}
+      first={first}
     >
       {children && <span>{children}</span>}
       <span>{cardName}</span>
