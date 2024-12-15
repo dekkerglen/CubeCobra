@@ -67,12 +67,13 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <hr />
         <Row>
           <Col xs={12} md={6}>
-            <Button outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
+            <Button type="link" outline color="accent" block href={`/search/card:${card.name}`} target="_blank">
               {`Cubes with ${card.name}`}
             </Button>
           </Col>
           <Col xs={12} md={6}>
             <Button
+              type="link"
               outline
               color="accent"
               block
@@ -83,22 +84,30 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
             </Button>
           </Col>
           <Col xs={12} md={6}>
-            <Button outline color="accent" block href={card.scryfall_uri} target="_blank">
+            <Button type="link" outline color="accent" block href={card.scryfall_uri} target="_blank">
               View on Scryfall
             </Button>
           </Col>
           <Col xs={12} md={6}>
-            <Button outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
+            <Button type="link" outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
               View on TCGPlayer
             </Button>
           </Col>
           <Col xs={12} md={6}>
-            <Button outline color="accent" block href={getCardKingdomLink(detailsToCard(card))} target="_blank">
+            <Button
+              type="link"
+              outline
+              color="accent"
+              block
+              href={getCardKingdomLink(detailsToCard(card))}
+              target="_blank"
+            >
               View on Card Kingdom
             </Button>
           </Col>
           <Col xs={12} md={6}>
             <Button
+              type="link"
               outline
               color="accent"
               block
@@ -110,6 +119,7 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
           </Col>
           <Col xs={12} md={6}>
             <Button
+              type="link"
               outline
               color="accent"
               block
