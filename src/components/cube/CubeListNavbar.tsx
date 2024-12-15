@@ -30,6 +30,7 @@ const UploadBulkModalItem = withModal(Link, UploadBulkModal);
 const UploadBulkReplaceModalItem = withModal(Link, UploadBulkReplaceModal);
 const TagColorsModalItem = withModal(Link, TagColorsModal);
 
+const enc = encodeURIComponent;
 interface CubeListNavbarProps {
   cubeView: string;
   setCubeView: (view: string) => void;
@@ -61,7 +62,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     [setOpenCollapse],
   );
 
-  const enc = encodeURIComponent;
   const sortUrlSegment = `primary=${enc(sortPrimary || '')}&secondary=${enc(sortSecondary || '')}&tertiary=${enc(
     sortTertiary || '',
   )}&quaternary=${enc(sortQuaternary || '')}&showother=${enc(cube.showUnsorted || false)}`;
@@ -215,8 +215,16 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
         </ResponsiveDiv>
         <div>
           {canEdit && <EditCollapse isOpen={openCollapse === 'edit'} />}
-          <SortCollapse isOpen={openCollapse === 'sort'} />
-          <FilterCollapse isOpen={openCollapse === 'filter'} />
+          <SortCollapse isOpen={openCollapse === 'sort'} canEdit={canEdit} />
+          <FilterCollapse
+            isOpen={openCollapse === 'filter'}
+            showReset
+            filterTextFn={({ mainboard, maybeboard }) =>
+              mainboard && maybeboard
+                ? `Showing ${mainboard[0]} / ${mainboard[1]} cards in Mainboard, ${maybeboard[0]} / ${maybeboard[1]} cards in Maybeboard.`
+                : 'No cards to filter.'
+            }
+          />
           <CompareCollapse isOpen={openCollapse === 'compare'} />
         </div>
       </Flexbox>

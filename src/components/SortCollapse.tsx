@@ -10,11 +10,11 @@ import Collapse from './base/Collapse';
 
 interface SortCollapseProps {
   isOpen: boolean;
+  canEdit?: boolean;
 }
 
-const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen }) => {
+const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit = false }) => {
   const {
-    canEdit,
     cube,
     setShowUnsorted,
     saveSorts,

@@ -2,7 +2,7 @@ import React, { ComponentProps, ComponentType, ElementType, MouseEvent, ReactNod
 
 // If the modal is controlled, modalprops should include isOpen and toggle. If not, the component will create its own.
 export interface WithModalProps<U> {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   modalprops?: Omit<U, 'setOpen' | 'isOpen' | 'toggle'>;
   altClick?: () => void;

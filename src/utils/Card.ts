@@ -1,5 +1,5 @@
 import Card from 'datatypes/Card';
-import CardDetails, { ColorCategory } from 'datatypes/CardDetails';
+import CardDetailsType, { ColorCategory } from 'datatypes/CardDetails';
 import CategoryOverrides from 'res/CategoryOverrides.json';
 import LandCategories from 'res/LandCategories.json';
 import { arraysEqual } from 'utils/Util';
@@ -101,6 +101,43 @@ export const cardStatus = (card: Card): any => card.status;
 export const cardColorIdentity = (card: Card): string[] => card.colors ?? card.details?.color_identity ?? [];
 
 export const cardIndex = (card: Card): number => (card.index === undefined ? -1 : card.index);
+
+export const CardDetails = (card: Card): CardDetailsType =>
+  card.details ?? {
+    scryfall_id: '',
+    oracle_id: '',
+    name: 'Invalid Card',
+    set: '',
+    collector_number: '',
+    released_at: '',
+    promo: false,
+    reprint: false,
+    digital: false,
+    isToken: false,
+    full_name: 'Invalid Card',
+    name_lower: 'invalid card',
+    artist: '',
+    scryfall_uri: '',
+    rarity: '',
+    legalities: {},
+    oracle_text: '',
+    cmc: 0,
+    type: '',
+    colors: [],
+    color_identity: [],
+    colorcategory: 'Colorless',
+    parsed_cost: [],
+    border_color: 'black',
+    language: '',
+    mtgo_id: -1,
+    layout: '',
+    full_art: false,
+    error: true,
+    prices: {},
+    tokens: [],
+    set_name: '',
+    finishes: [],
+  };
 
 export const cardCmc = (card: Card): number => {
   if (card.cmc) {
@@ -243,7 +280,7 @@ export const cardLegalIn = (card: Card): string[] => cardLegalityFilter(card, 'l
 export const cardBannedIn = (card: Card): string[] => cardLegalityFilter(card, 'banned');
 export const cardRestrictedIn = (card: Card): string[] => cardLegalityFilter(card, 'restricted');
 
-export const detailsToCard = (details: CardDetails): Card => {
+export const detailsToCard = (details: CardDetailsType): Card => {
   return {
     cardID: details.scryfall_id,
     type_line: details.type,
@@ -310,7 +347,7 @@ export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneT
 const isCreatureLand = (details: any): boolean =>
   details.type.includes('Land') && details.oracle_text.match(/\bbecomes? a .*\bcreature\b/);
 
-export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetails, card?: Card) => boolean> = {
+export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
   hybrid: (details) =>

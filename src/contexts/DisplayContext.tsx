@@ -2,6 +2,7 @@ import React, { ReactNode, useCallback, useState } from 'react';
 
 import useLocalStorage from 'hooks/useLocalStorage';
 import { NumCols } from 'components/base/Layout';
+import Query from 'utils/Query';
 
 export interface DisplayContextValue {
   showCustomImages: boolean;
@@ -32,7 +33,9 @@ interface DisplayContextProviderProps {
 
 export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
-  const [openCollapse, setOpenCollapse] = useState<string | null>(null);
+  const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
+    return Query.get('f') ? 'filter' : null;
+  });
   const [cardsPerRow, setCardsPerRow] = useState<NumCols>(8);
 
   const toggleShowCustomImages = useCallback(() => {

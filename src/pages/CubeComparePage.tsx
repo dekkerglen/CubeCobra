@@ -11,7 +11,7 @@ import Card from 'datatypes/Card';
 import Cube from 'datatypes/Cube';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
-import FilterContext from 'contexts/FilterContext';
+import FilterContext, { FilterContextProvider } from 'contexts/FilterContext';
 
 interface CubeComparePageProps {
   cards: Card[];
@@ -23,6 +23,30 @@ interface CubeComparePageProps {
   both: string[];
 }
 
+const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both }) => {
+  const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
+  const { cardFilter } = useContext(FilterContext);
+
+  const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
+
+  return (
+    <>
+      <CubeCompareNavbar
+        cubeA={cube}
+        cubeAID={cube.id}
+        cubeB={cubeB}
+        cubeBID={cubeB.id}
+        openCollapse={openCollapse}
+        setOpenCollapse={setOpenCollapse}
+      />
+      <DynamicFlash />
+      <ErrorBoundary>
+        <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} />
+      </ErrorBoundary>
+    </>
+  );
+};
+
 const CubeComparePage: React.FC<CubeComparePageProps> = ({
   cards,
   cube,
@@ -32,30 +56,16 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   onlyB,
   both,
 }) => {
-  const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
-  const { cardFilter } = useContext(FilterContext);
-
-  const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
-
   return (
-    <MainLayout loginCallback={loginCallback}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
-          <CubeCompareNavbar
-            cubeA={cube}
-            cubeAID={cube.id}
-            cubeB={cubeB}
-            cubeBID={cubeB.id}
-            openCollapse={openCollapse}
-            setOpenCollapse={setOpenCollapse}
-          />
-          <DynamicFlash />
-          <ErrorBoundary>
-            <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} />
-          </ErrorBoundary>
-        </CubeContextProvider>
-      </DisplayContextProvider>
-    </MainLayout>
+    <FilterContextProvider>
+      <MainLayout loginCallback={loginCallback}>
+        <DisplayContextProvider cubeID={cube.id}>
+          <CubeContextProvider initialCube={cube} cards={{ mainboard: cards, maybeboard: [] }}>
+            <CubeComparePageInner cards={cards} cube={cube} cubeB={cubeB} onlyA={onlyA} onlyB={onlyB} both={both} />
+          </CubeContextProvider>
+        </DisplayContextProvider>
+      </MainLayout>
+    </FilterContextProvider>
   );
 };
 

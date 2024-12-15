@@ -53,25 +53,25 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   return (
     <Controls>
       <Flexbox direction="col" gap="2" className="py-2 px-4">
-        <div className="cubenav">
-          <ul className="nav nav-tabs nav-fill pt-2">
-            <li className="nav-item">
-              <Text semibold md>
-                Compare cubes
-              </Text>
-              <Text semibold md>
-                <span className="text-muted">Base Cube:</span>{' '}
-                <a href={`/cube/list/${cubeAID}`} className="me-3" style={{ color: '#218937' }}>
-                  {cubeA.name} ({cubeA.cardCount} cards)
-                </a>{' '}
-                <span className="text-muted">Comparison Cube:</span>{' '}
-                <a href={`/cube/list/${cubeBID}`} style={{ color: '#218937' }}>
-                  {cubeB.name} ({cubeB.cardCount} cards)
-                </a>
-              </Text>
-            </li>
-          </ul>
-        </div>
+        <Flexbox direction="col" gap="2">
+          <Text semibold lg>
+            Compare cubes
+          </Text>
+          <Flexbox direction="row" gap="2" wrap="wrap" justify="start">
+            <Text semibold md className="text-muted">
+              Base Cube:
+            </Text>{' '}
+            <Link href={`/cube/list/${cubeAID}`}>
+              {cubeA.name} ({cubeA.cardCount} cards)
+            </Link>{' '}
+            <Text semibold md className="text-muted">
+              Comparison Cube:
+            </Text>{' '}
+            <Link href={`/cube/list/${cubeBID}`}>
+              {cubeB.name} ({cubeB.cardCount} cards)
+            </Link>
+          </Flexbox>
+        </Flexbox>
         <Flexbox direction="row" wrap="wrap" justify="end" alignItems="center">
           <ResponsiveDiv baseVisible lg>
             <Button color="secondary" onClick={toggleExpanded}>
@@ -93,7 +93,7 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
         </ResponsiveDiv>
         <div>
           <SortCollapse isOpen={openCollapse === 'sort'} />
-          <FilterCollapse isOpen={openCollapse === 'filter'} />
+          <FilterCollapse isOpen={openCollapse === 'filter'} showReset />
         </div>
       </Flexbox>
     </Controls>

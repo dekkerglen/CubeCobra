@@ -11,6 +11,7 @@ import Cube from 'datatypes/Cube';
 import { getCubeId } from 'utils/Util';
 import classNames from 'classnames';
 import Banner from 'components/Banner';
+import { FilterContextProvider } from 'contexts/FilterContext';
 
 interface CubeLayoutInnerProps {
   children: ReactNode;
@@ -73,31 +74,33 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   hasControls = false,
 }) => {
   return (
-    <CubeContextProvider
-      initialCube={cube}
-      cards={cards}
-      loadVersionDict={loadVersionDict}
-      useChangedCards={useChangedCards}
-    >
-      <div
-        className={classNames('bg-bg-accent border-r border-l border-b border-border', {
-          'rounded-b-md': !hasControls,
-        })}
+    <FilterContextProvider>
+      <CubeContextProvider
+        initialCube={cube}
+        cards={cards}
+        loadVersionDict={loadVersionDict}
+        useChangedCards={useChangedCards}
       >
-        <Banner className="px-2" />
-        <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
-          <CubeSubtitle />
-          <Tabs
-            tabs={tabs.map((tab) => ({
-              label: tab.label,
-              href: tab.href + '/' + encodeURIComponent(getCubeId(cube)),
-            }))}
-            activeTab={tabs.findIndex((tab) => tab.href.includes(activeLink))}
-          />
-        </Flexbox>
-      </div>
-      <CubeLayoutInner>{children}</CubeLayoutInner>
-    </CubeContextProvider>
+        <div
+          className={classNames('bg-bg-accent border-r border-l border-b border-border', {
+            'rounded-b-md': !hasControls,
+          })}
+        >
+          <Banner className="px-2" />
+          <Flexbox direction="row" className="px-4" justify="between" wrap="wrap">
+            <CubeSubtitle />
+            <Tabs
+              tabs={tabs.map((tab) => ({
+                label: tab.label,
+                href: tab.href + '/' + encodeURIComponent(getCubeId(cube)),
+              }))}
+              activeTab={tabs.findIndex((tab) => tab.href.includes(activeLink))}
+            />
+          </Flexbox>
+        </div>
+        <CubeLayoutInner>{children}</CubeLayoutInner>
+      </CubeContextProvider>
+    </FilterContextProvider>
   );
 };
 

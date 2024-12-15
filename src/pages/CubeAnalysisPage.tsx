@@ -14,7 +14,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import FilterCollapse from 'components/FilterCollapse';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
-import { FilterContextProvider } from 'contexts/FilterContext';
 import CardType from 'datatypes/Card';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
@@ -231,13 +230,11 @@ const CubeAnalysisPageWrapper: React.FC<CubeAnalysisPageWrapperProps> = ({
   tokenMap,
 }) => {
   return (
-    <FilterContextProvider>
-      <MainLayout loginCallback={loginCallback}>
-        <CubeLayout cube={cube} cards={cards} activeLink="analysis">
-          <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
-        </CubeLayout>
-      </MainLayout>
-    </FilterContextProvider>
+    <MainLayout loginCallback={loginCallback}>
+      <CubeLayout cube={cube} cards={cards} activeLink="analysis">
+        <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
+      </CubeLayout>
+    </MainLayout>
   );
 };
 
