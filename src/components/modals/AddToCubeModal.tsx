@@ -141,7 +141,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
       <ModalFooter>
         <Flexbox direction="row" justify="between" gap="2" className="w-full">
           {!hideAnalytics && (
-            <Button block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
+            <Button type="link" block color="accent" href={`/tool/card/${card.scryfall_id}`} target="_blank">
               Analytics
             </Button>
           )}

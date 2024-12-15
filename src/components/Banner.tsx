@@ -56,7 +56,9 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
     return (
       <Flexbox direction="row" justify="between" gap="2" className={`${className}`}>
         <ResponsiveDiv lg className="flex-grow py-2">
-          <img src="/content/delverbanner.png" className="h-full" />
+          <a href="https://www.kickstarter.com/projects/volatilerig/delver-pass" target="_blank" rel="noreferrer">
+            <img src="/content/delverbanner.png" className="h-full" />
+          </a>
         </ResponsiveDiv>
         <ResponsiveDiv xxxl className="pb-8 py-2">
           <Card className="h-full bg-advert">

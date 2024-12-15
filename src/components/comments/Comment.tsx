@@ -66,6 +66,13 @@ const Comment: React.FC<CommentProps> = ({ comment, index, depth = 0, noReplies 
     });
   };
 
+  if (!comment.owner) {
+    comment.owner = {
+      id: '',
+      username: '',
+    };
+  }
+
   return (
     <Flexbox
       direction="row"

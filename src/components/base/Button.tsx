@@ -1,6 +1,5 @@
-import React from 'react';
 import classNames from 'classnames';
-import { Flexbox } from './Layout';
+import React from 'react';
 
 export interface ButtonProps {
   children: React.ReactNode;
@@ -55,16 +54,14 @@ const Button: React.FC<ButtonProps> = ({
       'opacity-50 cursor-not-allowed': disabled,
       'focus:ring-2 focus:ring-focus-ring focus:ring-opacity-50 focus:border-focus-ring': true,
       'w-full': block,
-      'flex flex-row justify-center': type === 'link',
+      'flex flex-row justify-center items-center': type === 'link',
     },
   );
 
   if (type === 'link') {
     return (
-      <a className={classes} href={href} target={target} rel={rel}>
-        <Flexbox direction="row" gap="1" alignContent="center" alignItems="center">
-          {children}
-        </Flexbox>
+      <a className={`${classes}`} href={href} target={target} rel={rel}>
+        {children}
       </a>
     );
   }

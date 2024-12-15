@@ -171,7 +171,7 @@ const CubeOverviewCard: React.FC<CubeOverviewCardProps> = ({ followed, priceOwne
               <CardFooter>
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {cube.tags.map((tag) => (
-                    <Tag href={`/search/tag:${tag}`} key={tag} text={tag} />
+                    <Tag href={`/search?q=${encodeURIComponent(`tag:${tag}`)}`} key={tag} text={tag} />
                   ))}
                 </Flexbox>
               </CardFooter>

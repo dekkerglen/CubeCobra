@@ -850,6 +850,8 @@ router.get('/samplepack/:id/:seed', async (req, res) => {
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
     }
 
+
+    console.log(pack);
     const width = Math.floor(Math.sqrt((5 / 3) * pack.pack.length));
     const height = Math.ceil(pack.pack.length / width);
 

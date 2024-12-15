@@ -5,6 +5,7 @@ import { getCubeDescription, getCubeId } from 'utils/Util';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import { Tile } from 'components/base/Tile';
+import Link from 'components/base/Link';
 
 interface CubePreviewProps {
   cube: Cube;
@@ -24,8 +25,9 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
           <Text sm className="text-text-secondary truncate">
             {cube.following.length} followers
           </Text>
-          <Text sm className="text-text-secondary truncate">
-            Designed by {cube.owner.username}
+          <Text sm className="truncate">
+            {'Designed by '}
+            <Link href={`/user/view/${cube.owner.id}`}>{cube.owner.username}</Link>
           </Text>
         </Flexbox>
         <div className="overflow-hidden flex">

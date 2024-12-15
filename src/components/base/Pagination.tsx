@@ -29,16 +29,16 @@ const Paginate: React.FC<PaginateProps> = ({
     return (
       <Flexbox direction="row" gap="2" alignItems="center" className={className}>
         <Text semibold className="mr-4">{`Page ${active + 1} of ${count}`}</Text>
-        <Button color="primary" href={urlF(0)} disabled={active === 0}>
+        <Button color="primary" href={urlF(0)} disabled={active === 0 || loading}>
           <MoveToStartIcon size={16} />
         </Button>
-        <Button color="primary" href={urlF(active - 1)} disabled={active === 0}>
+        <Button color="primary" href={urlF(active - 1)} disabled={active === 0 || loading}>
           <ArrowLeftIcon size={16} />
         </Button>
-        <Button color="primary" href={urlF(active + 1)} disabled={active === count - 1}>
+        <Button color="primary" href={urlF(active + 1)} disabled={active === count - 1 || loading}>
           <ArrowRightIcon size={16} />
         </Button>
-        <Button color="primary" href={urlF(count - 1)} disabled={active === count - 1}>
+        <Button color="primary" href={urlF(count - 1)} disabled={active === count - 1 || loading}>
           <MoveToEndIcon size={16} />
         </Button>
       </Flexbox>
@@ -50,20 +50,20 @@ const Paginate: React.FC<PaginateProps> = ({
       <Flexbox direction="row" gap="2" alignItems="center" className={className}>
         <Text semibold className="mr-4">{`Page ${active + 1} of ${count}${hasMore ? '+' : ''}`}</Text>
         {loading && <Spinner sm />}
-        <Button color="primary" onClick={() => onClick(0)} disabled={active === 0 && !loading}>
+        <Button color="primary" onClick={() => onClick(0)} disabled={active === 0 || loading}>
           <MoveToStartIcon size={16} />
         </Button>
-        <Button color="primary" onClick={() => onClick(active - 1)} disabled={active === 0 && !loading}>
+        <Button color="primary" onClick={() => onClick(active - 1)} disabled={active === 0 || loading}>
           <ArrowLeftIcon size={16} />
         </Button>
         <Button
           color="primary"
           onClick={() => onClick(active + 1)}
-          disabled={active === count - 1 && hasMore === false && !loading}
+          disabled={(active === count - 1 && hasMore === false) || loading}
         >
           <ArrowRightIcon size={16} />
         </Button>
-        <Button color="primary" onClick={() => onClick(count - 1)} disabled={active === count - 1 && !loading}>
+        <Button color="primary" onClick={() => onClick(count - 1)} disabled={active === count - 1 || loading}>
           <MoveToEndIcon size={16} />
         </Button>
       </Flexbox>

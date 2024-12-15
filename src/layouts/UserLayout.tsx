@@ -78,12 +78,18 @@ const UserLayout: React.FC<UserLayoutProps> = ({
               followersText
             )}
             {!following && !canEdit && (
-              <Button color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
+              <Button type="link" color="accent" className="rounded-0 w-full" href={`/user/follow/${user.id}`}>
                 Follow
               </Button>
             )}
             {following && !canEdit && (
-              <Button color="danger" outline className="rounded-0 w-full" href={`/user/unfollow/${user.id}`}>
+              <Button
+                type="link"
+                color="danger"
+                outline
+                className="rounded-0 w-full"
+                href={`/user/unfollow/${user.id}`}
+              >
                 Unfollow
               </Button>
             )}

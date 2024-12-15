@@ -12,7 +12,7 @@ type RNGFunction = () => number;
 interface DraftParams {
   id: number;
   packs: number;
-  cards: number;
+  cards?: number;
   players: number;
 }
 
@@ -139,7 +139,7 @@ export const getDraftFormat = (params: DraftParams, cube: Cube): DraftFormat => 
   if (params.id >= 0) {
     return cube.formats[params.id];
   }
-  return createDefaultDraftFormat(params.packs, params.cards);
+  return createDefaultDraftFormat(params.packs, params.cards || 15);
 };
 
 const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
