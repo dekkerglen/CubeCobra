@@ -180,7 +180,10 @@ export function getCubeDescription(
   const overridePrefixes =
     cube.categoryPrefixes && cube.categoryPrefixes.length > 0 ? `${cube.categoryPrefixes.join(' ')} ` : '';
 
-  const cardCount = changedCards && changedCards.mainboard ? changedCards.mainboard.length : cube.cardCount;
+  const cardCount =
+    changedCards && changedCards.mainboard && changedCards.mainboard?.length > 0
+      ? changedCards.mainboard.length
+      : cube.cardCount;
 
   if (cube.categoryOverride) {
     return `${cardCount} Card ${overridePrefixes}${cube.categoryOverride} Cube`;

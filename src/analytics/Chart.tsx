@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import { Chart } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   TimeScale,
@@ -21,6 +21,9 @@ import CubeContext from 'contexts/CubeContext';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
+
+console.log('ChartJS', ChartJS);
+console.log('BarElement', BarElement);
 
 // Register the necessary Chart.js components
 ChartJS.register(CategoryScale, TimeScale, LinearScale, PointElement, LineElement, Tooltip, Legend, BarElement);
@@ -153,7 +156,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
         useAsfans={useAsfans === 'true'}
         setUseAsfans={(val) => setUseAsfans(val.toString())}
       />
-      <Chart options={options as any} data={data} type="bar" />
+      <Bar options={options as any} data={data} />
     </Flexbox>
   );
 };
