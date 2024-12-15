@@ -158,7 +158,23 @@ router.post(
       });
     }
 
-    cube.tagColors = req.body.tag_colors;
+    // filter out tags that don't exist on any cards
+    const cubeCards = await Cube.getCards(cube.id);
+    const tags = new Set();
+
+    for (const [board, list] of Object.entries(cubeCards)) {
+      if (board !== 'id') {
+        for (const card of list) {
+          for (const tag of card.tags || []) {
+            tags.add(tag);
+          }
+        }
+      }
+    }
+
+    const allTags = [...tags];
+
+    cube.tagColors = req.body.tag_colors.filter((tagColor) => allTags.includes(tagColor.tag));
 
     await Cube.update(cube);
     return res.status(200).send({

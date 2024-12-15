@@ -13,6 +13,10 @@ export default (api) => {
       ],
       '@babel/preset-react',
     ],
-    plugins: ['@babel/plugin-transform-nullish-coalescing-operator', '@babel/plugin-transform-optional-chaining'],
+    plugins: [
+      '@babel/plugin-transform-nullish-coalescing-operator',
+      '@babel/plugin-transform-optional-chaining',
+      '@babel/plugin-transform-runtime',
+    ],
   };
 };

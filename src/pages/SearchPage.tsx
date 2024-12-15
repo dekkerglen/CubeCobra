@@ -140,7 +140,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, loginCallback, lastKey }
             <Flexbox direction="col" gap="2">
               <Row xs={12}>
                 {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((cube) => (
-                  <Col key={cube.id} xl={2} md={3} sm={4} xs={6}>
+                  <Col key={cube.id} xxl={2} lg={3} md={4} xs={6}>
                     <CubePreview cube={cube} />
                   </Col>
                 ))}

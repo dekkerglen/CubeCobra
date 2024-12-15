@@ -1,35 +1,42 @@
-import Checkbox from 'components/base/Checkbox';
-import { Col, Row } from 'components/base/Layout';
+import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
+import Tag from 'components/base/Tag';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext, { TAG_COLORS } from 'contexts/CubeContext';
 import { TagColor } from 'datatypes/Cube';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { csrfFetch } from 'utils/CSRF';
 import { getTagColorClass } from 'utils/Util';
-import { SortableList } from '../DND';
+import { SortableItem, SortableList } from '../DND';
+import { Card } from 'components/base/Card';
+import { GrabberIcon } from '@primer/octicons-react';
 
 interface TagColorRowProps {
   tag: string;
   tagClass: string;
   value: string | null;
   onChange: (tagColor: string) => void;
+  id: string;
 }
 
-const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange }) => (
-  <Row className="tag-color-row">
-    <Col>
-      <span className={tagClass}>{tag}</span>
-    </Col>
-    <Col className="d-flex flex-column justify-content-center">
-      <Select
-        options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
-        value={value || 'none'}
-        setValue={onChange}
-      />
-    </Col>
-  </Row>
+const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => (
+  <SortableItem id={id} className="p-2">
+    <Card>
+      <Flexbox direction="row" justify="between">
+        <Flexbox direction="row" justify="start" alignItems="center">
+          <GrabberIcon size={16} className="cursor-grab" />
+          <Tag text={tag} colorClass={tagClass} />
+        </Flexbox>
+        <Select
+          options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
+          value={value || 'none'}
+          setValue={onChange}
+          dense
+        />
+      </Flexbox>
+    </Card>
+  </SortableItem>
 );
 
 interface TagColorsModalProps {
@@ -111,14 +118,28 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   );
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen}>
+    <Modal isOpen={isOpen} setOpen={setOpen} md>
       <ModalHeader setOpen={setOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
       <ModalBody>
-        <Checkbox
-          label="Show Tag Colors in Card List"
-          checked={showTagColors}
-          setChecked={(e) => updateShowTagColors(e)}
-        />
+        {showTagColors ? (
+          <LoadingButton
+            block
+            color="primary"
+            onClick={async () => await updateShowTagColors(false)}
+            disabled={!canEdit}
+          >
+            Hide tag colors by default
+          </LoadingButton>
+        ) : (
+          <LoadingButton
+            block
+            color="primary"
+            onClick={async () => await updateShowTagColors(true)}
+            disabled={!canEdit}
+          >
+            Show tag colors by default
+          </LoadingButton>
+        )}
         {!canEdit ? (
           ''
         ) : (
@@ -127,24 +148,21 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
         {!canEdit ? (
           staticRows
         ) : (
-          <Row className="tag-color-container">
-            <Col>
-              <SortableList onDragEnd={handleSortEnd} items={modalColors.map(({ tag }) => tag)}>
-                {modalColors.map(({ tag, color }) => {
-                  const tagClass = `tag ${getTagColorClass(modalColors, tag)}`;
-                  return (
-                    <TagColorRow
-                      key={tag}
-                      tag={tag}
-                      tagClass={tagClass}
-                      value={color}
-                      onChange={(color) => handleChangeColor(color, tag)}
-                    />
-                  );
-                })}
-              </SortableList>
-            </Col>
-          </Row>
+          <SortableList onDragEnd={handleSortEnd} items={modalColors.map(({ tag }) => tag)}>
+            {modalColors.map(({ tag, color }) => {
+              const tagClass = `tag ${getTagColorClass(modalColors, tag)}`;
+              return (
+                <TagColorRow
+                  key={tag}
+                  tag={tag}
+                  tagClass={tagClass}
+                  value={color}
+                  onChange={(color) => handleChangeColor(color, tag)}
+                  id={tag}
+                />
+              );
+            })}
+          </SortableList>
         )}
       </ModalBody>
       <ModalFooter>

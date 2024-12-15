@@ -296,7 +296,6 @@ export function CubeContextProvider({
       });
       if (response.ok) {
         setShowTagColors(showColors);
-        window.globalShowTagColors = showTagColors;
       } else {
         console.error('Request failed.');
       }

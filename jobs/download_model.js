@@ -36,4 +36,6 @@ const downloadFromS3 = async () => {
   }
 };
 
-downloadFromS3();
+module.exports = {
+  downloadFromS3,
+};

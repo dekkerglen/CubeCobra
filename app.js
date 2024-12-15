@@ -195,6 +195,10 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
   );
 }
 
+app.post('/healthcheck', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Route files; they manage their own CSRF protection
 app.use('/patreon', require('./routes/patreon_routes'));
 app.use('/cache', require('./routes/cache_routes'));

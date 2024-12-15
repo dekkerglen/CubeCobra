@@ -1,5 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
+import { Flexbox } from './Layout';
 
 export interface ButtonProps {
   children: React.ReactNode;
@@ -61,7 +62,9 @@ const Button: React.FC<ButtonProps> = ({
   if (type === 'link') {
     return (
       <a className={classes} href={href} target={target} rel={rel}>
-        {children}
+        <Flexbox direction="row" gap="1" alignContent="center" alignItems="center">
+          {children}
+        </Flexbox>
       </a>
     );
   }
@@ -70,7 +73,7 @@ const Button: React.FC<ButtonProps> = ({
     <button
       className={classes}
       onClick={(e) => {
-        type !== "submit" && e.preventDefault();
+        type !== 'submit' && e.preventDefault();
         if (onClick) {
           onClick(e);
         }

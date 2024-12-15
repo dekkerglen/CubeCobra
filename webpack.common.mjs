@@ -11,13 +11,18 @@ const config = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules[/\\](?!react-dnd|dnd-core)/,
+        exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
             configFile: path.resolve(__dirname, 'babel.config.mjs'),
           },
         },
+      },
+      {
+        test: /\.m?js$/,
+        include: /node_modules/,
+        type: 'javascript/auto',
       },
       {
         test: /\.tsx?$/,
@@ -31,10 +36,6 @@ const config = {
         use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.b64$/,
-        use: 'raw-loader',
-      },
-      {
         test: /\.m?js/,
         resolve: {
           fullySpecified: false,
@@ -42,7 +43,7 @@ const config = {
       },
     ],
   },
-  devtool: 'source-map',
+  // devtool: 'source-map',
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json'],
     modules: [path.resolve(__dirname, 'src'), 'node_modules'],

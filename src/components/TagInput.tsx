@@ -78,7 +78,7 @@ const TagInput: React.FC<TagInputProps> = ({
           <Tag
             key={tag.id}
             text={tag.text}
-            color={getTagColorClass(tagColors, tag.text)}
+            colorClass={getTagColorClass(tagColors, tag.text)}
             onDelete={() => handleDeleteTag(index)}
           />
         ))}

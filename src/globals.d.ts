@@ -2,7 +2,6 @@ export {};
 
 declare global {
   interface Window {
-    globalShowTagColors?: boolean;
     nitroAds: {
       createAd(id: string, options: NitroAdOptions): NitroAd | Promise<NitroAd> | Promise<NitroAd[]> | null;
     };

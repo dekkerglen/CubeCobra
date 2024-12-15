@@ -246,9 +246,9 @@ img.mana-symbol-sm {
 /* Extra small screens (xs) */
 @media (min-width: 0px) {
   .table-view-col {
-    width: 40%;
-		min-width: 40%;
-		max-width: 40%;
+    width: 33.33%;
+		min-width: 33.33%;
+		max-width: 33.33%;
   }
 }
 

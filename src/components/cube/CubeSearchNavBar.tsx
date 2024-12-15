@@ -7,6 +7,7 @@ import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 
 interface CubeSearchNavBarProps {
   query?: string;
@@ -39,19 +40,23 @@ const CubeSearchNavBar: React.FC<CubeSearchNavBarProps> = ({
       </Text>
       <Flexbox direction="row" justify="center" gap="2">
         <Input placeholder="Search cubes..." value={queryText} onChange={(event) => setQuery(event.target.value)} />
-        <Select
-          options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
-          defaultValue={searchOrder}
-          setValue={(value) => setSearchOrder(value)}
-        />
-        <Select
-          options={[
-            { value: 'true', label: 'Ascending' },
-            { value: 'false', label: 'Descending' },
-          ]}
-          defaultValue={searchAscending}
-          setValue={(value) => setSearchAscending(value)}
-        />
+        <ResponsiveDiv sm>
+          <Select
+            options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
+            defaultValue={searchOrder}
+            setValue={(value) => setSearchOrder(value)}
+          />
+        </ResponsiveDiv>
+        <ResponsiveDiv sm>
+          <Select
+            options={[
+              { value: 'true', label: 'Ascending' },
+              { value: 'false', label: 'Descending' },
+            ]}
+            defaultValue={searchAscending}
+            setValue={(value) => setSearchAscending(value)}
+          />
+        </ResponsiveDiv>
         <Button
           type="link"
           color="primary"

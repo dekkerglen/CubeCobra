@@ -38,6 +38,7 @@ import {
 } from 'utils/Card';
 import { getLabels } from 'utils/Sort';
 import Tag from 'components/base/Tag';
+import { getTagColorClass } from 'utils/Util';
 
 export interface CardModalProps {
   isOpen: boolean;
@@ -352,7 +353,7 @@ const CardModal: React.FC<CardModalProps> = ({
                 ) : (
                   <Flexbox direction="row" gap="2" wrap="wrap">
                     {cardTags(card).map((tag) => (
-                      <Tag key={tag} color="accent" text={tag} />
+                      <Tag key={tag} colorClass={getTagColorClass(tagColors, tag)} text={tag} />
                     ))}
                   </Flexbox>
                 )}

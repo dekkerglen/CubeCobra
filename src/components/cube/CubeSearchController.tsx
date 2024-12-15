@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
 import Banner from 'components/Banner';
+import Controls from 'components/base/Controls';
 import Input from 'components/base/Input';
+import { Col, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
-import Controls from 'components/base/Controls';
-import { Flexbox } from 'components/base/Layout';
 import LoadingButton from '../LoadingButton';
 
 interface CubeSearchControllerProps {
@@ -39,25 +39,33 @@ const CubeSearchController: React.FC<CubeSearchControllerProps> = ({
       <Text lg bold>
         {title}
       </Text>
-      <Flexbox direction="row" justify="center" gap="2">
-        <Input placeholder="Search cubes..." value={queryText} onChange={(event) => setQuery(event.target.value)} />
-        <Select
-          options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
-          defaultValue={searchOrder}
-          setValue={(value) => setSearchOrder(value)}
-        />
-        <Select
-          options={[
-            { value: 'true', label: 'Ascending' },
-            { value: 'false', label: 'Descending' },
-          ]}
-          defaultValue={searchAscending}
-          setValue={(value) => setSearchAscending(value)}
-        />
-        <LoadingButton color="primary" onClick={() => go(queryText, searchOrder, searchAscending)}>
-          <span className="px-4">Search</span>
-        </LoadingButton>
-      </Flexbox>
+      <Row xs={12}>
+        <Col xs={12} sm={3}>
+          <Input placeholder="Search cubes..." value={queryText} onChange={(event) => setQuery(event.target.value)} />
+        </Col>
+        <Col xs={6} sm={3}>
+          <Select
+            options={searchOptions.map((search) => ({ value: search[1], label: search[0] }))}
+            defaultValue={searchOrder}
+            setValue={(value) => setSearchOrder(value)}
+          />
+        </Col>
+        <Col xs={6} sm={3}>
+          <Select
+            options={[
+              { value: 'true', label: 'Ascending' },
+              { value: 'false', label: 'Descending' },
+            ]}
+            defaultValue={searchAscending}
+            setValue={(value) => setSearchAscending(value)}
+          />
+        </Col>
+        <Col xs={12} sm={3}>
+          <LoadingButton block color="primary" onClick={() => go(queryText, searchOrder, searchAscending)}>
+            <span className="px-4">Search</span>
+          </LoadingButton>
+        </Col>
+      </Row>
     </Controls>
   );
 };

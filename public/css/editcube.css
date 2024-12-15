@@ -56,33 +56,3 @@
 	background-color: var(--success) !important;
 	color: var(--bg);
 }
-
-.compare-header
-{
-	margin-top:40px;
-    margin-bottom: 10px;
-	background:var(--header);
-	border:1px solid var(--border-dark);
-	border-radius:5px;
-}
-
-.row:first-of-type .compare-header
-{
-	margin-top:0px;
-}
-
-.tag-color-container {
-  padding-bottom: 1px;
-  background-color: var(--header);
-}
-
-.tag-color-row {
-  margin-top: 1px;
-  background: white;
-}
-
-#showTagColors {
-  padding: 20px;
-  padding-left: 45px;
-  border-bottom: 1px solid var(--border-light);
-}
