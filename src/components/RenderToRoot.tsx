@@ -6,6 +6,7 @@ import AdsContext from 'contexts/AdsContext';
 import { AutocardContextProvider } from 'contexts/AutocardContext';
 import DomainContext, { DomainContextValue } from 'contexts/DomainContext';
 import UserContext, { UserContextValue } from 'contexts/UserContext';
+import CaptchaContext from 'contexts/CaptchaContext';
 
 declare global {
   interface Window {
@@ -18,6 +19,7 @@ export interface UniversalReactProps {
   domain: DomainContextValue;
   user: UserContextValue;
   theme: string;
+  captchaSiteKey: string;
 }
 
 // Returns its input to enable our usual pattern of export default RenderToRoot(XPage).
@@ -25,15 +27,17 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
   const reactProps: P & UniversalReactProps = typeof window !== 'undefined' ? window.reactProps : {};
   const element: ReactElement = (
     <ErrorBoundary className="mt-3">
-      <AutocardContextProvider>
-        <AdsContext.Provider value={reactProps.nitroPayEnabled}>
-          <DomainContext.Provider value={reactProps.domain}>
-            <UserContext.Provider value={reactProps.user}>
-              <Element {...reactProps} />
-            </UserContext.Provider>
-          </DomainContext.Provider>
-        </AdsContext.Provider>
-      </AutocardContextProvider>
+      <CaptchaContext.Provider value={reactProps.captchaSiteKey}>
+        <AutocardContextProvider>
+          <AdsContext.Provider value={reactProps.nitroPayEnabled}>
+            <DomainContext.Provider value={reactProps.domain}>
+              <UserContext.Provider value={reactProps.user}>
+                <Element {...reactProps} />
+              </UserContext.Provider>
+            </DomainContext.Provider>
+          </AdsContext.Provider>
+        </AutocardContextProvider>
+      </CaptchaContext.Provider>
     </ErrorBoundary>
   );
 

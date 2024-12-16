@@ -274,6 +274,7 @@ export function CubeContextProvider({
   ]);
 
   useMount(() => {
+    console.log(changes);
     // if there are changes
     if (
       Object.values(changes.mainboard).some((c) => c.length > 0) ||

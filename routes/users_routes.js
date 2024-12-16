@@ -23,7 +23,7 @@ const Draft = require('../dynamo/models/draft');
 
 const router = express.Router();
 
-const { ensureAuth, csrfProtection, flashValidationErrors } = require('./middleware');
+const { ensureAuth, csrfProtection, flashValidationErrors, recaptcha } = require('./middleware');
 
 // For consistency between different forms, validate username through this function.
 const usernameValid = [
@@ -310,6 +310,7 @@ router.post(
     }),
     ...usernameValid,
   ],
+  recaptcha,
   flashValidationErrors,
   async (req, res) => {
     const email = req.body.email.toLowerCase();

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Card from 'datatypes/Card';
 import { cardFinish, cardTags } from 'utils/Card';
 import { Flexbox } from 'components/base/Layout';
+import Tag from 'components/base/Tag';
 
 interface Tag {
   value: string;
@@ -68,27 +69,25 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
       style={{ zIndex, ...position }}
       ref={autocardPopup}
     >
-      <div className="autocard-background bg-bg-secondary">
+      <div className="autocard-background bg-bg-accent">
         <Flexbox direction="row">
           {front && (
             <div className="col position-relative card-border">
               {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
-              <img id="autocardImageFront" src={front} alt={front} key={front} />
+              <img className="rounded-b-md" id="autocardImageFront" src={front} alt={front} key={front} />
             </div>
           )}
           {back && (
             <div className="col position-relative card-border">
               {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
-              <img id="autocardImageBack" src={back} alt={back} key={back} />
+              <img className="rounded-b-md" id="autocardImageBack" src={back} alt={back} key={back} />
             </div>
           )}
         </Flexbox>
         {tags.length > 0 && (
           <div className="row g-0 p-1" id="autocardTags">
             {tags.map((tag) => (
-              <span key={tag.value} className={`tag ${tag.colorClass}`}>
-                {tag.value}
-              </span>
+              <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} />
             ))}
           </div>
         )}

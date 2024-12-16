@@ -7,7 +7,7 @@ const createdraft = require('../../dist/drafting/createdraft');
 const miscutil = require('../../dist/utils/Util');
 const carddb = require('../../serverjs/carddb');
 const { render, redirect } = require('../../serverjs/render');
-const { ensureAuth, csrfProtection } = require('../middleware');
+const { ensureAuth, csrfProtection, recaptcha } = require('../middleware');
 const util = require('../../serverjs/util');
 const generateMeta = require('../../serverjs/meta');
 const { createLobby } = require('../../serverjs/multiplayerDrafting');
@@ -40,7 +40,7 @@ router.use('/deck', require('./deck'));
 router.use('/api', require('./api'));
 router.use('/download', require('./download'));
 
-router.post('/add', ensureAuth, async (req, res) => {
+router.post('/add', ensureAuth, recaptcha, async (req, res) => {
   try {
     const {
       body: { name },

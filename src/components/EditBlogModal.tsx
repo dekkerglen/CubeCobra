@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import CSRFForm from 'components/CSRFForm';
 import TextEntry from 'components/TextEntry';
-import { findUserLinks } from 'markdown/parser';
 import BlogPost from 'datatypes/BlogPost';
+import React, { useMemo, useState } from 'react';
 
 interface EditBlogModalProps {
   isOpen: boolean;
@@ -15,7 +14,6 @@ interface EditBlogModalProps {
 }
 
 const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cubeID }) => {
-  const [mentions, setMentions] = useState('');
   const [markdown, setMarkdown] = useState<string>(post ? post.body : '');
   const formRef = React.createRef<HTMLFormElement>();
   const [title, setTitle] = useState<string>(post?.title ?? '');
@@ -27,19 +25,9 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
     [title, markdown],
   );
 
-  const handleMentions = () => {
-    setMentions(findUserLinks(markdown).join(';'));
-  };
-
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg>
-      <CSRFForm
-        method="POST"
-        action={`/cube/blog/post/${cubeID}`}
-        onSubmit={handleMentions}
-        ref={formRef}
-        formData={formData}
-      >
+      <CSRFForm method="POST" action={`/cube/blog/post/${cubeID}`} ref={formRef} formData={formData}>
         <ModalHeader setOpen={setOpen}>Edit Blog Post</ModalHeader>
         <ModalBody>
           <Input
@@ -54,7 +42,6 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
           />
           {post && <Input type="hidden" name="id" value={post.id} />}
           <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={10000} />
-          <Input name="mentions" type="hidden" value={mentions} />
         </ModalBody>
         <ModalFooter>
           <Button color="primary" onClick={() => setOpen(false)}>

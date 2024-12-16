@@ -1,16 +1,15 @@
 import React, { ChangeEvent, useContext } from 'react';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
+import Button from 'components/base/Button';
+import Input from 'components/base/Input';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import Select from 'components/base/Select';
 import { ColorChecksAddon } from 'components/ColorCheck';
 import NumericField from 'components/NumericField';
 import CubeContext from 'contexts/CubeContext';
 import { FilterValues } from 'datatypes/CardDetails';
-import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
-import { Col, Flexbox, Row } from 'components/base/Layout';
-import Text from 'components/base/Text';
-import Input from 'components/base/Input';
-import Select from 'components/base/Select';
-import Button from 'components/base/Button';
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
@@ -52,14 +51,9 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setValue={(value: string) => updateValue(value, 'mv')}
             setOperator={(operator: string) => updateValue(operator, 'mvOp')}
           />
-          <Flexbox direction="row" gap="1" justify="start">
-            <ColorChecksAddon
-              label="Color"
-              colorless
-              values={values.color ?? []}
-              setValues={(v: string[]) => updateValue(v, 'color')}
-            />
+          <Flexbox direction="row" gap="1" justify="start" alignItems="end">
             <Select
+              label="Color"
               value={values.colorOp}
               setValue={(v: string) => updateValue(v, 'colorOp')}
               options={[
@@ -68,15 +62,15 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                 { value: '<=', label: 'At most these colors' },
               ]}
             />
-          </Flexbox>
-          <Flexbox direction="row" gap="1" justify="start">
             <ColorChecksAddon
               colorless
-              label="Color Identity"
-              values={values.colorIdentity ?? []}
-              setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
+              values={values.color ?? []}
+              setValues={(v: string[]) => updateValue(v, 'color')}
             />
+          </Flexbox>
+          <Flexbox direction="row" gap="1" justify="start" alignItems="end">
             <Select
+              label="Color Identity"
               value={values.colorIdentityOp}
               setValue={(v: string) => updateValue(v, 'colorIdentityOp')}
               options={[
@@ -84,6 +78,11 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
                 { value: '>=', label: 'Including these colors' },
                 { value: '<=', label: 'At most these colors' },
               ]}
+            />
+            <ColorChecksAddon
+              colorless
+              values={values.colorIdentity ?? []}
+              setValues={(v: string[]) => updateValue(v, 'colorIdentity')}
             />
           </Flexbox>
           <Input
@@ -93,19 +92,17 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             value={values.mana}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'mana')}
           />
-          <Flexbox direction="row" gap="1" justify="start">
-            <Text semibold>Manacost Type</Text>
-            <Select
-              value={values.is}
-              setValue={(v: string) => updateValue(v, 'is')}
-              options={[
-                { value: '', label: 'Any' },
-                { value: 'Gold', label: 'Gold' },
-                { value: 'Hybrid', label: 'Hybrid' },
-                { value: 'Phyrexian', label: 'Phyrexian' },
-              ]}
-            />
-          </Flexbox>
+          <Select
+            label="Manacost Type"
+            value={values.is}
+            setValue={(v: string) => updateValue(v, 'is')}
+            options={[
+              { value: '', label: 'Any' },
+              { value: 'Gold', label: 'Gold' },
+              { value: 'Hybrid', label: 'Hybrid' },
+              { value: 'Phyrexian', label: 'Phyrexian' },
+            ]}
+          />
           <Input
             name="type"
             label="Type Line"
@@ -121,22 +118,20 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'set')}
           />
           {cubeId && (
-            <Flexbox direction="row" gap="1" justify="start">
-              <Text semibold>Tag</Text>
-              <AutocompleteInput
-                treeUrl={`/cube/api/cubecardtags/${cubeId}`}
-                treePath="tags"
-                type="text"
-                name="tag"
-                value={values.tag ?? ''}
-                setValue={(tag: string) => updateValue(tag, 'tag')}
-                placeholder={'Any text, e.g. "Zombie Testing"'}
-                autoComplete="off"
-                data-lpignore
-                className="tag-autocomplete-input"
-                wrapperClassName="tag-autocomplete-wrapper"
-              />
-            </Flexbox>
+            <AutocompleteInput
+              label="Tag"
+              treeUrl={`/cube/api/cubecardtags/${cubeId}`}
+              treePath="tags"
+              type="text"
+              name="tag"
+              value={values.tag ?? ''}
+              setValue={(tag: string) => updateValue(tag, 'tag')}
+              placeholder={'Any text, e.g. "Zombie Testing"'}
+              autoComplete="off"
+              data-lpignore
+              className="tag-autocomplete-input"
+              wrapperClassName="tag-autocomplete-wrapper"
+            />
           )}
           <Row>
             <Col md={6}>
@@ -258,9 +253,9 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setValue={(value: string) => updateValue(value, 'rarity')}
             setOperator={(operator: string) => updateValue(operator, 'rarityOp')}
           />
-          <Flexbox direction="row" gap="1" justify="start">
-            <Text semibold>Legality</Text>
+          <Flexbox direction="row" gap="1" justify="start" alignItems="end">
             <Select
+              label="Legality"
               value={values.legalityOp}
               setValue={(v: string) => updateValue(v, 'legalityOp')}
               options={[

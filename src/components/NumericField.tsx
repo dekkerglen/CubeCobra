@@ -1,6 +1,5 @@
 import React from 'react';
 import { Flexbox } from './base/Layout';
-import Text from './base/Text';
 import Input from './base/Input';
 import Select from './base/Select';
 
@@ -23,9 +22,9 @@ const NumericField: React.FC<NumericFieldProps> = ({
   setValue,
   setOperator,
 }) => (
-  <Flexbox direction="row" gap="2" justify="start">
-    <Text>{humanName}</Text>
+  <Flexbox direction="row" gap="2" justify="start" alignItems="end">
     <Select
+      label={humanName}
       value={operator}
       setValue={(v) => setOperator(v)}
       options={[

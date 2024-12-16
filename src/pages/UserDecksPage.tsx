@@ -84,7 +84,7 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
 
   return (
     <MainLayout loginCallback={loginCallback}>
-      <UserLayout user={owner} followers={followers} following={following} activeLink="blog">
+      <UserLayout user={owner} followers={followers} following={following} activeLink="decks">
         <DynamicFlash />
 
         <Card className="my-3">

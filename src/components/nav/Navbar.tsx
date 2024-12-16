@@ -15,10 +15,12 @@ import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import ResponsiveDiv from '../base/ResponsiveDiv';
 import NotificationsNav from './NotificationsNav';
+import CreateCubeModal from 'components/modals/CreateCubeModal';
 
 import withModal from 'components/WithModal';
 
 const LoginButton = withModal(NavButton, LoginModal);
+const CreateCubeButton = withModal(NavButton, CreateCubeModal);
 
 const navItems = [
   {
@@ -95,7 +97,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
               ))}
             </Flexbox>
             <CardFooter>
-              <NavLink href="/cube/create">Create A New Cube</NavLink>
+              <CreateCubeButton>Create A New Cube</CreateCubeButton>
             </CardFooter>
           </NavMenu>
           <NavMenu label={user.username} navBar>
@@ -105,7 +107,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggle, expanded }) => {
               {user.roles && user.roles.includes('ContentCreator') && (
                 <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
               )}
-              <NavLink href="/cube/create">Create A New Cube</NavLink>
+              <CreateCubeButton>Create A New Cube</CreateCubeButton>
               <NavLink href="/user/social">Social</NavLink>
               <NavLink href="/user/account">Account Information</NavLink>
               <NavLink href="/user/logout">Logout</NavLink>

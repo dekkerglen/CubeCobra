@@ -6,10 +6,11 @@ import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Button from 'components/base/Button';
+import Link from 'components/base/Link';
 
 interface Document {
   id: string;
-  type: string;
+  type: 'a' | 'v' | 'p';
   title: string;
 }
 
@@ -17,6 +18,12 @@ interface ReviewContentPageProps {
   loginCallback?: string;
   content: Document[];
 }
+
+const typeMap = {
+  a: 'article',
+  v: 'video',
+  p: 'podcast',
+};
 
 const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ loginCallback = '/', content }) => {
   return (
@@ -29,11 +36,14 @@ const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ loginCallback = '
           </Text>
         </CardHeader>
         {content.map((document) => (
-          <CardBody key={document.id} className="border-t">
+          <CardBody key={document.id}>
             <Row>
               <Col xs={12} sm={4}>
-                <p>type: {document.type}</p>
-                <a href={`/content/${document.type}/${document.id}`}>{document.title}</a>
+                <Text semibold>
+                  {typeMap[document.type]}
+                  {': '}
+                </Text>
+                <Link href={`/content/${typeMap[document.type]}/${document.id}`}>{document.title}</Link>
               </Col>
               <Col xs={12} sm={4}>
                 <Button type="link" color="primary" outline block href={`/admin/publish/${document.id}`}>

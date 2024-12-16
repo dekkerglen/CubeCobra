@@ -29,7 +29,7 @@ const CubesCard: React.FC<CubesCardProps> = ({ children, cubes, title, sideLink,
     <Card {...props}>
       <CardHeader className="cubes-card-header">
         <Flexbox direction="row" justify="between">
-          <Text semibold xl>
+          <Text semibold lg>
             {title}
           </Text>
           {sideLink && <Link href={sideLink.href}>{sideLink.text}</Link>}

@@ -7,13 +7,13 @@ interface CSRFFormProps {
   method: 'GET' | 'POST';
   action: string;
   formData: Record<string, string>;
-  onSubmit?: () => void;
 }
 
-const CSRFForm = forwardRef<HTMLFormElement, CSRFFormProps>(({ children, method, action, formData, onSubmit }, ref) => {
+const CSRFForm = forwardRef<HTMLFormElement, CSRFFormProps>(({ children, method, action, formData }, ref) => {
   return (
-    <form method={method} ref={ref} action={action} onSubmit={onSubmit}>
+    <form method={method} ref={ref} action={action}>
       <input type="hidden" name="_csrf" value={getCsrfToken() || ''} />
+      <input type="hidden" name="nickname" value={'Your Nickname'} />
       {Object.entries(formData || {}).map(([key, value]) => (
         <input key={key} type="hidden" name={key} value={value} />
       ))}

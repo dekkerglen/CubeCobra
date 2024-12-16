@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import CSRFForm from 'components/CSRFForm';
 import Input from 'components/base/Input';
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
+import ReCAPTCHA from 'react-google-recaptcha';
+import CaptchaContext from 'contexts/CaptchaContext';
 
 interface RegisterFormProps {
   email?: string;
@@ -10,11 +12,13 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }) => {
+  const captchaSiteKey = useContext(CaptchaContext);
   const [formData, setFormData] = React.useState({
     email,
     username,
     password: '',
     password2: '',
+    captcha: '',
   });
   const formRef = React.useRef<HTMLFormElement>(null);
 
@@ -57,6 +61,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ email = '', username = '' }
           value={formData.password2}
           onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
         />
+        <ReCAPTCHA sitekey={captchaSiteKey} onChange={(value) => setFormData({ ...formData, captcha: value || '' })} />
         <Button color="primary" block onClick={() => formRef.current?.submit()}>
           Register
         </Button>

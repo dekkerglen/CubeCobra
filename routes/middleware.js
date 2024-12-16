@@ -29,10 +29,44 @@ const ensureRole = (role) => async (req, res, next) => {
 const csrfProtection = [
   csurf(),
   (req, res, next) => {
+    const {nickname, recaptcha} = req.body;
+
+    if (nickname !== undefined && nickname !== 'Your Nickname') {
+      // probably a malicious request
+      req.flash('danger', 'Invalid request');
+
+      return redirect(req, res, '/');
+    }
+
     res.locals.csrfToken = req.csrfToken();
     return next();
   },
 ];
+
+async function recaptcha (req, res, next) {
+  const { captcha } = req.body;
+  if (!captcha) {
+    req.flash('danger', 'Please complete the reCAPTCHA');
+    return redirect(req, res, '/');
+  }
+
+  const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captcha}`,
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    req.flash('danger', 'Failed reCAPTCHA verification');
+    return redirect(req, res, '/');
+  }
+
+  next();
+}
 
 function flashValidationErrors(req, res, next) {
   const errors = validationResult(req).formatWith(({ msg }) => msg);
@@ -66,4 +100,5 @@ module.exports = {
   csrfProtection,
   flashValidationErrors,
   jsonValidationErrors,
+  recaptcha,
 };
