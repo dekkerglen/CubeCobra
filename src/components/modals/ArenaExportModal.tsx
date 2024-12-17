@@ -7,7 +7,7 @@ import CubeContext from 'contexts/CubeContext';
 import FilterContext from 'contexts/FilterContext';
 import CardDetails from 'datatypes/CardDetails';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { sortForDownload } from 'utils/Sort';
 
 interface ArenaExportModalProps {
@@ -25,8 +25,9 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
 
   const AFTERMATH_ORACLE_TEXT = 'Aftermath (Cast this spell only from your graveyard. Then exile it.)'.toLowerCase();
 
-  //Component is being re-rendered a lot so the useCallback isn't doing much, though ideally it would optimize how often the export is generated
-  const generateExport = useCallback(() => {
+  //Generate the export text for the current cube cards, tracking all the cards, filters and sorts to ensure it only
+  //generates when things change
+  useEffect(() => {
     generateArenaExport();
   }, [
     cube.cards.mainboard,
@@ -39,26 +40,20 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
     sortQuaternary,
   ]);
 
-  // console.log([cube.cards.mainboard,
-  //   isFilterUsed,
-  //   isSortUsed,
-  //   cardFilter,
-  //   sortPrimary,
-  //   sortSecondary,
-  //   sortTertiary,
-  //   sortQuaternary,]);
-
+  /*
+  * Based text format on information in https://magicarena.fandom.com/wiki/Deck_Import. Could not find a more definitive resource.
+  * Known issues:
+  * 1) Cards ending in ! (eg Fear, Fire, Foes!) are unable to import to Arena (even exporting from Arena then back in fails). See https://feedback.wizards.com/forums/918667-mtg-arena-bugs-product-suggestions/suggestions/46881610-can-t-import-deck-with-fear-fire-foes
+  * 2) Meld back sides will fail to find in Arena. Don't see any information from Scryfall to distinguish from the meld front sides
+  */
   async function generateArenaExport() {
-    console.log("Generate export");
     let cards = cube.cards.mainboard;
     if (isFilterUsed) {
-      console.log("Filter used");
       cards = cards.filter(cardFilter.filter);
     }
 
     let sortedCards = cards;
     if (isSortUsed) {
-      console.log("Sort used");
       //Use ?? in case the sorts are null. Undefined results in the defaults within sortForDownload being used
       sortedCards = sortForDownload(cards, sortPrimary ?? undefined, sortSecondary ?? undefined, sortTertiary ?? undefined, sortQuaternary ?? undefined, cube.showUnsorted);
     }
@@ -70,7 +65,8 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
       }
       /*
        * While card set and collector number can be imported to Arena, if the set is not available on Arena (or if in a different set code than paper),
-       * it causes a failure to import for the card name. Thus we omit the information.
+       * it causes a failure to import for the card name. Thus we omit the information even if it can be used.
+       * Similar to the majority of the exports, treat each card in the cube as indepenent instead of counting by name to group.
        */
       exportText += `1 ${getCardNameForArena(card.details)}\n`;
     }
@@ -99,9 +95,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
 
   //Modal setOpen is when the background is clicked to close
   function onClose() {
-    console.log("onClose");
-    setOpen(isOpen);
-    //Dismiss alerts
+    setOpen(false);
   }
 
   return (
@@ -109,6 +103,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, is
       <ModalHeader setOpen={setOpen}>Arena Export</ModalHeader>
       <ModalBody>
         <Text>Copy the textbox or use the Copy to clipboard button.</Text>
+        <Text>Note: Arena can only import 250 cards into a deck.</Text>
         <Alerts alerts={alerts} />
         <TextArea rows={10} placeholder="Copy Cube" value={text} disabled />
       </ModalBody>
